@@ -9,7 +9,7 @@ let editingId: string | null = null;
 export async function loadWishlistManager() {
     const container = document.getElementById('wishlistPanel');
     if (!container) return;
-    container.innerHTML = `<div style="padding:20px;font-family:'Orbitron';font-size:0.65rem;color:#c5a059;">LOADING WISHLIST...</div>`;
+    container.innerHTML = `<div style="padding:20px;font-family:'Orbitron';font-size:0.65rem;color:var(--gold);">LOADING WISHLIST...</div>`;
 
     try {
         const res = await fetch('/api/admin/wishlist');
@@ -35,14 +35,14 @@ function renderWishlistPanel() {
         const id = item.ID || item.id || item.Title;
         const title = item.Title || item.title || '—';
         const category = item.Category || item.category || '';
-        const typeColor = isCrowdfund ? '#64b4ff' : '#c5a059';
-        const typeBg = isCrowdfund ? 'rgba(100,180,255,0.15)' : 'rgba(197,160,89,0.15)';
+        const typeColor = isCrowdfund ? '#64b4ff' : 'var(--gold)';
+        const typeBg = isCrowdfund ? 'rgba(100,180,255,0.15)' : 'rgba(var(--gold-rgb),0.15)';
         const progressBar = isCrowdfund && goal > 0
-            ? `<div style="margin-top:4px;height:2px;background:rgba(255,255,255,0.1);border-radius:1px;overflow:hidden;"><div style="height:100%;width:${Math.min((raised / goal) * 100, 100)}%;background:#c5a059;"></div></div>`
+            ? `<div style="margin-top:4px;height:2px;background:rgba(255,255,255,0.1);border-radius:1px;overflow:hidden;"><div style="height:100%;width:${Math.min((raised / goal) * 100, 100)}%;background:var(--gold);"></div></div>`
             : '';
 
         return `
-        <div class="wl-card" style="position:relative;border-radius:10px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.15);cursor:pointer;"
+        <div class="wl-card" style="position:relative;border-radius:10px;overflow:hidden;background:#0a0a14;border:1px solid rgba(var(--gold-rgb),0.15);cursor:pointer;"
              onmouseenter="this.querySelector('.wl-actions').style.opacity='1'"
              onmouseleave="this.querySelector('.wl-actions').style.opacity='0'">
             <!-- Image area -->
@@ -56,7 +56,7 @@ function renderWishlistPanel() {
             <div style="padding:10px 10px 8px;">
                 <div style="font-family:'Cinzel';font-size:0.72rem;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">${title}</div>
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                    <span style="font-family:'Orbitron';font-size:0.55rem;color:#c5a059;font-weight:700;">${price.toLocaleString()} coins</span>
+                    <span style="font-family:'Orbitron';font-size:0.55rem;color:var(--gold);font-weight:700;">${price.toLocaleString()} coins</span>
                     <span style="font-family:'Orbitron';font-size:0.45rem;padding:2px 6px;border-radius:10px;background:${typeBg};color:${typeColor};">${isCrowdfund ? 'CROWDFUND' : 'GIFT'}</span>
                     ${category ? `<span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.25);">${category}</span>` : ''}
                 </div>
@@ -64,7 +64,7 @@ function renderWishlistPanel() {
             </div>
             <!-- Hover actions -->
             <div class="wl-actions" style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:0;opacity:0;transition:opacity 0.15s;">
-                <button onclick="event.stopPropagation();window.openWishlistEdit('${id}')" style="flex:1;padding:8px 0;background:rgba(197,160,89,0.9);border:none;color:#000;font-family:'Orbitron';font-size:0.5rem;font-weight:700;cursor:pointer;letter-spacing:1px;">EDIT</button>
+                <button onclick="event.stopPropagation();window.openWishlistEdit('${id}')" style="flex:1;padding:8px 0;background:rgba(var(--gold-rgb),0.9);border:none;color:#000;font-family:'Orbitron';font-size:0.5rem;font-weight:700;cursor:pointer;letter-spacing:1px;">EDIT</button>
                 <button onclick="event.stopPropagation();window.deleteWishlistItem('${id}')" style="flex:1;padding:8px 0;background:rgba(180,0,40,0.9);border:none;color:#fff;font-family:'Orbitron';font-size:0.5rem;font-weight:700;cursor:pointer;letter-spacing:1px;">DEL</button>
             </div>
         </div>`;
@@ -73,8 +73,8 @@ function renderWishlistPanel() {
     container.innerHTML = `
         <div style="padding:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div style="font-family:'Orbitron';font-size:0.6rem;color:rgba(197,160,89,0.6);letter-spacing:2px;">${wishlistItems.length} ITEMS</div>
-                <button onclick="window.openWishlistAdd()" style="padding:7px 16px;background:linear-gradient(135deg,#c5a059,#8b6914);color:#000;font-family:'Orbitron';font-size:0.55rem;font-weight:700;border:none;border-radius:4px;cursor:pointer;letter-spacing:1px;">+ ADD ITEM</button>
+                <div style="font-family:'Orbitron';font-size:0.6rem;color:rgba(var(--gold-rgb),0.6);letter-spacing:2px;">${wishlistItems.length} ITEMS</div>
+                <button onclick="window.openWishlistAdd()" style="padding:7px 16px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#000;font-family:'Orbitron';font-size:0.55rem;font-weight:700;border:none;border-radius:4px;cursor:pointer;letter-spacing:1px;">+ ADD ITEM</button>
             </div>
             <div id="wishlistItemsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;">
                 ${itemsHtml || `<div style="color:rgba(255,255,255,0.3);font-family:'Orbitron';font-size:0.6rem;text-align:center;padding:40px;grid-column:1/-1;">NO ITEMS YET</div>`}
@@ -83,42 +83,42 @@ function renderWishlistPanel() {
 
         <!-- Modal -->
         <div id="wishlistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-            <div style="background:#0d0d1a;border:1px solid rgba(197,160,89,0.4);border-radius:12px;padding:28px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto;">
+            <div style="background:#0d0d1a;border:1px solid rgba(var(--gold-rgb),0.4);border-radius:12px;padding:28px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                    <div id="wishlistModalTitle" style="font-family:'Cinzel';font-size:1rem;color:#c5a059;letter-spacing:2px;">ADD ITEM</div>
+                    <div id="wishlistModalTitle" style="font-family:'Cinzel';font-size:1rem;color:var(--gold);letter-spacing:2px;">ADD ITEM</div>
                     <button onclick="window.closeWishlistModal()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;">✕</button>
                 </div>
 
                 <!-- Photo upload -->
                 <div style="margin-bottom:16px;">
-                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">PHOTO</div>
-                    <div id="wishlistImgPreview" style="width:100%;height:140px;background:#050510;border:1px dashed rgba(197,160,89,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;margin-bottom:6px;" onclick="document.getElementById('wishlistImgInput').click()">
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:6px;">PHOTO</div>
+                    <div id="wishlistImgPreview" style="width:100%;height:140px;background:#050510;border:1px dashed rgba(var(--gold-rgb),0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;margin-bottom:6px;" onclick="document.getElementById('wishlistImgInput').click()">
                         <span style="color:rgba(255,255,255,0.2);font-family:'Orbitron';font-size:0.55rem;">CLICK TO UPLOAD</span>
                     </div>
                     <input type="file" id="wishlistImgInput" accept="image/*" style="display:none;" onchange="window.handleWishlistImageSelect(this)">
-                    <input type="text" id="wishlistImgUrl" placeholder="Or paste image URL..." style="width:100%;box-sizing:border-box;padding:7px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#fff;font-family:'Orbitron';font-size:0.55rem;outline:none;" oninput="window.previewWishlistUrl(this.value)">
+                    <input type="text" id="wishlistImgUrl" placeholder="Or paste image URL..." style="width:100%;box-sizing:border-box;padding:7px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(var(--gold-rgb),0.2);border-radius:4px;color:#fff;font-family:'Orbitron';font-size:0.55rem;outline:none;" oninput="window.previewWishlistUrl(this.value)">
                 </div>
 
                 <div style="margin-bottom:12px;">
-                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">NAME *</div>
-                    <input type="text" id="wishlistFieldTitle" placeholder="Item name..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#fff;font-family:'Cinzel';font-size:0.8rem;outline:none;">
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:6px;">NAME *</div>
+                    <input type="text" id="wishlistFieldTitle" placeholder="Item name..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(var(--gold-rgb),0.2);border-radius:4px;color:#fff;font-family:'Cinzel';font-size:0.8rem;outline:none;">
                 </div>
 
                 <div id="priceRow" style="margin-bottom:12px;">
-                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">PRICE (COINS) *</div>
-                    <input type="number" id="wishlistFieldPrice" placeholder="e.g. 500" min="0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#c5a059;font-family:'Orbitron';font-size:0.8rem;outline:none;">
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:6px;">PRICE (COINS) *</div>
+                    <input type="number" id="wishlistFieldPrice" placeholder="e.g. 500" min="0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(var(--gold-rgb),0.2);border-radius:4px;color:var(--gold);font-family:'Orbitron';font-size:0.8rem;outline:none;">
                 </div>
 
                 <div style="margin-bottom:12px;">
-                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">CATEGORY</div>
-                    <input type="text" id="wishlistFieldCategory" placeholder="e.g. Food, Experience..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#fff;font-family:'Orbitron';font-size:0.7rem;outline:none;">
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:6px;">CATEGORY</div>
+                    <input type="text" id="wishlistFieldCategory" placeholder="e.g. Food, Experience..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(var(--gold-rgb),0.2);border-radius:4px;color:#fff;font-family:'Orbitron';font-size:0.7rem;outline:none;">
                 </div>
 
                 <div style="margin-bottom:12px;">
-                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:8px;">TYPE</div>
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:8px;">TYPE</div>
                     <div style="display:flex;gap:10px;">
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Orbitron';font-size:0.6rem;color:#fff;">
-                            <input type="radio" name="wishlistType" id="wishlistTypeGift" value="gift" checked style="accent-color:#c5a059;"> GIFT
+                            <input type="radio" name="wishlistType" id="wishlistTypeGift" value="gift" checked style="accent-color:var(--gold);"> GIFT
                         </label>
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Orbitron';font-size:0.6rem;color:#64b4ff;">
                             <input type="radio" name="wishlistType" id="wishlistTypeCrowdfund" value="crowdfund" style="accent-color:#64b4ff;"> CROWDFUND
@@ -127,13 +127,13 @@ function renderWishlistPanel() {
                 </div>
 
                 <div id="goalAmountRow" style="margin-bottom:16px;display:none;">
-                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">GOAL AMOUNT (COINS)</div>
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:6px;">GOAL AMOUNT (COINS)</div>
                     <input type="number" id="wishlistFieldGoal" placeholder="e.g. 10000" min="0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(100,180,255,0.2);border-radius:4px;color:#64b4ff;font-family:'Orbitron';font-size:0.8rem;outline:none;">
                 </div>
 
                 <div id="wishlistSaveErr" style="display:none;color:#ff4444;font-family:'Orbitron';font-size:0.55rem;margin-bottom:10px;"></div>
 
-                <button onclick="window.saveWishlistItem()" style="width:100%;padding:12px;background:linear-gradient(135deg,#c5a059,#8b6914);color:#000;font-family:'Orbitron';font-size:0.65rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;letter-spacing:2px;">SAVE ITEM</button>
+                <button onclick="window.saveWishlistItem()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#000;font-family:'Orbitron';font-size:0.65rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;letter-spacing:2px;">SAVE ITEM</button>
             </div>
         </div>
     `;
@@ -219,7 +219,7 @@ export async function handleWishlistImageSelect(input: HTMLInputElement) {
     if (!file) return;
 
     const preview = document.getElementById('wishlistImgPreview');
-    if (preview) preview.innerHTML = `<span style="color:#c5a059;font-family:'Orbitron';font-size:0.55rem;">UPLOADING...</span>`;
+    if (preview) preview.innerHTML = `<span style="color:var(--gold);font-family:'Orbitron';font-size:0.55rem;">UPLOADING...</span>`;
 
     const formData = new FormData();
     formData.append('file', file);

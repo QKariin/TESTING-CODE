@@ -35,11 +35,11 @@
     width: 82%;
     max-width: 1120px;
     height: 75vh;
-    border: 1px solid rgba(197, 160, 89, 0.28);
+    border: 1px solid rgba(var(--gold-rgb), 0.28);
     border-radius: 16px;
     overflow: hidden;
     pointer-events: auto;
-    box-shadow: 0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(197,160,89,0.06), 0 0 80px rgba(197,160,89,0.04);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(var(--gold-rgb),0.06), 0 0 80px rgba(var(--gold-rgb),0.04);
 }
 
 .m-media-box {
@@ -75,7 +75,7 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid rgba(197, 160, 89, 0.1);
+    border-left: 1px solid rgba(var(--gold-rgb), 0.1);
     order: 2;
     position: relative;
     background: linear-gradient(175deg, #0d0c0b 0%, #090607 100%);
@@ -104,7 +104,7 @@
     display: block;
     font-family: 'Orbitron', sans-serif;
     font-size: 0.42rem;
-    color: rgba(197,160,89,0.4);
+    color: rgba(var(--gold-rgb),0.4);
     letter-spacing: 3px;
     margin-bottom: 8px;
 }
@@ -122,7 +122,7 @@
     align-items: center;
     justify-content: flex-start;
     overflow-y: auto;
-    border-left: 1px solid rgba(197, 160, 89, 0.15);
+    border-left: 1px solid rgba(var(--gold-rgb), 0.15);
 }
 
 .m-text-scroll {
@@ -133,12 +133,12 @@
     width: 100%;
     margin-bottom: 16px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(197,160,89,0.15) transparent;
+    scrollbar-color: rgba(var(--gold-rgb),0.15) transparent;
 }
 
 .m-text-scroll::-webkit-scrollbar { width: 3px; }
 .m-text-scroll::-webkit-scrollbar-track { background: transparent; }
-.m-text-scroll::-webkit-scrollbar-thumb { background: rgba(197,160,89,0.2); border-radius: 2px; }
+.m-text-scroll::-webkit-scrollbar-thumb { background: rgba(var(--gold-rgb),0.2); border-radius: 2px; }
 
 .btn-main {
     width: 100%;
@@ -374,7 +374,7 @@
 .rw-inp {
     width: 100%;
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(197, 160, 89, 0.3);
+    border: 1px solid rgba(var(--gold-rgb), 0.3);
     color: var(--gold);
     font-family: 'Orbitron';
     padding: 8px 10px;
@@ -387,7 +387,7 @@
 
 .rw-inp:focus {
     border-color: var(--gold);
-    box-shadow: 0 0 8px rgba(197, 160, 89, 0.2);
+    box-shadow: 0 0 8px rgba(var(--gold-rgb), 0.2);
 }
 
 #broadcastModal .m-content {
@@ -880,21 +880,21 @@
     height: 68px !important;
     border-radius: 50% !important;
     padding: 0 !important;
-    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.1), rgba(197,160,89,0.04)) !important;
-    border: 1.5px solid rgba(197,160,89,0.35) !important;
+    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.1), rgba(var(--gold-rgb),0.04)) !important;
+    border: 1.5px solid rgba(var(--gold-rgb),0.35) !important;
     flex: 0 0 68px !important;
 }
 
 .merit-coin:hover {
-    border-color: rgba(197,160,89,0.7) !important;
-    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.18), rgba(197,160,89,0.1)) !important;
-    box-shadow: 0 0 18px rgba(197,160,89,0.2) !important;
+    border-color: rgba(var(--gold-rgb),0.7) !important;
+    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.18), rgba(var(--gold-rgb),0.1)) !important;
+    box-shadow: 0 0 18px rgba(var(--gold-rgb),0.2) !important;
 }
 
 .merit-coin.selected {
-    border-color: rgba(197,160,89,0.9) !important;
-    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.25), rgba(197,160,89,0.14)) !important;
-    box-shadow: 0 0 22px rgba(197,160,89,0.3), inset 0 0 12px rgba(197,160,89,0.08) !important;
+    border-color: rgba(var(--gold-rgb),0.9) !important;
+    background: radial-gradient(circle at 38% 32%, rgba(255,215,80,0.25), rgba(var(--gold-rgb),0.14)) !important;
+    box-shadow: 0 0 22px rgba(var(--gold-rgb),0.3), inset 0 0 12px rgba(var(--gold-rgb),0.08) !important;
 }
 
 .merit-coin-pts {
@@ -908,13 +908,13 @@
 .merit-coin-lbl {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.55rem;
-    color: rgba(197,160,89,0.55);
+    color: rgba(var(--gold-rgb),0.55);
     letter-spacing: 0.5px;
     margin-top: 3px;
 }
 
 .merit-coin.selected .merit-coin-pts {
-    text-shadow: 0 0 10px rgba(197,160,89,0.5);
+    text-shadow: 0 0 10px rgba(var(--gold-rgb),0.5);
 }
 
 .reward-tier-btn {
@@ -932,13 +932,13 @@
 
 .reward-tier-btn:hover {
     border-color: var(--gold);
-    background: rgba(197, 160, 89, 0.1);
+    background: rgba(var(--gold-rgb), 0.1);
 }
 
 .reward-tier-btn.selected {
     border-color: var(--gold);
-    background: rgba(197, 160, 89, 0.12);
-    box-shadow: 0 0 20px rgba(197, 160, 89, 0.25);
+    background: rgba(var(--gold-rgb), 0.12);
+    box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.25);
 }
 
 .rt-pts {
@@ -958,11 +958,11 @@
 
 .reward-tier-btn.selected .rt-pts {
     color: var(--gold);
-    text-shadow: 0 0 12px rgba(197, 160, 89, 0.6);
+    text-shadow: 0 0 12px rgba(var(--gold-rgb), 0.6);
 }
 
 .reward-tier-btn.selected .rt-lbl {
-    color: rgba(197, 160, 89, 0.8);
+    color: rgba(var(--gold-rgb), 0.8);
 }
 
 /* ── LUXURY REVIEW PANEL ─────────────────────────────────────────────── */
@@ -970,14 +970,14 @@
 .review-note-wrap {
     width: 100%;
     flex-shrink: 0;
-    border-top: 1px solid rgba(197, 160, 89, 0.08);
+    border-top: 1px solid rgba(var(--gold-rgb), 0.08);
     padding-top: 14px;
 }
 
 .review-note-label {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.45rem;
-    color: rgba(197, 160, 89, 0.4);
+    color: rgba(var(--gold-rgb), 0.4);
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 6px;
@@ -989,7 +989,7 @@
     max-height: 110px;
     resize: vertical;
     background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(197, 160, 89, 0.18);
+    border: 1px solid rgba(var(--gold-rgb), 0.18);
     color: rgba(255, 255, 255, 0.85);
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
@@ -1007,7 +1007,7 @@
 }
 
 #taskQuickNote:focus {
-    border-color: rgba(197, 160, 89, 0.45);
+    border-color: rgba(var(--gold-rgb), 0.45);
     background: rgba(0, 0, 0, 0.7);
 }
 
@@ -1016,7 +1016,7 @@
 .reward-protocol-header {
     font-family: 'Cinzel', serif;
     font-size: 0.6rem;
-    color: rgba(197, 160, 89, 0.5);
+    color: rgba(var(--gold-rgb), 0.5);
     letter-spacing: 4px;
     text-align: center;
     margin-bottom: 4px;
@@ -1032,7 +1032,7 @@
     letter-spacing: 3px;
     text-align: center;
     margin-bottom: 16px;
-    text-shadow: 0 0 30px rgba(197, 160, 89, 0.35);
+    text-shadow: 0 0 30px rgba(var(--gold-rgb), 0.35);
     width: 100%;
 }
 
@@ -1069,15 +1069,15 @@
 }
 
 .rw-confirm-btn.primary {
-    border: 1px solid rgba(197, 160, 89, 0.6);
-    background: rgba(197, 160, 89, 0.12);
+    border: 1px solid rgba(var(--gold-rgb), 0.6);
+    background: rgba(var(--gold-rgb), 0.12);
     color: var(--gold);
-    box-shadow: 0 0 10px rgba(197, 160, 89, 0.12);
+    box-shadow: 0 0 10px rgba(var(--gold-rgb), 0.12);
 }
 
 .rw-confirm-btn.primary:hover {
-    background: rgba(197, 160, 89, 0.22);
-    box-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
+    background: rgba(var(--gold-rgb), 0.22);
+    box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.3);
     transform: translateY(-1px);
 }
 

@@ -14,7 +14,7 @@
 
 :root {
     --pink: #ff00de;
-    --gold: #c5a059;
+    --gold: var(--gold);
     --gold-dim: rgba(255, 215, 0, 0.3);
     --panel-bg: rgba(10, 10, 10, 0.95);
     --border: #333;
@@ -75,7 +75,7 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid #c5a059;
+    border: 1px solid var(--gold);
     /* Gold Border */
 }
 
@@ -113,7 +113,7 @@
 .rh-status-text {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.6rem;
-    color: #c5a059;
+    color: var(--gold);
     /* Gold text */
     letter-spacing: 1px;
     margin-top: 2px;
@@ -133,9 +133,9 @@
     width: 100%;
     padding: 8px 0;
     background: rgba(10, 10, 10, 0.95);
-    border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.3);
     /* Gold Line */
-    color: #c5a059;
+    color: var(--gold);
     font-family: 'Orbitron', sans-serif;
     font-size: 0.65rem;
     text-align: center;
@@ -161,11 +161,11 @@
     0% {
         color: #fff;
         text-shadow: 0 0 10px #fff;
-        background: rgba(197, 160, 89, 0.2);
+        background: rgba(var(--gold-rgb), 0.2);
     }
 
     100% {
-        color: #c5a059;
+        color: var(--gold);
         background: rgba(10, 10, 10, 0.95);
     }
 }
@@ -214,7 +214,7 @@
 }
 
 .chat-input:focus {
-    border-color: #c5a059;
+    border-color: var(--gold);
     color: #fff;
 }
 
@@ -251,7 +251,7 @@
 
 /* OTHER BUTTONS */
 .chat-btn-send {
-    color: #c5a059;
+    color: var(--gold);
     font-family: 'Rajdhani', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
@@ -433,7 +433,7 @@
     height: 34px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid rgba(197,160,89,0.4);
+    border: 1px solid rgba(var(--gold-rgb),0.4);
     flex-shrink: 0;
     align-self: flex-end;
     margin-bottom: 20px;
@@ -454,8 +454,8 @@
 
 #chatContent .cb-queen {
     background: #000;
-    box-shadow: 0 0 0 1px rgba(197,160,89,0.6),
-                inset 0 0 20px rgba(197,160,89,0.04);
+    box-shadow: 0 0 0 1px rgba(var(--gold-rgb),0.6),
+                inset 0 0 20px rgba(var(--gold-rgb),0.04);
     color: #fff;
     font-family: 'Cinzel', serif;
     font-size: 0.88rem;
@@ -486,7 +486,7 @@
     letter-spacing: 0.8px;
     margin-top: 4px;
 }
-#chatContent .chat-ts-left  { color: rgba(197,160,89,0.45); text-align: left; }
+#chatContent .chat-ts-left  { color: rgba(var(--gold-rgb),0.45); text-align: left; }
 #chatContent .chat-ts-right { color: #444; text-align: right; }
 
 #chatContent .chat-gift-wrap {
@@ -500,7 +500,7 @@
     border-radius: 12px;
     overflow: hidden;
     background: #0a0a14;
-    border: 1px solid rgba(197,160,89,0.35);
+    border: 1px solid rgba(var(--gold-rgb),0.35);
     box-shadow: 0 6px 24px rgba(0,0,0,0.5);
 }
 #chatContent .chat-gift-img {
@@ -516,12 +516,12 @@
     top: 7px;
     right: 7px;
     background: rgba(5,5,20,0.9);
-    border: 1px solid rgba(197,160,89,0.6);
+    border: 1px solid rgba(var(--gold-rgb),0.6);
     border-radius: 20px;
     padding: 3px 8px;
     font-family: 'Orbitron', sans-serif;
     font-size: 0.6rem;
-    color: #c5a059;
+    color: var(--gold);
     font-weight: 700;
     letter-spacing: 1px;
 }
@@ -529,7 +529,7 @@
 #chatContent .chat-gift-label {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.45rem;
-    color: rgba(197,160,89,0.5);
+    color: rgba(var(--gold-rgb),0.5);
     letter-spacing: 2px;
     margin-bottom: 4px;
 }
@@ -593,7 +593,7 @@
     .chat-back {
         background: none;
         border: none;
-        color: #c5a059;
+        color: var(--gold);
         font-size: 1.5rem;
         padding: 0 10px;
         cursor: pointer;
@@ -616,7 +616,7 @@
         height: 100%;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid #c5a059;
+        border: 1px solid var(--gold);
     }
 
     .status-dot {
@@ -740,8 +740,8 @@
     }
 
     .store-item.selected {
-        border-color: #c5a059;
-        box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+        border-color: var(--gold);
+        box-shadow: 0 0 15px rgba(var(--gold-rgb), 0.3);
         transform: scale(0.98);
     }
 
@@ -770,7 +770,7 @@
     .store-price {
         font-family: 'Orbitron', sans-serif;
         font-size: 0.8rem;
-        color: #c5a059;
+        color: var(--gold);
         font-weight: bold;
     }
 

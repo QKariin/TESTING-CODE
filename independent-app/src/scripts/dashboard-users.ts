@@ -144,7 +144,7 @@ export async function updateDetail(u: any) {
                 const target = r.target || 1;
                 const pct = Math.min((current / target) * 100, 100);
                 const isDone = current >= target;
-                const color = isDone ? "#00ff00" : "#c5a059";
+                const color = isDone ? "#00ff00" : "var(--gold)";
 
                 // No icons — label only
 
@@ -241,9 +241,9 @@ export async function updateDetail(u: any) {
         const limits = u.limits || '';
         if (kinks || limits) {
             kinksLimitsEl.innerHTML = `
-                <div style="border:1px solid rgba(197,160,89,0.15); border-radius:4px; overflow:hidden;">
-                    ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(197,160,89,0.1)' : 'none'}">
-                        <div style="font-size:0.5rem; color:#c5a059; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
+                <div style="border:1px solid rgba(var(--gold-rgb),0.15); border-radius:4px; overflow:hidden;">
+                    ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(var(--gold-rgb),0.1)' : 'none'}">
+                        <div style="font-size:0.5rem; color:var(--gold); font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${kinks}</div>
                     </div>` : ''}
                     ${limits ? `<div style="padding:10px; background:rgba(255,68,68,0.03);">
@@ -290,7 +290,7 @@ function renderKneelSection(u: any) {
     const isOverGoal = todayCount >= GOAL;
     const display = isOverGoal ? `${todayCount} / ${MAX}` : `${todayCount} / ${GOAL}`;
     const pct = Math.min((todayCount / (isOverGoal ? MAX : GOAL)) * 100, 100);
-    const barColor = isOverGoal ? 'linear-gradient(90deg,#c5a059,#f0d080)' : '#c5a059';
+    const barColor = isOverGoal ? 'linear-gradient(90deg,var(--gold),#f0d080)' : 'var(--gold)';
 
     // Build hour dots from kneelHistory timestamps
     const rawHistory = u.kneelHistory || u.kneel_history;
@@ -307,8 +307,8 @@ function renderKneelSection(u: any) {
     for (let h = 0; h < 24; h++) {
         const lit = kneelHours.has(h);
         const dim = !lit && h < currentHour;
-        const bg = lit ? '#c5a059' : dim ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
-        const shadow = lit ? '0 0 6px rgba(197,160,89,0.6)' : 'none';
+        const bg = lit ? 'var(--gold)' : dim ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
+        const shadow = lit ? '0 0 6px rgba(var(--gold-rgb),0.6)' : 'none';
         const border = lit ? '1px solid #f0d080' : dim ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.06)';
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
@@ -319,17 +319,17 @@ function renderKneelSection(u: any) {
     const statusText = isLocked ? `LOCKED  ${minLeft}m` : 'AVAILABLE';
 
     el.innerHTML = `
-        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(197,160,89,0.12);border-radius:6px;padding:12px 14px;">
+        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(var(--gold-rgb),0.12);border-radius:6px;padding:12px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <span style="font-family:'Orbitron';font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
                 <span style="font-family:'Orbitron';font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Orbitron';letter-spacing:1px;margin-bottom:5px;">
                 <span style="color:#555;">TODAY</span>
-                <span style="color:${isOverGoal ? '#c5a059' : '#666'}">${display}</span>
+                <span style="color:${isOverGoal ? 'var(--gold)' : '#666'}">${display}</span>
             </div>
             <div style="width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:10px;">
-                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(197,160,89,0.4);' : ''}"></div>
+                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(var(--gold-rgb),0.4);' : ''}"></div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">
                 ${dotsHtml}
@@ -379,9 +379,9 @@ function renderTelemetry(u: any) {
     ];
 
     container.innerHTML = rows.map(r => `
-        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(197,160,89,0.1);">
+        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(var(--gold-rgb),0.1);">
             <div style="color:#666; font-size:0.5rem; font-family:'Orbitron'; margin-bottom:2px;">${r.label}</div>
-            <div style="color:#c5a059; font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
+            <div style="color:var(--gold); font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
         </div>
     `).join('');
     // drawer open/close is controlled by the header click handler only
@@ -424,7 +424,7 @@ async function updateReviewQueue(u: any) {
                 ? (t.thumbnail_url
                     ? `<img src="${getOptimizedUrl(t.thumbnail_url, 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'" style="object-fit:cover;">`
                     : `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
-                         <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                         <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                        </div>`)
                 : `<img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
 
@@ -565,8 +565,8 @@ export function updateTaskQueue(u: any) {
     let personalTasks = u.task_queue || u.taskQueue || u.queue || [];
 
     listContainer.innerHTML = `
-        <div class="mini-active" style="border:1px solid rgba(197,160,89,0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(197,160,89,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
-            <div style="font-family:'Orbitron', sans-serif; font-size:1.5rem; color:#c5a059; margin-bottom:5px;">${personalTasks.length}</div>
+        <div class="mini-active" style="border:1px solid rgba(var(--gold-rgb),0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(var(--gold-rgb),0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+            <div style="font-family:'Orbitron', sans-serif; font-size:1.5rem; color:var(--gold); margin-bottom:5px;">${personalTasks.length}</div>
             <div style="font-family:'Cinzel', serif; font-size:0.7rem; color:#aaa; letter-spacing:2px;">SCHEDULED DIRECTIVES</div>
             <div style="font-family:'Rajdhani', sans-serif; font-size:0.65rem; color:#666; margin-top:10px; text-transform:uppercase; letter-spacing:1px;">Tap to view full queue &rarr;</div>
         </div>

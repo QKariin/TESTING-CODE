@@ -26,7 +26,7 @@ import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
 
 // ── Theme system ────────────────────────────────────────────────────────────
 const THEMES = {
-    gold:    { id: 'gold'    as const, label: 'GOLD',    hex: '#c5a059', dim: '#8b6914', rgb: '197,160,89'  },
+    gold:    { id: 'gold'    as const, label: 'GOLD',    hex: 'var(--gold)', dim: 'var(--gold-dark)', rgb: '197,160,89'  },
     crimson: { id: 'crimson' as const, label: 'CRIMSON', hex: '#dc2626', dim: '#991b1b', rgb: '220,38,38'   },
     violet:  { id: 'violet'  as const, label: 'VIOLET',  hex: '#7c3aed', dim: '#5b21b6', rgb: '124,58,237'  },
     rose:    { id: 'rose'    as const, label: 'ROSE',    hex: '#ec4899', dim: '#be185d', rgb: '236,72,153'  },
@@ -84,10 +84,10 @@ function buildGlMsgHtml(msg: any): string {
     const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const name = msg.sender_name || 'SUBJECT';
     const av = msg.sender_avatar;
-    const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
+    const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="var(--gold)" style="flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
-    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;"><div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">${(msg.reply_to.sender_name||'').replace(/</g,'&lt;')}</div><div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content||'').slice(0,60).replace(/</g,'&lt;')}</div></div>` : '';
+    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(var(--gold-rgb),0.5);padding:3px 8px;margin-bottom:5px;background:rgba(var(--gold-rgb),0.05);border-radius:0 4px 4px 0;"><div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:1px;margin-bottom:2px;">${(msg.reply_to.sender_name||'').replace(/</g,'&lt;')}</div><div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content||'').slice(0,60).replace(/</g,'&lt;')}</div></div>` : '';
 
     // PROMOTION CARD
     if (content.startsWith('PROMOTION_CARD::')) {
@@ -95,8 +95,8 @@ function buildGlMsgHtml(msg: any): string {
             const d = JSON.parse(content.replace('PROMOTION_CARD::',''));
             const ini = (d.name||'S')[0].toUpperCase();
             const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-            const photoFallback = `<div style="${d.photo?'display:none;':''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:56px;height:56px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:130px;background:#0a0703;overflow:hidden;">${photoBlock}${photoFallback}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${d.name||''}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span><span style="color:rgba(197,160,89,0.7);">→</span><span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+            const photoFallback = `<div style="${d.photo?'display:none;':''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(var(--gold-rgb),0.08),rgba(var(--gold-rgb),0.02));"><div style="width:56px;height:56px;border-radius:50%;border:1px solid rgba(var(--gold-rgb),0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(var(--gold-rgb),0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:130px;background:#0a0703;overflow:hidden;">${photoBlock}${photoFallback}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(var(--gold-rgb),0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${d.name||''}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(var(--gold-rgb),0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span><span style="color:rgba(var(--gold-rgb),0.7);">→</span><span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -154,7 +154,7 @@ function buildGlMsgHtml(msg: any): string {
             const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::',''));
             const ini = (d.senderName||'S')[0].toUpperCase();
             const coverSrc = d.image || d.senderAvatar || '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">${coverSrc?`<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2rem;color:rgba(197,160,89,0.4);">${ini}</div>`}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div><div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div></div><div style="padding:10px 14px 12px;"><div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"><span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div></div></div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(var(--gold-rgb),0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">${coverSrc?`<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2rem;color:rgba(var(--gold-rgb),0.4);">${ini}</div>`}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div><div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(var(--gold-rgb),0.75);letter-spacing:2px;">✦ GIFT SENT</div></div><div style="padding:10px 14px 12px;"><div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"><span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div></div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -162,13 +162,13 @@ function buildGlMsgHtml(msg: any): string {
     if (content.startsWith('UPDATE_PHOTO_CARD::')) {
         try {
             const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::',''));
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'"><div style="padding:10px 14px 12px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:'Cinzel';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.35);">${time}</span></div>${d.caption?`<div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>`:''}</div></div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(var(--gold-rgb),0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'"><div style="padding:10px 14px 12px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:'Cinzel';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.35);">${time}</span></div>${d.caption?`<div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>`:''}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
     // GIF
     if ((msg.media_type === 'gif' || (msg.message === '[GIF]' && msg.media_url)) && msg.media_url) {
-        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:65%;min-width:180px;max-width:320px;"><div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 30px rgba(0,0,0,0.8);"><div style="width:100%;overflow:hidden;background:#0a0703;"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:200px;object-fit:contain;" /></div><div style="padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(197,160,89,0.1);"><div style="font-family:'Cinzel',serif;font-size:0.78rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:3px;letter-spacing:1px;">${time}</div></div></div>`;
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:65%;min-width:180px;max-width:320px;"><div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(var(--gold-rgb),0.35);box-shadow:0 10px 30px rgba(0,0,0,0.8);"><div style="width:100%;overflow:hidden;background:#0a0703;"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:200px;object-fit:contain;" /></div><div style="padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(var(--gold-rgb),0.1);"><div style="font-family:'Cinzel',serif;font-size:0.78rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:3px;letter-spacing:1px;">${time}</div></div></div>`;
     }
 
     // Skip SYSTEM messages
@@ -183,14 +183,14 @@ function buildGlMsgHtml(msg: any): string {
 
     // Queen bubble
     if (isQueen) {
-        const qAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
-        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
+        const qAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(var(--gold-rgb),0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(var(--gold-rgb),0.7);flex-shrink:0;">`;
+        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(var(--gold-rgb),0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(var(--gold-rgb),0.75);border-radius:10px;box-shadow:0 0 14px rgba(var(--gold-rgb),0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(var(--gold-rgb),0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
     }
 
     // Regular user bubble
     const initial = (name[0]||'S').toUpperCase();
-    const userAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
-    return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
+    const userAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(var(--gold-rgb),0.35);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(var(--gold-rgb),0.12);border:1px solid rgba(var(--gold-rgb),0.25);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
+    return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(var(--gold-rgb),0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
 }
 
 function LeadsPanel() {
@@ -326,7 +326,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                     onChange={e => setText(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && send()}
                     placeholder="Send to global..."
-                    style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }}
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(var(--gold-rgb),0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }}
                 />
                 <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
                     SEND
@@ -372,8 +372,8 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
     };
 
     const isPaywall = tab === 'paywall';
-    const accentColor = isPaywall ? '#c5a059' : '#e03030';
-    const borderColor = isPaywall ? 'rgba(197,160,89,0.3)' : 'rgba(200,40,40,0.35)';
+    const accentColor = isPaywall ? 'var(--gold)' : '#e03030';
+    const borderColor = isPaywall ? 'rgba(var(--gold-rgb),0.3)' : 'rgba(200,40,40,0.35)';
 
     return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -388,7 +388,7 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-                    <button onClick={() => switchTab('paywall')} style={{ flex: 1, padding: '10px', background: isPaywall ? 'rgba(197,160,89,0.12)' : 'transparent', border: `1px solid ${isPaywall ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: isPaywall ? '#c5a059' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                    <button onClick={() => switchTab('paywall')} style={{ flex: 1, padding: '10px', background: isPaywall ? 'rgba(var(--gold-rgb),0.12)' : 'transparent', border: `1px solid ${isPaywall ? 'rgba(var(--gold-rgb),0.5)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: isPaywall ? 'var(--gold)' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
                         PAYWALL
                     </button>
                     <button onClick={() => switchTab('silence')} style={{ flex: 1, padding: '10px', background: !isPaywall ? 'rgba(200,40,40,0.1)' : 'transparent', border: `1px solid ${!isPaywall ? 'rgba(200,40,40,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: !isPaywall ? '#e03030' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
@@ -407,7 +407,7 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
                 {isPaywall && (
                     <div style={{ marginBottom: 20 }}>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT (€)</div>
-                        <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
+                        <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(var(--gold-rgb),0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
                     </div>
                 )}
 
@@ -764,13 +764,13 @@ export default function DashboardPage() {
                 const senderName = (msg.member_id || 'slave').split('@')[0];
                 const msgType = msg.type || 'text';
                 if (msgType === 'wishlist') {
-                    (window as any).pushActivity?.('💎', `${senderName} sent a tribute`, '#c5a059');
+                    (window as any).pushActivity?.('💎', `${senderName} sent a tribute`, 'var(--gold)');
                 } else if (msgType === 'photo') {
-                    (window as any).pushActivity?.('📸', `${senderName} sent a photo`, '#c5a059');
+                    (window as any).pushActivity?.('📸', `${senderName} sent a photo`, 'var(--gold)');
                 } else if (msgType === 'video') {
-                    (window as any).pushActivity?.('🎥', `${senderName} sent a video`, '#c5a059');
+                    (window as any).pushActivity?.('🎥', `${senderName} sent a video`, 'var(--gold)');
                 } else {
-                    (window as any).pushActivity?.('💬', `${senderName} sent a message`, 'rgba(197,160,89,0.7)');
+                    (window as any).pushActivity?.('💬', `${senderName} sent a message`, 'rgba(var(--gold-rgb),0.7)');
                 }
             })
             .subscribe();
@@ -792,17 +792,27 @@ export default function DashboardPage() {
             <style>{`
                 :root {
                     --gold: ${t.hex};
-                    --gold-dim: ${t.dim};
+                    --gold-dark: ${t.dim};
+                    --gold-rgb: ${t.rgb};
                 }
                 .ops-card.task { border-color: ${ac(0.22)} !important; background: linear-gradient(135deg, ${ac(0.07)}, rgba(0,0,0,0.8)) !important; }
                 .ops-card.routine { border-color: ${ac(0.12)} !important; background: linear-gradient(135deg, ${ac(0.04)}, rgba(0,0,0,0.8)) !important; }
                 .ops-card:hover { border-color: ${t.hex} !important; box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px ${ac(0.18)} !important; }
-                .ops-counter.gold { background: linear-gradient(to bottom, #fff, ${t.hex}); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-                .ops-counter.silver { background: linear-gradient(to bottom, #fff, ${ac(0.6)}); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+                .ops-counter.gold { background: linear-gradient(to bottom, #fff, ${t.hex}) !important; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+                .ops-counter.silver { background: linear-gradient(to bottom, #fff, ${ac(0.6)}) !important; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
                 .sb-dash-btn:hover { color: ${t.hex} !important; box-shadow: inset 3px 0 0 ${t.hex} !important; }
                 .v-gauge-card:hover { border-color: ${ac(0.5)} !important; }
                 .v-best-sub:hover { border-color: ${ac(0.5)} !important; }
                 .v-hero-card { border-color: ${ac(0.2)} !important; }
+                .v-feed-card, .v-monitor-card { border-color: ${ac(0.15)} !important; }
+                .glass-card { border-color: ${ac(0.15)} !important; }
+                .sidebar { border-right-color: ${ac(0.08)} !important; }
+                [class*="chat"] .bubble-out, .msg-out { background: linear-gradient(135deg, ${t.hex}, ${t.dim}) !important; }
+                .chat-header, .dc-header { border-bottom-color: ${ac(0.12)} !important; }
+                input:focus, textarea:focus { border-color: ${ac(0.4)} !important; box-shadow: 0 0 0 2px ${ac(0.12)} !important; }
+                .btn-primary, button[class*="gold"] { background: ${t.hex} !important; }
+                scrollbar-color: ${ac(0.3)} transparent;
+                ::-webkit-scrollbar-thumb { background: ${ac(0.25)} !important; }
             `}</style>
 
             {/* MOBILE TOP BAR */}
@@ -814,7 +824,7 @@ export default function DashboardPage() {
             {/* SIDEBAR */}
             <div className="sidebar">
                 {/* Brand */}
-                <div style={{ padding:'18px 16px 12px', borderBottom:'1px solid rgba(197,160,89,0.1)', display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ padding:'18px 16px 12px', borderBottom:'1px solid rgba(var(--gold-rgb),0.1)', display:'flex', alignItems:'center', gap:10 }}>
                     <div style={{ width:32, height:32, borderRadius:'50%', background:`linear-gradient(135deg,${t.hex},${t.dim})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>♛</div>
                     <div>
                         <div style={{ fontFamily:'Cinzel', fontSize:'0.8rem', color:t.hex, fontWeight:700, letterSpacing:'1px' }}>COMMAND</div>
@@ -984,7 +994,7 @@ export default function DashboardPage() {
                     <div className="v-grid-main">
                         {/* HERO CARD */}
                         <div className="v-hero-card glass-card span-2"
-                            style={{ backgroundImage: `linear-gradient(rgba(15, 12, 5, 0.2), rgba(5, 5, 10, 0.9)), url('/hero-bg.png')`, border: '1px solid rgba(197, 160, 89, 0.2)' }}>
+                            style={{ backgroundImage: `linear-gradient(rgba(15, 12, 5, 0.2), rgba(5, 5, 10, 0.9)), url('/hero-bg.png')`, border: '1px solid rgba(var(--gold-rgb), 0.2)' }}>
                             <div className="vh-content">
                                 <div className="vh-title">Welcome back,<br />Queen Karin</div>
                                 <div className="vh-sub" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -1004,12 +1014,12 @@ export default function DashboardPage() {
                         {/* CHALLENGES WIDGET */}
                         <div className="v-gauge-card glass-card span-1"
                             onClick={() => setShowChallenges(true)}
-                            style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', padding: 0, overflow: 'hidden' }}
-                            onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(197,160,89,0.4)')}
-                            onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)')}>
+                            style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(var(--gold-rgb),0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(var(--gold-rgb),0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', padding: 0, overflow: 'hidden' }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(var(--gold-rgb),0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(var(--gold-rgb),0.4)')}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(var(--gold-rgb),0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(var(--gold-rgb),0.15)')}>
                             <div className="vg-header" style={{ padding: '12px 16px 10px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>CHALLENGES</div>
+                                    <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? 'var(--gold)' : '#4ade80') : 'var(--gold)' }}>CHALLENGES</div>
                                     {pendingVerificationCount > 0 && (
                                         <span style={{ background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.36rem', fontWeight: 700, letterSpacing: '0.5px' }}>
                                             {pendingVerificationCount} TO VALIDATE
@@ -1019,9 +1029,9 @@ export default function DashboardPage() {
                                 <div className="vg-sub" style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); setShowChallenges(true); }}>MANAGE ↗</div>
                             </div>
                             {challengeWidget ? (
-                                <div style={{ display: 'flex', gap: 0, borderTop: `1px solid ${challengeWidget.isUpcoming ? 'rgba(197,160,89,0.15)' : 'rgba(74,222,128,0.1)'}` }}>
+                                <div style={{ display: 'flex', gap: 0, borderTop: `1px solid ${challengeWidget.isUpcoming ? 'rgba(var(--gold-rgb),0.15)' : 'rgba(74,222,128,0.1)'}` }}>
                                     {/* Image */}
-                                    <div style={{ width: 120, flexShrink: 0, position: 'relative', background: 'rgba(197,160,89,0.04)', minHeight: 200 }}>
+                                    <div style={{ width: 120, flexShrink: 0, position: 'relative', background: 'rgba(var(--gold-rgb),0.04)', minHeight: 200 }}>
                                         {challengeWidget.image_url
                                             ? <img src={challengeWidget.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }} alt={challengeWidget.name} />
                                             : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.15 }}>★</div>
@@ -1047,11 +1057,11 @@ export default function DashboardPage() {
                                             ].map(({ label, val }) => (
                                                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.38)' }}>{label}</span>
-                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
+                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(var(--gold-rgb),0.9)', fontWeight: 700 }}>{val}</span>
                                                 </div>
                                             ))}
                                         </div>
-                                        <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(197,160,89,0.3)' }}>
+                                        <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(var(--gold-rgb),0.3)' }}>
                                             {challengeWidget.isUpcoming ? 'VIEW CHALLENGE' : 'MANAGE CHALLENGE'}
                                         </div>
                                     </div>
@@ -1060,23 +1070,23 @@ export default function DashboardPage() {
                                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px 16px' }}>
                                     <div style={{ fontSize: '2rem', opacity: 0.3 }}>★</div>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#333', letterSpacing: '2px', textAlign: 'center' }}>NO ACTIVE CHALLENGE</div>
-                                    <div style={{ padding: '8px 18px', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>CREATE ONE ↗</div>
+                                    <div style={{ padding: '8px 18px', border: '1px solid rgba(var(--gold-rgb),0.25)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'var(--gold)', letterSpacing: '2px' }}>CREATE ONE ↗</div>
                                 </div>
                             )}
                         </div>
 
                         {/* ENTER GLOBAL */}
-                        <div className="v-best-sub glass-card span-1" onClick={() => window.location.href = '/global'} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
+                        <div className="v-best-sub glass-card span-1" onClick={() => window.location.href = '/global'} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(var(--gold-rgb),0.06), rgba(var(--gold-rgb),0.02))', border: '1px solid rgba(var(--gold-rgb),0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(var(--gold-rgb),0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(var(--gold-rgb),0.22)')}>
                             <div className="vb-header">
-                                <div className="vb-title" style={{ fontFamily: 'Cinzel', color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
+                                <div className="vb-title" style={{ fontFamily: 'Cinzel', color: 'var(--gold)', letterSpacing: '2px' }}>GLOBAL</div>
                                 <div className="vb-sub">Community Hub</div>
                             </div>
                             <div className="vb-content">
-                                <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: 'rgba(197,160,89,0.06)', boxShadow: '0 0 24px rgba(197,160,89,0.12)' }}>
-                                    <span style={{ fontSize: '1.6rem', color: '#c5a059', opacity: 0.85 }}>◎</span>
+                                <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(var(--gold-rgb),0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: 'rgba(var(--gold-rgb),0.06)', boxShadow: '0 0 24px rgba(var(--gold-rgb),0.12)' }}>
+                                    <span style={{ fontSize: '1.6rem', color: 'var(--gold)', opacity: 0.85 }}>◎</span>
                                 </div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
-                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER ↗</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(var(--gold-rgb),0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
+                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(var(--gold-rgb),0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'var(--gold)', letterSpacing: '2px', background: 'rgba(var(--gold-rgb),0.08)' }}>ENTER ↗</div>
                             </div>
                         </div>
 
@@ -1087,8 +1097,8 @@ export default function DashboardPage() {
                         <div className="v-feed-card glass-card span-2">
                             <div className="vf-header">Revenue & Intel Stream</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px 14px' }}>
-                                <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
+                                <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(var(--gold-rgb),0.06)', border: '1px solid rgba(var(--gold-rgb),0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'var(--gold)', letterSpacing: '2px' }}>WISHLIST</div>
                                 </div>
                                 <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
@@ -1101,9 +1111,9 @@ export default function DashboardPage() {
 
                         {/* EXCHEQUER — COIN TRANSACTION LOG */}
                         <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '180px', overflow: 'hidden' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(var(--gold-rgb),0.12)', flexShrink: 0 }}>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: 'var(--gold)', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(var(--gold-rgb),0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
                             </div>
                             <div id="exchequerLog" style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
                                 <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
@@ -1118,13 +1128,13 @@ export default function DashboardPage() {
                 {/* POSTS VIEW */}
                 <div id="viewPosts" style={{ display: 'none', flexDirection: 'column', gap: '25px', padding: '30px', overflowY: 'auto', height: '100%' }}>
                     <div style={{ borderBottom: '1px solid #222', paddingBottom: '20px' }}>
-                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#c5a059', letterSpacing: '4px', marginBottom: '5px' }}>QUEEN'S DISPATCH</div>
+                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: 'var(--gold)', letterSpacing: '4px', marginBottom: '5px' }}>QUEEN'S DISPATCH</div>
                         <div style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555', letterSpacing: '2px' }}>PUBLISH POSTS · VISIBLE TO ALL SUBJECTS</div>
                     </div>
 
                     {/* COMPOSE */}
-                    <div id="postComposeForm" style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px', marginBottom: '5px' }}>NEW POST</div>
+                    <div id="postComposeForm" style={{ background: 'rgba(var(--gold-rgb),0.04)', border: '1px solid rgba(var(--gold-rgb),0.2)', borderRadius: '8px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: 'var(--gold)', letterSpacing: '3px', marginBottom: '5px' }}>NEW POST</div>
                         <input
                             id="postTitleInput"
                             type="text"
@@ -1180,11 +1190,11 @@ export default function DashboardPage() {
                                     <button key={t} id={`postMediaType_${t}`} onClick={() => {
                                         ['text','photo','video'].forEach(x => {
                                             const b = document.getElementById(`postMediaType_${x}`) as HTMLButtonElement;
-                                            if (b) { b.style.background = x === t ? 'rgba(197,160,89,0.2)' : '#111'; b.style.color = x === t ? '#c5a059' : '#666'; b.style.borderColor = x === t ? 'rgba(197,160,89,0.4)' : '#333'; }
+                                            if (b) { b.style.background = x === t ? 'rgba(var(--gold-rgb),0.2)' : '#111'; b.style.color = x === t ? 'var(--gold)' : '#666'; b.style.borderColor = x === t ? 'rgba(var(--gold-rgb),0.4)' : '#333'; }
                                         });
                                         const inp = document.getElementById('postMediaTypeValue') as HTMLInputElement;
                                         if (inp) inp.value = t;
-                                    }} style={{ background: t === 'text' ? 'rgba(197,160,89,0.2)' : '#111', border: `1px solid ${t === 'text' ? 'rgba(197,160,89,0.4)' : '#333'}`, color: t === 'text' ? '#c5a059' : '#666', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '6px 14px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', textTransform: 'uppercase' }}>{t}</button>
+                                    }} style={{ background: t === 'text' ? 'rgba(var(--gold-rgb),0.2)' : '#111', border: `1px solid ${t === 'text' ? 'rgba(var(--gold-rgb),0.4)' : '#333'}`, color: t === 'text' ? 'var(--gold)' : '#666', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '6px 14px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', textTransform: 'uppercase' }}>{t}</button>
                                 ))}
                             </div>
                             <input type="hidden" id="postMediaTypeValue" defaultValue="text" />
@@ -1192,14 +1202,14 @@ export default function DashboardPage() {
 
                         {/* Published toggle */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <input type="checkbox" id="postIsPublished" defaultChecked style={{ accentColor: '#c5a059', width: '16px', height: '16px', cursor: 'pointer' }} />
+                            <input type="checkbox" id="postIsPublished" defaultChecked style={{ accentColor: 'var(--gold)', width: '16px', height: '16px', cursor: 'pointer' }} />
                             <label htmlFor="postIsPublished" style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#888', letterSpacing: '2px', cursor: 'pointer' }}>PUBLISH IMMEDIATELY</label>
                         </div>
 
                         <button
                             id="postSubmitBtn"
                             onClick={() => (window as any).submitQueenPost()}
-                            style={{ background: '#c5a059', color: '#000', border: 'none', fontFamily: 'Cinzel', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '4px', padding: '14px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.3s' }}
+                            style={{ background: 'var(--gold)', color: '#000', border: 'none', fontFamily: 'Cinzel', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '4px', padding: '14px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.3s' }}
                         >PUBLISH</button>
                     </div>
 
@@ -1264,8 +1274,8 @@ export default function DashboardPage() {
                                             onInput={() => (window as any).filterTaskGallery()}
                                             style={{
                                                 background: 'rgba(0,0,0,0.5)',
-                                                border: '1px solid rgba(197,160,89,0.2)',
-                                                color: '#c5a059',
+                                                border: '1px solid rgba(var(--gold-rgb),0.2)',
+                                                color: 'var(--gold)',
                                                 fontFamily: 'Orbitron',
                                                 fontSize: '0.6rem',
                                                 padding: '5px 10px',
@@ -1279,8 +1289,8 @@ export default function DashboardPage() {
 
                                 <div className="task-gallery-split" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', height: 'calc(100% - 60px)', overflow: 'hidden', position: 'relative' }}>
                                     {/* LEFT: COMMAND QUEUE (10 TASKS) */}
-                                    <div className="command-queue-section" style={{ borderRight: '1px solid rgba(197,160,89,0.1)', padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)' }}>
-                                        <div style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
+                                    <div className="command-queue-section" style={{ borderRight: '1px solid rgba(var(--gold-rgb),0.1)', padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)' }}>
+                                        <div style={{ fontFamily: 'Orbitron', color: 'var(--gold)', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
                                         <div id="armoryLiveQueue" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {/* Scheduled tasks go here */}
                                         </div>
@@ -1366,7 +1376,7 @@ export default function DashboardPage() {
                                 <div id="dashSystemLogContent" className="dash-syslog-body"></div>
                             </div>
 
-                            <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
+                            <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(var(--gold-rgb),0.2)' }}></div>
 
                             <div className="c-foot">
                                 <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
@@ -1398,7 +1408,7 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="ap-vitals-mirror" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
-                                <div id="telemetry_section" style={{ marginBottom: '30px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: '8px', overflow: 'hidden' }}>
+                                <div id="telemetry_section" style={{ marginBottom: '30px', background: 'rgba(var(--gold-rgb),0.03)', border: '1px solid rgba(var(--gold-rgb),0.1)', borderRadius: '8px', overflow: 'hidden' }}>
                                     <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', cursor: 'pointer', userSelect: 'none' as any }}>
                                         <span style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px' }}>ACTIVE TELEMETRY</span>
                                         <span id="telemetry_arrow" style={{ color: '#555', fontSize: '1rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
@@ -1410,7 +1420,7 @@ export default function DashboardPage() {
 
                                 <div id="progress_section" style={{ marginBottom: '30px' }}>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center' }}>PROMOTION PROGRESS</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#c5a059', textAlign: 'center', margin: '10px 0' }}>LOADING...</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: 'var(--gold)', textAlign: 'center', margin: '10px 0' }}>LOADING...</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
@@ -1423,7 +1433,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="footer-stats" style={{ borderTop: '1px solid rgba(197,160,89,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
+                                <div className="footer-stats" style={{ borderTop: '1px solid rgba(var(--gold-rgb),0.2)', paddingTop: '20px', marginTop: 'auto' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                                         <span style={{ color: '#666', fontSize: '0.7rem' }}>REGISTERED SINCE:</span>
                                         <strong id="dMirrorSlaveSince" style={{ color: '#fff', fontSize: '0.7rem' }}>--/--/--</strong>
@@ -1441,7 +1451,7 @@ export default function DashboardPage() {
                                             UNLOCK
                                         </button>
                                     ) : (
-                                        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
+                                        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: 'rgba(var(--gold-rgb),0.07)', border: '1px solid rgba(var(--gold-rgb),0.3)', borderRadius: 8, color: 'var(--gold)', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
                                             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                                             LOCK
                                         </button>
@@ -1478,10 +1488,10 @@ export default function DashboardPage() {
             {/* SHARED MODALS */}
             <div id="reviewModal" className="modal">
                 <div className="m-content" style={{ position: 'relative' }}>
-                    <span onClick={() => (window as any).closeModal()} style={{ position: 'absolute', top: '15px', right: '20px', fontSize: '2rem', color: 'rgba(197,160,89,0.45)', cursor: 'pointer', zIndex: 1100, lineHeight: 1 }}>&times;</span>
+                    <span onClick={() => (window as any).closeModal()} style={{ position: 'absolute', top: '15px', right: '20px', fontSize: '2rem', color: 'rgba(var(--gold-rgb),0.45)', cursor: 'pointer', zIndex: 1100, lineHeight: 1 }}>&times;</span>
                     <div id="mMediaBox" className="m-media-box"></div>
                     <div className="m-info">
-                        <div id="mModalHeader" style={{ flexShrink: 0, padding: '24px 28px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}></div>
+                        <div id="mModalHeader" style={{ flexShrink: 0, padding: '24px 28px 14px', borderBottom: '1px solid rgba(var(--gold-rgb),0.1)' }}></div>
                         <div id="reviewNormalContent" style={{ padding: '14px 28px 24px' }}>
                             <div id="mText" className="m-text-scroll"></div>
                             <div id="modalActions"></div>
@@ -1491,7 +1501,7 @@ export default function DashboardPage() {
                             <div className="reward-protocol-title">REWARD PROTOCOL</div>
 
                             <div id="reviewRewardTaskText" className="m-text-scroll" style={{
-                                borderBottom: '1px solid rgba(197,160,89,0.15)',
+                                borderBottom: '1px solid rgba(var(--gold-rgb),0.15)',
                                 paddingBottom: '12px',
                                 marginBottom: '14px',
                                 fontSize: '0.82rem',
@@ -1588,8 +1598,8 @@ export default function DashboardPage() {
 
             {/* SECTION EXPANDED OVERLAY */}
             <div id="feedSectionOverlay" style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(6,6,16,0.97)', zIndex: 1000, flexDirection: 'column', backdropFilter: 'blur(10px)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', borderBottom: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }}>
-                    <div id="feedSectionOverlayTitle" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#c5a059', letterSpacing: '4px' }}>WISHLIST</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', borderBottom: '1px solid rgba(var(--gold-rgb),0.2)', flexShrink: 0 }}>
+                    <div id="feedSectionOverlayTitle" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'var(--gold)', letterSpacing: '4px' }}>WISHLIST</div>
                     <button onClick={() => (window as any).collapseFeedSection()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
                 </div>
                 <div id="wishlistPanel" style={{ flex: 1, overflowY: 'auto' }}></div>
@@ -1623,8 +1633,8 @@ export default function DashboardPage() {
                                 {lockedUsers.map((u: any) => {
                                     const isSilenced = u.silence === true;
                                     const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
-                                    const accent = isSilenced ? 'rgba(220,60,60,0.8)' : 'rgba(197,160,89,0.8)';
-                                    const border = isSilenced ? 'rgba(220,60,60,0.2)' : 'rgba(197,160,89,0.2)';
+                                    const accent = isSilenced ? 'rgba(220,60,60,0.8)' : 'rgba(var(--gold-rgb),0.8)';
+                                    const border = isSilenced ? 'rgba(220,60,60,0.2)' : 'rgba(var(--gold-rgb),0.2)';
                                     return (
                                         <div key={u.memberId} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${border}`, borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                                             <img src={u.avatar || '/queen-karin.png'} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} />
@@ -1632,13 +1642,13 @@ export default function DashboardPage() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                                                     <span style={{ fontFamily: 'Cinzel', fontSize: '0.95rem', color: '#fff' }}>{u.name || u.memberId}</span>
                                                     {isSilenced && <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(220,60,60,0.8)', border: '1px solid rgba(220,60,60,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>SILENCED</span>}
-                                                    {isPaywalled && !isSilenced && <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(197,160,89,0.8)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>PAYWALLED</span>}
+                                                    {isPaywalled && !isSilenced && <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(var(--gold-rgb),0.8)', border: '1px solid rgba(var(--gold-rgb),0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>PAYWALLED</span>}
                                                 </div>
                                                 <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
                                                     {isSilenced ? (u.parameters?.silence_reason || '—') : (u.parameters?.paywall?.reason || '—')}
                                                 </div>
                                                 {isPaywalled && !isSilenced && u.parameters?.paywall?.amount > 0 && (
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginTop: 4 }}>€{Number(u.parameters.paywall.amount).toFixed(2)}</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(var(--gold-rgb),0.7)', marginTop: 4 }}>€{Number(u.parameters.paywall.amount).toFixed(2)}</div>
                                                 )}
                                             </div>
                                             <button onClick={() => { (window as any).selUser?.(u.memberId); setShowLocksModal(false); }} style={{ background: 'none', border: `1px solid ${border}`, color: accent, fontFamily: 'Orbitron', fontSize: '0.38rem', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', letterSpacing: '1px', flexShrink: 0 }}>VIEW</button>

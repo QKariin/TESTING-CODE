@@ -50,7 +50,7 @@ function getOnlineStatus(lastSeen: string | null): 'online' | 'recent' | 'away' 
 }
 function statusColor(s: ReturnType<typeof getOnlineStatus>) {
     if (s === 'online') return '#6bcb77';
-    if (s === 'recent') return '#c5a059';
+    if (s === 'recent') return 'var(--gold)';
     if (s === 'away') return '#ff8c42';
     return '#222';
 }
@@ -65,7 +65,7 @@ function timeAgo(iso: string | null): string {
 
 const RANK_COLOR: Record<string, string> = {
     "Queen's Champion": '#d4af37',
-    'Secretary': '#c5a059',
+    'Secretary': 'var(--gold)',
     'Chamberlain': '#4a9eff',
     'Butler': '#ff8c42',
     'Silverman': '#b8b8b8',
@@ -300,18 +300,18 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     {([
                         { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: undefined as number | undefined, bc: '#ff8c42' },
                         { key: 'subjects' as Tab, icon: '◉', label: 'SUBS', badge: unreadCount > 0 ? unreadCount : (onlineCount > 0 ? onlineCount : undefined), bc: unreadCount > 0 ? '#4a9eff' : '#6bcb77' },
-                        { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, bc: '#c5a059' },
-                        { key: 'challenges' as Tab, icon: '⚔', label: 'WAR', badge: undefined as number | undefined, bc: '#c5a059' },
-                        { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
+                        { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, bc: 'var(--gold)' },
+                        { key: 'challenges' as Tab, icon: '⚔', label: 'WAR', badge: undefined as number | undefined, bc: 'var(--gold)' },
+                        { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: 'var(--gold)' },
                     ]).map(({ key, icon, label, badge, bc }) => (
                         <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => setTab(key)}>
                             <div style={{ position: 'relative' }}>
-                                <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
+                                <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? 'var(--gold)' : '#2e2e2e' }}>{icon}</span>
                                 {badge !== undefined && (
                                     <div style={{ position: 'absolute', top: -4, right: -8, minWidth: 14, height: 14, background: bc, borderRadius: 7, fontSize: '0.36rem', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, padding: '0 3px' }}>{badge}</div>
                                 )}
                             </div>
-                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1.5px', color: tab === key ? '#c5a059' : '#2e2e2e', textTransform: 'uppercase' }}>{label}</span>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1.5px', color: tab === key ? 'var(--gold)' : '#2e2e2e', textTransform: 'uppercase' }}>{label}</span>
                         </button>
                     ))}
                 </nav>
@@ -473,13 +473,13 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 4 }}>{greeting}</div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: 'var(--gold)', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#333', letterSpacing: '2px', marginTop: 5 }}>COMMAND CENTER</div>
                 </div>
                 {/* Daily code — tucked top-right */}
                 <div style={{ flexShrink: 0, textAlign: 'center' }}>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.28rem', color: '#2e2e2e', letterSpacing: '2px', marginBottom: 3 }}>TODAY</div>
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.25rem', fontWeight: 900, color: '#c5a059', letterSpacing: '5px', textShadow: '0 0 14px rgba(197,160,89,0.25)' }}>{dailyCode}</div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.25rem', fontWeight: 900, color: 'var(--gold)', letterSpacing: '5px', textShadow: '0 0 14px rgba(197,160,89,0.25)' }}>{dailyCode}</div>
                 </div>
             </div>
 
@@ -487,7 +487,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, flexShrink: 0 }}>
                 {[
                     { val: stats.online, label: 'ONLINE', color: '#4ade80', glow: 'rgba(74,222,128,0.15)' },
-                    { val: stats.active, label: 'SUBJECTS', color: '#c5a059', glow: 'rgba(197,160,89,0.1)' },
+                    { val: stats.active, label: 'SUBJECTS', color: 'var(--gold)', glow: 'rgba(197,160,89,0.1)' },
                     { val: taskQueue.length, label: 'REVIEW', color: taskQueue.length > 0 ? '#ff8c42' : '#333', glow: taskQueue.length > 0 ? 'rgba(255,140,66,0.1)' : 'transparent' },
                     { val: stats.totalMerit.toLocaleString(), label: 'MERIT', color: '#a78bfa', glow: 'rgba(167,139,250,0.08)' },
                 ].map(s => (
@@ -522,11 +522,11 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                 <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(0,0,0,0.5))', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                     {activeChallenge.image_url && <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${activeChallenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.07 }} />}
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(197,160,89,0.1)', color: '#c5a059', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0, border: '1px solid rgba(197,160,89,0.2)' }}>⚔</div>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(197,160,89,0.1)', color: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0, border: '1px solid rgba(197,160,89,0.2)' }}>⚔</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 6px #c5a059', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: '#c5a059', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChallenge.name}</div>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)', boxShadow: '0 0 6px #c5a059', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: 'var(--gold)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChallenge.name}</div>
                             </div>
                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>LIVE · {activeChallenge.participant_active ?? '—'} ACTIVE · {activeChallenge.participant_total ?? '—'} TOTAL</div>
                         </div>
@@ -572,12 +572,12 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                                 <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
                                                 {user && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: rc(user.rank), marginLeft: 8 }}>{user.rank}</span>}
                                             </div>
-                                            {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
+                                            {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: 'var(--gold)', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
                                         </button>
                                         {proofUrl && (
                                             <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                                 {isVideo ? <video src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} /> : <img src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} alt="" />}
-                                                <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
+                                                <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: 'var(--gold)', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
                                             </button>
                                         )}
                                         <div style={{ padding: '10px 14px 12px' }}>
@@ -590,7 +590,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <button disabled={busy} onClick={() => onOpenReview(task)} style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.08)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '...' : '✓ REVIEW + REWARD'}</button>
+                                                        <button disabled={busy} onClick={() => onOpenReview(task)} style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.08)', color: 'var(--gold)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '...' : '✓ REVIEW + REWARD'}</button>
                                                         <button disabled={busy} onClick={() => handleReject(task)} style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '·' : '✕'}</button>
                                                     </>
                                                 )}
@@ -724,7 +724,7 @@ function chThemeColor(theme: string) {
     if (theme === 'red') return '#e03030';
     if (theme === 'purple') return '#a855f7';
     if (theme === 'blue') return '#3b82f6';
-    return '#c5a059';
+    return 'var(--gold)';
 }
 
 function ChallengesView() {
@@ -796,7 +796,7 @@ function ChallengesView() {
                     { key: 'history' as ChallengesTab, label: 'HISTORY' },
                 ] as { key: ChallengesTab; label: string; badge?: number }[]).map(({ key, label, badge }) => (
                     <button key={key} onClick={() => setCTab(key)}
-                        style={{ flex: 1, padding: '13px 0', background: 'none', border: 'none', borderBottom: `2px solid ${cTab === key ? '#c5a059' : 'transparent'}`, color: cTab === key ? '#c5a059' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
+                        style={{ flex: 1, padding: '13px 0', background: 'none', border: 'none', borderBottom: `2px solid ${cTab === key ? 'var(--gold)' : 'transparent'}`, color: cTab === key ? 'var(--gold)' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
                         {label}
                         {badge !== undefined && (
                             <span style={{ position: 'absolute', top: 8, right: '20%', background: '#ff8c42', color: '#000', borderRadius: 10, minWidth: 16, height: 16, fontSize: '0.38rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{badge}</span>
@@ -914,7 +914,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                     <div style={{ fontFamily: 'Cinzel,serif', color: '#ddd', fontSize: '0.88rem' }}>{c.name}</div>
                                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#555', marginTop: 3 }}>{c.duration_days}d · {c.tasks_per_day}×/day</div>
                                 </div>
-                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#c5a059' }}>→</span>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: 'var(--gold)' }}>→</span>
                             </button>
                         ))}
                     </>
@@ -1074,7 +1074,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                 <input type="email" placeholder="Add participant by email..." value={addEmail} onChange={e => setAddEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddParticipant()}
                     style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.82rem', padding: '10px 14px', outline: 'none' }} />
                 <button onClick={handleAddParticipant} disabled={addingParticipant || !addEmail.trim()}
-                    style={{ padding: '10px 16px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.72rem', cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ padding: '10px 16px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: 'var(--gold)', fontFamily: 'Cinzel,serif', fontSize: '0.72rem', cursor: 'pointer', flexShrink: 0 }}>
                     {addingParticipant ? '...' : '+ Add'}
                 </button>
             </div>
@@ -1094,11 +1094,11 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                         const isChamp = p.status === 'champion';
                         const rank = isChamp ? 1 : (p.final_rank || (isElim ? null : i + 1));
                         return (
-                            <div key={p.member_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isChamp ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isChamp ? 'rgba(197,160,89,0.3)' : 'rgba(255,255,255,0.04)'}`, borderLeft: `3px solid ${isElim ? '#222' : isChamp ? '#c5a059' : color}`, borderRadius: 8, opacity: isElim ? 0.4 : 1 }}>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '—')}</div>
+                            <div key={p.member_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isChamp ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isChamp ? 'rgba(197,160,89,0.3)' : 'rgba(255,255,255,0.04)'}`, borderLeft: `3px solid ${isElim ? '#222' : isChamp ? 'var(--gold)' : color}`, borderRadius: 8, opacity: isElim ? 0.4 : 1 }}>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? 'var(--gold)' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '—')}</div>
                                 <img src={p.avatar || '/queen-karin.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: isChamp ? 'var(--gold)' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
                                     <div style={{ textAlign: 'right' }}>
@@ -1193,7 +1193,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
             {Object.keys(byDay).sort((a, b) => Number(a) - Number(b)).map(day => (
                 <div key={day}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>DAY {day}</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', color: 'var(--gold)', letterSpacing: '3px' }}>DAY {day}</div>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right,rgba(197,160,89,0.2),transparent)' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1209,13 +1209,13 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                 <div key={w.id} style={{ background: isOpen ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isOpen ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.1)'}`, borderLeft: `3px solid ${isOpen ? '#4ade80' : isPast ? '#181818' : 'rgba(197,160,89,0.4)'}`, borderRadius: 10, overflow: 'hidden', opacity: isPast && !isOpen ? 0.4 : 1 }}>
                                     {/* Header row */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px' }}>
-                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.72rem', fontWeight: 900, color: isOpen ? '#4ade80' : isPast ? '#333' : '#c5a059', letterSpacing: '4px', flexShrink: 0 }}>{w.verification_code}</div>
+                                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.72rem', fontWeight: 900, color: isOpen ? '#4ade80' : isPast ? '#333' : 'var(--gold)', letterSpacing: '4px', flexShrink: 0 }}>{w.verification_code}</div>
                                         <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: isOpen ? '#4ade80' : '#555', flexShrink: 0 }}>T{w.window_number}</div>
                                         {isOpen && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', animation: 'pulse 1.2s infinite', flexShrink: 0 }} />}
                                         <div style={{ flex: 1 }} />
                                         {!isEditing && !isPast && (
                                             <button onClick={() => { setEditDate(opensDate.toISOString().slice(0, 10)); setEditTime(opensDate.toTimeString().slice(0, 5)); setEditName(taskName); setEditingId(w.id); }}
-                                                style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.54rem', cursor: 'pointer' }}>Edit</button>
+                                                style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: 'var(--gold)', fontFamily: 'Cinzel,serif', fontSize: '0.54rem', cursor: 'pointer' }}>Edit</button>
                                         )}
                                         {!isEditing && isOpen && (
                                             <button disabled={stopping === w.id} onClick={async () => { if (!confirm(`Stop T${w.window_number}?`)) return; setStopping(w.id); await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ closes_at: new Date().toISOString() }) }); setStopping(null); onRefresh(); }}
@@ -1242,9 +1242,9 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                                 style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 7, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.82rem', padding: '8px 12px', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
                                             <div style={{ display: 'flex', gap: 6 }}>
                                                 <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
-                                                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
                                                 <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
-                                                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
                                             </div>
                                             <div style={{ display: 'flex', gap: 6 }}>
                                                 <button onClick={() => saveEdit(w)} disabled={saving === w.id}
@@ -1375,7 +1375,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     {form.image_url && <img src={form.image_url} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(74,222,128,0.3)' }} alt="" />}
                     <button onClick={() => imgRef.current?.click()} disabled={imageUploading}
-                        style={{ padding: '10px 16px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                        style={{ padding: '10px 16px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}>
                         {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ CHANGE IMAGE' : '⬆ UPLOAD COVER'}
                     </button>
                     {form.image_url && <button onClick={() => set('image_url', '')} style={{ padding: '10px 12px', background: 'rgba(255,0,0,0.06)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: 8, color: '#ff4444', fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', cursor: 'pointer' }}>✕</button>}
@@ -1411,7 +1411,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
                         <div key={dayIdx} style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
                             <button type="button" onClick={() => setExpandedDay(expandedDay === dayIdx ? -1 : dayIdx)}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', background: expandedDay === dayIdx ? 'rgba(197,160,89,0.05)' : 'none', border: 'none', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '2px' }}>DAY {dayIdx + 1}</span>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: 'var(--gold)', letterSpacing: '2px' }}>DAY {dayIdx + 1}</span>
                                 {expandedDay !== dayIdx && (
                                     <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#444' }}>{dayTimes.join(' · ')}</span>
                                 )}
@@ -1423,7 +1423,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
                                         <div key={ti} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                             <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.36rem', color: '#555', flexShrink: 0, width: 16 }}>T{ti + 1}</span>
                                             <input type="time" value={t} onChange={e => setTaskTimes(p => { const n = p.map(d => [...d]); n[dayIdx][ti] = e.target.value; return n; })}
-                                                style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
+                                                style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
                                             <input placeholder="Task description..." value={taskNames[dayIdx]?.[ti] || ''} onChange={e => setTaskNames(p => { const n = p.map(d => [...d]); n[dayIdx][ti] = e.target.value; return n; })}
                                                 style={{ flex: 2, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 6, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.78rem', padding: '7px 10px', outline: 'none' }} />
                                         </div>
@@ -1437,7 +1437,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
 
             {/* Submit */}
             <button disabled={submitting || !form.name || !form.start_date} onClick={handleSubmit}
-                style={{ width: '100%', padding: '16px', background: submitting || !form.name || !form.start_date ? '#111' : 'linear-gradient(135deg,rgba(197,160,89,0.2),rgba(140,105,20,0.15))', border: `1px solid ${submitting || !form.name || !form.start_date ? '#222' : 'rgba(197,160,89,0.4)'}`, borderRadius: 10, color: submitting || !form.name || !form.start_date ? '#333' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
+                style={{ width: '100%', padding: '16px', background: submitting || !form.name || !form.start_date ? '#111' : 'linear-gradient(135deg,rgba(197,160,89,0.2),rgba(140,105,20,0.15))', border: `1px solid ${submitting || !form.name || !form.start_date ? '#222' : 'rgba(197,160,89,0.4)'}`, borderRadius: 10, color: submitting || !form.name || !form.start_date ? '#333' : 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
                 {submitting ? 'CREATING...' : '⚔ CREATE CHALLENGE'}
             </button>
         </div>
@@ -1496,7 +1496,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                     {rank && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: rc(rank), letterSpacing: '1px' }}>{rank}</div>}
                 </div>
-                {isRoutine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
+                {isRoutine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: 'var(--gold)', background: 'rgba(197,160,89,0.08)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
             </div>
 
             {/* Media area — scrollable if needed */}
@@ -1521,7 +1521,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                         <div style={{ display: 'flex', gap: 7, marginBottom: 12 }}>
                             {tiers.map(t => (
                                 <button key={t} onClick={() => setTier(t)}
-                                    style={{ flex: 1, padding: '10px 0', background: tier === t ? '#c5a059' : 'rgba(197,160,89,0.05)', border: `1px solid ${tier === t ? '#c5a059' : 'rgba(197,160,89,0.15)'}`, borderRadius: 8, color: tier === t ? '#000' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.65rem', fontWeight: tier === t ? 700 : 400, cursor: 'pointer' }}>
+                                    style={{ flex: 1, padding: '10px 0', background: tier === t ? 'var(--gold)' : 'rgba(197,160,89,0.05)', border: `1px solid ${tier === t ? 'var(--gold)' : 'rgba(197,160,89,0.15)'}`, borderRadius: 8, color: tier === t ? '#000' : 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.65rem', fontWeight: tier === t ? 700 : 400, cursor: 'pointer' }}>
                                     {t}
                                 </button>
                             ))}
@@ -1609,7 +1609,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                 {/* Stats row */}
                 <div style={{ display: 'flex', width: '100%', marginTop: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '8px 0' }}>
                     {[
-                        { label: 'MERIT', val: user.score, c: '#c5a059' },
+                        { label: 'MERIT', val: user.score, c: 'var(--gold)' },
                         { label: 'COINS', val: user.wallet.toLocaleString(), c: '#4ecdc4' },
                         { label: 'PENDING', val: queue.length, c: queue.length > 0 ? '#ff8c42' : '#555' },
                     ].map((s, i) => (
@@ -1624,7 +1624,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid rgba(197,160,89,0.1)', background: 'rgba(6,6,6,0.97)', flexShrink: 0, overflowX: 'auto' }}>
                 {tabs.map(t => (
-                    <button key={t.key} onClick={() => setProfileTab(t.key)} style={{ flex: 1, minWidth: 70, padding: '11px 4px', background: 'none', border: 'none', borderBottom: profileTab === t.key ? '2px solid #c5a059' : '2px solid transparent', color: profileTab === t.key ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', letterSpacing: '1.5px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
+                    <button key={t.key} onClick={() => setProfileTab(t.key)} style={{ flex: 1, minWidth: 70, padding: '11px 4px', background: 'none', border: 'none', borderBottom: profileTab === t.key ? '2px solid #c5a059' : '2px solid transparent', color: profileTab === t.key ? 'var(--gold)' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.46rem', letterSpacing: '1.5px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
                         {t.label}
                         {t.badge ? <span style={{ position: 'absolute', top: 6, right: 4, background: '#ff4444', color: '#fff', borderRadius: 100, minWidth: 14, height: 14, fontSize: '0.36rem', fontFamily: 'Orbitron,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{t.badge}</span> : null}
                     </button>
@@ -1682,7 +1682,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                     <div style={S.cardTitle}>KINKS & LIMITS</div>
                                     {user.parameters?.kinks && (
                                         <div style={{ marginBottom: 10 }}>
-                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 6 }}>KINKS</div>
+                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: 'var(--gold)', letterSpacing: '2px', marginBottom: 6 }}>KINKS</div>
                                             <div style={{ fontSize: '0.82rem', color: '#888', lineHeight: 1.6 }}>{user.parameters.kinks}</div>
                                         </div>
                                     )}
@@ -1720,7 +1720,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.3)' }}>ROUTINE</span>}
+                                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: 'var(--gold)', background: 'rgba(197,160,89,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.3)' }}>ROUTINE</span>}
                                                     {(task.timestamp || task.submitted_at) && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#444' }}>{new Date(task.timestamp || task.submitted_at).toLocaleDateString()}</span>}
                                                 </div>
                                                 {task.notes && <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
@@ -1741,7 +1741,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                             ) : (
                                                 <>
                                                     <button disabled={busy} onClick={() => onOpenReview(task)}
-                                                        style={{ flex: 2, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                        style={{ flex: 2, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: 'var(--gold)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
                                                         {busy ? '...' : '✓ APPROVE'}
                                                     </button>
                                                     <button disabled={busy} onClick={() => handleReject(task)}
@@ -1888,7 +1888,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
 
     const inp: React.CSSProperties = { width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', padding: '10px 12px', outline: 'none' };
     const smInp: React.CSSProperties = { ...inp, width: '90px', textAlign: 'center', padding: '10px 8px' };
-    const actionBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '12px 0', background: active ? 'rgba(255,51,51,0.12)' : 'rgba(197,160,89,0.08)', border: `1px solid ${active ? 'rgba(255,51,51,0.4)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: active ? '#ff6666' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
+    const actionBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '12px 0', background: active ? 'rgba(255,51,51,0.12)' : 'rgba(197,160,89,0.08)', border: `1px solid ${active ? 'rgba(255,51,51,0.4)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: active ? '#ff6666' : 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
 
     return (
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 14, WebkitOverflowScrolling: 'touch' as any }}>
@@ -1951,7 +1951,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input style={{ ...smInp, flex: 1 }} value={meritAmt} onChange={e => setMeritAmt(e.target.value)} placeholder="50" />
                     <button disabled={busy} onClick={() => adjustMerit(1)}
-                        style={{ flex: 1, padding: '11px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                        style={{ flex: 1, padding: '11px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
                         + ADD
                     </button>
                     <button disabled={busy} onClick={() => adjustMerit(-1)}
@@ -1966,15 +1966,15 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                 <div style={S.cardTitle}>RANK — {user.rank}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     <select value={newRank} onChange={e => setNewRank(e.target.value)}
-                        style={{ flex: 1, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', padding: '11px 10px', outline: 'none', cursor: 'pointer' }}>
-                        {RANKS.map(r => <option key={r} value={r} style={{ background: '#111', color: '#c5a059' }}>{r}</option>)}
+                        style={{ flex: 1, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', padding: '11px 10px', outline: 'none', cursor: 'pointer' }}>
+                        {RANKS.map(r => <option key={r} value={r} style={{ background: '#111', color: 'var(--gold)' }}>{r}</option>)}
                     </select>
                     <button disabled={busy} onClick={changeRank}
-                        style={{ padding: '11px 16px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
+                        style={{ padding: '11px 16px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
                         SET
                     </button>
                     <button disabled={busy} onClick={promoteNext}
-                        style={{ padding: '11px 12px', background: 'linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0, fontWeight: 700 }}>
+                        style={{ padding: '11px 12px', background: 'linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0, fontWeight: 700 }}>
                         ↑ PROMOTE
                     </button>
                 </div>
@@ -1986,7 +1986,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                 <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
                     style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
                 <button disabled={busy || !taskText.trim()} onClick={issueTask}
-                    style={{ width: '100%', padding: '12px', background: taskText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: taskText.trim() ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: taskText.trim() && !busy ? 'pointer' : 'default', opacity: busy ? 0.4 : 1 }}>
+                    style={{ width: '100%', padding: '12px', background: taskText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: taskText.trim() ? 'var(--gold)' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: taskText.trim() && !busy ? 'pointer' : 'default', opacity: busy ? 0.4 : 1 }}>
                     {busy ? 'SENDING...' : 'ISSUE COMMAND'}
                 </button>
             </div>
@@ -2051,7 +2051,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid rgba(197,160,89,0.12)', background: 'rgba(0,0,0,0.4)' }}>
                 {(['chat', 'service'] as const).map(t => (
-                    <button key={t} onClick={() => setChatTab(t)} style={{ flex: 1, padding: '12px', background: 'none', border: 'none', borderBottom: chatTab === t ? '2px solid #c5a059' : '2px solid transparent', color: chatTab === t ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', letterSpacing: '2px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                    <button key={t} onClick={() => setChatTab(t)} style={{ flex: 1, padding: '12px', background: 'none', border: 'none', borderBottom: chatTab === t ? '2px solid #c5a059' : '2px solid transparent', color: chatTab === t ? 'var(--gold)' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', letterSpacing: '2px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
                         {t === 'chat' ? 'CHAT' : 'SERVICE'}
                     </button>
                 ))}
@@ -2076,12 +2076,12 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                         <div style={{ width: '80%', maxWidth: 300, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06,#110d04)', border: '1px solid rgba(197,160,89,0.45)' }}>
                                             {d.photo && <img src={d.photo} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} alt="" />}
                                             <div style={{ padding: '12px 16px 14px', textAlign: 'center' }}>
-                                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 8 }}>✦ RANK PROMOTION</div>
+                                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: 'var(--gold)', letterSpacing: '3px', marginBottom: 8 }}>✦ RANK PROMOTION</div>
                                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: '#fff', fontWeight: 700, marginBottom: 8 }}>{d.name}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                                                     <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: 'rgba(197,160,89,0.35)', textDecoration: 'line-through' }}>{d.oldRank}</span>
-                                                    <span style={{ color: '#c5a059', fontSize: '0.8rem' }}>→</span>
-                                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#c5a059', fontWeight: 700 }}>{d.newRank}</span>
+                                                    <span style={{ color: 'var(--gold)', fontSize: '0.8rem' }}>→</span>
+                                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: 'var(--gold)', fontWeight: 700 }}>{d.newRank}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -2134,7 +2134,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                         const content = msg.content || msg.message || '';
                         return (
                             <div key={msg.id || i} style={{ background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid rgba(197,160,89,0.4)', padding: '9px 14px', borderRadius: '0 6px 6px 0' }}>
-                                <span style={{ fontFamily: 'Cinzel,serif', color: '#c5a059', fontSize: '0.82rem', lineHeight: 1.5, display: 'block', marginBottom: 4 }}>{content}</span>
+                                <span style={{ fontFamily: 'Cinzel,serif', color: 'var(--gold)', fontSize: '0.82rem', lineHeight: 1.5, display: 'block', marginBottom: 4 }}>{content}</span>
                                 <span style={{ fontFamily: 'Orbitron,monospace', color: '#333', fontSize: '0.46rem', letterSpacing: '1px' }}>{d.toLocaleDateString()} · {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                         );
@@ -2150,7 +2150,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                         placeholder="Issue command..." autoComplete="off"
                         style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none' }} />
                     <button onTouchEnd={e => { e.preventDefault(); sendMessage(); }} onClick={sendMessage}
-                        style={{ background: canSend ? '#c5a059' : '#111', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: canSend ? '#000' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '1px', padding: '10px 14px', cursor: canSend ? 'pointer' : 'default', flexShrink: 0, fontWeight: 700, WebkitTapHighlightColor: 'transparent' }}>
+                        style={{ background: canSend ? 'var(--gold)' : '#111', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: canSend ? '#000' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', letterSpacing: '1px', padding: '10px 14px', cursor: canSend ? 'pointer' : 'default', flexShrink: 0, fontWeight: 700, WebkitTapHighlightColor: 'transparent' }}>
                         {sending ? '...' : 'SEND'}
                     </button>
                 </div>
@@ -2217,7 +2217,7 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
         <div style={S.scroll}>
             {/* Compose */}
             <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '18px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 2 }}>QUEEN'S DISPATCH</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'var(--gold)', letterSpacing: '4px', marginBottom: 2 }}>QUEEN'S DISPATCH</div>
                 <input type="text" placeholder="Title (optional)" value={title} onChange={e => setTitle(e.target.value)} style={inp} />
                 <textarea placeholder="Write your decree..." value={body} onChange={e => setBody(e.target.value)} rows={4}
                     style={{ ...inp, resize: 'none', lineHeight: 1.6 } as React.CSSProperties} />
@@ -2235,10 +2235,10 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
                     </button>
                 )}
 
-                {uploadProgress && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#c5a059', textAlign: 'center', letterSpacing: '1px' }}>{uploadProgress}</div>}
+                {uploadProgress && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: 'var(--gold)', textAlign: 'center', letterSpacing: '1px' }}>{uploadProgress}</div>}
 
                 <button onClick={submitPost} disabled={submitting || !body.trim()}
-                    style={{ background: !submitting && body.trim() ? '#c5a059' : '#1a1a1a', color: !submitting && body.trim() ? '#000' : '#444', border: 'none', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', padding: '14px', cursor: !submitting && body.trim() ? 'pointer' : 'default' }}>
+                    style={{ background: !submitting && body.trim() ? 'var(--gold)' : '#1a1a1a', color: !submitting && body.trim() ? '#000' : '#444', border: 'none', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', padding: '14px', cursor: !submitting && body.trim() ? 'pointer' : 'default' }}>
                     {submitting ? 'PUBLISHING...' : 'PUBLISH DECREE'}
                 </button>
             </div>
@@ -2247,7 +2247,7 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
                 <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: '#1e1e1e', letterSpacing: '2px' }}>NO POSTS YET</div>
             ) : posts.map((post: any) => (
                 <div key={post.id} style={{ background: 'rgba(12,12,12,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px' }}>
-                    {post.title && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: '#c5a059', marginBottom: 8 }}>{post.title}</div>}
+                    {post.title && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: 'var(--gold)', marginBottom: 8 }}>{post.title}</div>}
                     <div style={{ fontSize: '0.9rem', color: '#bbb', lineHeight: 1.7 }}>{post.body}</div>
                     {post.media_url && (
                         post.media_url.match(/\.(mp4|mov|webm)/i)
@@ -2293,7 +2293,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
             {/* Profile card */}
             <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 12, padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                 <img src="/queen-karin.png" style={{ width: 84, height: 84, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.35)', boxShadow: '0 0 30px rgba(197,160,89,0.12)' }} alt="" />
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.35rem', color: '#c5a059', letterSpacing: '4px', marginTop: 4 }}>QUEEN KARIN</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.35rem', color: 'var(--gold)', letterSpacing: '4px', marginTop: 4 }}>QUEEN KARIN</div>
                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#444', letterSpacing: '3px' }}>SYSTEM ADMINISTRATOR</div>
                 <div style={{ fontSize: '0.68rem', color: '#2e2e2e', letterSpacing: '1px' }}>{userEmail}</div>
             </div>
@@ -2310,7 +2310,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
                 ].map((item, i) => (
                     <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                         <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: '#444', letterSpacing: '1px' }}>{item.label}</span>
-                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.8rem', color: '#c5a059', fontWeight: 700 }}>{item.val}</span>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.8rem', color: 'var(--gold)', fontWeight: 700 }}>{item.val}</span>
                     </div>
                 ))}
             </div>
@@ -2324,7 +2324,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
                     <div style={{ background: broadcastStatus.startsWith('✓') ? 'rgba(107,203,119,0.1)' : 'rgba(255,51,51,0.1)', border: `1px solid ${broadcastStatus.startsWith('✓') ? 'rgba(107,203,119,0.3)' : 'rgba(255,51,51,0.3)'}`, borderRadius: 6, padding: '8px 12px', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', color: broadcastStatus.startsWith('✓') ? '#6bcb77' : '#ff6666', marginBottom: 8, textAlign: 'center' }}>{broadcastStatus}</div>
                 )}
                 <button disabled={broadcasting || !broadcastText.trim()} onClick={sendBroadcast}
-                    style={{ width: '100%', padding: '13px', background: !broadcasting && broadcastText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${!broadcasting && broadcastText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: !broadcasting && broadcastText.trim() ? '#c5a059' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: !broadcasting && broadcastText.trim() ? 'pointer' : 'default' }}>
+                    style={{ width: '100%', padding: '13px', background: !broadcasting && broadcastText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${!broadcasting && broadcastText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: !broadcasting && broadcastText.trim() ? 'var(--gold)' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', fontWeight: 700, letterSpacing: '1.5px', cursor: !broadcasting && broadcastText.trim() ? 'pointer' : 'default' }}>
                     {broadcasting ? `SENDING TO ${users.length} SUBJECTS...` : `BROADCAST TO ALL (${users.length})`}
                 </button>
             </div>
@@ -2339,7 +2339,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
                         { label: '♛ SLAVE RECORDS', href: '/profile', c: 'rgba(197,160,89,0.1)' },
                     ].map(item => (
                         <button key={item.href} onClick={() => window.location.href = item.href}
-                            style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.04)', border: `1px solid ${item.c}`, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.72rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center' }}>
+                            style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.04)', border: `1px solid ${item.c}`, color: 'var(--gold)', fontFamily: 'Cinzel,serif', fontSize: '0.72rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center' }}>
                             {item.label} ↗
                         </button>
                     ))}
@@ -2365,20 +2365,20 @@ function isSystemMessage(msg: any): boolean {
 const S: Record<string, React.CSSProperties> = {
     root: { display: 'flex', flexDirection: 'column', height: '100dvh', background: '#030303', color: '#fff', fontFamily: "'Rajdhani', sans-serif", overflow: 'hidden', WebkitFontSmoothing: 'antialiased' },
     topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 50, minHeight: 50, background: 'rgba(4,4,4,0.99)', borderBottom: '1px solid rgba(197,160,89,0.15)', padding: '0 16px', flexShrink: 0, zIndex: 10 },
-    topBrand: { fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: '#c5a059', letterSpacing: '3px' },
-    topCode: { fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', color: '#c5a059', fontWeight: 900, letterSpacing: '2px', background: 'rgba(197,160,89,0.07)', padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(197,160,89,0.12)' },
+    topBrand: { fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'var(--gold)', letterSpacing: '3px' },
+    topCode: { fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', color: 'var(--gold)', fontWeight: 900, letterSpacing: '2px', background: 'rgba(197,160,89,0.07)', padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(197,160,89,0.12)' },
     content: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative', zIndex: 1 },
     nav: { display: 'flex', alignItems: 'stretch', height: 60, minHeight: 60, background: 'rgba(4,4,4,0.99)', borderTop: '1px solid rgba(197,160,89,0.15)', flexShrink: 0 },
     navBtn: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'none', border: 'none', borderTop: '2px solid transparent', cursor: 'pointer', padding: '6px 0', outline: 'none', WebkitTapHighlightColor: 'transparent' },
     navActive: { borderTopColor: 'rgba(197,160,89,0.5)' },
     loadWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#030303', gap: 16 },
-    spinner: { width: 32, height: 32, border: '2px solid rgba(197,160,89,0.1)', borderTopColor: '#c5a059', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-    loadTxt: { fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', margin: 0 },
+    spinner: { width: 32, height: 32, border: '2px solid rgba(197,160,89,0.1)', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+    loadTxt: { fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'var(--gold)', letterSpacing: '4px', margin: 0 },
     scroll: { height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '14px 12px 24px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any },
     heroCard: { background: "linear-gradient(135deg, rgba(197,160,89,0.08) 0%, rgba(8,6,2,0.96) 100%)", border: '1px solid rgba(197,160,89,0.18)', borderRadius: 12, padding: '22px 20px', flexShrink: 0 },
     statCard: { background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.07)', borderRadius: 10, padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6 },
     card: { background: 'rgba(11,11,11,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px 14px', flexShrink: 0 },
-    cardTitle: { fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 12, opacity: 0.8 },
+    cardTitle: { fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'var(--gold)', letterSpacing: '3px', marginBottom: 12, opacity: 0.8 },
     userCard: { display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(11,11,11,0.95)', border: '1px solid rgba(197,160,89,0.07)', borderRadius: 10, padding: '12px 14px', width: '100%', cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent', outline: 'none', flexShrink: 0 },
-    backBtn: { alignSelf: 'flex-start', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', letterSpacing: '2px', padding: '6px 14px', borderRadius: 6, cursor: 'pointer', marginBottom: 14, WebkitTapHighlightColor: 'transparent' },
+    backBtn: { alignSelf: 'flex-start', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', color: 'var(--gold)', fontFamily: 'Orbitron,monospace', fontSize: '0.44rem', letterSpacing: '2px', padding: '6px 14px', borderRadius: 6, cursor: 'pointer', marginBottom: 14, WebkitTapHighlightColor: 'transparent' },
 };

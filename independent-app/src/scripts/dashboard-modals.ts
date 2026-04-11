@@ -156,7 +156,7 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     } else if (isRoutine) {
         actionsEl.innerHTML = `
             <button class="btn-main" onclick="window.reviewTask('reject')" style="flex:1;background:rgba(160,20,20,0.12);color:rgba(200,60,60,0.9);border:1px solid rgba(160,30,30,0.35);">DISMISS</button>
-            <button class="btn-main" onclick="window.reviewTask('approve')" style="flex:1;background:rgba(197,160,89,0.1);color:var(--gold);border:1px solid rgba(197,160,89,0.4);">✓ CONFIRM</button>`;
+            <button class="btn-main" onclick="window.reviewTask('approve')" style="flex:1;background:rgba(var(--gold-rgb),0.1);color:var(--gold);border:1px solid rgba(var(--gold-rgb),0.4);">✓ CONFIRM</button>`;
     } else {
         setPendingApproveTask(currTask);
         setSelectedStickerId(null);
@@ -509,7 +509,7 @@ export function renderTaskGallery(tasksToRender?: any[]) {
     const tasks = tasksToRender || cachedTasks;
     const u = users.find(x => x.memberId === currId);
     const breadcrumbHtml = `
-        <div class="filter-breadcrumb" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; margin-bottom:15px; border-bottom:1px solid rgba(197,160,89,0.1);">
+        <div class="filter-breadcrumb" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; margin-bottom:15px; border-bottom:1px solid rgba(var(--gold-rgb),0.1);">
             <div style="font-family:Cinzel; font-size:0.75rem; color:#888; letter-spacing:1px;">
                 VIEWING: <span style="color:var(--gold)">${currentCategory ? currentCategory.toUpperCase() : 'ALL DIRECTIVES'}</span>
             </div>

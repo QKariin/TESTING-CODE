@@ -262,22 +262,22 @@ function renderToHtml(m: any) {
                 : '';
             return `
                 <div class="chat-gift-wrap">
-                    <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                    <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(var(--gold-rgb),0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
                         <div style="position:relative;width:100%;height:150px;background:#0a0703;overflow:hidden;">
                             ${photoBlock}
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
-                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">✦ RANK PROMOTION</span>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(var(--gold-rgb),0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:3px;">✦ RANK PROMOTION</span>
                             </div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
                             <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${purifier.sanitize(d.name||'')}</div>
                             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
-                                <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(var(--gold-rgb),0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
+                                <span style="color:rgba(var(--gold-rgb),0.7);font-size:0.9rem;">→</span>
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:var(--gold);letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
                             </div>
-                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
+                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(var(--gold-rgb),0.35),transparent);margin:0 auto;"></div>
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
@@ -300,10 +300,10 @@ function renderToHtml(m: any) {
                 : '';
             const cardHtml = `
                 <div class="chat-gift-wrap" style="cursor:pointer;" onclick="window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">
-                    <div style="max-width:240px;width:55vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
+                    <div style="max-width:240px;width:55vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(var(--gold-rgb),0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
                         ${mediaBlock}
                         <div style="padding:9px 12px 11px;">
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(var(--gold-rgb),0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
                             ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${purifier.sanitize(fbNote)}</div>` : ''}
                         </div>
                     </div>

@@ -371,7 +371,7 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
         overlay.innerHTML = `
             <div style="max-width:900px;margin:0 auto;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-                    <div style="font-family:Orbitron;font-size:0.7rem;color:#c5a059;letter-spacing:3px;">${category.toUpperCase()} — ${filtered.length} ENTRIES</div>
+                    <div style="font-family:Orbitron;font-size:0.7rem;color:var(--gold);letter-spacing:3px;">${category.toUpperCase()} — ${filtered.length} ENTRIES</div>
                     <button onclick="document.getElementById('__adminCatOverlay').remove()" style="background:none;border:1px solid #333;color:#888;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">CLOSE</button>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
@@ -383,7 +383,7 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
                     : `<img src="${getOptimizedUrl(t.proofUrl, 300)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}" />`)
                 : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:2rem;background:#0a0a0a;">🚫</div>`;
             const date = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-            const statusColor = t.status === 'approve' ? '#c5a059' : t.status === 'pending' ? '#888' : '#8b0000';
+            const statusColor = t.status === 'approve' ? 'var(--gold)' : t.status === 'pending' ? '#888' : '#8b0000';
             const isPending = t.status === 'pending';
             return `<div style="background:#060606;border:1px solid #1a1a1a;border-radius:6px;overflow:hidden;cursor:pointer;" onclick="this.querySelector('video,img')?.click()">
                         ${media}
@@ -391,7 +391,7 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
                             <div style="font-family:Orbitron;font-size:0.4rem;color:${statusColor};letter-spacing:1px;">${date} · ${(t.status || '').toUpperCase()}</div>
                             <div style="font-family:Rajdhani;font-size:0.7rem;color:#666;margin-top:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${(t.text || '').replace(/<[^>]+>/g, '')}</div>
                             ${isPending ? `<div style="display:flex;gap:6px;margin-top:8px;">
-                                <button onclick="event.stopPropagation();(window.reviewTask||window.approveFromGallery)('${t.id}','${u.memberId}')" style="flex:1;background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.4rem;padding:6px;cursor:pointer;border-radius:3px;">APPROVE</button>
+                                <button onclick="event.stopPropagation();(window.reviewTask||window.approveFromGallery)('${t.id}','${u.memberId}')" style="flex:1;background:var(--gold);color:#000;border:none;font-family:Orbitron;font-size:0.4rem;padding:6px;cursor:pointer;border-radius:3px;">APPROVE</button>
                                 <button onclick="event.stopPropagation();(window.rejectFromGallery||function(){})('${t.id}','${u.memberId}')" style="flex:1;background:#8b0000;color:#fff;border:none;font-family:Orbitron;font-size:0.4rem;padding:6px;cursor:pointer;border-radius:3px;">REJECT</button>
                             </div>` : ''}
                         </div>
@@ -484,7 +484,7 @@ export async function loadQueenPostsDashboard() {
             <div style="border:1px solid #222;border-radius:8px;padding:20px;background:#0a0a0a;display:flex;flex-direction:column;gap:10px;position:relative;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="flex:1;min-width:0;">
-                        ${p.title ? `<div style="font-family:Cinzel;font-size:1rem;color:#c5a059;letter-spacing:2px;margin-bottom:5px;">${p.title}</div>` : ''}
+                        ${p.title ? `<div style="font-family:Cinzel;font-size:1rem;color:var(--gold);letter-spacing:2px;margin-bottom:5px;">${p.title}</div>` : ''}
                         ${p.content ? `<div style="font-family:Rajdhani;font-size:0.9rem;color:#ccc;line-height:1.6;">${p.content}</div>` : ''}
                     </div>
                     <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>
@@ -504,13 +504,13 @@ export async function loadQueenPostsDashboard() {
                     ${p.is_published === false ? `<div style="font-family:Orbitron;font-size:0.45rem;color:#ff6b6b;letter-spacing:1px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);padding:2px 8px;border-radius:3px;">DRAFT</div>` : ''}
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #161616;">
-                    <select id="editRank_${p.id}" style="background:#111;border:1px solid #333;color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:6px 10px;border-radius:4px;letter-spacing:1px;outline:none;">
+                    <select id="editRank_${p.id}" style="background:#111;border:1px solid #333;color:var(--gold);font-family:Orbitron;font-size:0.5rem;padding:6px 10px;border-radius:4px;letter-spacing:1px;outline:none;">
                         ${['Hall Boy','Footman','Silverman','Butler','Chamberlain','Secretary',"Queen's Champion"].map(r =>
                             `<option value="${r}"${p.min_rank === r ? ' selected' : ''}>${r}</option>`
                         ).join('')}
                     </select>
                     <input id="editPrice_${p.id}" type="number" min="0" value="${p.price || 0}" style="background:#111;border:1px solid #333;color:#fff;font-family:Orbitron;font-size:0.5rem;padding:6px 10px;border-radius:4px;width:100px;outline:none;" placeholder="COINS" />
-                    <button onclick="window.updateQueenPost('${p.id}')" style="background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:Orbitron;font-size:0.5rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:2px;">SAVE</button>
+                    <button onclick="window.updateQueenPost('${p.id}')" style="background:rgba(var(--gold-rgb),0.15);border:1px solid rgba(var(--gold-rgb),0.4);color:var(--gold);font-family:Orbitron;font-size:0.5rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:2px;">SAVE</button>
                 </div>
             </div>
         `).join('');
@@ -548,10 +548,10 @@ export async function submitQueenPost() {
     Object.assign(indicator.style, {
         position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
         background: 'linear-gradient(135deg,#0d0d0d 0%,#111008 100%)',
-        border: '1px solid rgba(197,160,89,0.45)',
+        border: '1px solid rgba(var(--gold-rgb),0.45)',
         borderRadius: '6px', padding: '14px 18px',
         fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px',
-        color: '#c5a059', display: 'flex', alignItems: 'center', gap: '10px',
+        color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: '10px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.6)', opacity: '0',
         transition: 'opacity 0.3s ease, transform 0.3s ease',
         transform: 'translateY(12px)', minWidth: '220px',
@@ -560,7 +560,7 @@ export async function submitQueenPost() {
     const dot = document.createElement('div');
     Object.assign(dot.style, {
         width: '7px', height: '7px', borderRadius: '50%',
-        background: '#c5a059', flexShrink: '0',
+        background: 'var(--gold)', flexShrink: '0',
         animation: 'uploadPulse 1s ease-in-out infinite alternate',
     });
     if (!document.getElementById('uploadPulseStyle')) {

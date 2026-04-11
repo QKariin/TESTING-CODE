@@ -163,9 +163,9 @@ export function renderSidebar() {
         const isSilenced = u.silence === true;
         const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
         const isLocked = isSilenced || isPaywalled;
-        const lockColor = isSilenced ? 'rgba(220,60,60,0.85)' : 'rgba(197,160,89,0.85)';
-        const lockBg = isSilenced ? 'rgba(220,60,60,0.08)' : 'rgba(197,160,89,0.07)';
-        const lockBorder = isSilenced ? 'rgba(220,60,60,0.4)' : 'rgba(197,160,89,0.4)';
+        const lockColor = isSilenced ? 'rgba(220,60,60,0.85)' : 'rgba(var(--gold-rgb),0.85)';
+        const lockBg = isSilenced ? 'rgba(220,60,60,0.08)' : 'rgba(var(--gold-rgb),0.07)';
+        const lockBorder = isSilenced ? 'rgba(220,60,60,0.4)' : 'rgba(var(--gold-rgb),0.4)';
         const lockLabel = isSilenced ? 'SILENCED' : 'PAYWALLED';
         const lockPath = "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z";
 
@@ -252,7 +252,7 @@ function renderUserIcons(u: any) {
     if (isSilenced) {
         html += `<div class="icon-box" title="Silenced"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(220,60,60,0.85)"><path d="${lockPath}"/></svg></div>`;
     } else if (isPaywalled) {
-        html += `<div class="icon-box" title="Paywalled"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(197,160,89,0.85)"><path d="${lockPath}"/></svg></div>`;
+        html += `<div class="icon-box" title="Paywalled"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(var(--gold-rgb),0.85)"><path d="${lockPath}"/></svg></div>`;
     } else {
         html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${lockPath}"/></svg></div>`;
     }
