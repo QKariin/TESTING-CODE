@@ -47,7 +47,7 @@ export function mediaType(url: string | null | undefined): "video" | "image" | "
 
 export function getThumbnail(url: string | null | undefined): string | null | undefined {
     if (!url) return url;
-    if (url.includes('supabase.co/storage') && mediaType(url) === 'image') return url; // Already client-compressed
+    if (url.includes('supabase.co/storage') && mediaType(url) === 'image') return getOptimizedUrl(url, 200); // Route through CDN cache
     return getOptimizedUrl(url, 200); // Fallback to optimized wix
 }
 
@@ -58,8 +58,13 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("blob:")) return url;
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
     if (url.includes("token=")) return url; // Already a signed URL
-    // Supabase storage URLs — return as-is (no server-side transform)
-    if (url.includes("supabase.co/storage")) return url;
+    // Supabase storage URLs — route through Next.js image CDN so Vercel caches them
+    // Supabase only gets hit once per image, all subsequent loads served from Vercel edge
+    if (url.includes("supabase.co/storage")) {
+        const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+        if (isVideo) return url; // videos can't go through next/image, serve direct
+        return `/_next/image?url=${encodeURIComponent(url)}&w=${width <= 200 ? 256 : width <= 400 ? 828 : 1200}&q=75`;
+    }
 
     // 1. CLOUDINARY
     if (url.includes("cloudinary.com")) {
