@@ -11,6 +11,11 @@ import { getSignedUrl, mediaType as mediaTypeFunction, getOptimizedUrl } from '.
 
 import { getHierarchyReport } from '../lib/hierarchyRules';
 
+// --- Theme helpers (reads runtime theme from window.__dashTheme) ---
+function _tHex(): string { return (window as any).__dashTheme?.hex || '#c5a059'; }
+function _tRgb(): string { return (window as any).__dashTheme?.rgb || '197,160,89'; }
+function _tAc(a: number): string { return `rgba(${_tRgb()},${a})`; }
+
 // --- STABILITY CACHE ---
 let cachedFillers: any[] = [];
 let fillerUserId: string | null = null;
@@ -144,9 +149,8 @@ export async function updateDetail(u: any) {
                 const target = r.target || 1;
                 const pct = Math.min((current / target) * 100, 100);
                 const isDone = current >= target;
-                const color = isDone ? "#00ff00" : "var(--gold)";
-
-                // No icons — label only
+                const color = isDone ? _tHex() : _tAc(0.4);
+                const glow = isDone ? _tAc(0.35) : _tAc(0.15);
 
                 html += `
                     <div style="margin-bottom:12px;">
@@ -154,8 +158,8 @@ export async function updateDetail(u: any) {
                             <span>${r.label}</span>
                             <span style="color:${color}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
                         </div>
-                        <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
-                            <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40;"></div>
+                        <div style="width:100%; height:8px; background:#000; border:1px solid rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; position:relative;">
+                            <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${glow};"></div>
                         </div>
                     </div>`;
             } else if (r.type === 'check') {
@@ -164,8 +168,8 @@ export async function updateDetail(u: any) {
 
                 const isDone = r.status === 'VERIFIED';
                 const svgIcon = isDone
-                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tHex()}" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="${_tHex()}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tAc(0.35)}" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="${_tAc(0.35)}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 
                 html += `
                     <div style="margin-bottom:8px;">
@@ -186,8 +190,8 @@ export async function updateDetail(u: any) {
             h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === todayStr
         );
         const routineSvg = isDoneToday
-            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tHex()}" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="${_tHex()}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tAc(0.35)}" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="${_tAc(0.35)}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
         const proofStatus = todayEntry?.status;
         const proofOverlay = todayEntry && todayEntry.id
             ? (proofStatus === 'approve'
@@ -219,7 +223,7 @@ export async function updateDetail(u: any) {
         // Always show force-promote button when not at max
         if (!report.isMax) {
             html += `<div style="margin-top:16px;">
-                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
+                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,${_tAc(0.22)},${_tAc(0.1)});color:${_tHex()};border:1px solid ${_tAc(0.45)};border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
                     ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
                 </button>
             </div>`;
@@ -232,7 +236,7 @@ export async function updateDetail(u: any) {
     const routineName = (u.routine || "NONE").toUpperCase();
     setText('dMirrorRoutine', `${routineName} (${isRoutineDone ? "DONE" : "PENDING"})`);
     const rEl = document.getElementById('dMirrorRoutine');
-    if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
+    if (rEl) rEl.style.color = isRoutineDone ? _tHex() : '#666';
 
     // Kinks & limits
     const kinksLimitsEl = document.getElementById('admin_KinksLimits');
@@ -246,8 +250,8 @@ export async function updateDetail(u: any) {
                         <div style="font-size:0.5rem; color:var(--gold); font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${kinks}</div>
                     </div>` : ''}
-                    ${limits ? `<div style="padding:10px; background:rgba(255,68,68,0.03);">
-                        <div style="font-size:0.5rem; color:#ff6666; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
+                    ${limits ? `<div style="padding:10px; background:${_tAc(0.03)};">
+                        <div style="font-size:0.5rem; color:${_tAc(0.7)}; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${limits}</div>
                     </div>` : ''}
                 </div>`;
@@ -313,9 +317,9 @@ function renderKneelSection(u: any) {
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
 
-    const statusColor = isLocked ? '#c5603a' : '#3a9c6e';
-    const statusBg = isLocked ? 'rgba(197,96,58,0.12)' : 'rgba(58,156,110,0.12)';
-    const statusBorder = isLocked ? 'rgba(197,96,58,0.3)' : 'rgba(58,156,110,0.3)';
+    const statusColor = isLocked ? '#c05050' : _tHex();
+    const statusBg = isLocked ? 'rgba(180,60,60,0.1)' : _tAc(0.1);
+    const statusBorder = isLocked ? 'rgba(180,60,60,0.3)' : _tAc(0.35);
     const statusText = isLocked ? `LOCKED  ${minLeft}m` : 'AVAILABLE';
 
     el.innerHTML = `

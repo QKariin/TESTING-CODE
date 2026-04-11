@@ -30,7 +30,7 @@ const THEMES = {
     gold:  { id: 'gold'  as const, label: 'GOLD',  hex: '#c5a059', dim: '#8b6914', rgb: '197,160,89',  hex2: '#b91c1c', dim2: '#7f1d1d', rgb2: '185,28,28'   },
     rose:  { id: 'rose'  as const, label: 'ROSE',  hex: '#ec4899', dim: '#be185d', rgb: '236,72,153',  hex2: '#7c3aed', dim2: '#5b21b6', rgb2: '124,58,237'  },
     ice:   { id: 'ice'   as const, label: 'ICE',   hex: '#38bdf8', dim: '#0284c7', rgb: '56,189,248',  hex2: '#e2e8f0', dim2: '#94a3b8', rgb2: '226,232,240' },
-    jade:  { id: 'jade'  as const, label: 'JADE',  hex: '#10b981', dim: '#059669', rgb: '16,185,129',  hex2: '#d97706', dim2: '#92400e', rgb2: '217,119,6'   },
+    neon:  { id: 'neon'  as const, label: 'NEON',  hex: '#ff2d78', dim: '#c0185a', rgb: '255,45,120',  hex2: '#39ff14', dim2: '#22cc0a', rgb2: '57,255,20'   },
     ember: { id: 'ember' as const, label: 'EMBER', hex: '#f97316', dim: '#c2410c', rgb: '249,115,22',  hex2: '#991b1b', dim2: '#7f1d1d', rgb2: '153,27,27'   },
 } as const;
 type ThemeId = keyof typeof THEMES;
