@@ -10,6 +10,7 @@ import {
 
 import { renderSidebar } from './dashboard-sidebar';
 import { renderOperationsMonitor } from './dashboard-operations';
+import { renderOverview, pushActivity } from './dashboard-overview';
 import { loadWishlistManager, openWishlistAdd, openWishlistEdit, closeWishlistModal, saveWishlistItem, deleteWishlistItem, handleWishlistImageSelect, previewWishlistUrl } from './dashboard-wishlist';
 import { updateDetail } from './dashboard-users';
 import { toggleMobStats } from './dashboard-utils';
@@ -193,7 +194,10 @@ export function renderMainDashboard() {
     renderSidebar();
     renderOperationsMonitor();
     updateStatsDeck();
+    renderOverview();
 }
+
+export { pushActivity };
 
 function updateStatsDeck() {
     const totalTributes = document.getElementById('statTributes');
@@ -813,6 +817,7 @@ export async function rejectFromGallery(submissionId: string, memberId: string) 
 if (typeof window !== 'undefined') {
     (window as any).showHome = showHome;
     (window as any).renderMainDashboard = renderMainDashboard;
+    (window as any).pushActivity = pushActivity;
     (window as any).initDashboard = initDashboard;
     (window as any).switchAdminTab = switchAdminTab;
     (window as any).expandFeedSection = expandFeedSection;

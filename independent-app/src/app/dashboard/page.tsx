@@ -729,6 +729,19 @@ export default function DashboardPage() {
 
                 // Re-render sidebar — sound + pink SVG glow handled inside renderSidebar
                 renderSidebar();
+
+                // Push to activity feed
+                const senderName = (msg.member_id || 'slave').split('@')[0];
+                const msgType = msg.type || 'text';
+                if (msgType === 'wishlist') {
+                    (window as any).pushActivity?.('💎', `${senderName} sent a tribute`, '#c5a059');
+                } else if (msgType === 'photo') {
+                    (window as any).pushActivity?.('📸', `${senderName} sent a photo`, '#c5a059');
+                } else if (msgType === 'video') {
+                    (window as any).pushActivity?.('🎥', `${senderName} sent a video`, '#c5a059');
+                } else {
+                    (window as any).pushActivity?.('💬', `${senderName} sent a message`, 'rgba(197,160,89,0.7)');
+                }
             })
             .subscribe();
 
@@ -753,23 +766,47 @@ export default function DashboardPage() {
 
             {/* SIDEBAR */}
             <div className="sidebar">
-                <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
-                <div
-                    className="sb-dash-btn"
-                    onClick={() => (window as any).showPosts()}
-                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
-                >✦ POSTS</div>
-                <div
-                    className="sb-dash-btn"
-                    onClick={() => setShowChallenges(true)}
-                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: showChallenges ? '#4ade80' : '#4ade8099', position: 'relative', cursor: 'pointer', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}
-                >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</div>
-                <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
-                    <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
-                    <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
+                {/* Brand */}
+                <div style={{ padding:'18px 16px 12px', borderBottom:'1px solid rgba(197,160,89,0.1)', display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#c5a059,#8b6914)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>♛</div>
+                    <div>
+                        <div style={{ fontFamily:'Cinzel', fontSize:'0.8rem', color:'#c5a059', fontWeight:700, letterSpacing:'1px' }}>COMMAND</div>
+                        <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px' }}>CENTER</div>
+                    </div>
                 </div>
-                <div className="sb-head">SUB LIST</div>
-                <div id="userList" className="user-list"></div>
+
+                {/* Today's code */}
+                <div style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', textAlign:'center' }}>
+                    <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px', marginBottom:3 }}>TODAY'S CODE</div>
+                    <div id="adminDailyCode" style={{ color:'#c5a059', fontWeight:900, fontFamily:'Orbitron', fontSize:'1rem', letterSpacing:'3px' }}>----</div>
+                </div>
+
+                {/* Nav */}
+                <div style={{ padding:'8px 0' }}>
+                    <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px' }}>OVERVIEW</div>
+                    <div className="sb-dash-btn" onClick={() => (window as any).showHome()} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                        <span style={{ opacity:0.5 }}>⊞</span> DASHBOARD
+                    </div>
+
+                    <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px', marginTop:4 }}>CONTENT</div>
+                    <div className="sb-dash-btn" onClick={() => (window as any).showPosts()} style={{ display:'flex', alignItems:'center', gap:10, color:'#c5a059' }}>
+                        <span style={{ opacity:0.6 }}>✦</span> POSTS
+                    </div>
+                    <div className="sb-dash-btn" onClick={() => setShowChallenges(true)} style={{ display:'flex', alignItems:'center', gap:10, color: showChallenges ? '#4ade80' : '#4ade8099', position:'relative', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}>
+                        <span style={{ opacity:0.6 }}>⚔</span> CHALLENGES
+                        {pendingVerificationCount > 0 && <span style={{ marginLeft:'auto', background:'#e03030', color:'#fff', borderRadius:10, padding:'2px 6px', fontFamily:'Orbitron', fontSize:'0.35rem', fontWeight:700 }}>{pendingVerificationCount}</span>}
+                    </div>
+
+                    <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px', marginTop:4 }}>COMMUNITY</div>
+                    <div className="sb-dash-btn" onClick={() => window.location.href = '/global'} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                        <span style={{ opacity:0.5 }}>◎</span> GLOBAL
+                    </div>
+                </div>
+
+                <div style={{ borderTop:'1px solid rgba(255,255,255,0.04)', paddingTop:8 }}>
+                    <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'6px 18px 4px' }}>SUBJECTS</div>
+                    <div id="userList" className="user-list"></div>
+                </div>
             </div>
 
             {/* MAIN CONTENT AREA */}
@@ -784,42 +821,92 @@ export default function DashboardPage() {
 
                 {/* 1. HOME VIEW */}
                 <div id="viewHome">
-                    <div className="v-header">
-                        <div className="v-header-left">
-                            <div className="v-breadcrumb">Pages / Dashboard</div>
-                            <div className="v-title">Dashboard</div>
+
+                    {/* ── OVERVIEW HEADER ── */}
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'28px 28px 0', flexWrap:'wrap', gap:12 }}>
+                        <div>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.45rem', color:'rgba(197,160,89,0.5)', letterSpacing:'3px', marginBottom:4 }}>COMMAND CENTER / OVERVIEW</div>
+                            <div style={{ fontFamily:'Cinzel', fontSize:'1.6rem', color:'#fff', fontWeight:700, letterSpacing:'2px' }}>
+                                Welcome back, <span style={{ color:'#c5a059' }}>{userEmail?.split('@')[0]?.toUpperCase() || 'QUEEN'}</span>
+                            </div>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.42rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px', marginTop:4 }}>
+                                {new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
+                            </div>
+                        </div>
+                        <div style={{ display:'flex', gap:8 }}>
+                            <button onClick={handleLogout} style={{ background:'rgba(255,60,60,0.08)', border:'1px solid rgba(255,60,60,0.2)', color:'rgba(255,80,80,0.7)', fontFamily:'Orbitron', fontSize:'0.42rem', letterSpacing:'2px', padding:'8px 16px', borderRadius:6, cursor:'pointer' }}>LOGOUT</button>
                         </div>
                     </div>
 
-                    <div className="v-grid-stats">
-                        <div className="v-stat-card glass-card">
-                            <div className="vs-info">
-                                <div className="vs-label">Today's Tributes</div>
-                                <div className="vs-val" id="statTributes">0 <span className="vs-perc">+55%</span></div>
+                    {/* ── STATS ROW ── */}
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:12, padding:'20px 28px 0' }}>
+                        {[
+                            { id:'ov-stat-today', label:"TODAY'S REVENUE", icon:'💰', color:'#c5a059' },
+                            { id:'ov-stat-month', label:'THIS MONTH', icon:'📈', color:'#c5a059' },
+                            { id:'ov-stat-online', label:'ONLINE NOW', icon:'🟢', color:'#4ade80' },
+                            { id:'ov-stat-slaves', label:'TOTAL SLAVES', icon:'👤', color:'#c5a059' },
+                            { id:'ov-stat-pending', label:'PENDING REVIEW', icon:'📝', color:'#f59e0b' },
+                            { id:'ov-stat-total', label:'TOTAL TRIBUTES', icon:'♛', color:'#c5a059' },
+                        ].map(s => (
+                            <div key={s.id} style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:12, padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+                                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                    <div style={{ fontFamily:'Orbitron', fontSize:'0.38rem', color:'rgba(255,255,255,0.3)', letterSpacing:'2px' }}>{s.label}</div>
+                                    <div style={{ fontSize:'0.9rem', opacity:0.7 }}>{s.icon}</div>
+                                </div>
+                                <div id={s.id} style={{ fontFamily:'Orbitron', fontSize:'1.2rem', fontWeight:700, color:s.color, letterSpacing:'1px' }}>—</div>
                             </div>
-                            <div className="vs-icon gold-bg">💰</div>
-                        </div>
-                        <div className="v-stat-card glass-card">
-                            <div className="vs-info">
-                                <div className="vs-label">Active Slaves</div>
-                                <div className="vs-val" id="statActive">0 <span className="vs-perc">+5%</span></div>
+                        ))}
+                    </div>
+
+                    {/* ── MAIN GRID ── */}
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, padding:'16px 28px 0' }}>
+
+                        {/* REVENUE CHART */}
+                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
+                            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                <div>
+                                    <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>TRIBUTE REVENUE</div>
+                                    <div style={{ fontFamily:'Orbitron', fontSize:'0.38rem', color:'rgba(255,255,255,0.2)', letterSpacing:'2px', marginTop:3 }}>LAST 7 DAYS</div>
+                                </div>
+                                <div id="statTributes" style={{ fontFamily:'Orbitron', fontSize:'0.45rem', color:'rgba(197,160,89,0.5)', letterSpacing:'2px' }}></div>
                             </div>
-                            <div className="vs-icon gold-bg">👤</div>
+                            <div id="ov-revenue-chart" style={{ width:'100%', minHeight:140 }}></div>
                         </div>
-                        <div className="v-stat-card glass-card">
-                            <div className="vs-info">
-                                <div className="vs-label">Pending Reviews</div>
-                                <div className="vs-val" id="statPending">0 <span className="vs-perc neg">-14%</span></div>
+
+                        {/* SLAVE STATUS DONUT */}
+                        <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>SLAVE STATUS</div>
+                            <div id="ov-slave-donut" style={{ display:'flex', alignItems:'center', gap:16, flex:1 }}></div>
+                        </div>
+
+                        {/* TOP SPENDER */}
+                        <div style={{ background:'linear-gradient(135deg,rgba(197,160,89,0.06),rgba(197,160,89,0.02))', border:'1px solid rgba(197,160,89,0.18)', borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:12 }}>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>TOP SPENDER</div>
+                            <div style={{ display:'flex', alignItems:'center', gap:14, flex:1 }}>
+                                <img id="ov-top-avatar" src="/queen-karin.png" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:'2px solid rgba(197,160,89,0.4)', display:'none' }} />
+                                <div>
+                                    <div id="ov-top-name" style={{ fontFamily:'Cinzel', fontSize:'1rem', color:'#fff', fontWeight:700, letterSpacing:'1px' }}>—</div>
+                                    <div id="ov-top-val" style={{ fontFamily:'Orbitron', fontSize:'0.65rem', color:'#c5a059', marginTop:4 }}>—</div>
+                                </div>
                             </div>
-                            <div className="vs-icon gold-bg">📝</div>
                         </div>
-                        <div className="v-stat-card glass-card">
-                            <div className="vs-info">
-                                <div className="vs-label">Total Failures</div>
-                                <div className="vs-val" id="statSkipped">0 <span className="vs-perc">+8%</span></div>
+
+                        {/* ACTIVITY FEED */}
+                        <div style={{ gridColumn:'span 2', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(197,160,89,0.1)', borderRadius:14, display:'flex', flexDirection:'column', overflow:'hidden', minHeight:220 }}>
+                            <div style={{ padding:'16px 18px 12px', borderBottom:'1px solid rgba(197,160,89,0.08)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+                                <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:'#c5a059', letterSpacing:'3px' }}>LIVE ACTIVITY</div>
+                                <div style={{ width:8, height:8, borderRadius:'50%', background:'#4ade80', boxShadow:'0 0 8px rgba(74,222,128,0.6)', animation:'pulse 2s infinite' }}></div>
                             </div>
-                            <div className="vs-icon gold-bg">⚠️</div>
+                            <div id="ov-activity-feed" style={{ flex:1, overflowY:'auto', maxHeight:200 }}></div>
                         </div>
+
+                    </div>
+
+                    {/* ── LEGACY STATS (hidden, kept for script compatibility) ── */}
+                    <div style={{ display:'none' }}>
+                        <span id="statActive"></span>
+                        <span id="statPending"></span>
+                        <span id="statSkipped"></span>
                     </div>
 
                     <div className="v-grid-main">
