@@ -1,5 +1,5 @@
 // dashboard-overview.ts — Professional queen dashboard home overview
-import { getState as getDashState, users, globalTributes, globalQueue } from './dashboard-state';
+import { users, globalTributes, globalQueue } from './dashboard-state';
 
 // ── Activity feed ring buffer ──────────────────────────────────────────────
 const _activityFeed: { time: Date; icon: string; text: string; color: string }[] = [];
