@@ -8,6 +8,9 @@ function themeHex(): string { return (window as any).__dashTheme?.hex || '#c5a05
 function themeDim(): string { return (window as any).__dashTheme?.dim || '#8b6914'; }
 function themeRgb(): string { return (window as any).__dashTheme?.rgb || '197,160,89'; }
 function themeAc(a: number): string { return `rgba(${themeRgb()},${a})`; }
+function themeHex2(): string { return (window as any).__dashTheme?.hex2 || '#b91c1c'; }
+function themeRgb2(): string { return (window as any).__dashTheme?.rgb2 || '185,28,28'; }
+function themeAc2(a: number): string { return `rgba(${themeRgb2()},${a})`; }
 
 export function pushActivity(icon: string, text: string, color?: string) {
     color = color || themeHex();
@@ -97,7 +100,7 @@ function _buildRevenueChart(): string {
             <defs>
                 <linearGradient id="accentGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="${hex}"/>
-                    <stop offset="100%" stop-color="${dim}"/>
+                    <stop offset="100%" stop-color="${themeHex2()}"/>
                 </linearGradient>
             </defs>
             <line x1="${padL}" y1="${H - 20}" x2="${W - padL}" y2="${H - 20}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
@@ -128,18 +131,19 @@ function _buildSlaveDonut(): string {
     const inactiveDash = (inactive / total) * circumference;
 
     const h = themeHex();
-    const hDim = themeAc(0.4);
+    const h2 = themeHex2();
     const hGlow = themeAc(0.6);
+    const h2Glow = themeAc2(0.6);
     return `
         <svg width="110" height="110" viewBox="0 0 110 110">
             <!-- inactive -->
             <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12" stroke-dasharray="${circumference}" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>
-            <!-- recent -->
-            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${hDim}" stroke-width="12"
+            <!-- recent — use second theme color -->
+            <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${h2}" stroke-width="12"
                 stroke-dasharray="${recentDash} ${circumference - recentDash}"
                 stroke-dashoffset="${-onlineDash}"
                 transform="rotate(-90 ${cx} ${cy})"/>
-            <!-- online -->
+            <!-- online — use primary theme color -->
             <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${h}" stroke-width="12"
                 stroke-dasharray="${onlineDash} ${circumference - onlineDash}"
                 stroke-dashoffset="0"
@@ -154,9 +158,9 @@ function _buildSlaveDonut(): string {
                 <span style="font-family:Orbitron;font-size:0.5rem;color:${h};margin-left:auto;">${online}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-                <div style="width:10px;height:10px;border-radius:50%;background:${hDim};"></div>
+                <div style="width:10px;height:10px;border-radius:50%;background:${h2};box-shadow:0 0 6px ${h2Glow};"></div>
                 <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);">ACTIVE TODAY</span>
-                <span style="font-family:Orbitron;font-size:0.5rem;color:${hDim};margin-left:auto;">${recent}</span>
+                <span style="font-family:Orbitron;font-size:0.5rem;color:${h2};margin-left:auto;">${recent}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08);"></div>

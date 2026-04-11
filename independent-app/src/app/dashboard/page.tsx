@@ -26,11 +26,11 @@ import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
 
 // ── Theme system ────────────────────────────────────────────────────────────
 const THEMES = {
-    gold:    { id: 'gold'    as const, label: 'GOLD',    hex: '#c5a059', dim: '#8b6914', rgb: '197,160,89'  },
-    crimson: { id: 'crimson' as const, label: 'CRIMSON', hex: '#dc2626', dim: '#991b1b', rgb: '220,38,38'   },
-    violet:  { id: 'violet'  as const, label: 'VIOLET',  hex: '#7c3aed', dim: '#5b21b6', rgb: '124,58,237'  },
-    rose:    { id: 'rose'    as const, label: 'ROSE',    hex: '#ec4899', dim: '#be185d', rgb: '236,72,153'  },
-    ice:     { id: 'ice'     as const, label: 'ICE',     hex: '#94a3b8', dim: '#64748b', rgb: '148,163,184' },
+    gold:  { id: 'gold'  as const, label: 'GOLD',  hex: '#c5a059', dim: '#8b6914', rgb: '197,160,89',  hex2: '#b91c1c', dim2: '#7f1d1d', rgb2: '185,28,28'   },
+    rose:  { id: 'rose'  as const, label: 'ROSE',  hex: '#ec4899', dim: '#be185d', rgb: '236,72,153',  hex2: '#7c3aed', dim2: '#5b21b6', rgb2: '124,58,237'  },
+    ice:   { id: 'ice'   as const, label: 'ICE',   hex: '#38bdf8', dim: '#0284c7', rgb: '56,189,248',  hex2: '#e2e8f0', dim2: '#94a3b8', rgb2: '226,232,240' },
+    jade:  { id: 'jade'  as const, label: 'JADE',  hex: '#10b981', dim: '#059669', rgb: '16,185,129',  hex2: '#d97706', dim2: '#92400e', rgb2: '217,119,6'   },
+    ember: { id: 'ember' as const, label: 'EMBER', hex: '#f97316', dim: '#c2410c', rgb: '249,115,22',  hex2: '#991b1b', dim2: '#7f1d1d', rgb2: '153,27,27'   },
 } as const;
 type ThemeId = keyof typeof THEMES;
 
@@ -328,7 +328,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                     placeholder="Send to global..."
                     style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(var(--gold-rgb),0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }}
                 />
-                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
+                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,var(--gold),var(--accent))', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
                     SEND
                 </button>
             </div>
@@ -413,7 +413,7 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
 
                 {error && <div style={{ color: '#ff5555', fontFamily: 'Orbitron', fontSize: '0.38rem', marginBottom: 12 }}>{error}</div>}
 
-                <button onClick={activate} disabled={loading} style={{ width: '100%', padding: '13px', background: isPaywall ? 'linear-gradient(135deg,#c5a059,#8b6914)' : 'linear-gradient(135deg,#b02020,#7a1010)', border: 'none', borderRadius: 8, color: isPaywall ? '#000' : '#fff', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+                <button onClick={activate} disabled={loading} style={{ width: '100%', padding: '13px', background: isPaywall ? 'linear-gradient(135deg,var(--gold),var(--accent))' : 'linear-gradient(135deg,#b02020,#7a1010)', border: 'none', borderRadius: 8, color: isPaywall ? '#000' : '#fff', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
                     {loading ? 'LOCKING...' : (isPaywall ? 'ACTIVATE PAYWALL' : 'SILENCE USER')}
                 </button>
             </div>
@@ -437,20 +437,19 @@ export default function DashboardPage() {
     // Derived theme helpers (recomputed on each render, no effect needed)
     const t = THEMES[themeId];
     const ac = (alpha: number) => `rgba(${t.rgb},${alpha})`;
+    const ac2 = (alpha: number) => `rgba(${t.rgb2},${alpha})`;
     const saveTheme = useCallback((id: ThemeId) => {
         setThemeId(id);
         localStorage.setItem('qk_theme', id);
-        (window as any).__dashTheme = THEMES[id];
+        const th = THEMES[id];
+        (window as any).__dashTheme = { hex: th.hex, dim: th.dim, rgb: th.rgb, hex2: th.hex2, dim2: th.dim2, rgb2: th.rgb2 };
     }, []);
 
     useEffect(() => {
         const saved = localStorage.getItem('qk_theme') as ThemeId | null;
-        if (saved && THEMES[saved]) {
-            setThemeId(saved);
-            (window as any).__dashTheme = THEMES[saved];
-        } else {
-            (window as any).__dashTheme = THEMES.gold;
-        }
+        const th = saved && THEMES[saved] ? THEMES[saved] : THEMES.gold;
+        if (saved && THEMES[saved]) setThemeId(saved);
+        (window as any).__dashTheme = { hex: th.hex, dim: th.dim, rgb: th.rgb, hex2: th.hex2, dim2: th.dim2, rgb2: th.rgb2 };
     }, []);
 
     useEffect(() => {
@@ -794,25 +793,33 @@ export default function DashboardPage() {
                     --gold: ${t.hex};
                     --gold-dark: ${t.dim};
                     --gold-rgb: ${t.rgb};
+                    --accent: ${t.hex2};
+                    --accent-dark: ${t.dim2};
+                    --accent-rgb: ${t.rgb2};
                 }
                 .ops-card.task { border-color: ${ac(0.22)} !important; background: linear-gradient(135deg, ${ac(0.07)}, rgba(0,0,0,0.8)) !important; }
-                .ops-card.routine { border-color: ${ac(0.12)} !important; background: linear-gradient(135deg, ${ac(0.04)}, rgba(0,0,0,0.8)) !important; }
+                .ops-card.routine { border-color: ${ac2(0.22)} !important; background: linear-gradient(135deg, ${ac2(0.07)}, rgba(0,0,0,0.8)) !important; }
                 .ops-card:hover { border-color: ${t.hex} !important; box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 16px ${ac(0.18)} !important; }
                 .ops-counter.gold { background: linear-gradient(to bottom, #fff, ${t.hex}) !important; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-                .ops-counter.silver { background: linear-gradient(to bottom, #fff, ${ac(0.6)}) !important; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+                .ops-counter.silver { background: linear-gradient(to bottom, #fff, ${ac2(0.8)}) !important; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
                 .sb-dash-btn:hover { color: ${t.hex} !important; box-shadow: inset 3px 0 0 ${t.hex} !important; }
                 .v-gauge-card:hover { border-color: ${ac(0.5)} !important; }
-                .v-best-sub:hover { border-color: ${ac(0.5)} !important; }
+                .v-best-sub:hover { border-color: ${ac2(0.5)} !important; }
                 .v-hero-card { border-color: ${ac(0.2)} !important; }
-                .v-feed-card, .v-monitor-card { border-color: ${ac(0.15)} !important; }
-                .glass-card { border-color: ${ac(0.15)} !important; }
+                .v-feed-card, .v-monitor-card { border-color: ${ac2(0.15)} !important; }
+                .glass-card { border-color: ${ac(0.12)} !important; }
                 .sidebar { border-right-color: ${ac(0.08)} !important; }
-                [class*="chat"] .bubble-out, .msg-out { background: linear-gradient(135deg, ${t.hex}, ${t.dim}) !important; }
+                [class*="chat"] .bubble-out, .msg-out { background: linear-gradient(135deg, ${t.hex}, ${t.hex2}) !important; }
                 .chat-header, .dc-header { border-bottom-color: ${ac(0.12)} !important; }
                 input:focus, textarea:focus { border-color: ${ac(0.4)} !important; box-shadow: 0 0 0 2px ${ac(0.12)} !important; }
                 .btn-primary, button[class*="gold"] { background: ${t.hex} !important; }
                 scrollbar-color: ${ac(0.3)} transparent;
-                ::-webkit-scrollbar-thumb { background: ${ac(0.25)} !important; }
+                ::-webkit-scrollbar-thumb { background: linear-gradient(${t.hex}, ${t.hex2}) !important; }
+                .vk-title { color: var(--gold) !important; }
+                .vg-title { color: var(--gold) !important; }
+                .vb-title { color: var(--gold) !important; }
+                .vf-header { color: var(--gold) !important; }
+                .vh-title { background: linear-gradient(135deg, var(--gold), var(--accent)) !important; -webkit-background-clip: text !important; background-clip: text !important; -webkit-text-fill-color: transparent !important; }
             `}</style>
 
             {/* MOBILE TOP BAR */}
@@ -824,10 +831,10 @@ export default function DashboardPage() {
             {/* SIDEBAR */}
             <div className="sidebar">
                 {/* Brand */}
-                <div style={{ padding:'18px 16px 12px', borderBottom:'1px solid rgba(var(--gold-rgb),0.1)', display:'flex', alignItems:'center', gap:10 }}>
-                    <div style={{ width:32, height:32, borderRadius:'50%', background:`linear-gradient(135deg,${t.hex},${t.dim})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>♛</div>
+                <div style={{ padding:'18px 16px 12px', borderBottom:`1px solid ${ac(0.1)}`, display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ width:32, height:32, borderRadius:'50%', background:`linear-gradient(135deg,${t.hex},${t.hex2})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>♛</div>
                     <div>
-                        <div style={{ fontFamily:'Cinzel', fontSize:'0.8rem', color:t.hex, fontWeight:700, letterSpacing:'1px' }}>COMMAND</div>
+                        <div style={{ fontFamily:'Cinzel', fontSize:'0.8rem', background:`linear-gradient(135deg,${t.hex},${t.hex2})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontWeight:700, letterSpacing:'1px' }}>COMMAND</div>
                         <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px' }}>CENTER</div>
                     </div>
                 </div>
@@ -835,7 +842,7 @@ export default function DashboardPage() {
                 {/* Today's code */}
                 <div style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', textAlign:'center' }}>
                     <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.25)', letterSpacing:'2px', marginBottom:3 }}>TODAY'S CODE</div>
-                    <div id="adminDailyCode" style={{ color:t.hex, fontWeight:900, fontFamily:'Orbitron', fontSize:'1rem', letterSpacing:'3px' }}>----</div>
+                    <div id="adminDailyCode" style={{ background:`linear-gradient(135deg,${t.hex},${t.hex2})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', fontWeight:900, fontFamily:'Orbitron', fontSize:'1rem', letterSpacing:'3px' }}>----</div>
                 </div>
 
                 {/* Nav */}
@@ -899,14 +906,14 @@ export default function DashboardPage() {
                                         onClick={() => saveTheme(th.id)}
                                         title={th.label}
                                         style={{
-                                            width: themeId === th.id ? 18 : 13,
-                                            height: themeId === th.id ? 18 : 13,
-                                            borderRadius: '50%',
-                                            background: th.hex,
-                                            border: themeId === th.id ? '2px solid rgba(255,255,255,0.9)' : '2px solid transparent',
+                                            width: themeId === th.id ? 32 : 24,
+                                            height: themeId === th.id ? 16 : 12,
+                                            borderRadius: 20,
+                                            background: `linear-gradient(135deg, ${th.hex} 0%, ${th.hex2} 100%)`,
+                                            border: themeId === th.id ? '2px solid rgba(255,255,255,0.85)' : '2px solid transparent',
                                             cursor: 'pointer',
                                             transition: 'all 0.18s',
-                                            boxShadow: themeId === th.id ? `0 0 10px ${th.hex}` : 'none',
+                                            boxShadow: themeId === th.id ? `0 0 12px ${th.hex}, 0 0 12px ${th.hex2}` : 'none',
                                             padding: 0,
                                             outline: 'none',
                                             flexShrink: 0,
@@ -921,19 +928,19 @@ export default function DashboardPage() {
                     {/* ── STATS ROW ── */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:12, padding:'20px 28px 0' }}>
                         {[
-                            { id:'ov-stat-today', label:"TODAY'S REVENUE", icon:'💰', accent: true },
-                            { id:'ov-stat-month', label:'THIS MONTH', icon:'📈', accent: true },
-                            { id:'ov-stat-online', label:'ONLINE NOW', icon:'🟢', accent: false, fixedColor:'#4ade80' },
-                            { id:'ov-stat-slaves', label:'TOTAL SLAVES', icon:'👤', accent: true },
-                            { id:'ov-stat-pending', label:'PENDING REVIEW', icon:'📝', accent: false, fixedColor:'#f59e0b' },
-                            { id:'ov-stat-total', label:'TOTAL TRIBUTES', icon:'♛', accent: true },
+                            { id:'ov-stat-today', label:"TODAY'S REVENUE", icon:'💰', color: t.hex, border: ac(0.18) },
+                            { id:'ov-stat-month', label:'THIS MONTH', icon:'📈', color: t.hex2, border: ac2(0.18) },
+                            { id:'ov-stat-online', label:'ONLINE NOW', icon:'🟢', color:'#4ade80', border:'rgba(74,222,128,0.18)' },
+                            { id:'ov-stat-slaves', label:'TOTAL SLAVES', icon:'👤', color: t.hex, border: ac(0.12) },
+                            { id:'ov-stat-pending', label:'PENDING REVIEW', icon:'📝', color:'#f59e0b', border:'rgba(245,158,11,0.18)' },
+                            { id:'ov-stat-total', label:'TOTAL TRIBUTES', icon:'♛', color: t.hex2, border: ac2(0.18) },
                         ].map(s => (
-                            <div key={s.id} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${ac(0.12)}`, borderRadius:14, padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
+                            <div key={s.id} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${s.border}`, borderRadius:14, padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8 }}>
                                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                                     <div style={{ fontFamily:'Orbitron', fontSize:'0.38rem', color:'rgba(255,255,255,0.3)', letterSpacing:'2px' }}>{s.label}</div>
                                     <div style={{ fontSize:'0.9rem', opacity:0.7 }}>{s.icon}</div>
                                 </div>
-                                <div id={s.id} style={{ fontFamily:'Orbitron', fontSize:'1.2rem', fontWeight:700, color: s.accent ? t.hex : (s as any).fixedColor, letterSpacing:'1px' }}>—</div>
+                                <div id={s.id} style={{ fontFamily:'Orbitron', fontSize:'1.2rem', fontWeight:700, color: s.color, letterSpacing:'1px' }}>—</div>
                             </div>
                         ))}
                     </div>
@@ -954,13 +961,13 @@ export default function DashboardPage() {
                         </div>
 
                         {/* SLAVE STATUS DONUT */}
-                        <div style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${ac(0.1)}`, borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
-                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex, letterSpacing:'3px' }}>SLAVE STATUS</div>
+                        <div style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${ac2(0.12)}`, borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:14 }}>
+                            <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex2, letterSpacing:'3px' }}>SLAVE STATUS</div>
                             <div id="ov-slave-donut" style={{ display:'flex', alignItems:'center', gap:16, flex:1 }}></div>
                         </div>
 
                         {/* TOP SPENDER */}
-                        <div style={{ background:`linear-gradient(135deg,${ac(0.06)},${ac(0.02)})`, border:`1px solid ${ac(0.18)}`, borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:12 }}>
+                        <div style={{ background:`linear-gradient(135deg,${ac(0.06)},${ac2(0.04)})`, border:`1px solid ${ac(0.18)}`, borderRadius:14, padding:'20px 18px', display:'flex', flexDirection:'column', gap:12 }}>
                             <div style={{ fontFamily:'Orbitron', fontSize:'0.55rem', color:t.hex, letterSpacing:'3px' }}>TOP SPENDER</div>
                             <div style={{ display:'flex', alignItems:'center', gap:14, flex:1 }}>
                                 <img id="ov-top-avatar" src="/queen-karin.png" style={{ width:52, height:52, borderRadius:'50%', objectFit:'cover', border:`2px solid ${ac(0.4)}`, display:'none' }} />
@@ -1061,7 +1068,7 @@ export default function DashboardPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(var(--gold-rgb),0.3)' }}>
+                                        <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,var(--gold) 0%,var(--accent) 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(var(--gold-rgb),0.3)' }}>
                                             {challengeWidget.isUpcoming ? 'VIEW CHALLENGE' : 'MANAGE CHALLENGE'}
                                         </div>
                                     </div>

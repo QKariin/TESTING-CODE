@@ -21,9 +21,12 @@ body {
     --bg-panel: rgba(10, 10, 15, 0.85);
     --bg-card: rgba(20, 20, 25, 0.7);
     /* ── Accent theme variables (overridden by theme picker) ── */
-    --gold: var(--gold);
-    --gold-dark: var(--gold-dark);
+    --gold: #c5a059;
+    --gold-dark: #8b6914;
     --gold-rgb: 197, 160, 89;
+    --accent: #b91c1c;
+    --accent-dark: #7f1d1d;
+    --accent-rgb: 185, 28, 28;
     --border: rgba(var(--gold-rgb), 0.15);
     --gold-glow: rgba(var(--gold-rgb), 0.4);
     --gold-dim: rgba(var(--gold-rgb), 0.1);
