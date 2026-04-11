@@ -26,7 +26,7 @@ import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
 
 // ── Theme system ────────────────────────────────────────────────────────────
 const THEMES = {
-    gold:    { id: 'gold'    as const, label: 'GOLD',    hex: 'var(--gold)', dim: 'var(--gold-dark)', rgb: '197,160,89'  },
+    gold:    { id: 'gold'    as const, label: 'GOLD',    hex: '#c5a059', dim: '#8b6914', rgb: '197,160,89'  },
     crimson: { id: 'crimson' as const, label: 'CRIMSON', hex: '#dc2626', dim: '#991b1b', rgb: '220,38,38'   },
     violet:  { id: 'violet'  as const, label: 'VIOLET',  hex: '#7c3aed', dim: '#5b21b6', rgb: '124,58,237'  },
     rose:    { id: 'rose'    as const, label: 'ROSE',    hex: '#ec4899', dim: '#be185d', rgb: '236,72,153'  },
@@ -1100,8 +1100,8 @@ export default function DashboardPage() {
                                 <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(var(--gold-rgb),0.06)', border: '1px solid rgba(var(--gold-rgb),0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'var(--gold)', letterSpacing: '2px' }}>WISHLIST</div>
                                 </div>
-                                <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
+                                <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: ac(0.06), border: `1px solid ${ac(0.2)}`, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: ac(0.7), letterSpacing: '2px' }}>LOCKS</div>
                                 </div>
                                 <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
