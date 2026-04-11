@@ -8,6 +8,7 @@ import '../../css/dashboard-modals.css';
 import '../../css/dashboard-mobile.css';
 import MobileDashboard from './MobileDashboard';
 import { ChallengesContent } from './challenges/page';
+import { GlobalContent } from './GlobalContent';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -431,6 +432,7 @@ export default function DashboardPage() {
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const [showChallenges, setShowChallenges] = useState(false);
+    const [showGlobal, setShowGlobal] = useState(false);
     const [themeId, setThemeId] = useState<ThemeId>('gold');
     const router = useRouter();
 
@@ -537,6 +539,7 @@ export default function DashboardPage() {
             // Wrapped with mobile nav sync
             (window as any).showHome = () => {
                 setShowChallenges(false);
+                setShowGlobal(false);
                 markPendingRead(); // leaving a chat — mark it as read now
                 showHome();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
@@ -848,22 +851,37 @@ export default function DashboardPage() {
                 {/* Nav */}
                 <div style={{ padding:'8px 0' }}>
                     <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px' }}>OVERVIEW</div>
-                    <div className="sb-dash-btn" onClick={() => (window as any).showHome()} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <span style={{ opacity:0.5 }}>⊞</span> DASHBOARD
+                    <div className="sb-dash-btn" onClick={() => { setShowChallenges(false); setShowGlobal(false); (window as any).showHome(); }} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ opacity:0.45, flexShrink:0 }}>
+                            <rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/>
+                            <rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>
+                        </svg>
+                        DASHBOARD
                     </div>
 
                     <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px', marginTop:4 }}>CONTENT</div>
-                    <div className="sb-dash-btn" onClick={() => (window as any).showPosts()} style={{ display:'flex', alignItems:'center', gap:10, color:t.hex }}>
-                        <span style={{ opacity:0.6 }}>✦</span> POSTS
+                    <div className="sb-dash-btn" onClick={() => { setShowChallenges(false); setShowGlobal(false); (window as any).showPosts(); }} style={{ display:'flex', alignItems:'center', gap:10, color:t.hex }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity:0.7, flexShrink:0 }}>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        POSTS
                     </div>
-                    <div className="sb-dash-btn" onClick={() => setShowChallenges(true)} style={{ display:'flex', alignItems:'center', gap:10, color: showChallenges ? '#4ade80' : '#4ade8099', position:'relative', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}>
-                        <span style={{ opacity:0.6 }}>⚔</span> CHALLENGES
+                    <div className="sb-dash-btn" onClick={() => { setShowGlobal(false); setShowChallenges(true); }} style={{ display:'flex', alignItems:'center', gap:10, color: showChallenges ? '#4ade80' : '#4ade8099', position:'relative', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity:0.7, flexShrink:0 }}>
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        CHALLENGES
                         {pendingVerificationCount > 0 && <span style={{ marginLeft:'auto', background:'#e03030', color:'#fff', borderRadius:10, padding:'2px 6px', fontFamily:'Orbitron', fontSize:'0.35rem', fontWeight:700 }}>{pendingVerificationCount}</span>}
                     </div>
 
                     <div style={{ fontFamily:'Orbitron', fontSize:'0.35rem', color:'rgba(255,255,255,0.2)', letterSpacing:'3px', padding:'10px 18px 4px', marginTop:4 }}>COMMUNITY</div>
-                    <div className="sb-dash-btn" onClick={() => window.location.href = '/global'} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                        <span style={{ opacity:0.5 }}>◎</span> GLOBAL
+                    <div className="sb-dash-btn" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ display:'flex', alignItems:'center', gap:10, color: showGlobal ? t.hex : 'rgba(255,255,255,0.45)', position:'relative', boxShadow: showGlobal ? `inset 3px 0 0 ${t.hex}` : 'none' }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: showGlobal ? 1 : 0.5, flexShrink:0 }}>
+                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                        GLOBAL
                     </div>
                 </div>
 
@@ -876,11 +894,16 @@ export default function DashboardPage() {
             {/* MAIN CONTENT AREA */}
             <div className="content" style={{ position: 'relative' }}>
 
-                {/* CHALLENGES INLINE PANEL — overlays content area when open */}
+                {/* CHALLENGES INLINE PANEL */}
                 {showChallenges && (
                     <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
                         <ChallengesContent onClose={() => setShowChallenges(false)} />
                     </div>
+                )}
+
+                {/* GLOBAL INLINE PANEL */}
+                {showGlobal && (
+                    <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
                 )}
 
                 {/* 1. HOME VIEW */}
@@ -1083,17 +1106,20 @@ export default function DashboardPage() {
                         </div>
 
                         {/* ENTER GLOBAL */}
-                        <div className="v-best-sub glass-card span-1" onClick={() => window.location.href = '/global'} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(var(--gold-rgb),0.06), rgba(var(--gold-rgb),0.02))', border: '1px solid rgba(var(--gold-rgb),0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(var(--gold-rgb),0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(var(--gold-rgb),0.22)')}>
+                        <div className="v-best-sub glass-card span-1" onClick={() => setShowGlobal(true)} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(var(--gold-rgb),0.06), rgba(var(--gold-rgb),0.02))', border: '1px solid rgba(var(--gold-rgb),0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(var(--gold-rgb),0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(var(--gold-rgb),0.22)')}>
                             <div className="vb-header">
                                 <div className="vb-title" style={{ fontFamily: 'Cinzel', color: 'var(--gold)', letterSpacing: '2px' }}>GLOBAL</div>
                                 <div className="vb-sub">Community Hub</div>
                             </div>
                             <div className="vb-content">
                                 <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(var(--gold-rgb),0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: 'rgba(var(--gold-rgb),0.06)', boxShadow: '0 0 24px rgba(var(--gold-rgb),0.12)' }}>
-                                    <span style={{ fontSize: '1.6rem', color: 'var(--gold)', opacity: 0.85 }}>◎</span>
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity:0.85 }}>
+                                        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                    </svg>
                                 </div>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(var(--gold-rgb),0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
-                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(var(--gold-rgb),0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'var(--gold)', letterSpacing: '2px', background: 'rgba(var(--gold-rgb),0.08)' }}>ENTER ↗</div>
+                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(var(--gold-rgb),0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'var(--gold)', letterSpacing: '2px', background: 'rgba(var(--gold-rgb),0.08)' }}>ENTER</div>
                             </div>
                         </div>
 
