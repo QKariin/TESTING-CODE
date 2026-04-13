@@ -19,14 +19,14 @@ export async function GET() {
 
     const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
-        .select('member_id, name, title, avatar_url, profile_picture_url, last_active');
+        .select('*');
 
     if (error) return NextResponse.json({ error: error.message, all: [] });
 
     const all = (profiles || [])
-        .filter((p: any) => (p.name || p.title || '').trim() !== '')
+        .filter((p: any) => (p.name || '').trim() !== '')
         .map((p: any) => ({
-            name: p.name || p.title,
+            name: p.name,
             avatar: p.avatar_url || p.profile_picture_url || null,
             online: !!(p.last_active && p.last_active >= cutoff),
             last_active: p.last_active || null,
@@ -44,11 +44,12 @@ export async function POST(req: Request) {
 
     const now = new Date().toISOString();
 
-    const { error } = await supabaseAdmin
+    // last_active may not exist in all schema versions — ignore update errors
+    await supabaseAdmin
         .from('profiles')
         .update({ last_active: now })
-        .ilike('member_id', email);
+        .ilike('member_id', email)
+        .then(() => {});
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
 }
