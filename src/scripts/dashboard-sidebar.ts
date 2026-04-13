@@ -322,13 +322,8 @@ export function selUser(id: string) {
         const openUser = users.find(x => x.memberId === id);
         // Always render static profile (cached state)
         if (openUser) updateDetail(openUser);
-        // Only start live chat if member is online — ghost if offline
-        if (isMemberOnline(id)) {
-            initDashboardChat(id);
-        } else {
-            const b = document.getElementById('adminChatBox');
-            if (b) b.innerHTML = '<div style="color:#333;text-align:center;padding:30px;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px;">OFFLINE — CHAT UNAVAILABLE</div>';
-        }
+        // Always load chat history — polling is skipped internally when member is offline
+        initDashboardChat(id);
     });
 }
 
