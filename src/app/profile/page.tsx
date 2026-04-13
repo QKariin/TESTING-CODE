@@ -458,9 +458,7 @@ export default function ProfilePage() {
                 }
             } catch {}
         }
-        checkChallenge();
-        const t = setInterval(checkChallenge, 30000); // 30s — challenges don't change by the second
-        return () => clearInterval(t);
+        checkChallenge(); // load once — challenges don't change frequently, no polling needed
     }, []);
 
     // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──

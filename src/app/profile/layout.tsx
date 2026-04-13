@@ -173,7 +173,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 }
 
                 await check();
-                if (active) interval = setInterval(check, 3000);
+                // Realtime subscription in profile-logic handles silence/paywall changes instantly
+                // Poll only as a fallback every 60s — not every 3s
+                if (active) interval = setInterval(check, 60000);
             } catch {}
         }
 
