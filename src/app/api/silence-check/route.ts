@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
             paywall: data?.paywall === true,
             paywallReason: data?.parameters?.paywall?.reason || '',
             paywallAmount: data?.parameters?.paywall?.amount || 0,
-        });
+        }, { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } });
     } catch {
         return NextResponse.json({ silence: false, reason: '' });
     }

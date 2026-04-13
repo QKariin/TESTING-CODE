@@ -458,7 +458,7 @@ export default function ProfilePage() {
             } catch {}
         }
         checkChallenge();
-        const t = setInterval(checkChallenge, 5000);
+        const t = setInterval(checkChallenge, 30000); // 30s — challenges don't change by the second
         return () => clearInterval(t);
     }, []);
 
@@ -481,7 +481,7 @@ export default function ProfilePage() {
         }
 
         pollSilence();
-        const interval = setInterval(pollSilence, 3000);
+        const interval = setInterval(pollSilence, 60000); // 60s — silence status rarely changes
         return () => clearInterval(interval);
     }, [profile]);
 

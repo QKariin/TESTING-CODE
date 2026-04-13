@@ -1776,9 +1776,9 @@ export async function initChatSystem() {
         })
         .subscribe();
 
-    // 3. Polling fallback every 4s — catches messages realtime misses (reconnects, brief gaps)
+    // 3. Polling fallback every 15s — realtime handles delivery; poll only as a safety net
     if (_chatPollInterval) clearInterval(_chatPollInterval);
-    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
+    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 15000);
 
     // Refresh queen presence status every 60s — stored so it can be cleared
     if (_queenInterval) clearInterval(_queenInterval);
@@ -1824,7 +1824,7 @@ export async function initChatSystem() {
                 }
             }
         } catch (_) {}
-    }, 15000);
+    }, 60000); // 60s — realtime subscription handles live updates; this is just a fallback
 
     // 6. Push notifications — use profile UUID (not email) as external user ID
     const profileId = getState().id || email;
