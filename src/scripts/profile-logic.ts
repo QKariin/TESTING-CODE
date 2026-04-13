@@ -1964,6 +1964,12 @@ export async function loadChatHistory(email: string) {
 let _galleryDirty = false;
 let _galleryEmail = '';
 
+/** Call on page load to register the email without loading anything — gallery loads lazily on first open. */
+export function initGallery(email: string) {
+    _galleryEmail = email;
+    _galleryDirty = true;
+}
+
 async function refreshTaskGallery(email: string) {
     _galleryEmail = email;
     // Check if record/gallery section is actually visible before loading media.

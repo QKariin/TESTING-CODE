@@ -53,6 +53,7 @@ import {
     mobileUploadEvidence,
     initChatSystem,
     loadQueenPosts,
+    initGallery,
     renderHistoryAndAltar,
     openAltarDrawer,
     closeAltarDrawer,
@@ -233,7 +234,7 @@ export default function ProfilePage() {
                         }
                         getRandomTask(true);
                         loadQueenPosts();
-                        renderHistoryAndAltar(unifiedData);
+                        initGallery(unifiedData.memberId || unifiedData.member_id || '');
 
                         // Initialize Chat & Tracking
                         initChatSystem();
@@ -336,7 +337,7 @@ export default function ProfilePage() {
                         }
                         getRandomTask(true);
                         loadQueenPosts();
-                        renderHistoryAndAltar(unifiedData);
+                        initGallery(unifiedData.memberId || unifiedData.member_id || '');
 
                         // Initialize Chat & Tracking
                         initChatSystem();
