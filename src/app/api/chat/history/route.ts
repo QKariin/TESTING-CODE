@@ -63,7 +63,7 @@ export async function GET(req: Request) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select('id, member_id, sender, sender_email, sender_name, content, type, media_url, media_type, created_at, read_at, read_by_admin')
                 .ilike('member_id', emailToQuery)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
@@ -71,10 +71,10 @@ export async function GET(req: Request) {
             // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select('id, member_id, sender, sender_email, sender_name, content, type, media_url, media_type, created_at, read_at, read_by_admin')
                 .ilike('member_id', emailToQuery)
                 .order('created_at', { ascending: false })
-                .limit(300);
+                .limit(50);
         }
 
         const { data, error } = await query;
@@ -154,7 +154,7 @@ export async function POST(req: Request) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select('id, member_id, sender, sender_email, sender_name, content, type, media_url, media_type, created_at, read_at, read_by_admin')
                 .ilike('member_id', emailToQuery)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
@@ -162,10 +162,10 @@ export async function POST(req: Request) {
             // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select('id, member_id, sender, sender_email, sender_name, content, type, media_url, media_type, created_at, read_at, read_by_admin')
                 .ilike('member_id', emailToQuery)
                 .order('created_at', { ascending: false })
-                .limit(300);
+                .limit(50);
         }
 
         const { data, error } = await query;

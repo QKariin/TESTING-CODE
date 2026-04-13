@@ -99,7 +99,7 @@ function _stopPoll() {
     if (talkPollInterval) { clearInterval(talkPollInterval); talkPollInterval = null; }
     if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
     if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
-    // updatesChannel intentionally kept alive while overlay is open
+    // updatesChannel is cleaned up separately in _stopUpdatesRealtime() called by closeGlobalView()
 }
 
 function _stopUpdatesRealtime() {
@@ -128,13 +128,44 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
 
 function _loadAllPreviews() {
     loadLeaderboardPreview(currentPeriod);
-    _loadSidePanels();
+    // Fetch sidepanels ONCE — share result with mini-panels + spenders preview
+    _loadSidePanelsAndSpenders();
     _initTalkRealtime();
     _loadUpdatesPreview();
     _initUpdatesRealtime();
-    _loadSpendersPreview();
     _loadQueenPreview();
     _loadChallengesPreview();
+}
+
+async function _loadSidePanelsAndSpenders() {
+    try {
+        const res = await fetch('/api/global/sidepanels');
+        const { kneelers, spenders, streakers } = await res.json();
+        _renderMiniPanel('lbMini_kneelers', kneelers, (e: any) => `${e.count}✦`, 'rgba(74,222,128,0.7)');
+        _renderMiniPanel('lbMini_spenders', spenders, (e: any) => `${e.amount.toLocaleString()}`, '#c5a059');
+        _renderMiniPanel('lbMini_streakers', streakers, (e: any) => `${e.streak}d`, 'rgba(255,140,100,0.85)');
+        // Also populate spenders preview without a second fetch
+        const el = document.getElementById('globalPreview_spenders');
+        if (el && spenders?.length) {
+            el.innerHTML = spenders.slice(0, 3).map((e: any, i: number) => {
+                const avatarSrc = e.avatar || DEFAULT_AVATAR;
+                return `
+                <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.12s;"
+                     onmouseenter="this.style.background='rgba(197,160,89,0.05)'"
+                     onmouseleave="this.style.background='transparent'">
+                    <span style="font-size:${i < 3 ? '0.85rem' : '0.5rem'};width:18px;text-align:center;flex-shrink:0;">${MEDALS[i]}</span>
+                    <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;border:1.5px solid ${i === 0 ? '#c5a059' : 'rgba(255,255,255,0.1)'};">
+                        <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-family:'Cinzel';font-size:0.6rem;color:rgba(255,255,255,${i === 0 ? '1' : '0.65'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
+                        <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.45);letter-spacing:1px;margin-top:1px;">${e.hierarchy}</div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.58rem;color:${i === 0 ? '#c5a059' : 'rgba(255,255,255,0.35)'};font-weight:700;flex-shrink:0;">${(e.amount || 0).toLocaleString()}</div>
+                </div>`;
+            }).join('');
+        }
+    } catch {}
 }
 
 // ─── LEADERBOARD PREVIEW ─────────────────────────────────────────────────────
@@ -221,16 +252,8 @@ export async function loadLeaderboardPreview(period: 'today' | 'alltime' | 'week
 }
 
 // ─── SIDE PANELS inside leaderboard (kneelers / spenders / streakers) ────────
-
-async function _loadSidePanels() {
-    try {
-        const res = await fetch('/api/global/sidepanels');
-        const { kneelers, spenders, streakers } = await res.json();
-        _renderMiniPanel('lbMini_kneelers', kneelers, (e: any) => `${e.count}✦`, 'rgba(74,222,128,0.7)');
-        _renderMiniPanel('lbMini_spenders', spenders, (e: any) => `${e.amount.toLocaleString()}`, '#c5a059');
-        _renderMiniPanel('lbMini_streakers', streakers, (e: any) => `${e.streak}d`, 'rgba(255,140,100,0.85)');
-    } catch {}
-}
+// Note: on initial load these are populated by _loadSidePanelsAndSpenders() above.
+// This standalone version is kept only for manual refresh calls.
 
 function _renderMiniPanel(elId: string, entries: any[], valueLabel: (e: any) => string, accentColor: string) {
     const el = document.getElementById(elId);
@@ -357,36 +380,7 @@ function _buildUpdateCardPreview(u: any): string {
 }
 
 // ─── SPENDERS PREVIEW ────────────────────────────────────────────────────────
-
-async function _loadSpendersPreview() {
-    const el = document.getElementById('globalPreview_spenders');
-    if (!el) return;
-    try {
-        const res = await fetch('/api/global/sidepanels');
-        const { spenders } = await res.json();
-        if (!spenders?.length) {
-            el.innerHTML = `<div style="text-align:center;padding:24px;font-family:'Orbitron';font-size:0.48rem;color:rgba(255,255,255,0.15);">NO DATA YET</div>`;
-            return;
-        }
-        el.innerHTML = spenders.slice(0, 3).map((e: any, i: number) => {
-            const avatarSrc = e.avatar || DEFAULT_AVATAR;
-            return `
-            <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.12s;"
-                 onmouseenter="this.style.background='rgba(197,160,89,0.05)'"
-                 onmouseleave="this.style.background='transparent'">
-                <span style="font-size:${i < 3 ? '0.85rem' : '0.5rem'};width:18px;text-align:center;flex-shrink:0;">${MEDALS[i]}</span>
-                <div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;border:1.5px solid ${i === 0 ? '#c5a059' : 'rgba(255,255,255,0.1)'};">
-                    <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
-                </div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-family:'Cinzel';font-size:0.6rem;color:rgba(255,255,255,${i === 0 ? '1' : '0.65'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
-                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.45);letter-spacing:1px;margin-top:1px;">${e.hierarchy}</div>
-                </div>
-                <div style="font-family:'Orbitron';font-size:0.58rem;color:${i === 0 ? '#c5a059' : 'rgba(255,255,255,0.35)'};font-weight:700;flex-shrink:0;">${(e.amount || 0).toLocaleString()}</div>
-            </div>`;
-        }).join('');
-    } catch {}
-}
+// Populated by _loadSidePanelsAndSpenders() on initial load — no separate fetch needed.
 
 // ─── QUEEN PREVIEW ────────────────────────────────────────────────────────────
 
@@ -560,21 +554,27 @@ function _initTalkRealtime() {
         )
         .subscribe();
 
-    // Presence heartbeat — update last_active every 30s
+    // Presence heartbeat — update last_active every 5 min (was 30s)
+    // Pause automatically when tab is hidden to avoid background egress
     const raw = getState().raw;
     const email = raw?.member_id || raw?.email;
     if (email) {
-        const heartbeat = () => fetch('/api/global/presence', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-        }).catch(() => {});
+        const heartbeat = () => {
+            if (document.visibilityState === 'hidden') return;
+            fetch('/api/global/presence', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            }).catch(() => {});
+        };
         heartbeat();
-        presenceInterval = setInterval(heartbeat, 30000);
+        presenceInterval = setInterval(heartbeat, 300000);
     }
 
-    // Poll online users every 30s
-    talkPollInterval = setInterval(_fetchAndRenderOnline, 30000);
+    // Poll online users every 5 min (was 30s) — realtime handles instant updates
+    talkPollInterval = setInterval(() => {
+        if (document.visibilityState !== 'hidden') _fetchAndRenderOnline();
+    }, 300000);
 }
 
 // ─── FETCH MESSAGES ───────────────────────────────────────────────────────────

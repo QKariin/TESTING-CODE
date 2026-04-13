@@ -1,12 +1,13 @@
 // src/lib/supabase-service.ts
 import { supabase, supabaseAdmin } from './supabase';
+import { cacheGet, cacheSet } from '@/lib/api-cache';
 
 export const DbService = {
     // --- PROFILES ---
     async getProfile(memberId: string) {
         const { data: byEmail } = await supabaseAdmin
             .from('profiles')
-            .select('*')
+            .select('member_id, id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active')
             .eq('member_id', memberId)
             .maybeSingle();
 
@@ -15,7 +16,7 @@ export const DbService = {
         // Try by UUID id (for admin lookups)
         const { data: byId } = await supabaseAdmin
             .from('profiles')
-            .select('*')
+            .select('member_id, id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active')
             .eq('id', memberId)
             .maybeSingle();
 
@@ -24,7 +25,7 @@ export const DbService = {
         // Fallback: Check 'tasks' table for legacy data — return REAL values
         const { data: taskData } = await supabaseAdmin
             .from('tasks')
-            .select('*')
+            .select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history')
             .ilike('member_id', memberId)
             .maybeSingle();
 
@@ -62,7 +63,7 @@ export const DbService = {
     async getAllProfiles() {
         const { data, error } = await supabaseAdmin
             .from('profiles')
-            .select('*')
+            .select('member_id, id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active')
             .order('last_active', { ascending: false });
         if (error) throw error;
         return data;
@@ -194,7 +195,7 @@ export const DbService = {
     async getMessages(memberId: string, limit = 50) {
         const { data, error } = await supabaseAdmin
             .from('messages')
-            .select('*')
+            .select('id, member_id, sender, content, type, media_url, created_at')
             .eq('member_id', memberId)
             .order('created_at', { ascending: false })
             .limit(limit);
@@ -207,7 +208,7 @@ export const DbService = {
     async _getTaskRow(memberId: string) {
         const { data } = await supabaseAdmin
             .from('tasks')
-            .select('*')
+            .select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history')
             .eq('member_id', memberId)
             .maybeSingle();
         return data;
@@ -234,50 +235,65 @@ export const DbService = {
             .in('member_id', memberIds);
         const avatarMap = new Map((profileData || []).map((p: any) => [p.member_id?.toLowerCase(), p.avatar_url]));
 
-        const pending: any[] = [];
+        // Collect all pending entries first, then sign URLs in parallel
+        const pendingRaw: Array<{ entry: any; row: any; path: string }> = [];
         for (const row of (data || [])) {
             const history: any[] = this._parseHistory(row);
             const pendingEntries = history.filter((t: any) => t.status === 'pending');
             for (const entry of pendingEntries) {
-                let finalUrl = entry.proofUrl;
-                if (finalUrl && (finalUrl.includes('proofs/') || finalUrl.includes('/public/proofs/'))) {
-                    try {
-                        let path = "";
-                        // Case A: Full absolute public URL from Supabase
-                        if (finalUrl.includes('/object/public/proofs/')) {
-                            path = finalUrl.split('/object/public/proofs/')[1].split('?')[0];
-                        }
-                        // Case B: Relative path with my previous prefix
-                        else if (finalUrl.includes('/public/proofs/')) {
-                            path = finalUrl.split('/public/proofs/')[1].split('?')[0];
-                        }
-                        // Case C: Raw relative path starting with bucket or subpath
-                        else if (finalUrl.includes('proofs/tasks/')) {
-                            path = 'tasks/' + finalUrl.split('proofs/tasks/')[1].split('?')[0];
-                        }
+                const proofUrl: string = entry.proofUrl || '';
+                let path = '';
+                if (proofUrl && (proofUrl.includes('proofs/') || proofUrl.includes('/public/proofs/'))) {
+                    // Case A: Full absolute public URL from Supabase
+                    if (proofUrl.includes('/object/public/proofs/')) {
+                        path = proofUrl.split('/object/public/proofs/')[1].split('?')[0];
+                    }
+                    // Case B: Relative path with my previous prefix
+                    else if (proofUrl.includes('/public/proofs/')) {
+                        path = proofUrl.split('/public/proofs/')[1].split('?')[0];
+                    }
+                    // Case C: Raw relative path starting with bucket or subpath
+                    else if (proofUrl.includes('proofs/tasks/')) {
+                        path = 'tasks/' + proofUrl.split('proofs/tasks/')[1].split('?')[0];
+                    }
+                }
+                pendingRaw.push({ entry, row, path });
+            }
+        }
 
-                        if (path) {
+        // Sign all URLs in parallel, with a 1-hour in-memory cache per path
+        const signed = await Promise.all(
+            pendingRaw.map(async ({ entry, row, path }) => {
+                let finalUrl = entry.proofUrl;
+                if (path) {
+                    const cacheKey = `signed-url:proofs:${path}`;
+                    const cached = cacheGet<string>(cacheKey);
+                    if (cached) {
+                        finalUrl = cached;
+                    } else {
+                        try {
                             const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 7200);
                             if (!signErr && signData?.signedUrl) {
                                 finalUrl = signData.signedUrl;
+                                cacheSet(cacheKey, finalUrl, 3_600_000);
                             }
+                        } catch (e) {
+                            console.error("[DbService] Error signing proofUrl:", entry.proofUrl, e);
                         }
-                    } catch (e) {
-                        console.error("[DbService] Error signing proofUrl:", finalUrl, e);
                     }
                 }
-
-                pending.push({
+                return {
                     ...entry,
                     id: entry.id,
                     proofUrl: finalUrl,
                     member_id: row.member_id,
                     memberName: row['Name'] || 'Slave',
                     avatarUrl: avatarMap.get(row.member_id?.toLowerCase()) || null,
-                });
-            }
-        }
-        return pending;
+                };
+            })
+        );
+
+        return signed;
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
@@ -491,7 +507,7 @@ export const DbService = {
     async getRecentTributes(limit = 10) {
         const { data, error } = await supabaseAdmin
             .from('tributes')
-            .select('*')
+            .select('id, member_id, amount, message, created_at')
             .order('created_at', { ascending: false })
             .limit(limit);
         if (error) throw error;
@@ -504,7 +520,7 @@ export const DbService = {
         try {
             const { data, error } = await supabaseAdmin
                 .from('tasks_database')
-                .select('*')
+                .select('id, Category, Task, Description, Points, Duration, difficulty')
                 .order('Category', { ascending: true });
 
             if (error) {
