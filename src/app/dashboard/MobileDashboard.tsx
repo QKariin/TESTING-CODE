@@ -771,7 +771,7 @@ function ChallengesView() {
     // Auto-refresh detail
     useEffect(() => {
         if (!detail) return;
-        const t = setInterval(() => loadDetail(detail.challenge.id), 10000);
+        const t = setInterval(() => loadDetail(detail.challenge.id), 60000);
         return () => clearInterval(t);
     }, [detail, loadDetail]);
 

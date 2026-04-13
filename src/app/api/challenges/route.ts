@@ -11,14 +11,21 @@ export async function GET() {
 
         if (error) throw error;
 
-        const enriched = await Promise.all((challenges || []).map(async (c: any) => {
-            const [{ count: total }, { count: active }, { count: eliminated }] = await Promise.all([
-                supabaseAdmin.from('challenge_participants').select('*', { count: 'exact', head: true }).eq('challenge_id', c.id),
-                supabaseAdmin.from('challenge_participants').select('*', { count: 'exact', head: true }).eq('challenge_id', c.id).eq('status', 'active'),
-                supabaseAdmin.from('challenge_participants').select('*', { count: 'exact', head: true }).eq('challenge_id', c.id).eq('status', 'eliminated'),
-            ]);
-            return { ...c, participant_total: total || 0, participant_active: active || 0, participant_eliminated: eliminated || 0 };
-        }));
+        // Single query for all participants across all challenges — then count in JS
+        const challengeIds = (challenges || []).map((c: any) => c.id);
+        const { data: allParticipants } = challengeIds.length
+            ? await supabaseAdmin.from('challenge_participants').select('challenge_id, status').in('challenge_id', challengeIds)
+            : { data: [] };
+
+        const enriched = (challenges || []).map((c: any) => {
+            const cp = (allParticipants || []).filter((p: any) => p.challenge_id === c.id);
+            return {
+                ...c,
+                participant_total: cp.length,
+                participant_active: cp.filter((p: any) => p.status === 'active').length,
+                participant_eliminated: cp.filter((p: any) => p.status === 'eliminated').length,
+            };
+        });
 
         return NextResponse.json({ success: true, challenges: enriched });
     } catch (err: any) {
