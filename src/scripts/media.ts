@@ -56,6 +56,8 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("failed")) return ""; // bad upload result stored in DB
     if (url.startsWith("data:")) return url;
     if (url.startsWith("blob:")) return url;
+    // Normalize http:// → https:// so Next.js image optimizer and browsers accept the URL
+    url = url.replace(/^http:\/\//i, "https://");
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
     if (url.includes("token=")) return url; // Already a signed URL
     // Supabase storage URLs — route images through Next.js CDN (cached at Vercel edge), videos as-is
