@@ -142,7 +142,7 @@ function subscribeToPurchaseNotifications(supabase: any) {
             // Refresh the exchequer log to show the new entry
             loadExchequerLog();
         });
-    _purchaseWatchChannel.subscribe();
+    _purchaseWatchChannel!.subscribe();
 }
 
 export async function loadExchequerLog() {

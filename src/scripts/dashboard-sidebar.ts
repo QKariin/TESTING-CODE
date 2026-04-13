@@ -42,7 +42,19 @@ export function renderSidebar() {
 
     const now = Date.now();
 
-    const isUserOnline = (u: any) => isMemberOnline(u?.memberId || '');
+    const getLastSeenMs = (u: any): number => {
+        const raw = u.lastSeen || u.lastWorship || null;
+        if (!raw) return 0;
+        const t = new Date(raw).getTime();
+        return isNaN(t) ? 0 : t;
+    };
+
+    const isUserOnline = (u: any) => {
+        if (!u) return false;
+        if (isMemberOnline(u.memberId)) return true;
+        const ls = getLastSeenMs(u);
+        return ls > 0 && (now - ls) / 60000 < 5;
+    };
 
     // ── Update tracking state ────────────────────────────────────────────
     users.forEach(u => {
