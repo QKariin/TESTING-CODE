@@ -1,3 +1,5 @@
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+
 const CACHE = 'qk-v4';
 const SHELL = ['/dashboard', '/profile', '/icons/collar-192.png', '/icons/collar-512.png'];
 
