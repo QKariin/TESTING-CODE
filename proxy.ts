@@ -1,20 +1,8 @@
-import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { updateSession } from '@/utils/supabase/proxy'
 
-export function proxy(request: NextRequest) {
-    const { pathname } = request.nextUrl
-
-    // 🔓 BYPASS AUTH FOR DEBUG ENDPOINTS
-    if (
-        pathname === '/api/debug-chat' ||
-        pathname === '/api/chat/history' ||
-        pathname.startsWith('/auth')
-    ) {
-        return NextResponse.next()
-    }
-
-    // Default: no redirect if not explicitly required by other middleware
-    return NextResponse.next()
+export async function proxy(request: NextRequest) {
+    return await updateSession(request)
 }
 
 export const config = {
