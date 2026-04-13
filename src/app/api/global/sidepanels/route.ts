@@ -33,8 +33,8 @@ function parseTributeHistory(val: any): number {
 
 export async function GET() {
     const [{ data: tasks }, { data: profiles }] = await Promise.all([
-        supabaseAdmin.from('tasks').select('member_id, Name, Hierarchy, kneelCount, "Tribute History", Taskdom_Streak'),
-        supabaseAdmin.from('profiles').select('member_id, avatar_url, parameters'),
+        supabaseAdmin.from('tasks').select('*'),
+        supabaseAdmin.from('profiles').select('*'),
     ]);
 
     // profiles keyed by member_id (which is the email address)
