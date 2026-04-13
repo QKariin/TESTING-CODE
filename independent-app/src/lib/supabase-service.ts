@@ -257,7 +257,7 @@ export const DbService = {
                         }
 
                         if (path) {
-                            const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 7200);
+                            const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 604_800); // 1 week
                             if (!signErr && signData?.signedUrl) {
                                 finalUrl = signData.signedUrl;
                             }

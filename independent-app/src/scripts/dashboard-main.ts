@@ -84,7 +84,7 @@ function subscribeToDashboardTaskUpdates() {
 
     // Polling fallback — catches anything the realtime subscription misses
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
-    _dashboardPollInterval = setInterval(refreshQueueFromServer, 20000);
+    _dashboardPollInterval = setInterval(refreshQueueFromServer, 300000);
 
     // Subscribe to profiles for purchase notifications
     subscribeToPurchaseNotifications(supabase);

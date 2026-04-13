@@ -1604,10 +1604,28 @@ const getChatSupabase = () => {
 let _chatChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
+let _queenInterval: ReturnType<typeof setInterval> | null = null;
+let _walletInterval: ReturnType<typeof setInterval> | null = null;
+let _presenceCh: any = null;
+let _tasksChannel: any = null;
+let _statsChannel: any = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+
+/** Tear down all intervals + realtime channels. Safe to call multiple times. */
+export function cleanupChatSystem() {
+    if (_chatPollInterval) { clearInterval(_chatPollInterval); _chatPollInterval = null; }
+    if (_silenceCheckInterval) { clearInterval(_silenceCheckInterval); _silenceCheckInterval = null; }
+    if (_queenInterval) { clearInterval(_queenInterval); _queenInterval = null; }
+    if (_walletInterval) { clearInterval(_walletInterval); _walletInterval = null; }
+    if (_chatChannel) { getChatSupabase().removeChannel(_chatChannel); _chatChannel = null; }
+    if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
+    if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); _statsChannel = null; }
+    if (_presenceCh) { _presenceCh.unsubscribe(); _presenceCh = null; }
+    chatSubscribed = false;
+}
 
 function _scrollChat() {
     // Scroll outer containers
@@ -1682,20 +1700,17 @@ export async function initChatSystem() {
         setState({ memberId: email });
     }
 
-    // Start silence polling — runs every 3s, uses supabaseAdmin endpoint (no auth dependency)
-    if (_silenceCheckInterval) clearInterval(_silenceCheckInterval);
-    _silenceCheckInterval = setInterval(async () => {
-        try {
-            const r = await fetch('/api/silence-check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: email }),
-            });
-            if (!r.ok) return;
-            const d = await r.json();
-            _applySilence(d.silence === true, d.reason || '');
-        } catch {}
-    }, 3000);
+    // Silence is handled by profile_stats realtime subscription below — no polling needed
+    if (_silenceCheckInterval) { clearInterval(_silenceCheckInterval); _silenceCheckInterval = null; }
+
+    // Broadcast presence so dashboard knows this member is online
+    const supabase = createClient();
+    _presenceCh = supabase.channel('members-online');
+    _presenceCh.subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED') {
+            await _presenceCh.track({ email: email!.toLowerCase() });
+        }
+    });
 
     if (chatSubscribed) return; // channels already set up — don't duplicate
     chatSubscribed = true;
@@ -1766,17 +1781,20 @@ export async function initChatSystem() {
     if (_chatPollInterval) clearInterval(_chatPollInterval);
     _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
 
-    // Refresh queen presence status every 60s
-    setInterval(() => _fetchQueenStatus(), 60000);
+    // Refresh queen presence status every 60s — stored so it can be cleared
+    if (_queenInterval) clearInterval(_queenInterval);
+    _queenInterval = setInterval(() => _fetchQueenStatus(), 60000);
 
-    // 4. Supabase realtime for tasks + profile stats (keep existing logic)
-    getChatSupabase()
+    // 4. Supabase realtime for tasks + profile stats — stored so they can be removed
+    if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); }
+    _tasksChannel = getChatSupabase()
         .channel('tasks_updates_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
             () => { updateRoutineWidget(); refreshTaskGallery(email!); })
         .subscribe();
 
-    getChatSupabase()
+    if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); }
+    _statsChannel = getChatSupabase()
         .channel('profile_stats_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `member_id=eq.${email}` },
             (payload: any) => {
@@ -1786,15 +1804,16 @@ export async function initChatSystem() {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();
                 }
-                // Paywall / silence activated or deactivated in realtime
+                // Paywall / silence activated or deactivated in realtime — no polling needed
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
                 _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
             })
         .subscribe();
 
-    // 5. Wallet/score polling fallback every 15s
+    // 5. Wallet/score polling fallback every 15s — stored so it can be cleared
+    if (_walletInterval) clearInterval(_walletInterval);
     const walletEmail = email;
-    setInterval(async () => {
+    _walletInterval = setInterval(async () => {
         try {
             const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: walletEmail }) });
             const data = await res.json();
