@@ -42,19 +42,11 @@ function renderOperationsGrid() {
     const latestTask = pendingTasks[0];
     const latestRoutine = pendingRoutines[0];
 
-    // Use thumbnail for video proofs — never embed live video URLs as backgrounds (causes continuous Supabase egress)
-    const taskVideo = latestTask && (latestTask.proofUrl?.endsWith('.mp4') || latestTask.proofType?.includes('video'));
-    const routineVideo = latestRoutine && (latestRoutine.proofUrl?.endsWith('.mp4') || latestRoutine.proofType?.includes('video'));
-    const taskBg = latestTask ? getOptimizedUrl(taskVideo ? (latestTask.thumbnail_url || latestTask.proofUrl) : latestTask.proofUrl, 400) : '';
-    const routineBg = latestRoutine ? getOptimizedUrl(routineVideo ? (latestRoutine.thumbnail_url || latestRoutine.proofUrl) : latestRoutine.proofUrl, 400) : '';
-
     let html = '<div class="ops-monitor-grid">';
 
-    // 1. TASK CARD (GOLD)
+    // 1. TASK CARD (GOLD) — no proof image on the card, loads on click only
     html += `
         <div class="ops-card task" onclick="window.showQueueFiltered(false)">
-            ${taskBg && !taskVideo ? `<img src="${taskBg}" class="ops-card-bg">` :
-              taskBg && taskVideo ? `<img src="${taskBg}" class="ops-card-bg">` : ''}
             <div class="ops-card-overlay">
                 <div class="ops-card-label">PENDING OPERATIONS</div>
                 <div class="ops-card-title">TASK QUEUE</div>
@@ -63,10 +55,9 @@ function renderOperationsGrid() {
         </div>
     `;
 
-    // 2. ROUTINE CARD (SILVER)
+    // 2. ROUTINE CARD (SILVER) — no proof image on the card, loads on click only
     html += `
         <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
-            ${routineBg ? `<img src="${routineBg}" class="ops-card-bg">` : ''}
             <div class="ops-card-overlay">
                 <div class="ops-card-label">DAILY PROTOCOLS</div>
                 <div class="ops-card-title">ROUTINE QUEUE</div>

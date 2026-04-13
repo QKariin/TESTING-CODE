@@ -434,14 +434,14 @@ async function updateReviewQueue(u: any) {
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
             const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-            // Videos: show thumbnail if available, otherwise a static placeholder — no autoplay
+            // Placeholder only — proof loads on click, not on render (no eager storage requests)
             const mediaTag = isVideo
-                ? (t.thumbnail_url
-                    ? `<img src="${getOptimizedUrl(t.thumbnail_url, 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'" style="object-fit:cover;">`
-                    : `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
-                         <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-                       </div>`)
-                : `<img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
+                ? `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
+                     <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                   </div>`
+                : `<div class="pend-thumb" style="background:#111;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
+                     <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.4)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                   </div>`;
 
             return `
                     <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
