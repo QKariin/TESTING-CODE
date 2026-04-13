@@ -320,8 +320,20 @@ export function selUser(id: string) {
         import('./dashboard-chat')
     ]).then(([{ updateDetail }, { initDashboardChat }]) => {
         const openUser = users.find(x => x.memberId === id);
-        // Always render static profile (cached state)
+        // Render immediately with cached lightweight data
         if (openUser) updateDetail(openUser);
+        // Fetch full profile (wallet, score, tasks, routineHistory, etc.) in background
+        fetch('/api/slave-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: id, full: true }),
+        }).then(r => r.json()).then(fullData => {
+            if (!fullData || fullData.error) return;
+            // Merge full data into the user object
+            if (openUser) Object.assign(openUser, fullData);
+            // Re-render with complete data if this user is still open
+            if (currId === id) updateDetail(openUser || fullData);
+        }).catch(() => {});
         // Always load chat history — polling is skipped internally when member is offline
         initDashboardChat(id);
     });
