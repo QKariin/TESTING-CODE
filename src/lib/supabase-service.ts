@@ -379,7 +379,7 @@ export const DbService = {
         } catch (_) { }
     },
 
-    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false) {
+    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false, thumbnailUrl: string | null = null) {
         const now = new Date().toISOString();
         const taskId = Date.now().toString();
 
@@ -393,6 +393,7 @@ export const DbService = {
             text: isRoutine ? "Daily Routine" : taskText,
             proofUrl: proofUrl,
             proofType: (proofType || '').startsWith('video') ? 'video' : 'image',
+            thumbnail_url: thumbnailUrl || undefined,
             timestamp: now,
             status: 'pending',
             completed: false,

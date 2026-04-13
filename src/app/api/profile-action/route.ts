@@ -36,7 +36,7 @@ export async function POST(req: Request) {
                 break;
 
             case 'SUBMIT_TASK':
-                result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine);
+                result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl);
                 break;
 
             default:

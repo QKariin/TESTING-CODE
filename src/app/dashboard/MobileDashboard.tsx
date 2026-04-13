@@ -537,6 +537,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                 const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
                                 const proofUrl = task.proofUrl || task.proof_url;
                                 const isVideo = !!(proofUrl && ((task.proofType && (task.proofType === 'video' || task.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl)));
+                                const previewUrl = isVideo ? (task.thumbnail_url || task.thumbnailUrl || '/queen-karin.png') : proofUrl;
                                 const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
                                 return (
                                     <div key={taskId || i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.15)' : 'rgba(255,140,66,0.12)'}`, borderRadius: 12, overflow: 'hidden' }}>
@@ -551,7 +552,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                         </button>
                                         {proofUrl && (
                                             <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                                {isVideo ? <video src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} /> : <img src={proofUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} alt="" />}
+                                                <img src={previewUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
                                                 <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
                                             </button>
                                         )}

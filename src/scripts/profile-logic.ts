@@ -1,7 +1,7 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from '../lib/hierarchyRules';
-import { uploadToSupabase, getVideoDuration, isVideo } from './mediaSupabase';
+import { uploadToSupabase, getVideoDuration, isVideo, extractAndUploadVideoThumbnail } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 
 let globalTributes: any[] = [];
@@ -1527,6 +1527,13 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             return;
         }
 
+        let thumbnailUrl: string | null = null;
+        if (isVideo(file)) {
+            console.log("Generating task video thumbnail...");
+            thumbnailUrl = await extractAndUploadVideoThumbnail(file);
+            console.log("Task thumbnail result:", thumbnailUrl);
+        }
+
         // 2. Submit link to Postgres records
         console.log("Submitting URL to backend API...");
         const res = await fetch('/api/profile-action', {
@@ -1537,6 +1544,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
                 memberId: pid,
                 payload: {
                     proofUrl: fileUrl,
+                    thumbnailUrl,
                     proofType: file.type,
                     taskText: taskText,
                     isRoutine: isRoutine
@@ -4658,6 +4666,12 @@ function _isVideo(url: string | null | undefined): boolean {
         (l.includes('supabase.co/storage') && /\.(mp4|webm|mov)(\?|$)/.test(l));
 }
 
+function _resolveThumbUrl(item: any, resolveUrl: (u: string) => string): string | null {
+    const rawThumb = item?.thumbnail_url || item?.thumbnailUrl;
+    if (!rawThumb) return null;
+    return resolveUrl(rawThumb);
+}
+
 function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
     const altarMain = document.getElementById('altarMain');
     const imgMain = document.getElementById('imgAltarMain') as HTMLImageElement | null;
@@ -4667,18 +4681,13 @@ function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
 
     const url = resolveUrl(hero.proofUrl);
     const merit = hero.meritAwarded ? `+${hero.meritAwarded} MERIT` : '';
+    const thumbUrl = _resolveThumbUrl(hero, resolveUrl);
 
     if (_isVideo(url)) {
-        const vid = document.createElement('video');
-        vid.setAttribute('preload', 'none');
-        vid.className = 'hero-img';
-        vid.style.objectFit = 'cover';
-        vid.style.cursor = 'pointer';
-        vid.setAttribute('muted', '');
-        vid.setAttribute('playsinline', '');
-        vid.setAttribute('controls', '');
-        vid.src = url;
-        imgMain.replaceWith(vid);
+        imgMain.src = thumbUrl || '/queen-karin.png';
+        imgMain.style.display = 'block';
+        imgMain.style.objectFit = 'cover';
+        imgMain.style.cursor = 'pointer';
     } else {
         imgMain.src = url;
         imgMain.style.display = 'block';
@@ -4741,8 +4750,9 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const meritBadge = t.meritAwarded
         ? `<div class="altar-card-merit">+${t.meritAwarded}</div>`
         : '';
+    const thumbUrl = _resolveThumbUrl(t, resolveUrl);
     const media = isVid
-        ? `<video src="${url}" class="altar-card-media" muted playsinline loop preload="none"></video>`
+        ? `<img src="${thumbUrl || '/queen-karin.png'}" class="altar-card-media" loading="lazy" />`
         : `<img src="${getOptimizedUrl(url, 400)}" class="altar-card-media" loading="lazy" />`;
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
@@ -4784,16 +4794,13 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
         if (!el) return;
         const url = resolveUrl(t.proofUrl);
         const isVid = _isVideo(url);
+        const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         if (isVid) {
-            const vid = document.createElement('video');
-            vid.id = slotIds[i];
-            vid.src = url;
-            vid.muted = true;
-            vid.playsInline = true;
-            vid.loop = true;
-            vid.preload = 'none';
-            vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
-            el.replaceWith(vid);
+            const img = document.createElement('img');
+            img.id = slotIds[i];
+            img.src = thumbUrl || '/queen-karin.png';
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+            el.replaceWith(img);
         } else {
             const img = el as HTMLImageElement;
             img.dataset.loaded = 'true'; // signal onerror it's now a real URL
@@ -4818,8 +4825,9 @@ function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u
         const url = resolveUrl(t.proofUrl);
         const isVid = _isVideo(url);
         const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
+        const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const media = isVid
-            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" muted playsinline loop preload="none"></video>`
+            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`
             : `<img src="${getOptimizedUrl(url, 300)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
         return `
             <div style="position:relative;overflow:hidden;border-radius:4px;cursor:pointer;" onclick="void(0)">
@@ -4840,8 +4848,9 @@ function _renderFailedGrid(containerId: string, failed: any[], resolveUrl: (u: s
         const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
         if (!url) return `<div style="background:#0a0a0a;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✗</div>`;
         const isVid = _isVideo(url);
+        const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         return isVid
-            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" muted playsinline loop preload="none"></video>`
+            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`
             : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`;
     }).join('');
 }
@@ -4858,9 +4867,10 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         card.style.cssText = 'position:relative;overflow:hidden;border-radius:6px;border:1px solid rgba(197,160,89,0.25);background:#060606;display:flex;flex-direction:column;cursor:default;';
         const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
         const isVidP = url ? _isVideo(url) : false;
+        const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const mediaP = url
             ? (isVidP
-                ? `<video src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" muted playsinline></video>`
+                ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy">`
                 : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy">`)
             : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0a0a;font-size:2rem;">⏳</div>`;
         card.innerHTML = `
@@ -4887,8 +4897,9 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         const url = resolveUrl(t.proofUrl);
         const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();
         const isVid = _isVideo(url);
+        const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const mediaHTML = isVid
-            ? `<video src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" muted playsinline loop preload="none"></video>`
+            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`
             : `<img src="${getOptimizedUrl(url, 400)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
         const meritBadge = t.meritAwarded ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#c5a059;font-family:Orbitron;font-size:0.38rem;padding:3px 7px;border-radius:3px;letter-spacing:1px;">+${t.meritAwarded}</div>` : '';
 
