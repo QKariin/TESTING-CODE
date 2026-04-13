@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 import { mapUserProfile } from '@/lib/mapUserProfile';
 
 const ADMIN_EMAILS = ['ceo@qkarin.com'];
 
-// Reads the verified email injected by proxy.ts — avoids re-calling getUser() which
-// breaks when the session token was just refreshed by the proxy.
-function getCallerEmail(request: NextRequest): string | null {
-    return request.headers.get('x-user-email') || null;
+async function getCallerEmail(): Promise<string | null> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        return user?.email?.toLowerCase() || null;
+    } catch {
+        return null;
+    }
 }
 
 function stripSensitive(response: any, isAdmin: boolean): any {
@@ -47,7 +52,7 @@ async function buildFullProfile(email: string) {
 }
 
 export async function GET(request: NextRequest) {
-    const callerEmail = getCallerEmail(request);
+    const callerEmail = await getCallerEmail();
     if (!callerEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
@@ -77,7 +82,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const callerEmail = getCallerEmail(request);
+    const callerEmail = await getCallerEmail();
     if (!callerEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
