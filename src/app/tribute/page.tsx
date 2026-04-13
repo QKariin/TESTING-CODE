@@ -488,7 +488,7 @@ export default function TributePage() {
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '5px', marginBottom: 14 }}>ENTRANCE TRIBUTE</div>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2rem,6vw,3rem)', color: gold, fontWeight: 700, letterSpacing: '4px', marginBottom: 6 }}>€55</div>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 28 }}>One-time. Permanent access.</div>
-                    <button className="tribute-btn" onClick={handleTribute} disabled={loading} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#0a0602 0%,#1a1208 30%,#c5a059 60%,#e8d5a8 80%,#c5a059 100%)', border: '1px solid rgba(197,160,89,0.5)', color: '#fff', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, borderRadius: 4, marginBottom: 16, boxShadow: '0 0 30px rgba(197,160,89,0.15),0 8px 40px rgba(0,0,0,0.4)' }}>
+                    <button className="tribute-btn" onClick={handleTribute} disabled={loading} style={{ opacity: loading ? 0.6 : 1 }}>
                         {loading ? 'Initializing...' : 'Send Tribute'}
                     </button>
                     {status && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: gold, letterSpacing: '2px', marginBottom: 14 }}>{status}</div>}
@@ -556,6 +556,22 @@ export default function TributePage() {
                 }
                 .tribute-btn {
                     animation: tributeGlow 5s ease-in-out infinite;
+                    width: 70%;
+                    display: block;
+                    margin: 0 auto 16px;
+                    background: linear-gradient(90deg, #c5a059 0%, #7a5a20 55%, #000000 100%);
+                    color: #fff;
+                    border: 1px solid rgba(197,160,89,0.4);
+                    padding: 18px 24px;
+                    font-family: 'Cinzel', serif;
+                    font-weight: 700;
+                    letter-spacing: 8px;
+                    font-size: 0.72rem;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    border-radius: 4px;
+                    position: relative;
+                    overflow: hidden;
                 }
 
                 @media (min-width: 768px) {

@@ -19,9 +19,18 @@ export default function AuthCallbackPage() {
         const handle = async () => {
             const supabase = createClient();
 
-            // Twitter OAuth 1.0a — tokens arrive in URL hash, must be set manually
             const hash = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = hash.get('access_token');
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorParam = urlParams.get('error');
+            const errorDesc = urlParams.get('error_description');
+
+            if (errorParam) {
+                setStatus(`Auth error: ${errorParam} — ${errorDesc}`);
+                setTimeout(() => router.replace('/login?error=auth_failed'), 3000);
+                return;
+            }
+
             if (accessToken) {
                 setStatus('Authenticating...');
                 const { data } = await supabase.auth.setSession({
@@ -34,7 +43,7 @@ export default function AuthCallbackPage() {
                 }
             }
 
-            // Google OAuth 2.0 — browser client auto-exchanges the ?code= param
+            // Wait for session — covers Twitter, Google, and email magic link
             const user = await new Promise<any>((resolve) => {
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
                     if (session?.user) { subscription.unsubscribe(); resolve(session.user); }
@@ -42,7 +51,7 @@ export default function AuthCallbackPage() {
                 supabase.auth.getUser().then(({ data }) => {
                     if (data.user) { subscription.unsubscribe(); resolve(data.user); }
                 });
-                setTimeout(() => { subscription.unsubscribe(); resolve(null); }, 8000);
+                setTimeout(() => { subscription.unsubscribe(); resolve(null); }, 10000);
             });
 
             if (!user) { router.replace('/login?error=auth_failed'); return; }

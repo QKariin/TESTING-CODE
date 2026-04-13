@@ -92,13 +92,13 @@
 }
 
 .tribute-btn {
-    width: 100%;
-    background: linear-gradient(135deg, #0a0602 0%, #1a1208 30%, #c5a059 60%, #e8d5a8 80%, #c5a059 100%);
-    background-size: 250% 250%;
-    background-position: 0% 0%;
+    width: 70%;
+    display: block;
+    margin: 0 auto 16px;
+    background: linear-gradient(90deg, #c5a059 0%, #7a5a20 55%, #000000 100%);
     color: #fff;
-    border: 1px solid rgba(197, 160, 89, 0.5);
-    padding: 20px 24px;
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    padding: 18px 24px;
     font-family: 'Cinzel', serif;
     font-weight: 700;
     letter-spacing: 8px;
