@@ -125,7 +125,6 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         }
 
         let active = true;
-        let interval: ReturnType<typeof setInterval>;
 
         async function init() {
             try {
@@ -181,7 +180,6 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         init();
         return () => {
             active = false;
-            clearInterval(interval);
         };
     }, []);
 
