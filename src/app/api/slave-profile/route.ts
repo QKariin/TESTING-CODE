@@ -33,8 +33,8 @@ function stripSensitive(response: any, isAdmin: boolean): any {
 
 async function buildFullProfile(email: string) {
     const [{ data: profileData, error: profileError }, { data: taskData }, { data: contribData }] = await Promise.all([
-        supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('tasks').select('*').ilike('member_id', email).maybeSingle(),
+        supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle(),
+        supabaseAdmin.from('tasks').select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history').ilike('member_id', email).maybeSingle(),
         supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', email),
     ]);
 
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
+        const { data, error } = await supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
+        const { data, error } = await supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {

@@ -99,7 +99,7 @@ function _stopPoll() {
     if (talkPollInterval) { clearInterval(talkPollInterval); talkPollInterval = null; }
     if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
     if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
-    // updatesChannel is cleaned up separately in _stopUpdatesRealtime() called by closeGlobalView()
+    if (updatesChannel) { updatesChannel.unsubscribe(); updatesChannel = null; }
 }
 
 function _stopUpdatesRealtime() {
