@@ -272,10 +272,10 @@ export const DbService = {
                         finalUrl = cached;
                     } else {
                         try {
-                            const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 7200);
+                            const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 604_800); // 1 week validity
                             if (!signErr && signData?.signedUrl) {
                                 finalUrl = signData.signedUrl;
-                                cacheSet(cacheKey, finalUrl, 3_600_000);
+                                cacheSet(cacheKey, finalUrl, 604_800_000); // cache 1 week — proof URLs are immutable (new file = new path)
                             }
                         } catch (e) {
                             console.error("[DbService] Error signing proofUrl:", entry.proofUrl, e);
