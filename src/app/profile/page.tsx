@@ -327,6 +327,8 @@ export default function ProfilePage() {
                             (window as any).goToExchequer?.();
                         } else if (urlParams.get('exchequer') === 'open') {
                             (window as any).goToExchequer();
+                        } else if (urlParams.get('tab') === 'chat') {
+                            setTimeout(() => (window as any).openMobChatOverlay?.(), 800);
                         } else if (urlParams.get('tab') === 'record') {
                             switchTab('record');
                         } else {
@@ -353,8 +355,23 @@ export default function ProfilePage() {
             }
         }
 
+        // Handle notification tap when app is already open (visibilitychange)
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('tab') === 'chat') {
+                    setTimeout(() => {
+                        (window as any).openMobChatOverlay?.();
+                        window.history.replaceState({}, '', '/profile');
+                    }, 300);
+                }
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
         loadProfile();
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibility);
             if (heartbeatRef.current) {
                 clearInterval(heartbeatRef.current);
                 heartbeatRef.current = null;
@@ -491,6 +508,20 @@ export default function ProfilePage() {
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {
         if (!loading) {
+            // Auto-open chat if redirected from push notification
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('tab') === 'chat') {
+                const tryOpen = (attempts = 0) => {
+                    if (typeof (window as any).openMobChatOverlay === 'function') {
+                        (window as any).openMobChatOverlay();
+                        window.history.replaceState({}, '', '/profile');
+                    } else if (attempts < 15) {
+                        setTimeout(() => tryOpen(attempts + 1), 200);
+                    }
+                };
+                setTimeout(() => tryOpen(), 300);
+            }
+
             if (pendingLockRef.current) {
                 const { silence, silenceReason: reason, paywall, memberId } = pendingLockRef.current;
                 if (silence) _applySilence(true, reason);
