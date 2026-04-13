@@ -34,7 +34,11 @@ export function cacheDelete(pattern: string): void {
 /** Fetch-or-compute: returns cached value or runs fn() and caches result. */
 export async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
     const hit = cacheGet<T>(key);
-    if (hit !== null) return hit;
+    if (hit !== null) {
+        console.log(`[CACHE HIT] ${key}`);
+        return hit;
+    }
+    console.log(`[CACHE MISS] ${key} — fetching from DB`);
     const value = await fn();
     cacheSet(key, value, ttlMs);
     return value;
