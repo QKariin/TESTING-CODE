@@ -8,6 +8,7 @@ import '../../css/dashboard-modals.css';
 import '../../css/dashboard-mobile.css';
 import MobileDashboard from './MobileDashboard';
 import { ChallengesContent } from './challenges/page';
+import { GlobalContent } from './GlobalContent';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -421,6 +422,7 @@ export default function DashboardPage() {
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const [showChallenges, setShowChallenges] = useState(false);
+    const [showGlobal, setShowGlobal] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -764,6 +766,11 @@ export default function DashboardPage() {
                     onClick={() => setShowChallenges(true)}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: showChallenges ? '#4ade80' : '#4ade8099', position: 'relative', cursor: 'pointer', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}
                 >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</div>
+                <div
+                    className="sb-dash-btn"
+                    onClick={() => { setShowChallenges(false); setShowGlobal(true); }}
+                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.06), transparent)', borderBottom: '1px solid rgba(197,160,89,0.15)', color: showGlobal ? 'var(--gold)' : 'rgba(255,255,255,0.45)', position: 'relative', cursor: 'pointer', boxShadow: showGlobal ? 'inset 3px 0 0 var(--gold)' : 'none' }}
+                >⊕ GLOBAL</div>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
@@ -780,6 +787,11 @@ export default function DashboardPage() {
                     <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
                         <ChallengesContent onClose={() => setShowChallenges(false)} />
                     </div>
+                )}
+
+                {/* GLOBAL INLINE PANEL — overlays content area when open */}
+                {showGlobal && (
+                    <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
                 )}
 
                 {/* 1. HOME VIEW */}
