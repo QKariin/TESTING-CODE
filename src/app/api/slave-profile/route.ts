@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
+        console.error('[slave-profile] GET catch:', err?.message, err?.code, err?.stack);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
@@ -119,6 +120,7 @@ export async function POST(request: NextRequest) {
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
+        console.error('[slave-profile] POST catch:', err?.message, err?.code, err?.stack);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
