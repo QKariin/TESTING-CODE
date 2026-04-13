@@ -115,6 +115,9 @@ export function switchTab(tab: string) {
         }
     }
 
+    // Load gallery if switching to record tab and it has pending updates
+    if (tab === 'record') flushGalleryIfDirty();
+
     const btns = document.querySelectorAll('.nav-btn');
     btns.forEach(b => b.classList.remove('active'));
 }
@@ -485,6 +488,53 @@ function showGiftToast(title: string, amount: number, merit: number) {
     }
     document.body.appendChild(toast);
     requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
+}
+
+// ─── New Message Banner: slides in when Queen sends a message ───────────────
+function showNewMessageBanner(preview: string) {
+    const existing = document.getElementById('queenMsgBanner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'queenMsgBanner';
+    const escaped = preview.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    banner.innerHTML = `
+        <div style="display:flex; align-items:flex-start; gap:14px;">
+            <img src="/queen-karin.png" style="flex-shrink:0; width:44px; height:44px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(197,160,89,0.6);" onerror="this.style.display='none'" />
+            <div style="flex:1; min-width:0;">
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">✦ New Message</div>
+                <div style="font-family:'Cinzel', serif; font-size:1.1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${escaped}</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+            <button onclick="document.getElementById('queenMsgBanner').remove();" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.5rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">DISMISS</button>
+            <button onclick="document.getElementById('queenMsgBanner').remove(); if(typeof window.openMobChatOverlay==='function') window.openMobChatOverlay();" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.5rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">OPEN CHAT ♥</button>
+        </div>
+    `;
+    Object.assign(banner.style, {
+        position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
+        background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
+        border: '1px solid rgba(197,160,89,0.4)',
+        borderRadius: '18px', padding: '20px 22px',
+        boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08)',
+        width: '400px', maxWidth: 'calc(100vw - 40px)',
+        opacity: '0', transform: 'translateY(20px)',
+        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    });
+    if (window.innerWidth <= 768) {
+        banner.style.zIndex = '10000000';
+        banner.style.bottom = 'calc(85px + env(safe-area-inset-bottom) + 16px)';
+        banner.style.right = '12px';
+        banner.style.left = '12px';
+        banner.style.width = 'auto';
+    }
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; });
+    // Auto-dismiss after 8 seconds
+    setTimeout(() => {
+        const el = document.getElementById('queenMsgBanner');
+        if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(20px)'; setTimeout(() => el.remove(), 400); }
+    }, 8000);
 }
 
 // ─── Poverty Modal: not enough coins ────────────────────────────────────────
@@ -1632,20 +1682,7 @@ export async function initChatSystem() {
         setState({ memberId: email });
     }
 
-    // Start silence polling — runs every 3s, uses supabaseAdmin endpoint (no auth dependency)
-    if (_silenceCheckInterval) clearInterval(_silenceCheckInterval);
-    _silenceCheckInterval = setInterval(async () => {
-        try {
-            const r = await fetch('/api/silence-check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: email }),
-            });
-            if (!r.ok) return;
-            const d = await r.json();
-            _applySilence(d.silence === true, d.reason || '');
-        } catch {}
-    }, 3000);
+    // Silence is handled by the realtime profile_stats_ subscription below — no polling needed
 
     if (chatSubscribed) return; // channels already set up — don't duplicate
     chatSubscribed = true;
@@ -1689,6 +1726,9 @@ export async function initChatSystem() {
                     const ring = document.querySelector('.mob-nav-queen-ring');
                     if (ring) ring.classList.add('has-new-msg');
                     try { const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play(); } catch (_) {}
+                    // Show in-app message banner
+                    const preview = typeof msg.content === 'string' ? msg.content.slice(0, 80) : '👑 New message';
+                    showNewMessageBanner(preview);
                 }
             }
 
@@ -1709,7 +1749,7 @@ export async function initChatSystem() {
         })
         .subscribe();
 
-    // 3. Polling fallback every 4s (same as dashboard line 123)
+    // 3. Polling fallback every 4s — catches messages realtime misses (reconnects, brief gaps)
     if (_chatPollInterval) clearInterval(_chatPollInterval);
     _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 4000);
 
@@ -1739,7 +1779,7 @@ export async function initChatSystem() {
             })
         .subscribe();
 
-    // 5. Wallet/score polling fallback every 15s
+    // 5. Wallet/score polling fallback every 15s — catches missed realtime events
     const walletEmail = email;
     setInterval(async () => {
         try {
@@ -1953,6 +1993,9 @@ function subscribeToChat(email: string) {
                         snd.volume = 0.5;
                         snd.play();
                     } catch (_) {}
+                    // Show in-app message banner
+                    const preview = typeof msg.content === 'string' ? msg.content.slice(0, 80) : '👑 New message';
+                    showNewMessageBanner(preview);
                 }
             }
             const html = renderChatMessage(msg);
@@ -2004,16 +2047,45 @@ function subscribeToChat(email: string) {
         .subscribe();
 }
 
+let _galleryDirty = false;
+let _galleryEmail = '';
+
 async function refreshTaskGallery(email: string) {
+    _galleryEmail = email;
+    // Check if record/gallery section is actually visible before loading media.
+    // Must check the container's inline style (set by switchTab) — getComputedStyle on
+    // child elements does NOT inherit display:none from a hidden parent.
+    const recordVisible = (() => {
+        // Desktop: historySection is the container switchTab shows/hides via inline style
+        const historySection = document.getElementById('historySection');
+        if (historySection && historySection.style.display !== 'none' && historySection.style.display !== '') return true;
+        // Mobile: altarDrawer gets class 'open' added when opened
+        const altarDrawer = document.getElementById('altarDrawer') || document.getElementById('mobAltarDrawer');
+        if (altarDrawer && altarDrawer.classList.contains('open')) return true;
+        return false;
+    })();
+
+    if (!recordVisible) {
+        _galleryDirty = true; // mark as needing refresh — will load when user opens it
+        return;
+    }
+
     try {
         const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, full: true }) });
         const data = await res.json();
         if (data && !data.error) {
             renderHistoryAndAltar(data);
-            console.log('[GALLERY] Refreshed from DB.');
+            _galleryDirty = false;
         }
     } catch (err) {
         console.warn('[GALLERY] Refresh failed:', err);
+    }
+}
+
+// Call this when the record/altar section is opened to load any pending gallery refresh
+export async function flushGalleryIfDirty() {
+    if (_galleryDirty && _galleryEmail) {
+        await refreshTaskGallery(_galleryEmail);
     }
 }
 
@@ -2210,7 +2282,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
             const mediaBlock = fbSrc
                 ? (fbIsVideo
-                    ? `<video src="${fbSrc}" preload="metadata" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
+                    ? `<div style="position:relative;width:100%;max-height:180px;overflow:hidden;border-radius:10px 10px 0 0;cursor:pointer;background:#000;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:44px;height:44px;border-radius:50%;background:rgba(197,160,89,0.85);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">▶</div></div><video src="${fbSrc}" preload="none" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
                     : `<img src="${fbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">`)
                 : '';
             return `
@@ -2232,7 +2304,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     if (msg.type === 'photo') {
         content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
     } else if (msg.type === 'video') {
-        content = `<video src="${content}" class="chat-img-attachment" controls playsinline style="max-width:100%;border-radius:8px;"></video>`;
+        content = `<video src="${content}" class="chat-img-attachment" controls playsinline preload="none" style="max-width:100%;border-radius:8px;"></video>`;
     }
 
     if (isMe) {
@@ -2415,6 +2487,16 @@ export function mobNavTo(tab: 'profile' | 'record' | 'queen' | 'global') {
     }
 }
 
+// ─── MOB ROUTINE ─────────────────────────────────────────────────────────────
+// Opens the Queen Command Hub and scrolls to the routine upload section
+export function openMobRoutine() {
+    openLobby();
+    setTimeout(() => {
+        const routineEl = document.getElementById('mobRoutineDisplay');
+        if (routineEl) routineEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 220);
+}
+
 // ─── MOB CHAT OVERLAY ────────────────────────────────────────────────────────
 function _closeAllMobOverlays(except?: string) {
     ['mobChatOverlay', 'mobQueenWallOverlay', 'mobGlobalOverlay'].forEach(id => {
@@ -2425,6 +2507,7 @@ function _closeAllMobOverlays(except?: string) {
         setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     });
     if (except !== 'altar') closeAltarDrawer();
+    closeLobby();
 }
 
 function _isOverlayOpen(id: string) {
@@ -2577,7 +2660,7 @@ async function _loadMobQueenPosts() {
                         </div>
                     </div>`;
                 } else if (isVideo) {
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;"><video src="${p.media_url}" controls playsinline preload="metadata" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;"></video></div>`;
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div><video data-src="${p.media_url}" playsinline preload="none" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
                 } else {
                     mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
                 }
@@ -2943,7 +3026,7 @@ function _buildMobGlBubble(msg: any): string {
 
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="metadata" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
+            ? `<div style="position:relative;width:100%;background:#000;border-radius:8px;margin-top:8px;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;border-radius:8px;"><div style="width:50px;height:50px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">▶</div></div><video data-src="${msg.media_url}" playsinline preload="none" style="width:100%;border-radius:8px;max-height:260px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`)
         : '';
 
@@ -4666,14 +4749,15 @@ function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
 
     if (_isVideo(url)) {
         const vid = document.createElement('video');
-        vid.src = url;
+        vid.setAttribute('preload', 'none');
         vid.className = 'hero-img';
         vid.style.objectFit = 'cover';
+        vid.style.cursor = 'pointer';
         vid.setAttribute('muted', '');
         vid.setAttribute('playsinline', '');
-        vid.setAttribute('loop', '');
+        vid.setAttribute('controls', '');
+        vid.src = url;
         imgMain.replaceWith(vid);
-        vid.play().catch(() => { });
     } else {
         imgMain.src = url;
         imgMain.style.display = 'block';
@@ -4705,6 +4789,8 @@ export function openAltarDrawer() {
     if (drawer) drawer.classList.add('open');
     if (backdrop) backdrop.classList.add('open');
     _setNavActive('record');
+    // Load gallery if it has pending updates
+    flushGalleryIfDirty();
 }
 
 export function closeAltarDrawer() {
@@ -4784,7 +4870,7 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
             vid.muted = true;
             vid.playsInline = true;
             vid.loop = true;
-            vid.autoplay = true;
+            vid.preload = 'none';
             vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
             el.replaceWith(vid);
         } else {
@@ -4834,7 +4920,7 @@ function _renderFailedGrid(containerId: string, failed: any[], resolveUrl: (u: s
         if (!url) return `<div style="background:#0a0a0a;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">✗</div>`;
         const isVid = _isVideo(url);
         return isVid
-            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" muted playsinline loop></video>`
+            ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" muted playsinline loop preload="none"></video>`
             : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`;
     }).join('');
 }

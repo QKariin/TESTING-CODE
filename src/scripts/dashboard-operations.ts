@@ -42,20 +42,19 @@ function renderOperationsGrid() {
     const latestTask = pendingTasks[0];
     const latestRoutine = pendingRoutines[0];
 
-    const taskBg = latestTask ? getOptimizedUrl(latestTask.proofUrl, 400) : '';
-    const routineBg = latestRoutine ? getOptimizedUrl(latestRoutine.proofUrl, 400) : '';
-
+    // Use thumbnail for video proofs — never embed live video URLs as backgrounds (causes continuous Supabase egress)
     const taskVideo = latestTask && (latestTask.proofUrl?.endsWith('.mp4') || latestTask.proofType?.includes('video'));
     const routineVideo = latestRoutine && (latestRoutine.proofUrl?.endsWith('.mp4') || latestRoutine.proofType?.includes('video'));
+    const taskBg = latestTask ? getOptimizedUrl(taskVideo ? (latestTask.thumbnail_url || latestTask.proofUrl) : latestTask.proofUrl, 400) : '';
+    const routineBg = latestRoutine ? getOptimizedUrl(routineVideo ? (latestRoutine.thumbnail_url || latestRoutine.proofUrl) : latestRoutine.proofUrl, 400) : '';
 
     let html = '<div class="ops-monitor-grid">';
 
     // 1. TASK CARD (GOLD)
     html += `
         <div class="ops-card task" onclick="window.showQueueFiltered(false)">
-            ${taskBg ? (taskVideo ?
-            `<video src="${taskBg}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
-            `<img src="${taskBg}" class="ops-card-bg">`) : ''}
+            ${taskBg && !taskVideo ? `<img src="${taskBg}" class="ops-card-bg">` :
+              taskBg && taskVideo ? `<img src="${taskBg}" class="ops-card-bg">` : ''}
             <div class="ops-card-overlay">
                 <div class="ops-card-label">PENDING OPERATIONS</div>
                 <div class="ops-card-title">TASK QUEUE</div>
@@ -67,9 +66,7 @@ function renderOperationsGrid() {
     // 2. ROUTINE CARD (SILVER)
     html += `
         <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
-            ${routineBg ? (routineVideo ?
-            `<video src="${routineBg}" class="ops-card-bg" autoplay muted loop playsinline></video>` :
-            `<img src="${routineBg}" class="ops-card-bg">`) : ''}
+            ${routineBg ? `<img src="${routineBg}" class="ops-card-bg">` : ''}
             <div class="ops-card-overlay">
                 <div class="ops-card-label">DAILY PROTOCOLS</div>
                 <div class="ops-card-title">ROUTINE QUEUE</div>
@@ -150,7 +147,7 @@ function renderTributeFeedCard(tribute: any) {
                     <span>${clean(tribute.memberName || 'Unknown')}</span>
                     <span>${timeStr}</span>
                 </div>
-                <div class="ft-main">${tribute.amount || 0} <i class="fas fa-coins" style="font-size:0.85rem; color:#c5a059;"></i></div>
+                <div class="ft-main">${tribute.amount || 0} <i class="fas fa-coins" style="font-size:0.85rem; color:var(--gold);"></i></div>
                 <div class="ft-sub">${clean(tribute.reason || 'Tribute sent')}</div>
             </div>
         </div>

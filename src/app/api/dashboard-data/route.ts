@@ -1,24 +1,29 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { getMasterData } from '@/actions/velo-actions';
+import { cached } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
+
+const USERS_TTL  = 30_000; // 30s — user list
+const QUEUE_TTL  = 15_000; // 15s — review queue (more time-sensitive)
+const TRIBUTE_TTL = 60_000; // 60s — tributes change infrequently
 
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');
 
-        const users = await getMasterData();
-        const tributes = await DbService.getRecentTributes(50).catch(() => []);
-        const reviewQueue = await DbService.getReviewQueue().catch(() => []);
+        const [users, tributes, reviewQueue] = await Promise.all([
+            cached('dashboard:users', USERS_TTL, () => getMasterData()),
+            cached('dashboard:tributes', TRIBUTE_TTL, () => DbService.getRecentTributes(50).catch(() => [])),
+            cached('dashboard:queue', QUEUE_TTL, () => DbService.getReviewQueue().catch(() => [])),
+        ]);
 
-        // If memberId is provided, fetch specific profile
+        // Per-member profile is never cached — always fresh
         let profile = null;
         if (memberId) {
-            console.log('[dashboard-data] fetching profile for:', memberId);
             profile = await DbService.getProfile(memberId);
-            console.log('[dashboard-data] profile result:', profile ? `found (${profile.name}, score=${profile.score})` : 'NULL - no match');
         }
 
         return NextResponse.json({
@@ -28,7 +33,7 @@ export async function GET(req: Request) {
             profile,
             availableDailyTasks: [],
             status: 'success'
-        });
+        }, { headers: { 'Cache-Control': 'private, max-age=15, stale-while-revalidate=30' } });
     } catch (error) {
         console.error('Dashboard data fetch error:', error);
         return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 });

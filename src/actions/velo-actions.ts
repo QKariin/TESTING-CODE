@@ -779,7 +779,7 @@ export async function getMasterData() {
 
         const { data: tasks, error: tError } = await getAdmin()
             .from('tasks')
-            .select('*')
+            .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history')
             .limit(1000);
 
         if (pError) throw pError;

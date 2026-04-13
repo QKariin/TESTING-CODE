@@ -11,6 +11,11 @@ import { getSignedUrl, mediaType as mediaTypeFunction, getOptimizedUrl } from '.
 
 import { getHierarchyReport } from '../lib/hierarchyRules';
 
+// --- Theme helpers (reads runtime theme from window.__dashTheme) ---
+function _tHex(): string { return (window as any).__dashTheme?.hex || '#c5a059'; }
+function _tRgb(): string { return (window as any).__dashTheme?.rgb || '197,160,89'; }
+function _tAc(a: number): string { return `rgba(${_tRgb()},${a})`; }
+
 // --- STABILITY CACHE ---
 let cachedFillers: any[] = [];
 let fillerUserId: string | null = null;
@@ -144,9 +149,8 @@ export async function updateDetail(u: any) {
                 const target = r.target || 1;
                 const pct = Math.min((current / target) * 100, 100);
                 const isDone = current >= target;
-                const color = isDone ? "#00ff00" : "#c5a059";
-
-                // No icons — label only
+                const color = isDone ? _tHex() : _tAc(0.4);
+                const glow = isDone ? _tAc(0.35) : _tAc(0.15);
 
                 html += `
                     <div style="margin-bottom:12px;">
@@ -154,8 +158,8 @@ export async function updateDetail(u: any) {
                             <span>${r.label}</span>
                             <span style="color:${color}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
                         </div>
-                        <div style="width:100%; height:8px; background:#000; border:1px solid #333; border-radius:4px; overflow:hidden; position:relative;">
-                            <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${color}40;"></div>
+                        <div style="width:100%; height:8px; background:#000; border:1px solid rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; position:relative;">
+                            <div style="width:${pct}%; height:100%; background:${color}; box-shadow:0 0 10px ${glow};"></div>
                         </div>
                     </div>`;
             } else if (r.type === 'check') {
@@ -164,8 +168,8 @@ export async function updateDetail(u: any) {
 
                 const isDone = r.status === 'VERIFIED';
                 const svgIcon = isDone
-                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+                    ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tHex()}" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="${_tHex()}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                    : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tAc(0.35)}" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="${_tAc(0.35)}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 
                 html += `
                     <div style="margin-bottom:8px;">
@@ -186,8 +190,8 @@ export async function updateDetail(u: any) {
             h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === todayStr
         );
         const routineSvg = isDoneToday
-            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#00ff00" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="#00ff00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#ff4444" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+            ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tHex()}" stroke-width="1"/><path d="M3.5 7L5.5 9.5L10.5 4.5" stroke="${_tHex()}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+            : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="${_tAc(0.35)}" stroke-width="1"/><path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="${_tAc(0.35)}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
         const proofStatus = todayEntry?.status;
         const proofOverlay = todayEntry && todayEntry.id
             ? (proofStatus === 'approve'
@@ -199,10 +203,21 @@ export async function updateDetail(u: any) {
                     <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(150,0,0,0.6);color:#ff4444;border:1px solid rgba(200,0,0,0.5);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✗ REJECT</button>
                   </div>`)
             : '';
+        const isRoutineVideo = todayEntry?.proofUrl?.match(/\.(mp4|mov|webm)/i);
+        const routineThumb = isRoutineVideo ? (todayEntry.thumbnail_url || null) : null;
         const proofHtml = todayEntry
             ? `<div style="position:relative;margin-top:6px;border-radius:4px;overflow:hidden;">
-                ${todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i)
-                    ? `<video src="${todayEntry.proofUrl}" controls style="width:100%;display:block;border-radius:4px;border:1px solid #333;max-height:200px;"></video>`
+                ${isRoutineVideo
+                    ? (routineThumb
+                        ? `<div style="position:relative;cursor:pointer;" onclick="window.open('${todayEntry.proofUrl}','_blank')">
+                             <img src="${routineThumb}" style="width:100%;display:block;border-radius:4px;border:1px solid #333;max-height:200px;object-fit:cover;">
+                             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);border-radius:4px;">
+                               <svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)"><path d="M8 5v14l11-7z"/></svg>
+                             </div>
+                           </div>`
+                        : `<div style="background:#0a0a0a;height:80px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid #333;cursor:pointer;" onclick="window.open('${todayEntry.proofUrl}','_blank')">
+                             <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(197,160,89,0.7)"><path d="M8 5v14l11-7z"/></svg>
+                           </div>`)
                     : `<img src="${todayEntry.proofUrl}" style="width:100%;display:block;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`}
                 ${proofOverlay}
               </div>`
@@ -219,7 +234,7 @@ export async function updateDetail(u: any) {
         // Always show force-promote button when not at max
         if (!report.isMax) {
             html += `<div style="margin-top:16px;">
-                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(170,125,30,0.5),rgba(130,92,15,0.4));color:rgba(240,210,120,0.95);border:1px solid rgba(180,140,50,0.5);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
+                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,${_tAc(0.22)},${_tAc(0.1)});color:${_tHex()};border:1px solid ${_tAc(0.45)};border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
                     ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
                 </button>
             </div>`;
@@ -232,7 +247,7 @@ export async function updateDetail(u: any) {
     const routineName = (u.routine || "NONE").toUpperCase();
     setText('dMirrorRoutine', `${routineName} (${isRoutineDone ? "DONE" : "PENDING"})`);
     const rEl = document.getElementById('dMirrorRoutine');
-    if (rEl) rEl.style.color = isRoutineDone ? '#00ff00' : '#666';
+    if (rEl) rEl.style.color = isRoutineDone ? _tHex() : '#666';
 
     // Kinks & limits
     const kinksLimitsEl = document.getElementById('admin_KinksLimits');
@@ -241,13 +256,13 @@ export async function updateDetail(u: any) {
         const limits = u.limits || '';
         if (kinks || limits) {
             kinksLimitsEl.innerHTML = `
-                <div style="border:1px solid rgba(197,160,89,0.15); border-radius:4px; overflow:hidden;">
-                    ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(197,160,89,0.1)' : 'none'}">
-                        <div style="font-size:0.5rem; color:#c5a059; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
+                <div style="border:1px solid rgba(var(--gold-rgb),0.15); border-radius:4px; overflow:hidden;">
+                    ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(var(--gold-rgb),0.1)' : 'none'}">
+                        <div style="font-size:0.5rem; color:var(--gold); font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${kinks}</div>
                     </div>` : ''}
-                    ${limits ? `<div style="padding:10px; background:rgba(255,68,68,0.03);">
-                        <div style="font-size:0.5rem; color:#ff6666; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
+                    ${limits ? `<div style="padding:10px; background:${_tAc(0.03)};">
+                        <div style="font-size:0.5rem; color:${_tAc(0.7)}; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${limits}</div>
                     </div>` : ''}
                 </div>`;
@@ -290,7 +305,7 @@ function renderKneelSection(u: any) {
     const isOverGoal = todayCount >= GOAL;
     const display = isOverGoal ? `${todayCount} / ${MAX}` : `${todayCount} / ${GOAL}`;
     const pct = Math.min((todayCount / (isOverGoal ? MAX : GOAL)) * 100, 100);
-    const barColor = isOverGoal ? 'linear-gradient(90deg,#c5a059,#f0d080)' : '#c5a059';
+    const barColor = isOverGoal ? 'linear-gradient(90deg,var(--gold),#f0d080)' : 'var(--gold)';
 
     // Build hour dots from kneelHistory timestamps
     const rawHistory = u.kneelHistory || u.kneel_history;
@@ -307,29 +322,29 @@ function renderKneelSection(u: any) {
     for (let h = 0; h < 24; h++) {
         const lit = kneelHours.has(h);
         const dim = !lit && h < currentHour;
-        const bg = lit ? '#c5a059' : dim ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
-        const shadow = lit ? '0 0 6px rgba(197,160,89,0.6)' : 'none';
+        const bg = lit ? 'var(--gold)' : dim ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
+        const shadow = lit ? '0 0 6px rgba(var(--gold-rgb),0.6)' : 'none';
         const border = lit ? '1px solid #f0d080' : dim ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.06)';
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
 
-    const statusColor = isLocked ? '#c5603a' : '#3a9c6e';
-    const statusBg = isLocked ? 'rgba(197,96,58,0.12)' : 'rgba(58,156,110,0.12)';
-    const statusBorder = isLocked ? 'rgba(197,96,58,0.3)' : 'rgba(58,156,110,0.3)';
+    const statusColor = isLocked ? '#c05050' : _tHex();
+    const statusBg = isLocked ? 'rgba(180,60,60,0.1)' : _tAc(0.1);
+    const statusBorder = isLocked ? 'rgba(180,60,60,0.3)' : _tAc(0.35);
     const statusText = isLocked ? `LOCKED  ${minLeft}m` : 'AVAILABLE';
 
     el.innerHTML = `
-        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(197,160,89,0.12);border-radius:6px;padding:12px 14px;">
+        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(var(--gold-rgb),0.12);border-radius:6px;padding:12px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <span style="font-family:'Orbitron';font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
                 <span style="font-family:'Orbitron';font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Orbitron';letter-spacing:1px;margin-bottom:5px;">
                 <span style="color:#555;">TODAY</span>
-                <span style="color:${isOverGoal ? '#c5a059' : '#666'}">${display}</span>
+                <span style="color:${isOverGoal ? 'var(--gold)' : '#666'}">${display}</span>
             </div>
             <div style="width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:10px;">
-                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(197,160,89,0.4);' : ''}"></div>
+                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(var(--gold-rgb),0.4);' : ''}"></div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">
                 ${dotsHtml}
@@ -379,9 +394,9 @@ function renderTelemetry(u: any) {
     ];
 
     container.innerHTML = rows.map(r => `
-        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(197,160,89,0.1);">
+        <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(var(--gold-rgb),0.1);">
             <div style="color:#666; font-size:0.5rem; font-family:'Orbitron'; margin-bottom:2px;">${r.label}</div>
-            <div style="color:#c5a059; font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
+            <div style="color:var(--gold); font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
         </div>
     `).join('');
     // drawer open/close is controlled by the header click handler only
@@ -424,7 +439,7 @@ async function updateReviewQueue(u: any) {
                 ? (t.thumbnail_url
                     ? `<img src="${getOptimizedUrl(t.thumbnail_url, 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'" style="object-fit:cover;">`
                     : `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
-                         <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                         <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                        </div>`)
                 : `<img src="${getOptimizedUrl(t.proofUrl || '', 400)}" class="pend-thumb" onerror="this.src='/queen-karin.png'">`;
 
@@ -565,8 +580,8 @@ export function updateTaskQueue(u: any) {
     let personalTasks = u.task_queue || u.taskQueue || u.queue || [];
 
     listContainer.innerHTML = `
-        <div class="mini-active" style="border:1px solid rgba(197,160,89,0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(197,160,89,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
-            <div style="font-family:'Orbitron', sans-serif; font-size:1.5rem; color:#c5a059; margin-bottom:5px;">${personalTasks.length}</div>
+        <div class="mini-active" style="border:1px solid rgba(var(--gold-rgb),0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(var(--gold-rgb),0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
+            <div style="font-family:'Orbitron', sans-serif; font-size:1.5rem; color:var(--gold); margin-bottom:5px;">${personalTasks.length}</div>
             <div style="font-family:'Cinzel', serif; font-size:0.7rem; color:#aaa; letter-spacing:2px;">SCHEDULED DIRECTIVES</div>
             <div style="font-family:'Rajdhani', sans-serif; font-size:0.65rem; color:#666; margin-top:10px; text-transform:uppercase; letter-spacing:1px;">Tap to view full queue &rarr;</div>
         </div>

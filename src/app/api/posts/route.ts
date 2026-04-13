@@ -3,29 +3,26 @@ import { createClient as createServerClient } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { rankMeetsRequirement } from '@/lib/hierarchyRules';
+import { cached, cacheDelete } from '@/lib/api-cache';
+
+const POSTS_TTL = 60_000; // 60s — posts don't change that often
 
 const getAdmin = () => createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ── GET: Public – return all published posts newest-first, annotated ──────────
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const email = (searchParams.get('email') || '').toLowerCase().trim();
-
+async function fetchAnnotatedPosts(email: string) {
     const { data: posts, error } = await supabaseAdmin
         .from('social_feed')
-        .select('*')
+        .select('id, title, content, media_url, thumbnail_url, external_url, min_rank, price, media_type, is_published, created_at')
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
-    if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    if (!posts?.length) return NextResponse.json({ success: true, posts: [] });
+    if (error) throw error;
+    if (!posts?.length) return [];
 
-    if (!email) {
-        return NextResponse.json({ success: true, posts: posts.map((p: any) => ({ ...p, userHasAccess: true, userHasLiked: false })) });
-    }
+    if (!email) return posts.map((p: any) => ({ ...p, userHasAccess: true, userHasLiked: false }));
 
     const [profileRes, unlocksRes, likesRes] = await Promise.all([
         supabaseAdmin.from('profiles').select('hierarchy').ilike('member_id', email).maybeSingle(),
@@ -37,13 +34,24 @@ export async function GET(request: Request) {
     const unlockedIds = new Set((unlocksRes.data || []).map((r: any) => r.post_id));
     const likedIds    = new Set((likesRes.data  || []).map((r: any) => r.post_id));
 
-    const annotated = posts.map((p: any) => ({
+    return posts.map((p: any) => ({
         ...p,
         userHasAccess: rankMeetsRequirement(userRank, p.min_rank || 'Hall Boy') || unlockedIds.has(p.id),
         userHasLiked:  likedIds.has(p.id),
     }));
+}
 
-    return NextResponse.json({ success: true, posts: annotated });
+// ── GET: Public – return all published posts newest-first, annotated ──────────
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const email = (searchParams.get('email') || '').toLowerCase().trim();
+    try {
+        const key = `posts:${email}`;
+        const posts = await cached(key, POSTS_TTL, () => fetchAnnotatedPosts(email));
+        return NextResponse.json({ success: true, posts }, { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } });
+    } catch (err: any) {
+        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    }
 }
 
 // ── POST: fetch posts with email in body (action:'fetch'), or CEO creates a post ─
@@ -54,36 +62,13 @@ export async function POST(request: Request) {
         // Fetch posts with personalized access — email sent in body instead of URL
         if (body.action === 'fetch') {
             const email = (body.email || '').toLowerCase().trim();
-            const { data: posts, error } = await supabaseAdmin
-                .from('social_feed')
-                .select('*')
-                .eq('is_published', true)
-                .order('created_at', { ascending: false });
-
-            if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-            if (!posts?.length) return NextResponse.json({ success: true, posts: [] });
-
-            if (!email) {
-                return NextResponse.json({ success: true, posts: posts.map((p: any) => ({ ...p, userHasAccess: true, userHasLiked: false })) });
+            try {
+                const key = `posts:${email}`;
+                const posts = await cached(key, POSTS_TTL, () => fetchAnnotatedPosts(email));
+                return NextResponse.json({ success: true, posts });
+            } catch (err: any) {
+                return NextResponse.json({ success: false, error: err.message }, { status: 500 });
             }
-
-            const [profileRes, unlocksRes, likesRes] = await Promise.all([
-                supabaseAdmin.from('profiles').select('hierarchy').ilike('member_id', email).maybeSingle(),
-                supabaseAdmin.from('post_unlocks').select('post_id').ilike('member_id', email),
-                supabaseAdmin.from('post_likes').select('post_id').ilike('member_id', email),
-            ]);
-
-            const userRank = profileRes.data?.hierarchy || 'Hall Boy';
-            const unlockedIds = new Set((unlocksRes.data || []).map((r: any) => r.post_id));
-            const likedIds    = new Set((likesRes.data  || []).map((r: any) => r.post_id));
-
-            const annotated = posts.map((p: any) => ({
-                ...p,
-                userHasAccess: rankMeetsRequirement(userRank, p.min_rank || 'Hall Boy') || unlockedIds.has(p.id),
-                userHasLiked:  likedIds.has(p.id),
-            }));
-
-            return NextResponse.json({ success: true, posts: annotated });
         }
 
         // 1. Verify session (CEO post creation)
@@ -129,6 +114,7 @@ export async function POST(request: Request) {
             .single();
 
         if (error) throw error;
+        cacheDelete('posts:'); // bust all user-specific post caches
         return NextResponse.json({ success: true, post: data });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { cached } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
+
+const TTL = 30_000; // 30s — routine status changes at most once per day
 
 async function getRoutineStatus(memberEmail: string, tz: string) {
     const { data: profile } = await supabaseAdmin
@@ -59,7 +62,9 @@ export async function GET(req: Request) {
         const memberEmail = searchParams.get('email');
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
         const tz = searchParams.get('tz') || 'UTC';
-        return NextResponse.json(await getRoutineStatus(memberEmail, tz));
+        const key = `routine:${memberEmail.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getRoutineStatus(memberEmail, tz));
+        return NextResponse.json(data, { headers: { 'Cache-Control': 'private, max-age=30' } });
     } catch (err: any) {
         console.error('[routine-status]', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -72,7 +77,9 @@ export async function POST(req: Request) {
         const memberEmail = body.email;
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
         const tz = body.tz || 'UTC';
-        return NextResponse.json(await getRoutineStatus(memberEmail, tz));
+        const key = `routine:${memberEmail.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getRoutineStatus(memberEmail, tz));
+        return NextResponse.json(data);
     } catch (err: any) {
         console.error('[routine-status]', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { cached, cacheDelete } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
+
+const TTL = 10_000; // 10s — stale kneel state is fine, button locks client-side anyway
 
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000;
 
@@ -57,7 +60,9 @@ export async function GET(req: Request) {
         const memberEmail = searchParams.get('email');
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
         const tz = searchParams.get('tz') || 'UTC';
-        return NextResponse.json(await getKneelStatus(memberEmail, tz));
+        const key = `kneel:${memberEmail.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getKneelStatus(memberEmail, tz));
+        return NextResponse.json(data, { headers: { 'Cache-Control': 'private, max-age=10' } });
     } catch (err: any) {
         console.error('[kneel-status]', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -70,9 +75,16 @@ export async function POST(req: Request) {
         const memberEmail = body.email;
         if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
         const tz = body.tz || 'UTC';
-        return NextResponse.json(await getKneelStatus(memberEmail, tz));
+        const key = `kneel:${memberEmail.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getKneelStatus(memberEmail, tz));
+        return NextResponse.json(data);
     } catch (err: any) {
         console.error('[kneel-status]', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
+}
+
+// Call this after a successful kneel to bust the cache immediately
+export function bustKneelCache(email: string) {
+    cacheDelete(`kneel:${email.toLowerCase()}`);
 }

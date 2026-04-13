@@ -10,6 +10,10 @@ export async function POST(req: Request) {
         const { urls } = await req.json();
         if (!Array.isArray(urls)) return NextResponse.json({ urls: [] }, { status: 400 });
 
+        // Public buckets — files are already accessible via public URL, no signing needed.
+        // Signing them creates ?token= URLs that bypass Vercel CDN cache and hit Supabase directly.
+        const PUBLIC_BUCKETS = ['media', 'avatars', 'public'];
+
         const signed = await Promise.all(urls.map(async (url: string) => {
             if (!url || typeof url !== 'string') return url;
 
@@ -18,6 +22,13 @@ export async function POST(req: Request) {
             if (!match) return url;
 
             const [, bucket, rawPath] = match;
+
+            // Public bucket files: return the canonical public URL so Vercel CDN can cache it
+            if (PUBLIC_BUCKETS.includes(bucket)) {
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+                return `${supabaseUrl}/storage/v1/object/public/${bucket}/${decodeURIComponent(rawPath)}`;
+            }
+
             const path = decodeURIComponent(rawPath);
 
             try {
