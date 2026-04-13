@@ -613,80 +613,31 @@ export default function DashboardPage() {
         initDashboard();
 
         // 2. Fetch Real Data & Hydrate State
+        // Lightweight list — only name, avatar, online status, unread indicator
+        // Full profile/tasks load when a user is clicked
         const loadLiveAction = async () => {
-            const [data, unreadMap] = await Promise.all([
-                getAdminDashboardData(),
+            const [listRes, unreadMap] = await Promise.all([
+                fetch('/api/dashboard-list').then(r => r.json()),
                 getUnreadMessageStatus(),
             ]);
 
-            if (data.success && data.users) {
-                const mappedUsers = data.users.map((u: any) => {
-                    // lastMessageTime: prefer unreadMap (direct from messages table), fallback to parameters
-                    const msgFromMessages = unreadMap[u.memberId || u.member_id];
-                    const msgFromParams = u.parameters?.lastMessageTime;
-                    const rawMsgTime = msgFromMessages || msgFromParams || null;
-                    const lastMessageTime = rawMsgTime ? new Date(rawMsgTime).getTime() : 0;
-
-                    // lastSeen: prefer last_active (profile), fallback to lastWorship (tasks)
-                    const lastSeen = u.lastSeen || u.last_active || u.lastWorship || null;
-
+            if (listRes.success && listRes.users) {
+                const mappedUsers = listRes.users.map((u: any) => {
+                    const msgTime = unreadMap[u.memberId?.toLowerCase()];
+                    const lastMessageTime = msgTime ? new Date(msgTime).getTime() : 0;
                     return {
                         ...u,
-                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || '/queen-karin.png', 100),
+                        avatar: getOptimizedUrl(u.avatar || '/queen-karin.png', 100),
                         lastMessageTime,
-                        lastSeen,
+                        reviewQueue: [],
+                        wallet: 0,
+                        score: 0,
+                        parameters: { paywall: u.paywall ? { active: true } : undefined },
+                        hasActiveTask: false,
                     };
                 });
 
                 setUsers(mappedUsers);
-
-                // Sync server-side read state to localStorage (so read state survives page reloads/device changes)
-                try {
-                    const readRes = await fetch('/api/chat/mark-read?type=admin');
-                    const readData = await readRes.json();
-                    const serverReadMap = readData.chatRead || {};
-                    Object.entries(serverReadMap).forEach(([email, ts]) => {
-                        const key = 'read_' + email;
-                        const localTs = parseInt(localStorage.getItem(key) || '0');
-                        const serverTs = new Date(ts as string).getTime();
-                        if (serverTs > localTs) {
-                            localStorage.setItem(key, serverTs.toString());
-                        }
-                    });
-                } catch {}
-
-                setAvailableDailyTasks(data.dailyTasks || []);
-
-                // Populate Review Queue correctly mapped to each user
-                const allQueues = data.globalQueue || [];
-                setGlobalQueue(allQueues);
-
-                // Assign each user their specific review queue
-                mappedUsers.forEach((u: any) => {
-                    u.reviewQueue = allQueues.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId);
-                });
-
-                // Aggregate Global Tributes
-                const allTributes = mappedUsers.flatMap((u: any) => {
-                    let history = [];
-                    try {
-                        const raw = u.parameters?.tributeHistory;
-                        if (raw) {
-                            history = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                        }
-                    } catch (e) { }
-
-                    return history.map((t: any) => ({
-                        ...t,
-                        memberId: u.memberId,
-                        memberName: u.name,
-                        memberAvatar: u.avatar
-                    }));
-                }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-                setGlobalTributes(allTributes);
-
-                console.log("Dashboard Hydrated with Live Data:", mappedUsers.length, "users");
                 renderMainDashboard();
 
                 // If a user profile is open, refresh their Current Status with the latest data

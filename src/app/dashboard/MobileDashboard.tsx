@@ -97,40 +97,27 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const loadData = useCallback(async () => {
         try {
-            const [data, unread] = await Promise.all([
-                getAdminDashboardData(),
+            // Lightweight list — only name, avatar, online status, unread indicator
+            // Full profile/tasks load on click only
+            const [listRes, unread] = await Promise.all([
+                fetch('/api/dashboard-list').then(r => r.json()),
                 getUnreadMessageStatus(),
             ]);
             setUnreadMap(unread);
-            if (data.success && data.users) {
-                const rawQueue = data.globalQueue || [];
-                // Build user map first so we can enrich queue with real names
-                const mapped: DashUser[] = data.users.map((u: any) => ({
-                    memberId: u.memberId || u.member_id || '',
-                    name: u.name || (u.memberId || '').split('@')[0] || 'Unknown',
-                    avatar: u.avatar || u.avatar_url || '/queen-karin.png',
-                    rank: u.rank || u.hierarchy || 'Hall Boy',
-                    wallet: Number(u.wallet) || 0,
-                    score: Number(u.score) || 0,
-                    parameters: u.parameters || {},
+            if (listRes.success && listRes.users) {
+                const mapped: DashUser[] = listRes.users.map((u: any) => ({
+                    memberId: u.memberId || '',
+                    name: u.name || '',
+                    avatar: u.avatar || '/queen-karin.png',
+                    rank: u.hierarchy || 'Hall Boy',
+                    wallet: 0,
+                    score: 0,
+                    parameters: { paywall: u.paywall ? { active: true } : undefined },
                     reviewQueue: [],
-                    lastMessageTime: u.parameters?.lastMessageTime || null,
-                    lastSeen: u.lastSeen || u.last_active || u.lastWorship || null,
-                    hasActiveTask: !!(u.parameters?.taskdom_active_task),
+                    lastMessageTime: unread[u.memberId?.toLowerCase()] || null,
+                    lastSeen: u.lastSeen || null,
+                    hasActiveTask: false,
                 }));
-                // Enrich each queue item with real name+avatar from matched user
-                const enrichedQueue = rawQueue.map((t: any) => {
-                    const mid = (t.member_id || '').toLowerCase();
-                    const u = mapped.find(x => x.memberId.toLowerCase() === mid);
-                    return u ? { ...t, memberName: u.name, avatarUrl: u.avatar } : t;
-                });
-                // Assign per-user review queues
-                mapped.forEach(u => {
-                    u.reviewQueue = enrichedQueue.filter((t: any) =>
-                        (t.member_id || '').toLowerCase() === u.memberId.toLowerCase()
-                    );
-                });
-                setGlobalQueue(enrichedQueue);
                 setUsers(mapped);
             }
         } finally { setLoading(false); }
