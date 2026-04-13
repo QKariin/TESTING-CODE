@@ -44,8 +44,11 @@ export async function updateSession(request: NextRequest) {
         const isAuthPage = pathname.startsWith('/auth')
 
         // 🟢 AUTHENTICATED API ACCESS: Allow all /api requests if the user is logged in.
-        // Bouncer shouldn't block background data fetches.
-        if (isApiPage) return supabaseResponse;
+        // Inject verified email as a trusted header so route handlers don't need to re-call getUser().
+        if (isApiPage) {
+            supabaseResponse.headers.set('x-user-email', userEmailNormalized);
+            return supabaseResponse;
+        }
 
         // 🛡️ ADMIN CLIENT FOR BOUNCER (Edge-Compatible)
         const adminSupabase = createServerClient(
