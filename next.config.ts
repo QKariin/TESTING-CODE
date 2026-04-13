@@ -16,7 +16,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '*.supabase.co',
-        pathname: '/storage/v1/object/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.wixstatic.com',
       },
     ],
     minimumCacheTTL: 604800, // 1 week — profile pics rarely change
