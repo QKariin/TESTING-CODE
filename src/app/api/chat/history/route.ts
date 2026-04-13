@@ -80,8 +80,9 @@ export async function GET(req: Request) {
         const { data, error } = await query;
 
         if (error) {
-            console.error("[API/Chat/History] Error:", error.message);
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+            console.error("[API/Chat/History] GET query error:", error.message, error.code);
+            // Return empty messages instead of 500 so the UI doesn't break
+            return NextResponse.json({ success: true, messages: [] });
         }
 
         const messages = (data || []).sort((a: any, b: any) =>
@@ -94,8 +95,8 @@ export async function GET(req: Request) {
         });
 
     } catch (err: any) {
-        console.error("[API/Chat/History] Error:", err.message);
-        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+        console.error("[API/Chat/History] GET error:", err.message);
+        return NextResponse.json({ success: true, messages: [] });
     }
 }
 
@@ -171,8 +172,8 @@ export async function POST(req: Request) {
         const { data, error } = await query;
 
         if (error) {
-            console.error("[API/Chat/History] Error:", error.message);
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+            console.error("[API/Chat/History] POST query error:", error.message, error.code);
+            return NextResponse.json({ success: true, messages: [] });
         }
 
         const messages = (data || []).sort((a: any, b: any) =>
@@ -185,6 +186,7 @@ export async function POST(req: Request) {
         });
 
     } catch (err: any) {
-        return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+        console.error("[API/Chat/History] POST error:", err.message);
+        return NextResponse.json({ success: true, messages: [] });
     }
 }
