@@ -151,14 +151,6 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     useEffect(() => { const t = setInterval(loadData, 120000); return () => clearInterval(t); }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
-    // Challenges — load once on mount only, no background polling
-    useEffect(() => {
-        fetch('/api/challenges')
-            .then(r => r.json())
-            .then(d => { if (d.success) setChallenges(d.challenges || []); })
-            .catch(() => {});
-    }, []);
-
     // Track online join times
     useEffect(() => {
         const now = Date.now();

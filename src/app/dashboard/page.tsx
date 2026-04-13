@@ -447,6 +447,7 @@ export default function DashboardPage() {
     }, []);
 
     useEffect(() => {
+        if (isMobile) return; // mobile dashboard handles its own data
         const fetchChallenge = async () => {
             try {
                 const res = await fetch('/api/challenges');
@@ -495,7 +496,7 @@ export default function DashboardPage() {
             } catch { /* silent */ }
         };
         fetchChallenge();
-    }, []);
+    }, [isMobile]);
 
     const handleLogout = async () => {
         const supabase = createClient();
@@ -705,6 +706,7 @@ export default function DashboardPage() {
         // Expose so the lock modal can force an immediate refresh after lock/unlock
         (window as any)._refreshDashboard = loadLiveAction;
 
+        if (isMobile) return; // mobile dashboard handles its own data — no duplicate load
         loadLiveAction();
         // Poll every 60s — Realtime handles chat; this is just a periodic sync fallback
         const pollInterval = setInterval(loadLiveAction, 60000);

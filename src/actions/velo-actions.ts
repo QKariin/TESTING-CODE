@@ -100,11 +100,9 @@ export async function getAdminDashboardData() {
             .from('system_rules')
             .select('*');
 
-        const { data: tasksData, error: taskErr } = await getAdmin()
+        const { data: tasksData } = await getAdmin()
             .from('tasks')
             .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"');
-
-        const reviewQueue = await DbService.getReviewQueue();
 
         if (pError) throw pError;
 
@@ -115,12 +113,22 @@ export async function getAdminDashboardData() {
             return mapUserForDashboard(p, t);
         });
 
+        // Build review queue from already-fetched tasks data — no extra DB call, no URL signing (proofs load on click)
+        const reviewQueue: any[] = [];
+        for (const row of (tasksData || [])) {
+            let history: any[] = [];
+            try { history = typeof row['Taskdom_History'] === 'string' ? JSON.parse(row['Taskdom_History']) : (row['Taskdom_History'] || []); } catch { }
+            for (const entry of history.filter((e: any) => e.status === 'pending')) {
+                reviewQueue.push({ ...entry, member_id: row.member_id });
+            }
+        }
+
         return {
             success: true,
             users: finalProfiles,
             dailyTasks: dailyTasks || [],
             customRules: globalSettings || [],
-            globalQueue: reviewQueue || []
+            globalQueue: reviewQueue
         };
     } catch (e: any) {
         console.error("Dashboard Data Fetch Error", e);
@@ -738,7 +746,8 @@ export async function getUnreadMessageStatus(): Promise<Record<string, string>> 
         const { data, error } = await getAdmin()
             .from('chats')
             .select('member_id, created_at, metadata, type, sender_email')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(500);
         if (error || !data) return {};
         // Keep only the latest real user message per member — skip admin and system messages
         const result: Record<string, string> = {};
