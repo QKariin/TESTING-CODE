@@ -21,10 +21,6 @@ const nextConfig: NextConfig = {
     ],
     minimumCacheTTL: 604800, // 1 week — profile pics rarely change
   },
-  // @ts-ignore - Bypass tight NextConfig typing on older versions to allow ESLint skip
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
 export default nextConfig;
