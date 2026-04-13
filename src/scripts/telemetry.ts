@@ -1,19 +1,7 @@
-// Ping every 5 min to keep profiles.last_active fresh (was 60s — 5x reduction).
-// Skips pings while tab is hidden — no egress from background tabs.
-// Dashboard online status is now handled by Supabase Realtime presence (instant);
-// this ping only keeps the DB timestamp updated for historical/fallback queries.
-export function startPresenceHeartbeat(userId: string): ReturnType<typeof setInterval> | null {
-    if (!userId) return null;
-    const ping = () => {
-        if (document.visibilityState === 'hidden') return; // skip when backgrounded
-        fetch('/api/tracking/ping', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, clientData: {} }),
-        }).catch(() => {});
-    };
-    ping(); // immediate first ping
-    return setInterval(ping, 300000); // 5 min
+// Presence is now handled entirely by Supabase Realtime track() in profile-logic.ts.
+// No DB heartbeat needed — returning null so existing callers don't break.
+export function startPresenceHeartbeat(_userId: string): ReturnType<typeof setInterval> | null {
+    return null;
 }
 
 export async function trackUserAnalytics(userId: string) {

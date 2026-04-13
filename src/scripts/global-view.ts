@@ -554,27 +554,8 @@ function _initTalkRealtime() {
         )
         .subscribe();
 
-    // Presence heartbeat — update last_active every 5 min (was 30s)
-    // Pause automatically when tab is hidden to avoid background egress
-    const raw = getState().raw;
-    const email = raw?.member_id || raw?.email;
-    if (email) {
-        const heartbeat = () => {
-            if (document.visibilityState === 'hidden') return;
-            fetch('/api/global/presence', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            }).catch(() => {});
-        };
-        heartbeat();
-        presenceInterval = setInterval(heartbeat, 300000);
-    }
-
-    // Poll online users every 5 min (was 30s) — realtime handles instant updates
-    talkPollInterval = setInterval(() => {
-        if (document.visibilityState !== 'hidden') _fetchAndRenderOnline();
-    }, 300000);
+    // Online list loaded once on open — no interval needed.
+    // Presence is tracked via Supabase Realtime (profile page track()), not DB heartbeats.
 }
 
 // ─── FETCH MESSAGES ───────────────────────────────────────────────────────────
