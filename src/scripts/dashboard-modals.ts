@@ -885,8 +885,8 @@ export function renderGlobalReview(filterRoutine: boolean) {
             if (thumbSrc) {
                 mediaBg = `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`;
             } else {
-                // preload="metadata" loads only headers + first frame — not autoplay, not full load
-                mediaBg = `<video src="${optUrl}" class="ops-card-bg" preload="metadata" muted playsinline style="pointer-events:none;" onerror="this.style.display='none'"></video>`;
+                // No thumbnail — show placeholder icon, load video only when opened in modal
+                mediaBg = `<div class="ops-card-bg" style="background:#0a0a0a;"></div>`;
             }
             mediaBg += `<div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>`;
         } else {
