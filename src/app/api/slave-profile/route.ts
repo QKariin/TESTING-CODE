@@ -32,23 +32,19 @@ function stripSensitive(response: any, isAdmin: boolean): any {
 }
 
 async function buildFullProfile(email: string) {
-    const [profileResult, taskResult, contribResult] = await Promise.all([
-        supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('tasks').select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', email).then((r: any) => r).catch(() => ({ data: null, error: null })),
+    const [{ data: profileData, error: profileError }, { data: taskData }, { data: contribData }] = await Promise.all([
+        supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle(),
+        supabaseAdmin.from('tasks').select('*').ilike('member_id', email).maybeSingle(),
+        supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', email),
     ]);
 
-    if (profileResult.error) {
-        console.error('[slave-profile] buildFullProfile profileError:', profileResult.error.message, profileResult.error.code);
-        throw profileResult.error;
-    }
-    if (taskResult.error) {
-        console.error('[slave-profile] buildFullProfile taskError:', taskResult.error.message, taskResult.error.code);
-        // Don't throw — proceed with null task data
+    if (profileError) {
+        console.error('[slave-profile] buildFullProfile profileError:', profileError.message, profileError.code);
+        throw profileError;
     }
 
-    const crowdfundTotal = ((contribResult.data as any[] | null) || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
-    return mapUserProfile(profileResult.data || {}, taskResult.data || {}, crowdfundTotal);
+    const crowdfundTotal = ((contribData as any[] | null) || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
+    return mapUserProfile(profileData || {}, taskData || {}, crowdfundTotal);
 }
 
 export async function GET(request: NextRequest) {
@@ -72,11 +68,11 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = await supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle();
+        const { data, error } = await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
-        console.error('[slave-profile] GET catch:', err?.message, err?.code, err?.stack);
+        console.error('[slave-profile] GET catch:', err?.message, err?.code);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
@@ -98,7 +94,6 @@ export async function POST(request: NextRequest) {
 
     // Update mode
     if (Object.keys(updates).length > 0) {
-        if (!isAdmin && !isSelf) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
@@ -116,11 +111,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = await supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle();
+        const { data, error } = await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
-        console.error('[slave-profile] POST catch:', err?.message, err?.code, err?.stack);
+        console.error('[slave-profile] POST catch:', err?.message, err?.code);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
