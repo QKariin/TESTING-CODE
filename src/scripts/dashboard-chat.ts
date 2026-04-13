@@ -197,7 +197,7 @@ async function loadDashboardChatHistory(email: string) {
     }
 }
 
-function appendChatMessage(msg: any) {
+export function appendChatMessage(msg: any) {
     // Prevent duplicates from instant-append + realtime sync
     const msgId = msg.id ? String(msg.id) : null;
     if (msgId && _renderedMsgIds.has(msgId)) return;

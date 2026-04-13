@@ -13,6 +13,7 @@ import {
 import { clean, raw, getOptimizedUrl } from './utils';
 import { mediaType as mediaTypeFunction } from './media';
 import { adminApproveTaskAction, adminRejectTaskAction, adminGetTasksAction, adminAssignTaskAction } from '@/actions/velo-actions';
+import { appendChatMessage } from './dashboard-chat';
 
 let pendingDirectiveText = "";
 let workshopFillers: any[] = [];
@@ -33,11 +34,14 @@ async function sendChatFeedback(memberId: string, mediaUrl: string | null, media
     if (!sender || !memberId) return;
     try {
         const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId });
-        await fetch('/api/chat/send', {
+        const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: 'TASK_FEEDBACK::' + payload, type: 'text' })
         });
+        const data = await res.json();
+        // Optimistically append so the card shows immediately regardless of poll/online status
+        if (data?.success && data?.data) appendChatMessage(data.data);
     } catch (err) {
         console.error('[sendChatFeedback] non-critical:', err);
     }
