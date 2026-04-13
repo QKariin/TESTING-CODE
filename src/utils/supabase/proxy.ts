@@ -44,10 +44,14 @@ export async function updateSession(request: NextRequest) {
         const isAuthPage = pathname.startsWith('/auth')
 
         // 🟢 AUTHENTICATED API ACCESS: Allow all /api requests if the user is logged in.
-        // Inject verified email as a trusted header so route handlers don't need to re-call getUser().
+        // Forward verified email as a REQUEST header so route handlers can read it via request.headers.
         if (isApiPage) {
-            supabaseResponse.headers.set('x-user-email', userEmailNormalized);
-            return supabaseResponse;
+            const reqHeaders = new Headers(request.headers);
+            reqHeaders.set('x-user-email', userEmailNormalized);
+            const apiResponse = NextResponse.next({ request: { headers: reqHeaders } });
+            // Preserve any refreshed session cookies from supabaseResponse
+            supabaseResponse.cookies.getAll().forEach(c => apiResponse.cookies.set(c));
+            return apiResponse;
         }
 
         // 🛡️ ADMIN CLIENT FOR BOUNCER (Edge-Compatible)
