@@ -148,7 +148,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
-    useEffect(() => { const t = setInterval(loadData, 8000); return () => clearInterval(t); }, [loadData]);
+    useEffect(() => { const t = setInterval(loadData, 120000); return () => clearInterval(t); }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
     // Challenges
@@ -2018,7 +2018,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
         } finally { setLoadingMsgs(false); }
     }, [user.memberId, adminEmail]);
 
-    useEffect(() => { fetchMessages(); const t = setInterval(fetchMessages, 8000); return () => clearInterval(t); }, [fetchMessages]);
+    useEffect(() => { fetchMessages(); const t = setInterval(fetchMessages, 30000); return () => clearInterval(t); }, [fetchMessages]);
 
     // Only scroll to bottom when message count changes (new message) or on initial load
     useLayoutEffect(() => {
