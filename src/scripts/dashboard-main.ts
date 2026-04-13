@@ -9,6 +9,7 @@ import {
 } from './dashboard-state';
 
 import { renderSidebar } from './dashboard-sidebar';
+import { initPresenceTracking, isMemberOnline, onPresenceChange } from './dashboard-presence';
 import { renderOperationsMonitor } from './dashboard-operations';
 import { renderOverview, pushActivity } from './dashboard-overview';
 import { loadWishlistManager, openWishlistAdd, openWishlistEdit, closeWishlistModal, saveWishlistItem, deleteWishlistItem, handleWishlistImageSelect, previewWishlistUrl } from './dashboard-wishlist';
@@ -40,10 +41,26 @@ export function initDashboard() {
     if (codeEl) codeEl.innerText = dayCode;
 
     // Start Systems
+    initPresenceTracking();
     startTimerLoop();
     renderMainDashboard();
     subscribeToDashboardTaskUpdates();
     loadExchequerLog();
+
+    // When a member comes online: re-render sidebar dot + restart their chat/detail
+    onPresenceChange(async () => {
+        renderSidebar();
+        if (!currId) return;
+        if (!isMemberOnline(currId)) return;
+        // Member just came online while admin has them open — wake everything up
+        const [{ updateDetail }, { initDashboardChat }] = await Promise.all([
+            import('./dashboard-users'),
+            import('./dashboard-chat'),
+        ]);
+        const u = users.find((x: any) => x.memberId === currId);
+        if (u) updateDetail(u);
+        initDashboardChat(currId);
+    });
 
     console.log('Dashboard initialized. ID:', dayCode);
 }
@@ -244,10 +261,10 @@ function updateStatsDeck() {
 function startTimerLoop() {
     if (timerInterval) clearInterval(timerInterval);
     const interval = setInterval(() => {
-        if (currId) {
-            const u = users.find(x => x.memberId === currId);
-            if (u) updateDetail(u);
-        }
+        if (!currId) return;
+        if (!isMemberOnline(currId)) return; // ghost — skip all updates
+        const u = users.find(x => x.memberId === currId);
+        if (u) updateDetail(u);
     }, 1000);
     setTimerInterval(interval);
 }

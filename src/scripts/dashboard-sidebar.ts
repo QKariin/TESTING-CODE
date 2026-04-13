@@ -5,6 +5,7 @@ import { users, currId, setCurrId } from './dashboard-state';
 import { clean } from './utils';
 import { triggerSound } from './utils';
 import { getOptimizedUrl } from './media';
+import { isMemberOnline } from './dashboard-presence';
 
 // firstUnreadTime: when each user's FIRST unread message arrived
 const firstUnreadTime: Record<string, number> = {};
@@ -41,18 +42,7 @@ export function renderSidebar() {
 
     const now = Date.now();
 
-    const getLastSeenMs = (u: any): number => {
-        const raw = u.lastSeen || u.lastWorship || null;
-        if (!raw) return 0;
-        const t = new Date(raw).getTime();
-        return isNaN(t) ? 0 : t;
-    };
-
-    const isUserOnline = (u: any) => {
-        if (!u) return false;
-        const ls = getLastSeenMs(u);
-        return ls > 0 && (now - ls) / 60000 < 5;
-    };
+    const isUserOnline = (u: any) => isMemberOnline(u?.memberId || '');
 
     // ── Update tracking state ────────────────────────────────────────────
     users.forEach(u => {
@@ -318,8 +308,15 @@ export function selUser(id: string) {
         import('./dashboard-chat')
     ]).then(([{ updateDetail }, { initDashboardChat }]) => {
         const openUser = users.find(x => x.memberId === id);
+        // Always render static profile (cached state)
         if (openUser) updateDetail(openUser);
-        initDashboardChat(id);
+        // Only start live chat if member is online — ghost if offline
+        if (isMemberOnline(id)) {
+            initDashboardChat(id);
+        } else {
+            const b = document.getElementById('adminChatBox');
+            if (b) b.innerHTML = '<div style="color:#333;text-align:center;padding:30px;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px;">OFFLINE — CHAT UNAVAILABLE</div>';
+        }
     });
 }
 

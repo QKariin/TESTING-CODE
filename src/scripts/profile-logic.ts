@@ -1687,6 +1687,15 @@ export async function initChatSystem() {
     if (chatSubscribed) return; // channels already set up — don't duplicate
     chatSubscribed = true;
 
+    // Broadcast presence so dashboard knows this member is online.
+    // Supabase automatically removes the entry when the tab closes / disconnects.
+    const _presenceCh = supabase.channel('members-online');
+    _presenceCh.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+            await _presenceCh.track({ email: email!.toLowerCase() });
+        }
+    });
+
     // Load history once on first init
     await loadChatHistory(email);
 

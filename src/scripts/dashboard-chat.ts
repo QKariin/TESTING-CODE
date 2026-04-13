@@ -2,6 +2,7 @@
 // Dashboard Chat Management - Refactored for Supabase Realtime
 
 import { currId, users, adminEmail } from './dashboard-state';
+import { isMemberOnline } from './dashboard-presence';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
 import { clean } from './utils';
@@ -121,8 +122,11 @@ export async function initDashboardChat(slaveEmail: string) {
         })
         .subscribe();
 
-    // 4. Polling fallback — catches messages that realtime misses (RLS / connection issues)
-    chatPollInterval = setInterval(() => pollNewMessages(cleanEmail), 120000);
+    // 4. Polling fallback — only fires when member is online (presence gate)
+    chatPollInterval = setInterval(() => {
+        if (!isMemberOnline(cleanEmail)) return; // offline — skip
+        pollNewMessages(cleanEmail);
+    }, 120000);
 }
 
 async function pollNewMessages(email: string) {
