@@ -35,8 +35,10 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
     const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
     const tributeTotal = parseTributeTotal(t?.['Tribute History']);
 
-    const rawPic = p.avatar_url || p.profile_picture_url || '';
+    const rawPic = p.avatar_url || p.profile_picture_url || params?.avatar_url || params?.photoUrl || '';
     const finalPic = (rawPic && rawPic.length > 5 && rawPic !== 'undefined' && rawPic !== 'null') ? rawPic : '/queen-karin.png';
+    // Normalise so page.tsx and profile-logic both find it regardless of original column name
+    if (finalPic !== '/queen-karin.png' && !p.avatar_url) p.avatar_url = finalPic;
 
     return {
         ...p,
