@@ -461,27 +461,6 @@ export default function ProfilePage() {
         checkChallenge(); // load once — challenges don't change frequently, no polling needed
     }, []);
 
-    // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
-    useEffect(() => {
-        if (!profile) return;
-        const email = profile.memberId || profile.member_id || profile.email;
-        if (!email) return;
-
-        async function pollSilence() {
-            try {
-                const res = await fetch('/api/silence-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId: email }),
-                });
-                const data = await res.json();
-                _applySilence(data.silence === true, data.reason || '');
-            } catch {}
-        }
-
-        pollSilence(); // Realtime _statsChannel handles subsequent silence/paywall updates
-    }, [profile]);
-
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
     useEffect(() => {
         if (!profile) return;
