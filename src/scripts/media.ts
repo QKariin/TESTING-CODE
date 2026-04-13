@@ -58,8 +58,12 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("blob:")) return url;
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
     if (url.includes("token=")) return url; // Already a signed URL
-    // Supabase storage URLs — return as-is (no server-side transform)
-    if (url.includes("supabase.co/storage")) return url;
+    // Supabase storage URLs — route images through Next.js CDN (cached at Vercel edge), videos as-is
+    if (url.includes("supabase.co/storage")) {
+        const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+        if (isVideo) return url;
+        return `/_next/image?url=${encodeURIComponent(url)}&w=${width}&q=80`;
+    }
 
     // 1. CLOUDINARY
     if (url.includes("cloudinary.com")) {

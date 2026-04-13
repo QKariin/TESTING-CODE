@@ -3927,12 +3927,13 @@ export function renderProfileSidebar(u: any) {
 
     const photoSrc = u.avatar_url || u.profile_picture_url || '';
     if (photoSrc) {
+        const optimizedPic = getOptimizedUrl(photoSrc, 200);
         const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
-        if (elProfilePic) elProfilePic.src = photoSrc;
+        if (elProfilePic) elProfilePic.src = optimizedPic;
         const elMobUserPic = document.getElementById('hudUserPic') as HTMLImageElement;
-        if (elMobUserPic) elMobUserPic.src = photoSrc;
+        if (elMobUserPic) elMobUserPic.src = optimizedPic;
         const elMobHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
-        if (elMobHaloPic) elMobHaloPic.src = photoSrc;
+        if (elMobHaloPic) elMobHaloPic.src = optimizedPic;
     }
 
     const elCurBen = document.getElementById('desk_CurrentBenefits');
