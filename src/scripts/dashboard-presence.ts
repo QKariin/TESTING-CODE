@@ -60,3 +60,12 @@ export function isMemberOnline(email: string): boolean {
     if (!email) return false;
     return onlineMembers.has(email.toLowerCase());
 }
+
+/** Unsubscribe and clean up the presence channel. Call on page unload. */
+export function cleanupPresenceTracking() {
+    if (_channel) {
+        _channel.unsubscribe();
+        _channel = null;
+    }
+    onlineMembers.clear();
+}

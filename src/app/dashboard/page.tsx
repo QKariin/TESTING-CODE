@@ -24,6 +24,7 @@ import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, se
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
+import { cleanupPresenceTracking } from '@/scripts/dashboard-presence';
 
 const PAYWALL_PRESETS = [
     "Monthly tribute not received. Pay now.",
@@ -737,6 +738,7 @@ export default function DashboardPage() {
         return () => {
             clearInterval(pollInterval);
             supabaseRt.removeChannel(realtimeChannel);
+            cleanupPresenceTracking();
         };
     }, []);
 

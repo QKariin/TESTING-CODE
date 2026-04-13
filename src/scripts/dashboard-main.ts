@@ -84,10 +84,17 @@ async function refreshQueueFromServer() {
     }
 }
 
+// Module-level refs — prevent duplicate subscriptions and allow cleanup
+let _tasksWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
+let _purchaseWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
+
 function subscribeToDashboardTaskUpdates() {
+    // Guard against duplicate subscriptions
+    if (_tasksWatchChannel) return;
+
     // Realtime — fires instantly if Supabase realtime is enabled on tasks table
     const supabase = createClient();
-    supabase
+    _tasksWatchChannel = supabase
         .channel('dashboard_tasks_watch')
         .on('postgres_changes', {
             event: '*',
@@ -96,8 +103,8 @@ function subscribeToDashboardTaskUpdates() {
         }, () => {
             console.log('[DASHBOARD REALTIME] Tasks changed — refreshing...');
             refreshQueueFromServer();
-        })
-        .subscribe();
+        });
+    _tasksWatchChannel.subscribe();
 
     // Polling fallback — catches anything the realtime subscription misses
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
@@ -114,7 +121,9 @@ let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
 let _lastSeenPurchaseSession: string | null = null;
 
 function subscribeToPurchaseNotifications(supabase: any) {
-    supabase
+    if (_purchaseWatchChannel) return;
+
+    _purchaseWatchChannel = supabase
         .channel('dashboard_purchase_watch')
         .on('postgres_changes', {
             event: 'UPDATE',
@@ -132,8 +141,8 @@ function subscribeToPurchaseNotifications(supabase: any) {
             _lastSeenPurchaseSession = notif.sessionId;
             // Refresh the exchequer log to show the new entry
             loadExchequerLog();
-        })
-        .subscribe();
+        });
+    _purchaseWatchChannel.subscribe();
 }
 
 export async function loadExchequerLog() {
