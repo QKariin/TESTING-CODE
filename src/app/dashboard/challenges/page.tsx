@@ -126,12 +126,7 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
 
     useEffect(() => { loadAll(); }, [loadAll]);
 
-    // Auto-refresh detail every 10s
-    useEffect(() => {
-        if (!detail) return;
-        const interval = setInterval(() => loadDetail(detail.challenge.id), 60000);
-        return () => clearInterval(interval);
-    }, [detail, loadDetail]);
+    // No background polling — detail loads fresh on click
 
     // Countdown tick
     useEffect(() => {

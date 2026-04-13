@@ -151,16 +151,12 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     useEffect(() => { const t = setInterval(loadData, 120000); return () => clearInterval(t); }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
-    // Challenges
+    // Challenges — load once on mount only, no background polling
     useEffect(() => {
         fetch('/api/challenges')
             .then(r => r.json())
             .then(d => { if (d.success) setChallenges(d.challenges || []); })
             .catch(() => {});
-        const t = setInterval(() => {
-            fetch('/api/challenges').then(r => r.json()).then(d => { if (d.success) setChallenges(d.challenges || []); }).catch(() => {});
-        }, 30000);
-        return () => clearInterval(t);
     }, []);
 
     // Track online join times
@@ -768,12 +764,7 @@ function ChallengesView() {
         if (pick) loadDetail(pick.id);
     }, [challenges, detail, loadDetail]);
 
-    // Auto-refresh detail
-    useEffect(() => {
-        if (!detail) return;
-        const t = setInterval(() => loadDetail(detail.challenge.id), 60000);
-        return () => clearInterval(t);
-    }, [detail, loadDetail]);
+    // No auto-refresh detail — loads fresh on click only
 
     // Countdown tick
     useEffect(() => {

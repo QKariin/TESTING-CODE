@@ -495,8 +495,6 @@ export default function DashboardPage() {
             } catch { /* silent */ }
         };
         fetchChallenge();
-        const t = setInterval(fetchChallenge, 30000);
-        return () => clearInterval(t);
     }, []);
 
     const handleLogout = async () => {
