@@ -184,7 +184,7 @@ export async function renderChat(messages: any[]) {
 
                     const mediaBlock = fbSrc
                         ? (fbIsVideo
-                            ? `<video src="${fbSrc}" class="tf-media" preload="metadata" muted playsinline style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',true)"></video>`
+                            ? `<video src="${fbSrc}" class="tf-media" preload="none" muted playsinline style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',true)"></video>`
                             : `<img src="${fbSrc}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',false)">`)
                         : '';
 
@@ -262,7 +262,7 @@ export async function renderChat(messages: any[]) {
                 const isVideo = mediaType(srcUrl) === "video" || srcUrl.includes(".mp4");
 
                 if (isVideo) {
-                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls playsinline preload="metadata" style="max-width:100%; border-radius:inherit;" onerror="this.closest('.msg').innerHTML='<div style=\\'padding:10px;font-family:Orbitron;font-size:0.5rem;color:rgba(255,100,100,0.7);\\'>VIDEO UNAVAILABLE</div>'"></video></div>`;
+                    contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls playsinline preload="none" style="max-width:100%; border-radius:inherit;" onerror="this.closest('.msg').innerHTML='<div style=\\'padding:10px;font-family:Orbitron;font-size:0.5rem;color:rgba(255,100,100,0.7);\\'>VIDEO UNAVAILABLE</div>'"></video></div>`;
                 } else {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; overflow:hidden; width:240px; max-width:70vw; border-radius:12px;">
                         <img src="${srcUrl}" onload="window.forceBottom()" style="width:100%; height:200px; object-fit:cover; display:block; cursor:pointer;" onclick="openChatPreview('${encodeURIComponent(srcUrl)}', false)">
