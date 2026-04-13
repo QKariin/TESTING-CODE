@@ -78,8 +78,8 @@ export async function GET(req: NextRequest) {
         const activeTaskPayload = { ...randomTask, assigned_at: new Date().toISOString() };
 
         await supabaseAdmin.from('tasks').upsert({
-            member_id: profile.member_id || memberEmail,
-            Name: profile.name || memberEmail,
+            member_id: profile?.member_id || memberEmail,
+            Name: profile?.name || memberEmail,
             taskdom_active_task: JSON.stringify(activeTaskPayload)
         }, { onConflict: 'member_id' });
 

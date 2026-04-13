@@ -7,7 +7,7 @@ export const DbService = {
     async getProfile(memberId: string) {
         const { data: byEmail } = await supabaseAdmin
             .from('profiles')
-            .select('member_id, id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active')
+            .select('*')
             .eq('member_id', memberId)
             .maybeSingle();
 
@@ -16,7 +16,7 @@ export const DbService = {
         // Try by UUID id (for admin lookups)
         const { data: byId } = await supabaseAdmin
             .from('profiles')
-            .select('member_id, id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active')
+            .select('*')
             .eq('id', memberId)
             .maybeSingle();
 
@@ -25,7 +25,7 @@ export const DbService = {
         // Fallback: Check 'tasks' table for legacy data — return REAL values
         const { data: taskData } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history')
+            .select('*')
             .ilike('member_id', memberId)
             .maybeSingle();
 
@@ -63,8 +63,8 @@ export const DbService = {
     async getAllProfiles() {
         const { data, error } = await supabaseAdmin
             .from('profiles')
-            .select('member_id, id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active')
-            .order('last_active', { ascending: false });
+            .select('*')
+            .order('created_at', { ascending: false });
         if (error) throw error;
         return data;
     },
@@ -195,7 +195,7 @@ export const DbService = {
     async getMessages(memberId: string, limit = 50) {
         const { data, error } = await supabaseAdmin
             .from('messages')
-            .select('id, member_id, sender, content, type, media_url, created_at')
+            .select('*')
             .eq('member_id', memberId)
             .order('created_at', { ascending: false })
             .limit(limit);
@@ -208,7 +208,7 @@ export const DbService = {
     async _getTaskRow(memberId: string) {
         const { data } = await supabaseAdmin
             .from('tasks')
-            .select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history')
+            .select('*')
             .eq('member_id', memberId)
             .maybeSingle();
         return data;
