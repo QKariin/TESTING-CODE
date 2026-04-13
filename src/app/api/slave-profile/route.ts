@@ -32,16 +32,23 @@ function stripSensitive(response: any, isAdmin: boolean): any {
 }
 
 async function buildFullProfile(email: string) {
-    const [{ data: profileData, error: profileError }, { data: taskData }, { data: contribData }] = await Promise.all([
+    const [profileResult, taskResult, contribResult] = await Promise.all([
         supabaseAdmin.from('profiles').select('id, member_id, name, "Name", wallet, score, hierarchy, routine, parameters, avatar_url, silence, paywall, last_active, created_at').ilike('member_id', email).maybeSingle(),
         supabaseAdmin.from('tasks').select('member_id, "Name", "Status", "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", score, kneel_history').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', email),
+        supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', email).then((r: any) => r).catch(() => ({ data: null, error: null })),
     ]);
 
-    if (profileError) throw profileError;
+    if (profileResult.error) {
+        console.error('[slave-profile] buildFullProfile profileError:', profileResult.error.message, profileResult.error.code);
+        throw profileResult.error;
+    }
+    if (taskResult.error) {
+        console.error('[slave-profile] buildFullProfile taskError:', taskResult.error.message, taskResult.error.code);
+        // Don't throw — proceed with null task data
+    }
 
-    const crowdfundTotal = (contribData || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
-    return mapUserProfile(profileData || {}, taskData || {}, crowdfundTotal);
+    const crowdfundTotal = ((contribResult.data as any[] | null) || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
+    return mapUserProfile(profileResult.data || {}, taskResult.data || {}, crowdfundTotal);
 }
 
 export async function GET(request: NextRequest) {
