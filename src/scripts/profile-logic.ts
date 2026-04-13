@@ -1605,7 +1605,6 @@ let _chatChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
 let _queenInterval: ReturnType<typeof setInterval> | null = null;
-let _walletInterval: ReturnType<typeof setInterval> | null = null;
 let _presenceCh: any = null;
 let _tasksChannel: any = null;
 let _statsChannel: any = null;
@@ -1619,7 +1618,6 @@ export function cleanupChatSystem() {
     if (_chatPollInterval) { clearInterval(_chatPollInterval); _chatPollInterval = null; }
     if (_silenceCheckInterval) { clearInterval(_silenceCheckInterval); _silenceCheckInterval = null; }
     if (_queenInterval) { clearInterval(_queenInterval); _queenInterval = null; }
-    if (_walletInterval) { clearInterval(_walletInterval); _walletInterval = null; }
     if (_chatChannel) { getChatSupabase().removeChannel(_chatChannel); _chatChannel = null; }
     if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
     if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); _statsChannel = null; }
@@ -1809,24 +1807,7 @@ export async function initChatSystem() {
             })
         .subscribe();
 
-    // 5. Wallet/score polling fallback every 15s — stored so it can be cleared
-    if (_walletInterval) clearInterval(_walletInterval);
-    const walletEmail = email;
-    _walletInterval = setInterval(async () => {
-        try {
-            const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: walletEmail }) });
-            const data = await res.json();
-            if (data && (data.wallet !== undefined || data.score !== undefined)) {
-                const s = getState();
-                if ((data.wallet !== undefined && data.wallet !== s.wallet) || (data.score !== undefined && data.score !== s.score)) {
-                    setState({ wallet: data.wallet ?? s.wallet, score: data.score ?? s.score });
-                    updateWalletDisplay();
-                }
-            }
-        } catch (_) {}
-    }, 60000); // 60s — realtime subscription handles live updates; this is just a fallback
-
-    // 6. Push notifications — use profile UUID (not email) as external user ID
+    // 5. Push notifications — use profile UUID (not email) as external user ID
     const profileId = getState().id || email;
     initOneSignal(profileId!);
 }

@@ -283,8 +283,21 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
 
     useEffect(() => {
         load();
-        const iv = setInterval(load, 5000);
-        return () => clearInterval(iv);
+        // Realtime: push new global messages instantly instead of polling every 5s
+        const supabaseRt = createClient();
+        const channel = supabaseRt
+            .channel('global-messages-live')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'global_messages',
+            }, (payload: any) => {
+                const msg = payload.new;
+                if (!msg) return;
+                appendToFeed([msg], false);
+            })
+            .subscribe();
+        return () => { supabaseRt.removeChannel(channel); };
     }, [load]);
 
     async function send() {
@@ -695,8 +708,8 @@ export default function DashboardPage() {
         (window as any)._refreshDashboard = loadLiveAction;
 
         loadLiveAction();
-        // Poll every 10 seconds — refreshes lastSeen, tasks, and anything missed by realtime
-        const pollInterval = setInterval(loadLiveAction, 10000);
+        // Poll every 60s — Realtime handles chat; this is just a periodic sync fallback
+        const pollInterval = setInterval(loadLiveAction, 60000);
 
         // ── Supabase Realtime: instant push on new chat messages ──────────────
         // Requires Realtime to be enabled for the 'chats' table in Supabase dashboard

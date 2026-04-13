@@ -480,9 +480,7 @@ export default function ProfilePage() {
             } catch {}
         }
 
-        pollSilence();
-        const interval = setInterval(pollSilence, 60000); // 60s — silence status rarely changes
-        return () => clearInterval(interval);
+        pollSilence(); // Realtime _statsChannel handles subsequent silence/paywall updates
     }, [profile]);
 
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
