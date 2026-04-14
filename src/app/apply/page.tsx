@@ -212,35 +212,54 @@ function TextArea({ placeholder, value, onChange, rows = 4 }: any) {
     );
 }
 
+const MAX_TAGS = 10;
+
 function TagPicker({ options, selected, onChange, label }: {
     options: string[]; selected: string[]; onChange: (next: string[]) => void; label: string;
 }) {
-    const toggle = (opt: string) =>
-        onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]);
+    const atMax = selected.length >= MAX_TAGS;
+    const toggle = (opt: string) => {
+        if (selected.includes(opt)) {
+            onChange(selected.filter(s => s !== opt));
+        } else if (!atMax) {
+            onChange([...selected, opt]);
+        }
+    };
     return (
         <div>
             <Question>{label}</Question>
-            <div className="flex flex-wrap gap-2 mt-1">
+            <div className="flex items-center justify-between mb-3">
+                <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-white/20">
+                    {selected.length > 0 ? `${selected.length} / ${MAX_TAGS} selected` : `pick up to ${MAX_TAGS}`}
+                </p>
+                {atMax && (
+                    <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-amber-400/45">
+                        maximum reached
+                    </p>
+                )}
+            </div>
+            <div
+                className="grid grid-cols-2 gap-2 tag-picker-scroll"
+                style={{ maxHeight: '55vh', overflowY: 'auto', scrollbarWidth: 'none' }}
+            >
                 {options.map(opt => {
                     const active = selected.includes(opt);
+                    const disabled = !active && atMax;
                     return (
                         <button key={opt} onClick={() => toggle(opt)}
                             className={cn(
-                                "px-3 py-2 border transition-all duration-150 font-['Cormorant_Garamond'] font-normal text-[1rem] leading-tight",
+                                "px-3 py-3 border transition-all duration-150 font-['Cormorant_Garamond'] font-normal text-[0.95rem] leading-snug text-center",
                                 active
-                                    ? "border-amber-500/50 bg-amber-500/[0.09] text-amber-200/90"
-                                    : "border-white/[0.08] text-white/45 hover:border-amber-500/20 hover:text-white/65"
+                                    ? "border-amber-500/55 bg-amber-500/[0.10] text-amber-200/90"
+                                    : disabled
+                                    ? "border-white/[0.04] text-white/20 cursor-not-allowed"
+                                    : "border-white/[0.09] text-white/45 hover:border-amber-500/25 hover:text-white/65"
                             )}>
                             {opt}
                         </button>
                     );
                 })}
             </div>
-            {selected.length > 0 && (
-                <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-amber-400/40 mt-3">
-                    {selected.length} selected
-                </p>
-            )}
         </div>
     );
 }
@@ -442,6 +461,7 @@ export default function ApplyPage() {
                 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; box-shadow:0 0 8px rgba(197,160,89,0.4); }
                 input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; }
                 input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
+                .tag-picker-scroll::-webkit-scrollbar { display:none; }
             `}</style>
 
             <AnimatedBackground />
