@@ -161,7 +161,8 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 function PrimaryBtn({ children, onClick, disabled }: any) {
     return (
         <button onClick={onClick} disabled={disabled}
-            className="w-full py-4 bg-gradient-to-r from-amber-600/90 to-amber-800/90 text-black/90 text-[0.58rem] tracking-[4px] font-[Raleway] font-semibold uppercase transition-opacity duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90">
+            className="w-full py-4 border border-amber-500/45 bg-amber-500/[0.06] text-amber-200/85 font-['Cormorant_Garamond'] font-normal text-[1.1rem] tracking-wide transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hover:border-amber-400/65 hover:bg-amber-500/[0.10] hover:text-amber-100/90"
+            style={{ boxShadow: '0 0 18px rgba(197,160,89,0.10)' }}>
             {children}
         </button>
     );
@@ -170,7 +171,7 @@ function PrimaryBtn({ children, onClick, disabled }: any) {
 function GhostBtn({ children, onClick }: any) {
     return (
         <button onClick={onClick}
-            className="text-[0.6rem] tracking-[3px] text-white/25 uppercase font-[Raleway] hover:text-white/40 transition-colors duration-200">
+            className="font-['Cormorant_Garamond'] italic text-[0.9rem] text-white/25 hover:text-white/45 transition-colors duration-200">
             {children}
         </button>
     );
@@ -197,10 +198,10 @@ function TextArea({ placeholder, value, onChange, rows = 4 }: any) {
 function ChoiceBtn({ label, active, onClick }: any) {
     return (
         <button onClick={onClick} className={cn(
-            "w-full px-4 py-3.5 text-left border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1rem] tracking-normal",
+            "w-full px-5 py-4 text-left border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1.15rem]",
             active
-                ? "border-amber-500/40 bg-amber-500/[0.06] text-amber-200/85"
-                : "border-white/[0.07] bg-white/[0.01] text-white/45 hover:border-white/14"
+                ? "border-amber-500/50 bg-amber-500/[0.08] text-amber-200/90"
+                : "border-white/[0.08] bg-transparent text-white/55 hover:border-amber-500/25 hover:text-white/70"
         )}>{label}</button>
     );
 }
@@ -346,9 +347,9 @@ export default function ApplyPage() {
                         {step === 3 && <ExperienceStep form={form} set={set} onNext={() => goTo(4)} onBack={() => goTo(2 as Step)} />}
                         {step === 4 && <SlidersStep form={form} set={set} setSlider={setSlider} onNext={() => goTo(5)} onBack={() => goTo(3 as Step)} />}
                         {step === 5 && <ToneStep form={form} set={set} onNext={() => goTo(6)} onBack={() => goTo(4 as Step)} />}
-                        {step === 6 && <PsychologyStep form={form} set={set} onNext={() => goTo(7)} onBack={() => goTo(5 as Step)} />}
-                        {step === 7 && <AssuranceStep form={form} set={set} onNext={() => goTo(8)} onBack={() => goTo(6 as Step)} />}
-                        {step === 8 && <PainStep form={form} set={set} onNext={() => goTo(9)} onBack={() => goTo(7 as Step)} />}
+                        {step === 6 && <PainStep form={form} set={set} onNext={() => goTo(7)} onBack={() => goTo(5 as Step)} />}
+                        {step === 7 && <PsychologyStep form={form} set={set} onNext={() => goTo(8)} onBack={() => goTo(6 as Step)} />}
+                        {step === 8 && <AssuranceStep form={form} set={set} onNext={() => goTo(9)} onBack={() => goTo(7 as Step)} />}
                         {step === 9 && <CheckoutStep form={form} set={set} onNext={handleCheckout} onBack={() => goTo(8 as Step)} saving={saving} amount={form.amount} setAmount={(v: number) => set('amount', v)} />}
 
                     </motion.div>
@@ -952,17 +953,21 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
 // --- Step 5: Tone ---
 
 function ToneStep({ form, set, onNext, onBack }: any) {
+    const select = (val: string) => {
+        set('domination_tone', val);
+        setTimeout(onNext, 520);
+    };
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
                 <StepHeader stepLabel="05 - Tone" line1="What kind of dominance" line2="speaks to you?" />
                 <div className="flex flex-col gap-3">
                     {TONES.map(t => (
-                        <ChoiceBtn key={t} label={t} active={form.domination_tone === t} onClick={() => set('domination_tone', t)} />
+                        <ChoiceBtn key={t} label={t} active={form.domination_tone === t} onClick={() => select(t)} />
                     ))}
                 </div>
             </div>
-            <StepNav onNext={onNext} onBack={onBack} disabled={!form.domination_tone} />
+            <div className="mt-10 flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
         </div>
     );
 }
@@ -978,7 +983,7 @@ function PsychologyStep({ form, set, onNext, onBack }: any) {
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <StepHeader stepLabel="06 - Psychology" line1="The last" line2="layer." />
+                <StepHeader stepLabel="07 - Psychology" line1="The last" line2="layer." />
                 <div className="space-y-8">
 
                     <div>
@@ -1024,7 +1029,7 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <StepHeader stepLabel="07 - Assurance" line1="Convince me this" line2="is worth my time." />
+                <StepHeader stepLabel="08 - Assurance" line1="Convince me this" line2="is worth my time." />
                 <div className="space-y-8">
 
                     <div>
@@ -1079,22 +1084,24 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
     );
 }
 
-// --- Step 8: Pain tolerance ---
+// --- Step 6: Pain tolerance ---
 
 function PainStep({ form, set, onNext, onBack }: any) {
-    const ready = form.pain_tolerance !== '';
-
+    const select = (val: string) => {
+        set('pain_tolerance', val);
+        setTimeout(onNext, 520);
+    };
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <StepHeader stepLabel="08 - Pain" line1="Where do you" line2="stand?" />
+                <StepHeader stepLabel="06 - Pain" line1="Where do you" line2="stand?" />
                 <div className="flex flex-col gap-3">
                     {PAIN_OPTIONS.map(opt => (
-                        <ChoiceBtn key={opt} label={opt} active={form.pain_tolerance === opt} onClick={() => set('pain_tolerance', opt)} />
+                        <ChoiceBtn key={opt} label={opt} active={form.pain_tolerance === opt} onClick={() => select(opt)} />
                     ))}
                 </div>
             </div>
-            <StepNav onNext={onNext} onBack={onBack} disabled={!ready} />
+            <div className="mt-10 flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
         </div>
     );
 }
