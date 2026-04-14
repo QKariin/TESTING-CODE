@@ -24,39 +24,7 @@ export async function GET(req: Request) {
 
         const since = searchParams.get('since'); // ISO timestamp — return only newer messages
 
-        // Fetch messages for this specific user
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
-        let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
-
-        if (!profile && !isUUID) {
-            // 🔄 DEFAULT PROFILE CREATION: If no profile exists yet, create one now.
-            // This adoption logic ensures legacy users and new users all have a valid profile.
-            const { data: legacyTask } = await queryClient
-                .from('tasks')
-                .select('Score')
-                .ilike('MemberID', email)
-                .maybeSingle();
-
-            const { data: newProfile, error: createError } = await queryClient
-                .from('profiles')
-                .insert({
-                    member_id: email.toLowerCase(),
-                    name: email.split('@')[0],
-                    score: Number(legacyTask?.Score || 0),
-                    wallet: 0,
-                    hierarchy: 'Hall Boy'
-                })
-                .select()
-                .single();
-            
-            if (!createError && newProfile) {
-                profile = newProfile;
-            } else if (createError) {
-                console.error("[API/Chat/History] Failed to auto-create profile:", createError.message);
-            }
-        }
-
-        const emailToQuery = profile?.member_id || email;
+        const emailToQuery = email;
 
         let query: any;
         if (since) {
@@ -120,35 +88,7 @@ export async function POST(req: Request) {
 
         const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
-        // Fetch messages for this specific user
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
-        let { data: profile } = await queryClient.from('profiles').select('id, member_id').or(isUUID ? `id.eq.${email}` : `member_id.ilike.${email}`).maybeSingle();
-
-        if (!profile && !isUUID) {
-            // 🔄 LEGIACY IDENTITY ADOPTION
-            const { data: legacyTask } = await queryClient
-                .from('tasks')
-                .select('Score')
-                .ilike('MemberID', email)
-                .maybeSingle();
-
-            if (legacyTask) {
-                const { data: newProfile } = await queryClient
-                    .from('profiles')
-                    .insert({
-                        member_id: email.toLowerCase(),
-                        name: email.split('@')[0],
-                        score: Number(legacyTask.Score || 0),
-                        wallet: 0,
-                        hierarchy: 'Hall Boy'
-                    })
-                    .select()
-                    .single();
-                if (newProfile) profile = newProfile;
-            }
-        }
-
-        const emailToQuery = profile?.member_id || email;
+        const emailToQuery = email;
 
         let query: any;
         if (since) {

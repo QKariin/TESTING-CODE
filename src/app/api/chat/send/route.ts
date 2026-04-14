@@ -106,10 +106,6 @@ export async function POST(req: Request) {
         };
 
 
-        const isUUIDConv = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationContext);
-        const { data: convProfile } = await adminClient.from('profiles').select('id, member_id').or(isUUIDConv ? `id.eq.${conversationContext}` : `member_id.ilike.${conversationContext}`).maybeSingle();
-        // Removed profile_id insertion logic due to missing schema
-
         const { data: msgData, error: msgErr } = await adminClient.from('chats').insert(insertData).select().single();
 
         if (msgErr) {
@@ -146,17 +142,17 @@ export async function POST(req: Request) {
             } catch (_) {}
         }
 
+        // Fire push notification in background — don't block the response
         if (isQueen && conversationId) {
-            try {
-                const { data: pushProfile } = await adminClient
-                    .from('profiles')
-                    .select('onesignal_id')
-                    .ilike('member_id', conversationId)
-                    .maybeSingle();
-                const onesignalId = pushProfile?.onesignal_id;
-                console.log('[push] onesignal_id for', conversationId, ':', onesignalId || 'NOT FOUND');
-                if (onesignalId) {
-                    const pushRes = await fetch('https://onesignal.com/api/v1/notifications', {
+            adminClient
+                .from('profiles')
+                .select('onesignal_id')
+                .ilike('member_id', conversationId)
+                .maybeSingle()
+                .then(({ data: pushProfile }) => {
+                    const onesignalId = pushProfile?.onesignal_id;
+                    if (!onesignalId) return;
+                    fetch('https://onesignal.com/api/v1/notifications', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -169,13 +165,8 @@ export async function POST(req: Request) {
                             contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
                             url: 'https://throne.qkarin.com/profile',
                         }),
-                    });
-                    const pushData = await pushRes.json();
-                    console.log('[push] OneSignal result:', pushRes.status, JSON.stringify(pushData));
-                }
-            } catch (e: any) {
-                console.error('[push] error:', e.message);
-            }
+                    }).catch(() => {});
+                }).catch(() => {});
         }
 
         return NextResponse.json({ success: true, data: msgData, newWallet });
