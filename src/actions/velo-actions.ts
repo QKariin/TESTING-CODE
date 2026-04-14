@@ -325,7 +325,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             if (updateData.forceActive) {
                 try {
                     await getAdmin().from('chats').insert({
-                        member_id: member_id,
+                        member_id: taskRow ? taskRow.member_id : profile.id,
                         sender: 'system',
                         sender_email: 'system',
                         message: `NEW DIRECTIVE ASSIGNED`,
