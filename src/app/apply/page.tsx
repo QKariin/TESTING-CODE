@@ -485,6 +485,10 @@ export default function ApplyPage() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
                 * { box-sizing: border-box; }
+                html, body { scrollbar-width: none; -ms-overflow-style: none; }
+                html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+                *::-webkit-scrollbar { display: none; }
+                * { scrollbar-width: none; -ms-overflow-style: none; }
                 input[type=range] { -webkit-appearance:none; appearance:none; height:2px; background:rgba(255,255,255,0.08); outline:none; width:100%; cursor:pointer; border-radius:2px; }
                 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; box-shadow:0 0 8px rgba(197,160,89,0.4); }
                 input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; }

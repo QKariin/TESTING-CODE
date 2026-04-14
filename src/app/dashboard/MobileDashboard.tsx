@@ -1472,14 +1472,13 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 
     // Auto-focus note field when modal opens (skip for routine — no note shown)
     // iOS trick: proxy input was focused synchronously in the tap handler to capture the keyboard.
-    // Here we transfer focus to the real textarea; iOS keeps keyboard open on focus transfer.
+    // useEffect fires after DOM commit — noteRef is populated, proxy is still focused (keyboard open).
+    // Calling focus() here transfers keyboard from proxy to textarea without dismissing it.
     useEffect(() => {
         if (isRoutine) return;
-        requestAnimationFrame(() => {
-            noteRef.current?.focus();
-            const proxy = (window as any).__reviewFocusProxy;
-            if (proxy) { proxy.remove(); delete (window as any).__reviewFocusProxy; }
-        });
+        noteRef.current?.focus();
+        const proxy = (window as any).__reviewFocusProxy;
+        if (proxy) { proxy.remove(); delete (window as any).__reviewFocusProxy; }
     }, [isRoutine]);
     const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; };
     const handleTouchEnd = (e: React.TouchEvent) => {
