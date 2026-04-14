@@ -315,8 +315,11 @@ export default function ApplyPage() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;500&display=swap');
                 * { box-sizing: border-box; }
-                input[type=range] { -webkit-appearance:none; appearance:none; height:1px; background:rgba(255,255,255,0.1); outline:none; width:100%; cursor:pointer; }
-                input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#c5a059; border:none; }
+                input[type=range] { -webkit-appearance:none; appearance:none; height:2px; background:rgba(255,255,255,0.08); outline:none; width:100%; cursor:pointer; border-radius:2px; }
+                input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; box-shadow:0 0 8px rgba(197,160,89,0.4); }
+                input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; }
+                input[type=range]::-webkit-slider-runnable-track { height:2px; border-radius:2px; }
+                input[type=range]::-moz-range-progress { height:2px; background:rgba(197,160,89,0.5); border-radius:2px; }
                 input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
             `}</style>
 
@@ -615,43 +618,217 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
     );
 }
 
-// --- Step 4: Sliders ---
+// --- Step 4: Sliders (explosion gate + one-by-one with comments) ---
 
-function SlidersStep({ form, set, setSlider, onNext, onBack }: any) {
-    const confirmed = form.ready_for_sliders === 'Yes, Queen Karin';
+const HIGH_COMMENTS = [
+    "Noted. We'll use that.",
+    "Oh... interesting.",
+    "I see you.",
+    "Good to know.",
+    "That explains a lot.",
+    "Fascinating.",
+    "Bold choice.",
+    "I approve.",
+    "You surprise me.",
+    "Keep going.",
+];
+
+function getLowComment(label: string) {
+    const opts = [
+        `What a shame.`,
+        `Oh no - you don't like ${label}?`,
+        `How... underwhelming.`,
+        `Disappointing.`,
+        `Is that all?`,
+        `I expected more from you.`,
+        `${label}? Really? Nothing?`,
+        `We'll work on that.`,
+        `How boring.`,
+        `Not even a little?`,
+    ];
+    return opts[Math.floor(Math.random() * opts.length)];
+}
+
+function SlidersStep({ form, setSlider, onNext, onBack }: any) {
+    const [phase, setPhase] = useState<'gate' | 'exploding' | 'sliders'>('gate');
+    const [particles, setParticles] = useState<any[]>([]);
+    const [currentIdx, setCurrentIdx] = useState(0);
+    const [comment, setComment] = useState<string | null>(null);
+    const [commentHigh, setCommentHigh] = useState(true);
+    const [hasMoved, setHasMoved] = useState(false);
+
+    const currentLabel = SLIDERS[currentIdx];
+    const currentValue = form.sliders[currentLabel] ?? 50;
+    const allDone = currentIdx >= SLIDERS.length;
+
+    const handleYes = () => {
+        const ps = Array.from({ length: 26 }, (_, i) => ({
+            id: i,
+            dx: (Math.random() - 0.5) * 340,
+            dy: (Math.random() - 0.5) * 220,
+            rotate: (Math.random() - 0.5) * 720,
+            w: Math.random() * 55 + 12,
+            h: Math.random() * 7 + 3,
+            amber: Math.random() > 0.4,
+        }));
+        setParticles(ps);
+        setPhase('exploding');
+        setTimeout(() => setPhase('sliders'), 650);
+    };
+
+    const handleSliderRelease = () => {
+        const val = form.sliders[currentLabel] ?? 50;
+        setHasMoved(true);
+        if (val > 50) {
+            setCommentHigh(true);
+            setComment(HIGH_COMMENTS[Math.floor(Math.random() * HIGH_COMMENTS.length)]);
+        } else {
+            setCommentHigh(false);
+            setComment(getLowComment(currentLabel));
+        }
+    };
+
+    const handleNextSlider = () => {
+        setComment(null);
+        setHasMoved(false);
+        if (currentIdx < SLIDERS.length - 1) {
+            setCurrentIdx(i => i + 1);
+        } else {
+            onNext();
+        }
+    };
+
     return (
         <div className="flex flex-col flex-1 justify-between">
-            <div>
+            <div className="flex flex-col flex-1">
                 <StepHeader stepLabel="04 - Testing" line1="How far does" line2="your kink go?" />
 
-                {!confirmed ? (
-                    <div>
-                        <p className="font-['Cormorant_Garamond'] text-[1.05rem] font-light text-white/40 leading-relaxed mb-7">
+                {/* Gate phase */}
+                {phase === 'gate' && (
+                    <div className="flex flex-col items-center text-center">
+                        <p className="font-['Cormorant_Garamond'] text-[1.1rem] font-light text-white/40 leading-relaxed mb-10">
                             Ready to tell me more about your kink side?
                         </p>
-                        <ChoiceBtn label="Yes, Queen Karin"
-                            active={form.ready_for_sliders === 'Yes, Queen Karin'}
-                            onClick={() => set('ready_for_sliders', 'Yes, Queen Karin')} />
+                        <button
+                            onClick={handleYes}
+                            className="px-10 py-3.5 border border-amber-500/30 bg-amber-500/[0.04] text-amber-200/70 font-['Cormorant_Garamond'] text-[1.05rem] font-light tracking-wide hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
+                        >
+                            Yes, Queen Karin
+                        </button>
                     </div>
-                ) : (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-7">
-                        <p className="font-['Cormorant_Garamond'] text-[1rem] font-light italic text-white/30 mb-2">
-                            Slide to reflect your genuine interest level.
-                        </p>
-                        {SLIDERS.map(label => (
-                            <div key={label}>
-                                <div className="flex justify-between items-center mb-3">
-                                    <p className="font-['Cormorant_Garamond'] text-[0.95rem] text-white/50 font-light">{label}</p>
-                                    <p className="text-[0.62rem] tracking-[2px] text-amber-400/50 font-[Raleway]">{form.sliders[label]}%</p>
-                                </div>
-                                <input type="range" min={0} max={100} value={form.sliders[label]}
-                                    onChange={e => setSlider(label, parseInt(e.target.value))} />
-                            </div>
+                )}
+
+                {/* Explosion phase */}
+                {phase === 'exploding' && (
+                    <div className="relative flex justify-center items-center" style={{ height: 60 }}>
+                        {particles.map(p => (
+                            <motion.div
+                                key={p.id}
+                                initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scaleX: 1 }}
+                                animate={{ x: p.dx, y: p.dy, opacity: 0, rotate: p.rotate, scaleX: 0.3 }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                style={{
+                                    position: 'absolute',
+                                    width: p.w,
+                                    height: p.h,
+                                    top: '50%',
+                                    left: '50%',
+                                    marginTop: -p.h / 2,
+                                    marginLeft: -p.w / 2,
+                                    borderRadius: 1,
+                                    background: p.amber
+                                        ? 'rgba(197,160,89,0.75)'
+                                        : 'rgba(60,40,10,0.85)',
+                                }}
+                            />
                         ))}
+                    </div>
+                )}
+
+                {/* Sliders phase */}
+                {phase === 'sliders' && !allDone && (
+                    <motion.div
+                        key={currentIdx}
+                        initial={{ opacity: 0, x: 40 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
+                        className="flex flex-col flex-1"
+                    >
+                        {/* Progress within sliders */}
+                        <div className="flex gap-1 mb-10">
+                            {SLIDERS.map((_, i) => (
+                                <div key={i} className="h-px flex-1 transition-all duration-300"
+                                    style={{ background: i <= currentIdx ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.07)' }} />
+                            ))}
+                        </div>
+
+                        <p className="font-['Cormorant_Garamond'] text-[1.35rem] font-light text-white/75 mb-2 tracking-wide">
+                            {currentLabel}
+                        </p>
+                        <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/25 mb-10">
+                            {currentIdx + 1} of {SLIDERS.length}
+                        </p>
+
+                        {/* Slider track */}
+                        <div className="mb-3">
+                            <input
+                                type="range" min={0} max={100}
+                                value={currentValue}
+                                onChange={e => setSlider(currentLabel, parseInt(e.target.value))}
+                                onMouseUp={handleSliderRelease}
+                                onTouchEnd={handleSliderRelease}
+                                className="w-full"
+                                style={{ background: `linear-gradient(to right, rgba(197,160,89,0.6) ${currentValue}%, rgba(255,255,255,0.08) ${currentValue}%)` }}
+                            />
+                            <div className="flex justify-between mt-2">
+                                <span className="text-[0.52rem] tracking-[3px] text-white/20 font-[Raleway] uppercase">None</span>
+                                <span className="text-[0.65rem] tracking-[2px] text-amber-400/60 font-[Raleway] font-medium">{currentValue}%</span>
+                                <span className="text-[0.52rem] tracking-[3px] text-white/20 font-[Raleway] uppercase">Obsessed</span>
+                            </div>
+                        </div>
+
+                        {/* Comment bubble */}
+                        <AnimatePresence>
+                            {comment && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -6 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="mt-8 px-5 py-4 border-l-2 border-amber-500/30 bg-amber-500/[0.03]"
+                                >
+                                    <p className={cn(
+                                        "font-['Cormorant_Garamond'] text-[1rem] font-light italic leading-relaxed",
+                                        commentHigh ? "text-amber-300/65" : "text-white/40"
+                                    )}>
+                                        {comment}
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Next slider button */}
+                        {hasMoved && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.4, delay: 0.2 }}
+                                className="mt-10"
+                            >
+                                <PrimaryBtn onClick={handleNextSlider}>
+                                    {currentIdx < SLIDERS.length - 1 ? 'Next' : 'Continue'}
+                                </PrimaryBtn>
+                            </motion.div>
+                        )}
                     </motion.div>
                 )}
             </div>
-            <StepNav onNext={onNext} onBack={onBack} disabled={!confirmed} />
+
+            {phase === 'gate' && (
+                <div className="mt-10">
+                    <div className="flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
+                </div>
+            )}
         </div>
     );
 }
