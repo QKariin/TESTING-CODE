@@ -73,7 +73,6 @@ interface FormData {
     first_experience: string;
     best_moment: string;
     mistakes: string;
-    honest_confirmation: string;
     // Step 4 - Sliders
     ready_for_sliders: string;
     sliders: Record<string, number>;
@@ -146,12 +145,18 @@ function GoldDivider() {
     return <div className="w-8 h-px bg-gradient-to-r from-amber-500/60 to-transparent mb-8 mt-1" />;
 }
 
+// Short label (Name, Email, Amount) - stays small uppercase
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <p className="text-[0.6rem] tracking-[4px] text-amber-400/40 uppercase font-[Raleway] mb-1">{children}</p>;
+    return <p className="text-[0.58rem] tracking-[4px] text-amber-400/35 uppercase font-[Raleway] mb-1">{children}</p>;
+}
+
+// Full question text - readable Cormorant
+function Question({ children }: { children: React.ReactNode }) {
+    return <p className="font-['Cormorant_Garamond'] text-[1.1rem] font-light text-white/65 leading-relaxed mb-4">{children}</p>;
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.88rem] text-white/25 mb-3 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.9rem] text-white/28 mb-3 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
@@ -248,7 +253,7 @@ export default function ApplyPage() {
         bought_to_impress: null, toy_want_to_try: '',
         femdom_experience: '', expectations: '', hard_limits: '',
         soft_limits: '', first_experience: '', best_moment: '',
-        mistakes: '', honest_confirmation: '',
+        mistakes: '',
         ready_for_sliders: '',
         sliders: Object.fromEntries(SLIDERS.map(s => [s, 50])),
         domination_tone: '',
@@ -456,7 +461,7 @@ function AboutStep({ form, set, onNext, saving }: any) {
                     </Reveal>
 
                     <Reveal show={showFriends}>
-                        <FieldLabel>How would your friends describe you?</FieldLabel>
+                        <Question>How would your friends describe you?</Question>
                         <FieldHint>If you say "funny" or "loyal," I'll roll my eyes.</FieldHint>
                         <TextArea placeholder="Be honest..." value={form.friends_description} onChange={(e: any) => set('friends_description', e.target.value)} rows={3} />
                     </Reveal>
@@ -503,30 +508,30 @@ function KinksStep({ form, set, onNext, onBack }: any) {
                 <div className="space-y-8">
 
                     <div>
-                        <FieldLabel>List all toys you own</FieldLabel>
+                        <Question>List all toys you own.</Question>
                         <TextArea placeholder="Be thorough..." value={form.toys_owned} onChange={(e: any) => set('toys_owned', e.target.value)} />
                     </div>
 
                     <Reveal show={showFavorite}>
-                        <FieldLabel>Your favorite and why</FieldLabel>
+                        <Question>Your favorite and why.</Question>
                         <TextArea placeholder="What makes it your favorite..." value={form.favorite_toy} onChange={(e: any) => set('favorite_toy', e.target.value)} rows={3} />
                     </Reveal>
 
                     <Reveal show={showWeirdest}>
-                        <FieldLabel>Weirdest object you've used that technically wasn't a toy</FieldLabel>
+                        <Question>Weirdest object you've used that technically wasn't a toy.</Question>
                         <TextArea placeholder="Don't be shy..." value={form.weirdest_object} onChange={(e: any) => set('weirdest_object', e.target.value)} rows={2} />
                     </Reveal>
 
                     <Reveal show={showBought}>
-                        <FieldLabel>Have you ever bought a toy just to impress someone?</FieldLabel>
-                        <div className="flex gap-3 mt-2">
+                        <Question>Have you ever bought a toy just to impress someone?</Question>
+                        <div className="flex gap-3">
                             <ChoiceBtn label="Yes" active={form.bought_to_impress === true} onClick={() => set('bought_to_impress', true)} />
                             <ChoiceBtn label="No" active={form.bought_to_impress === false} onClick={() => set('bought_to_impress', false)} />
                         </div>
                     </Reveal>
 
                     <Reveal show={showWantToTry}>
-                        <FieldLabel>One toy you want to try but are too shy to admit</FieldLabel>
+                        <Question>One toy you want to try but are too shy to admit.</Question>
                         <TextArea placeholder="..." value={form.toy_want_to_try} onChange={(e: any) => set('toy_want_to_try', e.target.value)} rows={2} />
                     </Reveal>
 
@@ -548,9 +553,7 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
     const showFirstExp    = hasExp && showSoftLimits && form.soft_limits.trim().length > 0;
     const showBestMoment  = showFirstExp && form.first_experience.trim().length > 0;
     const showMistakes    = showBestMoment && form.best_moment.trim().length > 0;
-    const showHonest      = (isNew && showHardLimits) || (hasExp && form.mistakes.trim().length > 0) || (hasExp && showSoftLimits && form.soft_limits.trim().length > 0 && !showFirstExp);
-
-    const canContinue = form.femdom_experience !== '' && form.honest_confirmation === 'Yes, Queen Karin';
+    const canContinue = form.femdom_experience !== '';
 
     return (
         <div className="flex flex-col flex-1 justify-between">
@@ -559,7 +562,7 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
                 <div className="space-y-8">
 
                     <div>
-                        <FieldLabel>Do you have any experience with online FemDom?</FieldLabel>
+                        <Question>Do you have any experience with online FemDom?</Question>
                         <div className="flex flex-col gap-2.5 mt-2">
                             {EXPERIENCE_OPTIONS.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.femdom_experience === opt}
@@ -569,48 +572,41 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
                     </div>
 
                     <Reveal show={showDetails && hasExp}>
-                        <FieldLabel>Tell me more about your experiences</FieldLabel>
+                        <Question>Tell me more about your experiences.</Question>
                         <TextArea placeholder="What you've done, what worked, what didn't..." value={form.expectations} onChange={(e: any) => set('expectations', e.target.value)} />
                     </Reveal>
 
                     <Reveal show={showDetails && isNew}>
-                        <FieldLabel>Tell me about your expectations entering this</FieldLabel>
+                        <Question>Tell me about your expectations entering this.</Question>
                         <TextArea placeholder="Be honest about what you're looking for..." value={form.expectations} onChange={(e: any) => set('expectations', e.target.value)} />
                     </Reveal>
 
                     <Reveal show={showHardLimits}>
-                        <FieldLabel>Your hard limits</FieldLabel>
+                        <Question>Your hard limits.</Question>
                         <TextArea placeholder="Absolute non-negotiables..." value={form.hard_limits} onChange={(e: any) => set('hard_limits', e.target.value)} rows={2} />
                     </Reveal>
 
                     <Reveal show={showSoftLimits}>
-                        <FieldLabel>Your soft limits</FieldLabel>
+                        <Question>Your soft limits.</Question>
                         <TextArea placeholder="Things you'd consider with the right dynamic..." value={form.soft_limits} onChange={(e: any) => set('soft_limits', e.target.value)} rows={2} />
                     </Reveal>
 
                     <Reveal show={showFirstExp}>
-                        <FieldLabel>Describe your first kinky experience</FieldLabel>
+                        <Question>Describe your first kinky experience.</Question>
                         <TextArea placeholder="How it started..." value={form.first_experience} onChange={(e: any) => set('first_experience', e.target.value)} />
                     </Reveal>
 
                     <Reveal show={showBestMoment}>
-                        <FieldLabel>Your best submissive moment ever</FieldLabel>
+                        <Question>Your best submissive moment ever.</Question>
                         <TextArea placeholder="What stands out..." value={form.best_moment} onChange={(e: any) => set('best_moment', e.target.value)} />
                     </Reveal>
 
                     <Reveal show={showMistakes}>
-                        <FieldLabel>Worst mistake you ever made in service</FieldLabel>
+                        <Question>Worst mistake you ever made in service.</Question>
                         <TextArea placeholder="Be honest..." value={form.mistakes} onChange={(e: any) => set('mistakes', e.target.value)} />
                     </Reveal>
 
-                    <Reveal show={showHonest || (hasExp && form.soft_limits.trim().length > 0)}>
-                        <FieldLabel>Are you being honest so far?</FieldLabel>
-                        <div className="mt-2">
-                            <ChoiceBtn label="Yes, Queen Karin"
-                                active={form.honest_confirmation === 'Yes, Queen Karin'}
-                                onClick={() => set('honest_confirmation', 'Yes, Queen Karin')} />
-                        </div>
-                    </Reveal>
+
 
                 </div>
             </div>
@@ -693,7 +689,7 @@ function PsychologyStep({ form, set, onNext, onBack }: any) {
                 <div className="space-y-8">
 
                     <div>
-                        <FieldLabel>What drives you more?</FieldLabel>
+                        <Question>What drives you more?</Question>
                         <div className="flex gap-3 mt-2">
                             {PREFERENCE_OPTIONS.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.preference === opt} onClick={() => set('preference', opt)} />
@@ -702,17 +698,17 @@ function PsychologyStep({ form, set, onNext, onBack }: any) {
                     </div>
 
                     <Reveal show={showIgnored}>
-                        <FieldLabel>What would being ignored for a week do to your brain?</FieldLabel>
+                        <Question>What would being ignored for a week do to your brain?</Question>
                         <TextArea placeholder="Honestly..." value={form.isolation_effects} onChange={(e: any) => set('isolation_effects', e.target.value)} rows={3} />
                     </Reveal>
 
                     <Reveal show={showSelfReview}>
-                        <FieldLabel>Write a fake review of yourself as a submissive</FieldLabel>
+                        <Question>Write a fake review of yourself as a submissive.</Question>
                         <TextArea placeholder="Be critical..." value={form.self_review} onChange={(e: any) => set('self_review', e.target.value)} />
                     </Reveal>
 
                     <Reveal show={showPunishment}>
-                        <FieldLabel>Describe your ideal punishment</FieldLabel>
+                        <Question>Describe your ideal punishment.</Question>
                         <TextArea placeholder="In detail..." value={form.ideal_punishment} onChange={(e: any) => set('ideal_punishment', e.target.value)} />
                     </Reveal>
 
@@ -739,7 +735,7 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
                 <div className="space-y-8">
 
                     <div>
-                        <FieldLabel>Why did you apply for ownership directly instead of starting from the lowest rank?</FieldLabel>
+                        <Question>Why did you apply for ownership directly instead of starting from the lowest rank?</Question>
                         <div className="flex flex-col gap-2.5 mt-2">
                             {ASSURANCE_Q1.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.reason_applying === opt} onClick={() => set('reason_applying', opt)} />
@@ -748,7 +744,7 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
                     </div>
 
                     <Reveal show={show2}>
-                        <FieldLabel>You've obeyed every step. What do you think I see when I look at you?</FieldLabel>
+                        <Question>You've obeyed every step. What do you think I see when I look at you?</Question>
                         <div className="flex flex-col gap-2.5 mt-2">
                             {ASSURANCE_Q2.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.self_perception === opt} onClick={() => set('self_perception', opt)} />
@@ -757,7 +753,7 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
                     </Reveal>
 
                     <Reveal show={show3}>
-                        <FieldLabel>The next step is payment - your first real act of obedience. How does that make you feel?</FieldLabel>
+                        <Question>The next step is payment - your first real act of obedience. How does that make you feel?</Question>
                         <div className="flex flex-col gap-2.5 mt-2">
                             {ASSURANCE_Q3.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.feelings_payment === opt} onClick={() => set('feelings_payment', opt)} />
@@ -766,7 +762,7 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
                     </Reveal>
 
                     <Reveal show={show4}>
-                        <FieldLabel>What part of this application do you hope I notice first?</FieldLabel>
+                        <Question>What part of this application do you hope I notice first?</Question>
                         <div className="flex flex-col gap-2.5 mt-2">
                             {ASSURANCE_Q4.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.priority_aspect === opt} onClick={() => set('priority_aspect', opt)} />
@@ -775,7 +771,7 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
                     </Reveal>
 
                     <Reveal show={show5}>
-                        <FieldLabel>Be honest: why do you want to finish this application?</FieldLabel>
+                        <Question>Be honest: why do you want to finish this application?</Question>
                         <div className="flex flex-col gap-2.5 mt-2">
                             {ASSURANCE_Q5.map(opt => (
                                 <ChoiceBtn key={opt} label={opt} active={form.motivation === opt} onClick={() => set('motivation', opt)} />
