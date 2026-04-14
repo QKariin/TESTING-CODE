@@ -36,7 +36,7 @@ function stripSensitive(response: any, isAdmin: boolean): any {
     return { ...rest, parameters: params };
 }
 
-async function buildFullProfile(emailOrUuid: string) {
+async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | null) {
     // Step 1: fetch profile - by UUID (profiles.id) if UUID, else by email (profiles.member_id)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(emailOrUuid);
     const { data: profileData, error: profileError } = isUuid
@@ -48,26 +48,26 @@ async function buildFullProfile(emailOrUuid: string) {
         throw profileError;
     }
 
-    // Step 2: fetch tasks with UUID + legacy email fallback
-    const uuid = profileData?.id;
+    // Step 2: fetch tasks — try every possible UUID so legacy users (profiles.id ≠ auth.users.id) are covered
+    // Priority: profiles.id → caller auth UUID (auth.users.id) → email fallback
+    const profilesId = profileData?.id;
+    const profileEmail = profileData?.member_id;
+    const uuidsToTry = [...new Set([profilesId, authUuidHint].filter(Boolean))] as string[];
+
     let taskData: any = null;
-    if (uuid) {
-        const { data: taskByUuid } = await supabaseAdmin.from('tasks').select('*').eq('member_id', uuid).maybeSingle();
-        if (taskByUuid) {
-            taskData = taskByUuid;
-        } else {
-            // Legacy: tasks row may still use email as member_id
-            const profileEmail = profileData?.member_id;
-            if (profileEmail) {
-                const { data: taskByEmail } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profileEmail).maybeSingle();
-                if (taskByEmail) taskData = taskByEmail;
-            }
-        }
+    for (const tryId of uuidsToTry) {
+        const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', tryId).maybeSingle();
+        if (data) { taskData = data; break; }
+    }
+    // Legacy email fallback (rows not yet migrated)
+    if (!taskData && profileEmail) {
+        const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profileEmail).maybeSingle();
+        if (data) taskData = data;
     }
 
     const [{ data: contribData }] = await Promise.all([
-        uuid
-            ? supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', uuid)
+        profilesId
+            ? supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', profilesId)
             : supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', emailOrUuid),
     ]);
 
@@ -78,7 +78,7 @@ async function buildFullProfile(emailOrUuid: string) {
 }
 
 export async function GET(request: NextRequest) {
-    const callerEmail = await getCallerEmail();
+    const { email: callerEmail, uuid: callerUuid } = await getCaller();
     if (!callerEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     try {
         if (full) {
-            const data = await buildFullProfile(email);
+            const data = await buildFullProfile(email, callerUuid);
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     // Lookup mode
     try {
         if (full === true) {
-            const data = await buildFullProfile(email);
+            const data = await buildFullProfile(email, callerUuid);
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
