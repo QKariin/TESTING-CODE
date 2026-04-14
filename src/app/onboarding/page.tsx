@@ -231,26 +231,51 @@ function Btn({ children, onClick, disabled, variant = 'primary', className = '' 
 function WelcomeStep({ onNext }: { onNext: () => void }) {
     return (
         <div className="flex flex-col flex-1 justify-between">
-            <div>
-                <div className="text-amber-400 text-2xl mb-5 font-[Cinzel]">✦</div>
-                <Label>Private Access Granted</Label>
-                <h1 className="font-[Cinzel] text-2xl text-white font-normal leading-snug mb-4 tracking-wide">
-                    Welcome to<br />Queen Karin's Space
-                </h1>
-                <Divider />
-                <p className="text-sm text-white/40 leading-relaxed mb-4">
-                    Your tribute has been received. This is not a public platform — it is a private, curated space built for submission, discipline, and devotion.
-                </p>
-                <p className="text-sm text-white/40 leading-relaxed mb-4">
-                    Before you enter, I need to know who you are. This will take less than a minute.
-                </p>
-                <p className="text-xs text-amber-400/50 leading-relaxed">
-                    Your name and photo will appear in the global presence feed and leaderboard — visible to all members. Choose wisely.
-                </p>
+            <div className="flex-1 flex flex-col justify-center py-10">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, ease: [0.23, 0.86, 0.39, 0.96] }}
+                    className="mb-8"
+                >
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-amber-500/20 mb-8">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+                        <span className="font-[Orbitron] text-[0.42rem] tracking-[3px] text-amber-400/60 uppercase">Access Granted</span>
+                    </div>
+
+                    <h1 className="font-[Cinzel] text-[2rem] leading-tight text-white font-normal tracking-wide mb-2">
+                        You found<br />
+                        <span className="bg-gradient-to-r from-amber-300 via-amber-100 to-amber-400 bg-clip-text text-transparent">
+                            your place.
+                        </span>
+                    </h1>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.3 }}
+                >
+                    <Divider />
+                    <p className="text-[0.95rem] text-white/50 leading-relaxed mb-5">
+                        Most never get this far. You did — and that means something.
+                    </p>
+                    <p className="text-[0.95rem] text-white/50 leading-relaxed mb-5">
+                        This space was built for those who understand that real submission is a privilege, not a game. What happens here is private, intentional, and completely under Her control.
+                    </p>
+                    <p className="text-[0.95rem] text-amber-400/60 leading-relaxed">
+                        Before you step in — let me know who you are.
+                    </p>
+                </motion.div>
             </div>
-            <div className="mt-8">
-                <Btn onClick={onNext}>BEGIN</Btn>
-            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+            >
+                <Btn onClick={onNext}>I AM READY</Btn>
+            </motion.div>
         </div>
     );
 }
