@@ -558,17 +558,18 @@ export async function handleAdminUpload(file: File) {
     };
 }
 
-// iOS-safe media picker for admin chat — dynamic input avoids hidden-element restriction
+// iOS-safe media picker for admin chat — must be in viewport (not offscreen) for iOS gallery to open
 export function triggerAdminMediaPick() {
     const inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = 'image/*,video/*';
-    inp.style.position = 'fixed';
-    inp.style.top = '-9999px';
+    inp.multiple = false;
+    inp.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
     document.body.appendChild(inp);
     inp.onchange = () => {
-        document.body.removeChild(inp);
-        if (inp.files?.[0]) handleAdminUpload(inp.files[0]);
+        const file = inp.files?.[0];
+        try { document.body.removeChild(inp); } catch {}
+        if (file) handleAdminUpload(file);
     };
     inp.click();
 }

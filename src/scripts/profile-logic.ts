@@ -1313,8 +1313,7 @@ export async function updateRoutineWidget() {
             const inp = document.createElement('input');
             inp.type = 'file';
             inp.accept = 'image/*,video/*';
-            inp.style.position = 'fixed';
-            inp.style.top = '-9999px';
+            inp.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
             document.body.appendChild(inp);
             inp.onchange = () => {
                 document.body.removeChild(inp);
@@ -1444,8 +1443,7 @@ export function triggerTaskEvidencePick() {
     const inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = 'image/*,video/*';
-    inp.style.position = 'fixed';
-    inp.style.top = '-9999px';
+    inp.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
     document.body.appendChild(inp);
     inp.onchange = async () => {
         document.body.removeChild(inp);
@@ -3569,8 +3567,7 @@ async function _doProfileUpload() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.style.position = 'fixed';
-    input.style.top = '-9999px';
+    input.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
     document.body.appendChild(input);
 
     input.onchange = async () => {
