@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 
-// ─── Animated background shapes (from HeroGeometric) ─────────────────────────
+// ─── Animated shapes background ───────────────────────────────────────────────
 
 function ElegantShape({ className, delay = 0, width = 400, height = 100, rotate = 0, gradient = "from-white/[0.08]" }: {
     className?: string; delay?: number; width?: number; height?: number; rotate?: number; gradient?: string;
@@ -17,15 +17,10 @@ function ElegantShape({ className, delay = 0, width = 400, height = 100, rotate 
             transition={{ duration: 2.4, delay, ease: [0.23, 0.86, 0.39, 0.96], opacity: { duration: 1.2 } }}
             className={cn("absolute", className)}
         >
-            <motion.div
-                animate={{ y: [0, 15, 0] }}
-                transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                style={{ width, height }}
-                className="relative"
-            >
+            <motion.div animate={{ y: [0, 15, 0] }} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                style={{ width, height }} className="relative">
                 <div className={cn(
-                    "absolute inset-0 rounded-full bg-gradient-to-r to-transparent",
-                    gradient,
+                    "absolute inset-0 rounded-full bg-gradient-to-r to-transparent", gradient,
                     "backdrop-blur-[2px] border-2 border-white/[0.15]",
                     "shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]",
                     "after:absolute after:inset-0 after:rounded-full",
@@ -51,17 +46,6 @@ function AnimatedBackground() {
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const COUNTRIES = [
-    'Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Belgium','Brazil','Bulgaria',
-    'Canada','Chile','China','Colombia','Croatia','Czech Republic','Denmark','Egypt','Finland',
-    'France','Germany','Greece','Hungary','India','Indonesia','Iran','Ireland','Israel','Italy',
-    'Japan','Jordan','Kenya','South Korea','Latvia','Lithuania','Malaysia','Mexico','Netherlands',
-    'New Zealand','Nigeria','Norway','Pakistan','Peru','Philippines','Poland','Portugal','Romania',
-    'Russia','Saudi Arabia','Serbia','Singapore','Slovakia','Slovenia','South Africa','Spain',
-    'Sweden','Switzerland','Thailand','Turkey','Ukraine','United Arab Emirates','United Kingdom',
-    'United States','Venezuela','Vietnam','Other',
-];
-
 const SUB_TYPES = [
     { id: 'findom',      label: 'Financial Submission',  desc: 'Tributes, wallets, coin sacrifices' },
     { id: 'tasks',       label: 'Task-Based Obedience',  desc: 'Daily assignments, proof submission' },
@@ -72,11 +56,13 @@ const SUB_TYPES = [
 ];
 
 type Step = 'welcome' | 'identity' | 'about' | 'type' | 'done';
+const STEP_ORDER: Step[] = ['welcome', 'identity', 'about', 'type', 'done'];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
     const [step, setStep] = useState<Step>('welcome');
+    const [direction, setDirection] = useState(1);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
@@ -87,8 +73,6 @@ export default function OnboardingPage() {
     const [photoUploading, setPhotoUploading] = useState(false);
     const [age, setAge] = useState('');
     const [country, setCountry] = useState('');
-    const [countrySearch, setCountrySearch] = useState('');
-    const [showCountryList, setShowCountryList] = useState(false);
     const [subTypes, setSubTypes] = useState<string[]>([]);
     const fileRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +88,13 @@ export default function OnboardingPage() {
         };
         init();
     }, []);
+
+    const goTo = (next: Step) => {
+        const curr = STEP_ORDER.indexOf(step);
+        const nxt = STEP_ORDER.indexOf(next);
+        setDirection(nxt > curr ? 1 : -1);
+        setStep(next);
+    };
 
     const handlePhotoSelect = async (file: File) => {
         setPhotoPreview(URL.createObjectURL(file));
@@ -128,266 +119,242 @@ export default function OnboardingPage() {
             const existingParams = profile?.parameters || {};
             const updates: any = {
                 name: name.trim(),
-                parameters: { ...existingParams, age: age ? parseInt(age) : null, country: country || null, sub_types: subTypes, onboarding_seen: true },
+                parameters: { ...existingParams, age: age ? parseInt(age) : null, country: country.trim() || null, sub_types: subTypes, onboarding_seen: true },
             };
             if (photoUrl) updates.avatar_url = photoUrl;
             await supabase.from('profiles').update(updates).eq('id', userId);
-            setStep('done');
-            setTimeout(() => { window.location.href = '/profile'; }, 2000);
+            goTo('done');
+            setTimeout(() => { window.location.href = '/profile'; }, 2200);
         } catch { setSaving(false); }
     };
 
-    const filteredCountries = COUNTRIES.filter(c => c.toLowerCase().includes(countrySearch.toLowerCase()));
-
-    const fadeIn: Variants = {
-        hidden: { opacity: 0, y: 24 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.4, 0.25, 1] } },
+    const variants: Variants = {
+        enter: (d: number) => ({ opacity: 0, x: d > 0 ? 48 : -48 }),
+        center: { opacity: 1, x: 0, transition: { duration: 0.45, ease: [0.25, 0.4, 0.25, 1] } },
+        exit: (d: number) => ({ opacity: 0, x: d > 0 ? -48 : 48, transition: { duration: 0.3, ease: [0.25, 0.4, 0.25, 1] } }),
     };
 
     if (loading) return (
         <div className="min-h-screen bg-[#030303] flex items-center justify-center">
-            <div className="w-9 h-9 rounded-full border border-amber-500/20 border-t-amber-500/80 animate-spin" />
+            <div className="w-8 h-8 rounded-full border border-amber-500/20 border-t-amber-500/70 animate-spin" />
         </div>
     );
 
+    const stepIndex = STEP_ORDER.indexOf(step);
+    const showDots = step !== 'welcome' && step !== 'done';
+
     return (
-        <div className="relative min-h-screen bg-[#030303] flex items-start justify-center overflow-hidden font-[Rajdhani,sans-serif]">
+        <div className="relative min-h-screen bg-[#030303] flex items-start justify-center overflow-hidden">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;600&display=swap');
-                input:focus { border-color: rgba(197,160,89,0.5) !important; outline: none; }
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;500&display=swap');
+                * { box-sizing: border-box; }
+                .ob-input { width:100%; background:transparent; border:none; border-bottom: 1px solid rgba(197,160,89,0.25); color:#fff; font-family:'Raleway',sans-serif; font-size:1rem; font-weight:300; padding:10px 0; letter-spacing:1px; outline:none; transition: border-color 0.3s; }
+                .ob-input::placeholder { color: rgba(255,255,255,0.2); font-weight:300; }
+                .ob-input:focus { border-bottom-color: rgba(197,160,89,0.7); }
+                .ob-tap:active { opacity: 0.7; }
                 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-                .ob-tap:active { opacity: 0.75; }
             `}</style>
 
             <AnimatedBackground />
-
-            {/* bottom + top fade overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/70 pointer-events-none z-[1]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/60 pointer-events-none z-[1]" />
 
             <input ref={fileRef} type="file" accept="image/*" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }} />
 
-            <motion.div
-                key={step}
-                variants={fadeIn}
-                initial="hidden"
-                animate="visible"
-                className="relative z-10 w-full max-w-md px-7 pt-14 pb-12 flex flex-col min-h-screen"
-            >
-                {step === 'welcome' && <WelcomeStep onNext={() => setStep('identity')} />}
-                {step === 'identity' && (
-                    <IdentityStep name={name} setName={setName} photoPreview={photoPreview}
-                        photoUploading={photoUploading} onPhotoClick={() => fileRef.current?.click()}
-                        onNext={() => setStep('about')} />
+            <div className="relative z-10 w-full max-w-md min-h-screen flex flex-col px-8 pt-16 pb-12">
+
+                {/* Progress dots */}
+                {showDots && (
+                    <div className="flex gap-2 mb-12">
+                        {(['identity', 'about', 'type'] as Step[]).map((s, i) => (
+                            <div key={s} className="h-px flex-1 transition-all duration-500"
+                                style={{ background: STEP_ORDER.indexOf(step) > STEP_ORDER.indexOf(s) - 1 + 1 ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.1)' }} />
+                        ))}
+                    </div>
                 )}
-                {step === 'about' && (
-                    <AboutStep age={age} setAge={setAge} country={country} setCountry={setCountry}
-                        countrySearch={countrySearch} setCountrySearch={setCountrySearch}
-                        showCountryList={showCountryList} setShowCountryList={setShowCountryList}
-                        filteredCountries={filteredCountries}
-                        onNext={() => setStep('type')} onBack={() => setStep('identity')} />
-                )}
-                {step === 'type' && (
-                    <TypeStep subTypes={subTypes} toggle={toggleSubType}
-                        onNext={handleFinish} onBack={() => setStep('about')} saving={saving} />
-                )}
-                {step === 'done' && <DoneStep />}
-            </motion.div>
+
+                <AnimatePresence mode="wait" custom={direction}>
+                    <motion.div
+                        key={step}
+                        custom={direction}
+                        variants={variants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        className="flex flex-col flex-1"
+                    >
+                        {step === 'welcome'  && <WelcomeStep  onNext={() => goTo('identity')} />}
+                        {step === 'identity' && <IdentityStep name={name} setName={setName} photoPreview={photoPreview} photoUploading={photoUploading} onPhotoClick={() => fileRef.current?.click()} onNext={() => goTo('about')} onBack={() => goTo('welcome')} />}
+                        {step === 'about'    && <AboutStep    age={age} setAge={setAge} country={country} setCountry={setCountry} onNext={() => goTo('type')} onBack={() => goTo('identity')} />}
+                        {step === 'type'     && <TypeStep     subTypes={subTypes} toggle={toggleSubType} onNext={handleFinish} onBack={() => goTo('about')} saving={saving} />}
+                        {step === 'done'     && <DoneStep />}
+                    </motion.div>
+                </AnimatePresence>
+            </div>
         </div>
+    );
+}
+
+// ─── Shared primitives ────────────────────────────────────────────────────────
+
+function GoldDivider() {
+    return <div className="w-8 h-px bg-gradient-to-r from-amber-500/60 to-transparent mb-8 mt-1" />;
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+    return <p className="text-[0.6rem] tracking-[4px] text-amber-400/40 uppercase font-[Raleway] mb-3">{children}</p>;
+}
+
+function PrimaryBtn({ children, onClick, disabled }: any) {
+    return (
+        <button onClick={onClick} disabled={disabled}
+            className="w-full py-4 bg-gradient-to-r from-amber-600/90 to-amber-800/90 text-black/90 text-[0.58rem] tracking-[4px] font-[Raleway] font-semibold uppercase transition-opacity duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90">
+            {children}
+        </button>
+    );
+}
+
+function GhostBtn({ children, onClick }: any) {
+    return (
+        <button onClick={onClick}
+            className="text-[0.6rem] tracking-[3px] text-white/25 uppercase font-[Raleway] hover:text-white/40 transition-colors duration-200">
+            {children}
+        </button>
     );
 }
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 
-function Label({ children }: { children: React.ReactNode }) {
-    return <p className="font-[Orbitron] text-[0.45rem] tracking-[3px] text-amber-400/50 uppercase mb-3">{children}</p>;
-}
-function Divider() {
-    return <div className="w-9 h-px bg-amber-500/30 mb-6" />;
-}
-function ProgressDots({ total, current }: { total: number; current: number }) {
-    return (
-        <div className="flex gap-1.5 mb-7">
-            {Array.from({ length: total }).map((_, i) => (
-                <div key={i} className="h-1 rounded-full transition-all duration-300"
-                    style={{ width: i === current ? 24 : 8, background: i <= current ? '#c5a059' : 'rgba(255,255,255,0.12)' }} />
-            ))}
-        </div>
-    );
-}
-function Btn({ children, onClick, disabled, variant = 'primary', className = '' }: any) {
-    return (
-        <button onClick={onClick} disabled={disabled}
-            className={cn(
-                "px-4 py-3.5 rounded-md font-[Orbitron] text-[0.52rem] font-bold tracking-[2px] transition-opacity duration-150 disabled:cursor-not-allowed",
-                variant === 'primary' && "w-full bg-gradient-to-r from-amber-500 to-amber-700 text-black",
-                variant === 'ghost' && "border border-amber-500/25 text-amber-400/60 bg-transparent",
-                className
-            )}
-        >{children}</button>
-    );
-}
-
 function WelcomeStep({ onNext }: { onNext: () => void }) {
     return (
         <div className="flex flex-col flex-1 justify-between">
-            <div className="flex-1 flex flex-col justify-center py-10">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, ease: [0.23, 0.86, 0.39, 0.96] }}
-                    className="mb-8"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-amber-500/20 mb-8">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
-                        <span className="font-[Orbitron] text-[0.42rem] tracking-[3px] text-amber-400/60 uppercase">Access Granted</span>
+            <div className="flex-1 flex flex-col justify-center">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}>
+                    <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 border border-amber-500/20 bg-amber-500/[0.03] mb-10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400/70" />
+                        <span className="text-[0.5rem] tracking-[4px] text-amber-400/50 font-[Raleway] uppercase">Access Granted</span>
                     </div>
 
-                    <h1 className="font-[Cinzel] text-[2rem] leading-tight text-white font-normal tracking-wide mb-2">
-                        You found<br />
-                        <span className="bg-gradient-to-r from-amber-300 via-amber-100 to-amber-400 bg-clip-text text-transparent">
+                    <h1 className="font-[Cinzel] font-light text-[2.4rem] leading-[1.2] text-white mb-2 tracking-wide">
+                        You found
+                    </h1>
+                    <h1 className="font-[Cinzel] font-light text-[2.4rem] leading-[1.2] mb-10 tracking-wide">
+                        <span className="bg-gradient-to-r from-amber-300 via-amber-100 to-amber-400/80 bg-clip-text text-transparent">
                             your place.
                         </span>
                     </h1>
+                    <GoldDivider />
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7, delay: 0.3 }}
-                >
-                    <Divider />
-                    <p className="text-[0.95rem] text-white/50 leading-relaxed mb-5">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.35 }}
+                    className="space-y-5">
+                    <p className="font-['Cormorant_Garamond'] text-[1.15rem] font-light text-white/55 leading-relaxed italic">
                         Most never get this far. You did — and that means something.
                     </p>
-                    <p className="text-[0.95rem] text-white/50 leading-relaxed mb-5">
+                    <p className="font-['Cormorant_Garamond'] text-[1.15rem] font-light text-white/45 leading-relaxed">
                         This space was built for those who understand that real submission is a privilege, not a game. What happens here is private, intentional, and completely under my control.
                     </p>
-                    <p className="text-[0.95rem] text-amber-400/60 leading-relaxed">
+                    <p className="font-['Cormorant_Garamond'] text-[1.05rem] font-light text-amber-300/50 leading-relaxed">
                         Before you step in — let me know who you are.
                     </p>
                 </motion.div>
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-            >
-                <Btn onClick={onNext}>I AM READY</Btn>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.7 }} className="mt-12">
+                <PrimaryBtn onClick={onNext}>I am ready</PrimaryBtn>
             </motion.div>
         </div>
     );
 }
 
-function IdentityStep({ name, setName, photoPreview, photoUploading, onPhotoClick, onNext }: any) {
-    const ready = name.trim().length >= 2 && photoPreview;
+function IdentityStep({ name, setName, photoPreview, photoUploading, onPhotoClick, onNext, onBack }: any) {
+    const ready = name.trim().length >= 2 && photoPreview && !photoUploading;
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <ProgressDots total={3} current={0} />
-                <Label>Step 1 of 3</Label>
-                <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">IDENTIFY YOURSELF</h2>
-                <Divider />
+                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">01 — Identity</p>
+                <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">Who are you</h2>
+                <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
+                    <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">in this world?</span>
+                </h2>
+                <GoldDivider />
 
                 {/* Photo */}
-                <div className="mb-6">
-                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-1 flex items-center gap-2">
-                        PHOTO <span className="text-red-400/70 text-[0.55rem]">required</span>
-                    </p>
-                    <p className="text-xs text-white/25 leading-relaxed mb-3">
-                        Visible in global feed, leaderboard, and presence strip. Use something from your private world.
-                    </p>
-                    <div className="flex items-center gap-4">
-                        <div onClick={onPhotoClick} className="ob-tap w-[76px] h-[76px] rounded-full overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center border border-amber-500/25 bg-amber-500/[0.03]">
+                <div className="mb-10">
+                    <FieldLabel>Your Photo</FieldLabel>
+                    <div className="flex items-center gap-5">
+                        <div onClick={onPhotoClick}
+                            className="ob-tap w-20 h-20 rounded-full overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center border border-amber-500/20 bg-white/[0.02] transition-all hover:border-amber-500/40">
                             {photoPreview
                                 ? <img src={photoPreview} className="w-full h-full object-cover" alt="" />
-                                : <i className="fas fa-camera text-amber-400/40 text-lg" />}
+                                : <i className="fas fa-camera text-amber-400/30 text-base" />}
                         </div>
                         <div>
-                            <p className="text-[0.82rem] mb-1" style={{ color: photoPreview ? 'rgba(100,210,100,0.7)' : 'rgba(255,255,255,0.25)' }}>
-                                {photoUploading ? 'Uploading...' : photoPreview ? 'Photo selected' : 'No photo selected'}
+                            <p className="font-['Cormorant_Garamond'] text-base font-light leading-relaxed mb-2"
+                                style={{ color: photoPreview ? 'rgba(150,220,150,0.6)' : 'rgba(255,255,255,0.25)' }}>
+                                {photoUploading ? 'Uploading...' : photoPreview ? 'Looking good.' : 'No photo yet'}
                             </p>
-                            <button onClick={onPhotoClick} className="text-xs text-white/35 border border-white/10 rounded px-2.5 py-1 cursor-pointer bg-transparent">
-                                {photoPreview ? 'Change' : 'Upload photo'}
+                            <button onClick={onPhotoClick}
+                                className="text-[0.6rem] tracking-[3px] text-white/25 border-b border-white/10 uppercase font-[Raleway] pb-0.5 cursor-pointer bg-transparent hover:text-white/40 transition-colors">
+                                {photoPreview ? 'Change' : 'Upload'}
                             </button>
+                            <p className="font-['Cormorant_Garamond'] text-[0.8rem] text-white/20 mt-2 leading-relaxed">
+                                Visible to other members. Use something from your private world.
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Name */}
                 <div>
-                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-1 flex items-center gap-2">
-                        YOUR NAME <span className="text-red-400/70 text-[0.55rem]">required</span>
+                    <FieldLabel>Your Name</FieldLabel>
+                    <input className="ob-input" type="text" placeholder="The name you go by here..."
+                        maxLength={30} value={name} onChange={e => setName(e.target.value)} autoComplete="off" />
+                    <p className="font-['Cormorant_Garamond'] text-[0.82rem] text-white/20 mt-3 leading-relaxed">
+                        This is how the Queen and other members will know you. Not your real name.
                     </p>
-                    <p className="text-xs text-white/25 leading-relaxed mb-2.5">
-                        How the Queen and other members will address you. Visible on the leaderboard. Do not use your real name.
-                    </p>
-                    <input
-                        className="w-full bg-white/[0.04] border border-white/10 text-white font-[Rajdhani] text-base px-3.5 py-2.5 rounded-md"
-                        type="text" placeholder="Enter a name..." maxLength={30}
-                        value={name} onChange={e => setName(e.target.value)} autoComplete="off"
-                    />
                 </div>
             </div>
-            <div className="mt-8">
-                <Btn onClick={onNext} disabled={!ready} className={!ready ? 'opacity-30' : ''}>CONTINUE</Btn>
-                <p className="text-[0.7rem] text-white/12 text-center mt-3">Both photo and name are required to proceed.</p>
+
+            <div className="mt-10 space-y-4">
+                <PrimaryBtn onClick={onNext} disabled={!ready}>Continue</PrimaryBtn>
+                <div className="flex justify-center"><GhostBtn onClick={onBack}>← Back</GhostBtn></div>
             </div>
         </div>
     );
 }
 
-function AboutStep({ age, setAge, country, setCountry, countrySearch, setCountrySearch, showCountryList, setShowCountryList, filteredCountries, onNext, onBack }: any) {
-    const ready = age && parseInt(age) >= 18 && country;
+function AboutStep({ age, setAge, country, setCountry, onNext, onBack }: any) {
+    const ready = age && parseInt(age) >= 18 && country.trim().length >= 2;
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <ProgressDots total={3} current={1} />
-                <Label>Step 2 of 3</Label>
-                <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">ABOUT YOU</h2>
-                <Divider />
+                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">02 — About You</p>
+                <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">Tell me</h2>
+                <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
+                    <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">a little more.</span>
+                </h2>
+                <GoldDivider />
 
-                <div className="mb-6">
-                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-2 flex items-center gap-2">
-                        AGE <span className="text-red-400/70 text-[0.55rem]">required · must be 18+</span>
-                    </p>
-                    <input
-                        className="w-full bg-white/[0.04] border border-white/10 text-white font-[Rajdhani] text-base px-3.5 py-2.5 rounded-md"
-                        type="number" placeholder="Your age" min={18} max={99}
-                        value={age} onChange={e => setAge(e.target.value)}
-                    />
+                <div className="mb-10">
+                    <FieldLabel>Your Age</FieldLabel>
+                    <input className="ob-input" type="number" placeholder="Must be 18 or older"
+                        min={18} max={99} value={age} onChange={e => setAge(e.target.value)} />
                     {age && parseInt(age) < 18 && (
-                        <p className="text-red-400 text-xs mt-1.5">You must be 18 or older to access this space.</p>
+                        <p className="text-rose-400/60 font-['Cormorant_Garamond'] text-sm mt-2">You must be 18 or older to enter.</p>
                     )}
                 </div>
 
-                <div className="relative">
-                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-2 flex items-center gap-2">
-                        COUNTRY <span className="text-red-400/70 text-[0.55rem]">required</span>
-                    </p>
-                    <input
-                        className="w-full bg-white/[0.04] border border-white/10 text-white font-[Rajdhani] text-base px-3.5 py-2.5 rounded-md"
-                        type="text" placeholder="Search your country..." autoComplete="off"
-                        value={countrySearch || country}
-                        onChange={e => { setCountrySearch(e.target.value); setCountry(''); setShowCountryList(true); }}
-                        onFocus={() => setShowCountryList(true)}
-                    />
-                    {showCountryList && filteredCountries.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 bg-[#111] border border-amber-500/20 rounded-md z-50 max-h-48 overflow-y-auto">
-                            {filteredCountries.slice(0, 8).map((c: string) => (
-                                <div key={c} className="ob-tap px-3.5 py-2.5 text-sm text-white/55 border-b border-white/[0.05] cursor-pointer hover:text-white/80"
-                                    onClick={() => { setCountry(c); setCountrySearch(c); setShowCountryList(false); }}>
-                                    {c}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div>
+                    <FieldLabel>Where are you from</FieldLabel>
+                    <input className="ob-input" type="text" placeholder="Your country..."
+                        value={country} onChange={e => setCountry(e.target.value)} autoComplete="off" />
                 </div>
             </div>
-            <div className="flex gap-2.5 mt-8">
-                <Btn variant="ghost" onClick={onBack} className="flex-none px-5">BACK</Btn>
-                <Btn onClick={onNext} disabled={!ready} className={cn("flex-1", !ready && "opacity-30")}>CONTINUE</Btn>
+
+            <div className="mt-10 space-y-4">
+                <PrimaryBtn onClick={onNext} disabled={!ready}>Continue</PrimaryBtn>
+                <div className="flex justify-center"><GhostBtn onClick={onBack}>← Back</GhostBtn></div>
             </div>
         </div>
     );
@@ -398,40 +365,46 @@ function TypeStep({ subTypes, toggle, onNext, onBack, saving }: any) {
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <ProgressDots total={3} current={2} />
-                <Label>Step 3 of 3</Label>
-                <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">WHAT DRAWS YOU HERE</h2>
-                <Divider />
-                <p className="text-sm text-white/40 leading-relaxed mb-5">Select everything that applies. This helps me understand what you are looking for.</p>
-                <div className="flex flex-col gap-2.5">
+                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">03 — Your Nature</p>
+                <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">What draws</h2>
+                <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
+                    <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">you to this?</span>
+                </h2>
+                <GoldDivider />
+                <p className="font-['Cormorant_Garamond'] text-[1.05rem] font-light text-white/35 leading-relaxed mb-7">
+                    Select everything that applies. Be honest — this is private.
+                </p>
+
+                <div className="space-y-2.5">
                     {SUB_TYPES.map(type => {
                         const active = subTypes.includes(type.id);
                         return (
                             <div key={type.id} onClick={() => toggle(type.id)}
-                                className={cn("ob-tap px-4 py-3.5 rounded-lg cursor-pointer border transition-all duration-200",
-                                    active ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-white/[0.08] bg-white/[0.02]"
+                                className={cn(
+                                    "ob-tap flex items-center gap-4 px-4 py-3.5 border cursor-pointer transition-all duration-200",
+                                    active ? "border-amber-500/35 bg-amber-500/[0.05]" : "border-white/[0.06] bg-white/[0.01] hover:border-white/10"
                                 )}>
-                                <div className="flex items-center gap-3">
-                                    <div className={cn("w-[18px] h-[18px] rounded-full border flex-shrink-0 flex items-center justify-center transition-all",
-                                        active ? "border-amber-400 bg-amber-400" : "border-white/20 bg-transparent"
-                                    )}>
-                                        {active && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                                    </div>
-                                    <div>
-                                        <p className={cn("text-[0.88rem] font-semibold tracking-[0.5px]", active ? "text-amber-400" : "text-white/75")}>{type.label}</p>
-                                        <p className="text-[0.72rem] text-white/30 mt-0.5">{type.desc}</p>
-                                    </div>
+                                <div className={cn("w-4 h-4 border flex-shrink-0 flex items-center justify-center transition-all",
+                                    active ? "border-amber-400/70 bg-amber-500/20" : "border-white/15"
+                                )}>
+                                    {active && <div className="w-1.5 h-1.5 bg-amber-400" />}
+                                </div>
+                                <div>
+                                    <p className={cn("text-[0.88rem] tracking-wide font-[Raleway] font-medium transition-colors",
+                                        active ? "text-amber-300/90" : "text-white/55")}>{type.label}</p>
+                                    <p className="text-[0.72rem] text-white/20 font-['Cormorant_Garamond'] mt-0.5">{type.desc}</p>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
             </div>
-            <div className="flex gap-2.5 mt-8">
-                <Btn variant="ghost" onClick={onBack} className="flex-none px-5">BACK</Btn>
-                <Btn onClick={onNext} disabled={!ready || saving} className={cn("flex-1", (!ready || saving) && "opacity-30")}>
-                    {saving ? 'SAVING...' : 'ENTER THE SPACE'}
-                </Btn>
+
+            <div className="mt-10 space-y-4">
+                <PrimaryBtn onClick={onNext} disabled={!ready || saving}>
+                    {saving ? 'Entering...' : 'Enter the Space'}
+                </PrimaryBtn>
+                <div className="flex justify-center"><GhostBtn onClick={onBack}>← Back</GhostBtn></div>
             </div>
         </div>
     );
@@ -440,12 +413,17 @@ function TypeStep({ subTypes, toggle, onNext, onBack, saving }: any) {
 function DoneStep() {
     return (
         <div className="flex flex-col items-center justify-center flex-1 text-center">
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6 }}
-                className="text-amber-400 text-4xl mb-5 font-[Cinzel]">✦</motion.div>
-            <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">YOUR RECORD IS SET</h2>
-            <div className="w-9 h-px bg-amber-500/30 mb-6 mx-auto" />
-            <p className="text-sm text-white/40 leading-relaxed">Welcome. Your station is being prepared.</p>
-            <p className="text-xs text-amber-400/40 mt-2">Entering now...</p>
+            <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: [0.23, 0.86, 0.39, 0.96] }}
+                className="font-[Cinzel] text-5xl text-amber-400/70 mb-8">✦</motion.div>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
+                <h2 className="font-[Cinzel] font-light text-2xl text-white tracking-widest mb-4">Welcome.</h2>
+                <div className="w-8 h-px bg-amber-500/30 mx-auto mb-6" />
+                <p className="font-['Cormorant_Garamond'] text-lg font-light text-white/40 leading-relaxed">
+                    Your place has been prepared.
+                </p>
+                <p className="text-[0.58rem] tracking-[4px] text-amber-400/30 font-[Raleway] uppercase mt-4">Entering now...</p>
+            </motion.div>
         </div>
     );
 }
