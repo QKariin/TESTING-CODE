@@ -30,7 +30,6 @@ export default function TributePage() {
     const [taskRevealed, setTaskRevealed] = useState(false);
     const [disobedience, setDisobedience] = useState(false);
     const [activeRank, setActiveRank] = useState(1);
-    const [showApplication, setShowApplication] = useState(false);
 
     const [visibleItems, setVisibleItems] = useState<boolean[]>(Array(6).fill(false));
     const [sectionVisible, setSectionVisible] = useState(false);
@@ -111,32 +110,6 @@ export default function TributePage() {
         return () => window.removeEventListener('scroll', update);
     }, []);
 
-    useEffect(() => {
-        const existing = document.getElementById('fillout-script');
-        if (existing) return;
-        const script = document.createElement('script');
-        script.id = 'fillout-script';
-        script.src = 'https://server.fillout.com/embed/v1/';
-        script.async = true;
-        document.head.appendChild(script);
-    }, []);
-
-    useEffect(() => {
-        if (showApplication) {
-            document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
-        } else {
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-        };
-    }, [showApplication]);
 
     const handleTribute = async () => {
         setLoading(true); setStatus(null);
@@ -502,7 +475,7 @@ export default function TributePage() {
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.8, marginBottom: 18, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
                         For experienced submissives who are ready to be owned. No limits. No hesitation. Obedient to every order, at any time, without question.
                     </div>
-                    <button onClick={() => setShowApplication(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', maxWidth: 340, margin: '0 auto 32px', padding: '18px 24px', background: 'rgba(4,2,8,0.97)', border: '1px solid rgba(180,30,30,0.6)', borderTop: '2px solid rgba(200,40,40,0.8)', color: 'rgba(200,40,40,0.9)', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, boxShadow: '0 0 30px rgba(180,0,0,0.1),0 8px 40px rgba(0,0,0,0.4)' }}>
+                    <button onClick={() => window.location.href = '/apply'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', maxWidth: 340, margin: '0 auto 32px', padding: '18px 24px', background: 'rgba(4,2,8,0.97)', border: '1px solid rgba(180,30,30,0.6)', borderTop: '2px solid rgba(200,40,40,0.8)', color: 'rgba(200,40,40,0.9)', fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '8px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, boxShadow: '0 0 30px rgba(180,0,0,0.1),0 8px 40px rgba(0,0,0,0.4)' }}>
                         <svg width="14" height="17" viewBox="0 0 14 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11 7V5C11 2.791 9.209 1 7 1C4.791 1 3 2.791 3 5V7" stroke="rgba(200,40,40,0.85)" strokeWidth="1.4" strokeLinecap="round"/>
                             <rect x="0.7" y="7" width="12.6" height="9.3" rx="1.8" stroke="rgba(200,40,40,0.85)" strokeWidth="1.4"/>
@@ -519,12 +492,6 @@ export default function TributePage() {
             </div>
 
 
-
-            {/* ─── APPLICATION OVERLAY ─── */}
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', zIndex: 999999999, display: showApplication ? 'flex' : 'none', flexDirection: 'column', overflow: 'hidden', WebkitOverflowScrolling: 'touch' }}>
-                <button onClick={() => setShowApplication(false)} style={{ position: 'absolute', top: 16, right: 20, zIndex: 9999999999, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, color: 'rgba(255,255,255,0.6)', fontFamily: 'Orbitron,sans-serif', fontSize: '11px', letterSpacing: '3px', cursor: 'pointer', padding: '8px 14px' }}>CLOSE</button>
-                <div data-fillout-id="uysxJDvsUGus" data-fillout-embed-type="fullscreen" style={{ width: '100%', height: '100%', flex: 1 }} data-fillout-inherit-parameters />
-            </div>
 
             {/* ─── DISOBEDIENCE OVERLAY ─── */}
             {disobedience && (
