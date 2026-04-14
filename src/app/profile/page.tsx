@@ -266,7 +266,7 @@ export default function ProfilePage() {
                     const silenceRes = await fetch('/api/silence-check', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ memberId: user.email }),
+                        body: JSON.stringify({ memberId: user.id }),
                     });
                     const silenceData = await silenceRes.json();
                     if (silenceData.silence === true) {
@@ -285,8 +285,8 @@ export default function ProfilePage() {
                 // Guarantees memberId is set even if slave-profile strips it or returns 401
                 const unifiedData = {
                     ...(rawData && !rawData.error ? rawData : {}),
-                    member_id: rawData?.member_id || rawData?.memberId || user.email,
-                    memberId: rawData?.memberId || rawData?.member_id || user.email,
+                    member_id: rawData?.member_id || user.email,   // email (display only)
+                    memberId: rawData?.id || user.id,              // UUID (auth identifier)
                     email: user.email,
                 };
 
@@ -467,13 +467,13 @@ export default function ProfilePage() {
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
     useEffect(() => {
         if (!profile) return;
-        const email = profile.memberId || profile.member_id || profile.email;
-        if (!email) return;
+        const memberId = profile.id || profile.memberId;  // UUID
+        if (!memberId) return;
 
         async function checkRoutine() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}`);
+                const res = await fetch(`/api/routine-status?memberId=${encodeURIComponent(memberId)}&tz=${encodeURIComponent(tz)}`);
                 const data = await res.json();
                 setDutiesUploadedToday(!!data.uploadedToday);
             } catch {}

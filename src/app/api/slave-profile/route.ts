@@ -123,12 +123,14 @@ export async function POST(request: NextRequest) {
 
     if (!isAdmin && !isSelf) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const isUuidEmail = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+
     // Update mode
     if (Object.keys(updates).length > 0) {
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
-            .ilike('member_id', email)
+            .eq(isUuidEmail ? 'id' : 'member_id', email)
             .select()
             .single();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -142,7 +144,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
+        const { data, error } = isUuidEmail
+            ? await supabaseAdmin.from('profiles').select('*').eq('id', email).maybeSingle()
+            : await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {

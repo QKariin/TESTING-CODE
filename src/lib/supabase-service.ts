@@ -205,12 +205,11 @@ export const DbService = {
     },
 
     async getMessages(memberId: string, limit = 50) {
-        const { data, error } = await supabaseAdmin
-            .from('messages')
-            .select('*')
-            .ilike('member_id', memberId)
-            .order('created_at', { ascending: false })
-            .limit(limit);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        const query = supabaseAdmin.from('messages').select('*').order('created_at', { ascending: false }).limit(limit);
+        const { data, error } = isUuid
+            ? await query.eq('member_id', memberId)
+            : await query.ilike('member_id', memberId);
         if (error) throw error;
         return (data || []).reverse();
     },
@@ -467,19 +466,22 @@ export const DbService = {
         // 4. If routine, also append timestamp to profiles.routine_history
         if (isRoutine) {
             try {
-                const { data: prof } = await supabaseAdmin
-                    .from('profiles')
-                    .select('routine_history')
-                    .ilike('member_id', memberId)
-                    .maybeSingle();
+                const profileForHistory = profile || await this.getProfile(memberId);
+                if (profileForHistory?.id) {
+                    const { data: prof } = await supabaseAdmin
+                        .from('profiles')
+                        .select('routine_history')
+                        .eq('id', profileForHistory.id)
+                        .maybeSingle();
 
-                const prevHistory: string[] = Array.isArray(prof?.routine_history) ? prof.routine_history : [];
-                const updatedHistory = [...prevHistory, now];
+                    const prevHistory: string[] = Array.isArray(prof?.routine_history) ? prof.routine_history : [];
+                    const updatedHistory = [...prevHistory, now];
 
-                await supabaseAdmin
-                    .from('profiles')
-                    .update({ routine_history: updatedHistory })
-                    .ilike('member_id', memberId);
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({ routine_history: updatedHistory })
+                        .eq('id', profileForHistory.id);
+                }
             } catch (histErr) {
                 console.warn('[submitTask] Could not update routine_history:', histErr);
             }
@@ -502,7 +504,7 @@ export const DbService = {
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: activeTaskData })
-            .ilike('member_id', profile.member_id || memberId);
+            .eq('member_id', profile.id);
 
         if (error) throw error;
         return { success: true };
@@ -518,7 +520,7 @@ export const DbService = {
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: null, taskdom_pending_state: null })
-            .ilike('member_id', profile.member_id || memberId);
+            .eq('member_id', profile.id);
 
         if (error) throw error;
         return { success: true };
