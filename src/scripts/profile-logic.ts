@@ -1798,11 +1798,43 @@ export async function initChatSystem() {
             (payload: any) => {
                 updateRoutineWidget();
                 refreshTaskGallery(email!);
-                // If a task was force-assigned, refresh the active task display immediately
+
+                // If a task was force-assigned, show it immediately from the Realtime payload
+                // — no API round-trip needed, data is already here
                 const fresh = payload.new;
-                if (fresh?.taskdom_active_task) {
-                    getRandomTask(true);
+                if (!fresh?.taskdom_active_task) return;
+
+                let activeTask = fresh.taskdom_active_task;
+                if (typeof activeTask === 'string') {
+                    try { activeTask = JSON.parse(activeTask); } catch { return; }
                 }
+
+                const taskText = activeTask.text || activeTask.TaskText || activeTask.tasktext;
+                if (!taskText) return;
+
+                // Push task text to both desktop and mobile UI
+                const readyText = document.getElementById('readyText');
+                const mobTaskText = document.getElementById('mobTaskText');
+                const mainArea = document.getElementById('mainButtonsArea');
+                const activeArea = document.getElementById('activeTaskContent');
+                const uploadCont = document.getElementById('uploadBtnContainer');
+                const qmIdle = document.getElementById('qm_TaskIdle');
+                const qmActive = document.getElementById('qm_TaskActive');
+                const activeTimerRow = document.getElementById('activeTimerRow');
+                const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+
+                if (mainArea) mainArea.style.display = 'none';
+                if (activeArea) { activeArea.classList.remove('hidden'); activeArea.style.display = 'flex'; }
+                if (uploadCont) { uploadCont.classList.remove('hidden'); uploadCont.style.display = 'flex'; }
+                if (qmIdle) qmIdle.classList.add('hidden');
+                if (qmActive) { qmActive.classList.remove('hidden'); qmActive.style.display = 'block'; }
+                if (readyText) readyText.innerHTML = taskText;
+                if (mobTaskText) mobTaskText.innerHTML = taskText;
+                if (activeTimerRow) activeTimerRow.style.display = 'flex';
+                if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
+
+                const endTime = activeTask.endTime || (Date.now() + 24 * 3600 * 1000);
+                startTaskTimer(endTime - Date.now());
             })
         .subscribe();
 

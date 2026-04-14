@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         const { data: taskRow } = await supabaseAdmin
             .from('tasks')
             .select('taskdom_active_task')
-            .eq('member_id', profile?.member_id || memberEmail)
+            .ilike('member_id', profile?.member_id || memberEmail)
             .maybeSingle();
 
         if (taskRow && taskRow.taskdom_active_task) {
@@ -32,8 +32,8 @@ export async function GET(req: NextRequest) {
             const now = new Date().getTime();
             const hoursPassed = (now - assignedAt) / (1000 * 60 * 60);
 
-            // If task is less than 24 hours old, return it
-            if (activeTask.assigned_at && hoursPassed < 24) {
+            // Return active task if within 24h, or if no assigned_at (forced tasks may lack it)
+            if (!activeTask.assigned_at || hoursPassed < 24) {
                 return NextResponse.json({
                     success: true,
                     task: activeTask,
