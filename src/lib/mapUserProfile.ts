@@ -46,7 +46,7 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         memberId: p.member_id,
         name: p.name || p.title || 'Unknown',
         hierarchy: p.hierarchy || 'Hall Boy',
-        score: Number(t?.Score ?? t?.score ?? p.score ?? 0),
+        score: Math.max(Number(p.score || 0), Number(t?.Score || 0), Number(t?.score || 0)),
         wallet: Number(p.wallet || 0),
         Taskdom_History: t?.Taskdom_History || null,
         queue: pQueue,
