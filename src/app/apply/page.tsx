@@ -145,9 +145,8 @@ function GoldDivider() {
     return <div className="w-8 h-px bg-gradient-to-r from-amber-500/60 to-transparent mb-8 mt-1" />;
 }
 
-// Short label (Name, Email, Amount) - stays small uppercase
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <p className="text-[0.58rem] tracking-[4px] text-amber-400/35 uppercase font-[Raleway] mb-1">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.88rem] text-amber-400/50 mb-1">{children}</p>;
 }
 
 // Full question text - readable Cormorant
