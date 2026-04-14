@@ -72,14 +72,26 @@ export const DbService = {
     // --- CENTRALIZED POINTS AWARD (updates all score fields in tasks + profiles) ---
     async awardPoints(memberEmail: string, points: number): Promise<void> {
         if (!points) return;
-        const email = memberEmail.toLowerCase();
 
-        // Update all period score fields in tasks table
-        const { data: taskRow } = await supabaseAdmin
+        // Get profile to find UUID (tasks.member_id = profiles.id, not email)
+        const profile = await this.getProfile(memberEmail);
+        if (!profile) return;
+
+        // Look up task row by UUID first (correct), fall back to email (legacy)
+        let { data: taskRow } = await supabaseAdmin
             .from('tasks')
-            .select('"Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score"')
-            .ilike('member_id', email)
+            .select('"Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score", member_id')
+            .eq('member_id', profile.id)
             .maybeSingle();
+
+        if (!taskRow) {
+            const { data: legacyRow } = await supabaseAdmin
+                .from('tasks')
+                .select('"Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score", member_id')
+                .ilike('member_id', memberEmail)
+                .maybeSingle();
+            taskRow = legacyRow;
+        }
 
         if (taskRow) {
             await supabaseAdmin.from('tasks').update({
@@ -88,21 +100,13 @@ export const DbService = {
                 'Weekly Score':  (Number(taskRow['Weekly Score'])  || 0) + points,
                 'Monthly Score': (Number(taskRow['Monthly Score']) || 0) + points,
                 'Yearly Score':  (Number(taskRow['Yearly Score'])  || 0) + points,
-            }).ilike('member_id', email);
+            }).eq('member_id', taskRow.member_id);
         }
 
         // Keep profiles.score in sync
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('score')
-            .ilike('member_id', email)
-            .maybeSingle();
-
-        if (profile) {
-            await supabaseAdmin.from('profiles')
-                .update({ score: Math.max(0, (Number(profile.score) || 0) + points) })
-                .ilike('member_id', email);
-        }
+        await supabaseAdmin.from('profiles')
+            .update({ score: Math.max(0, (Number(profile.score) || 0) + points) })
+            .eq('id', profile.id);
     },
 
     // --- REWARDS & KNEELING ---
@@ -204,13 +208,21 @@ export const DbService = {
     },
 
     // --- TASKS ---
-    // Helper: get the raw tasks row for a member
+    // Helper: get the raw tasks row — tries UUID (profiles.id) first, falls back to email
     async _getTaskRow(memberId: string) {
-        const { data } = await supabaseAdmin
-            .from('tasks')
-            .select('*')
-            .ilike('member_id', memberId)
-            .maybeSingle();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        if (isUuid) {
+            const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', memberId).maybeSingle();
+            if (data) return data;
+        }
+        // Get profile UUID and try that
+        const profile = await this.getProfile(memberId);
+        if (profile?.id) {
+            const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
+            if (data) return data;
+        }
+        // Legacy fallback: email-based row
+        const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', memberId).maybeSingle();
         return data;
     },
 
@@ -321,7 +333,7 @@ export const DbService = {
                 'Status': 'approve',
                 'Taskdom_CompletedTasks': String(newCount)
             })
-            .ilike('member_id', profileId);
+            .eq('member_id', row.member_id);
 
         // 2. Award points only — no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
@@ -357,7 +369,7 @@ export const DbService = {
         await supabaseAdmin
             .from('tasks')
             .update(taskUpdates)
-            .ilike('member_id', profileId);
+            .eq('member_id', row.member_id);
 
         // 2. Sync wallet with profiles table (only for tasks)
         if (!isRoutine) {
@@ -427,11 +439,11 @@ export const DbService = {
             const { error } = await supabaseAdmin
                 .from('tasks')
                 .update(taskUpdates)
-                .ilike('member_id', memberId);
+                .eq('member_id', row.member_id);  // use existing row's member_id (UUID or legacy email)
             if (error) throw error;
         } else {
             const insertData: any = {
-                member_id: memberId,
+                member_id: profile?.id || memberId,  // always use UUID for new rows
                 Name: profile?.name || 'Slave',
                 Status: 'pending',
                 'Taskdom_History': newHistory,

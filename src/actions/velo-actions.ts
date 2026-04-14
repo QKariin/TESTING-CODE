@@ -31,7 +31,7 @@ async function getProfile(memberId: string) {
     if (isUuid) {
         query = query.or(`member_id.eq.${memberId},id.eq.${memberId}`);
     } else {
-        query = query.eq('member_id', memberId);
+        query = query.ilike('member_id', memberId);
     }
 
     const { data, error } = await query.maybeSingle();
@@ -106,10 +106,12 @@ export async function getAdminDashboardData() {
 
         if (pError) throw pError;
 
-        // Map tasks data to profiles so the dashboard works
+        // Map tasks data to profiles — match by UUID (correct) with email fallback (legacy rows)
         const finalProfiles = (profiles || []).map((p: any) => {
-            const pId = (p.member_id || p.id || '').toLowerCase();
-            const t = (tasksData || []).find((x: any) => (x.member_id || '').toLowerCase() === pId);
+            const t = (tasksData || []).find((x: any) =>
+                x.member_id === p.id ||
+                (x.member_id || '').toLowerCase() === (p.member_id || '').toLowerCase()
+            );
             return mapUserForDashboard(p, t);
         });
 
@@ -167,12 +169,12 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         const profile = await getProfile(memberId);
         if (!profile) return { success: false };
 
-        // 1. Fetch from tasks table
-        const { data: taskRow, error: taskFetchError } = await getAdmin()
-            .from('tasks')
-            .select('*')
-            .eq('member_id', profile.member_id || memberId)
-            .maybeSingle();
+        // 1. Fetch from tasks table — try UUID first (correct), fall back to email (legacy)
+        let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
+        if (!taskRow && profile.member_id) {
+            const { data: legacyRow } = await getAdmin().from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
+            taskRow = legacyRow;
+        }
 
         let needsUpdate = false;
         let taskUpdates: any = {};
@@ -306,13 +308,14 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         }
 
         if (needsUpdate) {
-            const member_id = profile.member_id || memberId;
             let result;
             if (taskRow) {
-                result = await getAdmin().from('tasks').update(taskUpdates).eq('member_id', member_id);
+                // Update using whatever member_id the existing row has (UUID or legacy email)
+                result = await getAdmin().from('tasks').update(taskUpdates).eq('member_id', taskRow.member_id);
             } else {
+                // New row: always use UUID
                 result = await getAdmin().from('tasks').insert({
-                    member_id: member_id,
+                    member_id: profile.id,
                     Name: profile.name || 'Slave',
                     ...taskUpdates
                 });
@@ -794,8 +797,10 @@ export async function getMasterData() {
         if (pError) throw pError;
 
         return (profiles || []).map((item: any) => {
-            const pId = (item.member_id || item.id || '').toLowerCase();
-            const uTasks = (tasks || []).find((t: any) => (t.member_id || '').toLowerCase() === pId);
+            const uTasks = (tasks || []).find((t: any) =>
+                t.member_id === item.id ||
+                (t.member_id || '').toLowerCase() === (item.member_id || '').toLowerCase()
+            );
             return mapUserForDashboard(item, uTasks);
         });
     } catch (err) {
@@ -811,11 +816,11 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
         const profile = await getProfile(userId);
         if (!profile) return false;
 
-        const { data: taskRow } = await getAdmin()
-            .from('tasks')
-            .select('*')
-            .eq('member_id', profile.member_id || userId)
-            .maybeSingle();
+        let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
+        if (!taskRow && profile.member_id) {
+            const { data: legacyRow } = await getAdmin().from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
+            taskRow = legacyRow;
+        }
 
         if (!taskRow) return false;
 
@@ -864,7 +869,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
             taskUpdates.Taskdom_History = JSON.stringify(history);
 
             await updateProfile(profile.id, updates);
-            await getAdmin().from('tasks').update(taskUpdates).eq('member_id', profile.member_id || userId);
+            await getAdmin().from('tasks').update(taskUpdates).eq('member_id', taskRow.member_id);
             if (decision === 'approve') {
                 const { DbService } = await import('@/lib/supabase-service');
                 await DbService.awardPoints(profile.member_id || userId, 50);
