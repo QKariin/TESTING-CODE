@@ -69,7 +69,7 @@ export async function POST(req: Request) {
                 await supabaseAdmin
                     .from('tasks')
                     .insert({
-                        member_id: userEmail,
+                        member_id: userId,
                         Name: userName,
                         Status: 'idle',
                         Taskdom_History: '[]',
@@ -179,7 +179,9 @@ export async function POST(req: Request) {
 
                     console.log(`✅ Subscription [${tierId}] activated for existing user.`);
                 } else {
+                    const subUserId = session.client_reference_id || null;
                     await supabaseAdmin.from('profiles').insert({
+                        ...(subUserId ? { id: subUserId } : {}),
                         member_id: subEmail,
                         name: "New Subscriber",
                         wallet: 0,

@@ -35,40 +35,32 @@ export async function POST(request: Request) {
             tributeHistory: [{ amount: -tributeCost, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' }, ...(Array.isArray((profile.parameters||{}).tributeHistory) ? (profile.parameters||{}).tributeHistory : [])].slice(0,50),
         };
 
+        const profileUuid = profile.id;
         const realEmail = profile?.member_id || memberEmail;
 
-        const { error: updateErr } = await supabase.from('profiles').update({ wallet: newWallet, parameters: newParams }).eq('member_id', realEmail);
+        const { error: updateErr } = await supabase.from('profiles').update({ wallet: newWallet, parameters: newParams }).eq('id', profileUuid);
 
         if (updateErr) return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
 
-        // Update tasks['Tribute History'] — primary source for SACRIFICE stat
-        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').ilike('member_id', realEmail).maybeSingle();
+        // Update tasks['Tribute History'] — use UUID (tasks.member_id is UUID)
+        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').eq('member_id', profileUuid).maybeSingle();
         const existingTH: any[] = (() => { try { const v = taskRow?.['Tribute History']; return Array.isArray(v) ? v : (typeof v === 'string' ? JSON.parse(v) : []); } catch { return []; } })();
         const newTH = [{ amount: -tributeCost, title: tributeTitle, date: new Date().toISOString() }, ...existingTH].slice(0, 100);
-        supabase.from('tasks').update({ 'Tribute History': newTH }).ilike('member_id', realEmail).then(() => {});
+        supabase.from('tasks').update({ 'Tribute History': newTH }).eq('member_id', profileUuid).then(() => {});
 
-        await DbService.awardPoints(realEmail, meritGain);
-
-        supabase.from('profiles').update({
-            last_tribute_at: new Date().toISOString(),
-            last_tribute_title: tributeTitle,
-        }).eq('member_id', realEmail).then(({ error: tsErr }: { error: any }) => {
-            if (tsErr) console.warn('[Purchase] col not found:', tsErr.message);
-        });
+        await DbService.awardPoints(profileUuid, meritGain);
 
         const msgText = `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`;
 
-        // System message insertion resilient to schema
-        const insertData: any = { sender_email: 'system', sender_name: 'SYSTEM', message: msgText, member_id: realEmail };
-        // Removed profile_id logic to synchronize with live database schema constraint
-
+        // System chat message — use UUID for member_id
         try {
-            const ins1 = await supabase.from('chats').insert(insertData);
-            if (ins1.error && (ins1.error.message.includes('sender_email') || ins1.error.message.includes('member_id'))) {
-                delete insertData.sender_email;
-                delete insertData.member_id;
-                await supabase.from('chats').insert(insertData);
-            }
+            await supabase.from('chats').insert({
+                member_id: profileUuid,
+                sender_email: 'system',
+                content: msgText,
+                type: 'system',
+                metadata: { isQueen: false }
+            });
         } catch (_) {}
 
         // Insert wishlist-type record so the Updates feed picks it up
@@ -76,7 +68,7 @@ export async function POST(request: Request) {
             const { data: tributeRow } = await supabase.from('wishlist').select('image, display_url').eq('id', tributeId).maybeSingle();
             const tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
             await supabase.from('chats').insert({
-                member_id: realEmail,
+                member_id: profileUuid,
                 sender_email: realEmail,
                 content: `Purchased "${tributeTitle}"`,
                 type: 'wishlist',

@@ -13,10 +13,11 @@ export async function POST(request: Request) {
         }
 
         // 1. Get User Profile and Check Balance
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
-            .select('wallet, score, parameters')
-            .eq('member_id', memberEmail)
+            .select('id, wallet, score, parameters, member_id')
+            .eq(isUUID ? 'id' : 'member_id', memberEmail)
             .single();
 
         if (profileErr || !profile) {
@@ -42,11 +43,13 @@ export async function POST(request: Request) {
             tributeHistory: [{ amount: -contributionAmount, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' }, ...(Array.isArray((profile.parameters||{}).tributeHistory) ? (profile.parameters||{}).tributeHistory : [])].slice(0,50),
         };
 
+        const profileUuid = profile.id;
+
         // 3. Update wallet + parameters (score via awardPoints below)
         const { error: updateProfileErr } = await supabase
             .from('profiles')
             .update({ wallet: newWallet, parameters: newParams })
-            .eq('member_id', memberEmail);
+            .eq('id', profileUuid);
 
         if (updateProfileErr) {
             console.error("Profile update error:", updateProfileErr);
@@ -54,13 +57,13 @@ export async function POST(request: Request) {
         }
 
         // Update tasks['Tribute History'] — primary source for SACRIFICE stat
-        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').ilike('member_id', memberEmail).maybeSingle();
+        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').eq('member_id', profileUuid).maybeSingle();
         const existingTH: any[] = (() => { try { const v = taskRow?.['Tribute History']; return Array.isArray(v) ? v : (typeof v === 'string' ? JSON.parse(v) : []); } catch { return []; } })();
         const newTH = [{ amount: -contributionAmount, title: tributeTitle, date: new Date().toISOString() }, ...existingTH].slice(0, 100);
-        supabase.from('tasks').update({ 'Tribute History': newTH }).ilike('member_id', memberEmail).then(() => {});
+        supabase.from('tasks').update({ 'Tribute History': newTH }).eq('member_id', profileUuid).then(() => {});
 
         // Award merit points via centralized function (updates all period scores)
-        await DbService.awardPoints(memberEmail, meritGain);
+        await DbService.awardPoints(profileUuid, meritGain);
 
         // 4. Update the Crowdfund raised_amount in the Wishlist table
         // The tributeId passed from the client is the Title value (the Wishlist table has no lowercase 'id' column)
@@ -95,7 +98,7 @@ export async function POST(request: Request) {
         const { error: insertErr } = await supabase
             .from('crowdfund_contributions')
             .insert({
-                member_id: memberEmail,
+                member_id: profileUuid,
                 tribute_id: tributeId.toString(),
                 amount_given: contributionAmount,
             });
@@ -104,7 +107,7 @@ export async function POST(request: Request) {
             console.error("Receipt logging error (Non-Fatal):", insertErr);
         }
 
-        try { await DbService.sendMessage(memberEmail, `CONTRIBUTED TO '${tributeTitle}' ${contributionAmount} <i class="fas fa-coins" style="color:#c5a059;"></i>`, 'system'); } catch (_) { }
+        try { await DbService.sendMessage(profileUuid, `CONTRIBUTED TO '${tributeTitle}' ${contributionAmount} <i class="fas fa-coins" style="color:#c5a059;"></i>`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,

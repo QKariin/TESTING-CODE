@@ -19,20 +19,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             .single();
         if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
 
+        // Resolve UUID from profiles
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('id, wallet, hierarchy')
+            .ilike('member_id', email)
+            .single();
+        if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        const memberId = profile.id;
+
         const { data: existing } = await supabaseAdmin
             .from('post_unlocks')
             .select('id')
             .eq('post_id', postId)
-            .ilike('member_id', email)
+            .eq('member_id', memberId)
             .maybeSingle();
         if (existing) return NextResponse.json({ success: true, alreadyUnlocked: true });
-
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('wallet, hierarchy')
-            .ilike('member_id', email)
-            .single();
-        if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
         if (rankMeetsRequirement(profile.hierarchy, post.min_rank)) {
             return NextResponse.json({ success: true, freeAccess: true });
@@ -46,14 +48,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const { error: walletErr } = await supabaseAdmin
             .from('profiles')
             .update({ wallet: newWallet })
-            .ilike('member_id', email);
+            .eq('id', memberId);
         if (walletErr) return NextResponse.json({ error: 'Failed to deduct coins' }, { status: 500 });
 
         const { error: unlockErr } = await supabaseAdmin
             .from('post_unlocks')
-            .insert({ post_id: postId, member_id: email });
+            .insert({ post_id: postId, member_id: memberId });
         if (unlockErr) {
-            await supabaseAdmin.from('profiles').update({ wallet: profile.wallet }).ilike('member_id', email);
+            await supabaseAdmin.from('profiles').update({ wallet: profile.wallet }).eq('id', memberId);
             return NextResponse.json({ error: unlockErr.message }, { status: 500 });
         }
 

@@ -7,9 +7,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const { id: challengeId } = await params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.email) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const memberEmail = user.email.toLowerCase();
+        const memberId = user.id;
         const { windowId, proofUrl } = await request.json();
         if (!windowId || !proofUrl)
             return NextResponse.json({ success: false, error: 'Missing windowId or proofUrl' }, { status: 400 });
@@ -35,7 +35,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             .from('challenge_participants')
             .select('status')
             .eq('challenge_id', challengeId)
-            .ilike('member_id', memberEmail)
+            .eq('member_id', memberId)
             .single();
 
         if (!participant || participant.status !== 'active')
@@ -47,7 +47,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             .select('id')
             .eq('challenge_id', challengeId)
             .eq('window_id', windowId)
-            .ilike('member_id', memberEmail)
+            .eq('member_id', memberId)
             .maybeSingle();
 
         if (existing)
@@ -60,7 +60,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             .insert({
                 challenge_id: challengeId,
                 window_id: windowId,
-                member_id: memberEmail,
+                member_id: memberId,
                 proof_url: proofUrl,
                 completed_at: now.toISOString(),
                 verified: false,
@@ -83,9 +83,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const { id: challengeId } = await params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.email) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const memberEmail = user.email.toLowerCase();
+        const memberId = user.id;
 
         const [{ data: challenge }, { data: windows }, { data: myCompletions }, { data: participant }] = await Promise.all([
             supabaseAdmin.from('challenges')
@@ -95,9 +95,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 .select('*').eq('challenge_id', challengeId).order('opens_at', { ascending: true }),
             supabaseAdmin.from('challenge_completions')
                 .select('id, window_id, verified, completed_at, response_time_seconds, proof_url')
-                .eq('challenge_id', challengeId).ilike('member_id', memberEmail),
+                .eq('challenge_id', challengeId).eq('member_id', memberId),
             supabaseAdmin.from('challenge_participants')
-                .select('status, joined_at').eq('challenge_id', challengeId).ilike('member_id', memberEmail).maybeSingle(),
+                .select('status, joined_at').eq('challenge_id', challengeId).eq('member_id', memberId).maybeSingle(),
         ]);
 
         // Compute per-task placement and aggregate stats
@@ -112,7 +112,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
                 .select('response_time_seconds')
                 .eq('window_id', comp.window_id)
                 .eq('verified', true)
-                .not('member_id', 'ilike', memberEmail);
+                .neq('member_id', memberId);
 
             const fasterCount = (others || []).filter(
                 (c: any) => (c.response_time_seconds ?? 999999) < (comp.response_time_seconds ?? 999999)

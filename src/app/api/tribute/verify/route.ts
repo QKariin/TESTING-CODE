@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         await supabaseAdmin
             .from('tasks')
             .insert({
-                member_id: identifier,
+                member_id: user.id,
                 Name: displayName,
                 Status: 'idle',
                 Taskdom_History: '[]',

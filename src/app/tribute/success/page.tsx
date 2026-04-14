@@ -24,7 +24,7 @@ export default function TributeSuccessPage() {
                     const data = await res.json();
                     if (data.success) {
                         setStatus('Profile confirmed. Entering...');
-                        setTimeout(() => { window.location.href = '/profile'; }, 1000);
+                        setTimeout(() => { window.location.href = '/onboarding'; }, 1000);
                         return;
                     }
                 }
@@ -34,7 +34,7 @@ export default function TributeSuccessPage() {
                 const data2 = await res2.json();
                 if (data2.success && data2.linked) {
                     setStatus('Profile confirmed. Entering...');
-                    setTimeout(() => { window.location.href = '/profile'; }, 1000);
+                    setTimeout(() => { window.location.href = '/onboarding'; }, 1000);
                     return;
                 }
             } catch { }
@@ -80,7 +80,7 @@ export default function TributeSuccessPage() {
                 {status.includes('Click below') && (
                     <button
                         className="tribute-btn"
-                        onClick={() => { window.location.href = '/profile'; }}
+                        onClick={() => { window.location.href = '/onboarding'; }}
                     >
                         Enter
                     </button>
