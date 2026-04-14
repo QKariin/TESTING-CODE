@@ -633,7 +633,6 @@ export default function DashboardPage() {
                         wallet: 0,
                         score: 0,
                         parameters: { paywall: u.paywall ? { active: true } : undefined },
-                        hasActiveTask: false,
                     };
                 });
 
