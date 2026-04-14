@@ -8,7 +8,7 @@ export const DbService = {
         const { data: byEmail } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .eq('member_id', memberId)
+            .ilike('member_id', memberId)
             .maybeSingle();
 
         if (byEmail) return byEmail;
@@ -196,7 +196,7 @@ export const DbService = {
         const { data, error } = await supabaseAdmin
             .from('messages')
             .select('*')
-            .eq('member_id', memberId)
+            .ilike('member_id', memberId)
             .order('created_at', { ascending: false })
             .limit(limit);
         if (error) throw error;
@@ -209,7 +209,7 @@ export const DbService = {
         const { data } = await supabaseAdmin
             .from('tasks')
             .select('*')
-            .eq('member_id', memberId)
+            .ilike('member_id', memberId)
             .maybeSingle();
         return data;
     },
@@ -321,7 +321,7 @@ export const DbService = {
                 'Status': 'approve',
                 'Taskdom_CompletedTasks': String(newCount)
             })
-            .eq('member_id', profileId);
+            .ilike('member_id', profileId);
 
         // 2. Award points only — no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
@@ -357,7 +357,7 @@ export const DbService = {
         await supabaseAdmin
             .from('tasks')
             .update(taskUpdates)
-            .eq('member_id', profileId);
+            .ilike('member_id', profileId);
 
         // 2. Sync wallet with profiles table (only for tasks)
         if (!isRoutine) {
@@ -427,7 +427,7 @@ export const DbService = {
             const { error } = await supabaseAdmin
                 .from('tasks')
                 .update(taskUpdates)
-                .eq('member_id', memberId);
+                .ilike('member_id', memberId);
             if (error) throw error;
         } else {
             const insertData: any = {
@@ -482,7 +482,7 @@ export const DbService = {
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: activeTaskData })
-            .eq('member_id', profile.member_id || memberId);
+            .ilike('member_id', profile.member_id || memberId);
 
         if (error) throw error;
         return { success: true };
@@ -498,7 +498,7 @@ export const DbService = {
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: null, taskdom_pending_state: null })
-            .eq('member_id', profile.member_id || memberId);
+            .ilike('member_id', profile.member_id || memberId);
 
         if (error) throw error;
         return { success: true };

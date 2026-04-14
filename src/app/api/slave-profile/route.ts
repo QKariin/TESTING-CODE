@@ -35,7 +35,7 @@ async function buildFullProfile(email: string) {
     const [{ data: profileData, error: profileError }, { data: taskData }, { data: contribData }] = await Promise.all([
         supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle(),
         supabaseAdmin.from('tasks').select('*').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', email),
+        supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', email),
     ]);
 
     if (profileError) {
