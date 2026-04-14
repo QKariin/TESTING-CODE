@@ -1596,63 +1596,97 @@ export function handleMediaPlus() {
 export async function handleChatMediaUpload(input: HTMLInputElement) {
     const file = input.files?.[0];
     if (!file) return;
-    input.value = ''; // reset so same file can be re-selected
+    input.value = '';
 
-    const { memberId, rank } = getState();
+    const { memberId } = getState();
     if (!memberId) return;
 
-    const isVideo = file.type.startsWith('video/');
-    const type = isVideo ? 'video' : 'photo';
+    const isVid = file.type.startsWith('video/');
+    const type = isVid ? 'video' : 'photo';
 
-    // Client-side rank gate (server also enforces this)
-    const { rankMeetsRequirement } = await import('@/lib/hierarchyRules');
-    if (type === 'photo' && !rankMeetsRequirement(rank || '', 'Silverman')) {
-        alert('Photo sharing requires Silverman rank or higher.');
-        return;
-    }
-    if (type === 'video' && !rankMeetsRequirement(rank || '', 'Butler')) {
-        alert('Video sharing requires Butler rank or higher.');
-        return;
-    }
+    // Show preview modal — let server enforce rank, don't block client-side
+    _showMediaPreviewModal(file, isVid, async (sendBtn: HTMLButtonElement, statusEl: HTMLElement) => {
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'UPLOADING...';
+        statusEl.textContent = '';
+        try {
+            const { uploadToSupabase } = await import('./mediaSupabase');
+            const url = await uploadToSupabase('media', 'chat', file);
 
-    // Show uploading indicator in chat input
-    const inputDesk = document.getElementById('chatMsgInput') as HTMLInputElement;
-    const inputMob = document.getElementById('mob_chatMsgInput') as HTMLInputElement;
-    const prevDesk = inputDesk?.value;
-    const prevMob = inputMob?.value;
-    if (inputDesk) inputDesk.value = 'Uploading...';
-    if (inputMob) inputMob.value = 'Uploading...';
+            const res = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: memberId, content: url, type })
+            });
+            const data = await res.json();
 
-    try {
-        const { uploadToSupabase } = await import('./mediaSupabase');
-        const url = await uploadToSupabase('chat-media', 'chat', file);
+            if (!data.success) {
+                statusEl.textContent = data.error || 'Failed to send.';
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'SEND';
+                return false;
+            }
 
-        const res = await fetch('/api/chat/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderEmail: memberId, content: url, type })
-        });
-        const data = await res.json();
-
-        if (!data.success) {
-            alert(data.error || 'Failed to send media.');
-            if (inputDesk) inputDesk.value = prevDesk || '';
-            if (inputMob) inputMob.value = prevMob || '';
-        } else {
-            if (inputDesk) inputDesk.value = '';
-            if (inputMob) inputMob.value = '';
             if (data.newWallet !== undefined) {
                 setState({ wallet: data.newWallet });
                 const wStr = data.newWallet.toLocaleString();
                 document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
             }
+            return true; // success → close modal
+        } catch (err) {
+            statusEl.textContent = 'Upload failed. Try again.';
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'SEND';
+            return false;
         }
-    } catch (err) {
-        console.error('[CHAT MEDIA] Upload failed', err);
-        alert('Upload failed. Please try again.');
-        if (inputDesk) inputDesk.value = prevDesk || '';
-        if (inputMob) inputMob.value = prevMob || '';
-    }
+    });
+}
+
+function _showMediaPreviewModal(file: File, isVid: boolean, onSend: (btn: HTMLButtonElement, status: HTMLElement) => Promise<boolean>) {
+    const existing = document.getElementById('__chatMediaPreview');
+    existing?.remove();
+
+    const objectUrl = URL.createObjectURL(file);
+    const overlay = document.createElement('div');
+    overlay.id = '__chatMediaPreview';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+
+    const mediaEl = isVid
+        ? `<video src="${objectUrl}" controls playsinline style="max-width:100%;max-height:55vh;border-radius:12px;display:block;"></video>`
+        : `<img src="${objectUrl}" style="max-width:100%;max-height:55vh;border-radius:12px;display:block;object-fit:contain;" />`;
+
+    overlay.innerHTML = `
+        <div style="width:min(420px,100%);background:#0a0806;border:1px solid rgba(197,160,89,0.35);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:14px 18px;border-bottom:1px solid rgba(197,160,89,0.12);display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-family:Orbitron,sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.7);letter-spacing:3px;">${isVid ? 'VIDEO' : 'PHOTO'} PREVIEW</span>
+                <button id="__chatMediaClose" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 4px;">✕</button>
+            </div>
+            <div style="padding:16px;display:flex;justify-content:center;background:#050403;">
+                ${mediaEl}
+            </div>
+            <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+                <div id="__chatMediaStatus" style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:#c55;text-align:center;min-height:16px;"></div>
+                <div style="display:flex;gap:10px;">
+                    <button id="__chatMediaCancel" style="flex:1;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#666;font-family:Orbitron,sans-serif;font-size:0.48rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
+                    <button id="__chatMediaSend" style="flex:2;padding:12px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;border-radius:8px;color:#000;font-family:Orbitron,sans-serif;font-size:0.48rem;font-weight:700;letter-spacing:2px;cursor:pointer;">SEND</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const close = () => { URL.revokeObjectURL(objectUrl); overlay.remove(); };
+    document.getElementById('__chatMediaClose')!.onclick = close;
+    document.getElementById('__chatMediaCancel')!.onclick = close;
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+
+    const sendBtn = document.getElementById('__chatMediaSend') as HTMLButtonElement;
+    const statusEl = document.getElementById('__chatMediaStatus') as HTMLElement;
+    sendBtn.onclick = async () => {
+        const ok = await onSend(sendBtn, statusEl);
+        if (ok) close();
+    };
 }
 
 export function handleChatKey(e: React.KeyboardEvent) {

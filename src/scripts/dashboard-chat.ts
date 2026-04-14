@@ -468,49 +468,89 @@ export async function handleAdminUpload(file: File) {
     const activeCurrId = currId || (window as any).currId;
     if (!activeCurrId) return;
 
-    const btn = document.querySelector('.btn-plus') as HTMLButtonElement;
-    if (btn) { btn.innerText = '⏳'; btn.disabled = true; }
+    const isVideo = file.type.startsWith('video/');
+    const msgType = isVideo ? 'video' : 'photo';
+    const objectUrl = URL.createObjectURL(file);
 
-    try {
-        const isVideo = file.type.startsWith('video/');
-        const msgType = isVideo ? 'video' : 'photo';
+    // Show preview modal before uploading
+    const existing = document.getElementById('__adminMediaPreview');
+    existing?.remove();
 
-        // Upload directly to Supabase (videos bypass API route size limit)
-        const url = await uploadToSupabase('media', 'admin-chat', file);
-        if (url === 'failed') {
-            console.error('[DASHBOARD-CHAT] Media upload failed');
-            return;
+    const overlay = document.createElement('div');
+    overlay.id = '__adminMediaPreview';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+
+    const mediaEl = isVideo
+        ? `<video src="${objectUrl}" controls playsinline style="max-width:100%;max-height:55vh;border-radius:12px;display:block;"></video>`
+        : `<img src="${objectUrl}" style="max-width:100%;max-height:55vh;border-radius:12px;display:block;object-fit:contain;" />`;
+
+    overlay.innerHTML = `
+        <div style="width:min(420px,100%);background:#0a0806;border:1px solid rgba(197,160,89,0.35);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:14px 18px;border-bottom:1px solid rgba(197,160,89,0.12);display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-family:Orbitron,sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.7);letter-spacing:3px;">${isVideo ? 'VIDEO' : 'PHOTO'} PREVIEW</span>
+                <button id="__adminMediaClose" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 4px;">✕</button>
+            </div>
+            <div style="padding:16px;display:flex;justify-content:center;background:#050403;">
+                ${mediaEl}
+            </div>
+            <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+                <div id="__adminMediaStatus" style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:#c55;text-align:center;min-height:16px;"></div>
+                <div style="display:flex;gap:10px;">
+                    <button id="__adminMediaCancel" style="flex:1;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#666;font-family:Orbitron,sans-serif;font-size:0.48rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
+                    <button id="__adminMediaSend" style="flex:2;padding:12px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;border-radius:8px;color:#000;font-family:Orbitron,sans-serif;font-size:0.48rem;font-weight:700;letter-spacing:2px;cursor:pointer;">SEND</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => { URL.revokeObjectURL(objectUrl); overlay.remove(); };
+    document.getElementById('__adminMediaClose')!.onclick = close;
+    document.getElementById('__adminMediaCancel')!.onclick = close;
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+
+    const sendBtn = document.getElementById('__adminMediaSend') as HTMLButtonElement;
+    const statusEl = document.getElementById('__adminMediaStatus') as HTMLElement;
+
+    sendBtn.onclick = async () => {
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'UPLOADING...';
+        statusEl.textContent = '';
+        try {
+            const url = await uploadToSupabase('media', 'admin-chat', file);
+            if (url === 'failed') {
+                statusEl.textContent = 'Upload failed. Try again.';
+                sendBtn.disabled = false; sendBtn.textContent = 'SEND';
+                return;
+            }
+
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            let userEmail = user?.email;
+            if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+                userEmail = 'ceo@qkarin.com';
+            }
+            if (!userEmail) { close(); return; }
+
+            const sendRes = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail: userEmail, conversationId: activeCurrId, content: url, type: msgType }),
+            });
+            const sendData = await sendRes.json();
+            if (sendData.success && sendData.data) {
+                appendChatMessage(sendData.data);
+                close();
+            } else {
+                statusEl.textContent = sendData.error || 'Send failed.';
+                sendBtn.disabled = false; sendBtn.textContent = 'SEND';
+            }
+        } catch (err) {
+            console.error('[DASHBOARD-CHAT] Upload error:', err);
+            statusEl.textContent = 'Network error. Try again.';
+            sendBtn.disabled = false; sendBtn.textContent = 'SEND';
         }
-
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        let userEmail = user?.email;
-        if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-            userEmail = 'ceo@qkarin.com';
-        }
-        if (!userEmail) return;
-
-        const sendRes = await fetch('/api/chat/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                senderEmail: userEmail,
-                conversationId: activeCurrId,
-                content: url,
-                type: msgType,
-            }),
-        });
-        const sendData = await sendRes.json();
-        if (sendData.success && sendData.data) {
-            appendChatMessage(sendData.data);
-        } else {
-            console.error('[DASHBOARD-CHAT] Send error:', sendData.error);
-        }
-    } catch (err) {
-        console.error('[DASHBOARD-CHAT] Upload error:', err);
-    } finally {
-        if (btn) { btn.innerText = '+'; btn.disabled = false; }
-    }
+    };
 }
 
 // iOS-safe media picker for admin chat — dynamic input avoids hidden-element restriction
