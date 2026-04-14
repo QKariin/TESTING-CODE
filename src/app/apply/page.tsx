@@ -56,6 +56,7 @@ interface FormData {
     femdom_experience: string; expectations: string;
     hard_limits: string[]; soft_limits: string[];
     first_experience: string; best_moment: string; mistakes: string;
+    honest_confirmation: string;
     ready_for_sliders: string; sliders: Record<string, number>;
     domination_tone: string;
     preference: string; isolation_effects: string; self_review: string; ideal_punishment: string;
@@ -424,6 +425,7 @@ export default function ApplyPage() {
         femdom_experience: '', expectations: '', hard_limits: [],
         soft_limits: [], first_experience: '', best_moment: '',
         mistakes: '',
+        honest_confirmation: '',
         ready_for_sliders: '',
         sliders: Object.fromEntries(SLIDERS.map(s => [s, 50])),
         domination_tone: '',
@@ -437,11 +439,17 @@ export default function ApplyPage() {
     const set = (key: keyof FormData, value: any) => setForm(prev => ({ ...prev, [key]: value }));
     const setSlider = (key: string, value: number) => setForm(prev => ({ ...prev, sliders: { ...prev.sliders, [key]: value } }));
 
+    // Ref so saveProgress always reads the latest form, avoiding stale closures
+    // when goTo() is called immediately after a set()
+    const formRef = useRef(form);
+    formRef.current = form;
+
     const saveProgress = async (nextStep: number, extraData?: Partial<FormData>) => {
-        if (!form.email) return;
+        const currentForm = formRef.current;
+        if (!currentForm.email) return;
         setSaving(true);
         try {
-            const payload = { ...form, ...extraData, step: nextStep, applicationId };
+            const payload = { ...currentForm, ...extraData, step: nextStep, applicationId };
             const res = await fetch('/api/apply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -463,7 +471,9 @@ export default function ApplyPage() {
     const handleCheckout = async () => {
         setSaving(true);
         try {
-            await saveProgress(9);
+            // Mark honest_confirmation when user proceeds to checkout
+            set('honest_confirmation', 'true');
+            await saveProgress(9, { honest_confirmation: 'true' });
             const res = await fetch('/api/apply/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
