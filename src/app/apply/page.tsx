@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -177,11 +177,11 @@ function GhostBtn({ children, onClick }: any) {
     );
 }
 
-function LineInput({ placeholder, value, onChange, type = 'text' }: any) {
+function LineInput({ placeholder, value, onChange, type = 'text', autoComplete }: any) {
     return (
         <input type={type}
             className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-base font-light py-2 outline-none transition-colors duration-300 placeholder:text-white/15 mt-0"
-            placeholder={placeholder} value={value} onChange={onChange} autoComplete="off"
+            placeholder={placeholder} value={value} onChange={onChange} autoComplete={autoComplete ?? 'off'}
         />
     );
 }
@@ -218,9 +218,9 @@ function Reveal({ show, children }: { show: boolean; children: React.ReactNode }
 function StepHeader({ stepLabel, line1, line2 }: { stepLabel: string; line1: string; line2: string }) {
     return (
         <div className="mb-8">
-            <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/20 mb-8 tracking-wide">{stepLabel}</p>
-            <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">{line1}</h2>
-            <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
+            <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/20 mb-6 tracking-wide">{stepLabel}</p>
+            <h2 className="font-['Cormorant_Garamond'] font-normal text-[2rem] text-white leading-snug mb-0.5">{line1}</h2>
+            <h2 className="font-['Cormorant_Garamond'] font-normal text-[2rem] leading-snug mb-8">
                 <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">{line2}</span>
             </h2>
             <GoldDivider />
@@ -422,12 +422,12 @@ function AboutStep({ form, set, onNext, saving }: any) {
                     <div>
                         <FieldLabel>Name</FieldLabel>
                         <FieldHint>the one your mother gave you, not the one you hope I'll call you.</FieldHint>
-                        <LineInput placeholder="Your name..." value={form.name} onChange={(e: any) => set('name', e.target.value)} />
+                        <LineInput placeholder="Your name..." value={form.name} onChange={(e: any) => set('name', e.target.value)} autoComplete="name" />
                     </div>
 
                     <Reveal show={showEmail}>
                         <FieldLabel>Email</FieldLabel>
-                        <LineInput type="email" placeholder="your@email.com" value={form.email} onChange={(e: any) => set('email', e.target.value)} />
+                        <LineInput type="email" placeholder="your@email.com" value={form.email} onChange={(e: any) => set('email', e.target.value)} autoComplete="email" />
                     </Reveal>
 
                     <Reveal show={showAge}>
@@ -655,48 +655,75 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
     const [currentIdx, setCurrentIdx] = useState(0);
     const [comment, setComment] = useState<string | null>(null);
     const [commentHigh, setCommentHigh] = useState(true);
-    const [hasMoved, setHasMoved] = useState(false);
+    const [interacted, setInteracted] = useState(false);
+    const [prevHigh, setPrevHigh] = useState<boolean | null>(null);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const idxRef = useRef(0);
 
     const currentLabel = SLIDERS[currentIdx];
     const currentValue = form.sliders[currentLabel] ?? 50;
-    const allDone = currentIdx >= SLIDERS.length;
+
+    // Keep ref in sync with state
+    idxRef.current = currentIdx;
+
+    // Clean up timer on unmount
+    useEffect(() => {
+        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }, []);
+
+    // Reset state when advancing to next slider
+    useEffect(() => {
+        setInteracted(false);
+        setComment(null);
+        setPrevHigh(null);
+    }, [currentIdx]);
 
     const handleYes = () => {
         const ps = Array.from({ length: 26 }, (_, i) => ({
             id: i,
-            dx: (Math.random() - 0.5) * 340,
-            dy: (Math.random() - 0.5) * 220,
-            rotate: (Math.random() - 0.5) * 720,
-            w: Math.random() * 55 + 12,
-            h: Math.random() * 7 + 3,
-            amber: Math.random() > 0.4,
+            dx: (Math.random() - 0.5) * 360,
+            dy: (Math.random() - 0.5) * 260,
+            rotate: (Math.random() - 0.5) * 800,
+            w: Math.random() * 60 + 10,
+            h: Math.random() * 8 + 2,
+            amber: Math.random() > 0.35,
         }));
         setParticles(ps);
         setPhase('exploding');
-        setTimeout(() => setPhase('sliders'), 650);
+        setTimeout(() => setPhase('sliders'), 700);
     };
 
-    const handleSliderRelease = () => {
-        const val = form.sliders[currentLabel] ?? 50;
-        if (hasMoved) return; // already triggered
-        setHasMoved(true);
-        if (val > 50) {
-            setCommentHigh(true);
-            setComment(HIGH_COMMENTS[Math.floor(Math.random() * HIGH_COMMENTS.length)]);
-        } else {
-            setCommentHigh(false);
-            setComment(getLowComment(currentLabel));
-        }
-        // auto-advance after showing comment
-        setTimeout(() => {
+    const handleSliderChange = (val: number, label: string) => {
+        setSlider(label, val);
+
+        const isHigh = val > 50;
+
+        // Only update comment text when direction changes or first interaction
+        setPrevHigh(prev => {
+            if (prev === null || isHigh !== prev) {
+                setCommentHigh(isHigh);
+                if (isHigh) {
+                    setComment(HIGH_COMMENTS[Math.floor(Math.random() * HIGH_COMMENTS.length)]);
+                } else {
+                    setComment(getLowComment(label));
+                }
+                return isHigh;
+            }
+            return prev;
+        });
+        setInteracted(true);
+
+        // Debounce: reset timer each time slider moves, advance 2.2s after last movement
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
             setComment(null);
-            setHasMoved(false);
-            if (currentIdx < SLIDERS.length - 1) {
-                setCurrentIdx(i => i + 1);
+            const idx = idxRef.current;
+            if (idx < SLIDERS.length - 1) {
+                setCurrentIdx(idx + 1);
             } else {
                 onNext();
             }
-        }, 1800);
+        }, 2200);
     };
 
     return (
@@ -706,13 +733,13 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
 
                 {/* Gate phase */}
                 {phase === 'gate' && (
-                    <div className="flex flex-col items-center text-center">
-                        <p className="font-['Cormorant_Garamond'] text-[1.1rem] font-light text-white/40 leading-relaxed mb-10">
-                            Ready to tell me more about your kink side?
+                    <div className="flex flex-col items-center text-center pt-4">
+                        <p className="font-['Cormorant_Garamond'] text-[1.1rem] font-light text-white/40 leading-relaxed mb-12">
+                            Ready to reveal your kink side to me?
                         </p>
                         <button
                             onClick={handleYes}
-                            className="px-10 py-3.5 border border-amber-500/30 bg-amber-500/[0.04] text-amber-200/70 font-['Cormorant_Garamond'] text-[1.05rem] font-light tracking-wide hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
+                            className="relative px-12 py-4 border border-amber-500/40 bg-amber-500/[0.05] text-amber-200/80 font-['Cormorant_Garamond'] text-[1.15rem] font-light tracking-widest hover:border-amber-400/60 hover:bg-amber-500/[0.10] transition-all duration-300 cursor-pointer"
                         >
                             Yes, Queen Karin
                         </button>
@@ -726,8 +753,8 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                             <motion.div
                                 key={p.id}
                                 initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scaleX: 1 }}
-                                animate={{ x: p.dx, y: p.dy, opacity: 0, rotate: p.rotate, scaleX: 0.3 }}
-                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                animate={{ x: p.dx, y: p.dy, opacity: 0, rotate: p.rotate, scaleX: 0.2 }}
+                                transition={{ duration: 0.65, ease: 'easeOut' }}
                                 style={{
                                     position: 'absolute',
                                     width: p.w,
@@ -738,77 +765,115 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                                     marginLeft: -p.w / 2,
                                     borderRadius: 1,
                                     background: p.amber
-                                        ? 'rgba(197,160,89,0.75)'
-                                        : 'rgba(60,40,10,0.85)',
+                                        ? 'rgba(197,160,89,0.80)'
+                                        : 'rgba(70,45,10,0.90)',
                                 }}
                             />
                         ))}
                     </div>
                 )}
 
-                {/* Sliders phase */}
-                {phase === 'sliders' && !allDone && (
-                    <motion.div
-                        key={currentIdx}
-                        initial={{ opacity: 0, x: 40 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4, ease: [0.25, 0.4, 0.25, 1] }}
-                        className="flex flex-col flex-1"
-                    >
-                        {/* Progress within sliders */}
-                        <div className="flex gap-1 mb-10">
-                            {SLIDERS.map((_, i) => (
-                                <div key={i} className="h-px flex-1 transition-all duration-300"
-                                    style={{ background: i <= currentIdx ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.07)' }} />
-                            ))}
-                        </div>
+                {/* Sliders phase - ONE at a time */}
+                {phase === 'sliders' && (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentIdx}
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -30 }}
+                            transition={{ duration: 0.38, ease: [0.25, 0.4, 0.25, 1] }}
+                            className="flex flex-col items-center text-center flex-1"
+                        >
+                            {/* Kink name */}
+                            <p className="font-['Cormorant_Garamond'] text-[2rem] font-light text-white/85 leading-tight mb-1 tracking-wide">
+                                {currentLabel}
+                            </p>
+                            <p className="font-[Raleway] text-[0.5rem] tracking-[4px] text-white/18 uppercase mb-10">
+                                {currentIdx + 1} of {SLIDERS.length}
+                            </p>
 
-                        <p className="font-['Cormorant_Garamond'] text-[1.35rem] font-light text-white/75 mb-2 tracking-wide">
-                            {currentLabel}
-                        </p>
-                        <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/25 mb-10">
-                            {currentIdx + 1} of {SLIDERS.length}
-                        </p>
-
-                        {/* Slider track */}
-                        <div className="mb-3">
-                            <input
-                                type="range" min={0} max={100}
-                                value={currentValue}
-                                onChange={e => setSlider(currentLabel, parseInt(e.target.value))}
-                                onMouseUp={handleSliderRelease}
-                                onTouchEnd={handleSliderRelease}
-                                className="w-full"
-                                style={{ background: `linear-gradient(to right, rgba(197,160,89,0.6) ${currentValue}%, rgba(255,255,255,0.08) ${currentValue}%)` }}
-                            />
-                            <div className="flex justify-between mt-2">
-                                <span className="text-[0.52rem] tracking-[3px] text-white/20 font-[Raleway] uppercase">None</span>
-                                <span className="text-[0.65rem] tracking-[2px] text-amber-400/60 font-[Raleway] font-medium">{currentValue}%</span>
-                                <span className="text-[0.52rem] tracking-[3px] text-white/20 font-[Raleway] uppercase">Obsessed</span>
+                            {/* Current value display */}
+                            <div className="mb-6">
+                                <span className="font-['Cormorant_Garamond'] text-[3rem] font-light leading-none"
+                                    style={{ color: currentValue > 50 ? 'rgba(197,160,89,0.75)' : 'rgba(255,255,255,0.25)' }}>
+                                    {currentValue}
+                                </span>
+                                <span className="font-[Raleway] text-[0.65rem] tracking-[2px] text-white/20 ml-1 align-top mt-3 inline-block">%</span>
                             </div>
-                        </div>
 
-                        {/* Comment bubble */}
-                        <AnimatePresence>
-                            {comment && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -6 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="mt-8 px-5 py-4 border-l-2 border-amber-500/30 bg-amber-500/[0.03]"
-                                >
-                                    <p className={cn(
-                                        "font-['Cormorant_Garamond'] text-[1rem] font-light italic leading-relaxed",
-                                        commentHigh ? "text-amber-300/65" : "text-white/40"
-                                    )}>
-                                        {comment}
-                                    </p>
-                                </motion.div>
+                            {/* Slider */}
+                            <div className="w-full px-1 mb-2">
+                                <style>{`
+                                    .kink-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; outline: none; cursor: pointer; background: transparent; }
+                                    .kink-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(197,160,89,0.9); cursor: pointer; border: 2px solid rgba(197,160,89,0.35); box-shadow: 0 0 14px rgba(197,160,89,0.35), 0 2px 8px rgba(0,0,0,0.5); transition: box-shadow 0.15s; }
+                                    .kink-slider::-webkit-slider-thumb:hover { box-shadow: 0 0 20px rgba(197,160,89,0.55), 0 2px 8px rgba(0,0,0,0.5); }
+                                    .kink-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: rgba(197,160,89,0.9); cursor: pointer; border: 2px solid rgba(197,160,89,0.35); box-shadow: 0 0 14px rgba(197,160,89,0.35); }
+                                    .kink-slider-track { position: relative; height: 2px; width: 100%; }
+                                    .kink-slider-bg { position: absolute; inset: 0; background: rgba(255,255,255,0.07); }
+                                    .kink-slider-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(197,160,89,0.55); transition: width 0.05s; }
+                                `}</style>
+                                <div className="kink-slider-track mb-0">
+                                    <div className="kink-slider-bg" />
+                                    <div className="kink-slider-fill" style={{ width: `${currentValue}%` }} />
+                                </div>
+                                <input
+                                    type="range" min={0} max={100}
+                                    value={currentValue}
+                                    onChange={e => handleSliderChange(parseInt(e.target.value), currentLabel)}
+                                    className="kink-slider"
+                                    style={{ marginTop: -11 }}
+                                />
+                                <div className="flex justify-between mt-2">
+                                    <span className="font-[Raleway] text-[0.5rem] tracking-[3px] text-white/18 uppercase">None</span>
+                                    <span className="font-[Raleway] text-[0.5rem] tracking-[3px] text-white/18 uppercase">Obsessed</span>
+                                </div>
+                            </div>
+
+                            {/* Comment bubble */}
+                            <AnimatePresence>
+                                {comment && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -6 }}
+                                        transition={{ duration: 0.35 }}
+                                        className="mt-8 px-6 py-4 border-l-2 border-amber-500/25 bg-amber-500/[0.025] text-left max-w-xs"
+                                    >
+                                        <p className={cn(
+                                            "font-['Cormorant_Garamond'] text-[1.05rem] font-light italic leading-relaxed",
+                                            commentHigh ? "text-amber-300/60" : "text-white/35"
+                                        )}>
+                                            {comment}
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Progress dots */}
+                            <div className="flex gap-1.5 mt-auto pt-10 pb-2">
+                                {SLIDERS.map((_, i) => (
+                                    <div key={i}
+                                        className="rounded-full transition-all duration-300"
+                                        style={{
+                                            width: i === currentIdx ? 18 : 5,
+                                            height: 4,
+                                            background: i < currentIdx
+                                                ? 'rgba(197,160,89,0.45)'
+                                                : i === currentIdx
+                                                    ? 'rgba(197,160,89,0.85)'
+                                                    : 'rgba(255,255,255,0.08)',
+                                        }}
+                                    />
+                                ))}
+                            </div>
+
+                            {!interacted && (
+                                <p className="font-['Cormorant_Garamond'] italic text-[0.82rem] text-white/20 mt-3">
+                                    Move the slider to continue
+                                </p>
                             )}
-                        </AnimatePresence>
-
-                    </motion.div>
+                        </motion.div>
+                    </AnimatePresence>
                 )}
             </div>
 
