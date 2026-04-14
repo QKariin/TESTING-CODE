@@ -31,17 +31,28 @@ function stripSensitive(response: any, isAdmin: boolean): any {
     return { ...rest, parameters: params };
 }
 
-async function buildFullProfile(email: string) {
-    const [{ data: profileData, error: profileError }, { data: taskData }, { data: contribData }] = await Promise.all([
-        supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('tasks').select('*').ilike('member_id', email).maybeSingle(),
-        supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', email),
-    ]);
+async function buildFullProfile(emailOrUuid: string) {
+    // Step 1: fetch profile — by UUID (profiles.id) if UUID, else by email (profiles.member_id)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(emailOrUuid);
+    const { data: profileData, error: profileError } = isUuid
+        ? await supabaseAdmin.from('profiles').select('*').eq('id', emailOrUuid).maybeSingle()
+        : await supabaseAdmin.from('profiles').select('*').ilike('member_id', emailOrUuid).maybeSingle();
 
     if (profileError) {
         console.error('[slave-profile] buildFullProfile profileError:', profileError.message, profileError.code);
         throw profileError;
     }
+
+    // Step 2: use UUID (profiles.id) to fetch tasks — tasks.member_id is UUID
+    const uuid = profileData?.id;
+    const [{ data: taskData }, { data: contribData }] = await Promise.all([
+        uuid
+            ? supabaseAdmin.from('tasks').select('*').eq('member_id', uuid).maybeSingle()
+            : Promise.resolve({ data: null }),
+        uuid
+            ? supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', uuid)
+            : supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', emailOrUuid),
+    ]);
 
     const crowdfundTotal = ((contribData as any[] | null) || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
     return mapUserProfile(profileData || {}, taskData || {}, crowdfundTotal);
