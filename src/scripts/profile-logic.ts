@@ -2036,9 +2036,15 @@ function initOneSignal(memberId: string) {
         }
     });
 
-    // Show opt-in banner based on native Notification API (works regardless of OneSignal)
+    // Show opt-in banner — skip if already granted or no API
     if (!('Notification' in window)) return;
     if ((window as any).Notification.permission === 'granted') return;
+
+    // Don't show again if dismissed within last 7 days (but always show in PWA on first open)
+    const isPwa = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+    const dismissedAt = parseInt(localStorage.getItem('pushBannerDismissed') || '0', 10);
+    const daysSinceDismiss = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+    if (!isPwa && dismissedAt && daysSinceDismiss < 7) return;
 
     const banner = document.getElementById('pushBanner');
     const allowBtn = document.getElementById('pushAllowBtn');
@@ -2046,27 +2052,35 @@ function initOneSignal(memberId: string) {
     const dismissBtn = document.getElementById('pushDismissBtn');
     if (!banner) return;
 
+    const dismiss = () => {
+        banner.style.display = 'none';
+        localStorage.setItem('pushBannerDismissed', String(Date.now()));
+    };
+
     if ((window as any).Notification.permission === 'denied') {
         if (allowLabel) allowLabel.textContent = 'HOW TO ENABLE';
         allowBtn?.addEventListener('click', () => {
-            banner.style.display = 'none';
-            alert('Go to your browser settings → Site Settings → Notifications → find throne.qkarin.com → set to Allow.');
+            dismiss();
+            alert('Go to your browser settings → Site Settings → Notifications → find this site → set to Allow.');
         });
     } else {
         allowBtn?.addEventListener('click', async () => {
-            banner.style.display = 'none';
-            // Request via OneSignal if available, else native
+            dismiss();
             const OS = (window as any).OneSignal;
             if (OS?.Notifications?.requestPermission) {
                 await OS.Notifications.requestPermission();
             } else {
                 await (window as any).Notification.requestPermission();
             }
+            _updateNotifToggleUI();
         });
     }
 
-    dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
-    setTimeout(() => { banner.style.display = 'flex'; }, 2000);
+    dismissBtn?.addEventListener('click', dismiss);
+
+    // Show sooner in PWA (500ms), later in browser (3s)
+    const delay = isPwa ? 500 : 3000;
+    setTimeout(() => { banner.style.display = 'flex'; }, delay);
 }
 
 function _updateNotifToggleUI() {
