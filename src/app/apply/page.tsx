@@ -162,15 +162,15 @@ function GoldDivider() {
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] font-normal text-[1.15rem] text-white/80 mb-0.5">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] font-normal text-[2rem] sm:text-[2.2rem] text-white/90 text-center mb-1 leading-snug">{children}</p>;
 }
 
 function Question({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] font-light text-[1.05rem] text-white/50 leading-relaxed mb-5">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] font-light text-[1.6rem] sm:text-[1.8rem] text-white/75 text-center leading-snug mb-6">{children}</p>;
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.88rem] text-white/22 mb-3 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-white/12 text-center mb-4 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
@@ -343,31 +343,30 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
     if (!q) return null;
 
     return (
-        <div className="flex flex-col flex-1 justify-between">
-            <div>
-                <StepHeader n={n} topic={topic} />
+        <div className="flex flex-col flex-1">
+            <StepHeader n={n} topic={topic} />
 
-                {/* Sub-progress */}
-                <div className="flex gap-1.5 mb-8">
-                    {qs.map((_, i) => (
-                        <div key={i} className="h-px flex-1 transition-all duration-500"
-                            style={{
-                                background: i < safeIdx ? 'rgba(197,160,89,0.55)'
-                                    : i === safeIdx ? 'rgba(197,160,89,0.95)'
-                                    : 'rgba(255,255,255,0.07)',
-                            }} />
-                    ))}
-                </div>
-
-                <AnimatePresence mode="wait" custom={dir}>
-                    <motion.div key={q.id} custom={dir} variants={qVariants}
-                        initial="enter" animate="center" exit="exit">
-                        {q.node(next)}
-                    </motion.div>
-                </AnimatePresence>
+            {/* Sub-progress */}
+            <div className="flex gap-1.5 mb-10">
+                {qs.map((_, i) => (
+                    <div key={i} className="h-px flex-1 transition-all duration-500"
+                        style={{
+                            background: i < safeIdx ? 'rgba(197,160,89,0.55)'
+                                : i === safeIdx ? 'rgba(197,160,89,0.95)'
+                                : 'rgba(255,255,255,0.07)',
+                        }} />
+                ))}
             </div>
 
-            <div className="mt-10 space-y-4">
+            <AnimatePresence mode="wait" custom={dir}>
+                <motion.div key={q.id} custom={dir} variants={qVariants}
+                    initial="enter" animate="center" exit="exit">
+                    {q.node(next)}
+                </motion.div>
+            </AnimatePresence>
+
+            {/* Continue sits right below the question content */}
+            <div className="mt-7 space-y-4">
                 {!q.auto && (
                     <PrimaryBtn onClick={next} disabled={!q.ready}>Continue</PrimaryBtn>
                 )}
