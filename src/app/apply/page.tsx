@@ -649,33 +649,122 @@ function getLowComment(label: string) {
     return opts[Math.floor(Math.random() * opts.length)];
 }
 
+function HoldKinkButton({ label, onRelease }: { label: string; onRelease: (val: number) => void }) {
+    const [liveVal, setLiveVal] = useState(0);
+    const [holding, setHolding] = useState(false);
+    const [done, setDone] = useState(false);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const valRef = useRef(0);
+
+    const start = () => {
+        if (done) return;
+        valRef.current = 0;
+        setLiveVal(0);
+        setHolding(true);
+        intervalRef.current = setInterval(() => {
+            valRef.current = Math.min(100, valRef.current + 1);
+            setLiveVal(valRef.current);
+            if (valRef.current >= 100) stop();
+        }, 28); // ~2.8s to fill fully
+    };
+
+    const stop = () => {
+        if (!holding && valRef.current === 0) return;
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setHolding(false);
+        setDone(true);
+        onRelease(valRef.current);
+    };
+
+    useEffect(() => {
+        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    }, []);
+
+    // Reset when label changes (new kink)
+    useEffect(() => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        valRef.current = 0;
+        setLiveVal(0);
+        setHolding(false);
+        setDone(false);
+    }, [label]);
+
+    const pct = liveVal;
+
+    return (
+        <div className="w-full select-none">
+            {/* Big % display */}
+            <div className="text-center mb-6 h-16 flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                    {!holding && !done && (
+                        <motion.p key="hint"
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="font-['Cormorant_Garamond'] italic text-[1rem] text-white/25">
+                            Press and hold to set your level
+                        </motion.p>
+                    )}
+                    {(holding || done) && (
+                        <motion.div key="val" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-end gap-1">
+                            <span className="font-['Cormorant_Garamond'] font-light text-[3.5rem] leading-none"
+                                style={{ color: pct > 50 ? 'rgba(197,160,89,0.85)' : 'rgba(255,255,255,0.35)' }}>
+                                {pct}
+                            </span>
+                            <span className="font-['Cormorant_Garamond'] text-[1.2rem] text-white/25 mb-2">%</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Hold button */}
+            <div
+                className="relative w-full overflow-hidden border border-white/10 cursor-pointer"
+                style={{ height: 64, userSelect: 'none' }}
+                onMouseDown={start}
+                onMouseUp={stop}
+                onMouseLeave={() => { if (holding) stop(); }}
+                onTouchStart={e => { e.preventDefault(); start(); }}
+                onTouchEnd={e => { e.preventDefault(); stop(); }}
+            >
+                {/* Fill */}
+                <div
+                    className="absolute inset-y-0 left-0 transition-none"
+                    style={{
+                        width: `${pct}%`,
+                        background: pct > 50
+                            ? 'rgba(197,160,89,0.18)'
+                            : 'rgba(255,255,255,0.05)',
+                        borderRight: pct > 0 ? '1px solid rgba(197,160,89,0.25)' : 'none',
+                    }}
+                />
+                {/* Label */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="font-['Cormorant_Garamond'] font-light text-[1rem]"
+                        style={{ color: holding ? 'rgba(197,160,89,0.7)' : done ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
+                        {done ? `${pct}% recorded` : holding ? 'Release when ready...' : 'Hold'}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function SlidersStep({ form, setSlider, onNext, onBack }: any) {
     const [phase, setPhase] = useState<'gate' | 'exploding' | 'sliders'>('gate');
     const [particles, setParticles] = useState<any[]>([]);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [comment, setComment] = useState<string | null>(null);
     const [commentHigh, setCommentHigh] = useState(true);
-    const [interacted, setInteracted] = useState(false);
-    const [prevHigh, setPrevHigh] = useState<boolean | null>(null);
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const advTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const idxRef = useRef(0);
-
-    const currentLabel = SLIDERS[currentIdx];
-    const currentValue = form.sliders[currentLabel] ?? 50;
-
-    // Keep ref in sync with state
     idxRef.current = currentIdx;
 
-    // Clean up timer on unmount
     useEffect(() => {
-        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+        return () => { if (advTimerRef.current) clearTimeout(advTimerRef.current); };
     }, []);
 
-    // Reset state when advancing to next slider
     useEffect(() => {
-        setInteracted(false);
         setComment(null);
-        setPrevHigh(null);
+        if (advTimerRef.current) clearTimeout(advTimerRef.current);
     }, [currentIdx]);
 
     const handleYes = () => {
@@ -693,29 +782,15 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
         setTimeout(() => setPhase('sliders'), 700);
     };
 
-    const handleSliderChange = (val: number, label: string) => {
+    const handleRelease = (val: number, label: string) => {
         setSlider(label, val);
-
         const isHigh = val > 50;
+        setCommentHigh(isHigh);
+        setComment(isHigh
+            ? HIGH_COMMENTS[Math.floor(Math.random() * HIGH_COMMENTS.length)]
+            : getLowComment(label));
 
-        // Only update comment text when direction changes or first interaction
-        setPrevHigh(prev => {
-            if (prev === null || isHigh !== prev) {
-                setCommentHigh(isHigh);
-                if (isHigh) {
-                    setComment(HIGH_COMMENTS[Math.floor(Math.random() * HIGH_COMMENTS.length)]);
-                } else {
-                    setComment(getLowComment(label));
-                }
-                return isHigh;
-            }
-            return prev;
-        });
-        setInteracted(true);
-
-        // Debounce: reset timer each time slider moves, advance 2.2s after last movement
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
+        advTimerRef.current = setTimeout(() => {
             setComment(null);
             const idx = idxRef.current;
             if (idx < SLIDERS.length - 1) {
@@ -723,61 +798,53 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
             } else {
                 onNext();
             }
-        }, 2200);
+        }, 2400);
     };
+
+    const currentLabel = SLIDERS[currentIdx];
 
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div className="flex flex-col flex-1">
                 <StepHeader stepLabel="04 - Testing" line1="How far does" line2="your kink go?" />
 
-                {/* Gate phase */}
+                {/* Gate */}
                 {phase === 'gate' && (
                     <div className="flex flex-col items-center text-center pt-4">
                         <p className="font-['Cormorant_Garamond'] text-[1.1rem] font-light text-white/40 leading-relaxed mb-12">
                             Ready to reveal your kink side to me?
                         </p>
-                        <button
-                            onClick={handleYes}
-                            className="relative px-12 py-4 border border-amber-500/40 bg-amber-500/[0.05] text-amber-200/80 font-['Cormorant_Garamond'] text-[1.15rem] font-light tracking-widest hover:border-amber-400/60 hover:bg-amber-500/[0.10] transition-all duration-300 cursor-pointer"
-                        >
+                        <button onClick={handleYes}
+                            className="px-12 py-4 border border-amber-500/40 bg-amber-500/[0.05] text-amber-200/80 font-['Cormorant_Garamond'] text-[1.15rem] font-light tracking-widest hover:border-amber-400/60 hover:bg-amber-500/[0.10] transition-all duration-300 cursor-pointer">
                             Yes, Queen Karin
                         </button>
                     </div>
                 )}
 
-                {/* Explosion phase */}
+                {/* Explosion */}
                 {phase === 'exploding' && (
                     <div className="relative flex justify-center items-center" style={{ height: 60 }}>
                         {particles.map(p => (
-                            <motion.div
-                                key={p.id}
+                            <motion.div key={p.id}
                                 initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scaleX: 1 }}
                                 animate={{ x: p.dx, y: p.dy, opacity: 0, rotate: p.rotate, scaleX: 0.2 }}
                                 transition={{ duration: 0.65, ease: 'easeOut' }}
                                 style={{
-                                    position: 'absolute',
-                                    width: p.w,
-                                    height: p.h,
-                                    top: '50%',
-                                    left: '50%',
-                                    marginTop: -p.h / 2,
-                                    marginLeft: -p.w / 2,
+                                    position: 'absolute', width: p.w, height: p.h,
+                                    top: '50%', left: '50%',
+                                    marginTop: -p.h / 2, marginLeft: -p.w / 2,
                                     borderRadius: 1,
-                                    background: p.amber
-                                        ? 'rgba(197,160,89,0.80)'
-                                        : 'rgba(70,45,10,0.90)',
+                                    background: p.amber ? 'rgba(197,160,89,0.80)' : 'rgba(70,45,10,0.90)',
                                 }}
                             />
                         ))}
                     </div>
                 )}
 
-                {/* Sliders phase - ONE at a time */}
+                {/* Hold buttons - one at a time */}
                 {phase === 'sliders' && (
                     <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentIdx}
+                        <motion.div key={currentIdx}
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -30 }}
@@ -785,51 +852,23 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                             className="flex flex-col items-center text-center flex-1"
                         >
                             {/* Kink name */}
-                            <p className="font-['Cormorant_Garamond'] text-[2rem] font-light text-white/85 leading-tight mb-1 tracking-wide">
+                            <p className="font-['Cormorant_Garamond'] text-[2rem] font-light text-white/85 leading-tight mb-1">
                                 {currentLabel}
                             </p>
-                            <p className="font-[Raleway] text-[0.5rem] tracking-[4px] text-white/18 uppercase mb-10">
+                            <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-white/20 mb-10">
                                 {currentIdx + 1} of {SLIDERS.length}
                             </p>
 
-                            {/* Current value display */}
-                            <div className="mb-6">
-                                <span className="font-['Cormorant_Garamond'] text-[3rem] font-light leading-none"
-                                    style={{ color: currentValue > 50 ? 'rgba(197,160,89,0.75)' : 'rgba(255,255,255,0.25)' }}>
-                                    {currentValue}
-                                </span>
-                                <span className="font-[Raleway] text-[0.65rem] tracking-[2px] text-white/20 ml-1 align-top mt-3 inline-block">%</span>
-                            </div>
-
-                            {/* Slider */}
-                            <div className="w-full px-1 mb-2">
-                                <style>{`
-                                    .kink-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; outline: none; cursor: pointer; background: transparent; }
-                                    .kink-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(197,160,89,0.9); cursor: pointer; border: 2px solid rgba(197,160,89,0.35); box-shadow: 0 0 14px rgba(197,160,89,0.35), 0 2px 8px rgba(0,0,0,0.5); transition: box-shadow 0.15s; }
-                                    .kink-slider::-webkit-slider-thumb:hover { box-shadow: 0 0 20px rgba(197,160,89,0.55), 0 2px 8px rgba(0,0,0,0.5); }
-                                    .kink-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: rgba(197,160,89,0.9); cursor: pointer; border: 2px solid rgba(197,160,89,0.35); box-shadow: 0 0 14px rgba(197,160,89,0.35); }
-                                    .kink-slider-track { position: relative; height: 2px; width: 100%; }
-                                    .kink-slider-bg { position: absolute; inset: 0; background: rgba(255,255,255,0.07); }
-                                    .kink-slider-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(197,160,89,0.55); transition: width 0.05s; }
-                                `}</style>
-                                <div className="kink-slider-track mb-0">
-                                    <div className="kink-slider-bg" />
-                                    <div className="kink-slider-fill" style={{ width: `${currentValue}%` }} />
-                                </div>
-                                <input
-                                    type="range" min={0} max={100}
-                                    value={currentValue}
-                                    onChange={e => handleSliderChange(parseInt(e.target.value), currentLabel)}
-                                    className="kink-slider"
-                                    style={{ marginTop: -11 }}
+                            {/* Hold button */}
+                            <div className="w-full">
+                                <HoldKinkButton
+                                    key={currentIdx}
+                                    label={currentLabel}
+                                    onRelease={(val) => handleRelease(val, currentLabel)}
                                 />
-                                <div className="flex justify-between mt-2">
-                                    <span className="font-[Raleway] text-[0.5rem] tracking-[3px] text-white/18 uppercase">None</span>
-                                    <span className="font-[Raleway] text-[0.5rem] tracking-[3px] text-white/18 uppercase">Obsessed</span>
-                                </div>
                             </div>
 
-                            {/* Comment bubble */}
+                            {/* Comment */}
                             <AnimatePresence>
                                 {comment && (
                                     <motion.div
@@ -837,11 +876,11 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.35 }}
-                                        className="mt-8 px-6 py-4 border-l-2 border-amber-500/25 bg-amber-500/[0.025] text-left max-w-xs"
+                                        className="mt-8 px-6 py-4 border-l-2 border-amber-500/25 bg-amber-500/[0.025] text-left w-full"
                                     >
                                         <p className={cn(
                                             "font-['Cormorant_Garamond'] text-[1.05rem] font-light italic leading-relaxed",
-                                            commentHigh ? "text-amber-300/60" : "text-white/35"
+                                            commentHigh ? "text-amber-300/65" : "text-white/38"
                                         )}>
                                             {comment}
                                         </p>
@@ -852,35 +891,22 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                             {/* Progress dots */}
                             <div className="flex gap-1.5 mt-auto pt-10 pb-2">
                                 {SLIDERS.map((_, i) => (
-                                    <div key={i}
-                                        className="rounded-full transition-all duration-300"
+                                    <div key={i} className="rounded-full transition-all duration-300"
                                         style={{
-                                            width: i === currentIdx ? 18 : 5,
-                                            height: 4,
-                                            background: i < currentIdx
-                                                ? 'rgba(197,160,89,0.45)'
-                                                : i === currentIdx
-                                                    ? 'rgba(197,160,89,0.85)'
-                                                    : 'rgba(255,255,255,0.08)',
-                                        }}
-                                    />
+                                            width: i === currentIdx ? 18 : 5, height: 4,
+                                            background: i < currentIdx ? 'rgba(197,160,89,0.45)'
+                                                : i === currentIdx ? 'rgba(197,160,89,0.85)'
+                                                : 'rgba(255,255,255,0.08)',
+                                        }} />
                                 ))}
                             </div>
-
-                            {!interacted && (
-                                <p className="font-['Cormorant_Garamond'] italic text-[0.82rem] text-white/20 mt-3">
-                                    Move the slider to continue
-                                </p>
-                            )}
                         </motion.div>
                     </AnimatePresence>
                 )}
             </div>
 
             {phase === 'gate' && (
-                <div className="mt-10">
-                    <div className="flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
-                </div>
+                <div className="mt-10 flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
             )}
         </div>
     );
