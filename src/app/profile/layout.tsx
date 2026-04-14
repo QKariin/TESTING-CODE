@@ -125,6 +125,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         }
 
         let active = true;
+        let pollInterval: ReturnType<typeof setInterval> | null = null;
 
         async function init() {
             try {
@@ -172,14 +173,16 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 }
 
                 await check();
-                // Realtime subscription in profile-logic handles silence/paywall changes instantly.
-                // No polling needed — one-time check on load is sufficient.
+                // Poll every 30s as reliable fallback — Realtime handles it instantly when working,
+                // but this guarantees silence/paywall activates within 30s even if Realtime lags.
+                pollInterval = setInterval(() => { if (active) check(); }, 30000);
             } catch {}
         }
 
         init();
         return () => {
             active = false;
+            if (pollInterval) clearInterval(pollInterval);
         };
     }, []);
 

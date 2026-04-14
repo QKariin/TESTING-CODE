@@ -1880,6 +1880,10 @@ async function _pollNewChatMessages(email: string) {
             if (isSystemMessage(m)) {
                 appendSystemLog(m);
                 updateSystemTicker(m);
+                // If a task was force-assigned via dashboard, refresh it immediately
+                if (m.content && m.content.includes('DIRECTIVE ASSIGNED')) {
+                    getRandomTask(true);
+                }
                 return;
             }
             const html = renderChatMessage(m);
