@@ -621,32 +621,58 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
 // --- Step 4: Sliders (explosion gate + one-by-one with comments) ---
 
 const HIGH_COMMENTS = [
-    "Noted. We'll use that.",
-    "Oh... interesting.",
-    "I see you.",
-    "Good to know.",
-    "That explains a lot.",
-    "Fascinating.",
-    "Bold choice.",
-    "I approve.",
-    "You surprise me.",
-    "Keep going.",
+    "That tells me everything I need to know.",
+    "Interesting. File that away.",
+    "You just made this more complicated for yourself.",
+    "Now I know exactly what to withhold.",
+    "That kind of answer gets you considered.",
+    "Every answer makes you more readable.",
+    "You lit up. I noticed.",
+    "I'll remember this. You won't be able to forget it.",
+    "That answers a question you didn't know I was asking.",
+    "You could have lied. You didn't. Smart.",
+    "More than I expected. Curious.",
+    "You're more honest than most.",
+    "Good. Now we have something to work with.",
+    "That number reveals more than you intended.",
+    "Now we're getting somewhere.",
+    "Predictable. And yet still useful.",
+    "You didn't hesitate. Telling.",
+    "That's the kind of thing I don't forget.",
+    "Strong preference. Duly noted.",
+    "I was waiting for that answer.",
 ];
 
-function getLowComment(label: string) {
-    const opts = [
-        `What a shame.`,
-        `Oh no - you don't like ${label}?`,
-        `How... underwhelming.`,
-        `Disappointing.`,
-        `Is that all?`,
-        `I expected more from you.`,
-        `${label}? Really? Nothing?`,
-        `We'll work on that.`,
-        `How boring.`,
-        `Not even a little?`,
-    ];
-    return opts[Math.floor(Math.random() * opts.length)];
+const LOW_COMMENTS = [
+    "How very underwhelming.",
+    "Not even a little? Almost impressive.",
+    "I'll pretend that didn't happen.",
+    "That hesitation says more than you think.",
+    "Oh. So you're one of those.",
+    "I expected more. I always do.",
+    "That number is almost embarrassing.",
+    "Zero points for ambition.",
+    "Noted. And judged.",
+    "The most boring answer you could have given.",
+    "Did you even try?",
+    "Low standards or low courage. Either way.",
+    "We can work on that. Whether you like it or not.",
+    "I'll chalk it up to inexperience. For now.",
+    "Playing it safe. That tells me something too.",
+    "Disappointing, but not surprising.",
+    "Is that really all you have?",
+    "Barely worth commenting on.",
+    "I've seen more commitment from people leaving.",
+    "You'll need to do better than that.",
+];
+
+function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
 
 function HoldKinkButton({ label, onRelease }: { label: string; onRelease: (val: number) => void }) {
@@ -758,6 +784,19 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
     const idxRef = useRef(0);
     idxRef.current = currentIdx;
 
+    // Non-repeating comment queues
+    const highQueueRef = useRef<string[]>([]);
+    const lowQueueRef = useRef<string[]>([]);
+
+    const pickHigh = () => {
+        if (highQueueRef.current.length === 0) highQueueRef.current = shuffle(HIGH_COMMENTS);
+        return highQueueRef.current.shift()!;
+    };
+    const pickLow = () => {
+        if (lowQueueRef.current.length === 0) lowQueueRef.current = shuffle(LOW_COMMENTS);
+        return lowQueueRef.current.shift()!;
+    };
+
     useEffect(() => {
         return () => { if (advTimerRef.current) clearTimeout(advTimerRef.current); };
     }, []);
@@ -786,9 +825,7 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
         setSlider(label, val);
         const isHigh = val > 50;
         setCommentHigh(isHigh);
-        setComment(isHigh
-            ? HIGH_COMMENTS[Math.floor(Math.random() * HIGH_COMMENTS.length)]
-            : getLowComment(label));
+        setComment(isHigh ? pickHigh() : pickLow());
 
         advTimerRef.current = setTimeout(() => {
             setComment(null);
