@@ -110,7 +110,32 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     return "/queen-karin.png";
 }
 
+const PRIVATE_PREFIXES = ['task-proofs/', 'chat/', 'admin-chat/', 'chat-media/', 'challenge-proofs/'];
+
+function isPrivateStorageUrl(url: string): boolean {
+    if (!url.includes('supabase.co/storage')) return false;
+    return PRIVATE_PREFIXES.some(prefix => url.includes('/' + prefix));
+}
+
+// Cache signed URLs in memory to avoid re-fetching on every render
+const _signedUrlCache = new Map<string, { url: string; expires: number }>();
+
 export async function getSignedUrl(url: string | null | undefined): Promise<string> {
     if (!url) return "";
-    return url;
+    if (!isPrivateStorageUrl(url)) return url;
+    if (url.includes('token=')) return url; // already signed
+
+    const cached = _signedUrlCache.get(url);
+    if (cached && cached.expires > Date.now()) return cached.url;
+
+    try {
+        const res = await fetch(`/api/media/url?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        if (data.url) {
+            // Cache for 6 days (signed URL valid for 7)
+            _signedUrlCache.set(url, { url: data.url, expires: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+            return data.url;
+        }
+    } catch { }
+    return url; // fallback to original
 }
