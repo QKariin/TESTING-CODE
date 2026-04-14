@@ -25,6 +25,7 @@ import {
     handleProfileUpload,
     handleAdminUpload,
     handleMediaPlus,
+    handleChatMediaUpload,
     handleChatKey,
     sendChatMessage,
     buyRealCoins,
@@ -616,7 +617,7 @@ export default function ProfilePage() {
             <input type="file" id="routineUploadInput" accept="image/*" className="hidden" onChange={(e: any) => handleRoutineUpload(e.target)} />
             <input type="file" id="taskEvidenceInput" accept="image/*,video/*" className="hidden" onChange={(e: any) => handleTaskEvidenceUpload(e.target)} />
             <input type="file" id="evidenceInputMob" accept="image/*,video/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
-            <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
+            <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" onChange={(e: any) => handleChatMediaUpload(e.target)} />
 
             {/* Push notification opt-in banner */}
             <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,6,2,0.97)', border: '1px solid rgba(197,160,89,0.6)', borderRadius: 12, padding: '14px 20px', flexDirection: 'row', alignItems: 'center', gap: 12, boxShadow: '0 4px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', whiteSpace: 'nowrap' }}>

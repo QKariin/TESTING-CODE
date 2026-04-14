@@ -1593,6 +1593,68 @@ export function handleMediaPlus() {
     input?.click();
 }
 
+export async function handleChatMediaUpload(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    if (!file) return;
+    input.value = ''; // reset so same file can be re-selected
+
+    const { memberId, rank } = getState();
+    if (!memberId) return;
+
+    const isVideo = file.type.startsWith('video/');
+    const type = isVideo ? 'video' : 'photo';
+
+    // Client-side rank gate (server also enforces this)
+    const { rankMeetsRequirement } = await import('@/lib/hierarchyRules');
+    if (type === 'photo' && !rankMeetsRequirement(rank || '', 'Silverman')) {
+        alert('Photo sharing requires Silverman rank or higher.');
+        return;
+    }
+    if (type === 'video' && !rankMeetsRequirement(rank || '', 'Butler')) {
+        alert('Video sharing requires Butler rank or higher.');
+        return;
+    }
+
+    // Show uploading indicator in chat input
+    const inputDesk = document.getElementById('chatMsgInput') as HTMLInputElement;
+    const inputMob = document.getElementById('mob_chatMsgInput') as HTMLInputElement;
+    const prevDesk = inputDesk?.value;
+    const prevMob = inputMob?.value;
+    if (inputDesk) inputDesk.value = 'Uploading...';
+    if (inputMob) inputMob.value = 'Uploading...';
+
+    try {
+        const { uploadToSupabase } = await import('./mediaSupabase');
+        const url = await uploadToSupabase('chat-media', 'chat', file);
+
+        const res = await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail: memberId, content: url, type })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(data.error || 'Failed to send media.');
+            if (inputDesk) inputDesk.value = prevDesk || '';
+            if (inputMob) inputMob.value = prevMob || '';
+        } else {
+            if (inputDesk) inputDesk.value = '';
+            if (inputMob) inputMob.value = '';
+            if (data.newWallet !== undefined) {
+                setState({ wallet: data.newWallet });
+                const wStr = data.newWallet.toLocaleString();
+                document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
+            }
+        }
+    } catch (err) {
+        console.error('[CHAT MEDIA] Upload failed', err);
+        alert('Upload failed. Please try again.');
+        if (inputDesk) inputDesk.value = prevDesk || '';
+        if (inputMob) inputMob.value = prevMob || '';
+    }
+}
+
 export function handleChatKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter') sendChatMessage();
 }
