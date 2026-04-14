@@ -45,12 +45,11 @@ async function getTaskRow(memberId: string) {
 }
 
 async function getRoutineStatus(memberId: string, tz: string) {
-    // Get routine name from profiles (UUID lookup)
-    const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('routine')
-        .eq('id', memberId)
-        .maybeSingle();
+    // Get routine name from profiles — UUID uses id column, email uses member_id
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+    const { data: profile } = isUuid
+        ? await supabaseAdmin.from('profiles').select('routine').eq('id', memberId).maybeSingle()
+        : await supabaseAdmin.from('profiles').select('routine').ilike('member_id', memberId).maybeSingle();
 
     const routine = profile?.routine || null;
 
