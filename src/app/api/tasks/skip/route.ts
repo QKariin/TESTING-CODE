@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         }
 
         const { supabaseAdmin } = require('@/lib/supabase');
-        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').eq('member_id', memberEmail).maybeSingle();
+        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').ilike('member_id', memberEmail).maybeSingle();
 
         // 1 & 2 & 3: Atomic Skip
         const params = { ...(profile.parameters || {}) };
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
                 'Taskdom_History': JSON.stringify(history),
                 taskdom_active_task: null,
                 taskdom_pending_state: null
-            }).eq('member_id', memberEmail);
+            }).ilike('member_id', memberEmail);
         } else {
             taskDbUpdate = await supabaseAdmin.from('tasks').insert({
                 member_id: memberEmail,

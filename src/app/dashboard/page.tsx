@@ -639,11 +639,6 @@ export default function DashboardPage() {
                 setUsers(mappedUsers);
                 renderMainDashboard();
 
-                // If a user profile is open, refresh their Current Status with the latest data
-                if (currId) {
-                    const openUser = mappedUsers.find((u: any) => u.memberId === currId || u.member_id === currId);
-                    if (openUser) updateDetail(openUser);
-                }
                 // Mirror daily code to mobile top bar
                 setTimeout(() => {
                     const src = document.getElementById('adminDailyCode');
