@@ -1795,7 +1795,15 @@ export async function initChatSystem() {
     _tasksChannel = getChatSupabase()
         .channel('tasks_updates_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
-            () => { updateRoutineWidget(); refreshTaskGallery(email!); })
+            (payload: any) => {
+                updateRoutineWidget();
+                refreshTaskGallery(email!);
+                // If a task was force-assigned, refresh the active task display immediately
+                const fresh = payload.new;
+                if (fresh?.taskdom_active_task) {
+                    getRandomTask(true);
+                }
+            })
         .subscribe();
 
     if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); }
