@@ -198,10 +198,10 @@ function TextArea({ placeholder, value, onChange, rows = 4 }: any) {
 function ChoiceBtn({ label, active, onClick }: any) {
     return (
         <button onClick={onClick} className={cn(
-            "w-full px-4 py-3.5 text-left border transition-all duration-200 font-['Cormorant_Garamond'] text-[1rem] font-light",
+            "w-full px-4 py-3.5 text-left border transition-all duration-200 font-[Raleway] font-light text-[0.9rem] tracking-wide",
             active
-                ? "border-amber-500/35 bg-amber-500/[0.05] text-amber-200/80"
-                : "border-white/[0.06] bg-white/[0.01] text-white/40 hover:border-white/12"
+                ? "border-amber-500/40 bg-amber-500/[0.06] text-amber-200/85"
+                : "border-white/[0.07] bg-white/[0.01] text-white/45 hover:border-white/14"
         )}>{label}</button>
     );
 }
@@ -218,7 +218,7 @@ function Reveal({ show, children }: { show: boolean; children: React.ReactNode }
 function StepHeader({ stepLabel, line1, line2 }: { stepLabel: string; line1: string; line2: string }) {
     return (
         <div className="mb-8">
-            <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">{stepLabel}</p>
+            <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/20 mb-8 tracking-wide">{stepLabel}</p>
             <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">{line1}</h2>
             <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
                 <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">{line2}</span>
@@ -678,6 +678,7 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
 
     const handleSliderRelease = () => {
         const val = form.sliders[currentLabel] ?? 50;
+        if (hasMoved) return; // already triggered
         setHasMoved(true);
         if (val > 50) {
             setCommentHigh(true);
@@ -686,16 +687,16 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
             setCommentHigh(false);
             setComment(getLowComment(currentLabel));
         }
-    };
-
-    const handleNextSlider = () => {
-        setComment(null);
-        setHasMoved(false);
-        if (currentIdx < SLIDERS.length - 1) {
-            setCurrentIdx(i => i + 1);
-        } else {
-            onNext();
-        }
+        // auto-advance after showing comment
+        setTimeout(() => {
+            setComment(null);
+            setHasMoved(false);
+            if (currentIdx < SLIDERS.length - 1) {
+                setCurrentIdx(i => i + 1);
+            } else {
+                onNext();
+            }
+        }, 1800);
     };
 
     return (
@@ -807,19 +808,6 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                             )}
                         </AnimatePresence>
 
-                        {/* Next slider button */}
-                        {hasMoved && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.4, delay: 0.2 }}
-                                className="mt-10"
-                            >
-                                <PrimaryBtn onClick={handleNextSlider}>
-                                    {currentIdx < SLIDERS.length - 1 ? 'Next' : 'Continue'}
-                                </PrimaryBtn>
-                            </motion.div>
-                        )}
                     </motion.div>
                 )}
             </div>
