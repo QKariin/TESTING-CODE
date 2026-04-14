@@ -492,9 +492,9 @@ export async function openTaskGallery() {
     if (gallery) gallery.classList.remove('hidden');
 
     try {
-        console.log("GALLERY: Fetching tasks...");
-        const res = await adminGetTasksAction();
-        const tasks = res.success ? res.tasks : [];
+        const res = await fetch('/api/tasks/all');
+        const data = await res.json();
+        const tasks = data.success ? data.tasks : [];
         cachedTasks = tasks || [];
         currentCategory = null;
         renderTaskGallery();
