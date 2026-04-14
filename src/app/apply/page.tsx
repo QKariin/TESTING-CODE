@@ -1039,6 +1039,30 @@ function PainStep({ form, set, onNext, onBack }: any) {
 // --- Step 9: Checkout ---
 
 function CheckoutStep({ form, set, onNext, onBack, saving, amount, setAmount }: any) {
+    const [showCustom, setShowCustom] = useState(false);
+    const [customVal, setCustomVal] = useState('');
+
+    const PRESETS = [95, 199, 499];
+
+    const selectPreset = (v: number) => {
+        setShowCustom(false);
+        setCustomVal('');
+        setAmount(v);
+    };
+
+    const selectOther = () => {
+        setShowCustom(true);
+        setCustomVal('');
+    };
+
+    const handleCustomChange = (val: string) => {
+        setCustomVal(val);
+        const n = parseInt(val);
+        if (!isNaN(n) && n >= 95) setAmount(n);
+    };
+
+    const isPreset = PRESETS.includes(amount) && !showCustom;
+
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
@@ -1048,18 +1072,58 @@ function CheckoutStep({ form, set, onNext, onBack, saving, amount, setAmount }: 
                     Minimum €95. Pay more if you want to be taken seriously.
                 </p>
 
-                <FieldLabel>Amount (€)</FieldLabel>
-                <div className="flex items-center gap-4 mt-2 mb-2">
-                    <span className="text-amber-400/40 font-['Cormorant_Garamond'] text-2xl">€</span>
-                    <input type="number" min={95} value={amount}
-                        onChange={e => setAmount(Math.max(95, parseInt(e.target.value) || 95))}
-                        className="bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-2xl font-light py-1 outline-none w-28 transition-colors" />
+                {/* Preset buttons */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                    {PRESETS.map(v => (
+                        <button key={v} onClick={() => selectPreset(v)}
+                            className={cn(
+                                "py-4 border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1.1rem]",
+                                amount === v && !showCustom
+                                    ? "border-amber-500/50 bg-amber-500/[0.07] text-amber-200/90"
+                                    : "border-white/[0.07] text-white/45 hover:border-white/15"
+                            )}>
+                            €{v}
+                        </button>
+                    ))}
                 </div>
+
+                {/* Other option */}
+                <button onClick={selectOther}
+                    className={cn(
+                        "w-full py-3.5 border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1rem] mb-6",
+                        showCustom
+                            ? "border-amber-500/50 bg-amber-500/[0.07] text-amber-200/90"
+                            : "border-white/[0.07] text-white/45 hover:border-white/15"
+                    )}>
+                    Other amount
+                </button>
+
+                {/* Custom input */}
+                <AnimatePresence>
+                    {showCustom && (
+                        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                            <FieldLabel>Custom amount (min €95)</FieldLabel>
+                            <div className="flex items-center gap-3 mt-2 mb-1">
+                                <span className="text-amber-400/40 font-['Cormorant_Garamond'] text-2xl">€</span>
+                                <input type="number" min={95} placeholder="95"
+                                    value={customVal}
+                                    onChange={e => handleCustomChange(e.target.value)}
+                                    className="bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-2xl font-light py-1 outline-none w-full transition-colors"
+                                    autoFocus
+                                />
+                            </div>
+                            {customVal && parseInt(customVal) < 95 && (
+                                <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-rose-400/50 mt-1">Minimum is €95.</p>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/20">Non-refundable</p>
             </div>
 
             <div className="mt-10 space-y-4">
-                <PrimaryBtn onClick={onNext} disabled={saving}>
+                <PrimaryBtn onClick={onNext} disabled={saving || amount < 95 || (showCustom && (!customVal || parseInt(customVal) < 95))}>
                     {saving ? 'Redirecting...' : `Submit & Pay €${amount}`}
                 </PrimaryBtn>
                 <div className="flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
