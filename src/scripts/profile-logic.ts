@@ -1906,9 +1906,7 @@ export async function initChatSystem() {
                 updateRoutineWidget();
                 refreshTaskGallery(email!);
 
-                // If a task was force-assigned, show it immediately from the Realtime payload
-                // — no API round-trip needed, data is already here
-                const fresh = payload.new;
+                // Force-assigned task — show it immediately from Realtime payload
                 if (!fresh?.taskdom_active_task) return;
 
                 let activeTask = fresh.taskdom_active_task;
