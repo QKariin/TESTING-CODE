@@ -40,32 +40,21 @@ export async function POST(request: Request) {
             ...(profile?.id ? { member_id: profile.id } : {}),
         };
 
-        // Map fields per step
-        if (data.name)               payload.name               = data.name;
-        if (data.toys_owned !== undefined)     payload.toys_owned         = data.toys_owned;
-        if (data.favorite_toy !== undefined)   payload.favorite_toy       = data.favorite_toy;
-        if (data.weirdest_object !== undefined) payload.weirdest_object   = data.weirdest_object;
-        if (data.bought_to_impress !== undefined) payload.bought_to_impress = data.bought_to_impress;
-        if (data.toy_want_to_try !== undefined) payload.toy_want_to_try   = data.toy_want_to_try;
-        if (data.femdom_experience !== undefined) payload.femdom_experience = data.femdom_experience;
-        if (data.expectations !== undefined)   payload.expectations       = data.expectations;
-        if (data.hard_limits !== undefined)    payload.hard_limits        = data.hard_limits;
-        if (data.soft_limits !== undefined)    payload.soft_limits        = data.soft_limits;
-        if (data.first_experience !== undefined) payload.first_experience = data.first_experience;
-        if (data.best_moment !== undefined)    payload.best_moment        = data.best_moment;
-        if (data.mistakes !== undefined)       payload.mistakes           = data.mistakes;
-        if (data.sliders !== undefined)        payload.sliders            = data.sliders;
-        if (data.domination_tone !== undefined) payload.domination_tone   = data.domination_tone;
-        if (data.reason_applying !== undefined) payload.reason_applying   = data.reason_applying;
-        if (data.feelings_payment !== undefined) payload.feelings_payment = data.feelings_payment;
-        if (data.self_perception !== undefined) payload.self_perception   = data.self_perception;
-        if (data.priority_aspect !== undefined) payload.priority_aspect   = data.priority_aspect;
-        if (data.motivation !== undefined)     payload.motivation         = data.motivation;
-        if (data.pain_tolerance !== undefined) payload.pain_tolerance     = data.pain_tolerance;
-        if (data.preference !== undefined)     payload.preference         = data.preference;
-        if (data.isolation_effects !== undefined) payload.isolation_effects = data.isolation_effects;
-        if (data.self_review !== undefined)    payload.self_review        = data.self_review;
-        if (data.ideal_punishment !== undefined) payload.ideal_punishment = data.ideal_punishment;
+        // Map all fields
+        const fields = [
+            'name', 'age', 'location', 'height_weight', 'occupation',
+            'relationship_status', 'friends_description', 'favorite_snack', 'weekly_budget',
+            'toys_owned', 'favorite_toy', 'weirdest_object', 'bought_to_impress', 'toy_want_to_try',
+            'femdom_experience', 'expectations', 'hard_limits', 'soft_limits',
+            'first_experience', 'best_moment', 'mistakes', 'honest_confirmation',
+            'ready_for_sliders', 'sliders', 'domination_tone',
+            'preference', 'isolation_effects', 'self_review', 'ideal_punishment',
+            'reason_applying', 'self_perception', 'feelings_payment', 'priority_aspect', 'motivation',
+            'pain_tolerance',
+        ];
+        for (const field of fields) {
+            if (data[field] !== undefined) payload[field] = data[field];
+        }
 
         let resultId = existingId;
 
