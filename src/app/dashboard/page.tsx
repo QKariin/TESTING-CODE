@@ -613,33 +613,66 @@ export default function DashboardPage() {
         initDashboard();
 
         // 2. Fetch Real Data & Hydrate State
-        // Lightweight list — only name, avatar, online status, unread indicator
-        // Full profile/tasks load when a user is clicked
         const loadLiveAction = async () => {
-            const [listRes, unreadMap] = await Promise.all([
-                fetch('/api/dashboard-list').then(r => r.json()),
+            const [data, unreadMap] = await Promise.all([
+                getAdminDashboardData(),
                 getUnreadMessageStatus(),
             ]);
 
-            if (listRes.success && listRes.users) {
-                const mappedUsers = listRes.users.map((u: any) => {
-                    const msgTime = unreadMap[u.memberId?.toLowerCase()];
-                    const lastMessageTime = msgTime ? new Date(msgTime).getTime() : 0;
+            if (data.success && data.users) {
+                const mappedUsers = data.users.map((u: any) => {
+                    const msgFromMessages = unreadMap[u.memberId || u.member_id];
+                    const msgFromParams = u.parameters?.lastMessageTime;
+                    const rawMsgTime = msgFromMessages || msgFromParams || null;
+                    const lastMessageTime = rawMsgTime ? new Date(rawMsgTime).getTime() : 0;
+                    const lastSeen = u.lastSeen || u.last_active || u.lastWorship || null;
                     return {
                         ...u,
-                        avatar: getOptimizedUrl(u.avatar || '/queen-karin.png', 100),
+                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || '/queen-karin.png', 100),
                         lastMessageTime,
-                        reviewQueue: [],
-                        wallet: 0,
-                        score: 0,
-                        parameters: { paywall: u.paywall ? { active: true } : undefined },
+                        lastSeen,
                     };
                 });
 
                 setUsers(mappedUsers);
+
+                try {
+                    const readRes = await fetch('/api/chat/mark-read?type=admin');
+                    const readData = await readRes.json();
+                    const serverReadMap = readData.chatRead || {};
+                    Object.entries(serverReadMap).forEach(([email, ts]) => {
+                        const key = 'read_' + email;
+                        const localTs = parseInt(localStorage.getItem(key) || '0');
+                        const serverTs = new Date(ts as string).getTime();
+                        if (serverTs > localTs) localStorage.setItem(key, serverTs.toString());
+                    });
+                } catch {}
+
+                setAvailableDailyTasks(data.dailyTasks || []);
+
+                const allQueues = data.globalQueue || [];
+                setGlobalQueue(allQueues);
+                mappedUsers.forEach((u: any) => {
+                    u.reviewQueue = allQueues.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId);
+                });
+
+                const allTributes = mappedUsers.flatMap((u: any) => {
+                    let history: any[] = [];
+                    try {
+                        const raw = u.parameters?.tributeHistory;
+                        if (raw) history = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                    } catch {}
+                    return history.map((t: any) => ({ ...t, memberId: u.memberId, memberName: u.name, memberAvatar: u.avatar }));
+                }).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                setGlobalTributes(allTributes);
+
                 renderMainDashboard();
 
-                // Mirror daily code to mobile top bar
+                if (currId) {
+                    const openUser = mappedUsers.find((u: any) => u.memberId === currId || u.member_id === currId);
+                    if (openUser) updateDetail(openUser);
+                }
+
                 setTimeout(() => {
                     const src = document.getElementById('adminDailyCode');
                     const mob = document.getElementById('adminDailyCodeMob');
@@ -654,7 +687,7 @@ export default function DashboardPage() {
         if (isMobile) return; // mobile dashboard handles its own data — no duplicate load
         loadLiveAction();
         // Poll every 60s — Realtime handles chat; this is just a periodic sync fallback
-        const pollInterval = setInterval(loadLiveAction, 60000);
+        const pollInterval = setInterval(loadLiveAction, 10000);
 
         // ── Supabase Realtime: instant push on new chat messages ──────────────
         // Requires Realtime to be enabled for the 'chats' table in Supabase dashboard
