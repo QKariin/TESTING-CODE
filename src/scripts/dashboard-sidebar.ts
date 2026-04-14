@@ -329,10 +329,15 @@ export function selUser(id: string) {
             body: JSON.stringify({ email: id, full: true }),
         }).then(r => r.json()).then(fullData => {
             if (!fullData || fullData.error) return;
-            // Merge full data into the user object
-            if (openUser) Object.assign(openUser, fullData);
-            // Re-render with complete data if this user is still open
-            if (currId === id) updateDetail(openUser || fullData);
+            if (currId === id) {
+                // Merge full data ON TOP of openUser — but never overwrite dashboard-only
+                // fields (reviewQueue, etc.) with undefined from the profile-formatted response.
+                const merged = Object.assign({}, openUser);
+                Object.entries(fullData).forEach(([k, v]) => {
+                    if (v !== undefined && v !== null) (merged as any)[k] = v;
+                });
+                updateDetail(merged);
+            }
         }).catch(() => {});
         // Always load chat history — polling is skipped internally when member is offline
         initDashboardChat(id);

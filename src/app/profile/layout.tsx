@@ -126,6 +126,40 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
         let active = true;
         let pollInterval: ReturnType<typeof setInterval> | null = null;
+        let realtimeChannel: any = null;
+
+        function applyFromRow(fresh: any, userEmail: string) {
+            if (!active) return;
+            // Silence
+            if (fresh.silence === true) {
+                const reason = fresh.parameters?.silence_reason || '';
+                sessionStorage.setItem('__silenced', '1');
+                sessionStorage.setItem('__silenceReason', reason);
+                setSilenced(true);
+                setSilenceReason(reason);
+            } else {
+                sessionStorage.removeItem('__silenced');
+                sessionStorage.removeItem('__silenceReason');
+                setSilenced(false);
+            }
+            // Paywall
+            const paywall = fresh.parameters?.paywall;
+            if (paywall?.active) {
+                const reason = paywall.reason || '';
+                const amount = paywall.amount || 0;
+                sessionStorage.setItem('__paywalled', '1');
+                sessionStorage.setItem('__paywallReason', reason);
+                sessionStorage.setItem('__paywallAmount', String(amount));
+                setPaywalled(true);
+                setPaywallReason(reason);
+                setPaywallAmount(amount);
+            } else {
+                sessionStorage.removeItem('__paywalled');
+                sessionStorage.removeItem('__paywallReason');
+                sessionStorage.removeItem('__paywallAmount');
+                setPaywalled(false);
+            }
+        }
 
         async function init() {
             try {
@@ -134,6 +168,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 const userEmail = session?.user?.email;
                 if (!userEmail || !active) return;
                 setEmail(userEmail);
+                const emailLower = userEmail.toLowerCase();
 
                 async function check() {
                     try {
@@ -172,10 +207,23 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     } catch {}
                 }
 
+                // Initial check on load
                 await check();
-                // Poll every 30s as reliable fallback — Realtime handles it instantly when working,
-                // but this guarantees silence/paywall activates within 30s even if Realtime lags.
-                pollInterval = setInterval(() => { if (active) check(); }, 30000);
+
+                // ── Realtime subscription — fires INSTANTLY when admin updates the profile ──
+                // No row filter: avoids case-sensitive eq() mismatch. Filter in JS below.
+                realtimeChannel = supabase
+                    .channel('layout-lock-' + emailLower)
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => {
+                        const fresh = payload.new;
+                        if (!fresh) return;
+                        if ((fresh.member_id || '').toLowerCase() !== emailLower) return;
+                        applyFromRow(fresh, emailLower);
+                    })
+                    .subscribe();
+
+                // Poll every 15s as fallback only — Realtime handles instant updates
+                pollInterval = setInterval(() => { if (active) check(); }, 15000);
             } catch {}
         }
 
@@ -183,6 +231,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         return () => {
             active = false;
             if (pollInterval) clearInterval(pollInterval);
+            if (realtimeChannel) {
+                try { createClient().removeChannel(realtimeChannel); } catch {}
+            }
         };
     }, []);
 

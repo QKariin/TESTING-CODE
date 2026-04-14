@@ -1830,9 +1830,13 @@ export async function initChatSystem() {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            filter: `member_id=eq.${email}`
+            // NO row filter here — filters use case-sensitive eq() which misses rows when
+            // member_id casing in the DB differs from the auth email. Filter in JS instead.
         }, (payload: any) => {
             const msg = payload.new;
+            // Case-insensitive guard — ignore messages for other members
+            const rowEmail = (msg.member_id || '').toLowerCase();
+            if (rowEmail !== email.toLowerCase()) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
             if (isSystemMessage(msg)) {
@@ -1878,20 +1882,27 @@ export async function initChatSystem() {
         })
         .subscribe();
 
-    // 3. Polling fallback every 15s — realtime handles delivery; poll only as a safety net
+    // 3. Polling fallback every 5s — safety net for when Realtime lags or misses events
     if (_chatPollInterval) clearInterval(_chatPollInterval);
-    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 15000);
+    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 5000);
 
     // Refresh queen presence status every 60s — stored so it can be cleared
     if (_queenInterval) clearInterval(_queenInterval);
     _queenInterval = setInterval(() => _fetchQueenStatus(), 60000);
 
     // 4. Supabase realtime for tasks + profile stats — stored so they can be removed
+    // NOTE: No row filter on either channel — eq() is case-sensitive and misses rows
+    // when member_id casing in DB differs from auth email. Filter in JS callback instead.
     if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); }
     _tasksChannel = getChatSupabase()
         .channel('tasks_updates_' + email)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `member_id=eq.${email}` },
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' },
             (payload: any) => {
+                const fresh = payload.new;
+                // Case-insensitive guard
+                const rowEmail = (fresh?.member_id || '').toLowerCase();
+                if (rowEmail !== email.toLowerCase()) return;
+
                 updateRoutineWidget();
                 refreshTaskGallery(email!);
 
@@ -1937,10 +1948,16 @@ export async function initChatSystem() {
     if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); }
     _statsChannel = getChatSupabase()
         .channel('profile_stats_' + email)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `member_id=eq.${email}` },
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' },
+            // No row filter — case-sensitive eq() misses rows when member_id has different
+            // casing in DB. Filter in JS with case-insensitive check below.
             (payload: any) => {
                 const fresh = payload.new as any;
                 if (!fresh) return;
+                // Case-insensitive guard
+                const rowEmail = (fresh.member_id || '').toLowerCase();
+                if (rowEmail !== email.toLowerCase()) return;
+
                 if (fresh.wallet !== undefined || fresh.score !== undefined) {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
                     updateWalletDisplay();

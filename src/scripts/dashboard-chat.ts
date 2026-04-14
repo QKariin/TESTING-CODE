@@ -85,6 +85,11 @@ function appendToSystemLog(msg: any) {
  */
 export async function initDashboardChat(slaveEmail: string) {
     const cleanEmail = slaveEmail.toLowerCase();
+
+    // Guard: if already initialized for this exact user AND channel is alive, skip.
+    // This prevents presence heartbeats from triggering repeated chat flashes.
+    if (activeChatEmail === cleanEmail && chatChannel) return;
+
     activeChatEmail = cleanEmail;
 
     // 1. Clean up existing subscription + poll on the SAME client instance
