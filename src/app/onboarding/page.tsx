@@ -1,7 +1,55 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { motion, type Variants } from 'framer-motion';
 import { createClient } from '@/utils/supabase/client';
+import { cn } from '@/lib/utils';
+
+// ─── Animated background shapes (from HeroGeometric) ─────────────────────────
+
+function ElegantShape({ className, delay = 0, width = 400, height = 100, rotate = 0, gradient = "from-white/[0.08]" }: {
+    className?: string; delay?: number; width?: number; height?: number; rotate?: number; gradient?: string;
+}) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -150, rotate: rotate - 15 }}
+            animate={{ opacity: 1, y: 0, rotate }}
+            transition={{ duration: 2.4, delay, ease: [0.23, 0.86, 0.39, 0.96], opacity: { duration: 1.2 } }}
+            className={cn("absolute", className)}
+        >
+            <motion.div
+                animate={{ y: [0, 15, 0] }}
+                transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                style={{ width, height }}
+                className="relative"
+            >
+                <div className={cn(
+                    "absolute inset-0 rounded-full bg-gradient-to-r to-transparent",
+                    gradient,
+                    "backdrop-blur-[2px] border-2 border-white/[0.15]",
+                    "shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]",
+                    "after:absolute after:inset-0 after:rounded-full",
+                    "after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"
+                )} />
+            </motion.div>
+        </motion.div>
+    );
+}
+
+function AnimatedBackground() {
+    return (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.04] via-transparent to-rose-500/[0.04] blur-3xl" />
+            <ElegantShape delay={0.2} width={500} height={120} rotate={12} gradient="from-amber-500/[0.12]" className="left-[-8%] top-[10%]" />
+            <ElegantShape delay={0.4} width={400} height={100} rotate={-15} gradient="from-rose-500/[0.10]" className="right-[-5%] top-[60%]" />
+            <ElegantShape delay={0.3} width={250} height={70} rotate={-8} gradient="from-violet-500/[0.10]" className="left-[5%] bottom-[8%]" />
+            <ElegantShape delay={0.6} width={180} height={50} rotate={20} gradient="from-amber-400/[0.12]" className="right-[10%] top-[8%]" />
+            <ElegantShape delay={0.5} width={130} height={38} rotate={-22} gradient="from-orange-500/[0.10]" className="left-[25%] top-[4%]" />
+        </div>
+    );
+}
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const COUNTRIES = [
     'Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Belgium','Brazil','Bulgaria',
@@ -15,15 +63,17 @@ const COUNTRIES = [
 ];
 
 const SUB_TYPES = [
-    { id: 'findom', label: 'Financial Submission', desc: 'Tributes, wallets, coin sacrifices' },
-    { id: 'tasks', label: 'Task-Based Obedience', desc: 'Daily assignments, proof submission' },
+    { id: 'findom',      label: 'Financial Submission',  desc: 'Tributes, wallets, coin sacrifices' },
+    { id: 'tasks',       label: 'Task-Based Obedience',  desc: 'Daily assignments, proof submission' },
     { id: 'humiliation', label: 'Humiliation & Control', desc: 'Commands, degradation, denial' },
-    { id: 'service', label: 'Service Submission', desc: 'Serving, caretaking, devotion' },
-    { id: 'worship', label: 'Worship & Devotion', desc: 'Kneeling rituals, adoration' },
-    { id: 'all', label: 'All of the Above', desc: 'Full submission across all categories' },
+    { id: 'service',     label: 'Service Submission',    desc: 'Serving, caretaking, devotion' },
+    { id: 'worship',     label: 'Worship & Devotion',    desc: 'Kneeling rituals, adoration' },
+    { id: 'all',         label: 'All of the Above',      desc: 'Full submission across all categories' },
 ];
 
 type Step = 'welcome' | 'identity' | 'about' | 'type' | 'done';
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
     const [step, setStep] = useState<Step>('welcome');
@@ -31,7 +81,6 @@ export default function OnboardingPage() {
     const [saving, setSaving] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
 
-    // Fields
     const [name, setName] = useState('');
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -49,153 +98,159 @@ export default function OnboardingPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { window.location.href = '/login'; return; }
             setUserId(user.id);
-
-            // Check if already onboarded (has a real name set)
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('name, parameters')
-                .eq('id', user.id)
-                .maybeSingle();
-
-            if (profile?.parameters?.onboarding_seen === true) {
-                window.location.href = '/profile';
-                return;
-            }
-
+            const { data: profile } = await supabase.from('profiles').select('parameters').eq('id', user.id).maybeSingle();
+            if (profile?.parameters?.onboarding_seen === true) { window.location.href = '/profile'; return; }
             setLoading(false);
         };
         init();
     }, []);
 
     const handlePhotoSelect = async (file: File) => {
-        const preview = URL.createObjectURL(file);
-        setPhotoPreview(preview);
+        setPhotoPreview(URL.createObjectURL(file));
         setPhotoUploading(true);
-
         try {
             const { uploadToSupabase } = await import('@/scripts/mediaSupabase');
             const url = await uploadToSupabase('media', 'avatars', file);
             setPhotoUrl(url.startsWith('failed') ? null : url);
-        } catch {
-            setPhotoUrl(null);
-        }
+        } catch { setPhotoUrl(null); }
         setPhotoUploading(false);
     };
 
-    const toggleSubType = (id: string) => {
-        setSubTypes(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        );
-    };
+    const toggleSubType = (id: string) =>
+        setSubTypes(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
     const handleFinish = async () => {
         if (!userId) return;
         setSaving(true);
         try {
             const supabase = createClient();
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('parameters')
-                .eq('id', userId)
-                .maybeSingle();
-
+            const { data: profile } = await supabase.from('profiles').select('parameters').eq('id', userId).maybeSingle();
             const existingParams = profile?.parameters || {};
             const updates: any = {
                 name: name.trim(),
-                parameters: {
-                    ...existingParams,
-                    age: age ? parseInt(age) : null,
-                    country: country || null,
-                    sub_types: subTypes,
-                    onboarding_seen: true,
-                },
+                parameters: { ...existingParams, age: age ? parseInt(age) : null, country: country || null, sub_types: subTypes, onboarding_seen: true },
             };
             if (photoUrl) updates.avatar_url = photoUrl;
-
             await supabase.from('profiles').update(updates).eq('id', userId);
             setStep('done');
             setTimeout(() => { window.location.href = '/profile'; }, 2000);
-        } catch {
-            setSaving(false);
-        }
+        } catch { setSaving(false); }
     };
 
-    const filteredCountries = COUNTRIES.filter(c =>
-        c.toLowerCase().includes(countrySearch.toLowerCase())
-    );
+    const filteredCountries = COUNTRIES.filter(c => c.toLowerCase().includes(countrySearch.toLowerCase()));
+
+    const fadeIn: Variants = {
+        hidden: { opacity: 0, y: 24 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.4, 0.25, 1] } },
+    };
 
     if (loading) return (
-        <div style={styles.page}>
-            <div style={styles.spinner} />
+        <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full border border-amber-500/20 border-t-amber-500/80 animate-spin" />
         </div>
     );
 
     return (
-        <div style={styles.page}>
-            <style>{css}</style>
-            <input
-                ref={fileRef} type="file" accept="image/*"
-                style={{ display: 'none' }}
-                onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }}
-            />
+        <div className="relative min-h-screen bg-[#030303] flex items-start justify-center overflow-hidden font-[Rajdhani,sans-serif]">
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;600&display=swap');
+                input:focus { border-color: rgba(197,160,89,0.5) !important; outline: none; }
+                input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+                .ob-tap:active { opacity: 0.75; }
+            `}</style>
 
-            {step === 'welcome' && <WelcomeStep onNext={() => setStep('identity')} />}
+            <AnimatedBackground />
 
-            {step === 'identity' && (
-                <IdentityStep
-                    name={name} setName={setName}
-                    photoPreview={photoPreview} photoUploading={photoUploading}
-                    onPhotoClick={() => fileRef.current?.click()}
-                    onNext={() => setStep('about')}
-                />
-            )}
+            {/* bottom + top fade overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/70 pointer-events-none z-[1]" />
 
-            {step === 'about' && (
-                <AboutStep
-                    age={age} setAge={setAge}
-                    country={country} setCountry={setCountry}
-                    countrySearch={countrySearch} setCountrySearch={setCountrySearch}
-                    showCountryList={showCountryList} setShowCountryList={setShowCountryList}
-                    filteredCountries={filteredCountries}
-                    onNext={() => setStep('type')}
-                    onBack={() => setStep('identity')}
-                />
-            )}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }} />
 
-            {step === 'type' && (
-                <TypeStep
-                    subTypes={subTypes}
-                    toggle={toggleSubType}
-                    onNext={handleFinish}
-                    onBack={() => setStep('about')}
-                    saving={saving}
-                />
-            )}
-
-            {step === 'done' && <DoneStep />}
+            <motion.div
+                key={step}
+                variants={fadeIn}
+                initial="hidden"
+                animate="visible"
+                className="relative z-10 w-full max-w-md px-7 pt-14 pb-12 flex flex-col min-h-screen"
+            >
+                {step === 'welcome' && <WelcomeStep onNext={() => setStep('identity')} />}
+                {step === 'identity' && (
+                    <IdentityStep name={name} setName={setName} photoPreview={photoPreview}
+                        photoUploading={photoUploading} onPhotoClick={() => fileRef.current?.click()}
+                        onNext={() => setStep('about')} />
+                )}
+                {step === 'about' && (
+                    <AboutStep age={age} setAge={setAge} country={country} setCountry={setCountry}
+                        countrySearch={countrySearch} setCountrySearch={setCountrySearch}
+                        showCountryList={showCountryList} setShowCountryList={setShowCountryList}
+                        filteredCountries={filteredCountries}
+                        onNext={() => setStep('type')} onBack={() => setStep('identity')} />
+                )}
+                {step === 'type' && (
+                    <TypeStep subTypes={subTypes} toggle={toggleSubType}
+                        onNext={handleFinish} onBack={() => setStep('about')} saving={saving} />
+                )}
+                {step === 'done' && <DoneStep />}
+            </motion.div>
         </div>
     );
 }
 
-// ─── STEPS ────────────────────────────────────────────────────────────────────
+// ─── Steps ────────────────────────────────────────────────────────────────────
+
+function Label({ children }: { children: React.ReactNode }) {
+    return <p className="font-[Orbitron] text-[0.45rem] tracking-[3px] text-amber-400/50 uppercase mb-3">{children}</p>;
+}
+function Divider() {
+    return <div className="w-9 h-px bg-amber-500/30 mb-6" />;
+}
+function ProgressDots({ total, current }: { total: number; current: number }) {
+    return (
+        <div className="flex gap-1.5 mb-7">
+            {Array.from({ length: total }).map((_, i) => (
+                <div key={i} className="h-1 rounded-full transition-all duration-300"
+                    style={{ width: i === current ? 24 : 8, background: i <= current ? '#c5a059' : 'rgba(255,255,255,0.12)' }} />
+            ))}
+        </div>
+    );
+}
+function Btn({ children, onClick, disabled, variant = 'primary', className = '' }: any) {
+    return (
+        <button onClick={onClick} disabled={disabled}
+            className={cn(
+                "px-4 py-3.5 rounded-md font-[Orbitron] text-[0.52rem] font-bold tracking-[2px] transition-opacity duration-150 disabled:cursor-not-allowed",
+                variant === 'primary' && "w-full bg-gradient-to-r from-amber-500 to-amber-700 text-black",
+                variant === 'ghost' && "border border-amber-500/25 text-amber-400/60 bg-transparent",
+                className
+            )}
+        >{children}</button>
+    );
+}
 
 function WelcomeStep({ onNext }: { onNext: () => void }) {
     return (
-        <div style={styles.card}>
-            <div style={styles.crown}>✦</div>
-            <div style={styles.label}>PRIVATE ACCESS GRANTED</div>
-            <h1 style={styles.title}>Welcome to<br />Queen Karin's Space</h1>
-            <div style={styles.divider} />
-            <p style={styles.body}>
-                Your tribute has been received. This is not a public platform — it is a private, curated space built for submission, discipline, and devotion.
-            </p>
-            <p style={styles.body}>
-                Before you enter, I need to know who you are. This will take less than a minute.
-            </p>
-            <p style={{ ...styles.body, color: 'rgba(197,160,89,0.6)', fontSize: '0.8rem' }}>
-                Your name and photo will appear in the global presence feed and leaderboard — visible to all members. Choose wisely.
-            </p>
-            <button style={styles.btn} onClick={onNext}>BEGIN</button>
+        <div className="flex flex-col flex-1 justify-between">
+            <div>
+                <div className="text-amber-400 text-2xl mb-5 font-[Cinzel]">✦</div>
+                <Label>Private Access Granted</Label>
+                <h1 className="font-[Cinzel] text-2xl text-white font-normal leading-snug mb-4 tracking-wide">
+                    Welcome to<br />Queen Karin's Space
+                </h1>
+                <Divider />
+                <p className="text-sm text-white/40 leading-relaxed mb-4">
+                    Your tribute has been received. This is not a public platform — it is a private, curated space built for submission, discipline, and devotion.
+                </p>
+                <p className="text-sm text-white/40 leading-relaxed mb-4">
+                    Before you enter, I need to know who you are. This will take less than a minute.
+                </p>
+                <p className="text-xs text-amber-400/50 leading-relaxed">
+                    Your name and photo will appear in the global presence feed and leaderboard — visible to all members. Choose wisely.
+                </p>
+            </div>
+            <div className="mt-8">
+                <Btn onClick={onNext}>BEGIN</Btn>
+            </div>
         </div>
     );
 }
@@ -203,61 +258,57 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
 function IdentityStep({ name, setName, photoPreview, photoUploading, onPhotoClick, onNext }: any) {
     const ready = name.trim().length >= 2 && photoPreview;
     return (
-        <div style={styles.card}>
-            <div style={styles.progress}><ProgressDots total={3} current={0} /></div>
-            <div style={styles.label}>STEP 1 OF 3</div>
-            <h2 style={styles.stepTitle}>IDENTIFY YOURSELF</h2>
-            <div style={styles.divider} />
+        <div className="flex flex-col flex-1 justify-between">
+            <div>
+                <ProgressDots total={3} current={0} />
+                <Label>Step 1 of 3</Label>
+                <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">IDENTIFY YOURSELF</h2>
+                <Divider />
 
-            {/* Photo */}
-            <div style={styles.field}>
-                <div style={styles.fieldLabel}>PHOTO <span style={styles.required}>required</span></div>
-                <div style={styles.fieldHint}>Visible in global feed, leaderboard, and presence strip. Use something from your private world.</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '12px' }}>
-                    <div
-                        style={{ ...styles.avatar, ...(photoPreview ? {} : styles.avatarEmpty) }}
-                        onClick={onPhotoClick}
-                        className="ob-tap"
-                    >
-                        {photoPreview
-                            ? <img src={photoPreview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                            : <i className="fas fa-camera" style={{ color: 'rgba(197,160,89,0.4)', fontSize: '1.2rem' }} />
-                        }
-                    </div>
-                    <div>
-                        <div style={{ fontSize: '0.82rem', color: photoPreview ? 'rgba(100,210,100,0.7)' : 'rgba(255,255,255,0.25)', marginBottom: '4px' }}>
-                            {photoUploading ? 'Uploading...' : photoPreview ? 'Photo selected' : 'No photo selected'}
+                {/* Photo */}
+                <div className="mb-6">
+                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-1 flex items-center gap-2">
+                        PHOTO <span className="text-red-400/70 text-[0.55rem]">required</span>
+                    </p>
+                    <p className="text-xs text-white/25 leading-relaxed mb-3">
+                        Visible in global feed, leaderboard, and presence strip. Use something from your private world.
+                    </p>
+                    <div className="flex items-center gap-4">
+                        <div onClick={onPhotoClick} className="ob-tap w-[76px] h-[76px] rounded-full overflow-hidden flex-shrink-0 cursor-pointer flex items-center justify-center border border-amber-500/25 bg-amber-500/[0.03]">
+                            {photoPreview
+                                ? <img src={photoPreview} className="w-full h-full object-cover" alt="" />
+                                : <i className="fas fa-camera text-amber-400/40 text-lg" />}
                         </div>
-                        <button style={styles.smallBtn} onClick={onPhotoClick}>
-                            {photoPreview ? 'Change photo' : 'Upload photo'}
-                        </button>
+                        <div>
+                            <p className="text-[0.82rem] mb-1" style={{ color: photoPreview ? 'rgba(100,210,100,0.7)' : 'rgba(255,255,255,0.25)' }}>
+                                {photoUploading ? 'Uploading...' : photoPreview ? 'Photo selected' : 'No photo selected'}
+                            </p>
+                            <button onClick={onPhotoClick} className="text-xs text-white/35 border border-white/10 rounded px-2.5 py-1 cursor-pointer bg-transparent">
+                                {photoPreview ? 'Change' : 'Upload photo'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Name */}
-            <div style={styles.field}>
-                <div style={styles.fieldLabel}>YOUR NAME <span style={styles.required}>required</span></div>
-                <div style={styles.fieldHint}>How the Queen and other members will address you. Visible on the leaderboard. Do not use your real name.</div>
-                <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Enter a name..."
-                    maxLength={30}
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    autoComplete="off"
-                />
+                {/* Name */}
+                <div>
+                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-1 flex items-center gap-2">
+                        YOUR NAME <span className="text-red-400/70 text-[0.55rem]">required</span>
+                    </p>
+                    <p className="text-xs text-white/25 leading-relaxed mb-2.5">
+                        How the Queen and other members will address you. Visible on the leaderboard. Do not use your real name.
+                    </p>
+                    <input
+                        className="w-full bg-white/[0.04] border border-white/10 text-white font-[Rajdhani] text-base px-3.5 py-2.5 rounded-md"
+                        type="text" placeholder="Enter a name..." maxLength={30}
+                        value={name} onChange={e => setName(e.target.value)} autoComplete="off"
+                    />
+                </div>
             </div>
-
-            <button
-                style={{ ...styles.btn, opacity: ready ? 1 : 0.3 }}
-                disabled={!ready}
-                onClick={onNext}
-            >
-                CONTINUE
-            </button>
-            <div style={styles.hint}>Both photo and name are required to proceed.</div>
+            <div className="mt-8">
+                <Btn onClick={onNext} disabled={!ready} className={!ready ? 'opacity-30' : ''}>CONTINUE</Btn>
+                <p className="text-[0.7rem] text-white/12 text-center mt-3">Both photo and name are required to proceed.</p>
+            </div>
         </div>
     );
 }
@@ -265,66 +316,53 @@ function IdentityStep({ name, setName, photoPreview, photoUploading, onPhotoClic
 function AboutStep({ age, setAge, country, setCountry, countrySearch, setCountrySearch, showCountryList, setShowCountryList, filteredCountries, onNext, onBack }: any) {
     const ready = age && parseInt(age) >= 18 && country;
     return (
-        <div style={styles.card}>
-            <div style={styles.progress}><ProgressDots total={3} current={1} /></div>
-            <div style={styles.label}>STEP 2 OF 3</div>
-            <h2 style={styles.stepTitle}>ABOUT YOU</h2>
-            <div style={styles.divider} />
+        <div className="flex flex-col flex-1 justify-between">
+            <div>
+                <ProgressDots total={3} current={1} />
+                <Label>Step 2 of 3</Label>
+                <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">ABOUT YOU</h2>
+                <Divider />
 
-            {/* Age */}
-            <div style={styles.field}>
-                <div style={styles.fieldLabel}>AGE <span style={styles.required}>required · must be 18+</span></div>
-                <input
-                    style={styles.input}
-                    type="number"
-                    placeholder="Your age"
-                    min={18}
-                    max={99}
-                    value={age}
-                    onChange={e => setAge(e.target.value)}
-                />
-                {age && parseInt(age) < 18 && (
-                    <div style={{ color: '#e05252', fontSize: '0.75rem', marginTop: '6px' }}>You must be 18 or older to access this space.</div>
-                )}
+                <div className="mb-6">
+                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-2 flex items-center gap-2">
+                        AGE <span className="text-red-400/70 text-[0.55rem]">required · must be 18+</span>
+                    </p>
+                    <input
+                        className="w-full bg-white/[0.04] border border-white/10 text-white font-[Rajdhani] text-base px-3.5 py-2.5 rounded-md"
+                        type="number" placeholder="Your age" min={18} max={99}
+                        value={age} onChange={e => setAge(e.target.value)}
+                    />
+                    {age && parseInt(age) < 18 && (
+                        <p className="text-red-400 text-xs mt-1.5">You must be 18 or older to access this space.</p>
+                    )}
+                </div>
+
+                <div className="relative">
+                    <p className="font-[Orbitron] text-[0.42rem] tracking-[2px] text-amber-400/55 uppercase mb-2 flex items-center gap-2">
+                        COUNTRY <span className="text-red-400/70 text-[0.55rem]">required</span>
+                    </p>
+                    <input
+                        className="w-full bg-white/[0.04] border border-white/10 text-white font-[Rajdhani] text-base px-3.5 py-2.5 rounded-md"
+                        type="text" placeholder="Search your country..." autoComplete="off"
+                        value={countrySearch || country}
+                        onChange={e => { setCountrySearch(e.target.value); setCountry(''); setShowCountryList(true); }}
+                        onFocus={() => setShowCountryList(true)}
+                    />
+                    {showCountryList && filteredCountries.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 bg-[#111] border border-amber-500/20 rounded-md z-50 max-h-48 overflow-y-auto">
+                            {filteredCountries.slice(0, 8).map((c: string) => (
+                                <div key={c} className="ob-tap px-3.5 py-2.5 text-sm text-white/55 border-b border-white/[0.05] cursor-pointer hover:text-white/80"
+                                    onClick={() => { setCountry(c); setCountrySearch(c); setShowCountryList(false); }}>
+                                    {c}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
-
-            {/* Country */}
-            <div style={{ ...styles.field, position: 'relative' }}>
-                <div style={styles.fieldLabel}>COUNTRY <span style={styles.required}>required</span></div>
-                <input
-                    style={styles.input}
-                    type="text"
-                    placeholder="Search your country..."
-                    value={countrySearch || country}
-                    onChange={e => { setCountrySearch(e.target.value); setCountry(''); setShowCountryList(true); }}
-                    onFocus={() => setShowCountryList(true)}
-                    autoComplete="off"
-                />
-                {showCountryList && filteredCountries.length > 0 && (
-                    <div style={styles.dropdown}>
-                        {filteredCountries.slice(0, 8).map((c: string) => (
-                            <div
-                                key={c}
-                                style={styles.dropdownItem}
-                                className="ob-tap"
-                                onClick={() => { setCountry(c); setCountrySearch(c); setShowCountryList(false); }}
-                            >
-                                {c}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                <button style={{ ...styles.btn, ...styles.backBtn }} onClick={onBack}>BACK</button>
-                <button
-                    style={{ ...styles.btn, flex: 1, opacity: ready ? 1 : 0.3 }}
-                    disabled={!ready}
-                    onClick={onNext}
-                >
-                    CONTINUE
-                </button>
+            <div className="flex gap-2.5 mt-8">
+                <Btn variant="ghost" onClick={onBack} className="flex-none px-5">BACK</Btn>
+                <Btn onClick={onNext} disabled={!ready} className={cn("flex-1", !ready && "opacity-30")}>CONTINUE</Btn>
             </div>
         </div>
     );
@@ -333,52 +371,42 @@ function AboutStep({ age, setAge, country, setCountry, countrySearch, setCountry
 function TypeStep({ subTypes, toggle, onNext, onBack, saving }: any) {
     const ready = subTypes.length > 0;
     return (
-        <div style={styles.card}>
-            <div style={styles.progress}><ProgressDots total={3} current={2} /></div>
-            <div style={styles.label}>STEP 3 OF 3</div>
-            <h2 style={styles.stepTitle}>WHAT DRAWS YOU HERE</h2>
-            <div style={styles.divider} />
-            <p style={{ ...styles.body, marginBottom: '20px' }}>Select everything that applies. This helps me understand what you are looking for.</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '28px' }}>
-                {SUB_TYPES.map(type => (
-                    <div
-                        key={type.id}
-                        style={{
-                            ...styles.typeCard,
-                            ...(subTypes.includes(type.id) ? styles.typeCardActive : {}),
-                        }}
-                        className="ob-tap"
-                        onClick={() => toggle(type.id)}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{
-                                width: '18px', height: '18px', borderRadius: '50%',
-                                border: `1.5px solid ${subTypes.includes(type.id) ? '#c5a059' : 'rgba(255,255,255,0.2)'}`,
-                                background: subTypes.includes(type.id) ? '#c5a059' : 'transparent',
-                                flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}>
-                                {subTypes.includes(type.id) && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000' }} />}
+        <div className="flex flex-col flex-1 justify-between">
+            <div>
+                <ProgressDots total={3} current={2} />
+                <Label>Step 3 of 3</Label>
+                <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">WHAT DRAWS YOU HERE</h2>
+                <Divider />
+                <p className="text-sm text-white/40 leading-relaxed mb-5">Select everything that applies. This helps me understand what you are looking for.</p>
+                <div className="flex flex-col gap-2.5">
+                    {SUB_TYPES.map(type => {
+                        const active = subTypes.includes(type.id);
+                        return (
+                            <div key={type.id} onClick={() => toggle(type.id)}
+                                className={cn("ob-tap px-4 py-3.5 rounded-lg cursor-pointer border transition-all duration-200",
+                                    active ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-white/[0.08] bg-white/[0.02]"
+                                )}>
+                                <div className="flex items-center gap-3">
+                                    <div className={cn("w-[18px] h-[18px] rounded-full border flex-shrink-0 flex items-center justify-center transition-all",
+                                        active ? "border-amber-400 bg-amber-400" : "border-white/20 bg-transparent"
+                                    )}>
+                                        {active && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                                    </div>
+                                    <div>
+                                        <p className={cn("text-[0.88rem] font-semibold tracking-[0.5px]", active ? "text-amber-400" : "text-white/75")}>{type.label}</p>
+                                        <p className="text-[0.72rem] text-white/30 mt-0.5">{type.desc}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <div style={{ fontSize: '0.88rem', color: subTypes.includes(type.id) ? '#c5a059' : 'rgba(255,255,255,0.75)', fontWeight: 600, letterSpacing: '0.5px' }}>{type.label}</div>
-                                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{type.desc}</div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                        );
+                    })}
+                </div>
             </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-                <button style={{ ...styles.btn, ...styles.backBtn }} onClick={onBack}>BACK</button>
-                <button
-                    style={{ ...styles.btn, flex: 1, opacity: ready ? 1 : 0.3 }}
-                    disabled={!ready || saving}
-                    onClick={onNext}
-                >
+            <div className="flex gap-2.5 mt-8">
+                <Btn variant="ghost" onClick={onBack} className="flex-none px-5">BACK</Btn>
+                <Btn onClick={onNext} disabled={!ready || saving} className={cn("flex-1", (!ready || saving) && "opacity-30")}>
                     {saving ? 'SAVING...' : 'ENTER THE SPACE'}
-                </button>
+                </Btn>
             </div>
         </div>
     );
@@ -386,238 +414,13 @@ function TypeStep({ subTypes, toggle, onNext, onBack, saving }: any) {
 
 function DoneStep() {
     return (
-        <div style={{ ...styles.card, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '16px', color: '#c5a059' }}>✦</div>
-            <h2 style={styles.stepTitle}>YOUR RECORD IS SET</h2>
-            <div style={styles.divider} />
-            <p style={styles.body}>Welcome. Your station is being prepared.</p>
-            <p style={{ ...styles.body, color: 'rgba(197,160,89,0.5)', fontSize: '0.78rem' }}>Entering now...</p>
+        <div className="flex flex-col items-center justify-center flex-1 text-center">
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6 }}
+                className="text-amber-400 text-4xl mb-5 font-[Cinzel]">✦</motion.div>
+            <h2 className="font-[Orbitron] text-sm text-white tracking-[2px] mb-4">YOUR RECORD IS SET</h2>
+            <div className="w-9 h-px bg-amber-500/30 mb-6 mx-auto" />
+            <p className="text-sm text-white/40 leading-relaxed">Welcome. Your station is being prepared.</p>
+            <p className="text-xs text-amber-400/40 mt-2">Entering now...</p>
         </div>
     );
 }
-
-function ProgressDots({ total, current }: { total: number; current: number }) {
-    return (
-        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '24px' }}>
-            {Array.from({ length: total }).map((_, i) => (
-                <div key={i} style={{
-                    height: '4px',
-                    width: i === current ? '24px' : '8px',
-                    borderRadius: '2px',
-                    background: i <= current ? '#c5a059' : 'rgba(255,255,255,0.12)',
-                    transition: 'all 0.3s',
-                }} />
-            ))}
-        </div>
-    );
-}
-
-// ─── STYLES ───────────────────────────────────────────────────────────────────
-
-const styles: Record<string, React.CSSProperties> = {
-    page: {
-        minHeight: '100svh',
-        background: '#050403',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        padding: '0 0 40px',
-        fontFamily: "'Rajdhani', sans-serif",
-    },
-    card: {
-        width: '100%',
-        maxWidth: '460px',
-        padding: '52px 28px 40px',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100svh',
-    },
-    crown: {
-        fontSize: '1.4rem',
-        color: '#c5a059',
-        marginBottom: '20px',
-        fontFamily: "'Cinzel', serif",
-    },
-    label: {
-        fontFamily: "'Orbitron', sans-serif",
-        fontSize: '0.45rem',
-        letterSpacing: '3px',
-        color: 'rgba(197,160,89,0.5)',
-        marginBottom: '12px',
-        textTransform: 'uppercase',
-    },
-    title: {
-        fontFamily: "'Cinzel', serif",
-        fontSize: '1.4rem',
-        color: '#fff',
-        fontWeight: 400,
-        letterSpacing: '1px',
-        margin: '0 0 16px',
-        lineHeight: 1.4,
-    },
-    stepTitle: {
-        fontFamily: "'Orbitron', sans-serif",
-        fontSize: '0.75rem',
-        color: '#fff',
-        letterSpacing: '2px',
-        margin: '0 0 14px',
-    },
-    divider: {
-        width: '36px',
-        height: '1px',
-        background: '#c5a059',
-        opacity: 0.35,
-        marginBottom: '22px',
-    },
-    body: {
-        fontSize: '0.92rem',
-        color: 'rgba(255,255,255,0.42)',
-        lineHeight: 1.75,
-        margin: '0 0 14px',
-    },
-    btn: {
-        width: '100%',
-        padding: '14px',
-        background: 'linear-gradient(135deg,#c5a059,#8b6914)',
-        border: 'none',
-        color: '#000',
-        fontFamily: "'Orbitron', sans-serif",
-        fontSize: '0.52rem',
-        fontWeight: 700,
-        letterSpacing: '2px',
-        cursor: 'pointer',
-        borderRadius: '6px',
-        marginTop: '8px',
-        transition: 'opacity 0.15s',
-    },
-    backBtn: {
-        width: 'auto',
-        flex: 'none',
-        paddingLeft: '18px',
-        paddingRight: '18px',
-        background: 'transparent',
-        border: '1px solid rgba(197,160,89,0.25)',
-        color: 'rgba(197,160,89,0.6)',
-    },
-    smallBtn: {
-        background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.1)',
-        color: 'rgba(255,255,255,0.4)',
-        fontSize: '0.7rem',
-        padding: '5px 10px',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontFamily: "'Rajdhani', sans-serif",
-    },
-    field: {
-        marginBottom: '22px',
-    },
-    fieldLabel: {
-        fontFamily: "'Orbitron', sans-serif",
-        fontSize: '0.42rem',
-        letterSpacing: '2px',
-        color: 'rgba(197,160,89,0.55)',
-        marginBottom: '8px',
-        textTransform: 'uppercase',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-    },
-    fieldHint: {
-        fontSize: '0.78rem',
-        color: 'rgba(255,255,255,0.25)',
-        lineHeight: 1.55,
-        marginBottom: '10px',
-    },
-    required: {
-        color: 'rgba(224,82,82,0.7)',
-        fontSize: '0.55rem',
-        letterSpacing: '1px',
-    },
-    input: {
-        width: '100%',
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        color: '#fff',
-        fontFamily: "'Rajdhani', sans-serif",
-        fontSize: '1rem',
-        padding: '11px 14px',
-        borderRadius: '6px',
-        outline: 'none',
-        boxSizing: 'border-box',
-    },
-    avatar: {
-        width: '76px',
-        height: '76px',
-        borderRadius: '50%',
-        overflow: 'hidden',
-        flexShrink: 0,
-        cursor: 'pointer',
-    },
-    avatarEmpty: {
-        border: '1.5px solid rgba(197,160,89,0.25)',
-        background: 'rgba(197,160,89,0.03)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    dropdown: {
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        right: 0,
-        background: '#111',
-        border: '1px solid rgba(197,160,89,0.2)',
-        borderRadius: '6px',
-        zIndex: 100,
-        maxHeight: '200px',
-        overflowY: 'auto',
-    },
-    dropdownItem: {
-        padding: '10px 14px',
-        fontSize: '0.9rem',
-        color: 'rgba(255,255,255,0.6)',
-        cursor: 'pointer',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-    },
-    typeCard: {
-        padding: '14px 16px',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        background: 'rgba(255,255,255,0.02)',
-    },
-    typeCardActive: {
-        border: '1px solid rgba(197,160,89,0.4)',
-        background: 'rgba(197,160,89,0.06)',
-    },
-    hint: {
-        fontSize: '0.7rem',
-        color: 'rgba(255,255,255,0.12)',
-        textAlign: 'center',
-        marginTop: '10px',
-    },
-    progress: {
-        marginBottom: '0',
-    },
-    spinner: {
-        width: '36px',
-        height: '36px',
-        border: '1px solid rgba(197,160,89,0.2)',
-        borderTopColor: '#c5a059',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        margin: 'auto',
-        marginTop: '50vh',
-    },
-};
-
-const css = `
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;600&display=swap');
-    * { box-sizing: border-box; }
-    .ob-tap:active { opacity: 0.75; }
-    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-    input:focus { border-color: rgba(197,160,89,0.5) !important; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-`;
