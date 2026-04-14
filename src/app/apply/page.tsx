@@ -162,15 +162,23 @@ function GoldDivider() {
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] font-normal text-[2rem] sm:text-[2.2rem] text-white/90 text-center mb-1 leading-snug">{children}</p>;
+    return (
+        <p className="font-['Cinzel'] font-normal text-[1.45rem] sm:text-[1.6rem] tracking-widest text-center mb-2 leading-snug bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400/80 bg-clip-text text-transparent">
+            {children}
+        </p>
+    );
 }
 
 function Question({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] font-light text-[1.6rem] sm:text-[1.8rem] text-white/75 text-center leading-snug mb-6">{children}</p>;
+    return (
+        <p className="font-['Cinzel'] font-normal text-[0.88rem] sm:text-[0.95rem] tracking-wider text-center text-amber-400/65 mb-6 leading-relaxed">
+            {children}
+        </p>
+    );
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-white/12 text-center mb-4 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.78rem] text-white/10 text-center mb-4 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
@@ -279,9 +287,9 @@ function ChoiceBtn({ label, active, onClick }: any) {
 
 function StepHeader({ n, topic }: { n: string; topic: string }) {
     return (
-        <div className="mb-8">
-            <p className="font-['Cormorant_Garamond'] italic text-[0.75rem] text-white/15 mb-3 tracking-widest">{n}</p>
-            <h2 className="font-['Cormorant_Garamond'] font-normal text-[2.8rem] sm:text-[3rem] text-white leading-none mb-6">
+        <div className="mb-6">
+            <p className="font-['Cormorant_Garamond'] italic text-[0.72rem] text-white/15 mb-2 tracking-widest">{n}</p>
+            <h2 className="font-['Cormorant_Garamond'] font-normal text-[2rem] sm:text-[2.2rem] text-white/80 leading-none mb-4">
                 {topic}
             </h2>
             <GoldDivider />
@@ -334,11 +342,29 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
         }
     }, [onBack]);
 
+    // Letter-fly animation: going forward the box launches upward like a sent letter
     const qVariants: Variants = {
-        enter: (d: number) => ({ opacity: 0, y: d > 0 ? 28 : -28 }),
-        center: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.4, 0.25, 1] } },
-        exit: (d: number) => ({ opacity: 0, y: d > 0 ? -18 : 18, transition: { duration: 0.25, ease: [0.4, 0, 1, 1] } }),
+        enter: (_d: number) => ({ opacity: 0, y: 55, scale: 0.97 }),
+        center: { opacity: 1, y: 0, scale: 1, rotate: 0, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } },
+        exit: (d: number) => d > 0
+            ? { opacity: 0, y: -220, scale: 0.92, rotate: -1.5, transition: { duration: 0.48, ease: [0.4, 0, 1, 1] } }
+            : { opacity: 0, y: 40, scale: 0.97, transition: { duration: 0.28, ease: [0.4, 0, 1, 1] } },
     };
+
+    // Enter key to advance (skip for textarea)
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key !== 'Enter' || e.shiftKey) return;
+            if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+            const currentQ = qsRef.current[Math.min(idxRef.current, qsRef.current.length - 1)];
+            if (currentQ && !currentQ.auto && currentQ.ready) {
+                e.preventDefault();
+                next();
+            }
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [next]);
 
     if (!q) return null;
 
@@ -347,7 +373,7 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
             <StepHeader n={n} topic={topic} />
 
             {/* Sub-progress */}
-            <div className="flex gap-1.5 mb-10">
+            <div className="flex gap-1.5 mb-7">
                 {qs.map((_, i) => (
                     <div key={i} className="h-px flex-1 transition-all duration-500"
                         style={{
@@ -361,12 +387,15 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
             <AnimatePresence mode="wait" custom={dir}>
                 <motion.div key={q.id} custom={dir} variants={qVariants}
                     initial="enter" animate="center" exit="exit">
-                    {q.node(next)}
+                    {/* Letter / card box */}
+                    <div className="border border-amber-500/[0.18] bg-gradient-to-b from-white/[0.025] to-transparent px-6 py-8 sm:px-8 sm:py-9">
+                        {q.node(next)}
+                    </div>
                 </motion.div>
             </AnimatePresence>
 
-            {/* Continue sits right below the question content */}
-            <div className="mt-7 space-y-4">
+            {/* Continue sits right below the box */}
+            <div className="mt-5 space-y-4">
                 {!q.auto && (
                     <PrimaryBtn onClick={next} disabled={!q.ready}>Continue</PrimaryBtn>
                 )}
@@ -454,7 +483,7 @@ export default function ApplyPage() {
     return (
         <div className="relative min-h-screen bg-[#030303] flex items-start justify-center overflow-hidden">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
                 * { box-sizing: border-box; }
                 input[type=range] { -webkit-appearance:none; appearance:none; height:2px; background:rgba(255,255,255,0.08); outline:none; width:100%; cursor:pointer; border-radius:2px; }
                 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; box-shadow:0 0 8px rgba(197,160,89,0.4); }
