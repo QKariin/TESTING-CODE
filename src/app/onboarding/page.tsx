@@ -119,7 +119,10 @@ export default function OnboardingPage() {
             const existingParams = profile?.parameters || {};
             const updates: any = {
                 name: name.trim(),
-                parameters: { ...existingParams, age: age ? parseInt(age) : null, country: country.trim() || null, sub_types: subTypes, onboarding_seen: true },
+                age: age ? parseInt(age) : null,
+                country: country.trim() || null,
+                sub_types: subTypes,
+                parameters: { ...existingParams, onboarding_seen: true },
             };
             if (photoUrl) updates.avatar_url = photoUrl;
             await supabase.from('profiles').update(updates).eq('id', userId);
