@@ -44,6 +44,22 @@ export async function POST(req: Request) {
 
         try {
             // ====================================================
+            // 0. APPLICATION FEE
+            // ====================================================
+            if (metadata.type === 'APPLICATION_FEE') {
+                const { applicationId, email } = metadata;
+                if (applicationId) {
+                    await supabaseAdmin.from('applications').update({
+                        payment_status: 'paid',
+                        payment_amount: session.amount_total || 9500,
+                        stripe_session_id: session.id,
+                        status: 'pending',
+                    }).eq('id', applicationId);
+                    console.log(`✅ Application fee paid for ${email} — app ${applicationId}`);
+                }
+            }
+
+            // ====================================================
             // A. COIN PURCHASE & TRIBUTE ACTIVATION
             // ====================================================
             if (metadata.type === 'ENTRANCE_TRIBUTE') {
