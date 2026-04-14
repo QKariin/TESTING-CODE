@@ -232,7 +232,17 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         onBack={() => { markPendingRead(); setSelectedUser(null); setProfileTab('chat'); }}
                         adminEmail={userEmail}
                         onReviewed={() => loadData()}
-                        onOpenReview={setRootReviewTask}
+                        onOpenReview={(task) => {
+                            // iOS proxy trick: focus a hidden input synchronously within the gesture
+                            // so iOS shows the keyboard; modal's useEffect transfers focus to textarea
+                            const proxy = document.createElement('input');
+                            proxy.type = 'text';
+                            proxy.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;';
+                            document.body.appendChild(proxy);
+                            proxy.focus();
+                            (window as any).__reviewFocusProxy = proxy;
+                            setRootReviewTask(task);
+                        }}
                         onUserUpdated={(updated) => {
                             setSelectedUser(updated);
                             setUsers(prev => prev.map(u => u.memberId === updated.memberId ? updated : u));
@@ -243,7 +253,15 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         stats={stats}
                         onSelectUser={(u) => { setSelectedUser(u); setProfileTab('tasks'); }}
                         onRefresh={loadData}
-                        onOpenReview={setRootReviewTask}
+                        onOpenReview={(task) => {
+                            const proxy = document.createElement('input');
+                            proxy.type = 'text';
+                            proxy.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;';
+                            document.body.appendChild(proxy);
+                            proxy.focus();
+                            (window as any).__reviewFocusProxy = proxy;
+                            setRootReviewTask(task);
+                        }}
                         onGoToReviews={() => setTab('home')} />
                 ) : tab === 'subjects' ? (
                     <SubjectsView
@@ -1453,10 +1471,15 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
     const touchStartY = useRef(0);
 
     // Auto-focus note field when modal opens (skip for routine — no note shown)
+    // iOS trick: proxy input was focused synchronously in the tap handler to capture the keyboard.
+    // Here we transfer focus to the real textarea; iOS keeps keyboard open on focus transfer.
     useEffect(() => {
         if (isRoutine) return;
-        const t = setTimeout(() => noteRef.current?.focus(), 150);
-        return () => clearTimeout(t);
+        requestAnimationFrame(() => {
+            noteRef.current?.focus();
+            const proxy = (window as any).__reviewFocusProxy;
+            if (proxy) { proxy.remove(); delete (window as any).__reviewFocusProxy; }
+        });
     }, [isRoutine]);
     const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; };
     const handleTouchEnd = (e: React.TouchEvent) => {
