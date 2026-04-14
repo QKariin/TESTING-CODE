@@ -261,7 +261,7 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
                         Most never get this far. You did — and that means something.
                     </p>
                     <p className="text-[0.95rem] text-white/50 leading-relaxed mb-5">
-                        This space was built for those who understand that real submission is a privilege, not a game. What happens here is private, intentional, and completely under Her control.
+                        This space was built for those who understand that real submission is a privilege, not a game. What happens here is private, intentional, and completely under my control.
                     </p>
                     <p className="text-[0.95rem] text-amber-400/60 leading-relaxed">
                         Before you step in — let me know who you are.
