@@ -4,11 +4,11 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const email = searchParams.get('email');
+        const memberId = searchParams.get('memberId') || searchParams.get('email');
         const requester = searchParams.get('requester')?.toLowerCase();
 
-        if (!email) {
-            return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
+        if (!memberId) {
+            return NextResponse.json({ success: false, error: "memberId is required." }, { status: 400 });
         }
 
         // Robust administrative client initialization
@@ -24,23 +24,21 @@ export async function GET(req: Request) {
 
         const since = searchParams.get('since'); // ISO timestamp — return only newer messages
 
-        const emailToQuery = email;
-
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', emailToQuery)
+                .eq('member_id', memberId)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
-            // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
+            // Initial load: get LAST 50 messages
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', emailToQuery)
+                .eq('member_id', memberId)
                 .order('created_at', { ascending: false })
                 .limit(50);
         }
@@ -71,10 +69,11 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { email, since, requester } = body;
+        const { memberId: rawMemberId, email, since, requester } = body;
+        const memberId = rawMemberId || email; // accept both memberId (UUID) and legacy email
 
-        if (!email) {
-            return NextResponse.json({ success: false, error: "Email is required." }, { status: 400 });
+        if (!memberId) {
+            return NextResponse.json({ success: false, error: "memberId is required." }, { status: 400 });
         }
 
         // Robust administrative client initialization
@@ -88,23 +87,21 @@ export async function POST(req: Request) {
 
         const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
-        const emailToQuery = email;
-
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', emailToQuery)
+                .eq('member_id', memberId)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
-            // Initial load: get LAST 300 messages to avoid Supabase's 1000-row default cap
+            // Initial load: get LAST 50 messages
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', emailToQuery)
+                .eq('member_id', memberId)
                 .order('created_at', { ascending: false })
                 .limit(50);
         }

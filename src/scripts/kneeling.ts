@@ -6,12 +6,12 @@ const REQUIRED_HOLD_TIME = 2000;
 // ─── 0. SERVER SYNC (RLS-safe via admin client) ───
 async function syncKneelStatusFromServer() {
     const { memberId, id } = getState();
-    const email = memberId || id;
-    if (!email) return;
+    const userId = memberId || id;
+    if (!userId) return;
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch('/api/kneel-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
+        const res = await fetch('/api/kneel-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: userId, tz }) });
         if (!res.ok) return;
         const data = await res.json();
 
@@ -281,15 +281,15 @@ async function completeKneelAction() {
 
     // Write to DB: increment kneelCount + today kneeling + lastWorship
     const { memberId, id } = getState();
-    const memberEmail = memberId || id;
+    const userId = memberId || id;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    if (memberEmail) {
+    if (userId) {
         try {
             const res = await fetch('/api/kneel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberEmail, tz })
+                body: JSON.stringify({ memberId: userId, tz })
             });
             const data = await res.json();
             if (res.ok && typeof data.todayKneeling === 'number') {

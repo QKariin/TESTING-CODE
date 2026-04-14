@@ -10,14 +10,14 @@ const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60
 
 export async function POST(req: Request) {
     try {
-        const { memberEmail, tz = 'UTC' } = await req.json();
-        if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
+        const { memberId, tz = 'UTC' } = await req.json();
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-        // Fetch current record from tasks table (member_id = email, case-insensitive)
+        // Fetch current record from tasks table (member_id = UUID)
         const { data: task } = await supabaseAdmin
             .from('tasks')
             .select('lastWorship, kneelCount, "today kneeling", kneel_history')
-            .ilike('member_id', memberEmail)
+            .eq('member_id', memberId)
             .maybeSingle();
 
         const now = new Date();
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         kneelHistory.push(now.toISOString());
 
         const upsertPayload: any = {
-            member_id: memberEmail,
+            member_id: memberId,
             lastWorship: now.toISOString(),
             kneelCount: String(newKneelCount),
             'today kneeling': String(newTodayKneeling),
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
             console.error('[kneel] update error:', error);
             // Retry without kneel_history in case column doesn't exist yet
             const { error: e2 } = await supabaseAdmin.from('tasks').upsert({
-                member_id: memberEmail,
+                member_id: memberId,
                 lastWorship: now.toISOString(),
                 kneelCount: String(newKneelCount),
                 'today kneeling': String(newTodayKneeling),
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
             if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
         }
 
-        try { await DbService.sendMessage(memberEmail, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
+        try { await DbService.sendMessage(memberId, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
 
         // Return which hours today had a kneel (for dot grid)
         const kneelHours = [...new Set(kneelHistory.map(ts => {

@@ -5,16 +5,19 @@ import { HIERARCHY_RULES, rankMeetsRequirement } from '@/lib/hierarchyRules';
 
 export async function POST(req: Request) {
     try {
-        const { senderEmail: rawSenderEmail, content, type = 'text', metadata = {}, conversationId: rawConversationId } = await req.json();
+        const { memberId: rawMemberId, senderEmail: rawSenderEmail, content, type = 'text', metadata = {}, conversationId: rawConversationId } = await req.json();
+        // Accept memberId (UUID) as primary, fall back to senderEmail for backward compat
+        const rawSender = rawMemberId || rawSenderEmail;
         let senderEmail = rawSenderEmail?.toLowerCase();
         let conversationId = rawConversationId?.toLowerCase();
 
-        if (!senderEmail || !content) {
+        if (!rawSender || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });
         }
 
         const supabase = await createClient();
-        const isHardcodedAdmin = senderEmail && ["ceo@qkarin.com"].includes(senderEmail.toLowerCase());
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawSender);
+        const isHardcodedAdmin = !isUUID && senderEmail && ["ceo@qkarin.com"].includes(senderEmail.toLowerCase());
 
         let profile: any = null;
         let isQueen = isHardcodedAdmin;
@@ -27,47 +30,44 @@ export async function POST(req: Request) {
         if (isHardcodedAdmin) {
             profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
         } else {
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(senderEmail);
+            // Look up profile by UUID (profiles.id) or email (profiles.member_id)
             const { data, error: profileErr } = await adminClient
                 .from('profiles')
                 .select('*')
-                .or(isUUID ? `id.eq.${senderEmail}` : `member_id.ilike.${senderEmail}`)
+                .eq(isUUID ? 'id' : 'member_id', rawSender)
                 .maybeSingle();
             profile = data;
 
-            if (profile && isUUID) {
+            if (profile) {
+                // Always resolve senderEmail from profile for display purposes
                 senderEmail = profile.member_id?.toLowerCase() || senderEmail;
             }
 
             if (profileErr || !profile) {
                 // 🔄 PROFILE AUTO-CREATION: Ensure every chat sender has a profile.
-                const { data: legacyTask } = await adminClient
-                    .from('tasks')
-                    .select('Score')
-                    .ilike('MemberID', senderEmail)
-                    .maybeSingle();
+                if (!isUUID && senderEmail) {
+                    const { data: newProfile, error: createErr } = await adminClient
+                        .from('profiles')
+                        .insert({
+                            member_id: senderEmail,
+                            name: senderEmail.split('@')[0],
+                            score: 0,
+                            wallet: 0,
+                            hierarchy: 'Hall Boy'
+                        })
+                        .select()
+                        .single();
 
-                const { data: newProfile, error: createErr } = await adminClient
-                    .from('profiles')
-                    .insert({
-                        member_id: senderEmail,
-                        name: senderEmail.split('@')[0],
-                        score: Number(legacyTask?.Score || 0),
-                        wallet: 0,
-                        hierarchy: 'Hall Boy'
-                    })
-                    .select()
-                    .single();
-
-                if (!createErr && newProfile) {
-                    profile = newProfile;
-                    isQueen = false;
+                    if (!createErr && newProfile) {
+                        profile = newProfile;
+                        isQueen = false;
+                    }
                 }
             }
 
             if (!profile) {
                 const { data: { user: authUser } } = await supabase.auth.getUser();
-                if (authUser?.email?.toLowerCase() === senderEmail) {
+                if (authUser?.id === rawSender || authUser?.email?.toLowerCase() === senderEmail) {
                     profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
                     isQueen = true;
                 } else {
@@ -78,7 +78,9 @@ export async function POST(req: Request) {
             }
         }
 
-        const conversationContext = isQueen ? conversationId || senderEmail : senderEmail;
+        // For chats.member_id: use UUID if available, else fall back to email
+        const chatMemberId = isUUID ? rawSender : (senderEmail || rawSender);
+        const conversationContext = isQueen ? conversationId || chatMemberId : chatMemberId;
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 
@@ -93,7 +95,11 @@ export async function POST(req: Request) {
             if (currentWallet < cost) return NextResponse.json({ success: false, error: "Insufficient coins" }, { status: 402 });
 
             newWallet = currentWallet - cost;
-            const { error: updateErr } = await supabase.from('profiles').update({ wallet: newWallet }).eq('member_id', senderEmail);
+            // Update wallet by profile UUID if available, else by email
+            const walletUpdateQuery = profile.id
+                ? supabase.from('profiles').update({ wallet: newWallet }).eq('id', profile.id)
+                : supabase.from('profiles').update({ wallet: newWallet }).eq('member_id', senderEmail);
+            const { error: updateErr } = await walletUpdateQuery;
             if (updateErr) return NextResponse.json({ success: false, error: "Failed to deduct coins." }, { status: 500 });
         }
 
@@ -114,12 +120,22 @@ export async function POST(req: Request) {
                 delete insertData.member_id;
                 const retry = await adminClient.from('chats').insert(insertData).select().single();
                 if (retry.error) {
-                    if (!isQueen) await supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
+                    if (!isQueen) {
+                        const rollbackQuery = profile.id
+                            ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('id', profile.id)
+                            : supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
+                        await rollbackQuery;
+                    }
                     return NextResponse.json({ success: false, error: retry.error.message }, { status: 500 });
                 }
                 return NextResponse.json({ success: true, data: retry.data, newWallet });
             }
-            if (!isQueen) await supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
+            if (!isQueen) {
+                const rollbackQuery = profile.id
+                    ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('id', profile.id)
+                    : supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
+                await rollbackQuery;
+            }
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
 
@@ -144,11 +160,13 @@ export async function POST(req: Request) {
 
         // Fire push notification in background — don't block the response
         if (isQueen && conversationId) {
+            // conversationId is UUID — look up by profiles.id
+            const isConvUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
             Promise.resolve(
                 adminClient
                     .from('profiles')
                     .select('onesignal_id')
-                    .ilike('member_id', conversationId)
+                    .eq(isConvUUID ? 'id' : 'member_id', conversationId)
                     .maybeSingle()
             ).then(({ data: pushProfile }) => {
                 const onesignalId = pushProfile?.onesignal_id;

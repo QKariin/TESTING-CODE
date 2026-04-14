@@ -83,14 +83,15 @@ function appendToSystemLog(msg: any) {
  * Initializes the chat listener for a specific user (Slave).
  * Called when a user is selected in the sidebar.
  */
-export async function initDashboardChat(slaveEmail: string) {
-    const cleanEmail = slaveEmail.toLowerCase();
+export async function initDashboardChat(memberIdOrEmail: string) {
+    // Resolve UUID: look up user by memberId (email) or id (UUID)
+    const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail);
+    const activeId = u?.id || memberIdOrEmail; // always use UUID for chat lookups
 
     // Guard: if already initialized for this exact user AND channel is alive, skip.
-    // This prevents presence heartbeats from triggering repeated chat flashes.
-    if (activeChatEmail === cleanEmail && chatChannel) return;
+    if (activeChatEmail === activeId && chatChannel) return;
 
-    activeChatEmail = cleanEmail;
+    activeChatEmail = activeId;
 
     // 1. Clean up existing subscription + poll on the SAME client instance
     if (chatChannel) {
@@ -109,18 +110,18 @@ export async function initDashboardChat(slaveEmail: string) {
     if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
     // 2. Load history
-    await loadDashboardChatHistory(cleanEmail);
+    await loadDashboardChatHistory(activeId);
 
     // 3. Realtime subscription on shared client
     chatChannel = _supabase
-        .channel('dash-chat-' + cleanEmail)
+        .channel('dash-chat-' + activeId)
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            filter: `member_id=eq.${cleanEmail}`
+            filter: `member_id=eq.${activeId}`
         }, (payload) => {
-            if (activeChatEmail !== cleanEmail) return; // switched user
+            if (activeChatEmail !== activeId) return; // switched user
             if (payload.new.id !== lastChatMsgId) {
                 appendChatMessage(payload.new);
             }
@@ -129,16 +130,16 @@ export async function initDashboardChat(slaveEmail: string) {
 
     // 4. Polling fallback — only fires when member is online (presence gate)
     chatPollInterval = setInterval(() => {
-        if (!isMemberOnline(cleanEmail)) return; // offline — skip
-        pollNewMessages(cleanEmail);
+        if (!isMemberOnline(activeId)) return; // offline — skip
+        pollNewMessages(activeId);
     }, 120000);
 }
 
-async function pollNewMessages(email: string) {
-    if (activeChatEmail !== email) return;
+async function pollNewMessages(memberId: string) {
+    if (activeChatEmail !== memberId) return;
     if (!lastChatMsgTimestamp) return;
     try {
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: lastChatMsgTimestamp }) });
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId, since: lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
         const newMsgs = (data.messages || []).filter((m: any) => {
@@ -149,7 +150,7 @@ async function pollNewMessages(email: string) {
     } catch (_) {}
 }
 
-async function loadDashboardChatHistory(email: string) {
+async function loadDashboardChatHistory(memberId: string) {
     try {
         const supabase = createClient();
         let { data: { user } } = await supabase.auth.getUser();
@@ -160,7 +161,7 @@ async function loadDashboardChatHistory(email: string) {
             userEmail = 'ceo@qkarin.com';
         }
 
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, ...(userEmail ? { requester: userEmail } : {}) }) });
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId, ...(userEmail ? { requester: userEmail } : {}) }) });
         const data = await res.json();
         if (data.success) {
             const msgs = data.messages || [];
@@ -231,9 +232,8 @@ export function appendChatMessage(msg: any) {
 }
 
 function renderToHtml(m: any) {
-    // Admin (Queen) message: sender differs from the member owning the conversation
-    const isMe = m.type !== 'system' && m.sender_email && m.member_id
-        && m.sender_email.toLowerCase() !== m.member_id.toLowerCase();
+    // Admin (Queen) message: flagged by metadata.isQueen on insert
+    const isMe = m.type !== 'system' && m.metadata?.isQueen === true;
 
     const ts = new Date(m.created_at || Date.now()).getTime();
     const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -404,6 +404,9 @@ export async function sendMsg() {
         console.warn(`[DASHBOARD-CHAT] Send failed: Missing input ${!inp} or currId ${!activeCurrId}`);
         return;
     }
+    // Resolve UUID for conversation (chats.member_id is UUID)
+    const convUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
+    const conversationUuid = convUser?.id || activeCurrId;
 
     const text = inp.value.trim();
     if (!text) return;
@@ -441,7 +444,7 @@ export async function sendMsg() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 senderEmail: senderEmail,
-                conversationId: activeCurrId, // sending TO this slave
+                conversationId: conversationUuid, // UUID — chats.member_id
                 content: text,
                 type: 'text'
             })
@@ -476,6 +479,9 @@ export async function handleAdminUpload(file: File) {
     const isVideo = file.type.startsWith('video/');
     const msgType = isVideo ? 'video' : 'photo';
     const objectUrl = URL.createObjectURL(file);
+    // Resolve UUID for conversation
+    const mediaConvUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
+    const mediaConvUuid = mediaConvUser?.id || activeCurrId;
 
     // Show preview modal before uploading
     const existing = document.getElementById('__adminMediaPreview');
@@ -540,7 +546,7 @@ export async function handleAdminUpload(file: File) {
             const sendRes = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: userEmail, conversationId: activeCurrId, content: url, type: msgType }),
+                body: JSON.stringify({ senderEmail: userEmail, conversationId: mediaConvUuid, content: url, type: msgType }),
             });
             const sendData = await sendRes.json();
             if (sendData.success && sendData.data) {

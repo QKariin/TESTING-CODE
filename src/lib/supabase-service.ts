@@ -178,12 +178,20 @@ export const DbService = {
     },
 
     // --- MESSAGING ---
-    async sendMessage(memberEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
-        // Prevent UUID leakage; chat histories use the email string
+    async sendMessage(memberIdOrEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
+        // Resolve to UUID — chats.member_id is always UUID
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberIdOrEmail);
+        let chatMemberId = memberIdOrEmail;
+        if (!isUuid) {
+            // Look up profile by email to get UUID
+            const { data: p } = await supabaseAdmin.from('profiles').select('id').ilike('member_id', memberIdOrEmail).maybeSingle();
+            if (p?.id) chatMemberId = p.id;
+        }
+
         const { data, error } = await supabaseAdmin
             .from('chats')
             .insert({
-                member_id: memberEmail,
+                member_id: chatMemberId,
                 sender_email: sender,
                 content: text,
                 type: 'system',

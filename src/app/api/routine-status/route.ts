@@ -6,19 +6,21 @@ export const dynamic = "force-dynamic";
 
 const TTL = 30_000; // 30s — routine status changes at most once per day
 
-async function getRoutineStatus(memberEmail: string, tz: string) {
+async function getRoutineStatus(memberId: string, tz: string) {
+    // profiles.id = UUID, so look up by .eq('id', memberId)
     const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('routine')
-        .ilike('member_id', memberEmail)
+        .eq('id', memberId)
         .maybeSingle();
 
     const routine = profile?.routine || null;
 
+    // tasks.member_id = UUID, use .eq()
     const { data: taskRow } = await supabaseAdmin
         .from('tasks')
         .select('Taskdom_History')
-        .ilike('member_id', memberEmail)
+        .eq('member_id', memberId)
         .maybeSingle();
 
     let uploadedToday = false;
@@ -59,11 +61,11 @@ async function getRoutineStatus(memberEmail: string, tz: string) {
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const memberEmail = searchParams.get('email');
-        if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+        const memberId = searchParams.get('memberId') || searchParams.get('email');
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
         const tz = searchParams.get('tz') || 'UTC';
-        const key = `routine:${memberEmail.toLowerCase()}`;
-        const data = await cached(key, TTL, () => getRoutineStatus(memberEmail, tz));
+        const key = `routine:${memberId.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getRoutineStatus(memberId, tz));
         return NextResponse.json(data, { headers: { 'Cache-Control': 'private, max-age=30' } });
     } catch (err: any) {
         console.error('[routine-status]', err);
@@ -74,11 +76,11 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const memberEmail = body.email;
-        if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+        const memberId = body.memberId || body.email;
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
         const tz = body.tz || 'UTC';
-        const key = `routine:${memberEmail.toLowerCase()}`;
-        const data = await cached(key, TTL, () => getRoutineStatus(memberEmail, tz));
+        const key = `routine:${memberId.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getRoutineStatus(memberId, tz));
         return NextResponse.json(data);
     } catch (err: any) {
         console.error('[routine-status]', err);

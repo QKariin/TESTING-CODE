@@ -5,13 +5,16 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
-        const { memberEmail } = await req.json();
+        const { memberId } = await req.json();
 
-        if (!memberEmail) {
-            return NextResponse.json({ success: false, error: 'Missing memberEmail' }, { status: 400 });
+        if (!memberId) {
+            return NextResponse.json({ success: false, error: 'Missing memberId' }, { status: 400 });
         }
 
-        const profile = await DbService.getProfile(memberEmail);
+        // Look up profile by UUID (profiles.id = UUID)
+        const { supabaseAdmin } = require('@/lib/supabase');
+        const { data: profileData } = await supabaseAdmin.from('profiles').select('*').eq('id', memberId).maybeSingle();
+        const profile = profileData;
         if (!profile || !profile.id) {
             return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
         }
@@ -22,8 +25,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Insufficient Capital. 300 coins required to skip duties.' }, { status: 403 });
         }
 
-        const { supabaseAdmin } = require('@/lib/supabase');
-        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').ilike('member_id', memberEmail).maybeSingle();
+        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').eq('member_id', memberId).maybeSingle();
 
         // 1 & 2 & 3: Atomic Skip
         const params = { ...(profile.parameters || {}) };
@@ -70,10 +72,10 @@ export async function POST(req: NextRequest) {
                 'Taskdom_History': JSON.stringify(history),
                 taskdom_active_task: null,
                 taskdom_pending_state: null
-            }).ilike('member_id', memberEmail);
+            }).eq('member_id', memberId);
         } else {
             taskDbUpdate = await supabaseAdmin.from('tasks').insert({
-                member_id: memberEmail,
+                member_id: memberId,
                 Name: profile.name || 'Slave',
                 Status: 'fail',
                 'Taskdom_History': JSON.stringify(history),
@@ -85,7 +87,7 @@ export async function POST(req: NextRequest) {
         console.log("Profile update:", profileDbUpdate.error ? profileDbUpdate.error : "SUCCESS");
         console.log("Task update:", taskDbUpdate.error ? taskDbUpdate.error : "SUCCESS");
 
-        try { await DbService.sendMessage(memberEmail, `TASK SKIPPED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> DEDUCTED`, 'system'); } catch (_) { }
+        try { await DbService.sendMessage(memberId, `TASK SKIPPED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> DEDUCTED`, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,

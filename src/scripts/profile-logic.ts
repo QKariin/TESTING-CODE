@@ -35,7 +35,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         const res = await fetch('/api/claim-reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ choice: type, memberEmail: pid })
+            body: JSON.stringify({ choice: type, memberId: pid })
         });
 
         const data = await res.json();
@@ -662,7 +662,7 @@ if (typeof window !== 'undefined') {
                 fetch('/api/chat/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ senderEmail: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
+                    body: JSON.stringify({ memberId: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
                 }).catch(e => console.warn('[CHAT] Tribute message send failed:', e));
 
                 // Re-fetch tributes to instantly update the progress bar visually
@@ -733,7 +733,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
             fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
+                body: JSON.stringify({ memberId: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
             }).catch(e => console.warn('[CHAT] Tribute message send failed:', e));
 
             // Close modal if open
@@ -1198,7 +1198,7 @@ export async function executeSkipTask() {
     try {
         const res = await fetch('/api/tasks/skip', {
             method: 'POST',
-            body: JSON.stringify({ memberEmail: pid })
+            body: JSON.stringify({ memberId: pid })
         });
         const data = await res.json();
 
@@ -1288,12 +1288,12 @@ export function mobileUploadEvidence(input: HTMLInputElement) {
 // ─── DAILY ROUTINE WIDGET ───────────────────────────────────────────────────
 export async function updateRoutineWidget() {
     const { memberId, id } = getState();
-    const email = memberId || id;
-    if (!email) return;
+    const userId = memberId || id;
+    if (!userId) return;
 
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, tz }) });
+        const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: userId, tz }) });
         if (!res.ok) return;
         const data = await res.json();
 
@@ -1614,7 +1614,7 @@ export async function handleChatMediaUpload(input: HTMLInputElement) {
             const res = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: memberId, content: url, type })
+                body: JSON.stringify({ memberId: memberId, content: url, type })
             });
             const data = await res.json();
 
@@ -1782,22 +1782,23 @@ export async function initChatSystem() {
     const { data: { user } } = await supabase.auth.getUser();
 
     let email = user?.email?.toLowerCase();
+    const userId = user?.id || '';
 
     // Localhost DEV bypass (same pattern as dashboard)
     if (!email && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
         email = 'pr.finsko@gmail.com';
     }
 
-    console.log('[CHAT] initChatSystem starting. Auth email:', email);
+    console.log('[CHAT] initChatSystem starting. Auth email:', email, 'userId:', userId);
 
     if (!email) {
         console.warn('[CHAT] initChatSystem: no email from auth, skipping');
         return;
     }
 
-    // Update state so rest of the app has the email too
+    // Update state so rest of the app has the UUID memberId and email too
     if (!getState().memberId) {
-        setState({ memberId: email });
+        setState({ memberId: userId, email: email });
     }
 
     // Silence is handled by the realtime profile_stats_ subscription below — no polling needed
@@ -1814,8 +1815,8 @@ export async function initChatSystem() {
         }
     });
 
-    // Load history once on first init
-    await loadChatHistory(email);
+    // Load history once on first init — use userId (UUID) for DB lookup
+    await loadChatHistory(userId || email);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -1823,18 +1824,20 @@ export async function initChatSystem() {
         _chatChannel = null;
     }
     _chatChannel = getChatSupabase()
-        .channel('profile-chats-' + email)
+        .channel('profile-chats-' + (userId || email))
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            // NO row filter here — filters use case-sensitive eq() which misses rows when
-            // member_id casing in the DB differs from the auth email. Filter in JS instead.
+            // NO row filter here — filter in JS instead to support UUID-based member_id
         }, (payload: any) => {
             const msg = payload.new;
-            // Case-insensitive guard — ignore messages for other members
-            const rowEmail = (msg.member_id || '').toLowerCase();
-            if (rowEmail !== email.toLowerCase()) return;
+            // Guard — ignore messages for other members (compare against UUID member_id)
+            const rowMemberId = (msg.member_id || '').toLowerCase();
+            const matchesUser = userId
+                ? rowMemberId === userId.toLowerCase()
+                : rowMemberId === email!.toLowerCase();
+            if (!matchesUser) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
             if (isSystemMessage(msg)) {
@@ -1882,7 +1885,7 @@ export async function initChatSystem() {
 
     // 3. Polling fallback every 5s — safety net for when Realtime lags or misses events
     if (_chatPollInterval) clearInterval(_chatPollInterval);
-    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 5000);
+    _chatPollInterval = setInterval(() => _pollNewChatMessages(userId || email!), 5000);
 
     // Refresh queen presence status every 60s — stored so it can be cleared
     if (_queenInterval) clearInterval(_queenInterval);
@@ -1969,10 +1972,10 @@ export async function initChatSystem() {
     initOneSignal(profileId!);
 }
 
-async function _pollNewChatMessages(email: string) {
+async function _pollNewChatMessages(memberId: string) {
     if (!_lastChatMsgTimestamp) return;
     try {
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, since: _lastChatMsgTimestamp }) });
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId, since: _lastChatMsgTimestamp }) });
         const data = await res.json();
         if (!data.success) return;
         const newMsgs = (data.messages || []).filter((m: any) => {
@@ -2058,9 +2061,9 @@ function initOneSignal(memberId: string) {
     setTimeout(() => { banner.style.display = 'flex'; }, 2000);
 }
 
-export async function loadChatHistory(email: string) {
+export async function loadChatHistory(memberId: string) {
     try {
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId }) });
         console.log('[CHAT] fetch /api/chat/history status:', res.status);
         const data = await res.json();
         if (data.success) {
@@ -2439,7 +2442,7 @@ export async function sendChatMessage() {
         const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderEmail: memberId, content: msg, type: 'text', metadata: chatReplyTo ? { reply_to: chatReplyTo } : {} })
+            body: JSON.stringify({ memberId: memberId, content: msg, type: 'text', metadata: chatReplyTo ? { reply_to: chatReplyTo } : {} })
         });
         const data = await res.json();
 

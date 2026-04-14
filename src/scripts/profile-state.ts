@@ -4,7 +4,8 @@ export interface ProfileState {
     cooldownMinutes: number;
     wallet: number;
     score: number;
-    memberId: string | null;
+    memberId: string | null; // UUID (profiles.id / session.user.id)
+    email: string | null;    // email (profiles.member_id) — for display only
     id: string | null;
     userName: string;
     rank: string;
@@ -20,6 +21,7 @@ const DEFAULT_STATE: ProfileState = {
     wallet: 0,
     score: 0,
     memberId: null,
+    email: null,
     id: null,
     userName: "SLAVE",
     rank: "INITIATE",
@@ -53,7 +55,8 @@ export function initProfileState(data: any) {
     }
 
     setState({
-        memberId: data.member_id || data.memberId || data.email || null,  // support both snake_case and camelCase
+        memberId: data.id || null,  // UUID — profiles.id / session.user.id
+        email: data.member_id || data.memberId || data.email || null,  // email for display/profile lookup
         id: data.id,
         wallet: data.wallet || 0,
         score: data.score || 0,

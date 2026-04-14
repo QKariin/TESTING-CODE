@@ -8,12 +8,12 @@ const TTL = 10_000; // 10s — stale kneel state is fine, button locks client-si
 
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000;
 
-async function getKneelStatus(memberEmail: string, tz: string) {
+async function getKneelStatus(memberId: string, tz: string) {
     // Select core fields first — kneel_history is optional (column may not exist yet)
     const { data: taskRow } = await supabaseAdmin
         .from('tasks')
         .select('lastWorship, kneelCount, "today kneeling"')
-        .ilike('member_id', memberEmail)
+        .eq('member_id', memberId)
         .maybeSingle();
 
     // Fetch kneel_history separately so a missing column doesn't zero out todayKneeling
@@ -22,7 +22,7 @@ async function getKneelStatus(memberEmail: string, tz: string) {
         const { data: hRow } = await supabaseAdmin
             .from('tasks')
             .select('kneel_history')
-            .ilike('member_id', memberEmail)
+            .eq('member_id', memberId)
             .maybeSingle();
         rawKneelHistory = hRow?.kneel_history ?? null;
     } catch (_) { }
@@ -57,11 +57,11 @@ async function getKneelStatus(memberEmail: string, tz: string) {
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const memberEmail = searchParams.get('email');
-        if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+        const memberId = searchParams.get('memberId') || searchParams.get('email');
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
         const tz = searchParams.get('tz') || 'UTC';
-        const key = `kneel:${memberEmail.toLowerCase()}`;
-        const data = await cached(key, TTL, () => getKneelStatus(memberEmail, tz));
+        const key = `kneel:${memberId.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getKneelStatus(memberId, tz));
         return NextResponse.json(data, { headers: { 'Cache-Control': 'private, max-age=10' } });
     } catch (err: any) {
         console.error('[kneel-status]', err);
@@ -72,11 +72,11 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const memberEmail = body.email;
-        if (!memberEmail) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
+        const memberId = body.memberId || body.email;
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
         const tz = body.tz || 'UTC';
-        const key = `kneel:${memberEmail.toLowerCase()}`;
-        const data = await cached(key, TTL, () => getKneelStatus(memberEmail, tz));
+        const key = `kneel:${memberId.toLowerCase()}`;
+        const data = await cached(key, TTL, () => getKneelStatus(memberId, tz));
         return NextResponse.json(data);
     } catch (err: any) {
         console.error('[kneel-status]', err);
@@ -85,6 +85,6 @@ export async function POST(req: Request) {
 }
 
 // Call this after a successful kneel to bust the cache immediately
-export function bustKneelCache(email: string) {
-    cacheDelete(`kneel:${email.toLowerCase()}`);
+export function bustKneelCache(memberId: string) {
+    cacheDelete(`kneel:${memberId.toLowerCase()}`);
 }
