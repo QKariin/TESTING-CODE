@@ -146,7 +146,7 @@ function GoldDivider() {
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.88rem] text-amber-400/50 mb-1">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] font-normal text-[1.15rem] text-white/80 mb-0.5">{children}</p>;
 }
 
 // Full question text - readable Cormorant
@@ -155,7 +155,7 @@ function Question({ children }: { children: React.ReactNode }) {
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.9rem] text-white/28 mb-3 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-white/22 mb-3 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
