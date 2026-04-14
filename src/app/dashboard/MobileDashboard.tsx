@@ -1448,8 +1448,16 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
     const tiers = [50, 70, 100];
+    const noteRef = useRef<HTMLTextAreaElement>(null);
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
+
+    // Auto-focus note field when modal opens (skip for routine — no note shown)
+    useEffect(() => {
+        if (isRoutine) return;
+        const t = setTimeout(() => noteRef.current?.focus(), 150);
+        return () => clearTimeout(t);
+    }, [isRoutine]);
     const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; };
     const handleTouchEnd = (e: React.TouchEvent) => {
         const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -1497,7 +1505,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                                 </button>
                             ))}
                         </div>
-                        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)..." rows={2}
+                        <textarea ref={noteRef} value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)..." rows={2}
                             style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', padding: '8px 12px', resize: 'none', outline: 'none', marginBottom: 12, lineHeight: 1.5, boxSizing: 'border-box' }} />
                     </>
                 )}
@@ -1954,7 +1962,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
             {/* Issue task */}
             <div style={S.card}>
                 <div style={S.cardTitle}>ISSUE TASK</div>
-                <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
+                <textarea autoFocus value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
                     style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
                 <button disabled={busy || !taskText.trim()} onClick={issueTask}
                     style={{ width: '100%', padding: '12px', background: taskText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: taskText.trim() ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', fontWeight: 700, letterSpacing: '1.5px', cursor: taskText.trim() && !busy ? 'pointer' : 'default', opacity: busy ? 0.4 : 1 }}>

@@ -199,6 +199,8 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
             </div>`;
 
         setRewardTier(50, 'tier_50');
+        // Auto-focus the note field so the admin can type immediately
+        setTimeout(() => (document.getElementById('reviewComment') as HTMLInputElement | null)?.focus(), 80);
     }
     modal.classList.add('active');
 }
