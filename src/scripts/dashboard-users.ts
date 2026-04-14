@@ -163,7 +163,7 @@ export async function updateDetail(u: any) {
                         </div>
                     </div>`;
             } else if (r.type === 'check') {
-                // Identity and photo are visually obvious — skip them
+                // Identity and photo are visually obvious - skip them
                 if (r.label === 'IDENTITY' || r.label === 'PHOTO') return;
 
                 const isDone = r.status === 'VERIFIED';
@@ -225,7 +225,7 @@ export async function updateDetail(u: any) {
         html += `
             <div style="margin-bottom:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
-                    <span style="color:#888;">ROUTINE — ${routineRowName}</span>
+                    <span style="color:#888;">ROUTINE - ${routineRowName}</span>
                     ${routineSvg}
                 </div>
                 ${proofHtml}
@@ -374,15 +374,15 @@ function renderTelemetry(u: any) {
     const decodeCity = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
     const cityStr = location.city ? decodeCity(location.city) : null;
     const countryStr = location.country ? decodeCity(location.country) : null;
-    const locationVal = cityStr && countryStr ? `${cityStr}, ${countryStr}` : cityStr || countryStr || '—';
+    const locationVal = cityStr && countryStr ? `${cityStr}, ${countryStr}` : cityStr || countryStr || '-';
     const timeVal = data.timezone
         ? new Date().toLocaleTimeString('en-GB', { timeZone: data.timezone, hour: '2-digit', minute: '2-digit' })
-        : (location.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: location.timezone, hour: '2-digit', minute: '2-digit' }) : '—');
+        : (location.timezone ? new Date().toLocaleTimeString('en-GB', { timeZone: location.timezone, hour: '2-digit', minute: '2-digit' }) : '-');
     const osStr = device.os || data.os || null;
     const browserStr = device.browser || data.browser || null;
-    const deviceVal = osStr && browserStr ? `${osStr} / ${browserStr}` : osStr || browserStr || '—';
-    const batteryVal = battery.level !== undefined ? `${battery.level}% ${battery.charging === true ? '⚡' : ''}` : (data.battery?.level !== undefined ? `${data.battery.level}%` : '—');
-    const resolutionVal = device.resolution || data.resolution || '—';
+    const deviceVal = osStr && browserStr ? `${osStr} / ${browserStr}` : osStr || browserStr || '-';
+    const batteryVal = battery.level !== undefined ? `${battery.level}% ${battery.charging === true ? '⚡' : ''}` : (data.battery?.level !== undefined ? `${data.battery.level}%` : '-');
+    const resolutionVal = device.resolution || data.resolution || '-';
 
     const rows = [
         { label: '🌍 LOCATION', val: locationVal },
@@ -434,7 +434,7 @@ async function updateReviewQueue(u: any) {
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
             const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-            // Placeholder only — proof loads on click, not on render (no eager storage requests)
+            // Placeholder only - proof loads on click, not on render (no eager storage requests)
             const mediaTag = isVideo
                 ? `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
                      <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>

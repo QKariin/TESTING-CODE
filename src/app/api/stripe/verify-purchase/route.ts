@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        // Retrieve session from Stripe — source of truth
+        // Retrieve session from Stripe - source of truth
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
         if (session.payment_status !== 'paid') {
@@ -58,11 +58,11 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, reason: 'profile_not_found' });
         }
 
-        // Idempotency check — track processed Stripe sessions in parameters
+        // Idempotency check - track processed Stripe sessions in parameters
         const params = profile.parameters || {};
         const processedSessions: string[] = params.processedStripeSessions || [];
         if (processedSessions.includes(sessionId)) {
-            // Already awarded — return current wallet so UI can sync
+            // Already awarded - return current wallet so UI can sync
             return NextResponse.json({ success: true, alreadyAwarded: true, wallet: profile.wallet });
         }
 
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
         processedSessions.push(sessionId);
         params.processedStripeSessions = processedSessions;
 
-        // Purchase entry — used for dashboard notification + persistent history
+        // Purchase entry - used for dashboard notification + persistent history
         const purchaseEntry = {
             coins,
             name: profile.name || userEmail || userId || 'Unknown',

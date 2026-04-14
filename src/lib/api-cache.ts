@@ -1,6 +1,6 @@
 /**
  * Simple in-memory TTL cache for API routes.
- * Runs in the Node.js process — avoids redundant DB round-trips
+ * Runs in the Node.js process - avoids redundant DB round-trips
  * for the same data within a short window.
  */
 
@@ -38,7 +38,7 @@ export async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>
         console.log(`[CACHE HIT] ${key}`);
         return hit;
     }
-    console.log(`[CACHE MISS] ${key} — fetching from DB`);
+    console.log(`[CACHE MISS] ${key} - fetching from DB`);
     const value = await fn();
     cacheSet(key, value, ttlMs);
     return value;

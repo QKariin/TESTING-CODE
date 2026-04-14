@@ -39,7 +39,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
         if (existing) return NextResponse.json({ success: true, already_joined: true, status: existing.status });
 
-        // Late join fee — charge 1000 coins if challenge is already running and has closed windows
+        // Late join fee - charge 1000 coins if challenge is already running and has closed windows
         let lateJoinFee = 0;
         if (isActive) {
             const { count } = await supabaseAdmin

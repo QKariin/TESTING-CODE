@@ -11,7 +11,7 @@ import { uploadToSupabase } from './mediaSupabase';
 // Fallback if DOMPurify is not available or needs to be used from global
 const purifier = (typeof window !== 'undefined' && (window as any).DOMPurify) || { sanitize: (s: string) => s };
 
-// Single shared client — realtime subscriptions must stay on the same instance
+// Single shared client - realtime subscriptions must stay on the same instance
 const _supabase = createClient();
 
 let chatChannel: any = null;
@@ -128,9 +128,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         })
         .subscribe();
 
-    // 4. Polling fallback — only fires when member is online (presence gate)
+    // 4. Polling fallback - only fires when member is online (presence gate)
     chatPollInterval = setInterval(() => {
-        if (!isMemberOnline(activeId)) return; // offline — skip
+        if (!isMemberOnline(activeId)) return; // offline - skip
         pollNewMessages(activeId);
     }, 120000);
 }
@@ -385,7 +385,7 @@ function _attachImgScrollHandlers(container: HTMLElement) {
             }
         }
     });
-    // video elements — bind on loadedmetadata since preload="none" means no load event
+    // video elements - bind on loadedmetadata since preload="none" means no load event
     container.querySelectorAll('video').forEach(vid => {
         if (!(vid as any)._dashScrollBound) {
             (vid as any)._dashScrollBound = true;
@@ -444,7 +444,7 @@ export async function sendMsg() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 senderEmail: senderEmail,
-                conversationId: conversationUuid, // UUID — chats.member_id
+                conversationId: conversationUuid, // UUID - chats.member_id
                 content: text,
                 type: 'text'
             })
@@ -564,7 +564,7 @@ export async function handleAdminUpload(file: File) {
     };
 }
 
-// iOS-safe media picker for admin chat — must be in viewport (not offscreen) for iOS gallery to open
+// iOS-safe media picker for admin chat - must be in viewport (not offscreen) for iOS gallery to open
 export function triggerAdminMediaPick() {
     const inp = document.createElement('input');
     inp.type = 'file';

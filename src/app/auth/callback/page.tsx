@@ -26,7 +26,7 @@ export default function AuthCallbackPage() {
             const errorDesc = urlParams.get('error_description');
 
             if (errorParam) {
-                setStatus(`Auth error: ${errorParam} — ${errorDesc}`);
+                setStatus(`Auth error: ${errorParam} - ${errorDesc}`);
                 setTimeout(() => router.replace('/login?error=auth_failed'), 3000);
                 return;
             }
@@ -43,7 +43,7 @@ export default function AuthCallbackPage() {
                 }
             }
 
-            // Wait for session — covers Twitter, Google, and email magic link
+            // Wait for session - covers Twitter, Google, and email magic link
             const user = await new Promise<any>((resolve) => {
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
                     if (session?.user) { subscription.unsubscribe(); resolve(session.user); }
@@ -75,7 +75,7 @@ export default function AuthCallbackPage() {
                 if (data?.memberId || data?.member_id) {
                     router.replace('/profile');
                 } else {
-                    // No profile — capture as a lead then send to tribute
+                    // No profile - capture as a lead then send to tribute
                     const supabase = createClient();
                     const { data: { user } } = await supabase.auth.getUser();
                     const provider = user?.app_metadata?.provider || 'unknown';

@@ -5,9 +5,9 @@ import { cached } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
 
-const USERS_TTL  = 120_000;  // 2min — user list
-const QUEUE_TTL  = 300_000;  // 5min — review queue (each refresh loads all task proof images from storage)
-const TRIBUTE_TTL = 300_000; // 5min — tributes change infrequently
+const USERS_TTL  = 120_000;  // 2min - user list
+const QUEUE_TTL  = 300_000;  // 5min - review queue (each refresh loads all task proof images from storage)
+const TRIBUTE_TTL = 300_000; // 5min - tributes change infrequently
 
 export async function GET(req: Request) {
     try {
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
             cached('dashboard:queue', QUEUE_TTL, () => DbService.getReviewQueue().catch(() => [])),
         ]);
 
-        // Per-member profile is never cached — always fresh
+        // Per-member profile is never cached - always fresh
         let profile = null;
         if (memberId) {
             profile = await DbService.getProfile(memberId);

@@ -158,9 +158,9 @@ export async function POST(req: Request) {
             } catch (_) {}
         }
 
-        // Fire push notification in background — don't block the response
+        // Fire push notification in background - don't block the response
         if (isQueen && conversationId) {
-            // conversationId is UUID — look up by profiles.id
+            // conversationId is UUID - look up by profiles.id
             const isConvUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
             Promise.resolve(
                 adminClient

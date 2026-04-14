@@ -77,7 +77,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 }
 
-// GET — member challenge data: status, stats, windows, gallery
+// GET - member challenge data: status, stats, windows, gallery
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id: challengeId } = await params;

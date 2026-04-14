@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@/utils/supabase/server';
 
-// Subscription tiers — must match the IDs used in page.tsx subscription cards
+// Subscription tiers - must match the IDs used in page.tsx subscription cards
 const SUBSCRIPTION_TIERS: Record<string, { amountCents: number; name: string; label: string }> = {
-    basic:     { amountCents:  3300, name: 'BASIC — Initiate',    label: 'Monthly Initiate Subscription'    },
-    royal:     { amountCents:  7700, name: 'ROYAL — Patronage',   label: 'Monthly Royal Patronage'          },
-    ownership: { amountCents: 22200, name: 'OWNERSHIP — Absolute', label: 'Monthly Absolute Ownership'     },
+    basic:     { amountCents:  3300, name: 'BASIC - Initiate',    label: 'Monthly Initiate Subscription'    },
+    royal:     { amountCents:  7700, name: 'ROYAL - Patronage',   label: 'Monthly Royal Patronage'          },
+    ownership: { amountCents: 22200, name: 'OWNERSHIP - Absolute', label: 'Monthly Absolute Ownership'     },
 };
 
 export async function POST(req: Request) {

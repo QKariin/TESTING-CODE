@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         if (!path) return NextResponse.json({ error: 'Missing path' }, { status: 400 });
 
         if (!isPrivatePath(path)) {
-            // Public path — just return public URL
+            // Public path - just return public URL
             const { data: { publicUrl } } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
             return NextResponse.json({ url: publicUrl });
         }

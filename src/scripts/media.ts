@@ -60,7 +60,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     url = url.replace(/^http:\/\//i, "https://");
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
     if (url.includes("token=")) return url; // Already a signed URL
-    // Supabase storage URLs — return direct URL (avoids /_next/image 400s when files are missing)
+    // Supabase storage URLs - return direct URL (avoids /_next/image 400s when files are missing)
     if (url.includes("supabase.co/storage")) {
         return url;
     }

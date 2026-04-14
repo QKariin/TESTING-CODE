@@ -44,7 +44,7 @@ function renderOperationsGrid() {
 
     let html = '<div class="ops-monitor-grid">';
 
-    // 1. TASK CARD (GOLD) — no proof image on the card, loads on click only
+    // 1. TASK CARD (GOLD) - no proof image on the card, loads on click only
     html += `
         <div class="ops-card task" onclick="window.showQueueFiltered(false)">
             <div class="ops-card-overlay">
@@ -55,7 +55,7 @@ function renderOperationsGrid() {
         </div>
     `;
 
-    // 2. ROUTINE CARD (SILVER) — no proof image on the card, loads on click only
+    // 2. ROUTINE CARD (SILVER) - no proof image on the card, loads on click only
     html += `
         <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
             <div class="ops-card-overlay">

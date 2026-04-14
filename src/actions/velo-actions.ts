@@ -106,7 +106,7 @@ export async function getAdminDashboardData() {
 
         if (pError) throw pError;
 
-        // Map tasks data to profiles — match by UUID (correct) with email fallback (legacy rows)
+        // Map tasks data to profiles - match by UUID (correct) with email fallback (legacy rows)
         const finalProfiles = (profiles || []).map((p: any) => {
             const t = (tasksData || []).find((x: any) =>
                 x.member_id === p.id ||
@@ -115,7 +115,7 @@ export async function getAdminDashboardData() {
             return mapUserForDashboard(p, t);
         });
 
-        // Build review queue from already-fetched tasks data — no extra DB call, no URL signing (proofs load on click)
+        // Build review queue from already-fetched tasks data - no extra DB call, no URL signing (proofs load on click)
         const reviewQueue: any[] = [];
         for (const row of (tasksData || [])) {
             let history: any[] = [];
@@ -169,7 +169,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         const profile = await getProfile(memberId);
         if (!profile) return { success: false };
 
-        // 1. Fetch from tasks table — try UUID first (correct), fall back to email (legacy)
+        // 1. Fetch from tasks table - try UUID first (correct), fall back to email (legacy)
         let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
         if (!taskRow && profile.member_id) {
             const { data: legacyRow } = await getAdmin().from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
@@ -752,7 +752,7 @@ export async function getUnreadMessageStatus(): Promise<Record<string, string>> 
             .order('created_at', { ascending: false })
             .limit(500);
         if (error || !data) return {};
-        // Keep only the latest real user message per member — skip admin and system messages
+        // Keep only the latest real user message per member - skip admin and system messages
         const result: Record<string, string> = {};
         for (const row of data) {
             if (!row.member_id) continue;
@@ -1152,26 +1152,26 @@ export async function updateProfileView(memberId: string) {
         const replacements = {
             name: profile.name || "Slave",
             score: (profile.score || 0).toLocaleString(),
-            hierarchy: profile.hierarchy || "—",
-            tasks: (params.tasks_pct || "—").toString(),
-            presence: (params.presence_pct || "—").toString(),
-            appreciation: (params.appreciation_pct || "—").toString(),
-            obedience: (params.obedience_pct || "—").toString(),
-            resp1: (params.resp1 || "—").toString(),
-            resp2: (params.resp2 || "—").toString(),
-            resp3: (params.resp3 || "—").toString(),
-            resp4: (params.resp4 || "—").toString(),
-            overallPerformance: (params.overallPerformance || "—").toString(),
-            points1: pointMessages[0] || "—",
-            points2: pointMessages[1] || "—",
-            points3: pointMessages[2] || "—",
-            points4: pointMessages[3] || "—",
-            points5: pointMessages[4] || "—",
-            points6: pointMessages[5] || "—",
-            points7: pointMessages[6] || "—",
-            points8: pointMessages[7] || "—",
-            points9: pointMessages[8] || "—",
-            points10: pointMessages[9] || "—",
+            hierarchy: profile.hierarchy || "-",
+            tasks: (params.tasks_pct || "-").toString(),
+            presence: (params.presence_pct || "-").toString(),
+            appreciation: (params.appreciation_pct || "-").toString(),
+            obedience: (params.obedience_pct || "-").toString(),
+            resp1: (params.resp1 || "-").toString(),
+            resp2: (params.resp2 || "-").toString(),
+            resp3: (params.resp3 || "-").toString(),
+            resp4: (params.resp4 || "-").toString(),
+            overallPerformance: (params.overallPerformance || "-").toString(),
+            points1: pointMessages[0] || "-",
+            points2: pointMessages[1] || "-",
+            points3: pointMessages[2] || "-",
+            points4: pointMessages[3] || "-",
+            points5: pointMessages[4] || "-",
+            points6: pointMessages[5] || "-",
+            points7: pointMessages[6] || "-",
+            points8: pointMessages[7] || "-",
+            points9: pointMessages[8] || "-",
+            points10: pointMessages[9] || "-",
             video: videoSlug
         };
 
@@ -1262,7 +1262,7 @@ export async function checkExpiredTasks() {
                 if (activityLog.length > 50) params.activity_log = activityLog.slice(0, 50);
                 else params.activity_log = activityLog;
 
-                // SAVE UPDATES — deduct 300 coins, no point change
+                // SAVE UPDATES - deduct 300 coins, no point change
                 await updateProfile(profile.id, {
                     routine_history: history,
                     parameters: params,

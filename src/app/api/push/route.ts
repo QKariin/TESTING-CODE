@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/push — send a push notification to a specific user via OneSignal
+// POST /api/push - send a push notification to a specific user via OneSignal
 export async function POST(req: Request) {
     try {
         const { externalId, title, message } = await req.json();
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     }
 }
 
-// PUT /api/push — save OneSignal subscription ID to the user's profile
+// PUT /api/push - save OneSignal subscription ID to the user's profile
 export async function PUT(req: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

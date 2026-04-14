@@ -30,7 +30,7 @@ function LockedContent() {
         }
 
         checkUnlock();
-        // Realtime handles silence removal — poll only as fallback every 30s
+        // Realtime handles silence removal - poll only as fallback every 30s
         const interval = setInterval(checkUnlock, 30000);
         return () => clearInterval(interval);
     }, []);

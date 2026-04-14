@@ -55,7 +55,7 @@ export async function PUT(req: Request) {
     let { data, error } = await supabaseAdmin.from('Wishlist').update(updates).eq('ID', id).select();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Fallback: some rows have NULL ID — match by Title instead
+    // Fallback: some rows have NULL ID - match by Title instead
     if (!data || data.length === 0) {
         const result = await supabaseAdmin.from('Wishlist').update(updates).eq('Title', id).select();
         if (result.error) return NextResponse.json({ error: result.error.message }, { status: 500 });

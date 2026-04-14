@@ -28,7 +28,7 @@ import { cleanupPresenceTracking } from '@/scripts/dashboard-presence';
 
 const PAYWALL_PRESETS = [
     "Monthly tribute not received. Pay now.",
-    "Punishment — pay for your attitude.",
+    "Punishment - pay for your attitude.",
     "Outstanding debt. You know what you did.",
     "You've been a disappointment. Pay your dues.",
     "Access suspended. Tribute required immediately.",
@@ -523,7 +523,7 @@ export default function DashboardPage() {
             // Wrapped with mobile nav sync
             (window as any).showHome = () => {
                 setShowChallenges(false);
-                markPendingRead(); // leaving a chat — mark it as read now
+                markPendingRead(); // leaving a chat - mark it as read now
                 showHome();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
                 document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
@@ -531,10 +531,10 @@ export default function DashboardPage() {
             };
             (window as any).showProfile = (id?: string) => {
                 setShowChallenges(false);
-                if (!id) markPendingRead(); // navigating to Queen view — leaving chat
+                if (!id) markPendingRead(); // navigating to Queen view - leaving chat
                 (showProfile as any)(id);
                 if (id) {
-                    // Opening a user's detail — close subjects drawer
+                    // Opening a user's detail - close subjects drawer
                     document.querySelector('.sidebar')?.classList.remove('mob-open');
                 }
             };
@@ -572,7 +572,7 @@ export default function DashboardPage() {
             (window as any).openProfileUpload = openProfileUpload;
             (window as any).showPosts = () => {
                 setShowChallenges(false);
-                markPendingRead(); // leaving a chat — mark it as read now
+                markPendingRead(); // leaving a chat - mark it as read now
                 showPosts();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
                 document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
@@ -684,9 +684,9 @@ export default function DashboardPage() {
         // Expose so the lock modal can force an immediate refresh after lock/unlock
         (window as any)._refreshDashboard = loadLiveAction;
 
-        if (isMobile) return; // mobile dashboard handles its own data — no duplicate load
+        if (isMobile) return; // mobile dashboard handles its own data - no duplicate load
         loadLiveAction();
-        // Poll every 60s — Realtime handles chat; this is just a periodic sync fallback
+        // Poll every 60s - Realtime handles chat; this is just a periodic sync fallback
         const pollInterval = setInterval(loadLiveAction, 10000);
 
         // ── Supabase Realtime: instant push on new chat messages ──────────────
@@ -721,7 +721,7 @@ export default function DashboardPage() {
                 });
                 setUsers(updatedUsers);
 
-                // Re-render sidebar — sound + pink SVG glow handled inside renderSidebar
+                // Re-render sidebar - sound + pink SVG glow handled inside renderSidebar
                 renderSidebar();
             })
             .subscribe();
@@ -775,14 +775,14 @@ export default function DashboardPage() {
             {/* MAIN CONTENT AREA */}
             <div className="content" style={{ position: 'relative' }}>
 
-                {/* CHALLENGES INLINE PANEL — overlays content area when open */}
+                {/* CHALLENGES INLINE PANEL - overlays content area when open */}
                 {showChallenges && (
                     <div style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
                         <ChallengesContent onClose={() => setShowChallenges(false)} />
                     </div>
                 )}
 
-                {/* GLOBAL INLINE PANEL — overlays content area when open */}
+                {/* GLOBAL INLINE PANEL - overlays content area when open */}
                 {showGlobal && (
                     <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
                 )}
@@ -884,9 +884,9 @@ export default function DashboardPage() {
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                                             {[
-                                                { label: 'Days', val: String(challengeWidget.duration_days ?? '—') },
-                                                { label: 'Tasks a day', val: String(challengeWidget.tasks_per_day ?? '—') },
-                                                { label: 'Window', val: challengeWidget.window_minutes ? `${challengeWidget.window_minutes} min` : '—' },
+                                                { label: 'Days', val: String(challengeWidget.duration_days ?? '-') },
+                                                { label: 'Tasks a day', val: String(challengeWidget.tasks_per_day ?? '-') },
+                                                { label: 'Window', val: challengeWidget.window_minutes ? `${challengeWidget.window_minutes} min` : '-' },
                                                 { label: 'Still working', val: String(challengeWidget.activeCount) },
                                                 ...(challengeWidget.isUpcoming && challengeWidget.start_date_raw ? [{ label: 'Starts', val: new Date(challengeWidget.start_date_raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }] : []),
                                                 ...(!challengeWidget.isUpcoming ? [{ label: 'Eliminated', val: String(challengeWidget.totalCount - challengeWidget.activeCount) }] : []),
@@ -951,7 +951,7 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* EXCHEQUER — COIN TRANSACTION LOG */}
+                        {/* EXCHEQUER - COIN TRANSACTION LOG */}
                         <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '180px', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
@@ -962,7 +962,7 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* LEADS — people who tried to log in but haven't paid */}
+                        {/* LEADS - people who tried to log in but haven't paid */}
                         <LeadsPanel />
                     </div>
                 </div>
@@ -1000,7 +1000,7 @@ export default function DashboardPage() {
                                     preview.style.display = 'block';
                                 }
                             }} />
-                            <span style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555' }}>Optional — image or video attachment</span>
+                            <span style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555' }}>Optional - image or video attachment</span>
                         </div>
                         <img id="postImagePreview" src="" alt="preview" style={{ display: 'none', maxHeight: '180px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #333' }} />
 
@@ -1203,13 +1203,13 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* SYSTEM TICKER — click to open service log */}
+                            {/* SYSTEM TICKER - click to open service log */}
                             <div id="dashSystemTicker" className="dash-system-ticker"
                                 onClick={() => (window as any).toggleDashSystemLog()}>
                                 SYSTEM ONLINE
                             </div>
 
-                            {/* SYSTEM LOG OVERLAY — covers chat area */}
+                            {/* SYSTEM LOG OVERLAY - covers chat area */}
                             <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
                                 <div className="dash-syslog-header">
                                     <span>SYSTEM LOGS</span>
@@ -1378,7 +1378,7 @@ export default function DashboardPage() {
                                     <input type="number" id="rewardBonus" className="rw-inp" defaultValue="50" />
                                 </div>
                                 <div className="rw-group">
-                                    <div className="rw-label">COMMENT — sent to member chat</div>
+                                    <div className="rw-label">COMMENT - sent to member chat</div>
                                     <textarea id="rewardComment" className="rw-inp" placeholder="Your verdict... (sent as chat message)" />
                                 </div>
                             </div>
@@ -1487,7 +1487,7 @@ export default function DashboardPage() {
                                                     {isPaywalled && !isSilenced && <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(197,160,89,0.8)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>PAYWALLED</span>}
                                                 </div>
                                                 <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-                                                    {isSilenced ? (u.parameters?.silence_reason || '—') : (u.parameters?.paywall?.reason || '—')}
+                                                    {isSilenced ? (u.parameters?.silence_reason || '-') : (u.parameters?.paywall?.reason || '-')}
                                                 </div>
                                                 {isPaywalled && !isSilenced && u.parameters?.paywall?.amount > 0 && (
                                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginTop: 4 }}>€{Number(u.parameters.paywall.amount).toFixed(2)}</div>

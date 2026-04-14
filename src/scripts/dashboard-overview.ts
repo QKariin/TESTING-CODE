@@ -1,4 +1,4 @@
-// dashboard-overview.ts — Professional queen dashboard home overview
+// dashboard-overview.ts - Professional queen dashboard home overview
 import { users, globalTributes, globalQueue } from './dashboard-state';
 
 // ── Activity feed ring buffer ──────────────────────────────────────────────
@@ -138,12 +138,12 @@ function _buildSlaveDonut(): string {
         <svg width="110" height="110" viewBox="0 0 110 110">
             <!-- inactive -->
             <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12" stroke-dasharray="${circumference}" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>
-            <!-- recent — use second theme color -->
+            <!-- recent - use second theme color -->
             <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${h2}" stroke-width="12"
                 stroke-dasharray="${recentDash} ${circumference - recentDash}"
                 stroke-dashoffset="${-onlineDash}"
                 transform="rotate(-90 ${cx} ${cy})"/>
-            <!-- online — use primary theme color -->
+            <!-- online - use primary theme color -->
             <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${h}" stroke-width="12"
                 stroke-dasharray="${onlineDash} ${circumference - onlineDash}"
                 stroke-dashoffset="0"
@@ -212,7 +212,7 @@ export function renderOverview() {
     _setOv('ov-stat-slaves', String((users || []).length));
 
     if (topSpender) {
-        _setOv('ov-top-name', (topSpender.name || topSpender.member_id || '—').toUpperCase());
+        _setOv('ov-top-name', (topSpender.name || topSpender.member_id || '-').toUpperCase());
         _setOv('ov-top-val', `€${(topSpender.totalSpend || topSpender.wallet || 0).toLocaleString()}`);
         const img = document.getElementById('ov-top-avatar') as HTMLImageElement;
         if (img && topSpender.avatar) { img.src = topSpender.avatar; img.style.display = 'block'; }

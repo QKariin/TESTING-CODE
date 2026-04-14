@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// No auth required — only returns silence boolean + reason for the requesting user.
+// No auth required - only returns silence boolean + reason for the requesting user.
 // Uses supabaseAdmin to bypass RLS so it always works regardless of session state.
 export async function POST(req: NextRequest) {
     try {

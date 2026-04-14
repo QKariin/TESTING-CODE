@@ -12,8 +12,8 @@ function emailToId(email: string): number {
     return Math.abs(h) || 1;
 }
 
-// GET — return all subscribers with online flag (online first)
-// Uses profiles.last_active for online detection — same logic as dashboard sidebar
+// GET - return all subscribers with online flag (online first)
+// Uses profiles.last_active for online detection - same logic as dashboard sidebar
 export async function GET() {
     const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
@@ -37,14 +37,14 @@ export async function GET() {
     return NextResponse.json({ online: all.filter((u: { online: boolean }) => u.online), all });
 }
 
-// POST — heartbeat: update profiles.last_active (same field dashboard uses for online detection)
+// POST - heartbeat: update profiles.last_active (same field dashboard uses for online detection)
 export async function POST(req: Request) {
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
 
     const now = new Date().toISOString();
 
-    // last_active may not exist in all schema versions — ignore update errors
+    // last_active may not exist in all schema versions - ignore update errors
     await supabaseAdmin
         .from('profiles')
         .update({ last_active: now })

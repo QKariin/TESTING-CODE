@@ -34,7 +34,7 @@ export async function GET() {
         ...(pointsRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
     ].filter(Boolean))] as string[];
 
-    // Lookup each profile individually with ilike (case-insensitive) — same pattern as /api/global/messages
+    // Lookup each profile individually with ilike (case-insensitive) - same pattern as /api/global/messages
     const profileMap = new Map<string, any>();
     if (allEmails.length) {
         const profileResults = await Promise.all(

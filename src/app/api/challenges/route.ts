@@ -11,7 +11,7 @@ export async function GET() {
 
         if (error) throw error;
 
-        // Single query for all participants across all challenges — then count in JS
+        // Single query for all participants across all challenges - then count in JS
         const challengeIds = (challenges || []).map((c: any) => c.id);
         const { data: allParticipants } = challengeIds.length
             ? await supabaseAdmin.from('challenge_participants').select('challenge_id, status').in('challenge_id', challengeIds)
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
 
         if (cErr) throw cErr;
 
-        // Generate windows — use provided task_times or distribute evenly 08:00–22:00
+        // Generate windows - use provided task_times or distribute evenly 08:00–22:00
         const windows: any[] = [];
         const tpd = Number(tasks_per_day);
         const wmin = Number(window_minutes);
@@ -114,9 +114,9 @@ export async function POST(request: Request) {
 
         // Auto-create 3 badge definitions
         await supabaseAdmin.from('badges').insert([
-            { challenge_id: challenge.id, type: 'participant', name: `${name} — Participant`, description: `Joined the ${name} challenge`, rarity: 'common' },
-            { challenge_id: challenge.id, type: 'finisher', name: `${name} — Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare' },
-            { challenge_id: challenge.id, type: 'champion', name: `${name} — Champion`, description: `Won the ${name} challenge`, rarity: 'legendary' },
+            { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common' },
+            { challenge_id: challenge.id, type: 'finisher', name: `${name} - Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare' },
+            { challenge_id: challenge.id, type: 'champion', name: `${name} - Champion`, description: `Won the ${name} challenge`, rarity: 'legendary' },
         ]);
 
         return NextResponse.json({ success: true, challenge, windows_created: windows.length });

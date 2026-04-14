@@ -1,5 +1,5 @@
 // src/scripts/onboarding.ts
-// First-visit onboarding — mobile only, new users only
+// First-visit onboarding - mobile only, new users only
 
 import { createClient } from '@/utils/supabase/client';
 import { uploadToSupabase } from './mediaSupabase';
@@ -17,7 +17,7 @@ function getSlides(name: string): Slide[] {
     return [
         {
             title: 'THE RITUAL',
-            body: `Kneeling is your core act of submission. You will complete 8 sessions per day.\n\nEach session earns you coins — the only currency that lets you speak to me. If you go silent, you kneel. That is the only way back.`,
+            body: `Kneeling is your core act of submission. You will complete 8 sessions per day.\n\nEach session earns you coins - the only currency that lets you speak to me. If you go silent, you kneel. That is the only way back.`,
         },
         {
             title: 'YOUR DAILY DUTY',
@@ -139,14 +139,14 @@ function _renderWelcome(state: OBState): void {
 
                 <div class="ob-body">
                     <p>This is not a public platform. There is no team behind it, no support line, and no other Mistress. I built this. I run this. I am the only Dominant here.</p>
-                    <p>What you are looking at is a high-precision system built specifically to track and manage submission — your kneeling, your tasks, your tributes, your obedience. All of it is logged and visible to me in real time.</p>
+                    <p>What you are looking at is a high-precision system built specifically to track and manage submission - your kneeling, your tasks, your tributes, your obedience. All of it is logged and visible to me in real time.</p>
                     <p>This server is private. Entry is not given freely. If you are here, I have chosen to allow it.</p>
                     <p style="color:rgba(255,255,255,0.6);">I expect full obedience from every sub who enters. No exceptions. No negotiations.</p>
                 </div>
             </div>
 
             <div>
-                <button id="ob-enter" class="ob-btn">I UNDERSTAND — ENTER</button>
+                <button id="ob-enter" class="ob-btn">I UNDERSTAND - ENTER</button>
             </div>
         </div>
     `;
@@ -170,7 +170,7 @@ function _renderSetup(state: OBState): void {
                 <div class="ob-title">BEFORE YOU GO FURTHER</div>
                 <div class="ob-gold-line"></div>
                 <div class="ob-body" style="margin-bottom:28px;">
-                    <p>Your name and photo identify you in the Global presence feed, the leaderboard, and throughout this space. Choose a name you use in your private world — not your legal name.</p>
+                    <p>Your name and photo identify you in the Global presence feed, the leaderboard, and throughout this space. Choose a name you use in your private world - not your legal name.</p>
                 </div>
 
                 <!-- Photo -->
@@ -311,11 +311,11 @@ function _renderSlide(state: OBState): void {
         const footman  = HIERARCHY_RULES.find(r => r.name === 'Footman');
         bodyHtml = `
             <div style="border:1px solid rgba(197,160,89,0.18);border-radius:6px;padding:16px;margin-bottom:12px;">
-                <div class="ob-label" style="margin-bottom:12px;color:#c5a059;">CURRENT — HALL BOY</div>
+                <div class="ob-label" style="margin-bottom:12px;color:#c5a059;">CURRENT - HALL BOY</div>
                 ${(hallBoy?.benefits || []).map(b => `<div style="font-size:0.85rem;color:rgba(255,255,255,0.42);margin-bottom:7px;padding-left:10px;border-left:1px solid rgba(197,160,89,0.2);">${b}</div>`).join('')}
             </div>
             <div style="border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:16px;">
-                <div class="ob-label" style="margin-bottom:12px;color:rgba(255,255,255,0.22);">NEXT — FOOTMAN</div>
+                <div class="ob-label" style="margin-bottom:12px;color:rgba(255,255,255,0.22);">NEXT - FOOTMAN</div>
                 ${(footman?.benefits || []).map(b => `<div style="font-size:0.85rem;color:rgba(255,255,255,0.22);margin-bottom:7px;padding-left:10px;border-left:1px solid rgba(255,255,255,0.07);">${b}</div>`).join('')}
                 <div style="font-size:0.7rem;color:rgba(255,255,255,0.15);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">5 tasks &nbsp;·&nbsp; 10 kneels &nbsp;·&nbsp; 2,000 merit points</div>
             </div>

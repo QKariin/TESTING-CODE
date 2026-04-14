@@ -757,7 +757,7 @@
 
 /* --- TYPOGRAPHY (REVERTED TO LUXURY) --- */
 
-/* ── GLOBAL SECTION HEADER — used by ribbon-label, chronicle-section-label, hub-section-label, altar-section-label ── */
+/* ── GLOBAL SECTION HEADER - used by ribbon-label, chronicle-section-label, hub-section-label, altar-section-label ── */
 .ribbon-label,
 .chronicle-section-label,
 .hub-section-label,
@@ -3968,7 +3968,7 @@
 }
 
 /* =============================================
-   EXCHEQUER RADIAL WHEEL — COIN SHOP
+   EXCHEQUER RADIAL WHEEL - COIN SHOP
    ============================================= */
 
 .exchequer-wheel-wrap {

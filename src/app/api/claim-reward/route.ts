@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         const COIN_REWARD = 10;
         const POINT_REWARD = 50;
 
-        // 1. Get current balance — look up by UUID (profiles.id) if UUID, else by member_id (email)
+        // 1. Get current balance - look up by UUID (profiles.id) if UUID, else by member_id (email)
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
         const { data: profile } = await supabaseAdmin
             .from('profiles')

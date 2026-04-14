@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
         const exactEmail = profile.member_id;
 
-        // 2. Find current rank index — fallback to Hall Boy (last) if unrecognized
+        // 2. Find current rank index - fallback to Hall Boy (last) if unrecognized
         const currentHierarchy = profile.hierarchy || "Hall Boy";
         let currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentHierarchy));
         if (currentIndex === -1) currentIndex = HIERARCHY_RULES.length - 1; // unrecognized = treat as lowest

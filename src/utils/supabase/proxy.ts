@@ -5,14 +5,14 @@ import { getSupabase } from '@/lib/supabase'
 export async function updateSession(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
-    // 🔓 API routes: always pass through — route handlers do their own auth.
+    // 🔓 API routes: always pass through - route handlers do their own auth.
     // CRITICAL: must be before any Supabase call or the proxy will redirect
     // expired-session API POSTs to /login (307), creating an infinite POST loop.
     if (pathname.startsWith('/api') || pathname.startsWith('/auth')) {
         return NextResponse.next();
     }
 
-    // 🔓 LOCAL DEV BYPASS — skip all auth when running on localhost
+    // 🔓 LOCAL DEV BYPASS - skip all auth when running on localhost
     const host = request.headers.get('host') || ''
     if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
         return NextResponse.next({ request })

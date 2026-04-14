@@ -50,7 +50,7 @@ export async function GET(req: Request) {
             const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
             return {
                 name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
-                hierarchy: prof.hierarchy || t.Hierarchy || '—',
+                hierarchy: prof.hierarchy || t.Hierarchy || '-',
                 avatar: prof.avatar_url || '',
                 score: parseNum(t[colKey]),
                 member_number: prof.id || null,

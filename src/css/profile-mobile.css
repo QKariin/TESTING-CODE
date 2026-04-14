@@ -2,7 +2,7 @@
    MOBILE RECONSTRUCTION (MIRRORED FROM INDEX.HTML)
    ========================================= */
 
-/* Nav hidden on desktop — shown only on mobile */
+/* Nav hidden on desktop - shown only on mobile */
 @media screen and (min-width: 769px) {
     #mobBottomNav {
         display: none;
@@ -295,7 +295,7 @@
         flex-shrink: 0;
     }
 
-    /* Gear badge — sits outside circle, bottom-right corner */
+    /* Gear badge - sits outside circle, bottom-right corner */
     .hud-gear {
         position: absolute;
         bottom: -3px;
@@ -955,7 +955,7 @@
         position: relative;
     }
 
-    /* New message — ring goes gold and ripples */
+    /* New message - ring goes gold and ripples */
     .mob-nav-queen-ring.has-new-msg {
         border-color: rgba(197, 160, 89, 1);
         animation: queenRingAlert 1.8s ease-in-out infinite;
@@ -1797,13 +1797,13 @@
         height: 0 !important;
     }
 
-    /* Chat overlay specific — strict flex column, only #mob_chatBox scrolls */
+    /* Chat overlay specific - strict flex column, only #mob_chatBox scrolls */
     #mobChatTabChat {
         display: flex;
         flex-direction: column;
         flex: 1;
         min-height: 0;
-        /* NO overflow:hidden here — that's what clips messages */
+        /* NO overflow:hidden here - that's what clips messages */
     }
 
     #mob_chatBox {
@@ -1973,7 +1973,7 @@
         max-width: 72%;
     }
 
-    /* QUEEN bubble — left, black bg, gold gradient border */
+    /* QUEEN bubble - left, black bg, gold gradient border */
     #mob_chatContent .cb-queen {
         background: #000;
         border: 1px solid transparent;
@@ -1991,7 +1991,7 @@
         white-space: pre-wrap;
     }
 
-    /* SLAVE bubble — right, charcoal, no border */
+    /* SLAVE bubble - right, charcoal, no border */
     #mob_chatContent .cb-slave {
         background: #1c1c1e;
         border: none;
@@ -2016,7 +2016,7 @@
     #mob_chatContent .chat-ts-left  { color: rgba(197,160,89,0.45); text-align: left; }
     #mob_chatContent .chat-ts-right { color: #444; text-align: right; }
 
-    /* Gift card — centered service card */
+    /* Gift card - centered service card */
     #mob_chatContent .chat-gift-wrap {
         display: flex;
         flex-direction: column;
@@ -2085,7 +2085,7 @@
         inset: 0 !important;
         background: #030308 !important;
         z-index: 9999 !important;
-        /* display controlled by JS — do NOT set display here */
+        /* display controlled by JS - do NOT set display here */
         flex-direction: column !important;
         padding: 0 !important;
         overflow: hidden;
@@ -2227,7 +2227,7 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    /* Top 3 rows — bigger, highlighted */
+    /* Top 3 rows - bigger, highlighted */
     .mob-gl-rank-row--top {
         padding: 14px 10px;
         gap: 13px;
@@ -2434,7 +2434,7 @@
 
     /* ── EXCHEQUER MODAL ───────────────────────────────────────────────── */
 
-    /* Force it above everything — inline zIndex:2147483640 is overridden by !important */
+    /* Force it above everything - inline zIndex:2147483640 is overridden by !important */
     #mobExchequer {
         z-index: 2147483647 !important;
     }

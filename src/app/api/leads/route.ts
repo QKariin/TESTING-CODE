@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// POST — capture a lead (called from auth callback when user has no profile)
+// POST - capture a lead (called from auth callback when user has no profile)
 export async function POST(req: NextRequest) {
     try {
         const { email, provider } = await req.json();
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 }
 
-// GET — list all leads for the dashboard
+// GET - list all leads for the dashboard
 export async function GET() {
     try {
         const { data, error } = await supabaseAdmin

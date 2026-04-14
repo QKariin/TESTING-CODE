@@ -55,7 +55,7 @@ export async function POST(req: Request) {
                         stripe_session_id: session.id,
                         status: 'pending',
                     }).eq('id', applicationId);
-                    console.log(`✅ Application fee paid for ${email} — app ${applicationId}`);
+                    console.log(`✅ Application fee paid for ${email} - app ${applicationId}`);
                 }
             }
 
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
 
                 console.log(`💰 Processing Coins: ${coins} for ${userEmail || userId}`);
 
-                // Find Profile — try email first (ilike for case-insensitivity), fallback to id
+                // Find Profile - try email first (ilike for case-insensitivity), fallback to id
                 let profile: any = null;
                 if (userEmail) {
                     const { data } = await supabaseAdmin
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
                     }
                     profileParams.processedStripeSessions = processedSessions;
 
-                    // Purchase entry — realtime notification + persistent history
+                    // Purchase entry - realtime notification + persistent history
                     const purchaseEntry = {
                         coins,
                         name: profile.name || userEmail || userId || 'Unknown',

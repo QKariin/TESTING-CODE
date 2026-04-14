@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Uses Tenor API v1 — get a free key at https://tenor.com/developer
-// Set TENOR_API_KEY in your .env.local — falls back to demo key for now
+// Uses Tenor API v1 - get a free key at https://tenor.com/developer
+// Set TENOR_API_KEY in your .env.local - falls back to demo key for now
 const TENOR_KEY = process.env.TENOR_API_KEY || 'LIVDSRZULELA';
 
 export async function GET(req: Request) {

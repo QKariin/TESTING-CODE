@@ -76,7 +76,7 @@ export function closeListModal() {
 }
 
 export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false) {
-    // Detect video by URL (original behavior — works reliably for .mp4/.mov/.webm URLs)
+    // Detect video by URL (original behavior - works reliably for .mp4/.mov/.webm URLs)
     const isVideo = mediaTypeFunction(mediaUrl) === 'video';
     setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine });
 
@@ -117,7 +117,7 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     actionsEl.style.backgroundRepeat = 'no-repeat';
     actionsEl.style.backgroundPosition = 'top';
 
-    // Media — original behavior restored
+    // Media - original behavior restored
     if (mediaUrl) {
         if (isVideo) {
             mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
@@ -230,7 +230,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
     // Capture state locally to avoid race conditions
     const taskData = { ...currTask };
 
-    // --- ROUTINE: simple YES/NO — no reward protocol, no penalty ---
+    // --- ROUTINE: simple YES/NO - no reward protocol, no penalty ---
     if (taskData.isRoutine) {
         isConfirming = true;
 
@@ -274,7 +274,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
     } else {
         console.log("Task rejected:", taskData.id);
 
-        // Read note BEFORE closeModal() is called — try new combined field first, fall back to old
+        // Read note BEFORE closeModal() is called - try new combined field first, fall back to old
         const quickNoteEl = (document.getElementById('reviewComment') || document.getElementById('taskQuickNote')) as HTMLInputElement | HTMLTextAreaElement;
         const rejectNote = quickNoteEl?.value.trim() || '';
 
@@ -425,7 +425,7 @@ export function confirmReward() {
         u.points = (u.points || 0) + bonus;
         if (u.score !== undefined) u.score = (u.score || 0) + bonus;
         if (u.parameters) {
-            // taskdom_completed_tasks is authoritative in tasks.Taskdom_CompletedTasks — not updated locally
+            // taskdom_completed_tasks is authoritative in tasks.Taskdom_CompletedTasks - not updated locally
         }
 
         // 3. Update local history entry for "Record" tab
@@ -889,7 +889,7 @@ export function renderGlobalReview(filterRoutine: boolean) {
             if (thumbSrc) {
                 mediaBg = `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`;
             } else {
-                // No thumbnail — show placeholder icon, load video only when opened in modal
+                // No thumbnail - show placeholder icon, load video only when opened in modal
                 mediaBg = `<div class="ops-card-bg" style="background:#0a0a0a;"></div>`;
             }
             mediaBg += `<div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>`;

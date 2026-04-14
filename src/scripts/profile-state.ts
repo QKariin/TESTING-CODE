@@ -5,7 +5,7 @@ export interface ProfileState {
     wallet: number;
     score: number;
     memberId: string | null; // UUID (profiles.id / session.user.id)
-    email: string | null;    // email (profiles.member_id) — for display only
+    email: string | null;    // email (profiles.member_id) - for display only
     id: string | null;
     userName: string;
     rank: string;
@@ -55,7 +55,7 @@ export function initProfileState(data: any) {
     }
 
     setState({
-        memberId: data.id || null,  // UUID — profiles.id / session.user.id
+        memberId: data.id || null,  // UUID - profiles.id / session.user.id
         email: data.member_id || data.memberId || data.email || null,  // email for display/profile lookup
         id: data.id,
         wallet: data.wallet || 0,

@@ -1,5 +1,5 @@
 // src/app/api/profile-update/route.ts
-// Server-side profile update — uses supabaseAdmin to bypass RLS
+// Server-side profile update - uses supabaseAdmin to bypass RLS
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';

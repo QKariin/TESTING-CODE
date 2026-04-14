@@ -1,5 +1,5 @@
 // src/scripts/dashboard-wishlist.ts
-// Admin Wishlist Manager — CRUD panel on the dashboard
+// Admin Wishlist Manager - CRUD panel on the dashboard
 import { getOptimizedUrl } from './media';
 
 let wishlistItems: any[] = [];
@@ -33,7 +33,7 @@ function renderWishlistPanel() {
         const goal = parseInt(item.goal_amount || item.Goal_Amount || 0);
         const img = item.Image || item.image || '';
         const id = item.ID || item.id || item.Title;
-        const title = item.Title || item.title || '—';
+        const title = item.Title || item.title || '-';
         const category = item.Category || item.category || '';
         const typeColor = isCrowdfund ? '#64b4ff' : '#c5a059';
         const typeBg = isCrowdfund ? 'rgba(100,180,255,0.15)' : 'rgba(197,160,89,0.15)';

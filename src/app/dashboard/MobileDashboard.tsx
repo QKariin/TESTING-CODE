@@ -88,7 +88,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     const [dailyCode, setDailyCode] = useState('----');
     const [unreadMap, setUnreadMap] = useState<Record<string, string>>({});
     const [challenges, setChallenges] = useState<any[]>([]);
-    // Root-level review modal — rendered after nav so it's always on top
+    // Root-level review modal - rendered after nav so it's always on top
     const [rootReviewTask, setRootReviewTask] = useState<any | null>(null);
     const [rootReviewing, setRootReviewing] = useState<string | null>(null);
     const onlineJoinTimeRef = useRef<Record<string, number>>({});
@@ -97,7 +97,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const loadData = useCallback(async () => {
         try {
-            // Lightweight list — only name, avatar, online status, unread indicator
+            // Lightweight list - only name, avatar, online status, unread indicator
             // Full profile/tasks load on click only
             const [listRes, unread] = await Promise.all([
                 fetch('/api/dashboard-list').then(r => r.json()),
@@ -292,7 +292,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 </nav>
             )}
 
-            {/* ROOT-LEVEL TASK REVIEW MODAL — rendered after nav, always on top */}
+            {/* ROOT-LEVEL TASK REVIEW MODAL - rendered after nav, always on top */}
             {rootReviewTask && (() => {
                 const rt = rootReviewTask;
                 const rtMid = (rt.member_id || '').toLowerCase();
@@ -451,7 +451,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.34rem', color: '#333', letterSpacing: '2px', marginTop: 5 }}>COMMAND CENTER</div>
                 </div>
-                {/* Daily code — tucked top-right */}
+                {/* Daily code - tucked top-right */}
                 <div style={{ flexShrink: 0, textAlign: 'center' }}>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.28rem', color: '#2e2e2e', letterSpacing: '2px', marginBottom: 3 }}>TODAY</div>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.25rem', fontWeight: 900, color: '#c5a059', letterSpacing: '5px', textShadow: '0 0 14px rgba(197,160,89,0.25)' }}>{dailyCode}</div>
@@ -503,7 +503,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 6px #c5a059', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: '#c5a059', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChallenge.name}</div>
                             </div>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>LIVE · {activeChallenge.participant_active ?? '—'} ACTIVE · {activeChallenge.participant_total ?? '—'} TOTAL</div>
+                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>LIVE · {activeChallenge.participant_active ?? '-'} ACTIVE · {activeChallenge.participant_total ?? '-'} TOTAL</div>
                         </div>
                     </div>
                 </div>
@@ -744,7 +744,7 @@ function ChallengesView() {
         if (pick) loadDetail(pick.id);
     }, [challenges, detail, loadDetail]);
 
-    // No auto-refresh detail — loads fresh on click only
+    // No auto-refresh detail - loads fresh on click only
 
     // Countdown tick
     useEffect(() => {
@@ -795,7 +795,7 @@ function ChallengesView() {
                             });
                             const json = await res.json();
                             if (json.success) {
-                                showToast(verified ? `✓ Verified — ${json.points_awarded ?? 20}pts` : '✕ Rejected', verified);
+                                showToast(verified ? `✓ Verified - ${json.points_awarded ?? 20}pts` : '✕ Rejected', verified);
                                 loadDetail(detail.challenge.id);
                             } else {
                                 showToast(json.error || 'Error', false);
@@ -876,7 +876,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {draftChallenges.length > 0 ? (
                     <>
-                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>DRAFTS — TAP TO SELECT</div>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>DRAFTS - TAP TO SELECT</div>
                         {draftChallenges.map(c => (
                             <button key={c.id} onClick={() => onSelectChallenge(c)}
                                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', WebkitTapHighlightColor: 'transparent' }}>
@@ -971,7 +971,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                         <div style={{ marginTop: 10, background: `${color}12`, border: `1px solid ${color}44`, borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
                             <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, animation: 'pulse 1.2s infinite' }} />
                             <div>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color, letterSpacing: '1px' }}>WINDOW OPEN — D{currentWindow.day_number}·T{currentWindow.window_number}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color, letterSpacing: '1px' }}>WINDOW OPEN - D{currentWindow.day_number}·T{currentWindow.window_number}</div>
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.4rem', fontWeight: 900, color, letterSpacing: '6px', lineHeight: 1.2 }}>{currentWindow.verification_code}</div>
                             </div>
                         </div>
@@ -1054,7 +1054,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             {/* Leaderboard collapsible */}
             <button onClick={() => setShowLeaderboard(v => !v)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>LEADERBOARD — {leaderboard.length}</span>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>LEADERBOARD - {leaderboard.length}</span>
                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#333' }}>{showLeaderboard ? '▲' : '▼'}</span>
             </button>
             {showLeaderboard && (
@@ -1066,7 +1066,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                         const rank = isChamp ? 1 : (p.final_rank || (isElim ? null : i + 1));
                         return (
                             <div key={p.member_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isChamp ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isChamp ? 'rgba(197,160,89,0.3)' : 'rgba(255,255,255,0.04)'}`, borderLeft: `3px solid ${isElim ? '#222' : isChamp ? '#c5a059' : color}`, borderRadius: 8, opacity: isElim ? 0.4 : 1 }}>
-                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '—')}</div>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '-')}</div>
                                 <img src={p.avatar || '/queen-karin.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
@@ -1092,7 +1092,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             {/* Task schedule collapsible */}
             <button onClick={() => setShowSchedule(v => !v)}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>TASK SCHEDULE — {windows.length} WINDOWS</span>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px' }}>TASK SCHEDULE - {windows.length} WINDOWS</span>
                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#333' }}>{showSchedule ? '▲' : '▼'}</span>
             </button>
             {showSchedule && (
@@ -1202,7 +1202,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                         <div style={{ padding: '0 12px 10px' }}>
                                             {taskName && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.78rem', color: 'rgba(220,215,200,0.8)', marginBottom: 4, lineHeight: 1.5 }}>{taskName}</div>}
                                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.32rem', color: isOpen ? 'rgba(74,222,128,0.5)' : isPast ? '#1e1e1e' : 'rgba(197,160,89,0.3)', letterSpacing: '1px' }}>
-                                                {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} — {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>
                                     )}
@@ -1439,7 +1439,7 @@ function ChHistoryTab({ challenges, onView }: { challenges: MChallenge[]; onView
 }
 
 // ─── TASK REVIEW MODAL ────────────────────────────────────────────────────────
-// Full-screen: media on top, actions at bottom. Single step — no extra dialogs.
+// Full-screen: media on top, actions at bottom. Single step - no extra dialogs.
 function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
     proofUrl?: string; isVideo: boolean; name: string; avatar: string; rank?: string;
     text: string; isRoutine: boolean; busy: boolean;
@@ -1470,7 +1470,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                 {isRoutine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.3rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
             </div>
 
-            {/* Media area — scrollable if needed */}
+            {/* Media area - scrollable if needed */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {proofUrl ? (
                     isVideo ? (
@@ -1484,7 +1484,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                 <div style={{ padding: '12px 16px', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#777', lineHeight: 1.5 }}>{text}</div>
             </div>
 
-            {/* Actions — always visible at bottom */}
+            {/* Actions - always visible at bottom */}
             <div style={{ background: '#080808', borderTop: '1px solid rgba(197,160,89,0.1)', padding: '14px 16px', paddingBottom: 'max(32px, env(safe-area-inset-bottom, 16px))', flexShrink: 0 }}>
                 {!isRoutine && (
                     <>
@@ -1702,7 +1702,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                                 <>
                                                     <button disabled={busy} onClick={() => handleApprove(task, 50)}
                                                         style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✓ YES — 50 PTS'}
+                                                        {busy ? '...' : '✓ YES - 50 PTS'}
                                                     </button>
                                                     <button disabled={busy} onClick={() => handleReject(task)}
                                                         style={{ flex: 1, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff4444', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.48rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
@@ -1902,7 +1902,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
 
             {/* Wallet */}
             <div style={S.card}>
-                <div style={S.cardTitle}>WALLET — {user.wallet.toLocaleString()} ₡</div>
+                <div style={S.cardTitle}>WALLET - {user.wallet.toLocaleString()} ₡</div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input style={{ ...smInp, flex: 1 }} value={walletAmt} onChange={e => setWalletAmt(e.target.value)} placeholder="100" />
                     <button disabled={busy} onClick={() => adjustWallet(1)}
@@ -1918,7 +1918,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
 
             {/* Merit */}
             <div style={S.card}>
-                <div style={S.cardTitle}>MERIT — {user.score}</div>
+                <div style={S.cardTitle}>MERIT - {user.score}</div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <input style={{ ...smInp, flex: 1 }} value={meritAmt} onChange={e => setMeritAmt(e.target.value)} placeholder="50" />
                     <button disabled={busy} onClick={() => adjustMerit(1)}
@@ -1934,7 +1934,7 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
 
             {/* Rank */}
             <div style={S.card}>
-                <div style={S.cardTitle}>RANK — {user.rank}</div>
+                <div style={S.cardTitle}>RANK - {user.rank}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     <select value={newRank} onChange={e => setNewRank(e.target.value)}
                         style={{ flex: 1, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', padding: '11px 10px', outline: 'none', cursor: 'pointer' }}>

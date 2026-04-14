@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 // GET /api/media?url=<supabase_public_url>
-// Proxies Supabase storage files via service role — works even if bucket is private.
+// Proxies Supabase storage files via service role - works even if bucket is private.
 // Also used as onerror fallback for videos/images that fail to load directly.
 export async function GET(req: NextRequest) {
     try {

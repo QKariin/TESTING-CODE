@@ -17,7 +17,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid tribute type' }, { status: 400 });
         }
 
-        // Determine identifier — email for Google/email users, twitter_{id} for Twitter users
+        // Determine identifier - email for Google/email users, twitter_{id} for Twitter users
         const identifier = user.email
             || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
 

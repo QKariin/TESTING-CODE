@@ -2,15 +2,15 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@/utils/supabase/server';
 
-// Coin package catalogue — coins → cents (EUR)
+// Coin package catalogue - coins → cents (EUR)
 // Prices: 5,500=€50 | 12,000=€100 | 30,000=€250 | 70,000=€500 | 150,000=€1,000
 const COIN_PACKAGES: Record<number, { amountCents: number; label: string }> = {
     1000:   { amountCents:   1000, label: '1,000 Royal Silver'              },
     5500:   { amountCents:   5000, label: '5,500 Royal Silver'              },
     12000:  { amountCents:  10000, label: '12,000 Royal Silver'             },
-    30000:  { amountCents:  25000, label: '30,000 Royal Silver — Treasury Vault' },
-    70000:  { amountCents:  50000, label: '70,000 Royal Silver — Best Value'     },
-    150000: { amountCents: 100000, label: '150,000 Royal Silver — Emperor'       },
+    30000:  { amountCents:  25000, label: '30,000 Royal Silver - Treasury Vault' },
+    70000:  { amountCents:  50000, label: '70,000 Royal Silver - Best Value'     },
+    150000: { amountCents: 100000, label: '150,000 Royal Silver - Emperor'       },
 };
 
 export async function POST(req: Request) {

@@ -210,7 +210,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 // Initial check on load
                 await check();
 
-                // ── Realtime subscription — fires INSTANTLY when admin updates the profile ──
+                // ── Realtime subscription - fires INSTANTLY when admin updates the profile ──
                 // No row filter: avoids case-sensitive eq() mismatch. Filter in JS below.
                 realtimeChannel = supabase
                     .channel('layout-lock-' + emailLower)
@@ -222,7 +222,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     })
                     .subscribe();
 
-                // Poll every 15s as fallback only — Realtime handles instant updates
+                // Poll every 15s as fallback only - Realtime handles instant updates
                 pollInterval = setInterval(() => { if (active) check(); }, 15000);
             } catch {}
         }

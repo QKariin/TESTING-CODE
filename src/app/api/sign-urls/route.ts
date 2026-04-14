@@ -10,7 +10,7 @@ export async function POST(req: Request) {
         const { urls } = await req.json();
         if (!Array.isArray(urls)) return NextResponse.json({ urls: [] }, { status: 400 });
 
-        // Public buckets — files are already accessible via public URL, no signing needed.
+        // Public buckets - files are already accessible via public URL, no signing needed.
         // Signing them creates ?token= URLs that bypass Vercel CDN cache and hit Supabase directly.
         const PUBLIC_BUCKETS = ['media', 'avatars', 'public'];
 

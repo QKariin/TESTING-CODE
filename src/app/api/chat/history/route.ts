@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 
         const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
-        const since = searchParams.get('since'); // ISO timestamp — return only newer messages
+        const since = searchParams.get('since'); // ISO timestamp - return only newer messages
 
         let query: any;
         if (since) {

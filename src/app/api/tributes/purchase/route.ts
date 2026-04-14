@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
         if (updateErr) return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
 
-        // Update tasks['Tribute History'] — use UUID (tasks.member_id is UUID)
+        // Update tasks['Tribute History'] - use UUID (tasks.member_id is UUID)
         const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').eq('member_id', profileUuid).maybeSingle();
         const existingTH: any[] = (() => { try { const v = taskRow?.['Tribute History']; return Array.isArray(v) ? v : (typeof v === 'string' ? JSON.parse(v) : []); } catch { return []; } })();
         const newTH = [{ amount: -tributeCost, title: tributeTitle, date: new Date().toISOString() }, ...existingTH].slice(0, 100);
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
         const msgText = `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`;
 
-        // System chat message — use UUID for member_id
+        // System chat message - use UUID for member_id
         try {
             await supabase.from('chats').insert({
                 member_id: profileUuid,

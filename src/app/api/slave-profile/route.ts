@@ -18,7 +18,7 @@ async function getCallerEmail(): Promise<string | null> {
 function stripSensitive(response: any, isAdmin: boolean): any {
     if (!response || typeof response !== 'object') return response;
 
-    // Keep member_id intact — it is needed by the frontend chat system.
+    // Keep member_id intact - it is needed by the frontend chat system.
     // initProfileState reads data.member_id to set the memberId used by
     // loadChatHistory/subscribeToChat. Stripping it makes chat never load.
     const rest = { ...response };
@@ -32,7 +32,7 @@ function stripSensitive(response: any, isAdmin: boolean): any {
 }
 
 async function buildFullProfile(emailOrUuid: string) {
-    // Step 1: fetch profile — by UUID (profiles.id) if UUID, else by email (profiles.member_id)
+    // Step 1: fetch profile - by UUID (profiles.id) if UUID, else by email (profiles.member_id)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(emailOrUuid);
     const { data: profileData, error: profileError } = isUuid
         ? await supabaseAdmin.from('profiles').select('*').eq('id', emailOrUuid).maybeSingle()
@@ -43,7 +43,7 @@ async function buildFullProfile(emailOrUuid: string) {
         throw profileError;
     }
 
-    // Step 2: use UUID (profiles.id) to fetch tasks — tasks.member_id is UUID
+    // Step 2: use UUID (profiles.id) to fetch tasks - tasks.member_id is UUID
     const uuid = profileData?.id;
     const [{ data: taskData }, { data: contribData }] = await Promise.all([
         uuid

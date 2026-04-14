@@ -245,7 +245,7 @@ function IntroStep({ form, set, onNext, saving }: any) {
                         This is not a casual inquiry. I review every application personally and I accept very few.
                     </p>
                     <p className="font-['Cormorant_Garamond'] text-[1.05rem] font-light text-white/35 leading-relaxed">
-                        Answer honestly. I value truth over performance — I can tell the difference.
+                        Answer honestly. I value truth over performance - I can tell the difference.
                     </p>
                 </motion.div>
 
@@ -525,7 +525,7 @@ function PsychologyStep({ form, set, onNext, onBack, saving, amount, setAmount }
 function StepHeader({ num, title, subtitle }: { num: string; title: string; subtitle: string }) {
     return (
         <div className="mb-8">
-            <p className="text-[0.55rem] tracking-[4px] text-white/15 font-[Raleway] uppercase mb-6">{num} — {title}</p>
+            <p className="text-[0.55rem] tracking-[4px] text-white/15 font-[Raleway] uppercase mb-6">{num} - {title}</p>
             <h2 className="font-[Cinzel] font-light text-[1.6rem] text-white leading-snug mb-1 tracking-wide">{title}</h2>
             <GoldDivider />
             <p className="font-['Cormorant_Garamond'] text-[1rem] font-light italic text-white/30 leading-relaxed">{subtitle}</p>

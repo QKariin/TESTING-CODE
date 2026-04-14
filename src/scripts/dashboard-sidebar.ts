@@ -15,7 +15,7 @@ const soundMemory: { [key: string]: number } = {};
 // Track previous online state to detect actual transitions, not jitter
 const prevOnlineState: Record<string, boolean> = {};
 
-// pendingReadId: user currently open who had unread — read is deferred until we leave them
+// pendingReadId: user currently open who had unread - read is deferred until we leave them
 let pendingReadId: string | null = null;
 
 /**
@@ -63,7 +63,7 @@ export function renderSidebar() {
         const hasMsg = hasUnreadMessage(u);
         const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
 
-        // Track first unread time — set only once per streak
+        // Track first unread time - set only once per streak
         if (hasMsg && msgTime > 0 && !firstUnreadTime[u.memberId]) {
             firstUnreadTime[u.memberId] = msgTime;
         }
@@ -100,19 +100,19 @@ export function renderSidebar() {
     const hasUnreadForSort = (u: any) =>
         u.memberId === pendingReadId ? true : hasUnreadMessage(u);
 
-    // Group 1: has unread — FIFO queue: earliest message = top
+    // Group 1: has unread - FIFO queue: earliest message = top
     const withUnread = users
         .filter(u => hasUnreadForSort(u))
         .sort((a, b) => (firstUnreadTime[a.memberId] || 0) - (firstUnreadTime[b.memberId] || 0));
 
     const withUnreadIds = new Set(withUnread.map(u => u.memberId));
 
-    // Group 2: online, no unread — stable by first time seen online
+    // Group 2: online, no unread - stable by first time seen online
     const onlineNoUnread = users
         .filter(u => isUserOnline(u) && !withUnreadIds.has(u.memberId))
         .sort((a, b) => (onlineJoinTime[a.memberId] || now) - (onlineJoinTime[b.memberId] || now));
 
-    // Group 3: offline, no unread — most recently seen first
+    // Group 3: offline, no unread - most recently seen first
     const offlineNoUnread = users
         .filter(u => !isUserOnline(u) && !withUnreadIds.has(u.memberId))
         .sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
@@ -209,7 +209,7 @@ export function renderSidebar() {
     list.querySelectorAll<HTMLElement>('.u-item[data-id]').forEach(el => {
         const id = el.dataset.id!;
         const before = beforeRects[id];
-        if (!before) return; // new item — fade in instead
+        if (!before) return; // new item - fade in instead
         const after = el.getBoundingClientRect();
         const dy = before.top - after.top;
         if (Math.abs(dy) < 2) return; // didn't move, skip
@@ -278,7 +278,7 @@ function hasUnreadMessageCurrentUser(u: any) {
 export function selUser(id: string) {
     if (id === currId) return;
 
-    // ── Mark the PREVIOUS user as read (deferred — only now that we're leaving them) ──
+    // ── Mark the PREVIOUS user as read (deferred - only now that we're leaving them) ──
     markPendingRead();
 
     // If the user we're opening has unread messages, defer their read mark
@@ -292,14 +292,14 @@ export function selUser(id: string) {
             pendingReadId = id;
         }
     }
-    // NOTE: do NOT write localStorage.read here — deferred until we leave this user
+    // NOTE: do NOT write localStorage.read here - deferred until we leave this user
 
     const chatBox = document.getElementById('adminChatBox');
     if (chatBox) chatBox.innerHTML = "";
 
     setCurrId(id);
 
-    // Just swap the active highlight — no re-render, no reorder
+    // Just swap the active highlight - no re-render, no reorder
     document.querySelectorAll('#userList .u-item').forEach(el => el.classList.remove('active'));
     const target = document.querySelector(`#userList .u-item[data-id="${id}"]`);
     if (target) target.classList.add('active');

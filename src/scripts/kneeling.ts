@@ -114,7 +114,7 @@ export function attachKneelListeners() {
         (btn.style as any).webkitTouchCallout = "none"; // iOS long-press callout
         btn.ondragstart = () => false; // Old school block
 
-        // 2. FORCE INNER ELEMENTS TO BE GHOSTS (recursive — covers text spans too)
+        // 2. FORCE INNER ELEMENTS TO BE GHOSTS (recursive - covers text spans too)
         btn.querySelectorAll('*').forEach((child) => {
             const el = child as HTMLElement;
             el.style.pointerEvents = "none";
@@ -152,7 +152,7 @@ export function attachKneelListeners() {
         // Block Context Menu
         btn.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // iOS Safari: drive hold via touchstart/touchend — prevents context menu
+        // iOS Safari: drive hold via touchstart/touchend - prevents context menu
         // and is more reliable than pointer events on iOS.
         // passive:false is required to allow preventDefault().
         btn.addEventListener('touchstart', (e) => {

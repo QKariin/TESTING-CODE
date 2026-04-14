@@ -1,5 +1,5 @@
 // src/scripts/dashboard-presence.ts
-// Supabase Realtime presence — tracks which members are currently online.
+// Supabase Realtime presence - tracks which members are currently online.
 // Profile pages track() themselves; dashboard subscribes and gates all polling.
 
 import { createClient } from '@/utils/supabase/client';
@@ -22,7 +22,7 @@ function _notify() {
 /**
  * Dashboard: subscribe to the shared presence channel.
  * Builds onlineMembers from whoever is currently tracked.
- * Safe to call multiple times — only subscribes once.
+ * Safe to call multiple times - only subscribes once.
  */
 export function initPresenceTracking() {
     if (_channel) return;

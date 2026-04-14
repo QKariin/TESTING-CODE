@@ -47,7 +47,7 @@
     order: 1;
     position: relative;
     overflow: hidden;
-    /* Let grid control the dimensions — no flex, no explicit h/w */
+    /* Let grid control the dimensions - no flex, no explicit h/w */
 }
 
 /* Image and video both absolutely fill the media box */

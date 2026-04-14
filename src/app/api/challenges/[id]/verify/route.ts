@@ -109,11 +109,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             return NextResponse.json({ success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1 });
         } else {
             if (windowStillOpen) {
-                // Window still open — delete so they can resubmit
+                // Window still open - delete so they can resubmit
                 await supabaseAdmin.from('challenge_completions').delete().eq('id', completionId);
                 return NextResponse.json({ success: true, action: 'rejected_can_resubmit' });
             } else {
-                // Window closed — eliminate
+                // Window closed - eliminate
                 await supabaseAdmin.from('challenge_completions').update({
                     verified: false, verification_note: note || 'Rejected',
                 }).eq('id', completionId);

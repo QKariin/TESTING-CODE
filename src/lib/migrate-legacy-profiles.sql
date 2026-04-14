@@ -1,6 +1,6 @@
 -- ===========================================================
 -- FULL LEGACY MIGRATION: Wix CMS -> Supabase profiles
--- 56 MEMBERS — UPSERT with gen_random_uuid() for id
+-- 56 MEMBERS - UPSERT with gen_random_uuid() for id
 -- Run in: Supabase Dashboard -> SQL Editor -> New Query -> Run
 -- ===========================================================
 

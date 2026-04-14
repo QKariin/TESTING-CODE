@@ -3,11 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// Private folders — serve via signed URLs, not public URLs
+// Private folders - serve via signed URLs, not public URLs
 const PRIVATE_PREFIXES = ['task-proofs/', 'chat/', 'admin-chat/', 'chat-media/', 'challenge-proofs/'];
 const isPrivatePath = (path: string) => PRIVATE_PREFIXES.some(p => path.startsWith(p));
 
-// Signed URL expiry: 7 days (604800 seconds) — refreshed on next load
+// Signed URL expiry: 7 days (604800 seconds) - refreshed on next load
 const SIGNED_URL_EXPIRY = 604800;
 
 // POST /api/upload/signed
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         let fileUrl: string;
 
         if (isPrivatePath(path)) {
-            // Private content — return a signed download URL
+            // Private content - return a signed download URL
             const { data: signedData, error: signedErr } = await supabaseAdmin.storage
                 .from(bucket)
                 .createSignedUrl(path, SIGNED_URL_EXPIRY);
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
                 fileUrl = signedData.signedUrl;
             }
         } else {
-            // Public content — return permanent public URL
+            // Public content - return permanent public URL
             const { data: { publicUrl } } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
             fileUrl = publicUrl;
         }

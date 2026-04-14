@@ -8,7 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
-// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED — WIP
+// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import {
     claimKneelReward,
@@ -244,7 +244,7 @@ export default function ProfilePage() {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
 
-                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
+                        // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
                     }, 150);
                     return;
                 }
@@ -258,8 +258,8 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // ── SILENCE CHECK — runs before anything else ──────────────────
-                // Sets React state directly — no redirect, no race condition on mobile
+                // ── SILENCE CHECK - runs before anything else ──────────────────
+                // Sets React state directly - no redirect, no race condition on mobile
                 try {
                     const silenceRes = await fetch('/api/silence-check', {
                         method: 'POST',
@@ -269,12 +269,12 @@ export default function ProfilePage() {
                     const silenceData = await silenceRes.json();
                     if (silenceData.silence === true) {
                         (window as any)._setSilenceOverlay(true, silenceData.reason || '');
-                        // Do NOT return — continue loading profile so polling can detect unlock
+                        // Do NOT return - continue loading profile so polling can detect unlock
                     }
                 } catch {}
                 // ──────────────────────────────────────────────────────────────
 
-                // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
+                // Fetch all data via the admin API route (same as dashboard) - bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
                 const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
                 const rawData = await res.json();
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
 
-                    // Store lock state — applied after loading screen clears (DOM not ready yet)
+                    // Store lock state - applied after loading screen clears (DOM not ready yet)
                     pendingLockRef.current = {
                         silence: unifiedData?.silence === true,
                         silenceReason: unifiedData?.parameters?.silence_reason || '',
@@ -310,7 +310,7 @@ export default function ProfilePage() {
 
                         // ── Stripe coin purchase fallback ──────────────────────────
                         // When Stripe redirects back with session_id, verify + award coins.
-                        // Idempotent — safe to run even if webhook already fired.
+                        // Idempotent - safe to run even if webhook already fired.
                         if (urlParams.get('exchequer') === 'success' && urlParams.get('session_id')) {
                             const sid = urlParams.get('session_id')!;
                             try {
@@ -347,7 +347,7 @@ export default function ProfilePage() {
                             heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
                         }
 
-                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
+                        // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
                     }, 150);
                 }
             } catch (err) {
@@ -381,7 +381,7 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ONBOARDING DISABLED — WIP
+    // ONBOARDING DISABLED - WIP
     // useEffect(() => {
     //     if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
     //         import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
@@ -424,7 +424,7 @@ export default function ProfilePage() {
                             ).length;
                             setChallengeCounts({ pending: activeChallengeCount, yours: joined ? 1 : 0 });
 
-                            // Check for open task window — alert active participants
+                            // Check for open task window - alert active participants
                             if (joined && pJson.participant?.status === 'active' && pJson.windows) {
                                 const submittedIds = new Set((pJson.completions || []).map((c: any) => c.window_id));
                                 const openWin = (pJson.windows as any[]).find(w =>
@@ -459,7 +459,7 @@ export default function ProfilePage() {
                 }
             } catch {}
         }
-        checkChallenge(); // load once — challenges don't change frequently, no polling needed
+        checkChallenge(); // load once - challenges don't change frequently, no polling needed
     }, []);
 
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
@@ -572,7 +572,7 @@ export default function ProfilePage() {
     return (
         <>
 
-        {/* ── PAYWALL OVERLAY — outside container so position:fixed works on iOS ── */}
+        {/* ── PAYWALL OVERLAY - outside container so position:fixed works on iOS ── */}
         <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
@@ -942,10 +942,10 @@ export default function ProfilePage() {
                                 </div>
                                 <div>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
-                                    <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
+                                    <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>-</div>
                                 </div>
                             </div>
-                            {/* Challenge notice — full-width prominent banner */}
+                            {/* Challenge notice - full-width prominent banner */}
                             {activeChallenge && !isParticipant && !challengeBannerDismissed && (
                                 <div style={{ flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                                     <div
@@ -1044,7 +1044,7 @@ export default function ProfilePage() {
                                 </div>
                                 <button onClick={() => setDesktopChallengeOverlayOpen(false)} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.color = '#c5a059'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; }} onMouseOut={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.15)'; }}>✕</button>
                             </div>
-                            {/* Panel content — embedded (no position:fixed) */}
+                            {/* Panel content - embedded (no position:fixed) */}
                             <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 10 }}>
                                 <ChallengeUploadPanel
                                     challengeId={activeChallenge.id}
@@ -1074,13 +1074,13 @@ export default function ProfilePage() {
                         {/* CENTER COLUMN: two separate boxes stacked vertically */}
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
 
-                            {/* TOP BOX — tribute card, unchanged */}
+                            {/* TOP BOX - tribute card, unchanged */}
                             <div className="v-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                                 <div id="desk_QuickTribute" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden', minHeight: 0, justifyContent: 'center' }}></div>
                                 <button className="action-btn" onClick={() => toggleTributeHunt()} style={{ width: '100%', fontSize: '0.6rem', padding: 6, borderRadius: 8, marginTop: 10, background: 'rgba(255,255,255,0.05)', color: '#888', flexShrink: 0 }}>SPOIL ME ♥</button>
                             </div>
 
-                            {/* BOTTOM BOX — link to record / gallery */}
+                            {/* BOTTOM BOX - link to record / gallery */}
                             <div className="v-card" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '22px 16px', cursor: 'pointer' }} onClick={() => (window as any).switchTab('record')}>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
                                 <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>MY RECORD</div>
@@ -1153,7 +1153,7 @@ export default function ProfilePage() {
                         <div style={{ height: 50 }} />
 
 
-                        {/* ── SECTION 1: SUBSCRIPTIONS — 3D TIER FAN ── */}
+                        {/* ── SECTION 1: SUBSCRIPTIONS - 3D TIER FAN ── */}
                         <div style={{ width: '100%', marginBottom: 50, display: 'flex', justifyContent: 'center' }}>
                             <div style={{ perspective: '1000px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 0, width: '100%', paddingBottom: 20 }}>
                                 {([
@@ -1197,7 +1197,7 @@ export default function ProfilePage() {
                                                 <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem, 1.2vw, 0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px, 0.5vw, 6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', whiteSpace: 'nowrap' }}>{sub.tier}</div>
                                             </div>
 
-                                            {/* CENTER — PRICE */}
+                                            {/* CENTER - PRICE */}
                                             <div style={{ position: 'absolute', top: '35%', left: '10%', right: '10%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                                                 <span style={{ fontFamily: 'Cinzel', fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
                                                 <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.35rem, 0.7vw, 0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
@@ -1214,7 +1214,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* TITLE — between subscriptions and coins */}
+                        {/* TITLE - between subscriptions and coins */}
                         <div style={{ width: '100%', display: 'flex', alignItems: 'center', margin: '10px 0 30px' }}>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.7))' }} />
                             <div style={{ padding: '0 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
@@ -1444,11 +1444,11 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="hub-diag-row">
                                     <span className="hub-diag-dot ok"></span>
-                                    <span id="diagSyncTime" className="hub-diag-text">LAST SYNC: —</span>
+                                    <span id="diagSyncTime" className="hub-diag-text">LAST SYNC: -</span>
                                 </div>
                                 <div className="hub-diag-row">
                                     <span className="hub-diag-dot ok"></span>
-                                    <span id="diagUserEmail" className="hub-diag-text">SESSION: —</span>
+                                    <span id="diagUserEmail" className="hub-diag-text">SESSION: -</span>
                                 </div>
                             </div>
                         </div>
@@ -1601,12 +1601,12 @@ export default function ProfilePage() {
                             <div id="mobStatsContent" className="mob-internal-drawer">
                                 <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '15px' }}>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
-                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '—'}</div>
+                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '-'}</div>
                                     <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
                                 </div>
                                 <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
-                                    <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>—</div>
+                                    <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>-</div>
                                 </div>
                                 <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
                                 <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
@@ -1705,7 +1705,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* ALTAR BACKDROP + DRAWER — siblings of viewMobileHome so position:fixed is relative to viewport, not transformed scroll container */}
+                {/* ALTAR BACKDROP + DRAWER - siblings of viewMobileHome so position:fixed is relative to viewport, not transformed scroll container */}
                 <div id="altarBackdrop" className="altar-backdrop" onClick={() => (window as any).closeAltarDrawer()}></div>
 
                 <div id="altarDrawer" className="altar-drawer">
@@ -1749,10 +1749,10 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* Global view lives at /global route — not rendered here */}
+            {/* Global view lives at /global route - not rendered here */}
             <div id="globalViewOverlay" style={{ display: 'none' }}></div>
 
-            {/* ── MOB CHAT OVERLAY — root level, above MOBILE_APP ── */}
+            {/* ── MOB CHAT OVERLAY - root level, above MOBILE_APP ── */}
             <div id="mobChatOverlay" className="mob-overlay" style={{ display: 'none' }}>
                 <div className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
@@ -1762,7 +1762,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <div className="mob-overlay-title">QUEEN KARIN</div>
-                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
+                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>-</div>
                         </div>
                     </div>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
@@ -1816,7 +1816,7 @@ export default function ProfilePage() {
                 <div id="mobSystemLogContainer" style={{ display: 'none' }}></div>
             </div>
 
-            {/* ── MOB QUEEN'S WALL OVERLAY — root level ── */}
+            {/* ── MOB QUEEN'S WALL OVERLAY - root level ── */}
             <div id="mobQueenWallOverlay" className="mob-overlay" style={{ display: 'none' }}>
                 <div className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
@@ -1881,7 +1881,7 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* ── MOBILE BOTTOM NAV — at root level, no stacking context conflicts ── */}
+            {/* ── MOBILE BOTTOM NAV - at root level, no stacking context conflicts ── */}
             <nav id="mobBottomNav" className="mob-bottom-nav">
                 <button id="mobNavProfile" className="mob-nav-item active" onClick={() => (window as any).mobNavTo('profile')}>
                     <span className="mob-nav-icon">◆</span>
@@ -1917,7 +1917,7 @@ export default function ProfilePage() {
         {/* ── CHALLENGE BANNER + PANEL ── */}
         {activeChallenge && (
             <>
-                {/* Mobile banner — only on mobile, landing page (no overlay open), non-participants */}
+                {/* Mobile banner - only on mobile, landing page (no overlay open), non-participants */}
                 {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && !challengeBannerDismissed && (
                     <div
                         style={{
@@ -1962,7 +1962,7 @@ export default function ProfilePage() {
                         >DISMISS</button>
                     </div>
                 )}
-                {/* Mobile participant banner — shows for enrolled members with active challenge */}
+                {/* Mobile participant banner - shows for enrolled members with active challenge */}
                 {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && !mobOverlayOpen && (
                     <MobileChallengeBanner
                         challengeName={activeChallenge.name}
@@ -2105,7 +2105,7 @@ function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onO
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{challengeName}</div>
                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', letterSpacing: '1.5px', marginTop: 3, color: hasOpenWindow ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>
-                    {hasOpenWindow ? 'TASK WINDOW OPEN — TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
+                    {hasOpenWindow ? 'TASK WINDOW OPEN - TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
                 </div>
             </div>
             <div style={{
@@ -2185,7 +2185,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                 setRejoinMsg(`✓ Back in! ${json.coins_charged} coins charged.`);
                 load();
             } else {
-                // Insufficient coins — send to wallet boost
+                // Insufficient coins - send to wallet boost
                 if (json.error?.toLowerCase().includes('need') || json.error?.toLowerCase().includes('coin')) {
                     if ((window as any).goToExchequer) (window as any).goToExchequer();
                 } else {
@@ -2248,7 +2248,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
         <div style={embedded ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'transparent' } : { position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
             <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
 
-            {/* Header — only shown on mobile (embedded overlay has its own header) */}
+            {/* Header - only shown on mobile (embedded overlay has its own header) */}
             {!embedded && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
                 <div>
@@ -2309,7 +2309,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: data.participant.status === 'active' ? 'rgba(74,222,128,0.1)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.1)' : 'rgba(197,160,89,0.1)', border: `1px solid ${data.participant.status === 'active' ? 'rgba(74,222,128,0.3)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.3)' : 'rgba(197,160,89,0.3)'}` }}>
                                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059' }} />
                                             <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059', letterSpacing: '1.5px' }}>
-                                                {data.participant.status === 'active' ? 'ENROLLED — STILL IN' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
+                                                {data.participant.status === 'active' ? 'ENROLLED - STILL IN' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
                                             </span>
                                         </div>
                                     )}
@@ -2335,12 +2335,12 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                             </div>
                         )}
 
-                        {/* Open windows — upload NOW (only if participant) */}
+                        {/* Open windows - upload NOW (only if participant) */}
                         {data.participant && data.participant.status === 'active' && openWindows.length > 0 && (
                             <div style={{ marginBottom: 28 }}>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
-                                    WINDOW OPEN NOW — SUBMIT PROOF
+                                    WINDOW OPEN NOW - SUBMIT PROOF
                                 </div>
                                 {openWindows.map((w: any) => {
                                     const comp = completionByWindowId[w.id];
@@ -2384,7 +2384,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                             </div>
                                             {!done && w.verification_code && (
                                                 <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center' }}>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE - SHOW IN PHOTO</div>
                                                     <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, color: '#4ade80', letterSpacing: '6px', textShadow: '0 0 16px rgba(74,222,128,0.4)' }}>{w.verification_code}</div>
                                                 </div>
                                             )}
@@ -2394,7 +2394,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                             </div>
                         )}
 
-                        {/* Eliminated — rejoin option */}
+                        {/* Eliminated - rejoin option */}
                         {data.participant?.status === 'eliminated' && (() => {
                             const elimWindow = data.windows?.find((w: any) => w.id === data.participant.eliminated_on_window_id);
                             return (
@@ -2622,13 +2622,13 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             )}
                                         </div>
 
-                                        {/* Challenge details — one per line */}
+                                        {/* Challenge details - one per line */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                                             {[
                                                 { label: 'Days', val: String(c.duration_days) },
                                                 { label: 'Tasks a day', val: String(c.tasks_per_day) },
                                                 { label: 'Window', val: `${c.window_minutes} min` },
-                                                { label: 'Still working', val: String(c.participant_active ?? '—') },
+                                                { label: 'Still working', val: String(c.participant_active ?? '-') },
                                                 ...(daysLeft !== null && !startsSoon ? [{ label: 'Days left', val: String(daysLeft) }] : []),
                                                 ...(startsSoon && c.start_date ? [{ label: 'Starts', val: new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }] : []),
                                             ].map(({ label, val }) => (
@@ -2639,7 +2639,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             ))}
                                         </div>
 
-                                        {/* Personal stats (if joined) — one per line */}
+                                        {/* Personal stats (if joined) - one per line */}
                                         {isThisJoined && fullData?.stats && (
                                             <div style={{ borderTop: '1px solid rgba(197,160,89,0.12)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 7 }}>
                                                 {[
@@ -2654,7 +2654,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>Next task in</span>
                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>
-                                                        {nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="" /> : '—'}
+                                                        {nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="" /> : '-'}
                                                     </span>
                                                 </div>
                                             </div>

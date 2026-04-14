@@ -388,7 +388,7 @@
     .qp-stats-row { gap: 24px; }
 
     /* ─────────────────────────────────────────
-       USER DETAIL VIEW — full-screen overlay
+       USER DETAIL VIEW - full-screen overlay
        with HORIZONTAL SWIPE: Chat ↔ Dossier
     ───────────────────────────────────────── */
     #viewUser {
@@ -434,7 +434,7 @@
 
     .split::-webkit-scrollbar { display: none; }
 
-    /* Chat panel — first page */
+    /* Chat panel - first page */
     .chat-panel {
         flex: none;
         min-width: 100%;
@@ -448,7 +448,7 @@
         background: #050505;
     }
 
-    /* Dossier / action panel — second page */
+    /* Dossier / action panel - second page */
     .action-panel {
         flex: none;
         min-width: 100%;

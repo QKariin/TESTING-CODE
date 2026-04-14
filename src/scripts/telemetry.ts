@@ -1,5 +1,5 @@
 // Presence is now handled entirely by Supabase Realtime track() in profile-logic.ts.
-// No DB heartbeat needed — returning null so existing callers don't break.
+// No DB heartbeat needed - returning null so existing callers don't break.
 export function startPresenceHeartbeat(_userId: string): ReturnType<typeof setInterval> | null {
     return null;
 }

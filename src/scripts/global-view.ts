@@ -128,7 +128,7 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
 
 function _loadAllPreviews() {
     loadLeaderboardPreview(currentPeriod);
-    // Fetch sidepanels ONCE — share result with mini-panels + spenders preview
+    // Fetch sidepanels ONCE - share result with mini-panels + spenders preview
     _loadSidePanelsAndSpenders();
     _initTalkRealtime();
     _loadUpdatesPreview();
@@ -259,7 +259,7 @@ function _renderMiniPanel(elId: string, entries: any[], valueLabel: (e: any) => 
     const el = document.getElementById(elId);
     if (!el) return;
     if (!entries?.length) {
-        el.innerHTML = `<div style="padding:8px 10px;font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.15);text-align:center;">—</div>`;
+        el.innerHTML = `<div style="padding:8px 10px;font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.15);text-align:center;">-</div>`;
         return;
     }
     el.innerHTML = entries.slice(0, 3).map((e: any, i: number) => {
@@ -380,7 +380,7 @@ function _buildUpdateCardPreview(u: any): string {
 }
 
 // ─── SPENDERS PREVIEW ────────────────────────────────────────────────────────
-// Populated by _loadSidePanelsAndSpenders() on initial load — no separate fetch needed.
+// Populated by _loadSidePanelsAndSpenders() on initial load - no separate fetch needed.
 
 // ─── QUEEN PREVIEW ────────────────────────────────────────────────────────────
 
@@ -401,7 +401,7 @@ async function _loadQueenPreview() {
                 </div>
                 <div style="display:flex;gap:12px;margin-top:4px;">
                     <div style="text-align:center;">
-                        <div style="font-family:'Orbitron';font-size:0.75rem;color:#fff;font-weight:700;">${data.totalSubjects ?? '—'}</div>
+                        <div style="font-family:'Orbitron';font-size:0.75rem;color:#fff;font-weight:700;">${data.totalSubjects ?? '-'}</div>
                         <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:1px;">SUBJECTS</div>
                     </div>
                     <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
@@ -545,7 +545,7 @@ function _initTalkRealtime() {
             (payload: any) => {
                 const raw = getState().raw;
                 const myEmail = (raw?.member_id || raw?.email || '').toLowerCase();
-                // Skip own messages — already shown optimistically on send
+                // Skip own messages - already shown optimistically on send
                 if (myEmail && (payload.new?.sender_email || '').toLowerCase() === myEmail) return;
                 // Strip email before passing to renderer
                 const { sender_email: _stripped, ...safeMsg } = payload.new || {};
@@ -554,7 +554,7 @@ function _initTalkRealtime() {
         )
         .subscribe();
 
-    // Online list loaded once on open — no interval needed.
+    // Online list loaded once on open - no interval needed.
     // Presence is tracked via Supabase Realtime (profile page track()), not DB heartbeats.
 }
 
@@ -797,8 +797,8 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             const accentBorder = passed ? 'rgba(74,222,128,0.25)' : 'rgba(224,48,48,0.25)';
             const label = passed ? '✓ TASK PASSED' : '✕ TASK FAILED';
             const subLabel = passed
-                ? `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — continues${d.taskNum ? ` (${d.taskNum})` : ''}`
-                : `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — eliminated`;
+                ? `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} - continues${d.taskNum ? ` (${d.taskNum})` : ''}`
+                : `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} - eliminated`;
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
                 <div style="width:60%;min-width:240px;max-width:480px;">
                     <div style="background:${accentBg};border:1px solid ${accentBorder};border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
@@ -978,7 +978,7 @@ export async function sendGlobalMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, senderEmail, reply_to: replyTo }),
         });
-        // Realtime will NOT duplicate — the optimistic bubble already shows it.
+        // Realtime will NOT duplicate - the optimistic bubble already shows it.
         // On next poll/open the real record loads with correct name/avatar.
     } catch {}
 }
@@ -1313,7 +1313,7 @@ async function _loadQueenFull() {
                 <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.3),transparent);"></div>
                 <div style="display:flex;gap:30px;justify-content:center;">
                     <div>
-                        <div style="font-family:'Orbitron';font-size:1.4rem;color:#fff;font-weight:700;">${data.totalSubjects ?? '—'}</div>
+                        <div style="font-family:'Orbitron';font-size:1.4rem;color:#fff;font-weight:700;">${data.totalSubjects ?? '-'}</div>
                         <div style="font-family:'Orbitron';font-size:0.45rem;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-top:3px;">SUBJECTS</div>
                     </div>
                     <div style="width:1px;background:rgba(255,255,255,0.08);"></div>
@@ -1477,7 +1477,7 @@ async function _loadChallengesPreview() {
                 { label: 'Days', val: String(c.duration_days) },
                 { label: 'Tasks a day', val: String(c.tasks_per_day) },
                 { label: 'Window', val: `${c.window_minutes} min` },
-                { label: 'Still working', val: String(c.participant_active ?? '—') },
+                { label: 'Still working', val: String(c.participant_active ?? '-') },
                 ...(daysLeft !== null && isActive ? [{ label: 'Days left', val: String(daysLeft) }] : []),
                 ...(!isActive && startStr ? [{ label: 'Starts', val: startStr }] : []),
             ];
@@ -1511,7 +1511,7 @@ async function _loadChallengesPreview() {
             ...upcoming.map((c: any) => renderCard(c, false)),
         ].join('');
     } catch {
-        el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.15);">—</div>`;
+        el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.15);">-</div>`;
     }
 }
 

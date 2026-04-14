@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 // Runs daily at 22:59 UTC = 23:59 CET (Europe/Prague)
 export async function GET(req: Request) {
-    // Auth check — only enforced if CRON_SECRET is actually set and non-empty
+    // Auth check - only enforced if CRON_SECRET is actually set and non-empty
     const envSecret = (process.env.CRON_SECRET || '').trim();
     if (envSecret) {
         const authHeader = req.headers.get('authorization') || '';
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 
     console.log('[cron/reset-scores] Resetting fields:', resets, 'Prague time:', pragueTime.toISOString());
 
-    // Use .not('member_id','is',null) — cleaner than neq to empty string
+    // Use .not('member_id','is',null) - cleaner than neq to empty string
     const { error, count } = await supabaseAdmin
         .from('tasks')
         .update(updates)

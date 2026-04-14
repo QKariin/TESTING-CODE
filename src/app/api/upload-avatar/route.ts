@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
         console.log('[upload-avatar] Uploaded to:', publicUrl);
 
-        // 2. Update profiles table — write to both columns so either lookup works
+        // 2. Update profiles table - write to both columns so either lookup works
         const { error: dbError } = await supabaseAdmin
             .from('profiles')
             .update({ avatar_url: publicUrl })

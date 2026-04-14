@@ -22,7 +22,7 @@ export const DbService = {
 
         if (byId) return byId;
 
-        // Fallback: Check 'tasks' table for legacy data — return REAL values
+        // Fallback: Check 'tasks' table for legacy data - return REAL values
         const { data: taskData } = await supabaseAdmin
             .from('tasks')
             .select('*')
@@ -179,7 +179,7 @@ export const DbService = {
 
     // --- MESSAGING ---
     async sendMessage(memberIdOrEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
-        // Resolve to UUID — chats.member_id is always UUID
+        // Resolve to UUID - chats.member_id is always UUID
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberIdOrEmail);
         let chatMemberId = memberIdOrEmail;
         if (!isUuid) {
@@ -216,7 +216,7 @@ export const DbService = {
     },
 
     // --- TASKS ---
-    // Helper: get the raw tasks row — tries UUID (profiles.id) first, falls back to email
+    // Helper: get the raw tasks row - tries UUID (profiles.id) first, falls back to email
     async _getTaskRow(memberId: string) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
         if (isUuid) {
@@ -295,7 +295,7 @@ export const DbService = {
                             const { data: signData, error: signErr } = await supabaseAdmin.storage.from('proofs').createSignedUrl(path, 604_800); // 1 week validity
                             if (!signErr && signData?.signedUrl) {
                                 finalUrl = signData.signedUrl;
-                                cacheSet(cacheKey, finalUrl, 604_800_000); // cache 1 week — proof URLs are immutable (new file = new path)
+                                cacheSet(cacheKey, finalUrl, 604_800_000); // cache 1 week - proof URLs are immutable (new file = new path)
                             }
                         } catch (e) {
                             console.error("[DbService] Error signing proofUrl:", entry.proofUrl, e);
@@ -329,7 +329,7 @@ export const DbService = {
             if (comment) history[idx].adminComment = comment;
         }
 
-        // Increment completed task count by 1 — only for real tasks, not routines
+        // Increment completed task count by 1 - only for real tasks, not routines
         const isRoutineEntry = idx > -1 ? !!history[idx].isRoutine : false;
         const currentCount = parseInt(row?.['Taskdom_CompletedTasks'] || '0', 10) || 0;
         const newCount = isRoutineEntry ? currentCount : currentCount + 1;
@@ -343,12 +343,12 @@ export const DbService = {
             })
             .eq('member_id', row.member_id);
 
-        // 2. Award points only — no wallet/coins for tasks
+        // 2. Award points only - no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
 
         // 3. Send system chat message
         try {
-            await this.sendMessage(profileId, `TASK APPROVED — ${bonus} POINTS AWARDED`, 'system');
+            await this.sendMessage(profileId, `TASK APPROVED - ${bonus} POINTS AWARDED`, 'system');
         } catch (_) { }
     },
 
@@ -365,7 +365,7 @@ export const DbService = {
             history[idx].completed = false;
         }
 
-        // Routines get no penalty — only tasks lose 300 coins
+        // Routines get no penalty - only tasks lose 300 coins
         const taskUpdates: any = {
             'Taskdom_History': JSON.stringify(history),
             'Status': 'reject',
@@ -393,8 +393,8 @@ export const DbService = {
         // 3. Send system chat message
         try {
             const msg = isRoutine
-                ? `ROUTINE REJECTED — NO POINTS AWARDED`
-                : `TASK REJECTED — 300 COINS PENALTY APPLIED`;
+                ? `ROUTINE REJECTED - NO POINTS AWARDED`
+                : `TASK REJECTED - 300 COINS PENALTY APPLIED`;
             await this.sendMessage(profileId, msg, 'system');
         } catch (_) { }
     },
@@ -487,7 +487,7 @@ export const DbService = {
 
         // 5. Send system chat message
         try {
-            await this.sendMessage(memberId, isRoutine ? `ROUTINE UPLOADED — AWAITING APPROVAL` : `TASK SUBMITTED — AWAITING REVIEW`, 'system');
+            await this.sendMessage(memberId, isRoutine ? `ROUTINE UPLOADED - AWAITING APPROVAL` : `TASK SUBMITTED - AWAITING REVIEW`, 'system');
         } catch (_) { }
 
         return { success: true, taskId };

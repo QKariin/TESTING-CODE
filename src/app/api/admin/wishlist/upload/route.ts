@@ -14,7 +14,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Only image files allowed' }, { status: 400 });
         }
 
-        // Use a fresh admin client — avoids proxy issues with storage
+        // Use a fresh admin client - avoids proxy issues with storage
         const adminClient = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const storagePath = `wishlist/${fileName}`;
 
-        // Upload the File object directly — more reliable than Buffer in serverless
+        // Upload the File object directly - more reliable than Buffer in serverless
         const { error: uploadError } = await adminClient.storage
             .from('media')
             .upload(storagePath, file, {

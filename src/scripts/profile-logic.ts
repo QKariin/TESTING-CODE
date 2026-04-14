@@ -30,7 +30,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     const amount = type === 'coins' ? 10 : 50;
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
 
-    // 1. Save to DB FIRST — this writes lastWorship + kneelCount (Wix CLAIM_KNEEL_REWARD pattern)
+    // 1. Save to DB FIRST - this writes lastWorship + kneelCount (Wix CLAIM_KNEEL_REWARD pattern)
     try {
         const res = await fetch('/api/claim-reward', {
             method: 'POST',
@@ -41,7 +41,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         const data = await res.json();
 
         if (res.status === 429) {
-            // Cooldown still active — overlay already hidden above
+            // Cooldown still active - overlay already hidden above
             console.log(`[REWARD] Cooldown still active (${data.minLeft}m left). Ignoring.`);
             _claiming = false;
             return;
@@ -212,7 +212,7 @@ function renderTributes() {
         return;
     }
 
-    // 1. Desktop Quick Connect — Last tribute info + 2 pinned gifts
+    // 1. Desktop Quick Connect - Last tribute info + 2 pinned gifts
     if (globalTributes.length >= 1) {
         const pinned = ['coffee', 'lunch'];
         const pinnedItems = pinned
@@ -221,7 +221,7 @@ function renderTributes() {
         // Only show 1 featured item in the quick tribute box; full list opens via SPOIL ME
         const quickItems = pinnedItems.length >= 1 ? [pinnedItems[0]] : globalTributes.slice(0, 1);
 
-        // Last tribute info — read from THIS user's own profile parameters (per-user, not global)
+        // Last tribute info - read from THIS user's own profile parameters (per-user, not global)
         const st = getState();
         const userLastTribute = st.raw?.parameters?.last_tribute || null;
         const lastTributeAt = userLastTribute?.at || null;
@@ -461,7 +461,7 @@ function showGiftToast(title: string, amount: number, merit: number) {
                 <div style="font-family:'Cinzel', serif; font-size:1.25rem; color:#fff; font-weight:700; line-height:1.3;">You just gifted<br><span style="color:#c5a059;">${amount.toLocaleString()} coins</span> to Queen Karin</div>
                 <div style="font-family:'Cinzel', serif; font-size:0.85rem; color:rgba(255,255,255,0.5); margin-top:4px;">for <em>${title}</em></div>
             </div>
-            <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); line-height:1.8; border-top:1px solid rgba(197,160,89,0.15); padding-top:12px;">She sees your devotion. Thank you — truly. 🤍<br>+${merit} merit points earned</div>
+            <div style="font-family:'Orbitron', sans-serif; font-size:0.55rem; color:rgba(255,255,255,0.4); line-height:1.8; border-top:1px solid rgba(197,160,89,0.15); padding-top:12px;">She sees your devotion. Thank you - truly. 🤍<br>+${merit} merit points earned</div>
             <div style="display:flex; gap:10px;">
                 <button onclick="document.getElementById('giftToast').remove(); if(window.innerWidth<=768){var ov=document.getElementById('mob_TributeOverlay');if(ov)ov.style.display='none';}" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">CLOSE</button>
                 <button onclick="document.getElementById('giftToast').remove(); window.toggleTributeHuntGlobal && window.toggleTributeHuntGlobal();" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">SEND MORE ♥</button>
@@ -1121,7 +1121,7 @@ export function cancelSkipTask() {
     if (sBox) sBox.style.display = 'none';
     if (msBox) msBox.style.display = 'none';
 
-    // Restore opacity only — task text is still in the element from when it was displayed
+    // Restore opacity only - task text is still in the element from when it was displayed
     if (readyText) { readyText.style.color = 'white'; readyText.style.opacity = '1'; }
     if (mobTaskText) { mobTaskText.style.color = 'white'; mobTaskText.style.opacity = '1'; }
 }
@@ -1245,7 +1245,7 @@ export function openQueenMenu() {
     el.style.display = 'flex';
     const { memberId, id } = getState();
     const diagUser = document.getElementById('diagUserEmail');
-    if (diagUser) diagUser.textContent = `SESSION: ${memberId || id || '—'}`;
+    if (diagUser) diagUser.textContent = `SESSION: ${memberId || id || '-'}`;
     const diagSync = document.getElementById('diagSyncTime');
     if (diagSync) diagSync.textContent = `LAST SYNC: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 }
@@ -1365,7 +1365,7 @@ export async function updateRoutineWidget() {
                 (window as any).__routineAction = () => { };
             }
             if (timeMsg) timeMsg.classList.add('hidden');
-            if (mobBtn) { mobBtn.textContent = 'ROUTINE DONE — NEXT: 6AM'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
+            if (mobBtn) { mobBtn.textContent = 'ROUTINE DONE - NEXT: 6AM'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
         } else {
@@ -1419,7 +1419,7 @@ export function handleTaskEvidenceUpload(input: HTMLInputElement) {
     }
 }
 
-// iOS-safe task evidence picker — dynamic input avoids hidden-element click restriction
+// iOS-safe task evidence picker - dynamic input avoids hidden-element click restriction
 function showUploadNotice(html: string) {
     ['uploadNoticeDesk', 'uploadNoticeMob'].forEach(id => document.getElementById(id)?.remove());
     const makeNotice = (id: string, anchorId: string) => {
@@ -1455,7 +1455,7 @@ export function triggerTaskEvidencePick() {
             if (duration > 120) {
                 const mins = Math.floor(duration / 60);
                 const secs = Math.round(duration % 60);
-                showUploadNotice(`<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Your video is ${mins}m ${secs}s — maximum is 2 minutes.<br>Please trim it and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`);
+                showUploadNotice(`<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Your video is ${mins}m ${secs}s - maximum is 2 minutes.<br>Please trim it and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`);
                 return;
             }
         }
@@ -1499,7 +1499,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
         if (mobRoutineDisplay) mobRoutineDisplay.textContent = 'UPLOADING...';
     }
 
-    // Task-only UI — do NOT touch task layout (text/timer stay as-is)
+    // Task-only UI - do NOT touch task layout (text/timer stay as-is)
     if (!isRoutine) {
         if (uploadBtn) { uploadBtn.innerText = "UPLOADING..."; (uploadBtn as HTMLButtonElement).disabled = true; }
         if (mobTaskBtn) { mobTaskBtn.innerText = "SENDING..."; (mobTaskBtn as HTMLButtonElement).disabled = true; }
@@ -1520,7 +1520,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             const sizeVal = isSizeError ? fileUrl.split(':')[2] : null;
             const noticeHtml = isTooLong
                 ? `<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Maximum 2 minutes allowed.<br>Please trim your video and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`
-                : `<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">${isSizeError ? `Video too large (${sizeVal}) — maximum 50MB.` : 'Upload failed — please try again.'}</div>`;
+                : `<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">${isSizeError ? `Video too large (${sizeVal}) - maximum 50MB.` : 'Upload failed - please try again.'}</div>`;
             if (!isRoutine) showUploadNotice(noticeHtml);
             return;
         }
@@ -1569,18 +1569,18 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             refreshTaskGallery(pid);
         } else {
             console.error("Backend submission error:", data.error);
-            if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">TRANSMISSION FAILED — ${data.error || 'please try again'}</div>`);
+            if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">TRANSMISSION FAILED - ${data.error || 'please try again'}</div>`);
         }
     } catch (err: any) {
         console.error("Critical submission error", err);
-        if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">UPLOAD FAILED — TASK STILL ACTIVE, TRY AGAIN</div>`);
+        if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">UPLOAD FAILED - TASK STILL ACTIVE, TRY AGAIN</div>`);
     } finally {
         if (!isRoutine) {
             if (uploadBtn && originalText) { uploadBtn.innerText = originalText; (uploadBtn as HTMLButtonElement).disabled = false; }
             if (mobTaskBtn && originalMobTaskText) { mobTaskBtn.innerText = originalMobTaskText; (mobTaskBtn as HTMLButtonElement).disabled = false; }
             if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
         }
-        // NOTE: routine button reset intentionally omitted — handleRoutineUpload.then() locks it
+        // NOTE: routine button reset intentionally omitted - handleRoutineUpload.then() locks it
     }
 }
 export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
@@ -1602,7 +1602,7 @@ export async function handleChatMediaUpload(input: HTMLInputElement) {
     const isVid = file.type.startsWith('video/');
     const type = isVid ? 'video' : 'photo';
 
-    // Show preview modal — let server enforce rank, don't block client-side
+    // Show preview modal - let server enforce rank, don't block client-side
     _showMediaPreviewModal(file, isVid, async (sendBtn: HTMLButtonElement, statusEl: HTMLElement) => {
         sendBtn.disabled = true;
         sendBtn.textContent = 'UPLOADING...';
@@ -1692,10 +1692,10 @@ export function handleChatKey(e: React.KeyboardEvent) {
 }
 
 // ---------------------------------------------------------
-// NEW SUPABASE CHAT LOGIC — mirrors dashboard-chat.ts exactly
+// NEW SUPABASE CHAT LOGIC - mirrors dashboard-chat.ts exactly
 // ---------------------------------------------------------
 
-// Single shared client — realtime subscriptions must stay on the same instance
+// Single shared client - realtime subscriptions must stay on the same instance
 // (same pattern as dashboard-chat.ts line 14, but lazy-loaded to fix static builds)
 let _profileChatSupabase: any = null;
 const getChatSupabase = () => {
@@ -1734,7 +1734,7 @@ function _scrollChat() {
         if (!b) return;
         b.scrollTop = b.scrollHeight + 9999;
     });
-    // Also scroll inner content divs — on mobile the flex layout can make
+    // Also scroll inner content divs - on mobile the flex layout can make
     // mob_chatContent (overflow-y:auto) be the actual scroll container instead of mob_chatBox
     ['chatContent', 'mob_chatContent'].forEach(id => {
         const b = document.getElementById(id);
@@ -1775,7 +1775,7 @@ function _isScrolledToBottom() {
 
 export async function initChatSystem() {
     // 🔑 KEY DIFFERENCE vs old broken code:
-    // Dashboard gets email directly from supabase.auth.getUser() — never from state.
+    // Dashboard gets email directly from supabase.auth.getUser() - never from state.
     // Profile was reading getState().memberId which could be null if initProfileState
     // hadn't fully run yet. Now we do exactly what dashboard does.
     const supabase = createClient();
@@ -1801,9 +1801,9 @@ export async function initChatSystem() {
         setState({ memberId: userId, email: email });
     }
 
-    // Silence is handled by the realtime profile_stats_ subscription below — no polling needed
+    // Silence is handled by the realtime profile_stats_ subscription below - no polling needed
 
-    if (chatSubscribed) return; // channels already set up — don't duplicate
+    if (chatSubscribed) return; // channels already set up - don't duplicate
     chatSubscribed = true;
 
     // Broadcast presence so dashboard knows this member is online.
@@ -1815,7 +1815,7 @@ export async function initChatSystem() {
         }
     });
 
-    // Load history once on first init — use userId (UUID) for DB lookup
+    // Load history once on first init - use userId (UUID) for DB lookup
     await loadChatHistory(userId || email);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
@@ -1829,10 +1829,10 @@ export async function initChatSystem() {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            // NO row filter here — filter in JS instead to support UUID-based member_id
+            // NO row filter here - filter in JS instead to support UUID-based member_id
         }, (payload: any) => {
             const msg = payload.new;
-            // Guard — ignore messages for other members (compare against UUID member_id)
+            // Guard - ignore messages for other members (compare against UUID member_id)
             const rowMemberId = (msg.member_id || '').toLowerCase();
             const matchesUser = userId
                 ? rowMemberId === userId.toLowerCase()
@@ -1883,16 +1883,16 @@ export async function initChatSystem() {
         })
         .subscribe();
 
-    // 3. Polling fallback every 5s — safety net for when Realtime lags or misses events
+    // 3. Polling fallback every 5s - safety net for when Realtime lags or misses events
     if (_chatPollInterval) clearInterval(_chatPollInterval);
     _chatPollInterval = setInterval(() => _pollNewChatMessages(userId || email!), 5000);
 
-    // Refresh queen presence status every 60s — stored so it can be cleared
+    // Refresh queen presence status every 60s - stored so it can be cleared
     if (_queenInterval) clearInterval(_queenInterval);
     _queenInterval = setInterval(() => _fetchQueenStatus(), 60000);
 
-    // 4. Supabase realtime for tasks + profile stats — stored so they can be removed
-    // NOTE: No row filter on either channel — eq() is case-sensitive and misses rows
+    // 4. Supabase realtime for tasks + profile stats - stored so they can be removed
+    // NOTE: No row filter on either channel - eq() is case-sensitive and misses rows
     // when member_id casing in DB differs from auth email. Filter in JS callback instead.
     if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); }
     _tasksChannel = getChatSupabase()
@@ -1907,7 +1907,7 @@ export async function initChatSystem() {
                 updateRoutineWidget();
                 refreshTaskGallery(email!);
 
-                // Force-assigned task — show it immediately from Realtime payload
+                // Force-assigned task - show it immediately from Realtime payload
                 if (!fresh?.taskdom_active_task) return;
 
                 let activeTask = fresh.taskdom_active_task;
@@ -1948,7 +1948,7 @@ export async function initChatSystem() {
     _statsChannel = getChatSupabase()
         .channel('profile_stats_' + email)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' },
-            // No row filter — case-sensitive eq() misses rows when member_id has different
+            // No row filter - case-sensitive eq() misses rows when member_id has different
             // casing in DB. Filter in JS with case-insensitive check below.
             (payload: any) => {
                 const fresh = payload.new as any;
@@ -1967,7 +1967,7 @@ export async function initChatSystem() {
             })
         .subscribe();
 
-    // 5. Push notifications — use profile UUID (not email) as external user ID
+    // 5. Push notifications - use profile UUID (not email) as external user ID
     const profileId = getState().id || email;
     initOneSignal(profileId!);
 }
@@ -2118,7 +2118,7 @@ export async function loadChatHistory(memberId: string) {
         ['chatContent', 'mob_chatContent'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
-                el.innerHTML = `<div style="text-align:center;padding:40px;color:#ff4d4d;font-family:Orbitron;font-size:0.6rem;letter-spacing:1px">CONNECTION ERROR — REFRESH REQUIRED</div>`;
+                el.innerHTML = `<div style="text-align:center;padding:40px;color:#ff4d4d;font-family:Orbitron;font-size:0.6rem;letter-spacing:1px">CONNECTION ERROR - REFRESH REQUIRED</div>`;
             }
         });
     }
@@ -2128,7 +2128,7 @@ export async function loadChatHistory(memberId: string) {
 let _galleryDirty = false;
 let _galleryEmail = '';
 
-/** Call on page load to register the email without loading anything — gallery loads lazily on first open. */
+/** Call on page load to register the email without loading anything - gallery loads lazily on first open. */
 export function initGallery(email: string) {
     _galleryEmail = email;
     _galleryDirty = true;
@@ -2137,7 +2137,7 @@ export function initGallery(email: string) {
 async function refreshTaskGallery(email: string) {
     _galleryEmail = email;
     // Check if record/gallery section is actually visible before loading media.
-    // Must check the container's inline style (set by switchTab) — getComputedStyle on
+    // Must check the container's inline style (set by switchTab) - getComputedStyle on
     // child elements does NOT inherit display:none from a hidden parent.
     const recordVisible = (() => {
         // Desktop: historySection is the container switchTab shows/hides via inline style
@@ -2150,7 +2150,7 @@ async function refreshTaskGallery(email: string) {
     })();
 
     if (!recordVisible) {
-        _galleryDirty = true; // mark as needing refresh — will load when user opens it
+        _galleryDirty = true; // mark as needing refresh - will load when user opens it
         return;
     }
 
@@ -2247,7 +2247,7 @@ function _updateQueenStatus(lastSeenIso: string | null) {
     };
 
     if (!lastSeenIso) {
-        setStatus('#555', '—', false);
+        setStatus('#555', '-', false);
         return;
     }
 
@@ -2288,7 +2288,7 @@ let _lastRenderedChatTs = 0;
 function renderChatMessage(msg: any, prevTs?: number): string {
     const senderEmail = (msg.sender_email || msg.sender || '').toLowerCase();
     const isSys = isSystemMessage(msg);
-    // System messages must never appear in the regular chat — they belong in the system log only
+    // System messages must never appear in the regular chat - they belong in the system log only
     if (isSys) return '';
     const myEmail = getState().memberId?.toLowerCase();
     const isMe = !isSys && (senderEmail === 'user' || senderEmail === 'slave' || senderEmail === myEmail);
@@ -2392,7 +2392,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     }
 
     if (isMe) {
-        // SLAVE — right, charcoal, no border, no avatar
+        // SLAVE - right, charcoal, no border, no avatar
         return `
             <div class="cb-row cb-row-me">
                 <div class="cb-wrap-me">
@@ -2402,7 +2402,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             </div>
         `;
     } else {
-        // QUEEN — left, black, gold border, avatar
+        // QUEEN - left, black, gold border, avatar
         return `
             <div class="cb-row cb-row-queen">
                 ${queenAvatar}
@@ -2450,7 +2450,7 @@ export async function sendChatMessage() {
             if (inputDesk) inputDesk.value = '';
             if (inputMob) inputMob.value = '';
 
-            // Immediately update wallet — use API-returned value, fall back to client-side subtraction
+            // Immediately update wallet - use API-returned value, fall back to client-side subtraction
             const newWallet = data.newWallet !== undefined
                 ? data.newWallet
                 : Math.max(0, (getState().wallet || 0) - (data.costCharged || 0));
@@ -2624,16 +2624,16 @@ export function openMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
 
-    // Step 1: display:flex — browser resets scrollTop=0 on any child scroll containers.
+    // Step 1: display:flex - browser resets scrollTop=0 on any child scroll containers.
     el.style.display = 'flex';
 
     // Step 2: Force sync layout so scrollHeight is computed and scroll reset is done.
     void (el as any).offsetHeight;
 
-    // Step 3: Set scroll to bottom NOW — element is off-screen (translateY(100%)) but
+    // Step 3: Set scroll to bottom NOW - element is off-screen (translateY(100%)) but
     // fully rendered. CSS transform changes do NOT reset scrollTop, so this persists
     // through the slide-up animation.
-    // Scroll both the outer container AND the inner content div — depending on flex
+    // Scroll both the outer container AND the inner content div - depending on flex
     // layout constraints, either one may be the actual scroll container on mobile.
     const b = document.getElementById('mob_chatBox');
     const bc = document.getElementById('mob_chatContent');
@@ -2659,7 +2659,7 @@ export function openMobChatOverlay() {
         loadChatHistory(email);
     }
 
-    // Safety net scrolls — in case content is loaded async after animation
+    // Safety net scrolls - in case content is loaded async after animation
     const scrollToBottom = () => {
         if (b) b.scrollTop = b.scrollHeight + 9999;
         if (bc) bc.scrollTop = bc.scrollHeight + 9999;
@@ -3009,7 +3009,7 @@ function _buildMobGlBubble(msg: any): string {
         <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
-    // PROMOTION CARD — same card as desktop global chat
+    // PROMOTION CARD - same card as desktop global chat
     if (content.startsWith('PROMOTION_CARD::')) {
         try {
             const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
@@ -3197,8 +3197,8 @@ function _buildMobGlBubble(msg: any): string {
             const accentBorder = passed ? 'rgba(74,222,128,0.25)' : 'rgba(224,48,48,0.25)';
             const label = passed ? '✓ TASK PASSED' : '✕ TASK FAILED';
             const subLabel = passed
-                ? `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — continues${d.taskNum ? ` (${d.taskNum})` : ''}`
-                : `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} — eliminated`;
+                ? `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} - continues${d.taskNum ? ` (${d.taskNum})` : ''}`
+                : `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'} - eliminated`;
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
                 <div style="width:85%;max-width:340px;min-width:200px;">
                     <div style="background:${accentBg};border:1px solid ${accentBorder};border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
@@ -3304,7 +3304,7 @@ export async function sendMobGlMessage() {
     const replyTo = _mobGlReply ? { sender_name: _mobGlReply.name, content: _mobGlReply.text } : null;
     cancelMobGlReply();
 
-    // Track for dedup — realtime will fire for our own message too
+    // Track for dedup - realtime will fire for our own message too
     _mobGlPendingSent.add(content);
 
     // Optimistic update
@@ -3358,7 +3358,7 @@ async function _loadMobGlChallenges() {
                 { label: 'Days', val: String(c.duration_days) },
                 { label: 'Tasks a day', val: String(c.tasks_per_day) },
                 { label: 'Window', val: `${c.window_minutes} min` },
-                { label: 'Still working', val: String(c.participant_active ?? '—') },
+                { label: 'Still working', val: String(c.participant_active ?? '-') },
                 ...(daysLeft !== null && isLive ? [{ label: 'Days left', val: String(daysLeft) }] : []),
                 ...(startsSoon && startDate ? [{ label: 'Starts', val: startDate }] : []),
             ];
@@ -3584,7 +3584,7 @@ async function _doProfileUpload() {
         if (elHudPic) elHudPic.style.opacity = '0.5';
 
         try {
-            // Get user email here (after file selected — async is fine now)
+            // Get user email here (after file selected - async is fine now)
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (!user?.email) {
@@ -3617,7 +3617,7 @@ async function _doProfileUpload() {
         }
     };
 
-    // Click synchronously — must happen within the user gesture on iOS
+    // Click synchronously - must happen within the user gesture on iOS
     input.click();
 }
 
@@ -3805,7 +3805,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         const selected = Array.from(box.querySelectorAll<HTMLElement>('._selected')).map(el => el.getAttribute('data-value') || '').filter(Boolean);
         if (selected.length < 3) { showErr('Select at least 3 items.'); return; }
         value = selected.join(', ');
-        // Only charge for newly added items — existing (already paid) ones are free
+        // Only charge for newly added items - existing (already paid) ones are free
         const newItems = Array.from(box.querySelectorAll<HTMLElement>('._reqChip:not([data-existing="true"])._selected')).map(el => el.getAttribute('data-value') || '').filter(Boolean);
         cost = newItems.length * costPerItem;
     } else if (isRoutine) {
@@ -3835,7 +3835,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     } else if (data.success && data.profile) {
         overlay.remove();
 
-        // Compute deducted wallet client-side immediately — don't trust API response timing
+        // Compute deducted wallet client-side immediately - don't trust API response timing
         const currentWallet = getState().wallet || 0;
         const immediateWallet = cost > 0 ? Math.max(0, currentWallet - cost) : currentWallet;
 
@@ -4185,7 +4185,7 @@ export async function loadQueenPosts() {
         if (heroCard && latest) {
             const cardLocked = !latest.userHasAccess;
             const cardHasMedia = latest.media_url && !String(latest.media_url).startsWith('failed');
-            // Always clear heroCard background/filter — background lives inside innerHTML as its own layer
+            // Always clear heroCard background/filter - background lives inside innerHTML as its own layer
             heroCard.style.backgroundImage = '';
             heroCard.style.backgroundSize = '';
             heroCard.style.backgroundPosition = '';
@@ -4201,7 +4201,7 @@ export async function loadQueenPosts() {
                 ? latest.min_rank.toUpperCase()
                 : null;
 
-            // Thumbnail or fallback for locked background — rendered as child div so blur never touches siblings
+            // Thumbnail or fallback for locked background - rendered as child div so blur never touches siblings
             const lockedBgUrl = latest.thumbnail_url || (latest.media_type !== 'video' ? latest.media_url : null);
             const lockedBgLayer = lockedBgUrl
                 ? `<div style="position:absolute;inset:-6%;background-image:url('${lockedBgUrl}');background-size:cover;background-position:center top;filter:blur(14px) brightness(0.22);z-index:0;"></div>`
@@ -4213,7 +4213,7 @@ export async function loadQueenPosts() {
                 <div style="position:absolute;inset:0;overflow:hidden;z-index:1;">
                     ${lockedBgLayer}
 
-                    <!-- NEW VIDEO / NEW POST badge — top right -->
+                    <!-- NEW VIDEO / NEW POST badge - top right -->
                     <div style="position:absolute;top:48px;right:12px;z-index:4;">
                         <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.4);padding:3px 9px;border-radius:2px;font-family:Orbitron;font-size:0.35rem;color:#c5a059;letter-spacing:2px;">${isVideo ? '<i class="fas fa-film" style="font-size:0.6rem;"></i> NEW VIDEO' : '<i class="fas fa-image" style="font-size:0.6rem;"></i> NEW POST'}</span>
                     </div>
@@ -4286,7 +4286,7 @@ export async function loadQueenPosts() {
                 letter-spacing: 3px;
                 margin-bottom: 4px;
             }
-            /* HERO — tall portrait image left, text right */
+            /* HERO - tall portrait image left, text right */
             .qk-hero {
                 display: grid;
                 grid-template-columns: 1fr 1.1fr;
@@ -5317,7 +5317,7 @@ export function _applyPaywall(paywall: any, memberId: string) {
 export function _applySilence(active: boolean, reason: string = '') {
     if (typeof window === 'undefined') return;
 
-    // 1. Update React state — triggers early return lock screen
+    // 1. Update React state - triggers early return lock screen
     const setter = (window as any)._setSilenceOverlay;
     if (setter) setter(active, reason);
 
@@ -5325,7 +5325,7 @@ export function _applySilence(active: boolean, reason: string = '') {
     const STYLE_ID = '__silenceStyle';
 
     if (active) {
-        // 2. Inject CSS that forcibly hides #MOBILE_APP and #DESKTOP_APP — overrides
+        // 2. Inject CSS that forcibly hides #MOBILE_APP and #DESKTOP_APP - overrides
         //    profile-mobile.css "display:block !important" via later declaration + higher specificity
         let styleEl = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
         if (!styleEl) {
@@ -5335,7 +5335,7 @@ export function _applySilence(active: boolean, reason: string = '') {
         }
         styleEl.textContent = '#MOBILE_APP{display:none!important;visibility:hidden!important}#DESKTOP_APP{display:none!important;visibility:hidden!important}';
 
-        // 3. Inject full-screen DOM overlay — z-index 2147483647 beats everything
+        // 3. Inject full-screen DOM overlay - z-index 2147483647 beats everything
         if (!document.getElementById(OVERLAY_ID)) {
             const overlay = document.createElement('div');
             overlay.id = OVERLAY_ID;

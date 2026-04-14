@@ -4,12 +4,12 @@ import { cached, cacheDelete } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
 
-const TTL = 10_000; // 10s — stale kneel state is fine, button locks client-side anyway
+const TTL = 10_000; // 10s - stale kneel state is fine, button locks client-side anyway
 
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000;
 
 async function getKneelStatus(memberId: string, tz: string) {
-    // Select core fields first — kneel_history is optional (column may not exist yet)
+    // Select core fields first - kneel_history is optional (column may not exist yet)
     const { data: taskRow } = await supabaseAdmin
         .from('tasks')
         .select('lastWorship, kneelCount, "today kneeling"')

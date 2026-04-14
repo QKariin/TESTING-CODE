@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/admin-chat — insert a message from admin into the messages table
+// POST /api/admin-chat - insert a message from admin into the messages table
 export async function POST(req: Request) {
     try {
         const { memberId, message } = await req.json();
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
 }
 
-// GET /api/admin-chat?memberId=xxx — fetch messages for a user
+// GET /api/admin-chat?memberId=xxx - fetch messages for a user
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);

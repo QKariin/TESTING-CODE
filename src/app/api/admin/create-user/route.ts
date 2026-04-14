@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         .maybeSingle();
 
     if (existingProfile) {
-        // Profile exists — just link it to the auth user
+        // Profile exists - just link it to the auth user
         const { error: linkError } = await supabaseAdmin
             .from('profiles')
             .update({ id: userId, member_id: lowerEmail })

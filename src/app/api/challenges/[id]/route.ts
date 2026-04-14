@@ -54,7 +54,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                     }).eq('challenge_id', id).eq('member_id', p.member_id);
                     p.status = 'eliminated';
                     p.eliminated_on_window_id = w.id;
-                    // Post elimination card — fetch profile directly with ilike for reliable name lookup
+                    // Post elimination card - fetch profile directly with ilike for reliable name lookup
                     try {
                         const { data: elimProf } = await supabaseAdmin.from('profiles')
                             .select('name, avatar_url').ilike('member_id', p.member_id).maybeSingle();

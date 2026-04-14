@@ -15,7 +15,7 @@ const RANKS = [
 
 const TRACKED = [
     { label: "Tasks Completed", desc: "Every task assigned, executed, and graded." },
-    { label: "Kneeling Sessions", desc: "Daily worship sessions — time and frequency." },
+    { label: "Kneeling Sessions", desc: "Daily worship sessions - time and frequency." },
     { label: "Tribute History", desc: "Full financial devotion record." },
     { label: "Locked Time", desc: "Total time spent under lock and control." },
     { label: "Consistency Score", desc: "Your reliability and daily commitment level." },
@@ -84,10 +84,10 @@ export default function TributePage() {
                     // fully off screen
                     ratio = 1;
                 } else if (rect.top <= 0 && rect.bottom >= vh) {
-                    // section fills the entire screen — perfectly clear
+                    // section fills the entire screen - perfectly clear
                     ratio = 0;
                 } else if (rect.top >= 0 && rect.bottom <= vh) {
-                    // entire section visible — perfectly clear
+                    // entire section visible - perfectly clear
                     ratio = 0;
                 } else if (rect.top > 0) {
                     // entering from bottom: starts blurred when top hits bottom of screen,
@@ -501,9 +501,9 @@ export default function TributePage() {
                         <div style={{ position: 'absolute', top: 0, left: '15%', right: '15%', height: 1, background: 'linear-gradient(to right, transparent, rgba(220,50,50,0.6), transparent)' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '11px', color: 'rgba(220,50,50,0.6)', letterSpacing: '6px', marginBottom: 18 }}>ALREADY FAILING</div>
                         <div style={{ fontFamily: 'Cinzel,serif', fontSize: '22px', color: '#fff', fontWeight: 700, letterSpacing: '2px', marginBottom: 12, lineHeight: 1.3 }}>You Haven't Even<br/>Started Yet.</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 28 }}>One task. A single instruction. And you already looked for the exit.<br/>This is exactly why you are still nobody.<br/>Queen Karin expected nothing — and you still disappointed her.</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 28 }}>One task. A single instruction. And you already looked for the exit.<br/>This is exactly why you are still nobody.<br/>Queen Karin expected nothing - and you still disappointed her.</div>
                         <button onClick={handleTribute} style={{ width: '100%', padding: '14px 0', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Cinzel,serif', fontSize: '14px', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer', marginBottom: 10 }}>
-                            I Obey — Send Tribute
+                            I Obey - Send Tribute
                         </button>
                         <button onClick={() => { setDisobedience(false); setTaskRevealed(false); }} style={{ width: '100%', padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: 'rgba(255,255,255,0.2)', fontFamily: 'Cinzel,serif', fontSize: '13px', cursor: 'pointer' }}>
                             Leave

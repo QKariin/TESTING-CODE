@@ -34,7 +34,7 @@ function isImage(file: File): boolean {
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'avif', 'tiff'].includes(ext);
 }
 
-/** Safe extension — always lowercase, HEIC/HEIF becomes jpg, fallback to bin */
+/** Safe extension - always lowercase, HEIC/HEIF becomes jpg, fallback to bin */
 function safeExt(file: File, outputType?: string): string {
     if (outputType === 'image/jpeg') return 'jpg';
     const raw = file.name.includes('.') ? file.name.split('.').pop()! : '';
@@ -49,7 +49,7 @@ async function compressImage(file: File, maxWidth = 1920, quality = 0.8): Promis
     // GIFs: skip compression (would break animation)
     if (file.type === 'image/gif') return { file, type: file.type };
 
-    // Determine output MIME — HEIC/HEIF must become JPEG (browsers can't encode HEIC)
+    // Determine output MIME - HEIC/HEIF must become JPEG (browsers can't encode HEIC)
     const isHeic = HEIC_TYPES.includes(file.type) || ['heic', 'heif'].includes(file.name.split('.').pop()?.toLowerCase() || '');
     const outputMime = isHeic ? 'image/jpeg' : (file.type || 'image/jpeg');
 
@@ -108,24 +108,24 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
     console.log(`[SupabaseStorage] Upload start: name=${file.name} type=${file.type || '(empty)'} size=${file.size}`);
 
     try {
-        // Videos (by MIME or extension) — signed URL, bypasses 4.5MB Vercel body limit
+        // Videos (by MIME or extension) - signed URL, bypasses 4.5MB Vercel body limit
         if (isVideo(file)) {
             const duration = await getVideoDuration(file);
             if (duration > MAX_VIDEO_SECONDS) {
                 const mins = Math.floor(duration / 60);
                 const secs = Math.round(duration % 60);
-                throw new Error(`VIDEO_TOO_LONG:Your video is ${mins}m ${secs}s — maximum allowed is 2 minutes. Please trim it and try again.`);
+                throw new Error(`VIDEO_TOO_LONG:Your video is ${mins}m ${secs}s - maximum allowed is 2 minutes. Please trim it and try again.`);
             }
             return await uploadFileDirectly(bucketName, folderPath, file);
         }
 
-        // Images — compress first, then upload directly via signed URL (same as video)
+        // Images - compress first, then upload directly via signed URL (same as video)
         if (isImage(file)) {
             const { file: processedFile } = await compressImage(file);
             return await uploadFileDirectly(bucketName, folderPath, processedFile);
         }
 
-        // Unknown file type — direct signed upload
+        // Unknown file type - direct signed upload
         return await uploadFileDirectly(bucketName, folderPath, file);
 
     } catch (err: any) {
@@ -151,7 +151,7 @@ export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<s
 
         const cleanup = () => { try { URL.revokeObjectURL(objectUrl); } catch { /* ignore */ } };
 
-        // Timeout safety — give up after 30s
+        // Timeout safety - give up after 30s
         const timeout = setTimeout(() => { cleanup(); resolve(null); }, 30000);
 
         const grabFrame = async () => {
@@ -193,7 +193,7 @@ export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<s
             if (seekTo > 0 && isFinite(seekTo)) {
                 video.currentTime = seekTo;
             } else {
-                // Duration unknown — try seeking to 0 and grab immediately
+                // Duration unknown - try seeking to 0 and grab immediately
                 video.currentTime = 0;
             }
         };
@@ -236,7 +236,7 @@ async function uploadFileDirectly(bucketName: string, folderPath: string, file: 
 
         const { signedUrl, publicUrl } = await signRes.json();
 
-        // 2. PUT directly to Supabase — infer content-type if empty (Android)
+        // 2. PUT directly to Supabase - infer content-type if empty (Android)
         const ext = file.name.split('.').pop()?.toLowerCase() || '';
         const mimeMap: Record<string, string> = {
             mp4: 'video/mp4', mov: 'video/quicktime', avi: 'video/x-msvideo',

@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { rankMeetsRequirement } from '@/lib/hierarchyRules';
 import { cached, cacheDelete } from '@/lib/api-cache';
 
-const POSTS_TTL = 60_000; // 60s — posts don't change that often
+const POSTS_TTL = 60_000; // 60s - posts don't change that often
 
 const getAdmin = () => createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
-        // Fetch posts with personalized access — email sent in body instead of URL
+        // Fetch posts with personalized access - email sent in body instead of URL
         if (body.action === 'fetch') {
             const email = (body.email || '').toLowerCase().trim();
             try {

@@ -24,7 +24,7 @@ async function unlockPaywall(memberId: string, logEntry: object) {
     }
 }
 
-// POST — called client-side after Payment Element confirms (PaymentIntent flow)
+// POST - called client-side after Payment Element confirms (PaymentIntent flow)
 export async function POST(req: Request) {
     try {
         const { intentId, memberId } = await req.json();

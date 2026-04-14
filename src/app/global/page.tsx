@@ -146,7 +146,7 @@ export default function GlobalPage() {
                 {/* ── DASHBOARD GRID ── */}
                 <div id="globalMainView" style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.7fr 1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '10px', padding: '10px', overflow: 'hidden', minHeight: 0 }}>
 
-                    {/* TALK — big left column, full chat */}
+                    {/* TALK - big left column, full chat */}
                     <div style={{ gridRow: '1 / 3', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
                             <div style={{ width: '3px', height: '14px', background: 'rgba(74,222,128,0.7)', borderRadius: '2px' }}></div>
@@ -167,7 +167,7 @@ export default function GlobalPage() {
                         </div>
                     </div>
 
-                    {/* LEADERBOARD — top right */}
+                    {/* LEADERBOARD - top right */}
                     <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
                         <div style={{ padding: '10px 14px 0', flexShrink: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -242,7 +242,7 @@ export default function GlobalPage() {
                     <div id="leaderboardList" style={{ flex: 1, overflowY: 'auto' }}></div>
                 </div>
 
-                {/* gPanel_talk is unused — TALK is the main panel */}
+                {/* gPanel_talk is unused - TALK is the main panel */}
                 <div id="gPanel_talk" style={{ display: 'none' }}></div>
 
                 <div id="gPanel_updates" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden', margin: '0 10px 10px' }}>

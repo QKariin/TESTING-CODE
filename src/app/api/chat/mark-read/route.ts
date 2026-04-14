@@ -60,8 +60,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid role' }, { status: 400 });
 }
 
-// GET /api/chat/mark-read?type=admin — returns admin's full chat_read map
-// GET /api/chat/mark-read?type=slave&email=xxx — returns slave's slave_chat_read_at
+// GET /api/chat/mark-read?type=admin - returns admin's full chat_read map
+// GET /api/chat/mark-read?type=slave&email=xxx - returns slave's slave_chat_read_at
 export async function GET(req: Request) {
     const admin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
         const ext = rawExt.toLowerCase().slice(0, 5);
         const filename = `${folder}/${crypto.randomUUID()}.${ext}`;
 
-        // Upload File directly — avoids loading entire video into a Buffer
+        // Upload File directly - avoids loading entire video into a Buffer
         const { error } = await supabaseAdmin.storage
             .from(bucket)
             .upload(filename, file, {

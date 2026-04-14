@@ -23,7 +23,7 @@ export async function GET() {
         const totalSpent = parseInt(params.wishlist_spent || 0);
         return {
             name: p.name || 'SUBJECT',
-            hierarchy: p.hierarchy || '—',
+            hierarchy: p.hierarchy || '-',
             totalSpent,
             member_number: p.id || null,
         };

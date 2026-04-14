@@ -55,13 +55,13 @@ function themeColor(theme: string) {
 }
 
 function fmtSeconds(s: number | null) {
-    if (s === null) return '—';
+    if (s === null) return '-';
     if (s < 60) return `${s}s`;
     return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
 function fmtDate(iso: string | null) {
-    if (!iso) return '—';
+    if (!iso) return '-';
     return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -126,7 +126,7 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
 
     useEffect(() => { loadAll(); }, [loadAll]);
 
-    // No background polling — detail loads fresh on click
+    // No background polling - detail loads fresh on click
 
     // Countdown tick
     useEffect(() => {
@@ -240,7 +240,7 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
                                 const json = await res.json();
                                 if (json.success) {
                                     const placeLabel = json.placement === 1 ? ' 🥇 +10 bonus' : json.placement === 2 ? ' 🥈 +7 bonus' : json.placement === 3 ? ' 🥉 +5 bonus' : '';
-                                    showToast(verified ? `✓ Verified — ${json.points_awarded ?? 20}pts awarded${placeLabel}` : '✕ Rejected', verified ? 'success' : 'error');
+                                    showToast(verified ? `✓ Verified - ${json.points_awarded ?? 20}pts awarded${placeLabel}` : '✕ Rejected', verified ? 'success' : 'error');
                                     loadDetail(detail.challenge.id);
                                 } else {
                                     showToast(json.error || 'Error', 'error');
@@ -373,7 +373,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                 </div>
                 {draftChallenges.length > 0 && (
                     <div className="ch-card" style={{ padding: 24 }}>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 16 }}>DRAFT CHALLENGES — READY TO LAUNCH</div>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 16 }}>DRAFT CHALLENGES - READY TO LAUNCH</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                             {draftChallenges.map(c => (
                                 <button key={c.id} onClick={() => onSelectChallenge(c)}
@@ -389,7 +389,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                         </div>
                     </div>
                 )}
-                <div className="ch-empty">NO ACTIVE CHALLENGE — CREATE ONE IN THE CREATE TAB</div>
+                <div className="ch-empty">NO ACTIVE CHALLENGE - CREATE ONE IN THE CREATE TAB</div>
             </div>
         );
     }
@@ -430,7 +430,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* CHALLENGE CARD — clickable to toggle drawer */}
+            {/* CHALLENGE CARD - clickable to toggle drawer */}
             <div
                 className="ch-card"
                 onClick={() => setDrawerOpen(o => !o)}
@@ -576,7 +576,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
 
                     {/* TWO-COLUMN: TASKS + LEADERBOARD */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, alignItems: 'start' }}>
-                        {/* LEFT — task schedule */}
+                        {/* LEFT - task schedule */}
                         <WindowsManager
                             windows={windows}
                             challengeId={challenge.id}
@@ -586,10 +586,10 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                             onRefresh={onRefresh}
                         />
 
-                        {/* RIGHT — leaderboard */}
+                        {/* RIGHT - leaderboard */}
                         <div>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 14 }}>
-                                LEADERBOARD — {leaderboard.length} PARTICIPANTS
+                                LEADERBOARD - {leaderboard.length} PARTICIPANTS
                             </div>
                             <div className="ch-card" style={{ overflow: 'hidden' }}>
                                 <table className="ch-table">
@@ -617,7 +617,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                                                 }}>
                                                     <td>
                                                         <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#aaa' }}>
-                                                            {isChamp ? '♛' : (rank || '—')}
+                                                            {isChamp ? '♛' : (rank || '-')}
                                                         </span>
                                                     </td>
                                                     <td>
@@ -755,7 +755,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
         <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', fontWeight: 700, textTransform: 'uppercase' }}>
-                    Task Schedule <span style={{ color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem' }}>— {windows.length} windows</span>
+                    Task Schedule <span style={{ color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem' }}>- {windows.length} windows</span>
                 </div>
                 {msg && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: msg.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>{msg.text}</div>}
             </div>
@@ -896,7 +896,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                     lineHeight: 1.6,
                                                     fontWeight: taskName ? 400 : 300,
                                                 }}>
-                                                    {taskName || 'No task description set — click Edit to add one'}
+                                                    {taskName || 'No task description set - click Edit to add one'}
                                                 </div>
                                             </div>
                                         )}
@@ -905,7 +905,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                         {!isEditing && (
                                             <div style={{ padding: '8px 18px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: isOpen ? 'rgba(74,222,128,0.6)' : isPast ? '#2a2a2a' : 'rgba(197,160,89,0.35)', letterSpacing: '1px' }}>
-                                                    {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} — {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                                    {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
                                         )}
@@ -1034,10 +1034,10 @@ function CreateTab({ allChallenges, onCreate }: {
             if (json.url) {
                 set('image_url', json.url);
             } else {
-                setImageError(json.error || 'Upload failed — try again');
+                setImageError(json.error || 'Upload failed - try again');
             }
         } catch {
-            setImageError('Upload failed — check connection');
+            setImageError('Upload failed - check connection');
         } finally {
             setImageUploading(false);
             if (imageInputRef.current) imageInputRef.current.value = '';
@@ -1132,7 +1132,7 @@ function CreateTab({ allChallenges, onCreate }: {
                                 <button type="button" onClick={() => imageInputRef.current?.click()}
                                     style={{ padding: '10px 18px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
                                     disabled={imageUploading}>
-                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED — CHANGE?' : '⬆ UPLOAD COVER'}
+                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED - CHANGE?' : '⬆ UPLOAD COVER'}
                                 </button>
                                 {imageError && (
                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#e03030', letterSpacing: '1px' }}>⚠ {imageError}</div>
@@ -1169,7 +1169,7 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                     </div>
 
-                    {/* Daily Task Schedule — per day */}
+                    {/* Daily Task Schedule - per day */}
                     <div>
                         <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>DAILY TASK SCHEDULE</label>
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
@@ -1496,7 +1496,7 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
                                 <button type="button" onClick={() => imageInputRef.current?.click()}
                                     style={{ padding: '9px 16px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
                                     disabled={imageUploading}>
-                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED — CHANGE?' : '⬆ UPLOAD COVER'}
+                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED - CHANGE?' : '⬆ UPLOAD COVER'}
                                 </button>
                                 {imageError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#e03030' }}>⚠ {imageError}</div>}
                             </div>

@@ -252,13 +252,13 @@ function WelcomeStep({ onNext }: { onNext: () => void }) {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.35 }}
                     className="space-y-5">
                     <p className="font-['Cormorant_Garamond'] text-[1.15rem] font-light text-white/55 leading-relaxed italic">
-                        Most never get this far. You did — and that means something.
+                        Most never get this far. You did - and that means something.
                     </p>
                     <p className="font-['Cormorant_Garamond'] text-[1.15rem] font-light text-white/45 leading-relaxed">
                         This space was built for those who understand that real submission is a privilege, not a game. What happens here is private, intentional, and completely under my control.
                     </p>
                     <p className="font-['Cormorant_Garamond'] text-[1.05rem] font-light text-amber-300/50 leading-relaxed">
-                        Before you step in — let me know who you are.
+                        Before you step in - let me know who you are.
                     </p>
                 </motion.div>
             </div>
@@ -275,7 +275,7 @@ function IdentityStep({ name, setName, photoPreview, photoUploading, onPhotoClic
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">01 — Identity</p>
+                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">01 - Identity</p>
                 <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">Who are you</h2>
                 <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
                     <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">in this world?</span>
@@ -332,7 +332,7 @@ function AboutStep({ age, setAge, country, setCountry, onNext, onBack }: any) {
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">02 — About You</p>
+                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">02 - About You</p>
                 <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">Tell me</h2>
                 <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
                     <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">a little more.</span>
@@ -368,14 +368,14 @@ function TypeStep({ subTypes, toggle, onNext, onBack, saving }: any) {
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
-                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">03 — Your Nature</p>
+                <p className="text-[0.58rem] tracking-[4px] text-white/20 font-[Raleway] uppercase mb-8">03 - Your Nature</p>
                 <h2 className="font-[Cinzel] font-light text-[1.7rem] text-white leading-snug mb-1 tracking-wide">What draws</h2>
                 <h2 className="font-[Cinzel] font-light text-[1.7rem] leading-snug mb-8 tracking-wide">
                     <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">you to this?</span>
                 </h2>
                 <GoldDivider />
                 <p className="font-['Cormorant_Garamond'] text-[1.05rem] font-light text-white/35 leading-relaxed mb-7">
-                    Select everything that applies. Be honest — this is private.
+                    Select everything that applies. Be honest - this is private.
                 </p>
 
                 <div className="space-y-2.5">

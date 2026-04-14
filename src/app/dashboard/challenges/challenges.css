@@ -81,7 +81,7 @@ html, body {
     overflow: hidden;
 }
 
-/* ── LEFT SIDEBAR — tabs ── */
+/* ── LEFT SIDEBAR - tabs ── */
 .ch-sidebar {
     background: rgba(8,8,12,0.98);
     border-right: 1px solid var(--gold-border);

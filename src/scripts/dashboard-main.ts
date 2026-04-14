@@ -52,7 +52,7 @@ export function initDashboard() {
         renderSidebar();
         if (!currId) return;
         if (!isMemberOnline(currId)) return;
-        // Member just came online while admin has them open — wake everything up
+        // Member just came online while admin has them open - wake everything up
         const [{ updateDetail }, { initDashboardChat }] = await Promise.all([
             import('./dashboard-users'),
             import('./dashboard-chat'),
@@ -84,7 +84,7 @@ async function refreshQueueFromServer() {
     }
 }
 
-// Module-level refs — prevent duplicate subscriptions and allow cleanup
+// Module-level refs - prevent duplicate subscriptions and allow cleanup
 let _tasksWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let _purchaseWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 
@@ -92,7 +92,7 @@ function subscribeToDashboardTaskUpdates() {
     // Guard against duplicate subscriptions
     if (_tasksWatchChannel) return;
 
-    // Realtime — fires instantly if Supabase realtime is enabled on tasks table
+    // Realtime - fires instantly if Supabase realtime is enabled on tasks table
     const supabase = createClient();
     _tasksWatchChannel = supabase
         .channel('dashboard_tasks_watch')
@@ -101,12 +101,12 @@ function subscribeToDashboardTaskUpdates() {
             schema: 'public',
             table: 'tasks',
         }, () => {
-            console.log('[DASHBOARD REALTIME] Tasks changed — refreshing...');
+            console.log('[DASHBOARD REALTIME] Tasks changed - refreshing...');
             refreshQueueFromServer();
         });
     _tasksWatchChannel.subscribe();
 
-    // Polling fallback — catches anything the realtime subscription misses
+    // Polling fallback - catches anything the realtime subscription misses
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
     _dashboardPollInterval = setInterval(refreshQueueFromServer, 300000);
 
@@ -271,7 +271,7 @@ function startTimerLoop() {
     if (timerInterval) clearInterval(timerInterval);
     const interval = setInterval(() => {
         if (!currId) return;
-        if (!isMemberOnline(currId)) return; // ghost — skip all updates
+        if (!isMemberOnline(currId)) return; // ghost - skip all updates
         const u = users.find(x => x.memberId === currId);
         if (u) updateDetail(u);
     }, 1000);
@@ -397,7 +397,7 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
         overlay.innerHTML = `
             <div style="max-width:900px;margin:0 auto;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-                    <div style="font-family:Orbitron;font-size:0.7rem;color:var(--gold);letter-spacing:3px;">${category.toUpperCase()} — ${filtered.length} ENTRIES</div>
+                    <div style="font-family:Orbitron;font-size:0.7rem;color:var(--gold);letter-spacing:3px;">${category.toUpperCase()} - ${filtered.length} ENTRIES</div>
                     <button onclick="document.getElementById('__adminCatOverlay').remove()" style="background:none;border:1px solid #333;color:#888;font-family:Orbitron;font-size:0.5rem;padding:8px 16px;cursor:pointer;border-radius:3px;">CLOSE</button>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
@@ -519,7 +519,7 @@ export async function loadQueenPostsDashboard() {
                     <div style="width:100%;border-radius:6px;border:1px solid #222;overflow:hidden;">
                         ${p.media_type === 'video'
                             ? `<video src="${p.media_url}" controls style="width:100%;max-height:300px;display:block;background:#000;"></video>`
-                            : `<img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" onerror="this.insertAdjacentHTML('afterend','<div style=\\'color:#ff4444;font-family:Orbitron;font-size:0.55rem;padding:8px;\\'>IMAGE FAILED TO LOAD — Supabase \\'media\\' bucket may not be public</div>');this.remove();" />`
+                            : `<img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" onerror="this.insertAdjacentHTML('afterend','<div style=\\'color:#ff4444;font-family:Orbitron;font-size:0.55rem;padding:8px;\\'>IMAGE FAILED TO LOAD - Supabase \\'media\\' bucket may not be public</div>');this.remove();" />`
                         }
                         <div style="font-family:monospace;font-size:0.55rem;color:#444;padding:4px 8px;word-break:break-all;">${p.media_url}</div>
                     </div>` : p.media_url?.startsWith('failed') ? `<div style="color:#ff6b6b;font-family:Orbitron;font-size:0.55rem;padding:6px 0;">⚠ Upload failed: ${p.media_url}</div>` : ''}
@@ -687,7 +687,7 @@ export async function submitQueenPost() {
                 const priceNote = price > 0 ? ` · ${price} coins to unlock` : '';
                 const rankNote = min_rank && min_rank !== 'Hall Boy' ? ` · ${min_rank}+ only` : '';
                 const announcementMsg = title
-                    ? `${typeLabel} — "${title}"${priceNote}${rankNote} · Check the Queen's Feed`
+                    ? `${typeLabel} - "${title}"${priceNote}${rankNote} · Check the Queen's Feed`
                     : `${typeLabel} published${priceNote}${rankNote} · Check the Queen's Feed`;
                 fetch('/api/global/messages', {
                     method: 'POST',
@@ -794,7 +794,7 @@ export async function reviewTask(submissionId: string, memberId: string) {
 
             // Close overlay and refresh
             document.getElementById('__adminCatOverlay')?.remove();
-            alert(`✓ APPROVED — ${data.pointsAwarded} points awarded.`);
+            alert(`✓ APPROVED - ${data.pointsAwarded} points awarded.`);
         } else {
             alert('Failed to approve: ' + data.error);
         }
@@ -830,7 +830,7 @@ export async function rejectFromGallery(submissionId: string, memberId: string) 
 
             // Close overlay and refresh
             document.getElementById('__adminCatOverlay')?.remove();
-            alert(`✗ REJECTED — 300 coin penalty applied.`);
+            alert(`✗ REJECTED - 300 coin penalty applied.`);
         } else {
             alert('Failed to reject: ' + data.error);
         }

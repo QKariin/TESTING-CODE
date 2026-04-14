@@ -19,7 +19,7 @@ function parseTributeHistory(val: any): number {
     try {
         const arr = typeof val === 'string' ? JSON.parse(val) : val;
         if (Array.isArray(arr)) {
-            // amounts can be negative (expense entries) or positive (older format) — sum absolute values
+            // amounts can be negative (expense entries) or positive (older format) - sum absolute values
             return arr.reduce((sum: number, item: any) => {
                 const raw = typeof item === 'number' ? item : parseNum(item?.amount ?? item?.coins ?? item?.value ?? 0);
                 return sum + Math.abs(raw);
@@ -48,7 +48,7 @@ export async function GET() {
         const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
         const base = {
             name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
-            hierarchy: prof.hierarchy || t.Hierarchy || '—',
+            hierarchy: prof.hierarchy || t.Hierarchy || '-',
             avatar: prof.avatar_url || '',
         };
 

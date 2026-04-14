@@ -4,7 +4,7 @@ import { cached } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
 
-const TTL = 30_000; // 30s — routine status changes at most once per day
+const TTL = 30_000; // 30s - routine status changes at most once per day
 
 async function getRoutineStatus(memberId: string, tz: string) {
     // profiles.id = UUID, so look up by .eq('id', memberId)
