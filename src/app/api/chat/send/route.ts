@@ -144,29 +144,30 @@ export async function POST(req: Request) {
 
         // Fire push notification in background — don't block the response
         if (isQueen && conversationId) {
-            adminClient
-                .from('profiles')
-                .select('onesignal_id')
-                .ilike('member_id', conversationId)
-                .maybeSingle()
-                .then(({ data: pushProfile }) => {
-                    const onesignalId = pushProfile?.onesignal_id;
-                    if (!onesignalId) return;
-                    fetch('https://onesignal.com/api/v1/notifications', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
-                        },
-                        body: JSON.stringify({
-                            app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0',
-                            include_player_ids: [onesignalId],
-                            headings: { en: 'Queen Karin' },
-                            contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
-                            url: 'https://throne.qkarin.com/profile',
-                        }),
-                    }).catch(() => {});
+            Promise.resolve(
+                adminClient
+                    .from('profiles')
+                    .select('onesignal_id')
+                    .ilike('member_id', conversationId)
+                    .maybeSingle()
+            ).then(({ data: pushProfile }) => {
+                const onesignalId = pushProfile?.onesignal_id;
+                if (!onesignalId) return;
+                fetch('https://onesignal.com/api/v1/notifications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0',
+                        include_player_ids: [onesignalId],
+                        headings: { en: 'Queen Karin' },
+                        contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
+                        url: 'https://throne.qkarin.com/profile',
+                    }),
                 }).catch(() => {});
+            }).catch(() => {});
         }
 
         return NextResponse.json({ success: true, data: msgData, newWallet });
