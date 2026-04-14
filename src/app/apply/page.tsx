@@ -45,7 +45,7 @@ function AnimatedBackground() {
 
 // --- Types ---
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 interface FormData {
     // Step 1 - About You
@@ -137,7 +137,7 @@ const ASSURANCE_Q5 = [
     "Every question has weakened me further",
 ];
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 // --- Shared UI ---
 
@@ -197,7 +197,7 @@ function TextArea({ placeholder, value, onChange, rows = 4 }: any) {
 function ChoiceBtn({ label, active, onClick }: any) {
     return (
         <button onClick={onClick} className={cn(
-            "w-full px-4 py-3.5 text-left border transition-all duration-200 font-[Raleway] font-light text-[0.9rem] tracking-wide",
+            "w-full px-4 py-3.5 text-left border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1rem] tracking-normal",
             active
                 ? "border-amber-500/40 bg-amber-500/[0.06] text-amber-200/85"
                 : "border-white/[0.07] bg-white/[0.01] text-white/45 hover:border-white/14"
@@ -327,7 +327,7 @@ export default function ApplyPage() {
 
             <div className="relative z-10 w-full max-w-md min-h-screen flex flex-col px-8 pt-16 pb-12">
 
-                {step > 0 && step < 9 && (
+                {step > 0 && step < 10 && (
                     <div className="flex gap-2 mb-12">
                         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                             <div key={i} className="h-px flex-1 transition-all duration-500"
@@ -348,7 +348,8 @@ export default function ApplyPage() {
                         {step === 5 && <ToneStep form={form} set={set} onNext={() => goTo(6)} onBack={() => goTo(4 as Step)} />}
                         {step === 6 && <PsychologyStep form={form} set={set} onNext={() => goTo(7)} onBack={() => goTo(5 as Step)} />}
                         {step === 7 && <AssuranceStep form={form} set={set} onNext={() => goTo(8)} onBack={() => goTo(6 as Step)} />}
-                        {step === 8 && <PainStep form={form} set={set} onNext={handleCheckout} onBack={() => goTo(7 as Step)} saving={saving} amount={form.amount} setAmount={(v: number) => set('amount', v)} />}
+                        {step === 8 && <PainStep form={form} set={set} onNext={() => goTo(9)} onBack={() => goTo(7 as Step)} />}
+                        {step === 9 && <CheckoutStep form={form} set={set} onNext={handleCheckout} onBack={() => goTo(8 as Step)} saving={saving} amount={form.amount} setAmount={(v: number) => set('amount', v)} />}
 
                     </motion.div>
                 </AnimatePresence>
@@ -366,12 +367,12 @@ function IntroStep({ onNext }: { onNext: () => void }) {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}>
                     <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 border border-amber-500/20 bg-amber-500/[0.03] mb-10">
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-400/70" />
-                        <span className="text-[0.5rem] tracking-[4px] text-amber-400/50 font-[Raleway] uppercase">Ownership Application</span>
+                        <span className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-amber-400/50">Ownership Application</span>
                     </div>
-                    <h1 className="font-[Cinzel] font-light text-[2.4rem] leading-[1.2] text-white mb-2 tracking-wide">
+                    <h1 className="font-['Cormorant_Garamond'] font-normal text-[2.4rem] leading-[1.2] text-white mb-2">
                         You are applying
                     </h1>
-                    <h1 className="font-[Cinzel] font-light text-[2.4rem] leading-[1.2] mb-10 tracking-wide">
+                    <h1 className="font-['Cormorant_Garamond'] font-normal text-[2.4rem] leading-[1.2] mb-10">
                         <span className="bg-gradient-to-r from-amber-300 via-amber-100 to-amber-400/80 bg-clip-text text-transparent">
                             for ownership.
                         </span>
@@ -1015,45 +1016,50 @@ function AssuranceStep({ form, set, onNext, onBack }: any) {
     );
 }
 
-// --- Step 8: Pain + Checkout ---
+// --- Step 8: Pain tolerance ---
 
-function PainStep({ form, set, onNext, onBack, saving, amount, setAmount }: any) {
+function PainStep({ form, set, onNext, onBack }: any) {
     const ready = form.pain_tolerance !== '';
 
     return (
         <div className="flex flex-col flex-1 justify-between">
             <div>
                 <StepHeader stepLabel="08 - Pain" line1="Where do you" line2="stand?" />
-
-                <div className="flex flex-col gap-3 mb-12">
+                <div className="flex flex-col gap-3">
                     {PAIN_OPTIONS.map(opt => (
                         <ChoiceBtn key={opt} label={opt} active={form.pain_tolerance === opt} onClick={() => set('pain_tolerance', opt)} />
                     ))}
                 </div>
+            </div>
+            <StepNav onNext={onNext} onBack={onBack} disabled={!ready} />
+        </div>
+    );
+}
 
-                {ready && (
-                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                        <div className="pt-8 border-t border-white/[0.06]">
-                            <h3 className="font-[Cinzel] font-light text-[1.3rem] text-white mb-1 tracking-wide">Application Fee</h3>
-                            <div className="w-8 h-px bg-gradient-to-r from-amber-500/50 to-transparent mb-6 mt-1" />
-                            <p className="font-['Cormorant_Garamond'] text-[1rem] font-light text-white/35 leading-relaxed mb-7 italic">
-                                Minimum €95. Pay more if you want to be taken seriously.
-                            </p>
-                            <FieldLabel>Amount (€)</FieldLabel>
-                            <div className="flex items-center gap-4 mt-2">
-                                <span className="text-amber-400/40 font-['Cormorant_Garamond'] text-2xl">€</span>
-                                <input type="number" min={95} value={amount}
-                                    onChange={e => setAmount(Math.max(95, parseInt(e.target.value) || 95))}
-                                    className="bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-2xl font-light py-1 outline-none w-28 transition-colors" />
-                            </div>
-                            <p className="text-[0.52rem] tracking-[3px] text-white/15 font-[Raleway] uppercase mt-3">Non-refundable</p>
-                        </div>
-                    </motion.div>
-                )}
+// --- Step 9: Checkout ---
+
+function CheckoutStep({ form, set, onNext, onBack, saving, amount, setAmount }: any) {
+    return (
+        <div className="flex flex-col flex-1 justify-between">
+            <div>
+                <StepHeader stepLabel="09 - Payment" line1="Application" line2="Fee." />
+
+                <p className="font-['Cormorant_Garamond'] text-[1rem] font-light text-white/35 leading-relaxed mb-8 italic">
+                    Minimum €95. Pay more if you want to be taken seriously.
+                </p>
+
+                <FieldLabel>Amount (€)</FieldLabel>
+                <div className="flex items-center gap-4 mt-2 mb-2">
+                    <span className="text-amber-400/40 font-['Cormorant_Garamond'] text-2xl">€</span>
+                    <input type="number" min={95} value={amount}
+                        onChange={e => setAmount(Math.max(95, parseInt(e.target.value) || 95))}
+                        className="bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-2xl font-light py-1 outline-none w-28 transition-colors" />
+                </div>
+                <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/20">Non-refundable</p>
             </div>
 
             <div className="mt-10 space-y-4">
-                <PrimaryBtn onClick={onNext} disabled={!ready || saving}>
+                <PrimaryBtn onClick={onNext} disabled={saving}>
                     {saving ? 'Redirecting...' : `Submit & Pay €${amount}`}
                 </PrimaryBtn>
                 <div className="flex justify-center"><GhostBtn onClick={onBack}>Back</GhostBtn></div>
