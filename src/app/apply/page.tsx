@@ -68,8 +68,8 @@ interface FormData {
     // Step 3 - Experience
     femdom_experience: string;
     expectations: string;
-    hard_limits: string;
-    soft_limits: string;
+    hard_limits: string[];
+    soft_limits: string[];
     first_experience: string;
     best_moment: string;
     mistakes: string;
@@ -139,6 +139,21 @@ const ASSURANCE_Q5 = [
 
 const TOTAL_STEPS = 9;
 
+const KINK_OPTIONS = [
+    'Obedience Training', 'Service Submission', 'Task Assignment', 'Protocol & Rituals',
+    'Financial Domination', 'Behavior Modification', 'Isolation / Ignoring',
+    'Tease & Denial', 'Orgasm Control', 'Chastity Device',
+    'Humiliation', 'Degradation', 'Verbal Abuse', 'Forced Confessions',
+    'Psychological Control', 'Gaslighting / Mind Games', 'Blackmail Fantasy',
+    'Impact Play', 'Sensation Play', 'Punishment / Discipline',
+    'Bondage & Restraints', 'Rope Bondage', 'Collar & Lead', 'Blindfolds', 'Gags',
+    'Exhibitionism', 'Forced Exposure', 'Body Inspection', 'Surveillance',
+    'Foot Worship', 'Body Worship', 'Objectification',
+    'Pet Play', 'Age Play', 'Role Play', 'CNC (Consensual Non-Consent)',
+    'Public Control', 'SPH', 'Cuckolding', 'Forced Feminization',
+    'Guided Masturbation', 'Praise & Reward', 'Breath Play', 'Blood Play', 'Watersports',
+];
+
 // --- Shared UI ---
 
 function GoldDivider() {
@@ -146,16 +161,15 @@ function GoldDivider() {
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] font-normal text-[1.15rem] text-white/80 mb-0.5">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] font-normal text-[1.2rem] text-white/80 mb-0.5">{children}</p>;
 }
 
-// Full question text - readable Cormorant
 function Question({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] text-[1.1rem] font-light text-white/65 leading-relaxed mb-4">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] text-[1.2rem] font-light text-white/65 leading-relaxed mb-4">{children}</p>;
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-white/22 mb-3 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.9rem] text-white/22 mb-3 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
@@ -180,7 +194,8 @@ function GhostBtn({ children, onClick }: any) {
 function LineInput({ placeholder, value, onChange, type = 'text', autoComplete }: any) {
     return (
         <input type={type}
-            className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-base font-light py-2 outline-none transition-colors duration-300 placeholder:text-white/15 mt-0"
+            className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] font-light py-3 outline-none transition-colors duration-300 placeholder:text-white/15 mt-0"
+            style={{ fontSize: '1rem' }}
             placeholder={placeholder} value={value} onChange={onChange} autoComplete={autoComplete ?? 'off'}
         />
     );
@@ -189,9 +204,43 @@ function LineInput({ placeholder, value, onChange, type = 'text', autoComplete }
 function TextArea({ placeholder, value, onChange, rows = 4 }: any) {
     return (
         <textarea
-            className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-base font-light p-0 py-2 resize-none outline-none transition-colors duration-300 placeholder:text-white/15"
+            className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] font-light p-0 py-3 resize-none outline-none transition-colors duration-300 placeholder:text-white/15"
+            style={{ fontSize: '1rem' }}
             placeholder={placeholder} value={value} onChange={onChange} rows={rows}
         />
+    );
+}
+
+function TagPicker({ options, selected, onChange, label }: {
+    options: string[]; selected: string[]; onChange: (next: string[]) => void; label: string;
+}) {
+    const toggle = (opt: string) =>
+        onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]);
+    return (
+        <div>
+            <Question>{label}</Question>
+            <div className="flex flex-wrap gap-2 mt-1">
+                {options.map(opt => {
+                    const active = selected.includes(opt);
+                    return (
+                        <button key={opt} onClick={() => toggle(opt)}
+                            className={cn(
+                                "px-3 py-2 border transition-all duration-150 font-['Cormorant_Garamond'] font-normal text-[1rem] leading-tight",
+                                active
+                                    ? "border-amber-500/50 bg-amber-500/[0.09] text-amber-200/90"
+                                    : "border-white/[0.08] text-white/45 hover:border-amber-500/20 hover:text-white/65"
+                            )}>
+                            {opt}
+                        </button>
+                    );
+                })}
+            </div>
+            {selected.length > 0 && (
+                <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-amber-400/40 mt-3">
+                    {selected.length} selected
+                </p>
+            )}
+        </div>
     );
 }
 
@@ -218,9 +267,9 @@ function Reveal({ show, children }: { show: boolean; children: React.ReactNode }
 function StepHeader({ stepLabel, line1, line2 }: { stepLabel: string; line1: string; line2: string }) {
     return (
         <div className="mb-8">
-            <p className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-white/20 mb-6 tracking-wide">{stepLabel}</p>
-            <h2 className="font-['Cormorant_Garamond'] font-normal text-[2rem] text-white leading-snug mb-0.5">{line1}</h2>
-            <h2 className="font-['Cormorant_Garamond'] font-normal text-[2rem] leading-snug mb-8">
+            <p className="font-['Cormorant_Garamond'] italic text-[0.9rem] text-white/20 mb-5 tracking-wide">{stepLabel}</p>
+            <h2 className="font-['Cormorant_Garamond'] font-normal text-[1.85rem] sm:text-[2rem] text-white leading-snug mb-0.5">{line1}</h2>
+            <h2 className="font-['Cormorant_Garamond'] font-normal text-[1.85rem] sm:text-[2rem] leading-snug mb-7">
                 <span className="bg-gradient-to-r from-amber-300 to-amber-500/70 bg-clip-text text-transparent">{line2}</span>
             </h2>
             <GoldDivider />
@@ -251,8 +300,8 @@ export default function ApplyPage() {
         favorite_snack: '', weekly_budget: '',
         toys_owned: '', favorite_toy: '', weirdest_object: '',
         bought_to_impress: null, toy_want_to_try: '',
-        femdom_experience: '', expectations: '', hard_limits: '',
-        soft_limits: '', first_experience: '', best_moment: '',
+        femdom_experience: '', expectations: '', hard_limits: [],
+        soft_limits: [], first_experience: '', best_moment: '',
         mistakes: '',
         ready_for_sliders: '',
         sliders: Object.fromEntries(SLIDERS.map(s => [s, 50])),
@@ -326,7 +375,7 @@ export default function ApplyPage() {
             <AnimatedBackground />
             <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/60 pointer-events-none z-[1]" />
 
-            <div className="relative z-10 w-full max-w-md min-h-screen flex flex-col px-8 pt-16 pb-12">
+            <div className="relative z-10 w-full max-w-md min-h-screen flex flex-col px-5 sm:px-8 pt-10 pb-10">
 
                 {step > 0 && step < 10 && (
                     <div className="flex gap-2 mb-12">
@@ -553,8 +602,8 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
     const hasExp = form.femdom_experience === 'Yes, I have a lot of experience' || form.femdom_experience === 'Only a few times';
     const showDetails     = form.femdom_experience !== '';
     const showHardLimits  = form.expectations.trim().length > 0;
-    const showSoftLimits  = showHardLimits && form.hard_limits.trim().length > 0;
-    const showFirstExp    = hasExp && showSoftLimits && form.soft_limits.trim().length > 0;
+    const showSoftLimits  = showHardLimits && form.hard_limits.length > 0;
+    const showFirstExp    = hasExp && showSoftLimits && form.soft_limits.length > 0;
     const showBestMoment  = showFirstExp && form.first_experience.trim().length > 0;
     const showMistakes    = showBestMoment && form.best_moment.trim().length > 0;
     const canContinue = form.femdom_experience !== '';
@@ -586,13 +635,21 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
                     </Reveal>
 
                     <Reveal show={showHardLimits}>
-                        <Question>Your hard limits.</Question>
-                        <TextArea placeholder="Absolute non-negotiables..." value={form.hard_limits} onChange={(e: any) => set('hard_limits', e.target.value)} rows={2} />
+                        <TagPicker
+                            label="Your hard limits — absolute non-negotiables."
+                            options={KINK_OPTIONS}
+                            selected={form.hard_limits}
+                            onChange={v => set('hard_limits', v)}
+                        />
                     </Reveal>
 
                     <Reveal show={showSoftLimits}>
-                        <Question>Your soft limits.</Question>
-                        <TextArea placeholder="Things you'd consider with the right dynamic..." value={form.soft_limits} onChange={(e: any) => set('soft_limits', e.target.value)} rows={2} />
+                        <TagPicker
+                            label="Your soft limits — things you'd consider with the right dynamic."
+                            options={KINK_OPTIONS}
+                            selected={form.soft_limits}
+                            onChange={v => set('soft_limits', v)}
+                        />
                     </Reveal>
 
                     <Reveal show={showFirstExp}>

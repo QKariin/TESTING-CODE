@@ -40,6 +40,10 @@ export async function POST(request: Request) {
             ...(profile?.id ? { member_id: profile.id } : {}),
         };
 
+        // Join array fields to strings for DB storage
+        if (Array.isArray(data.hard_limits)) data.hard_limits = data.hard_limits.join(', ');
+        if (Array.isArray(data.soft_limits)) data.soft_limits = data.soft_limits.join(', ');
+
         // Map all fields
         const fields = [
             'name', 'age', 'location', 'height_weight', 'occupation',
