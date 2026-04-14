@@ -803,6 +803,7 @@ export function openLobby() {
     const { memberId, id } = getState();
     const emailEl = document.getElementById('hubEmail');
     if (emailEl) emailEl.textContent = memberId || id || '';
+    _updateNotifToggleUI();
 }
 
 export function closeLobby() {
@@ -2059,6 +2060,50 @@ function initOneSignal(memberId: string) {
 
     dismissBtn?.addEventListener('click', () => { banner.style.display = 'none'; });
     setTimeout(() => { banner.style.display = 'flex'; }, 2000);
+}
+
+function _updateNotifToggleUI() {
+    const statusEl = document.getElementById('notifToggleStatus');
+    const descEl = document.getElementById('notifToggleDesc');
+    if (!statusEl || !descEl) return;
+    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'unsupported';
+    if (perm === 'granted') {
+        statusEl.textContent = 'ON';
+        statusEl.style.color = '#00cc66';
+        descEl.textContent = 'Push notifications enabled';
+    } else if (perm === 'denied') {
+        statusEl.textContent = 'BLOCKED';
+        statusEl.style.color = '#ff4444';
+        descEl.textContent = 'Enable in browser settings';
+    } else {
+        statusEl.textContent = 'OFF';
+        statusEl.style.color = '#555';
+        descEl.textContent = 'Enable push notifications';
+    }
+}
+
+export async function togglePushNotifications() {
+    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'unsupported';
+    if (perm === 'granted') {
+        // Already on — offer to disable via OneSignal
+        const OS = (window as any).OneSignal;
+        if (OS?.User?.PushSubscription?.optOut) {
+            await OS.User.PushSubscription.optOut();
+        }
+        alert('Notifications paused. To fully block them, go to browser settings → Site Settings → Notifications.');
+        _updateNotifToggleUI();
+    } else if (perm === 'denied') {
+        alert('Notifications are blocked. Go to browser Settings → Site Settings → Notifications → find this site → set to Allow.');
+    } else {
+        // Request permission
+        const OS = (window as any).OneSignal;
+        if (OS?.Notifications?.requestPermission) {
+            await OS.Notifications.requestPermission();
+        } else {
+            await (window as any).Notification.requestPermission();
+        }
+        _updateNotifToggleUI();
+    }
 }
 
 export async function loadChatHistory(memberId: string) {
@@ -4865,6 +4910,7 @@ let _altarResolveUrl: ((u: string) => string) | null = null;
 let _altarRoutines: any[] = [];
 let _altarAccepted: any[] = [];
 let _altarFailed: any[] = [];
+let _altarGridsFilled = false; // lazy: only fill grids when drawer first opens
 
 export function openAltarDrawer() {
     const drawer = document.getElementById('altarDrawer');
@@ -4874,6 +4920,13 @@ export function openAltarDrawer() {
     if (drawer) drawer.classList.add('open');
     if (backdrop) backdrop.classList.add('open');
     _setNavActive('record');
+    // Lazy-load drawer grids on first open
+    if (!_altarGridsFilled) {
+        _fillAltarGrid('altarGrid_routine', _altarRoutines);
+        _fillAltarGrid('altarGrid_accepted', _altarAccepted);
+        _fillAltarGrid('altarGrid_rejected', _altarFailed, true);
+        _altarGridsFilled = true;
+    }
     // Load gallery if it has pending updates
     flushGalleryIfDirty();
 }
@@ -4965,10 +5018,16 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
         }
     });
 
-    // Populate drawer tab grids
-    _fillAltarGrid('altarGrid_routine', _altarRoutines);
-    _fillAltarGrid('altarGrid_accepted', _altarAccepted);
-    _fillAltarGrid('altarGrid_rejected', _altarFailed, true);
+    // Fill drawer grids immediately if drawer is already open, otherwise defer until open
+    const drawer = document.getElementById('altarDrawer');
+    if (drawer?.classList.contains('open')) {
+        _fillAltarGrid('altarGrid_routine', _altarRoutines);
+        _fillAltarGrid('altarGrid_accepted', _altarAccepted);
+        _fillAltarGrid('altarGrid_rejected', _altarFailed, true);
+        _altarGridsFilled = true;
+    } else {
+        _altarGridsFilled = false;
+    }
 }
 
 function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u: string) => string) {

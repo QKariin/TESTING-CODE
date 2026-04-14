@@ -43,19 +43,33 @@ async function buildFullProfile(emailOrUuid: string) {
         throw profileError;
     }
 
-    // Step 2: use UUID (profiles.id) to fetch tasks - tasks.member_id is UUID
+    // Step 2: fetch tasks with UUID + legacy email fallback
     const uuid = profileData?.id;
-    const [{ data: taskData }, { data: contribData }] = await Promise.all([
-        uuid
-            ? supabaseAdmin.from('tasks').select('*').eq('member_id', uuid).maybeSingle()
-            : Promise.resolve({ data: null }),
+    let taskData: any = null;
+    if (uuid) {
+        const { data: taskByUuid } = await supabaseAdmin.from('tasks').select('*').eq('member_id', uuid).maybeSingle();
+        if (taskByUuid) {
+            taskData = taskByUuid;
+        } else {
+            // Legacy: tasks row may still use email as member_id
+            const profileEmail = profileData?.member_id;
+            if (profileEmail) {
+                const { data: taskByEmail } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profileEmail).maybeSingle();
+                if (taskByEmail) taskData = taskByEmail;
+            }
+        }
+    }
+
+    const [{ data: contribData }] = await Promise.all([
         uuid
             ? supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', uuid)
             : supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', emailOrUuid),
     ]);
 
+
     const crowdfundTotal = ((contribData as any[] | null) || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
     return mapUserProfile(profileData || {}, taskData || {}, crowdfundTotal);
+
 }
 
 export async function GET(request: NextRequest) {

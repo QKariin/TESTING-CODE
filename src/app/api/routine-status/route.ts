@@ -4,10 +4,48 @@ import { cached } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
 
-const TTL = 30_000; // 30s - routine status changes at most once per day
+const TTL = 15_000; // 15s cache
+
+// Resolve tasks row for any memberId (UUID or legacy email)
+async function getTaskRow(memberId: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+
+    if (isUuid) {
+        const { data } = await supabaseAdmin
+            .from('tasks')
+            .select('Taskdom_History')
+            .eq('member_id', memberId)
+            .maybeSingle();
+        if (data) return data;
+
+        // UUID user but tasks row might still use email — look up email via profiles
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('member_id')
+            .eq('id', memberId)
+            .maybeSingle();
+        if (profile?.member_id) {
+            const { data: row } = await supabaseAdmin
+                .from('tasks')
+                .select('Taskdom_History')
+                .ilike('member_id', profile.member_id)
+                .maybeSingle();
+            if (row) return row;
+        }
+    } else {
+        // Legacy email lookup
+        const { data } = await supabaseAdmin
+            .from('tasks')
+            .select('Taskdom_History')
+            .ilike('member_id', memberId)
+            .maybeSingle();
+        if (data) return data;
+    }
+    return null;
+}
 
 async function getRoutineStatus(memberId: string, tz: string) {
-    // profiles.id = UUID, so look up by .eq('id', memberId)
+    // Get routine name from profiles (UUID lookup)
     const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('routine')
@@ -16,12 +54,8 @@ async function getRoutineStatus(memberId: string, tz: string) {
 
     const routine = profile?.routine || null;
 
-    // tasks.member_id = UUID, use .eq()
-    const { data: taskRow } = await supabaseAdmin
-        .from('tasks')
-        .select('Taskdom_History')
-        .eq('member_id', memberId)
-        .maybeSingle();
+    // Get Taskdom_History with legacy fallback
+    const taskRow = await getTaskRow(memberId);
 
     let uploadedToday = false;
     let todayStatus = 'none';
@@ -42,7 +76,11 @@ async function getRoutineStatus(memberId: string, tz: string) {
 
             const todaysRoutine = Array.isArray(history) && history.find((t: any) => {
                 if (!t.isRoutine || !t.timestamp) return false;
-                try { return new Date(t.timestamp).toLocaleDateString('en-CA', { timeZone: tz }) === todayStr; } catch { return false; }
+                try {
+                    // Check both local-window date and simple local date to handle midnight uploads
+                    const localDate = new Date(t.timestamp).toLocaleDateString('en-CA', { timeZone: tz });
+                    return localDate === todayStr;
+                } catch { return false; }
             });
 
             if (todaysRoutine) {
@@ -66,7 +104,7 @@ export async function GET(req: Request) {
         const tz = searchParams.get('tz') || 'UTC';
         const key = `routine:${memberId.toLowerCase()}`;
         const data = await cached(key, TTL, () => getRoutineStatus(memberId, tz));
-        return NextResponse.json(data, { headers: { 'Cache-Control': 'private, max-age=30' } });
+        return NextResponse.json(data, { headers: { 'Cache-Control': 'private, max-age=15' } });
     } catch (err: any) {
         console.error('[routine-status]', err);
         return NextResponse.json({ error: 'Server error' }, { status: 500 });

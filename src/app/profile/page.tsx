@@ -83,6 +83,7 @@ import {
     cancelProfileChatReply,
     _applyPaywall,
     _applySilence,
+    togglePushNotifications,
 } from '@/scripts/profile-logic';
 
 export default function ProfilePage() {
@@ -177,6 +178,7 @@ export default function ProfilePage() {
             (window as any).skipTask = skipTask;
             (window as any).resetTaskUI = resetTaskUI;
             (window as any).handleLogout = handleLogout;
+            (window as any).togglePushNotifications = togglePushNotifications;
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
             (window as any).openAltarDrawer = () => { setMobOverlayOpen(true); openAltarDrawer(); };
@@ -1343,6 +1345,16 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                     <span className="hub-action-cost">50 ₡</span>
+                                </button>
+                                <button className="hub-action-row" id="notifToggleRow" onClick={() => (window as any).togglePushNotifications()}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">🔔</div>
+                                        <div>
+                                            <div className="hub-action-label">NOTIFICATIONS</div>
+                                            <div id="notifToggleDesc" className="hub-action-desc">Enable push notifications</div>
+                                        </div>
+                                    </div>
+                                    <span id="notifToggleStatus" className="hub-action-cost" style={{ color: '#555', fontSize: '0.55rem' }}>OFF</span>
                                 </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>

@@ -56,6 +56,7 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     if (url.startsWith("failed")) return ""; // bad upload result stored in DB
     if (url.startsWith("data:")) return url;
     if (url.startsWith("blob:")) return url;
+    if (url.startsWith("/api/")) return url; // relative API URL - pass through as-is
     // Normalize http:// → https:// so Next.js image optimizer and browsers accept the URL
     url = url.replace(/^http:\/\//i, "https://");
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
@@ -117,6 +118,7 @@ function isPrivateStorageUrl(url: string): boolean {
     return PRIVATE_PREFIXES.some(prefix => url.includes('/' + prefix));
 }
 
+// Note: 'chat/' is intentionally NOT in PRIVATE_PREFIXES — chat images live in the public 'media' bucket
 // Cache signed URLs in memory to avoid re-fetching on every render
 const _signedUrlCache = new Map<string, { url: string; expires: number }>();
 

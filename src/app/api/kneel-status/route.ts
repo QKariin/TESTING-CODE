@@ -4,26 +4,39 @@ import { cached, cacheDelete } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
 
-const TTL = 10_000; // 10s - stale kneel state is fine, button locks client-side anyway
-
+const TTL = 10_000; // 10s
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000;
 
-async function getKneelStatus(memberId: string, tz: string) {
-    // Select core fields first - kneel_history is optional (column may not exist yet)
-    const { data: taskRow } = await supabaseAdmin
-        .from('tasks')
-        .select('lastWorship, kneelCount, "today kneeling"')
-        .eq('member_id', memberId)
-        .maybeSingle();
+// Resolve tasks row with UUID + legacy email fallback
+async function getTasksRow(memberId: string, fields: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
 
-    // Fetch kneel_history separately so a missing column doesn't zero out todayKneeling
+    if (isUuid) {
+        const { data } = await supabaseAdmin.from('tasks').select(fields).eq('member_id', memberId).maybeSingle();
+        if (data) return data;
+
+        // Fallback: UUID user but tasks row indexed by email
+        const { data: profile } = await supabaseAdmin
+            .from('profiles').select('member_id').eq('id', memberId).maybeSingle();
+        if (profile?.member_id) {
+            const { data: row } = await supabaseAdmin
+                .from('tasks').select(fields).ilike('member_id', profile.member_id).maybeSingle();
+            if (row) return row;
+        }
+    } else {
+        const { data } = await supabaseAdmin.from('tasks').select(fields).ilike('member_id', memberId).maybeSingle();
+        if (data) return data;
+    }
+    return null;
+}
+
+async function getKneelStatus(memberId: string, tz: string) {
+    const taskRow = await getTasksRow(memberId, 'lastWorship, kneelCount, "today kneeling"');
+
+    // Fetch kneel_history separately — column may not exist yet
     let rawKneelHistory: any = null;
     try {
-        const { data: hRow } = await supabaseAdmin
-            .from('tasks')
-            .select('kneel_history')
-            .eq('member_id', memberId)
-            .maybeSingle();
+        const hRow = await getTasksRow(memberId, 'kneel_history');
         rawKneelHistory = hRow?.kneel_history ?? null;
     } catch (_) { }
 
@@ -50,6 +63,15 @@ async function getKneelStatus(memberId: string, tz: string) {
             )];
         }
     } catch (_) { }
+
+    // Fallback: if kneel_history is missing but lastWorship is today, derive hour from it
+    if (kneelHours.length === 0 && lastStr === todayStr && lastWorshipMs > 0) {
+        try {
+            const h = parseInt(new Date(lastWorshipMs).toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }), 10);
+            const safeH = h === 24 ? 0 : h;
+            if (safeH >= 0) kneelHours = [safeH];
+        } catch (_) { }
+    }
 
     return { lastWorshipMs, isLocked, minLeft, kneelCount: taskRow?.kneelCount || 0, todayKneeling, kneelHours };
 }
