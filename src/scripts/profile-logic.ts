@@ -75,15 +75,22 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     try {
         const freshRes = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: pid, full: true }) });
         const freshData = await freshRes.json();
-        setState({ raw: freshData });
-        renderProfileSidebar(freshData);
 
-        const { updateKneelingHoursUI } = await import('./kneeling');
-        const todayKneeling = parseInt(freshData['today kneeling'] || '0', 10);
-        updateKneelingHoursUI(todayKneeling);
+        if (!freshRes.ok || freshData.error) {
+            // Re-fetch failed — render with patched current state (don't overwrite with empty/error)
+            const patched = { ...(raw || {}), wallet: newWallet, score: newScore };
+            renderProfileSidebar(patched);
+        } else {
+            setState({ raw: freshData });
+            renderProfileSidebar(freshData);
+            const { updateKneelingHoursUI } = await import('./kneeling');
+            const todayKneeling = parseInt(freshData['today kneeling'] || '0', 10);
+            updateKneelingHoursUI(todayKneeling);
+        }
     } catch (_) {
-        // Fallback: render with current raw if fetch fails
-        renderProfileSidebar(raw || {});
+        // Network error — render with patched current state
+        const patched = { ...(raw || {}), wallet: newWallet, score: newScore };
+        renderProfileSidebar(patched);
     }
     _claiming = false;
 }

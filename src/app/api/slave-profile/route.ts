@@ -5,14 +5,19 @@ import { mapUserProfile } from '@/lib/mapUserProfile';
 
 const ADMIN_EMAILS = ['ceo@qkarin.com'];
 
-async function getCallerEmail(): Promise<string | null> {
+async function getCaller(): Promise<{ email: string | null; uuid: string | null }> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        return user?.email?.toLowerCase() || null;
+        return { email: user?.email?.toLowerCase() || null, uuid: user?.id || null };
     } catch {
-        return null;
+        return { email: null, uuid: null };
     }
+}
+
+// Keep backward compat
+async function getCallerEmail(): Promise<string | null> {
+    return (await getCaller()).email;
 }
 
 function stripSensitive(response: any, isAdmin: boolean): any {
@@ -103,7 +108,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const callerEmail = await getCallerEmail();
+    const { email: callerEmail, uuid: callerUuid } = await getCaller();
     if (!callerEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
@@ -113,7 +118,8 @@ export async function POST(request: NextRequest) {
     if (!email) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
 
     const isAdmin = ADMIN_EMAILS.includes(callerEmail);
-    const isSelf = callerEmail === email;
+    // isSelf: match by email OR by UUID (when claimKneelReward passes the user's auth UUID)
+    const isSelf = callerEmail === email || (!!callerUuid && callerUuid === email);
 
     if (!isAdmin && !isSelf) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
