@@ -24,9 +24,8 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     const currentState = getState();
     const { raw, id, memberId, email, wallet, score } = currentState;
     const pid = memberId || id;
-    const chatEmail = email || pid; // chats.member_id stores EMAIL - use email for chat lookups
-
     if (!pid) { _claiming = false; return; }
+    const chatEmail = email || pid; // chats.member_id stores EMAIL - use email for chat lookups
 
     const amount = type === 'coins' ? 10 : 50;
     console.log(`[REWARD] Claiming ${amount} ${type}...`);
@@ -1165,8 +1164,8 @@ export function cancelRequestWarning() {
 export async function executeSkipTask() {
     const { id, memberId, email, wallet } = getState();
     const pid = memberId || id;
-    const chatEmail = email || pid;
     if (!pid) return;
+    const chatEmail = email || pid;
 
     if ((wallet || 0) < 300) {
         cancelSkipTask();
