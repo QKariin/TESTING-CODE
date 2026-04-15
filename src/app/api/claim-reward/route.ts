@@ -20,8 +20,8 @@ export async function POST(req: Request) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('id, wallet, score, member_id')
-            .eq(isUUID ? 'id' : 'member_id', profileId)
+            .select('ID, wallet, score, member_id')
+            .eq(isUUID ? 'ID' : 'member_id', profileId)
             .single();
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
