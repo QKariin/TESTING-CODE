@@ -627,6 +627,9 @@ export default function DashboardPage() {
             };
         }
 
+        // Mobile uses MobileDashboard — skip all desktop init
+        if (window.innerWidth < 768) return () => { cleanupPresenceTracking(); };
+
         // 1. Initialize System (UI Listeners)
         initDashboard();
 
@@ -711,7 +714,6 @@ export default function DashboardPage() {
         // Expose so the lock modal can force an immediate refresh after lock/unlock
         (window as any)._refreshDashboard = loadLiveAction;
 
-        if (isMobile) return; // mobile dashboard handles its own data - no duplicate load
         loadLiveAction();
 
         const supabaseRt = createClient();
@@ -732,7 +734,8 @@ export default function DashboardPage() {
                 if (!memberId) return;
                 const msgTime = new Date(msg.created_at).getTime();
                 const updatedUsers = users.map((u: any) => {
-                    const uid = (u.memberId || u.member_id || '').toLowerCase();
+                    // chats.member_id stores EMAIL — match against user's email (member_id), not UUID (memberId)
+                    const uid = (u.member_id || u.memberId || '').toLowerCase();
                     if (uid === memberId) {
                         return { ...u, lastMessageTime: Math.max(u.lastMessageTime || 0, msgTime) };
                     }

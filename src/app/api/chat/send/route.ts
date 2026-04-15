@@ -177,7 +177,7 @@ export async function POST(req: Request) {
             // Queen sent to member — notify the member
             const isConvUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
             Promise.resolve(
-                adminClient.from('profiles').select('onesignal_id').eq(isConvUUID ? 'ID' : 'member_id', conversationId).maybeSingle()
+                adminClient.from('profiles').select('onesignal_id')[isConvUUID ? 'eq' : 'ilike'](isConvUUID ? 'ID' : 'member_id', conversationId).maybeSingle()
             ).then(({ data: pushProfile }) => {
                 if (pushProfile?.onesignal_id) {
                     sendPush(
