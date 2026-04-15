@@ -715,18 +715,22 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                             </div>
                                             {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
                                         </button>
-                                        {proofUrl && (
-                                            <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                                <img src={toPublicUrl(previewUrl || '')} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
+                                        <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                                {proofUrl ? (
+                                                    <img src={toPublicUrl(previewUrl || '')} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(previewUrl || ''))}`; else t.style.display = 'none'; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
+                                                ) : (
+                                                    <div style={{ background: 'rgba(197,160,89,0.04)', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#555', letterSpacing: '2px' }}>NO PROOF ATTACHED</span>
+                                                    </div>
+                                                )}
                                                 <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
                                             </button>
-                                        )}
                                         <div style={{ padding: '10px 14px 12px' }}>
                                             <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#888', lineHeight: 1.4, marginBottom: 10 }}>{cleanText}</div>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 {routine ? (
                                                     <>
-                                                        <button disabled={busy} onClick={() => handleApprove(task, 50)} style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '...' : '✓ DONE +50'}</button>
+                                                        <button disabled={busy} onClick={() => onOpenReview(task)} style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '...' : '✓ REVIEW PROOF'}</button>
                                                         <button disabled={busy} onClick={() => handleReject(task)} style={{ width: 44, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.86rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>{busy ? '·' : '✕'}</button>
                                                     </>
                                                 ) : (
@@ -1875,7 +1879,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                     <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px' }}>
                                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
                                             {(task.proofUrl || task.proof_url) && (
-                                                <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} alt="" />
+                                                <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222', cursor: 'pointer' }} onClick={() => onOpenReview(task)} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(task.proofUrl || task.proof_url))}`; else t.style.display = 'none'; }} alt="" />
                                             )}
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
@@ -1889,13 +1893,13 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             {routine ? (
                                                 <>
-                                                    <button disabled={busy} onClick={() => handleApprove(task, 50)}
-                                                        style={{ flex: 1, padding: '11px 0', background: busy ? '#111' : 'linear-gradient(135deg,#c5a059,#8b6914)', color: '#000', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✓ YES - 50 PTS'}
+                                                    <button disabled={busy} onClick={() => onOpenReview(task)}
+                                                        style={{ flex: 2, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                        {busy ? '...' : '✓ REVIEW PROOF'}
                                                     </button>
                                                     <button disabled={busy} onClick={() => handleReject(task)}
                                                         style={{ flex: 1, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff4444', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✕ NO'}
+                                                        {busy ? '...' : '✕ REJECT'}
                                                     </button>
                                                 </>
                                             ) : (
