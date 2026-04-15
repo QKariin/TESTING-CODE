@@ -117,6 +117,13 @@ export default function ProfilePage() {
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
     const dismissedAlertWindowIdRef = useRef<string | null>(null);
     const [dutiesUploadedToday, setDutiesUploadedToday] = useState<boolean | null>(null);
+    const [installPrompt, setInstallPrompt] = useState<any>(null);
+    const [installBannerDismissed, setInstallBannerDismissed] = useState(() =>
+        typeof window !== 'undefined' && !!localStorage.getItem('installBannerDismissed')
+    );
+    const [isStandalone, setIsStandalone] = useState(false);
+    const [showInstallGuide, setShowInstallGuide] = useState(false);
+    const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
     // Track mobile viewport
     useEffect(() => {
@@ -124,6 +131,14 @@ export default function ProfilePage() {
         check();
         window.addEventListener('resize', check);
         return () => window.removeEventListener('resize', check);
+    }, []);
+
+    // PWA install prompt (Android/Chrome)
+    useEffect(() => {
+        setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true);
+        const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
+        window.addEventListener('beforeinstallprompt', handler as any);
+        return () => window.removeEventListener('beforeinstallprompt', handler as any);
     }, []);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
@@ -1982,6 +1997,76 @@ export default function ProfilePage() {
                         nextWindowTs={openWindowForBanner ? null : nextChallengeWindowTs}
                         onOpen={() => { setChallengePanelOpen(true); setChallengePanelId(activeChallenge.id); }}
                     />
+                )}
+                {/* PWA Install Banner — shown on mobile browser when not already installed */}
+                {isMobile && !isStandalone && !installBannerDismissed && (installPrompt || isIOS) && (
+                    <div style={{
+                        position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000001,
+                        background: 'rgba(5,8,18,0.97)',
+                        border: '1px solid rgba(197,160,89,0.35)',
+                        borderRadius: 14, padding: '10px 14px',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        boxShadow: '0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px rgba(197,160,89,0.08)',
+                        backdropFilter: 'blur(16px)',
+                    }}>
+                        <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px' }}>Install as App</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', opacity: 0.9, marginTop: 2, letterSpacing: '1px' }}>FASTER · FULLSCREEN · NOTIFICATIONS</div>
+                        </div>
+                        <button
+                            onClick={async () => {
+                                if (installPrompt) {
+                                    await installPrompt.prompt();
+                                    const { outcome } = await installPrompt.userChoice;
+                                    if (outcome === 'accepted') { setInstallPrompt(null); setInstallBannerDismissed(true); }
+                                } else if (isIOS) {
+                                    setShowInstallGuide(true);
+                                }
+                            }}
+                            style={{
+                                background: 'linear-gradient(135deg, #c5a059, #8b6914)',
+                                borderRadius: 8, padding: '5px 12px', border: 'none',
+                                fontFamily: 'Orbitron', fontSize: '0.38rem',
+                                color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                            }}
+                        >{isIOS ? 'HOW TO' : 'INSTALL'}</button>
+                        <button
+                            onClick={() => { localStorage.setItem('installBannerDismissed', '1'); setInstallBannerDismissed(true); }}
+                            style={{
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: 8, padding: '5px 10px',
+                                fontFamily: 'Orbitron', fontSize: '0.38rem',
+                                color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                            }}
+                        >DISMISS</button>
+                    </div>
+                )}
+                {/* iOS install guide overlay */}
+                {showInstallGuide && (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(8px)' }}
+                        onClick={() => setShowInstallGuide(false)}>
+                        <div style={{ width: '100%', background: 'rgba(5,8,18,0.99)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '16px 16px 0 0', padding: '24px 20px 40px', fontFamily: 'Cinzel, serif' }}
+                            onClick={e => e.stopPropagation()}>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>INSTALL ON IPHONE</div>
+                            {[
+                                { step: '1', text: 'Tap the Share button at the bottom of Safari (the box with an arrow pointing up)' },
+                                { step: '2', text: 'Scroll down and tap "Add to Home Screen"' },
+                                { step: '3', text: 'Tap "Add" — done. Open it from your home screen for the full app experience.' },
+                            ].map(({ step, text }) => (
+                                <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>
+                                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#c5a059' }}>{step}</div>
+                                    <div style={{ fontSize: '0.82rem', color: '#bbb', lineHeight: 1.5, paddingTop: 4 }}>{text}</div>
+                                </div>
+                            ))}
+                            <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginTop: 8, marginBottom: 16 }}>
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 6 }}>WHY IT'S BETTER</div>
+                                <div style={{ fontSize: '0.78rem', color: '#888', lineHeight: 1.6 }}>
+                                    Runs fullscreen — no browser bar taking your space. Loads faster from home screen. You'll receive push notifications when your Queen sends you a task or message. It behaves like a real app, not a website.
+                                </div>
+                            </div>
+                            <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '12px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#c5a059', letterSpacing: '2px', cursor: 'pointer' }}>CLOSE</button>
+                        </div>
+                    </div>
                 )}
                 {challengePanelOpen && (
                     <ChallengeUploadPanel
