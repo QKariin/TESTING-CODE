@@ -22,6 +22,14 @@ export async function GET(req: Request) {
 
         const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
+        // chats.member_id stores EMAIL — if caller passed a UUID, resolve it to email first
+        const isUuidGet = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        let chatMemberIdGet = memberId;
+        if (isUuidGet) {
+            const { data: profile } = await queryClient.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
+            if (profile?.member_id) chatMemberIdGet = profile.member_id;
+        }
+
         const since = searchParams.get('since'); // ISO timestamp - return only newer messages
 
         let query: any;
@@ -30,7 +38,7 @@ export async function GET(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', memberId)
+                .ilike('member_id', chatMemberIdGet)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
@@ -38,7 +46,7 @@ export async function GET(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', memberId)
+                .ilike('member_id', chatMemberIdGet)
                 .order('created_at', { ascending: false })
                 .limit(50);
         }
@@ -87,13 +95,21 @@ export async function POST(req: Request) {
 
         const queryClient = createAdminClient(supabaseUrl, supabaseServiceKey);
 
+        // chats.member_id stores EMAIL — if caller passed a UUID, resolve it to email first
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        let chatMemberId = memberId;
+        if (isUuid) {
+            const { data: profile } = await queryClient.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
+            if (profile?.member_id) chatMemberId = profile.member_id;
+        }
+
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', memberId)
+                .ilike('member_id', chatMemberId)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
@@ -101,7 +117,7 @@ export async function POST(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .ilike('member_id', memberId)
+                .ilike('member_id', chatMemberId)
                 .order('created_at', { ascending: false })
                 .limit(50);
         }
