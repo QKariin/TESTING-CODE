@@ -9,7 +9,7 @@ async function unlockPaywall(memberId: string, logEntry: object) {
     );
     const { data: profile } = await admin
         .from('profiles')
-        .select('id, name, parameters')
+        .select('ID, name, parameters')
         .ilike('member_id', memberId)
         .maybeSingle();
 

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const { data: profile, error: profileErr } = await supabase
             .from('profiles')
-            .select('id, wallet, score, parameters, member_id')
+            .select('ID, wallet, score, parameters, member_id')
             .eq(isUUID ? 'id' : 'member_id', memberEmail)
             .single();
 
@@ -57,10 +57,10 @@ export async function POST(request: Request) {
         }
 
         // Update tasks['Tribute History'] - primary source for SACRIFICE stat
-        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').eq('member_id', profileUuid).maybeSingle();
+        const { data: taskRow } = await supabase.from('tasks').select('"Tribute History"').eq('ID', profileUuid).maybeSingle();
         const existingTH: any[] = (() => { try { const v = taskRow?.['Tribute History']; return Array.isArray(v) ? v : (typeof v === 'string' ? JSON.parse(v) : []); } catch { return []; } })();
         const newTH = [{ amount: -contributionAmount, title: tributeTitle, date: new Date().toISOString() }, ...existingTH].slice(0, 100);
-        supabase.from('tasks').update({ 'Tribute History': newTH }).eq('member_id', profileUuid).then(() => {});
+        supabase.from('tasks').update({ 'Tribute History': newTH }).eq('ID', profileUuid).then(() => {});
 
         // Award merit points via centralized function (updates all period scores)
         await DbService.awardPoints(profileUuid, meritGain);

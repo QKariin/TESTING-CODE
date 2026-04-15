@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('id, name, avatar_url, profile_picture_url')
+            .select('ID, name, avatar_url, profile_picture_url')
             .ilike('member_id', userEmail)
             .maybeSingle()
 

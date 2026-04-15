@@ -41,12 +41,12 @@ export async function POST(req: Request) {
         // Check if profile already exists for CURRENT ID
         const { data: existing } = await supabaseAdmin
             .from('profiles')
-            .select('id, rank')
-            .eq('id', user.id)
+            .select('ID, rank')
+            .eq('ID', user.id)
             .single();
 
         if (existing) {
-            console.log(`- Profile already linked: ${existing.id} (${existing.rank})`);
+            console.log(`- Profile already linked: ${existing.ID} (${existing.rank})`);
             return NextResponse.json({ success: true, linked: true, message: 'Already linked' });
         }
 
@@ -54,12 +54,12 @@ export async function POST(req: Request) {
         console.log(`- Strategy A: Searching member_id for ${userEmail}`);
         let { data: legacy, error: aError } = await supabaseAdmin
             .from('profiles')
-            .select('id, member_id')
+            .select('ID, member_id')
             .ilike('member_id', userEmail)
             .single();
 
         if (legacy) {
-            console.log(`- Strategy A MATCH: ${legacy.id}`);
+            console.log(`- Strategy A MATCH: ${legacy.ID}`);
         } else if (aError && aError.code !== 'PGRST116') {
             console.error(`- Strategy A ERROR:`, aError);
         }
@@ -69,12 +69,12 @@ export async function POST(req: Request) {
             console.log(`- Strategy B: Searching memberId (camel) for ${userEmail}`);
             const { data: legacyCamel, error: bError } = await supabaseAdmin
                 .from('profiles')
-                .select('id, member_id')
+                .select('ID, member_id')
                 .ilike('memberId', userEmail)
                 .single();
 
             if (legacyCamel) {
-                console.log(`- Strategy B MATCH: ${legacyCamel.id}`);
+                console.log(`- Strategy B MATCH: ${legacyCamel.ID}`);
                 legacy = legacyCamel;
             } else if (bError && bError.code !== 'PGRST116') {
                 console.error(`- Strategy B ERROR:`, bError);
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
         }
 
         if (legacy) {
-            console.log(`- FINAL MATCH FOUND: ${legacy.id}. Updating profile ID to ${user.id}`);
+            console.log(`- FINAL MATCH FOUND: ${legacy.ID}. Updating profile ID to ${user.id}`);
             const { error: uError } = await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', legacy.ID);
             if (uError) {
                 console.error(`- UPDATE ERROR:`, uError);

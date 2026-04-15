@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         if (!existingId) {
             const { data: existing } = await supabaseAdmin
                 .from('applications')
-                .select('id')
+                .select('ID')
                 .ilike('email', data.email)
                 .eq('payment_status', 'pending')
                 .order('created_at', { ascending: false })
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         // Resolve member_id from profiles if email matches
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('id')
+            .select('ID')
             .ilike('member_id', data.email)
             .maybeSingle();
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
             const { data: inserted } = await supabaseAdmin
                 .from('applications')
                 .insert(payload)
-                .select('id')
+                .select('ID')
                 .single();
             resultId = inserted?.id;
         }

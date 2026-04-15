@@ -87,7 +87,7 @@ export async function updateSession(request: NextRequest) {
                 // --- Background Linking Effort ---
                 const { data: legacyProfile } = await adminSupabase
                     .from('profiles')
-                    .select('id')
+                    .select('ID')
                     .or(`member_id.ilike.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
                     .maybeSingle();
 
