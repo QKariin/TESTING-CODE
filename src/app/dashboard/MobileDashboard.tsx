@@ -323,7 +323,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     return (
         <div style={S.root}>
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
                 @keyframes spin{to{transform:rotate(360deg)}}
                 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
                 * { box-sizing: border-box; }
@@ -613,7 +613,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 4 }}>{greeting}</div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#333', letterSpacing: '2px', marginTop: 5 }}>COMMAND CENTER</div>
                 </div>
                 {/* Daily code - tucked top-right */}
@@ -650,7 +650,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                     <img src={u.avatar} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(74,222,128,0.4)', display: 'block' }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                     <div style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, background: '#4ade80', borderRadius: '50%', border: '2px solid #030303', boxShadow: '0 0 4px #4ade80' }} />
                                 </div>
-                                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.94rem', color: '#888', maxWidth: 44, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name.split(' ')[0]}</span>
+                                <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.94rem', color: '#888', maxWidth: 44, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name.split(' ')[0]}</span>
                             </button>
                         ))}
                     </div>
@@ -666,7 +666,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 6px #c5a059', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.94rem', color: '#c5a059', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChallenge.name}</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.94rem', color: '#c5a059', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChallenge.name}</div>
                             </div>
                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#444', letterSpacing: '1px', marginTop: 2 }}>LIVE · {activeChallenge.participant_active ?? '-'} ACTIVE · {activeChallenge.participant_total ?? '-'} TOTAL</div>
                         </div>
@@ -682,7 +682,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: reviewsExpanded ? 'rgba(255,140,66,0.06)' : 'rgba(255,140,66,0.04)', border: '1px solid rgba(255,140,66,0.25)', borderRadius: 12, padding: '13px 16px', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ff8c42', boxShadow: '0 0 6px #ff8c42', animation: 'pulse 1.5s infinite', flexShrink: 0 }} />
-                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ff8c42', letterSpacing: '2px' }}>PENDING REVIEW</span>
+                            <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.8rem', color: '#ff8c42', letterSpacing: '2px' }}>PENDING REVIEW</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.95rem', fontWeight: 700, color: '#ff8c42', background: 'rgba(255,140,66,0.12)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 100, padding: '3px 12px' }}>{taskQueue.length}</span>
@@ -710,7 +710,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
                                             <img src={displayAvatar} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '55' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                             <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
+                                                <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
                                                 {user && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: rc(user.rank), marginLeft: 8 }}>{user.rank}</span>}
                                             </div>
                                             {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
@@ -829,7 +829,7 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                             )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 700 : 400, marginBottom: 4 }}>{u.name}</div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 700 : 400, marginBottom: 4 }}>{u.name}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', letterSpacing: '1px', padding: '1px 6px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
                             </div>
@@ -1068,7 +1068,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', WebkitTapHighlightColor: 'transparent' }}>
                                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: chThemeColor(c.theme), flexShrink: 0 }} />
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ fontFamily: 'Cinzel,serif', color: '#ddd', fontSize: '0.88rem' }}>{c.name}</div>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', color: '#ddd', fontSize: '0.88rem' }}>{c.name}</div>
                                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#555', marginTop: 3 }}>{c.duration_days}d · {c.tasks_per_day}×/day</div>
                                 </div>
                                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.88rem', color: '#c5a059' }}>→</span>
@@ -1126,7 +1126,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                 {challenge.status === 'active' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, animation: 'pulse 1.5s infinite', flexShrink: 0 }} />}
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challenge.name}</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challenge.name}</div>
                             </div>
                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#555', letterSpacing: '1px' }}>
                                 {challenge.status === 'active' ? `${daysLeft}d left · ${challenge.tasks_per_day}×/day · ${challenge.window_minutes}min windows` : challenge.status.toUpperCase()}
@@ -1186,7 +1186,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                         <img src={avatar || '/collar-placeholder.png'} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.3)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd' }}>{name}</div>
+                                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.85rem', color: '#ddd' }}>{name}</div>
                                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#555', letterSpacing: '1px' }}>
                                                 {w ? `DAY ${w.day_number} · TASK ${w.window_number}` : ''}
                                                 {!isOpen && w && <span style={{ color: '#e03030', marginLeft: 8 }}>WINDOW CLOSED</span>}
@@ -1229,9 +1229,9 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             {/* Add participant */}
             <div style={{ display: 'flex', gap: 8 }}>
                 <input type="email" placeholder="Add participant by email..." value={addEmail} onChange={e => setAddEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddParticipant()}
-                    style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.96rem', padding: '10px 14px', outline: 'none' }} />
+                    style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Orbitron,sans-serif', fontSize: '0.96rem', padding: '10px 14px', outline: 'none' }} />
                 <button onClick={handleAddParticipant} disabled={addingParticipant || !addEmail.trim()}
-                    style={{ padding: '10px 16px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.90rem', cursor: 'pointer', flexShrink: 0 }}>
+                    style={{ padding: '10px 16px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.90rem', cursor: 'pointer', flexShrink: 0 }}>
                     {addingParticipant ? '...' : '+ Add'}
                 </button>
             </div>
@@ -1255,7 +1255,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '-')}</div>
                                 <img src={p.avatar || '/collar-placeholder.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
                                     <div style={{ textAlign: 'right' }}>
@@ -1350,7 +1350,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
             {Object.keys(byDay).sort((a, b) => Number(a) - Number(b)).map(day => (
                 <div key={day}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#c5a059', letterSpacing: '3px' }}>DAY {day}</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.88rem', color: '#c5a059', letterSpacing: '3px' }}>DAY {day}</div>
                         <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right,rgba(197,160,89,0.2),transparent)' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1372,21 +1372,21 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                         <div style={{ flex: 1 }} />
                                         {!isEditing && !isPast && (
                                             <button onClick={() => { setEditDate(opensDate.toISOString().slice(0, 10)); setEditTime(opensDate.toTimeString().slice(0, 5)); setEditName(taskName); setEditingId(w.id); }}
-                                                style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.78rem', cursor: 'pointer' }}>Edit</button>
+                                                style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>Edit</button>
                                         )}
                                         {!isEditing && isOpen && (
                                             <button disabled={stopping === w.id} onClick={async () => { if (!confirm(`Stop T${w.window_number}?`)) return; setStopping(w.id); await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ closes_at: new Date().toISOString() }) }); setStopping(null); onRefresh(); }}
-                                                style={{ padding: '5px 10px', background: 'rgba(224,48,48,0.08)', border: '1px solid rgba(224,48,48,0.35)', borderRadius: 6, color: '#e03030', fontFamily: 'Cinzel,serif', fontSize: '0.78rem', cursor: 'pointer' }}>■ Stop</button>
+                                                style={{ padding: '5px 10px', background: 'rgba(224,48,48,0.08)', border: '1px solid rgba(224,48,48,0.35)', borderRadius: 6, color: '#e03030', fontFamily: 'Orbitron,sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>■ Stop</button>
                                         )}
                                         {!isEditing && !isOpen && !isPast && (
                                             <button disabled={pushing === w.id} onClick={async () => { if (!confirm(`Push T${w.window_number} live now?`)) return; setPushing(w.id); await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ push_now: true }) }); setPushing(null); onRefresh(); }}
-                                                style={{ padding: '5px 10px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.35)', borderRadius: 6, color: '#4ade80', fontFamily: 'Cinzel,serif', fontSize: '0.78rem', cursor: 'pointer' }}>⚡ Push</button>
+                                                style={{ padding: '5px 10px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.35)', borderRadius: 6, color: '#4ade80', fontFamily: 'Orbitron,sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>⚡ Push</button>
                                         )}
                                     </div>
                                     {/* Task name + time */}
                                     {!isEditing && (
                                         <div style={{ padding: '0 12px 10px' }}>
-                                            {taskName && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.94rem', color: 'rgba(220,215,200,0.8)', marginBottom: 4, lineHeight: 1.5 }}>{taskName}</div>}
+                                            {taskName && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.94rem', color: 'rgba(220,215,200,0.8)', marginBottom: 4, lineHeight: 1.5 }}>{taskName}</div>}
                                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: isOpen ? 'rgba(74,222,128,0.5)' : isPast ? '#1e1e1e' : 'rgba(197,160,89,0.3)', letterSpacing: '1px' }}>
                                                 {opensDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {opensDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - {closesDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                                             </div>
@@ -1396,7 +1396,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                     {isEditing && (
                                         <div style={{ padding: '0 12px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                                             <textarea placeholder="Task description..." value={editName} onChange={e => setEditName(e.target.value)} rows={2}
-                                                style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 7, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.96rem', padding: '8px 12px', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+                                                style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 7, color: '#ddd', fontFamily: 'Orbitron,sans-serif', fontSize: '0.96rem', padding: '8px 12px', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
                                             <div style={{ display: 'flex', gap: 6 }}>
                                                 <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
                                                     style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', padding: '7px 10px', outline: 'none' }} />
@@ -1485,7 +1485,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
         } finally { setSubmitting(false); }
     };
 
-    const field: React.CSSProperties = { background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.88rem', padding: '11px 14px', outline: 'none', width: '100%', boxSizing: 'border-box' };
+    const field: React.CSSProperties = { background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#ddd', fontFamily: 'Orbitron,sans-serif', fontSize: '0.88rem', padding: '11px 14px', outline: 'none', width: '100%', boxSizing: 'border-box' };
     const label: React.CSSProperties = { fontFamily: 'Orbitron,monospace', fontSize: '0.88rem', color: '#555', letterSpacing: '2px', display: 'block', marginBottom: 6 };
 
     return (
@@ -1498,7 +1498,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
                         {allChallenges.map(c => (
                             <button key={c.id} onClick={() => prefill(c)}
                                 style={{ flexShrink: 0, padding: '8px 14px', background: 'rgba(197,160,89,0.04)', border: `1px solid ${chThemeColor(c.theme)}44`, borderRadius: 8, cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: chThemeColor(c.theme), whiteSpace: 'nowrap' }}>{c.name}</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.75rem', color: chThemeColor(c.theme), whiteSpace: 'nowrap' }}>{c.name}</div>
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#444', marginTop: 2 }}>{c.duration_days}d · {c.tasks_per_day}×</div>
                             </button>
                         ))}
@@ -1582,7 +1582,7 @@ function ChCreateTab({ allChallenges, onCreate }: { allChallenges: MChallenge[];
                                             <input type="time" value={t} onChange={e => setTaskTimes(p => { const n = p.map(d => [...d]); n[dayIdx][ti] = e.target.value; return n; })}
                                                 style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', padding: '7px 10px', outline: 'none' }} />
                                             <input placeholder="Task description..." value={taskNames[dayIdx]?.[ti] || ''} onChange={e => setTaskNames(p => { const n = p.map(d => [...d]); n[dayIdx][ti] = e.target.value; return n; })}
-                                                style={{ flex: 2, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 6, color: '#ddd', fontFamily: 'Cinzel,serif', fontSize: '0.94rem', padding: '7px 10px', outline: 'none' }} />
+                                                style={{ flex: 2, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 6, color: '#ddd', fontFamily: 'Orbitron,sans-serif', fontSize: '0.94rem', padding: '7px 10px', outline: 'none' }} />
                                         </div>
                                     ))}
                                 </div>
@@ -1613,7 +1613,7 @@ function ChHistoryTab({ challenges, onView }: { challenges: MChallenge[]; onView
                     style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderLeft: `3px solid ${chThemeColor(c.theme)}44`, borderRadius: 12, cursor: 'pointer', textAlign: 'left', width: '100%', WebkitTapHighlightColor: 'transparent' }}>
                     {c.image_url && <img src={c.image_url} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} alt="" />}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: '#aaa', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.88rem', color: '#aaa', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
                         <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#444', letterSpacing: '1px' }}>{c.duration_days}d · {c.tasks_per_day}×/day · {c.participant_total ?? 0} participants</div>
                         {c.start_date && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#333', letterSpacing: '1px', marginTop: 2 }}>{new Date(c.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                     </div>
@@ -1664,7 +1664,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                 <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: '1.1rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' }}>←</button>
                 <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                     {rank && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: rc(rank), letterSpacing: '1px' }}>{rank}</div>}
                 </div>
                 {isRoutine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', background: 'rgba(197,160,89,0.08)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
@@ -1776,7 +1776,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                 <button onClick={onBack} style={S.backBtn}>← BACK</button>
                 <img src={user.avatar} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', letterSpacing: '2px', padding: '2px 12px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}44`, marginBottom: 6 }}>{user.rank}</span>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.2rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.2rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
                 {/* Stats row */}
                 <div style={{ display: 'flex', width: '100%', marginTop: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '8px 0' }}>
                     {[
@@ -1891,7 +1891,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                                 <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222', cursor: 'pointer' }} onClick={() => onOpenReview(task)} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(task.proofUrl || task.proof_url))}`; else t.style.display = 'none'; }} alt="" />
                                             )}
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
+                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                                     {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.3)' }}>ROUTINE</span>}
                                                     {(task.timestamp || task.submitted_at) && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#444' }}>{new Date(task.timestamp || task.submitted_at).toLocaleDateString()}</span>}
@@ -2342,7 +2342,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                             {d.photo && <img src={d.photo} style={{ width: '100%', height: 110, objectFit: 'cover', display: 'block' }} alt="" />}
                                             <div style={{ padding: '12px 16px 14px', textAlign: 'center' }}>
                                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 8 }}>✦ RANK PROMOTION</div>
-                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: '#fff', fontWeight: 700, marginBottom: 8 }}>{d.name}</div>
+                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.9rem', color: '#fff', fontWeight: 700, marginBottom: 8 }}>{d.name}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                                                     <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', color: 'rgba(197,160,89,0.35)', textDecoration: 'line-through' }}>{d.oldRank}</span>
                                                     <span style={{ color: '#c5a059', fontSize: '0.8rem' }}>→</span>
@@ -2378,7 +2378,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
 
                         return (
                             <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
-                                <div style={{ background: isAdmin ? '#000' : '#1c1c1e', color: '#fff', padding: (isPhoto || isVideo) ? '4px' : '10px 14px', borderRadius: isAdmin ? '16px 16px 3px 16px' : '16px 16px 16px 3px', maxWidth: '78%', fontSize: '0.95rem', lineHeight: 1.55, fontFamily: 'Cinzel,serif', wordBreak: 'break-word', boxShadow: isAdmin ? '0 0 0 1px rgba(197,160,89,0.55)' : undefined, border: !isAdmin ? '1px solid rgba(255,255,255,0.06)' : undefined }}>
+                                <div style={{ background: isAdmin ? '#000' : '#1c1c1e', color: '#fff', padding: (isPhoto || isVideo) ? '4px' : '10px 14px', borderRadius: isAdmin ? '16px 16px 3px 16px' : '16px 16px 16px 3px', maxWidth: '78%', fontSize: '0.95rem', lineHeight: 1.55, fontFamily: 'Orbitron,sans-serif', wordBreak: 'break-word', boxShadow: isAdmin ? '0 0 0 1px rgba(197,160,89,0.55)' : undefined, border: !isAdmin ? '1px solid rgba(255,255,255,0.06)' : undefined }}>
                                     {isPhoto ? <img src={text} style={{ display: 'block', maxWidth: 220, maxHeight: 220, borderRadius: 10, objectFit: 'cover' }} alt="" />
                                         : isVideo ? <video src={text} controls playsInline style={{ display: 'block', maxWidth: 220, borderRadius: 10 }} />
                                             : <span>{text}</span>}
@@ -2399,7 +2399,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                         const content = msg.content || msg.message || '';
                         return (
                             <div key={msg.id || i} style={{ background: 'rgba(255,255,255,0.02)', borderLeft: '2px solid rgba(197,160,89,0.4)', padding: '9px 14px', borderRadius: '0 6px 6px 0' }}>
-                                <span style={{ fontFamily: 'Cinzel,serif', color: '#c5a059', fontSize: '0.96rem', lineHeight: 1.5, display: 'block', marginBottom: 4 }}>{content}</span>
+                                <span style={{ fontFamily: 'Orbitron,sans-serif', color: '#c5a059', fontSize: '0.96rem', lineHeight: 1.5, display: 'block', marginBottom: 4 }}>{content}</span>
                                 <span style={{ fontFamily: 'Orbitron,monospace', color: '#333', fontSize: '0.76rem', letterSpacing: '1px' }}>{d.toLocaleDateString()} · {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                         );
@@ -2482,7 +2482,7 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
         <div style={S.scroll}>
             {/* Compose */}
             <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '18px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.86rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 2 }}>QUEEN'S DISPATCH</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.86rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 2 }}>QUEEN'S DISPATCH</div>
                 <input type="text" placeholder="Title (optional)" value={title} onChange={e => setTitle(e.target.value)} style={inp} />
                 <textarea placeholder="Write your decree..." value={body} onChange={e => setBody(e.target.value)} rows={4}
                     style={{ ...inp, resize: 'none', lineHeight: 1.6 } as React.CSSProperties} />
@@ -2503,7 +2503,7 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
                 {uploadProgress && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.90rem', color: '#c5a059', textAlign: 'center', letterSpacing: '1px' }}>{uploadProgress}</div>}
 
                 <button onClick={submitPost} disabled={submitting || !body.trim()}
-                    style={{ background: !submitting && body.trim() ? '#c5a059' : '#1a1a1a', color: !submitting && body.trim() ? '#000' : '#444', border: 'none', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', padding: '14px', cursor: !submitting && body.trim() ? 'pointer' : 'default' }}>
+                    style={{ background: !submitting && body.trim() ? '#c5a059' : '#1a1a1a', color: !submitting && body.trim() ? '#000' : '#444', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,sans-serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', padding: '14px', cursor: !submitting && body.trim() ? 'pointer' : 'default' }}>
                     {submitting ? 'PUBLISHING...' : 'PUBLISH DECREE'}
                 </button>
             </div>
@@ -2512,7 +2512,7 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
                 <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', color: '#1e1e1e', letterSpacing: '2px' }}>NO POSTS YET</div>
             ) : posts.map((post: any) => (
                 <div key={post.id} style={{ background: 'rgba(12,12,12,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px' }}>
-                    {post.title && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: '#c5a059', marginBottom: 8 }}>{post.title}</div>}
+                    {post.title && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.95rem', color: '#c5a059', marginBottom: 8 }}>{post.title}</div>}
                     <div style={{ fontSize: '0.9rem', color: '#bbb', lineHeight: 1.7 }}>{post.body}</div>
                     {post.media_url && (
                         post.media_url.match(/\.(mp4|mov|webm)/i)
@@ -2616,7 +2616,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
             {/* Profile card */}
             <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 12, padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                 <img src="/queen-karin.png" style={{ width: 84, height: 84, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.35)', boxShadow: '0 0 30px rgba(197,160,89,0.12)' }} alt="" />
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.35rem', color: '#c5a059', letterSpacing: '4px', marginTop: 4 }}>QUEEN KARIN</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.35rem', color: '#c5a059', letterSpacing: '4px', marginTop: 4 }}>QUEEN KARIN</div>
                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', color: '#444', letterSpacing: '3px' }}>SYSTEM ADMINISTRATOR</div>
                 <div style={{ fontSize: '0.68rem', color: '#2e2e2e', letterSpacing: '1px' }}>{userEmail}</div>
             </div>
@@ -2662,7 +2662,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
                         { label: '♛ SLAVE RECORDS', href: '/profile', c: 'rgba(197,160,89,0.1)' },
                     ].map(item => (
                         <button key={item.href} onClick={() => window.location.href = item.href}
-                            style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.04)', border: `1px solid ${item.c}`, color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.90rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center' }}>
+                            style={{ display: 'block', width: '100%', background: 'rgba(197,160,89,0.04)', border: `1px solid ${item.c}`, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.90rem', letterSpacing: '3px', padding: '14px', cursor: 'pointer', borderRadius: 8, textAlign: 'center' }}>
                             {item.label} ↗
                         </button>
                     ))}
@@ -2711,7 +2711,7 @@ function isSystemMessage(msg: any): boolean {
 const S: Record<string, React.CSSProperties> = {
     root: { display: 'flex', flexDirection: 'column', height: '100dvh', background: '#030303', color: '#fff', fontFamily: "'Rajdhani', sans-serif", overflow: 'hidden', WebkitFontSmoothing: 'antialiased' },
     topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 50, minHeight: 50, background: 'rgba(4,4,4,0.99)', borderBottom: '1px solid rgba(197,160,89,0.15)', padding: '0 16px', flexShrink: 0, zIndex: 10 },
-    topBrand: { fontFamily: 'Cinzel,serif', fontSize: '0.68rem', color: '#c5a059', letterSpacing: '3px' },
+    topBrand: { fontFamily: 'Orbitron,sans-serif', fontSize: '0.68rem', color: '#c5a059', letterSpacing: '3px' },
     topCode: { fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', color: '#c5a059', fontWeight: 900, letterSpacing: '2px', background: 'rgba(197,160,89,0.07)', padding: '3px 10px', borderRadius: 4, border: '1px solid rgba(197,160,89,0.12)' },
     content: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative', zIndex: 1 },
     nav: { display: 'flex', alignItems: 'stretch', height: 60, minHeight: 60, background: 'rgba(4,4,4,0.99)', borderTop: '1px solid rgba(197,160,89,0.15)', flexShrink: 0 },
@@ -2719,12 +2719,12 @@ const S: Record<string, React.CSSProperties> = {
     navActive: { borderTopColor: 'rgba(197,160,89,0.5)' },
     loadWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#030303', gap: 16 },
     spinner: { width: 32, height: 32, border: '2px solid rgba(197,160,89,0.1)', borderTopColor: '#c5a059', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-    loadTxt: { fontFamily: 'Cinzel,serif', fontSize: '0.86rem', color: '#c5a059', letterSpacing: '4px', margin: 0 },
+    loadTxt: { fontFamily: 'Orbitron,sans-serif', fontSize: '0.86rem', color: '#c5a059', letterSpacing: '4px', margin: 0 },
     scroll: { height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '14px 12px 24px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any },
     heroCard: { background: "linear-gradient(135deg, rgba(197,160,89,0.08) 0%, rgba(8,6,2,0.96) 100%)", border: '1px solid rgba(197,160,89,0.18)', borderRadius: 12, padding: '22px 20px', flexShrink: 0 },
     statCard: { background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.07)', borderRadius: 10, padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 6 },
     card: { background: 'rgba(11,11,11,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px 14px', flexShrink: 0 },
-    cardTitle: { fontFamily: 'Cinzel,serif', fontSize: '0.72rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 12, opacity: 0.8 },
+    cardTitle: { fontFamily: 'Orbitron,sans-serif', fontSize: '0.72rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 12, opacity: 0.8 },
     userCard: { display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(11,11,11,0.95)', border: '1px solid rgba(197,160,89,0.07)', borderRadius: 10, padding: '12px 14px', width: '100%', cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent', outline: 'none', flexShrink: 0 },
     backBtn: { alignSelf: 'flex-start', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', letterSpacing: '2px', padding: '6px 14px', borderRadius: 6, cursor: 'pointer', marginBottom: 14, WebkitTapHighlightColor: 'transparent' },
 };

@@ -831,8 +831,7 @@ body {
 .ops-monitor-grid {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 10px;
+    gap: 12px;
 }
 
 .ops-card {
@@ -2799,8 +2798,7 @@ body {
 /* Monitor & Feed */
 .v-monitor-card,
 .v-feed-card {
-    padding: 25px;
-    min-height: 400px;
+    padding: 20px;
 }
 
 .vm-header,
@@ -2815,7 +2813,6 @@ body {
 .vm-body,
 .vf-body {
     overflow-y: auto;
-    height: 320px;
 }
 
 /* Sidebar Overrides for Vision UI */
@@ -3010,7 +3007,14 @@ h2,
 h3,
 .v-title,
 .vh-title,
-.sb-dash-btn {
+.sb-dash-btn,
+.vk-title,
+.vg-title,
+.vb-title,
+.vm-header,
+.vf-header,
+.v-breadcrumb,
+.vs-label {
     font-family: 'Orbitron', sans-serif;
 }
 

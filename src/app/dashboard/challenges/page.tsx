@@ -195,7 +195,7 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
                             <div className="ch-sidebar-divider" />
                             <div className="ch-sidebar-label">CHALLENGE</div>
                             <div style={{ padding: '8px 20px' }}>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: themeColor(detail.challenge.theme), marginBottom: 4 }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: themeColor(detail.challenge.theme), marginBottom: 4 }}>
                                     {detail.challenge.name}
                                 </div>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '1px' }}>
@@ -380,7 +380,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                                     style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer', textAlign: 'left' }}>
                                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: themeColor(c.theme), flexShrink: 0 }} />
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontFamily: 'Cinzel, serif', color: '#ddd', fontSize: '0.9rem' }}>{c.name}</div>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', color: '#ddd', fontSize: '0.9rem' }}>{c.name}</div>
                                         <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', marginTop: 2 }}>{c.duration_days}d · {c.tasks_per_day}×/day · starts {fmtDate(c.start_date)}</div>
                                     </div>
                                     <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '1px' }}>SELECT →</span>
@@ -452,7 +452,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                             {challenge.status === 'active' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, flexShrink: 0, animation: 'pulse 1.5s infinite' }} />}
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challenge.name}</div>
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{challenge.name}</div>
                             {currentWindow && (
                                 <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color, background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 20, padding: '2px 8px', flexShrink: 0 }}>
                                     WINDOW OPEN · D{currentWindow.day_number}T{currentWindow.window_number}
@@ -508,7 +508,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                                         <div key={pv.id} className="ch-card" style={{ padding: '20px 24px', display: 'flex', gap: 20, alignItems: 'flex-start', borderColor: 'rgba(255,140,66,0.25)' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 72 }}>
                                                 <img src={avatar || '/queen-karin.png'} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: '#ddd', textAlign: 'center', wordBreak: 'break-word' }}>{prof?.name || pv.member_id?.split('@')[0] || pv.member_id}</div>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: '#ddd', textAlign: 'center', wordBreak: 'break-word' }}>{prof?.name || pv.member_id?.split('@')[0] || pv.member_id}</div>
                                                 {pv.response_time_seconds !== null && (
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#4ade80' }}>{fmtSeconds(pv.response_time_seconds)}</div>
                                                 )}
@@ -565,10 +565,10 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                             value={addEmail}
                             onChange={e => setAddEmail(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddParticipant()}
-                            style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, color: '#ddd', fontFamily: 'Cinzel, serif', fontSize: '0.78rem', padding: '9px 14px', outline: 'none' }}
+                            style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, color: '#ddd', fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', padding: '9px 14px', outline: 'none' }}
                         />
                         <button onClick={handleAddParticipant} disabled={addingParticipant || !addEmail.trim()}
-                            style={{ padding: '9px 18px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.72rem', cursor: 'pointer', flexShrink: 0 }}>
+                            style={{ padding: '9px 18px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', cursor: 'pointer', flexShrink: 0 }}>
                             {addingParticipant ? '...' : '+ Add'}
                         </button>
                         {addMsg && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: addMsg.ok ? '#4ade80' : '#e03030' }}>{addMsg.text}</span>}
@@ -623,7 +623,7 @@ function ActiveTab({ activeChallenge, detail, loading, tick, onVerify, onLaunch,
                                                     <td>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                                             <img src={p.avatar || '/queen-karin.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
-                                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd' }}>{p.name}</span>
+                                                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd' }}>{p.name}</span>
                                                         </div>
                                                     </td>
                                                     <td>
@@ -754,7 +754,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
     return (
         <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', fontWeight: 700, textTransform: 'uppercase' }}>
+                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', fontWeight: 700, textTransform: 'uppercase' }}>
                     Task Schedule <span style={{ color: '#333', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem' }}>- {windows.length} windows</span>
                 </div>
                 {msg && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: msg.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>{msg.text}</div>}
@@ -765,7 +765,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                     <div key={day}>
                         {/* Day label */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 700 }}>DAY {day}</div>
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 700 }}>DAY {day}</div>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(197,160,89,0.25), transparent)' }} />
                         </div>
 
@@ -849,7 +849,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                             border: '1px solid rgba(197,160,89,0.3)',
                                                             borderRadius: 6,
                                                             color: '#c5a059',
-                                                            fontFamily: 'Cinzel, serif',
+                                                            fontFamily: 'Orbitron, sans-serif',
                                                             fontSize: '0.58rem',
                                                             letterSpacing: '1px',
                                                             cursor: 'pointer',
@@ -862,7 +862,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                             border: `1px solid ${stopping === w.id ? 'rgba(255,255,255,0.08)' : 'rgba(224,48,48,0.45)'}`,
                                                             borderRadius: 6,
                                                             color: stopping === w.id ? '#444' : '#e03030',
-                                                            fontFamily: 'Cinzel, serif',
+                                                            fontFamily: 'Orbitron, sans-serif',
                                                             fontSize: '0.58rem',
                                                             fontWeight: 700,
                                                             cursor: stopping === w.id ? 'default' : 'pointer',
@@ -875,7 +875,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                             border: `1px solid ${isPushing ? 'rgba(255,255,255,0.08)' : 'rgba(74,222,128,0.45)'}`,
                                                             borderRadius: 6,
                                                             color: isPushing ? '#444' : '#4ade80',
-                                                            fontFamily: 'Cinzel, serif',
+                                                            fontFamily: 'Orbitron, sans-serif',
                                                             fontSize: '0.58rem',
                                                             fontWeight: 700,
                                                             cursor: isPushing ? 'default' : 'pointer',
@@ -889,7 +889,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                         {!isEditing && (
                                             <div style={{ padding: '10px 18px 6px' }}>
                                                 <div style={{
-                                                    fontFamily: taskName ? 'Cinzel, serif' : 'Rajdhani, sans-serif',
+                                                    fontFamily: taskName ? 'Orbitron, sans-serif' : 'Rajdhani, sans-serif',
                                                     fontSize: taskName ? '0.85rem' : '0.75rem',
                                                     color: taskName ? 'rgba(220,215,200,0.88)' : 'rgba(255,255,255,0.18)',
                                                     fontStyle: taskName ? 'normal' : 'italic',
@@ -918,7 +918,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                     value={editName}
                                                     onChange={e => setEditName(e.target.value)}
                                                     rows={3}
-                                                    style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 7, color: '#ddd', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', padding: '10px 14px', outline: 'none', resize: 'vertical', lineHeight: 1.6 }}
+                                                    style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 7, color: '#ddd', fontFamily: 'Orbitron, sans-serif', fontSize: '0.82rem', padding: '10px 14px', outline: 'none', resize: 'vertical', lineHeight: 1.6 }}
                                                 />
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                                     <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
@@ -927,10 +927,10 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                         style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '7px 12px', outline: 'none' }} />
                                                     <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#444' }}>+{windowMinutes}m window</span>
                                                     <div style={{ flex: 1 }} />
-                                                    <button onClick={() => saveEdit(w)} disabled={isSaving} style={{ padding: '7px 20px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 7, color: '#4ade80', fontFamily: 'Cinzel, serif', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 700, letterSpacing: '1px' }}>
+                                                    <button onClick={() => saveEdit(w)} disabled={isSaving} style={{ padding: '7px 20px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 7, color: '#4ade80', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 700, letterSpacing: '1px' }}>
                                                         {isSaving ? 'Saving...' : '✓ Save'}
                                                     </button>
-                                                    <button onClick={() => setEditingId(null)} style={{ padding: '7px 14px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 7, color: '#555', fontFamily: 'Cinzel, serif', fontSize: '0.65rem', cursor: 'pointer' }}>
+                                                    <button onClick={() => setEditingId(null)} style={{ padding: '7px 14px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 7, color: '#555', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', cursor: 'pointer' }}>
                                                         Cancel
                                                     </button>
                                                 </div>
@@ -1332,7 +1332,7 @@ function HistoryTab({ challenges, onView, onEdit }: {
                                 return (
                                     <tr key={c.id}>
                                         <td>
-                                            <div style={{ fontFamily: 'Cinzel, serif', color: '#ddd' }}>{c.name}</div>
+                                            <div style={{ fontFamily: 'Orbitron, sans-serif', color: '#ddd' }}>{c.name}</div>
                                             {c.description && <div style={{ fontSize: '0.75rem', color: '#444', marginTop: 2 }}>{c.description}</div>}
                                         </td>
                                         <td style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.72rem', color: '#555' }}>
@@ -1453,7 +1453,7 @@ function EditChallengeModal({ challenge, onClose, onSave }: {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
                     <div>
                         <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#c5a059', letterSpacing: '3px' }}>EDIT CHALLENGE</div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{challenge.name}</div>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: '#ddd', marginTop: 3 }}>{challenge.name}</div>
                     </div>
                     <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#666', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
                 </div>

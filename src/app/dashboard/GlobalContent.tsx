@@ -94,7 +94,7 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                             <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                         </svg>
-                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.85rem', color: 'var(--gold)', letterSpacing: '4px', fontWeight: 700 }}>GLOBAL</div>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: 'var(--gold)', letterSpacing: '4px', fontWeight: 700 }}>GLOBAL</div>
                     </div>
                     <div id="globalBreadcrumb" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(var(--gold-rgb),0.45)', letterSpacing: '3px', borderLeft: '1px solid rgba(var(--gold-rgb),0.2)', paddingLeft: '12px' }}></div>
                     <button id="globalBackBtn" onClick={() => closeGlobalSection()} style={{ display: 'none', background: 'none', border: '1px solid rgba(var(--gold-rgb),0.3)', color: 'var(--gold)', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '4px 11px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>← BACK</button>
@@ -159,11 +159,11 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                     <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(var(--gold-rgb),0.07), rgba(var(--gold-rgb),0.02))', border: '1px solid rgba(var(--gold-rgb),0.25)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(var(--gold-rgb),0.12)', flexShrink: 0 }}>
                             <div style={{ width: '3px', height: '14px', background: 'var(--gold)', borderRadius: '2px', marginRight: '8px' }}></div>
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: 'var(--gold)', letterSpacing: '2px', fontWeight: 700 }}>ACADEMY</span>
+                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'var(--gold)', letterSpacing: '2px', fontWeight: 700 }}>ACADEMY</span>
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 10px', gap: '10px' }}>
                             <img src="/academy-obedience.png" alt="Obedience Academy" style={{ width: '85%', maxWidth: '240px' }} />
-                            <span style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: 'rgba(var(--gold-rgb),0.5)', letterSpacing: '3px', textTransform: 'uppercase' }}>Coming Soon</span>
+                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(var(--gold-rgb),0.5)', letterSpacing: '3px', textTransform: 'uppercase' }}>Coming Soon</span>
                         </div>
                     </div>
 
@@ -187,7 +187,7 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderBottom: '1px solid rgba(74,222,128,0.1)', flexShrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <div style={{ width: '3px', height: '14px', background: '#4ade80', borderRadius: '2px', marginRight: '8px' }}></div>
-                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
                             </div>
                             <a href="/dashboard/challenges" style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '1px', textDecoration: 'none' }}>MANAGE</a>
                         </div>
@@ -242,11 +242,11 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                                         style={{ position: 'relative', width: '26%', flexShrink: 0, marginLeft: i === 0 ? 0 : '-6%', transform: sub.defaultTransform, transition: 'all 0.4s cubic-bezier(0.23,1,0.32,1)', zIndex: sub.defaultZ, cursor: 'pointer', filter: sub.id === 'royal' ? 'brightness(1.0)' : 'brightness(0.85)', transformStyle: 'preserve-3d' }}>
                                         <div style={{ width: '100%', paddingBottom: '140%', background: 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block' }} />
                                         <div style={{ position: 'absolute', top: '19%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center' }}>
-                                            <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem,1.2vw,0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px,0.5vw,6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', whiteSpace: 'nowrap' }}>{sub.tier}</div>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: 'clamp(0.5rem,1.2vw,0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px,0.5vw,6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', whiteSpace: 'nowrap' }}>{sub.tier}</div>
                                         </div>
                                         <div style={{ position: 'absolute', top: '35%', left: '10%', right: '10%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                            <span style={{ fontFamily: 'Cinzel', fontSize: 'clamp(1.5rem,3.5vw,3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
-                                            <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.35rem,0.7vw,0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
+                                            <span style={{ fontFamily: 'Orbitron', fontSize: 'clamp(1.5rem,3.5vw,3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: 'clamp(0.35rem,0.7vw,0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
                                         </div>
                                     </div>
                                 ))}
@@ -255,8 +255,8 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                         <div style={{ width: '100%', maxWidth: 900, display: 'flex', alignItems: 'center', margin: '0 0 30px' }}>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.7))' }} />
                             <div style={{ padding: '0 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                                <div style={{ fontFamily: 'Cinzel', fontSize: '2rem', fontWeight: 900, letterSpacing: 8, background: 'linear-gradient(to bottom, #fff8d0, #c8960c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', whiteSpace: 'nowrap' }}>ROYAL EXCHEQUER</div>
-                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(212,175,55,0.6)', letterSpacing: 6 }}>THE EMPEROR&apos;S TREASURY</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, letterSpacing: 8, background: 'linear-gradient(to bottom, #fff8d0, #c8960c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', whiteSpace: 'nowrap' }}>ROYAL EXCHEQUER</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(212,175,55,0.6)', letterSpacing: 6 }}>THE EMPEROR&apos;S TREASURY</div>
                             </div>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(212,175,55,0.7))' }} />
                         </div>

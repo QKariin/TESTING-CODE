@@ -168,13 +168,13 @@ export async function loadExchequerLog() {
 
             if (tx.type === 'PAYWALL_TRIBUTE') {
                 return `
-                    <div class="exchequer-row" style="background:rgba(var(--gold-rgb),0.06);border:1px solid rgba(var(--gold-rgb),0.25);border-radius:8px;padding:12px 14px;flex-direction:column;align-items:flex-start;gap:6px;">
+                    <div class="exchequer-row" style="background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.25);border-radius:8px;padding:12px 14px;flex-direction:column;align-items:flex-start;gap:6px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
                             <div style="display:flex;align-items:center;gap:8px;">
-                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:rgba(var(--gold-rgb),0.8);flex-shrink:0;"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                                <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:3px;">FORCED TRIBUTE</div>
+                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:rgba(197,160,89,0.8);flex-shrink:0;"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.7);letter-spacing:3px;">FORCED TRIBUTE</div>
                             </div>
-                            <div style="font-family:Orbitron,sans-serif;font-size:1rem;font-weight:700;color:rgba(var(--gold-rgb),0.9);">€${Number(tx.amount).toFixed(2)}</div>
+                            <div style="font-family:Orbitron,sans-serif;font-size:1rem;font-weight:700;color:rgba(197,160,89,0.9);">€${Number(tx.amount).toFixed(2)}</div>
                         </div>
                         <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.8);letter-spacing:1px;">${tx.name}</div>
                         ${tx.reason ? `<div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.4;">"${tx.reason}"</div>` : ''}
@@ -543,7 +543,7 @@ export async function loadQueenPostsDashboard() {
                         ).join('')}
                     </select>
                     <input id="editPrice_${p.id}" type="number" min="0" value="${p.price || 0}" style="background:#111;border:1px solid #333;color:#fff;font-family:Orbitron;font-size:0.5rem;padding:6px 10px;border-radius:4px;width:100px;outline:none;" placeholder="COINS" />
-                    <button onclick="window.updateQueenPost('${p.id}')" style="background:rgba(var(--gold-rgb),0.15);border:1px solid rgba(var(--gold-rgb),0.4);color:var(--gold);font-family:Orbitron;font-size:0.5rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:2px;">SAVE</button>
+                    <button onclick="window.updateQueenPost('${p.id}')" style="background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.4);color:var(--gold);font-family:Orbitron;font-size:0.5rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:2px;">SAVE</button>
                 </div>
             </div>
         `).join('');
@@ -581,7 +581,7 @@ export async function submitQueenPost() {
     Object.assign(indicator.style, {
         position: 'fixed', bottom: '30px', right: '30px', zIndex: '99999',
         background: 'linear-gradient(135deg,#0d0d0d 0%,#111008 100%)',
-        border: '1px solid rgba(var(--gold-rgb),0.45)',
+        border: '1px solid rgba(197,160,89,0.45)',
         borderRadius: '6px', padding: '14px 18px',
         fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px',
         color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: '10px',
