@@ -48,7 +48,7 @@ export function cancelGlReply() {
     if (bar) bar.style.display = 'none';
 }
 
-const DEFAULT_AVATAR = '/queen-karin.png';
+const DEFAULT_AVATAR = '/collar-placeholder.png';
 const MEDAL_COLORS = ['#c5a059', '#9ca3af', '#cd7f32'];
 const MEDALS = ['🥇', '🥈', '🥉'];
 

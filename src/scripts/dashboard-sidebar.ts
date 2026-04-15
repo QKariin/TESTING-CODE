@@ -157,7 +157,7 @@ export function renderSidebar() {
             }
         }
 
-        const defaultPic = "/queen-karin.png";
+        const defaultPic = "/collar-placeholder.png";
         let rawPic = u.avatar || u.profilePicture || defaultPic;
         if (rawPic === "null" || rawPic === "undefined" || !rawPic) rawPic = defaultPic;
         const finalPic = getOptimizedUrl(rawPic, 80) || defaultPic;

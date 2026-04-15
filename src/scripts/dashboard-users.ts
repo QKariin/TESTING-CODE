@@ -98,7 +98,7 @@ export async function updateDetail(u: any) {
 
     const profPic = document.getElementById('dProfilePic') as HTMLImageElement;
     const headerBg = document.getElementById('apMirrorHeader');
-    const defaultPic = "/queen-karin.png";
+    const defaultPic = "/collar-placeholder.png";
     const realAvatar = u.avatar || u.profilePicture || '';
     const finalPic = realAvatar || defaultPic;
 

@@ -113,25 +113,11 @@ export async function POST(req: Request) {
             metadata: { ...metadata, isQueen }
         };
 
-
-        const { data: msgData, error: msgErr } = await adminClient.from('chats').insert(insertData).select().single();
+        // Insert without .select() to avoid RETURNING id issues if the chats table
+        // primary key column name differs in the live database.
+        const { error: msgErr } = await adminClient.from('chats').insert(insertData);
 
         if (msgErr) {
-            if (msgErr.message.includes('sender_email') || msgErr.message.includes('member_id')) {
-                delete insertData.sender_email;
-                delete insertData.member_id;
-                const retry = await adminClient.from('chats').insert(insertData).select().single();
-                if (retry.error) {
-                    if (!isQueen) {
-                        const rollbackQuery = profile.ID
-                            ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('ID', profile.ID)
-                            : supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
-                        await rollbackQuery;
-                    }
-                    return NextResponse.json({ success: false, error: retry.error.message }, { status: 500 });
-                }
-                return NextResponse.json({ success: true, data: retry.data, newWallet });
-            }
             if (!isQueen) {
                 const rollbackQuery = profile.ID
                     ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('ID', profile.ID)
@@ -140,6 +126,13 @@ export async function POST(req: Request) {
             }
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
+
+        // Construct the message object for instant client-side append
+        // (realtime will sync the real DB row with correct id shortly after)
+        const msgData = {
+            ...insertData,
+            created_at: new Date().toISOString(),
+        };
 
         // When a tribute/wishlist is sent, also post a card to global chat
         if (type === 'wishlist' && !msgErr) {

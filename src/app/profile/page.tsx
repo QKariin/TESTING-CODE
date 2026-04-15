@@ -636,7 +636,7 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || profile?.avatar || profile?.image || "/queen-karin.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || profile?.avatar || profile?.image || "/collar-placeholder.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                         </div>
 
                         <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
@@ -1267,7 +1267,7 @@ export default function ProfilePage() {
                     <div className="mob-hud-row">
                         <div className="hud-circle-wrap" onClick={() => (window as any).openLobby()}>
                             <div className="hud-circle slave">
-                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || profile?.avatar || profile?.image || "/queen-karin.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || profile?.avatar || profile?.image || "/collar-placeholder.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>

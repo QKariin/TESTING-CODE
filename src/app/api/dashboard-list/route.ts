@@ -38,7 +38,7 @@ export async function GET() {
         const users = (profiles || []).map((p: any) => {
             const params = p.parameters || {};
             const rawPic = p.avatar_url || params.avatar_url || params.photoUrl || '';
-            const avatar = (rawPic && rawPic.length > 5 && rawPic !== 'undefined' && rawPic !== 'null') ? rawPic : '/queen-karin.png';
+            const avatar = (rawPic && rawPic.length > 5 && rawPic !== 'undefined' && rawPic !== 'null') ? rawPic : '/collar-placeholder.png';
 
             const activeTask = taskMap[(p.member_id || '').toLowerCase()] || null;
             const endTime = activeTask?.endTime || 0;

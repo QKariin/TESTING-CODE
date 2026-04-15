@@ -628,7 +628,7 @@ export default function DashboardPage() {
                     const lastSeen = u.lastSeen || u.last_active || u.lastWorship || null;
                     return {
                         ...u,
-                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || '/queen-karin.png', 100),
+                        avatar: getOptimizedUrl(u.avatar || u.avatar_url || u.profile_picture_url || '/collar-placeholder.png', 100),
                         lastMessageTime,
                         lastSeen,
                     };
@@ -1232,7 +1232,7 @@ export default function DashboardPage() {
                             <div id="apMirrorHeader" className="ap-mirror-header">
                                 <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
                                 <div className="avatar-container">
-                                    <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                    <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                 </div>
                                 <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Cinzel', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
 
@@ -1479,7 +1479,7 @@ export default function DashboardPage() {
                                     const border = isSilenced ? 'rgba(220,60,60,0.2)' : 'rgba(197,160,89,0.2)';
                                     return (
                                         <div key={u.memberId} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${border}`, borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                                            <img src={u.avatar || '/queen-karin.png'} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} />
+                                            <img src={u.avatar || '/collar-placeholder.png'} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e: any) => { e.target.src = '/collar-placeholder.png'; }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                                                     <span style={{ fontFamily: 'Cinzel', fontSize: '0.95rem', color: '#fff' }}>{u.name || u.memberId}</span>

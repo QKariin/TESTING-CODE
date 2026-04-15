@@ -188,7 +188,7 @@ export const DbService = {
             if (p?.member_id) chatMemberId = p.member_id;
         }
 
-        const { data, error } = await supabaseAdmin
+        const { error } = await supabaseAdmin
             .from('chats')
             .insert({
                 member_id: chatMemberId,
@@ -196,12 +196,10 @@ export const DbService = {
                 content: text,
                 type: 'system',
                 metadata: { isQueen: sender === 'system' ? false : true, mediaUrl }
-            })
-            .select()
-            .single();
+            });
 
         if (error) throw error;
-        return data;
+        return { member_id: chatMemberId, content: text, sender_email: sender, created_at: new Date().toISOString() };
     },
 
     async getMessages(memberId: string, limit = 50) {

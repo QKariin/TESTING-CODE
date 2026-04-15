@@ -108,7 +108,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 const mapped: DashUser[] = listRes.users.map((u: any) => ({
                     memberId: u.memberId || '',
                     name: u.name || '',
-                    avatar: u.avatar || '/queen-karin.png',
+                    avatar: u.avatar || '/collar-placeholder.png',
                     rank: u.hierarchy || 'Hall Boy',
                     wallet: 0,
                     score: 0,
@@ -363,7 +363,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         proofUrl={rtProof}
                         isVideo={rtVideo}
                         name={rt.memberName || rtUser?.name || 'Unknown'}
-                        avatar={rt.avatarUrl || rtUser?.avatar || '/queen-karin.png'}
+                        avatar={rt.avatarUrl || rtUser?.avatar || '/collar-placeholder.png'}
                         rank={rtUser?.rank}
                         text={rtText}
                         isRoutine={rtRoutine}
@@ -500,7 +500,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                             <button key={u.memberId} onClick={() => onSelectUser(u)}
                                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, padding: '2px 0', WebkitTapHighlightColor: 'transparent' }}>
                                 <div style={{ position: 'relative' }}>
-                                    <img src={u.avatar} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(74,222,128,0.4)', display: 'block' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                    <img src={u.avatar} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(74,222,128,0.4)', display: 'block' }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                     <div style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, background: '#4ade80', borderRadius: '50%', border: '2px solid #030303', boxShadow: '0 0 4px #4ade80' }} />
                                 </div>
                                 <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.94rem', color: '#888', maxWidth: 44, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name.split(' ')[0]}</span>
@@ -552,16 +552,16 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                 const routine = isRoutineTask(task);
                                 const busy = reviewing === taskId;
                                 const displayName = user?.name || task.memberName || (task.member_id || '').split('@')[0] || 'Unknown';
-                                const displayAvatar = user?.avatar || task.avatarUrl || '/queen-karin.png';
+                                const displayAvatar = user?.avatar || task.avatarUrl || '/collar-placeholder.png';
                                 const proofUrl = task.proofUrl || task.proof_url;
                                 const isVideo = !!(proofUrl && ((task.proofType && (task.proofType === 'video' || task.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofUrl)));
-                                const previewUrl = isVideo ? (task.thumbnail_url || task.thumbnailUrl || '/queen-karin.png') : proofUrl;
+                                const previewUrl = isVideo ? (task.thumbnail_url || task.thumbnailUrl || '/collar-placeholder.png') : proofUrl;
                                 const cleanText = stripHtml(task.taskName || task.task_name || task.text || 'Task');
                                 return (
                                     <div key={taskId || i} style={{ background: '#090909', border: `1px solid ${routine ? 'rgba(197,160,89,0.15)' : 'rgba(255,140,66,0.12)'}`, borderRadius: 12, overflow: 'hidden' }}>
                                         <button onClick={() => user && onSelectUser(user)}
                                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                                            <img src={displayAvatar} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '55' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                            <img src={displayAvatar} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${user ? rc(user.rank) + '55' : '#333'}`, flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                             <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
                                                 <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#ccc' }}>{displayName}</span>
                                                 {user && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: rc(user.rank), marginLeft: 8 }}>{user.rank}</span>}
@@ -654,7 +654,7 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                     <button key={u.memberId} onClick={() => onSelect(u)}
                         style={{ ...S.userCard, ...(unread ? { border: '1px solid rgba(74,158,255,0.3)', background: 'rgba(74,158,255,0.04)' } : {}) }}>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                            <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                             <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, background: dotC, borderRadius: '50%', border: '2px solid #030303', boxShadow: status === 'online' ? `0 0 6px ${dotC}` : 'none' }} />
                             {u.reviewQueue.length > 0 && (
                                 <div style={{ position: 'absolute', top: -3, right: -3, width: 17, height: 17, background: '#ff4444', borderRadius: '50%', fontSize: '0.90rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, border: '1.5px solid #030303' }}>{u.reviewQueue.length}</div>
@@ -1016,7 +1016,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                 <div key={pv.id} style={{ background: 'rgba(10,8,5,0.98)', border: '1px solid rgba(255,140,66,0.2)', borderRadius: 12, overflow: 'hidden' }}>
                                     {/* Header */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                        <img src={avatar || '/queen-karin.png'} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.3)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                        <img src={avatar || '/collar-placeholder.png'} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.3)', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd' }}>{name}</div>
                                             <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#555', letterSpacing: '1px' }}>
@@ -1085,7 +1085,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                         return (
                             <div key={p.member_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: isChamp ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${isChamp ? 'rgba(197,160,89,0.3)' : 'rgba(255,255,255,0.04)'}`, borderLeft: `3px solid ${isElim ? '#222' : isChamp ? '#c5a059' : color}`, borderRadius: 8, opacity: isElim ? 0.4 : 1 }}>
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.85rem', fontWeight: 700, color: isChamp ? '#c5a059' : '#555', width: 24, flexShrink: 0, textAlign: 'center' }}>{isChamp ? '♛' : (rank || '-')}</div>
-                                <img src={p.avatar || '/queen-karin.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                                <img src={p.avatar || '/collar-placeholder.png'} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: isChamp ? '#c5a059' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
                                 </div>
@@ -1492,7 +1492,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
             {/* Top bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: '#050505', flexShrink: 0 }}>
                 <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: '1.1rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' }}>←</button>
-                <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
                     {rank && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: rc(rank), letterSpacing: '1px' }}>{rank}</div>}
@@ -1604,7 +1604,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
             {/* Header */}
             <div style={{ padding: '12px 14px 16px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                 <button onClick={onBack} style={S.backBtn}>← BACK</button>
-                <img src={user.avatar} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = '/queen-karin.png'; }} alt="" />
+                <img src={user.avatar} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', letterSpacing: '2px', padding: '2px 12px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}44`, marginBottom: 6 }}>{user.rank}</span>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.2rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
                 {/* Stats row */}
