@@ -523,6 +523,7 @@ export default function DashboardPage() {
             // Wrapped with mobile nav sync
             (window as any).showHome = () => {
                 setShowChallenges(false);
+                setShowGlobal(false);
                 markPendingRead(); // leaving a chat - mark it as read now
                 showHome();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
@@ -531,6 +532,7 @@ export default function DashboardPage() {
             };
             (window as any).showProfile = (id?: string) => {
                 setShowChallenges(false);
+                setShowGlobal(false);
                 if (!id) markPendingRead(); // navigating to Queen view - leaving chat
                 (showProfile as any)(id);
                 if (id) {
@@ -761,12 +763,12 @@ export default function DashboardPage() {
                 <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
                 <div
                     className="sb-dash-btn"
-                    onClick={() => (window as any).showPosts()}
+                    onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showPosts(); }}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
                 >✦ POSTS</div>
                 <div
                     className="sb-dash-btn"
-                    onClick={() => setShowChallenges(true)}
+                    onClick={() => { setShowGlobal(false); setShowChallenges(true); }}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: showChallenges ? '#4ade80' : '#4ade8099', position: 'relative', cursor: 'pointer', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}
                 >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</div>
                 <div
