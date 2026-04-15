@@ -109,18 +109,25 @@ export async function getAdminDashboardData() {
             if (au.email) authUuidByEmail[au.email.toLowerCase()] = au.id;
         }
 
-        // Map tasks data to profiles - 3 strategies:
+        // Map tasks data to profiles - 3 strategies (collect ALL matches, pick richest row):
         // 1. UUID match: tasks.member_id === profiles.id (most users after migration)
         // 2. Email match: tasks.member_id === profiles.member_id (legacy rows not yet migrated)
         // 3. Auth UUID match: tasks.member_id === auth.users.id for legacy users where profiles.id ≠ auth.users.id
+        // If multiple rows match (email-keyed + UUID-keyed duplicate), prefer the one with more data.
         const finalProfiles = (profiles || []).map((p: any) => {
             const profileEmail = (p.member_id || '').toLowerCase();
             const authUuid = authUuidByEmail[profileEmail] || '';
-            const t = (tasksData || []).find((x: any) =>
+            const matches = (tasksData || []).filter((x: any) =>
                 x.member_id === p.id ||
                 (x.member_id || '').toLowerCase() === profileEmail ||
                 (authUuid && x.member_id === authUuid)
             );
+            // Pick the row with the most data (highest kneelCount + CompletedTasks)
+            const t = matches.length <= 1 ? matches[0] : matches.reduce((best: any, x: any) => {
+                const xScore = Number(x.kneelCount || 0) + Number(x['Taskdom_CompletedTasks'] || 0);
+                const bScore = Number(best?.kneelCount || 0) + Number(best?.['Taskdom_CompletedTasks'] || 0);
+                return xScore > bScore ? x : best;
+            }, matches[0]);
             return mapUserForDashboard(p, t);
         });
 
@@ -813,11 +820,17 @@ export async function getMasterData() {
         return (profiles || []).map((item: any) => {
             const profileEmail = (item.member_id || '').toLowerCase();
             const authUuid = authUuidByEmail[profileEmail] || '';
-            const uTasks = (tasks || []).find((t: any) =>
+            const matches = (tasks || []).filter((t: any) =>
                 t.member_id === item.id ||
                 (t.member_id || '').toLowerCase() === profileEmail ||
                 (authUuid && t.member_id === authUuid)
             );
+            // Pick the row with the most data (highest kneelCount + CompletedTasks)
+            const uTasks = matches.length <= 1 ? matches[0] : matches.reduce((best: any, x: any) => {
+                const xScore = Number(x.kneelCount || 0) + Number(x['Taskdom_CompletedTasks'] || 0);
+                const bScore = Number(best?.kneelCount || 0) + Number(best?.['Taskdom_CompletedTasks'] || 0);
+                return xScore > bScore ? x : best;
+            }, matches[0]);
             return mapUserForDashboard(item, uTasks);
         });
     } catch (err) {

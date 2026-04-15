@@ -48,22 +48,29 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
         throw profileError;
     }
 
-    // Step 2: fetch tasks — try every possible UUID so legacy users (profiles.id ≠ auth.users.id) are covered
-    // Priority: profiles.id → caller auth UUID (auth.users.id) → email fallback
+    // Step 2: fetch tasks — collect ALL matching rows and pick the richest one.
+    // Users may have both an email-keyed row (historical data) and a UUID-keyed row (newer/empty).
     const profilesId = profileData?.id;
     const profileEmail = profileData?.member_id;
-    const uuidsToTry = [...new Set([profilesId, authUuidHint].filter(Boolean))] as string[];
 
-    let taskData: any = null;
+    const taskCandidates: any[] = [];
+    const uuidsToTry = [...new Set([profilesId, authUuidHint].filter(Boolean))] as string[];
     for (const tryId of uuidsToTry) {
         const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', tryId).maybeSingle();
-        if (data) { taskData = data; break; }
+        if (data) taskCandidates.push(data);
     }
-    // Legacy email fallback (rows not yet migrated)
-    if (!taskData && profileEmail) {
+    if (profileEmail) {
         const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profileEmail).maybeSingle();
-        if (data) taskData = data;
+        if (data && !taskCandidates.some((c: any) => c.member_id === data.member_id)) taskCandidates.push(data);
     }
+    // Pick the row with the most data (highest kneelCount + CompletedTasks)
+    const taskData = taskCandidates.length === 0 ? null :
+        taskCandidates.length === 1 ? taskCandidates[0] :
+        taskCandidates.reduce((best: any, x: any) => {
+            const xScore = Number(x.kneelCount || 0) + Number(x['Taskdom_CompletedTasks'] || 0);
+            const bScore = Number(best?.kneelCount || 0) + Number(best?.['Taskdom_CompletedTasks'] || 0);
+            return xScore > bScore ? x : best;
+        }, taskCandidates[0]);
 
     const [{ data: contribData }] = await Promise.all([
         profilesId
