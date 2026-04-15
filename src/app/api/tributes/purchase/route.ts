@@ -12,11 +12,10 @@ export async function POST(request: Request) {
         }
 
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
-        const { data: profile, error: profileErr } = await supabase
-            .from('profiles')
-            .select('wallet, score, parameters, member_id, id')
-            .or(isUUID ? `id.eq.${memberEmail}` : `member_id.eq.${memberEmail}`)
-            .single();
+        const profileQuery = isUUID
+            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID').eq('ID', memberEmail).single()
+            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID').ilike('member_id', memberEmail).single();
+        const { data: profile, error: profileErr } = await profileQuery;
 
         if (profileErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
 
