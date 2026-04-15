@@ -311,6 +311,16 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 ::-webkit-scrollbar { width: 0; height: 0; }
             `}</style>
 
+            {/* ADD TO HOME SCREEN BANNER - shown when in browser (not PWA) */}
+            {typeof window !== 'undefined' && !window.matchMedia('(display-mode: standalone)').matches && !(navigator as any).standalone && (
+                <div style={{ background: 'rgba(197,160,89,0.12)', borderBottom: '1px solid rgba(197,160,89,0.3)', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                    <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>📲</span>
+                    <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: '#c5a059', flex: 1 }}>
+                        Tap <b>Share →</b> then <b>"Add to Home Screen"</b> for fullscreen mode
+                    </span>
+                </div>
+            )}
+
             {/* TOP BAR */}
             <div style={S.topBar}>
                 <span style={S.topBrand}>⚔ COMMAND CENTER</span>
@@ -324,7 +334,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         user={selectedUser}
                         profileTab={profileTab}
                         setProfileTab={setProfileTab}
-                        onBack={() => { markPendingRead(); setSelectedUser(null); setProfileTab('chat'); }}
+                        onBack={() => { markPendingRead(); setSelectedUser(null); setProfileTab('chat'); loadData(); }}
                         adminEmail={userEmail}
                         onReviewed={() => loadData()}
                         onOpenReview={(task) => {
@@ -669,7 +679,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                         </button>
                                         {proofUrl && (
                                             <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                                <img src={previewUrl} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
+                                                <img src={previewUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (previewUrl && !t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(previewUrl)}`; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
                                                 <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
                                             </button>
                                         )}
@@ -1613,9 +1623,9 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {displayUrl ? (
                     isVideo ? (
-                        <video src={displayUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
+                        <video src={displayUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} onError={(e) => { const t = e.target as HTMLVideoElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} />
                     ) : (
-                        <img src={displayUrl} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
+                        <img src={displayUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
                     )
                 ) : (
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222', fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', letterSpacing: '2px' }}>NO MEDIA</div>
@@ -1826,7 +1836,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                 return (
                                     <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px' }}>
                                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                            {(task.proofUrl || task.proof_url) && <img src={task.proofUrl || task.proof_url} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { (e.target as any).style.display = 'none'; }} alt="" />}
+                                            {(task.proofUrl || task.proof_url) && (() => { const pUrl = task.proofUrl || task.proof_url; return <img src={pUrl} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(pUrl)}`; else t.style.display = 'none'; }} alt="" />; })()}
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

@@ -10,9 +10,12 @@ export async function POST(req: Request) {
         const { urls } = await req.json();
         if (!Array.isArray(urls)) return NextResponse.json({ urls: [] }, { status: 400 });
 
-        // Public buckets - files are already accessible via public URL, no signing needed.
-        // Signing them creates ?token= URLs that bypass Vercel CDN cache and hit Supabase directly.
-        const PUBLIC_BUCKETS = ['media', 'avatars', 'public'];
+        // Buckets whose content is globally public (no signing needed).
+        const PUBLIC_BUCKETS = ['avatars', 'public'];
+
+        // Within the 'media' bucket, these folder prefixes require signed access.
+        // They are uploaded via signed URLs (not public), so the public URL returns 403.
+        const PRIVATE_MEDIA_PREFIXES = ['task-proofs/', 'admin-chat/', 'chat-media/', 'challenge-proofs/'];
 
         const signed = await Promise.all(urls.map(async (url: string) => {
             if (!url || typeof url !== 'string') return url;
@@ -22,15 +25,25 @@ export async function POST(req: Request) {
             if (!match) return url;
 
             const [, bucket, rawPath] = match;
-
-            // Public bucket files: return the canonical public URL so Vercel CDN can cache it
-            if (PUBLIC_BUCKETS.includes(bucket)) {
-                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-                return `${supabaseUrl}/storage/v1/object/public/${bucket}/${decodeURIComponent(rawPath)}`;
-            }
-
             const path = decodeURIComponent(rawPath);
 
+            // Truly public buckets (avatars, public) — return canonical public URL
+            if (PUBLIC_BUCKETS.includes(bucket)) {
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+                return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`;
+            }
+
+            // 'media' bucket: public paths serve fine via public URL; private paths need signing
+            if (bucket === 'media') {
+                const isPrivate = PRIVATE_MEDIA_PREFIXES.some(p => path.startsWith(p));
+                if (!isPrivate) {
+                    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+                    return `${supabaseUrl}/storage/v1/object/public/media/${path}`;
+                }
+                // Private path within media bucket — create fresh signed URL
+            }
+
+            // All other buckets (or private paths in media) — sign it
             try {
                 const { data, error } = await supabaseAdmin.storage
                     .from(bucket)
