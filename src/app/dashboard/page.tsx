@@ -504,7 +504,8 @@ export default function DashboardPage() {
         router.push('/'); // Redirect to home/login
     };
     useEffect(() => {
-        // Fetch current user email
+        // Fetch current user email and start heartbeat so queen's last_active stays fresh
+        let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
         const getCurrUser = async () => {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
@@ -512,8 +513,18 @@ export default function DashboardPage() {
                 setUserEmail(user.email);
                 setAdminEmail(user.email);
             }
+            if (user?.id) {
+                const ping = () => fetch('/api/tracking/ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, clientData: {} }),
+                }).catch(() => {});
+                ping(); // immediate first ping
+                heartbeatInterval = setInterval(ping, 2 * 60 * 1000); // then every 2min
+            }
         };
         getCurrUser();
+        return () => { if (heartbeatInterval) clearInterval(heartbeatInterval); };
 
         // Expose lock state setter so vanilla updateDetail can push state into React
         (window as any)._setActiveLocks = setActiveLocks;

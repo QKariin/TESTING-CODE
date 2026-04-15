@@ -26,6 +26,22 @@ type ProfileTab = 'info' | 'tasks' | 'chat' | 'controls';
 
 const RANKS = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
 
+const PAYWALL_PRESETS = [
+    "Monthly tribute not received. Pay now.",
+    "Punishment — pay for your attitude.",
+    "Outstanding debt. You know what you did.",
+    "You've been a disappointment. Pay your dues.",
+    "Access suspended. Tribute required immediately.",
+];
+
+const SILENCE_PRESETS = [
+    "You are silenced until further notice.",
+    "Disrespect has consequences. Speak when spoken to.",
+    "Your access has been revoked.",
+    "You crossed a line. Enjoy the silence.",
+    "Punishment in effect. No exceptions.",
+];
+
 interface DashUser {
     memberId: string;
     name: string;
@@ -94,11 +110,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     const onlineJoinTimeRef = useRef<Record<string, number>>({});
     const prevOnlineStateRef = useRef<Record<string, boolean>>({});
     const pendingReadIdRef = useRef<string | null>(null);
+    const fetchedFullRef = useRef<string | null>(null);
 
     const loadData = useCallback(async () => {
         try {
-            // Lightweight list - only name, avatar, online status, unread indicator
-            // Full profile/tasks load on click only
             const [listRes, unread] = await Promise.all([
                 fetch('/api/dashboard-list').then(r => r.json()),
                 getUnreadMessageStatus(),
@@ -112,13 +127,20 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     rank: u.hierarchy || 'Hall Boy',
                     wallet: 0,
                     score: 0,
-                    parameters: { paywall: u.paywall ? { active: true } : undefined },
-                    reviewQueue: [],
+                    parameters: {
+                        paywall: u.paywall ? { active: true } : undefined,
+                        silence: u.silence ? { active: true } : undefined,
+                    },
+                    reviewQueue: u.reviewQueue || [],
                     lastMessageTime: unread[u.memberId?.toLowerCase()] || null,
                     lastSeen: u.lastSeen || null,
-                    hasActiveTask: false,
+                    hasActiveTask: !!u.activeTask,
                 }));
                 setUsers(mapped);
+            }
+            // Global review queue for home screen
+            if (listRes.pendingReviews) {
+                setGlobalQueue(listRes.pendingReviews);
             }
         } finally { setLoading(false); }
         const d = new Date();
@@ -147,6 +169,42 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
         return () => { supabase.removeChannel(ch); };
     }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
+
+    // Fetch full profile data (wallet, score, routine, paywall detail, silence detail)
+    // when a user is opened — avoids stale 0 values from the lightweight list
+    useEffect(() => {
+        if (!selectedUser) { fetchedFullRef.current = null; return; }
+        if (fetchedFullRef.current === selectedUser.memberId) return;
+        fetchedFullRef.current = selectedUser.memberId;
+        let cancelled = false;
+        fetch(`/api/slave-profile?email=${encodeURIComponent(selectedUser.memberId)}&full=true`)
+            .then(r => r.json())
+            .then((data: any) => {
+                if (cancelled || !data || data.error) return;
+                setSelectedUser(prev => {
+                    if (!prev || prev.memberId !== selectedUser.memberId) return prev;
+                    return {
+                        ...prev,
+                        wallet: typeof data.wallet === 'number' ? data.wallet : prev.wallet,
+                        score: typeof data.score === 'number' ? data.score : (typeof data.points === 'number' ? data.points : prev.score),
+                        parameters: {
+                            ...prev.parameters,
+                            ...data.parameters,
+                            paywall: data.parameters?.paywall,
+                            silence: data.parameters?.silence,
+                            kinks: data.kinks || data.parameters?.kinks || '',
+                            limits: data.limits || data.parameters?.limits || '',
+                            devotion: data.parameters?.devotion,
+                            totalKneelMinutes: data.parameters?.totalKneelMinutes,
+                            kneelCount: data.kneelCount,
+                            routine: data.routine || data.parameters?.routine || '',
+                        },
+                    };
+                });
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, [selectedUser?.memberId]);
 
     // Track online join times
     useEffect(() => {
@@ -413,9 +471,13 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
 }) {
     const [taskQueue, setTaskQueue] = useState<any[]>(() => dedupeQueue(globalQueue));
     const [reviewing, setReviewing] = useState<string | null>(null);
-    const [reviewsExpanded, setReviewsExpanded] = useState(false);
+    const [reviewsExpanded, setReviewsExpanded] = useState(() => dedupeQueue(globalQueue).length > 0);
 
-    useEffect(() => { setTaskQueue(dedupeQueue(globalQueue)); }, [globalQueue]);
+    useEffect(() => {
+        const q = dedupeQueue(globalQueue);
+        setTaskQueue(q);
+        if (q.length > 0) setReviewsExpanded(true);
+    }, [globalQueue]);
 
     const activeChallenge = challenges.find(c => c.status === 'active');
     const onlineUsers = users.filter(u => getOnlineStatus(u.lastSeen) === 'online');
@@ -1790,11 +1852,39 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
     const [newRank, setNewRank] = useState(user.rank);
     // Issue task
     const [taskText, setTaskText] = useState('');
-    // Lock reason
+    // Lock controls
     const [lockReason, setLockReason] = useState('');
     const [paywallAmt, setPaywallAmt] = useState('500');
+    const [showPaywallPresets, setShowPaywallPresets] = useState(false);
+    const [showSilencePresets, setShowSilencePresets] = useState(false);
+    // Routine
+    const [routineText, setRoutineText] = useState(user.parameters?.routine || '');
+    const [savingRoutine, setSavingRoutine] = useState(false);
+
+    // Sync routine from parent when full profile loads
+    useEffect(() => {
+        const r = user.parameters?.routine || '';
+        if (r) setRoutineText(r);
+    }, [user.parameters?.routine]);
 
     const flash = (msg: string) => { setStatus(msg); setTimeout(() => setStatus(''), 3500); };
+
+    const saveRoutine = async () => {
+        setSavingRoutine(true);
+        try {
+            const res = await fetch('/api/slave-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.memberId, routine: routineText.trim() || 'None' }),
+            });
+            const d = await res.json();
+            if (d.success) {
+                flash('✓ Routine saved');
+                onUserUpdated?.({ ...user, parameters: { ...user.parameters, routine: routineText.trim() || 'None' } });
+            } else { flash('✕ ' + (d.error || 'Failed')); }
+        } catch (e: any) { flash('✕ ' + e.message); }
+        setSavingRoutine(false);
+    };
 
     const adjustWallet = async (dir: 1 | -1) => {
         const amount = parseInt(walletAmt) || 100;
@@ -1911,90 +2001,138 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
             )}
 
             {/* Lock status pills */}
-            <div style={{ display: 'flex', gap: 8 }}>
-                {paywallActive && <div style={{ flex: 1, textAlign: 'center', padding: '8px', background: 'rgba(255,51,51,0.1)', border: '1px solid rgba(255,51,51,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', color: '#ff6666', letterSpacing: '1px' }}>🔒 PAYWALL ACTIVE<br /><span style={{ fontSize: '0.64rem', color: '#ff8888', marginTop: 3, display: 'block' }}>{user.parameters?.paywall?.reason}</span></div>}
-                {silenceActive && <div style={{ flex: 1, textAlign: 'center', padding: '8px', background: 'rgba(255,140,66,0.1)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', color: '#ff8c42', letterSpacing: '1px' }}>🔇 SILENCED<br /><span style={{ fontSize: '0.64rem', color: '#ffaa66', marginTop: 3, display: 'block' }}>{user.parameters?.silence?.reason}</span></div>}
-            </div>
+            {(paywallActive || silenceActive) && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                    {paywallActive && <div style={{ flex: 1, textAlign: 'center', padding: '8px 10px', background: 'rgba(255,51,51,0.08)', border: '1px solid rgba(255,51,51,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#ff6666', letterSpacing: '1px' }}>PAYWALL ACTIVE<br /><span style={{ fontSize: '0.62rem', color: '#ff9999', marginTop: 2, display: 'block', fontFamily: 'Rajdhani,sans-serif', fontWeight: 400, letterSpacing: 0 }}>{user.parameters?.paywall?.reason}</span></div>}
+                    {silenceActive && <div style={{ flex: 1, textAlign: 'center', padding: '8px 10px', background: 'rgba(255,140,66,0.08)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#ff8c42', letterSpacing: '1px' }}>SILENCED<br /><span style={{ fontSize: '0.62rem', color: '#ffaa77', marginTop: 2, display: 'block', fontFamily: 'Rajdhani,sans-serif', fontWeight: 400, letterSpacing: 0 }}>{user.parameters?.silence?.reason}</span></div>}
+                </div>
+            )}
 
-            {/* Lock/Silence */}
+            {/* PAYWALL */}
             <div style={S.card}>
-                <div style={S.cardTitle}>LOCK CONTROLS</div>
-                {(!paywallActive || !silenceActive) && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={S.cardTitle}>PAYWALL</div>
+                    {paywallActive && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#ff6666', background: 'rgba(255,51,51,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(255,51,51,0.25)' }}>ACTIVE</span>}
+                </div>
+                {!paywallActive && (
                     <>
-                        <input style={inp} placeholder="Reason..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
-                        {!paywallActive && (
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>AMOUNT ₡</span>
-                                <input style={{ ...smInp, flex: 1 }} value={paywallAmt} onChange={e => setPaywallAmt(e.target.value)} placeholder="500" />
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <button onClick={() => setShowPaywallPresets(v => !v)} style={{ background: showPaywallPresets ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#888', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px' }}>
+                                PRESETS {showPaywallPresets ? '▲' : '▼'}
+                            </button>
+                        </div>
+                        {showPaywallPresets && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
+                                {PAYWALL_PRESETS.map((p, i) => (
+                                    <button key={i} onClick={() => { setLockReason(p); setShowPaywallPresets(false); }}
+                                        style={{ textAlign: 'left', background: lockReason === p ? 'rgba(255,51,51,0.08)' : 'rgba(255,255,255,0.02)', border: `1px solid ${lockReason === p ? 'rgba(255,51,51,0.3)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, padding: '8px 10px', color: lockReason === p ? '#ff9999' : '#666', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.84rem', cursor: 'pointer', lineHeight: 1.3 }}>
+                                        {p}
+                                    </button>
+                                ))}
                             </div>
                         )}
+                        <input style={inp} placeholder="Reason (required)..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>AMOUNT ₡</span>
+                            <input style={{ ...smInp, flex: 1 }} value={paywallAmt} onChange={e => setPaywallAmt(e.target.value)} placeholder="500" />
+                        </div>
                     </>
                 )}
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                    <button disabled={busy} onClick={togglePaywall} style={actionBtn(paywallActive)}>
-                        {paywallActive ? '🔓 UNLOCK PAYWALL' : '🔒 PAYWALL'}
-                    </button>
-                    <button disabled={busy} onClick={toggleSilence} style={actionBtn(silenceActive)}>
-                        {silenceActive ? '🔊 UNSILENCE' : '🔇 SILENCE'}
-                    </button>
-                </div>
+                <button disabled={busy} onClick={togglePaywall} style={{ width: '100%', marginTop: 12, padding: '12px', background: paywallActive ? 'rgba(107,203,119,0.1)' : 'rgba(255,51,51,0.1)', border: `1px solid ${paywallActive ? 'rgba(107,203,119,0.3)' : 'rgba(255,51,51,0.3)'}`, borderRadius: 8, color: paywallActive ? '#6bcb77' : '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                    {paywallActive ? 'UNLOCK PAYWALL' : 'ACTIVATE PAYWALL'}
+                </button>
             </div>
 
-            {/* Wallet */}
+            {/* SILENCE */}
             <div style={S.card}>
-                <div style={S.cardTitle}>WALLET - {user.wallet.toLocaleString()} ₡</div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <input style={{ ...smInp, flex: 1 }} value={walletAmt} onChange={e => setWalletAmt(e.target.value)} placeholder="100" />
-                    <button disabled={busy} onClick={() => adjustWallet(1)}
-                        style={{ flex: 1, padding: '11px', background: 'rgba(107,203,119,0.1)', border: '1px solid rgba(107,203,119,0.25)', borderRadius: 8, color: '#6bcb77', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                        + ADD
-                    </button>
-                    <button disabled={busy} onClick={() => adjustWallet(-1)}
-                        style={{ flex: 1, padding: '11px', background: 'rgba(255,51,51,0.07)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                        − TAKE
-                    </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={S.cardTitle}>SILENCE</div>
+                    {silenceActive && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#ff8c42', background: 'rgba(255,140,66,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(255,140,66,0.25)' }}>ACTIVE</span>}
                 </div>
+                {!silenceActive && (
+                    <>
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                            <button onClick={() => setShowSilencePresets(v => !v)} style={{ background: showSilencePresets ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#888', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px' }}>
+                                PRESETS {showSilencePresets ? '▲' : '▼'}
+                            </button>
+                        </div>
+                        {showSilencePresets && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
+                                {SILENCE_PRESETS.map((p, i) => (
+                                    <button key={i} onClick={() => { setLockReason(p); setShowSilencePresets(false); }}
+                                        style={{ textAlign: 'left', background: lockReason === p ? 'rgba(255,140,66,0.08)' : 'rgba(255,255,255,0.02)', border: `1px solid ${lockReason === p ? 'rgba(255,140,66,0.3)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, padding: '8px 10px', color: lockReason === p ? '#ffaa77' : '#666', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.84rem', cursor: 'pointer', lineHeight: 1.3 }}>
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <input style={inp} placeholder="Reason (required)..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
+                    </>
+                )}
+                <button disabled={busy} onClick={toggleSilence} style={{ width: '100%', marginTop: 12, padding: '12px', background: silenceActive ? 'rgba(107,203,119,0.1)' : 'rgba(255,140,66,0.1)', border: `1px solid ${silenceActive ? 'rgba(107,203,119,0.3)' : 'rgba(255,140,66,0.3)'}`, borderRadius: 8, color: silenceActive ? '#6bcb77' : '#ff8c42', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                    {silenceActive ? 'LIFT SILENCE' : 'SILENCE SUBJECT'}
+                </button>
             </div>
 
-            {/* Merit */}
-            <div style={S.card}>
-                <div style={S.cardTitle}>MERIT - {user.score}</div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <input style={{ ...smInp, flex: 1 }} value={meritAmt} onChange={e => setMeritAmt(e.target.value)} placeholder="50" />
-                    <button disabled={busy} onClick={() => adjustMerit(1)}
-                        style={{ flex: 1, padding: '11px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                        + ADD
-                    </button>
-                    <button disabled={busy} onClick={() => adjustMerit(-1)}
-                        style={{ flex: 1, padding: '11px', background: 'rgba(255,51,51,0.07)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                        − TAKE
-                    </button>
+            {/* Wallet + Merit row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={S.card}>
+                    <div style={S.cardTitle}>WALLET</div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#4ecdc4', fontWeight: 700, marginBottom: 10 }}>{user.wallet.toLocaleString()} ₡</div>
+                    <input style={{ ...inp, marginBottom: 8, padding: '8px 10px' }} value={walletAmt} onChange={e => setWalletAmt(e.target.value)} placeholder="100" />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        <button disabled={busy} onClick={() => adjustWallet(1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(107,203,119,0.1)', border: '1px solid rgba(107,203,119,0.25)', borderRadius: 7, color: '#6bcb77', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>+ADD</button>
+                        <button disabled={busy} onClick={() => adjustWallet(-1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.07)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 7, color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>-TAKE</button>
+                    </div>
+                </div>
+                <div style={S.card}>
+                    <div style={S.cardTitle}>MERIT</div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#c5a059', fontWeight: 700, marginBottom: 10 }}>{user.score}</div>
+                    <input style={{ ...inp, marginBottom: 8, padding: '8px 10px' }} value={meritAmt} onChange={e => setMeritAmt(e.target.value)} placeholder="50" />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        <button disabled={busy} onClick={() => adjustMerit(1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 7, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>+ADD</button>
+                        <button disabled={busy} onClick={() => adjustMerit(-1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.07)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 7, color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>-TAKE</button>
+                    </div>
                 </div>
             </div>
 
             {/* Rank */}
             <div style={S.card}>
-                <div style={S.cardTitle}>RANK - {user.rank}</div>
+                <div style={S.cardTitle}>RANK — {user.rank}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                     <select value={newRank} onChange={e => setNewRank(e.target.value)}
                         style={{ flex: 1, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', padding: '11px 10px', outline: 'none', cursor: 'pointer' }}>
                         {RANKS.map(r => <option key={r} value={r} style={{ background: '#111', color: '#c5a059' }}>{r}</option>)}
                     </select>
                     <button disabled={busy} onClick={changeRank}
-                        style={{ padding: '11px 16px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
+                        style={{ padding: '11px 14px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
                         SET
                     </button>
                     <button disabled={busy} onClick={promoteNext}
-                        style={{ padding: '11px 12px', background: 'linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0, fontWeight: 700 }}>
-                        ↑ PROMOTE
+                        style={{ padding: '11px 10px', background: 'linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0, fontWeight: 700 }}>
+                        ↑ UP
                     </button>
                 </div>
+            </div>
+
+            {/* Routine */}
+            <div style={S.card}>
+                <div style={S.cardTitle}>ASSIGNED ROUTINE</div>
+                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#444', marginBottom: 8, letterSpacing: '1px' }}>
+                    {user.parameters?.routine && user.parameters.routine !== 'None' ? 'CURRENT: ' + user.parameters.routine.slice(0, 60) + (user.parameters.routine.length > 60 ? '...' : '') : 'NO ROUTINE ASSIGNED'}
+                </div>
+                <textarea value={routineText} onChange={e => setRoutineText(e.target.value)} placeholder="Describe the daily routine for this subject..." rows={3}
+                    style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
+                <button disabled={savingRoutine} onClick={saveRoutine}
+                    style={{ width: '100%', padding: '11px', background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 8, color: '#a78bfa', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '1.5px', cursor: savingRoutine ? 'default' : 'pointer', opacity: savingRoutine ? 0.5 : 1 }}>
+                    {savingRoutine ? 'SAVING...' : 'SAVE ROUTINE'}
+                </button>
             </div>
 
             {/* Issue task */}
             <div style={S.card}>
                 <div style={S.cardTitle}>ISSUE TASK</div>
-                <textarea autoFocus value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
+                <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
                     style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
                 <button disabled={busy || !taskText.trim()} onClick={issueTask}
                     style={{ width: '100%', padding: '12px', background: taskText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: taskText.trim() ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', fontWeight: 700, letterSpacing: '1.5px', cursor: taskText.trim() && !busy ? 'pointer' : 'default', opacity: busy ? 0.4 : 1 }}>

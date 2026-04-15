@@ -1721,6 +1721,7 @@ let _presenceCh: any = null;
 let _tasksChannel: any = null;
 let _statsChannel: any = null;
 let _notifyChannel: any = null;
+let _queenStatusChannel: any = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
@@ -1772,6 +1773,7 @@ export function cleanupChatSystem() {
     if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
     if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); _statsChannel = null; }
     if (_notifyChannel) { getChatSupabase().removeChannel(_notifyChannel); _notifyChannel = null; }
+    if (_queenStatusChannel) { getChatSupabase().removeChannel(_queenStatusChannel); _queenStatusChannel = null; }
     if (_presenceCh) { _presenceCh.unsubscribe(); _presenceCh = null; }
     chatSubscribed = false;
 }
@@ -2019,7 +2021,22 @@ export async function initChatSystem() {
         .on('broadcast', { event: 'routine_rejected' }, () => _showRoutineToast(false))
         .subscribe();
 
-    // 6. Push notifications - use profile UUID (not email) as external user ID
+    // 6. Queen online status — Realtime subscription on profiles table
+    // Fires whenever queen's row updates (last_active, etc.) so member sees live status
+    if (_queenStatusChannel) getChatSupabase().removeChannel(_queenStatusChannel);
+    _queenStatusChannel = getChatSupabase()
+        .channel('queen-status-live')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => {
+            const row = payload.new;
+            if (!row) return;
+            const name = (row.name || row.member_id || '').toUpperCase();
+            if (name.includes('QUEEN') || name.includes('KARIN')) {
+                _updateQueenStatus(row.last_active || null);
+            }
+        })
+        .subscribe();
+
+    // 7. Push notifications - use profile UUID (not email) as external user ID
     const profileId = getState().id || email;
     initOneSignal(profileId!);
 }
