@@ -11,11 +11,12 @@ export async function POST(req: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        const { data: profile, error: fetchErr } = await admin
-            .from('profiles')
-            .select('ID, parameters')
-            .ilike('member_id', memberId)
-            .maybeSingle();
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        const profileQuery = admin.from('profiles').select('ID, parameters');
+        const { data: profile, error: fetchErr } = await (isUuid
+            ? profileQuery.eq('ID', memberId)
+            : profileQuery.ilike('member_id', memberId)
+        ).maybeSingle();
 
         if (fetchErr || !profile) {
             return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
