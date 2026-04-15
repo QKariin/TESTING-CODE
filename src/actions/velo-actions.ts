@@ -87,30 +87,39 @@ function mapUserForDashboard(p: any, t: any) {
 // --- 2.b GET ADMIN DASHBOARD DATA ---
 export async function getAdminDashboardData() {
     try {
-        const { data: profiles, error: pError } = await getAdmin()
-            .from('profiles')
-            .select('*')
-            .order('name');
-
-        const { data: dailyTasks, error: tError } = await getAdmin()
-            .from('daily_tasks')
-            .select('*');
-
-        const { data: globalSettings, error: sError } = await getAdmin()
-            .from('system_rules')
-            .select('*');
-
-        const { data: tasksData } = await getAdmin()
-            .from('tasks')
-            .select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"');
+        const [
+            { data: profiles, error: pError },
+            { data: dailyTasks },
+            { data: globalSettings },
+            { data: tasksData },
+            { data: authData },
+        ] = await Promise.all([
+            getAdmin().from('profiles').select('*').order('name'),
+            getAdmin().from('daily_tasks').select('*'),
+            getAdmin().from('system_rules').select('*'),
+            getAdmin().from('tasks').select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"'),
+            getAdmin().auth.admin.listUsers({ perPage: 1000 }),
+        ]);
 
         if (pError) throw pError;
 
-        // Map tasks data to profiles - match by UUID (correct) with email fallback (legacy rows)
+        // Build email → auth UUID map to handle legacy users where profiles.id ≠ auth.users.id
+        const authUuidByEmail: Record<string, string> = {};
+        for (const au of (authData?.users || [])) {
+            if (au.email) authUuidByEmail[au.email.toLowerCase()] = au.id;
+        }
+
+        // Map tasks data to profiles - 3 strategies:
+        // 1. UUID match: tasks.member_id === profiles.id (most users after migration)
+        // 2. Email match: tasks.member_id === profiles.member_id (legacy rows not yet migrated)
+        // 3. Auth UUID match: tasks.member_id === auth.users.id for legacy users where profiles.id ≠ auth.users.id
         const finalProfiles = (profiles || []).map((p: any) => {
+            const profileEmail = (p.member_id || '').toLowerCase();
+            const authUuid = authUuidByEmail[profileEmail] || '';
             const t = (tasksData || []).find((x: any) =>
                 x.member_id === p.id ||
-                (x.member_id || '').toLowerCase() === (p.member_id || '').toLowerCase()
+                (x.member_id || '').toLowerCase() === profileEmail ||
+                (authUuid && x.member_id === authUuid)
             );
             return mapUserForDashboard(p, t);
         });
@@ -784,22 +793,30 @@ function fixUrl(url: string) {
 // --- 1. GET ALL USERS & TASKS ---
 export async function getMasterData() {
     try {
-        const { data: profiles, error: pError } = await getAdmin()
-            .from('profiles')
-            .select('*')
-            .limit(1000);
-
-        const { data: tasks, error: tError } = await getAdmin()
-            .from('tasks')
-            .select('*')
-            .limit(1000);
+        const [
+            { data: profiles, error: pError },
+            { data: tasks },
+            { data: authData },
+        ] = await Promise.all([
+            getAdmin().from('profiles').select('*').limit(1000),
+            getAdmin().from('tasks').select('*').limit(1000),
+            getAdmin().auth.admin.listUsers({ perPage: 1000 }),
+        ]);
 
         if (pError) throw pError;
 
+        const authUuidByEmail: Record<string, string> = {};
+        for (const au of (authData?.users || [])) {
+            if (au.email) authUuidByEmail[au.email.toLowerCase()] = au.id;
+        }
+
         return (profiles || []).map((item: any) => {
+            const profileEmail = (item.member_id || '').toLowerCase();
+            const authUuid = authUuidByEmail[profileEmail] || '';
             const uTasks = (tasks || []).find((t: any) =>
                 t.member_id === item.id ||
-                (t.member_id || '').toLowerCase() === (item.member_id || '').toLowerCase()
+                (t.member_id || '').toLowerCase() === profileEmail ||
+                (authUuid && t.member_id === authUuid)
             );
             return mapUserForDashboard(item, uTasks);
         });
