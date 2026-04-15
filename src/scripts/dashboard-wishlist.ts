@@ -54,7 +54,7 @@ function renderWishlistPanel() {
             </div>
             <!-- Info area -->
             <div style="padding:10px 10px 8px;">
-                <div style="font-family:'Cinzel';font-size:0.72rem;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">${title}</div>
+                <div style="font-family:'Orbitron';font-size:0.72rem;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">${title}</div>
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                     <span style="font-family:'Orbitron';font-size:0.55rem;color:#c5a059;font-weight:700;">${price.toLocaleString()} coins</span>
                     <span style="font-family:'Orbitron';font-size:0.45rem;padding:2px 6px;border-radius:10px;background:${typeBg};color:${typeColor};">${isCrowdfund ? 'CROWDFUND' : 'GIFT'}</span>
@@ -85,7 +85,7 @@ function renderWishlistPanel() {
         <div id="wishlistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
             <div style="background:#0d0d1a;border:1px solid rgba(197,160,89,0.4);border-radius:12px;padding:28px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                    <div id="wishlistModalTitle" style="font-family:'Cinzel';font-size:1rem;color:#c5a059;letter-spacing:2px;">ADD ITEM</div>
+                    <div id="wishlistModalTitle" style="font-family:'Orbitron';font-size:1rem;color:#c5a059;letter-spacing:2px;">ADD ITEM</div>
                     <button onclick="window.closeWishlistModal()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;">✕</button>
                 </div>
 
@@ -101,7 +101,7 @@ function renderWishlistPanel() {
 
                 <div style="margin-bottom:12px;">
                     <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">NAME *</div>
-                    <input type="text" id="wishlistFieldTitle" placeholder="Item name..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#fff;font-family:'Cinzel';font-size:0.8rem;outline:none;">
+                    <input type="text" id="wishlistFieldTitle" placeholder="Item name..." style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.2);border-radius:4px;color:#fff;font-family:'Orbitron';font-size:0.8rem;outline:none;">
                 </div>
 
                 <div id="priceRow" style="margin-bottom:12px;">

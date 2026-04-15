@@ -59,7 +59,7 @@ export async function renderChat(messages: any[]) {
             const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
             <div style="display:flex; flex-direction:column; background:rgba(255,255,255,0.02); border-left:2px solid #c5a059; padding:10px 15px; margin-bottom:10px;">
-                <span style="font-family:'Cinzel'; color:#c5a059; font-size:0.85rem;">${DOMPurify.sanitize(m.content || m.message)}</span>
+                <span style="font-family:'Orbitron'; color:#c5a059; font-size:0.85rem;">${DOMPurify.sanitize(m.content || m.message)}</span>
                 <span style="font-family:'Orbitron'; color:rgba(255,255,255,0.3); font-size:0.6rem; margin-top:5px;">${timeStr}</span>
             </div>`;
         });
@@ -148,7 +148,7 @@ export async function renderChat(messages: any[]) {
                     const photoBlock = d.photo
                         ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
                         : '';
-                    const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
+                    const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:6px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
                     contentHtml = `
                     <div style="width:min(60%,480px);min-width:240px;margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
                         <div style="position:relative;width:100%;height:150px;background:#0a0703;overflow:hidden;">
@@ -159,7 +159,7 @@ export async function renderChat(messages: any[]) {
                             </div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${DOMPurify.sanitize(d.name || '')}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${DOMPurify.sanitize(d.name || '')}</div>
                             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
                                 <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
                                 <span style="color:rgba(197,160,89,0.7);font-size:0.9rem;">→</span>
@@ -223,7 +223,7 @@ export async function renderChat(messages: any[]) {
                         </div>
                         <div style="padding:10px 13px 13px;">
                             <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">✦ Gift Sent</div>
-                            <div style="font-family:'Cinzel', serif; font-size:0.75rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3;">${item.name || item.title || ''}</div>
+                            <div style="font-family:'Orbitron', sans-serif; font-size:0.75rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3;">${item.name || item.title || ''}</div>
                             ${item.sender ? `<div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(255,255,255,0.35); margin-top:5px; letter-spacing:1px;">by ${item.sender}</div>` : ''}
                         </div>
                     </div>`;

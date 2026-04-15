@@ -38,7 +38,7 @@ function _renderActivityFeed() {
         <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);">
             <div style="width:32px;height:32px;border-radius:50%;background:${themeAc(0.08)};border:1px solid ${themeAc(0.15)};display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;">${a.icon}</div>
             <div style="flex:1;min-width:0;">
-                <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.text}</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.text}</div>
             </div>
             <div style="font-family:Orbitron;font-size:0.4rem;color:rgba(255,255,255,0.25);letter-spacing:1px;flex-shrink:0;">${_timeAgo(a.time)}</div>
         </div>

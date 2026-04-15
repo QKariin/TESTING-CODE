@@ -280,7 +280,7 @@ function renderToHtml(m: any) {
                             </div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${purifier.sanitize(d.name||'')}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${purifier.sanitize(d.name||'')}</div>
                             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
                                 <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(var(--gold-rgb),0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
                                 <span style="color:rgba(var(--gold-rgb),0.7);font-size:0.9rem;">→</span>

@@ -177,19 +177,24 @@ export async function loadExchequerLog() {
                             <div style="font-family:Orbitron,sans-serif;font-size:1rem;font-weight:700;color:rgba(var(--gold-rgb),0.9);">€${Number(tx.amount).toFixed(2)}</div>
                         </div>
                         <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.8);letter-spacing:1px;">${tx.name}</div>
-                        ${tx.reason ? `<div style="font-family:Cinzel,serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.4;">"${tx.reason}"</div>` : ''}
+                        ${tx.reason ? `<div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.4;">"${tx.reason}"</div>` : ''}
                         <div class="exchequer-row-time">${timeStr}</div>
                     </div>
                 `;
             }
 
             return `
-                <div class="exchequer-row">
-                    <div class="exchequer-row-left">
-                        <div class="exchequer-row-name">${tx.name}</div>
-                        <div class="exchequer-row-time">${timeStr}</div>
+                <div class="exchequer-row" style="background:rgba(0,180,255,0.04);border:1px solid rgba(0,180,255,0.2);border-radius:8px;padding:12px 14px;flex-direction:column;align-items:flex-start;gap:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <i class="fas fa-coins" style="font-size:0.75rem;color:rgba(0,180,255,0.7);"></i>
+                            <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(0,180,255,0.7);letter-spacing:3px;">COIN PURCHASE</div>
+                        </div>
+                        <div class="exchequer-row-coins" style="color:rgba(0,200,255,0.9);">+${tx.coins.toLocaleString()}</div>
                     </div>
-                    <div class="exchequer-row-coins">+${tx.coins.toLocaleString()}</div>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.8);letter-spacing:1px;">${tx.name}</div>
+                    ${tx.amount ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);">€${Number(tx.amount).toFixed(2)}</div>` : ''}
+                    <div class="exchequer-row-time">${timeStr}</div>
                 </div>
             `;
         }).join('');
@@ -504,7 +509,7 @@ export async function loadQueenPostsDashboard() {
         const data = await res.json();
 
         if (!data.success || data.posts.length === 0) {
-            container.innerHTML = '<div style="color:#444;font-family:Cinzel;font-size:0.8rem;padding:20px;text-align:center;">No posts yet. Be the first to speak.</div>';
+            container.innerHTML = '<div style="color:#444;font-family:Orbitron;font-size:0.8rem;padding:20px;text-align:center;">No posts yet. Be the first to speak.</div>';
             return;
         }
 
@@ -512,7 +517,7 @@ export async function loadQueenPostsDashboard() {
             <div style="border:1px solid #222;border-radius:8px;padding:20px;background:#0a0a0a;display:flex;flex-direction:column;gap:10px;position:relative;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="flex:1;min-width:0;">
-                        ${p.title ? `<div style="font-family:Cinzel;font-size:1rem;color:var(--gold);letter-spacing:2px;margin-bottom:5px;">${p.title}</div>` : ''}
+                        ${p.title ? `<div style="font-family:Orbitron;font-size:1rem;color:var(--gold);letter-spacing:2px;margin-bottom:5px;">${p.title}</div>` : ''}
                         ${p.content ? `<div style="font-family:Rajdhani;font-size:0.9rem;color:#ccc;line-height:1.6;">${p.content}</div>` : ''}
                     </div>
                     <button onclick="window.deleteQueenPost('${p.id}')" style="background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Orbitron;font-size:0.6rem;flex-shrink:0;margin-left:15px;">DEL</button>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Orbitron:wght@400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
 
 /* Dashboard CSS - Complete Styles */
 html,
@@ -9,7 +9,7 @@ body {
     width: 100vw !important;
     height: 100vh !important;
     background: var(--bg-deep) !important;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     color: var(--text-main);
     overflow: hidden;
     position: relative !important;
@@ -197,7 +197,7 @@ body {
     letter-spacing: 3px;
     color: #444;
     font-size: 0.65rem;
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     text-transform: uppercase;
     flex-shrink: 0;
 }
@@ -769,7 +769,7 @@ body {
 }
 
 .pd-prog-txt {
-    font-family: 'Share Tech Mono';
+    font-family: 'Orbitron';
     font-size: 0.7rem;
     color: var(--yellow);
     text-align: center;
@@ -804,7 +804,7 @@ body {
     padding: 12px;
     background: #111;
     border-bottom: 1px solid #333;
-    font-family: 'Share Tech Mono';
+    font-family: 'Orbitron';
     color: #888;
     font-size: 0.8rem;
     display: flex;
@@ -830,22 +830,21 @@ body {
 
 .ops-monitor-grid {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 16px;
     padding: 10px;
-    overflow-x: auto;
 }
 
 .ops-card {
     position: relative;
-    width: 320px;
-    height: 320px;
+    width: 100%;
+    height: 180px;
     background: rgba(0, 0, 0, 0.8);
     border: 1px solid #333;
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
     transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
 }
 
 /* TASK card — gold accent */
@@ -1075,7 +1074,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-family: 'Share Tech Mono';
+    font-family: 'Orbitron';
     font-size: 0.8rem;
 }
 
@@ -2137,7 +2136,7 @@ body {
 }
 
 .pend-txt {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.8rem;
     color: #eee;
     white-space: nowrap;
@@ -2254,7 +2253,7 @@ body {
 
 /* 2. THE TEXT: Micro Serif (2-Line Clamp) */
 .q-txt-line {
-    font-family: 'Georgia', 'Times New Roman', serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.65rem !important;
     /* MICRO FONT */
     line-height: 1.2 !important;
@@ -2610,7 +2609,7 @@ body {
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: 4px;
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     text-transform: uppercase;
 }
 
@@ -3003,7 +3002,7 @@ body {
 
 /* Global Typography Override */
 * {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
 }
 
 h1,
@@ -3012,7 +3011,7 @@ h3,
 .v-title,
 .vh-title,
 .sb-dash-btn {
-    font-family: 'Orbitron', 'Inter', sans-serif;
+    font-family: 'Orbitron', sans-serif;
 }
 
 /* Kneeling Counter Card */
@@ -3409,7 +3408,7 @@ h3,
 }
 
 .aa-slot-label {
-    font-family: 'Cinzel';
+    font-family: 'Orbitron';
     font-size: 1.5rem;
     color: rgba(255, 255, 255, 0.1);
     pointer-events: none;
@@ -3485,7 +3484,7 @@ h3,
 }
 
 .node-count {
-    font-family: 'Share Tech Mono';
+    font-family: 'Orbitron';
     font-size: 1.2rem;
     color: #fff;
     margin-top: 5px;
@@ -3657,7 +3656,7 @@ h3,
 }
 
 #viewUser .cp-head {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
     color: #c5a059;
     letter-spacing: 5px;
@@ -3695,14 +3694,14 @@ h3,
 }
 
 #viewUser .at-label {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.9rem;
     color: #c5a059;
     letter-spacing: 4px;
 }
 
 #viewUser .at-status-text {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 2rem;
     color: #fff;
     margin: 15px 0;
@@ -3726,7 +3725,7 @@ h3,
 }
 
 #viewUser .ap-tab {
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-size: 0.8rem !important;
     color: #888 !important;
     letter-spacing: 3px !important;
@@ -3755,7 +3754,7 @@ h3,
     background: url('/assets/throne_judgment.png') no-repeat center center fixed !important;
     background-size: cover !important;
     z-index: 100 !important;
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
 }
 
 #viewUser .split {
@@ -3806,7 +3805,7 @@ h3,
 }
 
 #viewUser .cp-head {
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-size: 1.1rem !important;
     color: #c5a059 !important;
     letter-spacing: 12px !important;
@@ -3828,7 +3827,7 @@ h3,
 }
 
 #viewUser .identity-name {
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-weight: 700 !important;
     font-size: 1.6rem !important;
     letter-spacing: 3px !important;
@@ -3838,7 +3837,7 @@ h3,
 
 /* Status Refinement: Reduced Size and Improved Typography */
 #viewUser .at-status-text {
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-size: 1.2rem !important;
     color: #fff !important;
     margin: 12px 0 !important;
@@ -3848,7 +3847,7 @@ h3,
 }
 
 #viewUser .at-label {
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-size: 0.6rem !important;
     color: rgba(197, 160, 89, 0.6) !important;
     letter-spacing: 4px !important;
@@ -3890,7 +3889,7 @@ h3,
 }
 
 #viewUser .ap-tab {
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-size: 0.7rem !important;
     color: #555 !important;
     background: transparent !important;
@@ -3950,7 +3949,7 @@ h3,
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    font-family: 'Cinzel', serif !important;
+    font-family: 'Orbitron', sans-serif !important;
     font-size: 0.75rem !important;
     color: #c5a059 !important;
     letter-spacing: 3px !important;
@@ -4104,7 +4103,7 @@ h3,
 }
 
 .tcm-title {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.85rem;
     color: #c5a059;
     letter-spacing: 2px;
@@ -4175,7 +4174,7 @@ h3,
 }
 
 .gdh-title {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
     color: #fff;
     letter-spacing: 3px;
@@ -4488,7 +4487,7 @@ h3,
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(197, 160, 89, 0.3);
     color: #fff;
-    font-family: 'Cinzel';
+    font-family: 'Orbitron';
     font-size: 0.9rem;
     letter-spacing: 2px;
     padding: 20px;
@@ -4591,7 +4590,7 @@ h3,
 }
 
 .at-text {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.05rem;
     color: #c5a059 !important;
     text-shadow: 0 0 12px rgba(197, 160, 89, 0.35);
@@ -4664,7 +4663,7 @@ h3,
     padding: 12px 18px;
     background: rgba(197,160,89,0.04);
     border-bottom: 1px solid rgba(197,160,89,0.2);
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.75rem;
     color: #c5a059;
     letter-spacing: 2px;
@@ -4698,7 +4697,7 @@ h3,
     border-radius: 0 6px 6px 0;
 }
 .dash-syslog-text {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     color: #c5a059;
     font-size: 0.82rem;
     line-height: 1.5;
@@ -4759,7 +4758,7 @@ h3,
     background: #000;
     box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
     color: #fff;
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.95rem;
     line-height: 1.55;
     letter-spacing: 0.2px;
@@ -4773,7 +4772,7 @@ h3,
 #adminChatBox .cb-slave {
     background: #1c1c1e;
     color: #fff;
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.95rem;
     line-height: 1.55;
     letter-spacing: 0.2px;
@@ -4853,7 +4852,7 @@ h3,
     margin-bottom: 4px;
 }
 #adminChatBox .chat-gift-title {
-    font-family: 'Cinzel', serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.75rem;
     color: #fff;
     font-weight: 700;
@@ -4891,12 +4890,12 @@ h3,
 .exchequer-row-time {
     font-size: 0.65rem;
     color: rgba(255,255,255,0.3);
-    font-family: 'Orbitron', monospace;
+    font-family: 'Orbitron', sans-serif;
     letter-spacing: 0.5px;
 }
 
 .exchequer-row-coins {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Orbitron', sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
     color: #c5a059;

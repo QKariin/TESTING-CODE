@@ -158,7 +158,7 @@ async function _loadSidePanelsAndSpenders() {
                         <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
                     </div>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-family:'Cinzel';font-size:0.6rem;color:rgba(255,255,255,${i === 0 ? '1' : '0.65'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
+                        <div style="font-family:'Orbitron';font-size:0.6rem;color:rgba(255,255,255,${i === 0 ? '1' : '0.65'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
                         <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.45);letter-spacing:1px;margin-top:1px;">${e.hierarchy}</div>
                     </div>
                     <div style="font-family:'Orbitron';font-size:0.58rem;color:${i === 0 ? '#c5a059' : 'rgba(255,255,255,0.35)'};font-weight:700;flex-shrink:0;">${(e.amount || 0).toLocaleString()}</div>
@@ -215,7 +215,7 @@ export async function loadLeaderboardPreview(period: 'today' | 'alltime' | 'week
                     <div style="width:${avatarSizes[i]};height:${avatarSizes[i]};border-radius:50%;overflow:hidden;border:2px solid ${MEDAL_COLORS[i]};box-shadow:0 0 ${isFirst ? '14px' : '8px'} ${MEDAL_COLORS[i]}55;margin-bottom:5px;flex-shrink:0;">
                         <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='${DEFAULT_AVATAR}'">
                     </div>
-                    <div style="font-family:'Cinzel';font-size:${isFirst ? '0.58rem' : '0.5rem'};color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding:0 2px;font-weight:${isFirst ? 700 : 400};line-height:1.2;">${e.name}</div>
+                    <div style="font-family:'Orbitron';font-size:${isFirst ? '0.58rem' : '0.5rem'};color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding:0 2px;font-weight:${isFirst ? 700 : 400};line-height:1.2;">${e.name}</div>
                     <div style="font-family:'Orbitron';font-size:0.32rem;color:${MEDAL_COLORS[i]};margin-top:1px;letter-spacing:0.5px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;padding:0 2px;">${e.hierarchy}</div>
                     <div style="font-family:'Orbitron';font-size:${isFirst ? '0.72rem' : '0.58rem'};color:${MEDAL_COLORS[i]};margin-top:3px;font-weight:700;">${(e.score || 0).toLocaleString()}</div>
                     <div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-bottom:5px;">pts</div>
@@ -238,7 +238,7 @@ export async function loadLeaderboardPreview(period: 'today' | 'alltime' | 'week
                     <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
                 </div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-family:'Cinzel';font-size:0.55rem;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">${e.name}</div>
+                    <div style="font-family:'Orbitron';font-size:0.55rem;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;">${e.name}</div>
                     <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(197,160,89,0.4);letter-spacing:0.5px;">${e.hierarchy}</div>
                 </div>
                 <div style="font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.4);font-weight:700;flex-shrink:0;">${(e.score || 0).toLocaleString()}</div>
@@ -270,7 +270,7 @@ function _renderMiniPanel(elId: string, entries: any[], valueLabel: (e: any) => 
             <div style="width:20px;height:20px;border-radius:50%;overflow:hidden;flex-shrink:0;border:1px solid ${i === 0 ? accentColor : 'rgba(255,255,255,0.08)'};">
                 <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
             </div>
-            <div style="font-family:'Cinzel';font-size:0.52rem;color:rgba(255,255,255,${i === 0 ? '0.9' : '0.55'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;font-weight:${i === 0 ? '700' : '400'};">${e.name}</div>
+            <div style="font-family:'Orbitron';font-size:0.52rem;color:rgba(255,255,255,${i === 0 ? '0.9' : '0.55'});white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;font-weight:${i === 0 ? '700' : '400'};">${e.name}</div>
             <div style="font-family:'Orbitron';font-size:0.42rem;color:${i === 0 ? accentColor : 'rgba(255,255,255,0.35)'};font-weight:700;flex-shrink:0;">${valueLabel(e)}</div>
         </div>`;
     }).join('');
@@ -294,7 +294,7 @@ async function _loadTalkPreview() {
             const initial = name[0].toUpperCase();
             return `
             <div style="display:flex;align-items:flex-start;gap:7px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.03);">
-                <div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.22);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.5rem;color:#c5a059;flex-shrink:0;">${initial}</div>
+                <div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.22);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.5rem;color:#c5a059;flex-shrink:0;">${initial}</div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:1px;margin-bottom:2px;">${name}</div>
                     <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${
@@ -335,12 +335,12 @@ function _buildUpdateCardPreview(u: any): string {
                 ${coverSrc
                     ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
                     : ''}
-                <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2.5rem;color:rgba(197,160,89,0.4);">${initial}</div>
+                <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:2.5rem;color:rgba(197,160,89,0.4);">${initial}</div>
                 <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.85) 100%);"></div>
                 <div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);letter-spacing:2px;">✦ GIFT SENT</div>
             </div>
             <div style="padding:10px 12px 10px;">
-                <div style="font-family:'Cinzel';font-size:0.72rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
+                <div style="font-family:'Orbitron';font-size:0.72rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
                     <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>
                     <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);">${time}</span>
@@ -357,11 +357,11 @@ function _buildUpdateCardPreview(u: any): string {
         return `<div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;">
             <div style="width:36px;height:36px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
                 ${avHtml}
-                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.6rem;color:#a78bfa;">${initial}</div>
+                <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.6rem;color:#a78bfa;">${initial}</div>
             </div>
             <div style="flex:1;min-width:0;">
                 <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">⚡ MERIT EARNED</div>
-                <div style="font-family:'Cinzel';font-size:0.7rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
+                <div style="font-family:'Orbitron';font-size:0.7rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
                 <div style="font-family:'Orbitron';font-size:0.7rem;color:#a78bfa;font-weight:700;">+${u.points} MERIT</div>
             </div>
             <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
@@ -374,7 +374,7 @@ function _buildUpdateCardPreview(u: any): string {
         onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
         <img src="${getOptimizedUrl(u.media_url, 300)}" style="width:100%;height:90px;object-fit:cover;display:block;" loading="lazy">
         <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,0.88));opacity:0;transition:opacity 0.15s;">
-            <div style="font-family:'Cinzel';font-size:0.55rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);">${time}</span></div>
+            <div style="font-family:'Orbitron';font-size:0.55rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.3);">${time}</span></div>
         </div>
     </div>`;
 }
@@ -396,7 +396,7 @@ async function _loadQueenPreview() {
                     <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;">
                 </div>
                 <div>
-                    <div style="font-family:'Cinzel';font-size:0.8rem;color:#c5a059;font-weight:700;letter-spacing:2px;">Queen Karin</div>
+                    <div style="font-family:'Orbitron';font-size:0.8rem;color:#c5a059;font-weight:700;letter-spacing:2px;">Queen Karin</div>
                     <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-top:2px;">SUPREME AUTHORITY</div>
                 </div>
                 <div style="display:flex;gap:12px;margin-top:4px;">
@@ -492,7 +492,7 @@ function _renderFullLeaderboard(entries: any[], period: string) {
                     <div style="width:${i === 0 ? '60px' : '48px'};height:${i === 0 ? '60px' : '48px'};border-radius:50%;overflow:hidden;border:2.5px solid ${MEDAL_COLORS[i]};box-shadow:0 0 16px ${MEDAL_COLORS[i]}55;margin-bottom:8px;">
                         <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='${DEFAULT_AVATAR}'">
                     </div>
-                    <div style="font-family:'Cinzel';font-size:${i === 0 ? '0.78rem' : '0.65rem'};color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
+                    <div style="font-family:'Orbitron';font-size:${i === 0 ? '0.78rem' : '0.65rem'};color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
                     <div style="font-family:'Orbitron';font-size:0.4rem;color:${MEDAL_COLORS[i]};margin-top:2px;letter-spacing:1px;">${e.hierarchy}</div>
                     <div style="font-family:'Orbitron';font-size:${i === 0 ? '1.1rem' : '0.85rem'};color:${MEDAL_COLORS[i]};margin-top:6px;font-weight:700;">${(e.score || 0).toLocaleString()}</div>
                     <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">pts</div>
@@ -514,7 +514,7 @@ function _renderFullLeaderboard(entries: any[], period: string) {
                 <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
             </div>
             <div style="flex:1;min-width:0;">
-                <div style="font-family:'Cinzel';font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
+                <div style="font-family:'Orbitron';font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
                 <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.5);margin-top:1px;letter-spacing:1px;">${e.hierarchy}</div>
             </div>
             <div style="text-align:right;">
@@ -627,7 +627,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
             const initials = (d.name || 'S')[0].toUpperCase();
             const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#c5a059;">${initials}</div></div>`;
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
                 <div style="width:60%;min-width:240px;max-width:480px;">
                     <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
@@ -637,7 +637,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                             <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name||''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${d.name||''}</div>
                             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
                                 <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
                                 <span style="color:rgba(197,160,89,0.7);">→</span>
@@ -658,7 +658,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
             const initials = (d.name || 'S')[0].toUpperCase();
             const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(74,222,128,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(74,222,128,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#4ade80;">${initials}</div></div>`;
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(74,222,128,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(74,222,128,0.4);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#4ade80;">${initials}</div></div>`;
             const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
                 <div style="width:60%;min-width:240px;max-width:480px;">
@@ -666,13 +666,13 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         <div style="position:relative;width:100%;height:140px;background:#030a04;overflow:hidden;${bgImg}">
                             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);"></div>
                             <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
-                                <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Cinzel';font-size:1.2rem;color:#4ade80;">${initials}</div></div>
+                                <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Orbitron';font-size:1.2rem;color:#4ade80;">${initials}</div></div>
                             </div>
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#060e08 100%);"></div>
                             <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(3,10,4,0.9);border:1px solid rgba(74,222,128,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:3px;">⚔ JOINED CHALLENGE</span></div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${d.name||''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${d.name||''}</div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:10px;">${(d.challengeName||'').toUpperCase()}</div>
                             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:4px 14px;">
                                 <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
@@ -699,13 +699,13 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         <div style="position:relative;width:100%;height:140px;background:#0a0303;overflow:hidden;${bgImg}">
                             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
                             <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                                <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Cinzel';font-size:1.2rem;color:#e03030;">${initials}</div></div>
+                                <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Orbitron';font-size:1.2rem;color:#e03030;">${initials}</div></div>
                             </div>
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0606 100%);"></div>
                             <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(224,48,48,0.45);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#e03030;letter-spacing:3px;">✕ ELIMINATED</span></div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${d.name||''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${d.name||''}</div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(224,48,48,0.7);letter-spacing:1px;margin-bottom:10px;">${(d.challengeName||'').toUpperCase()}</div>
                             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:4px 14px;">
                                 <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
@@ -729,7 +729,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:240px;object-fit:contain;" />
                     </div>
                     <div style="padding:10px 16px 14px;text-align:center;border-top:1px solid rgba(197,160,89,0.12);">
-                        <div style="font-family:'Cinzel',serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${name}</div>
+                        <div style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${name}</div>
                     </div>
                 </div>
                 <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
@@ -747,7 +747,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         <img src="${d.mediaUrl}" style="width:100%;max-height:240px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'">
                         <div style="padding:10px 14px 12px;">
                             <div style="display:flex;align-items:center;justify-content:space-between;">
-                                <span style="font-family:'Cinzel';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span>
+                                <span style="font-family:'Orbitron';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span>
                                 <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
                             </div>
                             ${d.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>` : ''}
@@ -769,12 +769,12 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
                         <div style="width:100%;height:130px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
                             ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:2.5rem;color:rgba(197,160,89,0.4);">${tInitial}</div>
+                            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:2.5rem;color:rgba(197,160,89,0.4);">${tInitial}</div>
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
                             <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
                         </div>
                         <div style="padding:10px 14px 12px;">
-                            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div>
+                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
                                 <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span>
                                 <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
@@ -804,11 +804,11 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     <div style="background:${accentBg};border:1px solid ${accentBorder};border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
                         <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px solid ${accentBorder};overflow:hidden;position:relative;flex-shrink:0;">
                             ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:${accentColor};">${cInitial}</div>
+                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:${accentColor};">${cInitial}</div>
                         </div>
                         <div style="flex:1;min-width:0;">
                             <div style="font-family:'Orbitron';font-size:0.42rem;color:${accentColor};letter-spacing:1px;margin-bottom:3px;">${label}</div>
-                            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
+                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
                             <div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px;">${subLabel}</div>
                             ${passed && d.points ? `<div style="font-family:'Orbitron';font-size:0.72rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points} pts</div>` : ''}
                         </div>
@@ -829,11 +829,11 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
                         <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
                             ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${mInitial}</div>
+                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:#a78bfa;">${mInitial}</div>
                         </div>
                         <div style="flex:1;min-width:0;">
                             <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
-                            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
+                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
                             <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div>
                         </div>
                         <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
@@ -864,12 +864,12 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
                     <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
                         ${qAv}
-                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
                         <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                     </div>
                     ${replyBtn}
                 </div>
-                ${quoteHtml}${isGif ? '' : `<div style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
+                ${quoteHtml}${isGif ? '' : `<div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
                 ${mediaHtml}
             </div>
         </div>`;
@@ -879,7 +879,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const initial = (name[0] || 'S').toUpperCase();
     const userAv = av
         ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">`
-        : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
+        : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
     return `<div class="gl-msg-row" style="margin-bottom:8px;">
         <div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
@@ -928,8 +928,8 @@ function _renderOnlineUsers(users: any[]) {
         const imgFilter = isOnline ? '' : 'filter:grayscale(1);opacity:0.45;';
         const nameColor = isOnline ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)';
         const avHtml = u.avatar
-            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;${imgFilter}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.8rem;color:#c5a059;">${initial}</div>`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.8rem;color:${isOnline ? '#c5a059' : '#444'};">${initial}</div>`;
+            ? `<img src="${u.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;${imgFilter}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.8rem;color:#c5a059;">${initial}</div>`
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.8rem;color:${isOnline ? '#c5a059' : '#444'};">${initial}</div>`;
         return `<div title="${u.name}" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;">
             <div style="width:54px;height:54px;border-radius:50%;background:rgba(20,20,20,0.8);border:2px solid ${borderColor};overflow:hidden;position:relative;">
                 ${avHtml}
@@ -1142,12 +1142,12 @@ function _buildTributeCard(u: any): string {
             ${coverSrc
                 ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
                 : ''}
-            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:3rem;color:rgba(197,160,89,0.4);">${initial}</div>
+            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:3rem;color:rgba(197,160,89,0.4);">${initial}</div>
             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
             <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
         </div>
         <div style="padding:12px 14px 14px;">
-            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
+            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                 <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>
                 <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);">${time}</span>
@@ -1166,11 +1166,11 @@ function _buildPointsCard(u: any): string {
     <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
         <div style="width:42px;height:42px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">
             ${avHtml}
-            <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Cinzel';font-size:0.65rem;color:#a78bfa;">${initial}</div>
+            <div style="display:${u.sender_avatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:#a78bfa;">${initial}</div>
         </div>
         <div style="flex:1;min-width:0;">
             <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
-            <div style="font-family:'Cinzel';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
+            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.sender_name}</div>
             <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points} MERIT</div>
         </div>
         <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);flex-shrink:0;align-self:flex-start;">${time}</div>
@@ -1185,7 +1185,7 @@ function _buildPhotoCard(u: any): string {
          onmouseleave="this.querySelector('.uinfo').style.opacity='0'">
         <img src="${getOptimizedUrl(u.media_url, 400)}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy">
         <div class="uinfo" style="position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,0.88));opacity:0;transition:opacity 0.15s;">
-            <div style="font-family:'Cinzel';font-size:0.62rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div>
+            <div style="font-family:'Orbitron';font-size:0.62rem;color:#fff;">${u.sender_name} <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div>
             ${u.caption ? `<div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px;">${u.caption}</div>` : ''}
         </div>
     </div>`;
@@ -1252,7 +1252,7 @@ async function _loadSpendersFull() {
                         <div style="width:${i === 0 ? '60px' : '48px'};height:${i === 0 ? '60px' : '48px'};border-radius:50%;overflow:hidden;border:2.5px solid ${MEDAL_COLORS[i]};box-shadow:0 0 16px ${MEDAL_COLORS[i]}55;margin-bottom:8px;">
                             <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='${DEFAULT_AVATAR}'">
                         </div>
-                        <div style="font-family:'Cinzel';font-size:${i === 0 ? '0.78rem' : '0.65rem'};color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
+                        <div style="font-family:'Orbitron';font-size:${i === 0 ? '0.78rem' : '0.65rem'};color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-weight:${i === 0 ? 700 : 400};">${e.name}</div>
                         <div style="font-family:'Orbitron';font-size:0.4rem;color:${MEDAL_COLORS[i]};margin-top:2px;letter-spacing:1px;">${e.hierarchy}</div>
                         <div style="font-family:'Orbitron';font-size:${i === 0 ? '1.1rem' : '0.85rem'};color:${MEDAL_COLORS[i]};margin-top:6px;font-weight:700;">${(e.amount || 0).toLocaleString()}</div>
                         <div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">COINS SPENT</div>
@@ -1274,7 +1274,7 @@ async function _loadSpendersFull() {
                     <img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='${DEFAULT_AVATAR}'">
                 </div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-family:'Cinzel';font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
+                    <div style="font-family:'Orbitron';font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
                     <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(197,160,89,0.5);margin-top:1px;letter-spacing:1px;">${e.hierarchy}</div>
                 </div>
                 <div style="text-align:right;">
@@ -1307,7 +1307,7 @@ async function _loadQueenFull() {
                     <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:#c5a059;display:flex;align-items:center;justify-content:center;font-size:0.65rem;">👑</div>
                 </div>
                 <div>
-                    <div style="font-family:'Cinzel';font-size:1.5rem;color:#c5a059;font-weight:700;letter-spacing:4px;">Queen Karin</div>
+                    <div style="font-family:'Orbitron';font-size:1.5rem;color:#c5a059;font-weight:700;letter-spacing:4px;">Queen Karin</div>
                     <div style="font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:3px;margin-top:5px;">SUPREME AUTHORITY · DOMAIN RULER</div>
                 </div>
                 <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.3),transparent);"></div>
@@ -1323,7 +1323,7 @@ async function _loadQueenFull() {
                     </div>
                 </div>
                 <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.15),transparent);"></div>
-                <div style="font-family:'Cinzel';font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.7;max-width:320px;">
+                <div style="font-family:'Orbitron';font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.7;max-width:320px;">
                     "Obedience is not weakness. It is the highest form of devotion."
                 </div>
             </div>`;
@@ -1484,7 +1484,7 @@ async function _loadChallengesPreview() {
             const statsHtml = stats.map(s =>
                 `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
                     <span style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.38);">${s.label}</span>
-                    <span style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(197,160,89,0.9);font-weight:700;">${s.val}</span>
+                    <span style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:rgba(197,160,89,0.9);font-weight:700;">${s.val}</span>
                 </div>`
             ).join('');
             const imgBlock = c.image_url
@@ -1497,8 +1497,8 @@ async function _loadChallengesPreview() {
                 </div>
                 <div style="flex:1;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;min-width:0;">
                     <div>
-                        <div style="font-family:'Cinzel',serif;font-size:0.92rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:4px;">${c.name}</div>
-                        ${c.description ? `<div style="font-family:'Cinzel',serif;font-size:0.56rem;color:rgba(255,255,255,0.32);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
+                        <div style="font-family:'Orbitron',sans-serif;font-size:0.92rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:4px;">${c.name}</div>
+                        ${c.description ? `<div style="font-family:'Orbitron',sans-serif;font-size:0.56rem;color:rgba(255,255,255,0.32);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
                     </div>
                     <div>${statsHtml}</div>
                     <div style="padding:7px 0;border-radius:8px;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.45rem;font-weight:700;letter-spacing:1px;text-align:center;cursor:pointer;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</div>

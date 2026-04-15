@@ -44,20 +44,7 @@ function renderOperationsGrid() {
 
     let html = '<div class="ops-monitor-grid">';
 
-    // 1. TASK CARD (GOLD)
-    const taskBg = latestTask?.proofUrl ? `<img src="${getOptimizedUrl(latestTask.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
-    html += `
-        <div class="ops-card task" onclick="window.showQueueFiltered(false)">
-            ${taskBg}
-            <div class="ops-card-overlay">
-                <div class="ops-card-label">PENDING OPERATIONS</div>
-                <div class="ops-card-title">TASK QUEUE</div>
-                <div class="ops-counter gold">${pendingTasks.length}</div>
-            </div>
-        </div>
-    `;
-
-    // 2. ROUTINE CARD (SILVER)
+    // 1. ROUTINE CARD (SILVER) — full width, first
     const routineBg = latestRoutine?.proofUrl ? `<img src="${getOptimizedUrl(latestRoutine.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
     html += `
         <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
@@ -66,6 +53,19 @@ function renderOperationsGrid() {
                 <div class="ops-card-label">DAILY PROTOCOLS</div>
                 <div class="ops-card-title">ROUTINE QUEUE</div>
                 <div class="ops-counter silver">${pendingRoutines.length}</div>
+            </div>
+        </div>
+    `;
+
+    // 2. TASK CARD (GOLD) — full width, second
+    const taskBg = latestTask?.proofUrl ? `<img src="${getOptimizedUrl(latestTask.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
+    html += `
+        <div class="ops-card task" onclick="window.showQueueFiltered(false)">
+            ${taskBg}
+            <div class="ops-card-overlay">
+                <div class="ops-card-label">PENDING OPERATIONS</div>
+                <div class="ops-card-title">TASK QUEUE</div>
+                <div class="ops-counter gold">${pendingTasks.length}</div>
             </div>
         </div>
     `;

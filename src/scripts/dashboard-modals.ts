@@ -139,9 +139,9 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
         headerEl.innerHTML = `
             <div style="font-family:'Orbitron';font-size:0.33rem;color:rgba(180,140,60,0.4);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px;">Subject Review</div>
             <div style="display:flex;align-items:center;gap:14px;">
-                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(180,140,60,0.3);background:radial-gradient(circle at 40% 35%,rgba(180,140,60,0.12),rgba(0,0,0,0));display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1rem;color:rgba(200,165,85,0.75);flex-shrink:0;box-shadow:0 0 14px rgba(180,140,60,0.08);">${avatarInitial}</div>
+                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(180,140,60,0.3);background:radial-gradient(circle at 40% 35%,rgba(180,140,60,0.12),rgba(0,0,0,0));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1rem;color:rgba(200,165,85,0.75);flex-shrink:0;box-shadow:0 0 14px rgba(180,140,60,0.08);">${avatarInitial}</div>
                 <div>
-                    <div style="font-family:'Cinzel',serif;font-size:1.08rem;color:rgba(240,225,190,0.92);font-weight:700;letter-spacing:2px;line-height:1.2;">${memberDisplay}</div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:1.08rem;color:rgba(240,225,190,0.92);font-weight:700;letter-spacing:2px;line-height:1.2;">${memberDisplay}</div>
                     ${statusBadge ? `<div style="margin-top:5px;">${statusBadge}</div>` : ''}
                 </div>
             </div>`;
@@ -517,7 +517,7 @@ export function renderTaskGallery(tasksToRender?: any[]) {
     const u = users.find(x => x.memberId === currId);
     const breadcrumbHtml = `
         <div class="filter-breadcrumb" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; margin-bottom:15px; border-bottom:1px solid rgba(197,160,89,0.1);">
-            <div style="font-family:Cinzel; font-size:0.75rem; color:#888; letter-spacing:1px;">
+            <div style="font-family:Orbitron; font-size:0.75rem; color:#888; letter-spacing:1px;">
                 VIEWING: <span style="color:var(--gold)">${currentCategory ? currentCategory.toUpperCase() : 'ALL DIRECTIVES'}</span>
             </div>
             ${currentCategory ? `<button class="reset-btn" onclick="window.setTaskCategory(null)">RESET TO ALL</button>` : ''}
@@ -529,7 +529,7 @@ export function renderTaskGallery(tasksToRender?: any[]) {
         : tasks;
 
     if (filtered.length === 0) {
-        gridContainer.innerHTML = breadcrumbHtml + '<div style="color:#444; text-align:center; padding:40px; font-family:Cinzel; letter-spacing:1px;">NO DIRECTIVES FOUND</div>';
+        gridContainer.innerHTML = breadcrumbHtml + '<div style="color:#444; text-align:center; padding:40px; font-family:Orbitron; letter-spacing:1px;">NO DIRECTIVES FOUND</div>';
     } else {
         gridContainer.innerHTML = breadcrumbHtml + `
             <div style="display:flex; flex-direction:column; gap:12px;">
@@ -770,7 +770,7 @@ export function showEnforceOptions(taskText: string) {
     if (!container) return;
 
     container.innerHTML = `
-        <div style="font-family:Cinzel; font-size:0.8rem; color:#888; text-align:center; margin:20px 0; letter-spacing:2px;">SELECT QUEUE POSITION</div>
+        <div style="font-family:Orbitron; font-size:0.8rem; color:#888; text-align:center; margin:20px 0; letter-spacing:2px;">SELECT QUEUE POSITION</div>
         <div class="q-pos-grid">
             ${Array.from({ length: 10 }).map((_, i) => `<button class="q-pos-btn" onclick="window.enforceTask('${taskText}', ${i}); window.closeTaskDetail();">${i + 1}</button>`).join('')}
         </div>
