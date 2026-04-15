@@ -135,7 +135,17 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
-    useEffect(() => { const t = setInterval(loadData, 120000); return () => clearInterval(t); }, [loadData]);
+
+    // Realtime: reload sidebar list when a new chat arrives or a profile changes
+    useEffect(() => {
+        const supabase = createClient();
+        const ch = supabase
+            .channel('mob-dash-live')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, () => loadData())
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, () => loadData())
+            .subscribe();
+        return () => { supabase.removeChannel(ch); };
+    }, [loadData]);
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
     // Track online join times
@@ -2019,7 +2029,23 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
         } finally { setLoadingMsgs(false); }
     }, [user.memberId, adminEmail]);
 
-    useEffect(() => { fetchMessages(); const t = setInterval(fetchMessages, 30000); return () => clearInterval(t); }, [fetchMessages]);
+    useEffect(() => {
+        fetchMessages();
+        const supabase = createClient();
+        const ch = supabase
+            .channel('mob-chat-live-' + user.memberId)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, (payload: any) => {
+                const msg = payload.new;
+                if (!msg) return;
+                const msgEmail = (msg.member_id || '').toLowerCase();
+                const userEmail = (user.memberId || '').toLowerCase();
+                if (msgEmail !== userEmail) return;
+                // Append new message directly without refetching all history
+                setMessages(prev => [...prev, msg]);
+            })
+            .subscribe();
+        return () => { supabase.removeChannel(ch); };
+    }, [fetchMessages, user.memberId]);
 
     // Only scroll to bottom when message count changes (new message) or on initial load
     useLayoutEffect(() => {

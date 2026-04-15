@@ -11,28 +11,28 @@ function LockedContent() {
 
     useEffect(() => {
         const supabase = createClient();
+        let channel: any = null;
 
-        async function checkUnlock() {
+        async function init() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { router.push('/login'); return; }
 
-            try {
-                const res = await fetch('/api/silence-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId: user.email }),
-                });
-                const data = await res.json();
-                if (!data.silence) {
-                    router.push('/profile');
-                }
-            } catch {}
+            const emailLower = (user.email || '').toLowerCase();
+
+            // Subscribe to profile changes - fires instantly when admin removes silence
+            channel = supabase
+                .channel('locked-silence-watch-' + emailLower)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => {
+                    const fresh = payload.new;
+                    if (!fresh) return;
+                    if ((fresh.member_id || '').toLowerCase() !== emailLower) return;
+                    if (fresh.silence !== true) router.push('/profile');
+                })
+                .subscribe();
         }
 
-        checkUnlock();
-        // Realtime handles silence removal - poll only as fallback every 30s
-        const interval = setInterval(checkUnlock, 30000);
-        return () => clearInterval(interval);
+        init();
+        return () => { if (channel) supabase.removeChannel(channel); };
     }, []);
 
     return (

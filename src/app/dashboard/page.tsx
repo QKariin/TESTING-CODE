@@ -693,13 +693,11 @@ export default function DashboardPage() {
 
         if (isMobile) return; // mobile dashboard handles its own data - no duplicate load
         loadLiveAction();
-        // Poll every 60s - Realtime handles chat; this is just a periodic sync fallback
-        const pollInterval = setInterval(loadLiveAction, 10000);
 
-        // ── Supabase Realtime: instant push on new chat messages ──────────────
-        // Requires Realtime to be enabled for the 'chats' table in Supabase dashboard
         const supabaseRt = createClient();
-        const realtimeChannel = supabaseRt
+
+        // ── Realtime: new chat message → sidebar lights up instantly ──────────
+        const chatsChannel = supabaseRt
             .channel('chats-admin-live')
             .on('postgres_changes', {
                 event: 'INSERT',
@@ -708,17 +706,11 @@ export default function DashboardPage() {
             }, (payload: any) => {
                 const msg = payload.new;
                 if (!msg) return;
-
-                // Ignore messages sent by admin/Queen
                 const isQueenMsg = msg.metadata?.isQueen === true;
                 if (isQueenMsg) return;
-
                 const memberId = (msg.member_id || '').toLowerCase();
                 if (!memberId) return;
-
                 const msgTime = new Date(msg.created_at).getTime();
-
-                // Patch the user's lastMessageTime in state so sidebar lights up
                 const updatedUsers = users.map((u: any) => {
                     const uid = (u.memberId || u.member_id || '').toLowerCase();
                     if (uid === memberId) {
@@ -727,15 +719,26 @@ export default function DashboardPage() {
                     return u;
                 });
                 setUsers(updatedUsers);
-
-                // Re-render sidebar - sound + pink SVG glow handled inside renderSidebar
                 renderSidebar();
             })
             .subscribe();
 
+        // ── Realtime: profile update (wallet, score, hierarchy) → refresh user in state ──
+        const profilesChannel = supabaseRt
+            .channel('profiles-admin-live')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'profiles',
+            }, () => {
+                // Re-fetch full data when any profile changes
+                loadLiveAction();
+            })
+            .subscribe();
+
         return () => {
-            clearInterval(pollInterval);
-            supabaseRt.removeChannel(realtimeChannel);
+            supabaseRt.removeChannel(chatsChannel);
+            supabaseRt.removeChannel(profilesChannel);
             cleanupPresenceTracking();
         };
     }, []);

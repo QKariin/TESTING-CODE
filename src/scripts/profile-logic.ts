@@ -1891,13 +1891,7 @@ export async function initChatSystem() {
         })
         .subscribe();
 
-    // 3. Polling fallback every 5s - safety net for when Realtime lags or misses events
-    if (_chatPollInterval) clearInterval(_chatPollInterval);
-    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 5000);
-
-    // Refresh queen presence status every 60s - stored so it can be cleared
-    if (_queenInterval) clearInterval(_queenInterval);
-    _queenInterval = setInterval(() => _fetchQueenStatus(), 60000);
+    // Realtime handles all new chat messages - no polling needed
 
     // 4. Supabase realtime for tasks + profile stats - stored so they can be removed
     // NOTE: No row filter on either channel - eq() is case-sensitive and misses rows
