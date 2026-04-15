@@ -48,9 +48,13 @@ export async function POST(req: Request) {
                 const { data, error } = await supabaseAdmin.storage
                     .from(bucket)
                     .createSignedUrl(path, 7200);
-                if (error || !data?.signedUrl) return url;
+                if (error || !data?.signedUrl) {
+                    console.error(`[sign-urls] createSignedUrl failed: bucket=${bucket} path=${path} error=${error?.message}`);
+                    return url;
+                }
                 return data.signedUrl;
-            } catch {
+            } catch (e: any) {
+                console.error(`[sign-urls] exception: bucket=${bucket} path=${path}`, e?.message);
                 return url;
             }
         }));

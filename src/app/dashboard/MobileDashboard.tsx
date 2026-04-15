@@ -141,6 +141,20 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 getUnreadMessageStatus(),
             ]);
             setUnreadMap(unread);
+            // Sync server-side read timestamps to localStorage (cross-device read state).
+            // Desktop writes admin_chat_read via /api/chat/mark-read; mobile reads it here
+            // so reads done on desktop are reflected on mobile and vice-versa.
+            try {
+                const readRes = await fetch('/api/chat/mark-read?type=admin');
+                const readData = await readRes.json();
+                const serverReadMap: Record<string, string> = readData.chatRead || {};
+                Object.entries(serverReadMap).forEach(([email, ts]) => {
+                    const key = 'read_' + email.toLowerCase();
+                    const localTs = parseInt(localStorage.getItem(key) || '0');
+                    const serverTs = new Date(ts).getTime();
+                    if (serverTs > localTs) localStorage.setItem(key, serverTs.toString());
+                });
+            } catch { /* non-critical */ }
             if (listRes.success && listRes.users) {
                 // Sign proof URLs in per-user review queues
                 await Promise.all((listRes.users as any[]).map((u: any) => u.reviewQueue?.length ? signQueueItems(u.reviewQueue) : Promise.resolve()));
@@ -679,7 +693,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                         </button>
                                         {proofUrl && (
                                             <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                                <img src={previewUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (previewUrl && !t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(previewUrl)}`; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
+                                                {(() => { const m = previewUrl?.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/); const proxied = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : previewUrl; return <img src={proxied} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />; })()}
                                                 <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
                                             </button>
                                         )}
@@ -1145,7 +1159,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                     {pv.proof_url && (
                                         <button onClick={() => setProofPreview(pv.proof_url!)}
                                             style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
-                                            <img src={pv.proof_url} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                                            {(() => { const m = pv.proof_url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/); const src = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : pv.proof_url; return <img src={src} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />; })()}
                                             <div style={{ background: 'rgba(0,0,0,0.55)', padding: '4px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#666', letterSpacing: '1px', textAlign: 'center' }}>TAP TO ENLARGE</div>
                                         </button>
                                     )}
@@ -1238,7 +1252,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             {proofPreview && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column' }} onClick={() => setProofPreview(null)}>
                     <button onClick={() => setProofPreview(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '1.2rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', zIndex: 1 }}>✕</button>
-                    <img src={proofPreview} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />
+                    {(() => { const m = proofPreview.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/); const src = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : proofPreview; return <img src={src} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />; })()}
                 </div>
             )}
         </div>
@@ -1575,19 +1589,18 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
-    const [displayUrl, setDisplayUrl] = useState(proofUrl || '');
+    // Route proof media through the proxy immediately — avoids signed URL expiry issues.
+    // The proxy creates a fresh signed URL server-side and redirects to it.
+    const [displayUrl] = useState(() => {
+        if (!proofUrl) return '';
+        const match = proofUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/);
+        if (match) return `/api/media?bucket=${encodeURIComponent(match[1])}&path=${encodeURIComponent(match[2])}`;
+        return proofUrl; // non-storage URL — use as-is
+    });
     const tiers = [50, 70, 100];
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
-
-    // Sign the proof URL in case it wasn't pre-signed (private Supabase storage)
-    useEffect(() => {
-        if (!proofUrl) { setDisplayUrl(''); return; }
-        setDisplayUrl(proofUrl); // show immediately, replace with signed version when ready
-        fetch('/api/sign-urls', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urls: [proofUrl] }) })
-            .then(r => r.json()).then(d => { if (d.urls?.[0]) setDisplayUrl(d.urls[0]); }).catch(() => {});
-    }, [proofUrl]);
 
     // Auto-focus note field when modal opens (skip for routine — no note shown)
     // iOS trick: proxy input was focused synchronously in the tap handler to capture the keyboard.
@@ -1836,7 +1849,12 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                 return (
                                     <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px' }}>
                                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                            {(task.proofUrl || task.proof_url) && (() => { const pUrl = task.proofUrl || task.proof_url; return <img src={pUrl} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(pUrl)}`; else t.style.display = 'none'; }} alt="" />; })()}
+                                            {(task.proofUrl || task.proof_url) && (() => {
+                                                const rawUrl = task.proofUrl || task.proof_url;
+                                                const m = rawUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/);
+                                                const pUrl = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : rawUrl;
+                                                return <img src={pUrl} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} alt="" />;
+                                            })()}
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

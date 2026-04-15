@@ -3,38 +3,65 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/media?url=<supabase_public_url>
-// Proxies Supabase storage files via service role - works even if bucket is private.
-// Also used as onerror fallback for videos/images that fail to load directly.
+// GET /api/media?url=<supabase_storage_url>
+// GET /api/media?bucket=media&path=task-proofs/user/file.jpg  (direct form)
+//
+// Strategy: create a fresh signed URL and redirect to it (avoids streaming large files
+// through the Vercel function). Falls back to streaming if signing fails.
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const rawUrl = searchParams.get('url') || '';
+        const directBucket = searchParams.get('bucket') || '';
+        const directPath = searchParams.get('path') || '';
 
-        if (!rawUrl) return NextResponse.json({ error: 'Missing url' }, { status: 400 });
+        let bucket: string;
+        let filePath: string;
 
-        // Extract bucket and path from Supabase storage URL
-        // Format: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>
-        const match = rawUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?.*)?$/);
-        if (!match) return NextResponse.json({ error: 'Not a Supabase storage URL' }, { status: 400 });
+        if (directBucket && directPath) {
+            bucket = directBucket;
+            filePath = decodeURIComponent(directPath);
+        } else if (rawUrl) {
+            const match = rawUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/?]+)\/([^?]+)/);
+            if (!match) {
+                console.error('[media proxy] no match for URL:', rawUrl.slice(0, 120));
+                return NextResponse.json({ error: 'Not a Supabase storage URL' }, { status: 400 });
+            }
+            bucket = match[1];
+            filePath = decodeURIComponent(match[2]);
+        } else {
+            return NextResponse.json({ error: 'Missing url or bucket+path' }, { status: 400 });
+        }
 
-        const bucket = match[1];
-        const filePath = decodeURIComponent(match[2]);
+        console.log(`[media proxy] bucket=${bucket} path=${filePath.slice(0, 80)}`);
 
+        // Primary strategy: create a fresh signed URL and redirect (efficient — no streaming)
+        const { data: signed, error: signErr } = await supabaseAdmin.storage
+            .from(bucket)
+            .createSignedUrl(filePath, 3600);
+
+        if (signed?.signedUrl) {
+            return NextResponse.redirect(signed.signedUrl, 307);
+        }
+
+        console.warn(`[media proxy] sign failed (${signErr?.message}), trying download`);
+
+        // Fallback: stream the file directly
         const { data, error } = await supabaseAdmin.storage.from(bucket).download(filePath);
         if (error || !data) {
-            console.error('[media proxy] download error:', error?.message);
+            console.error(`[media proxy] download failed: bucket=${bucket} path=${filePath} error=${error?.message}`);
             return NextResponse.json({ error: error?.message || 'Not found' }, { status: 404 });
         }
 
+        const buffer = await data.arrayBuffer();
         const contentType = data.type || guessContentType(filePath);
-        const headers: HeadersInit = {
-            'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=86400',
-            'Accept-Ranges': 'bytes',
-        };
-
-        return new NextResponse(data, { status: 200, headers });
+        return new NextResponse(buffer, {
+            status: 200,
+            headers: {
+                'Content-Type': contentType,
+                'Cache-Control': 'public, max-age=3600',
+            },
+        });
     } catch (err: any) {
         console.error('[media proxy] error:', err.message);
         return NextResponse.json({ error: err.message }, { status: 500 });
