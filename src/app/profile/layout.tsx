@@ -222,7 +222,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     })
                     .subscribe();
 
-                // Realtime handles instant updates - no polling needed
+                // Polling fallback: re-check every 15s in case realtime misses the update
+                pollInterval = setInterval(check, 15000);
             } catch {}
         }
 
