@@ -10,6 +10,16 @@ import {
 
 type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen';
 
+// Convert any Supabase storage URL (signed or public) to a permanent public URL.
+// The 'media' bucket is public — chat images load this way, proofs should too.
+// Signed URLs expire after 7 days and can't always be re-signed; public URLs never expire.
+function toPublicUrl(url: string): string {
+    if (!url || !url.includes('supabase.co')) return url;
+    const m = url.match(/(https?:\/\/[^/]+\/storage\/v1\/object\/)(?:public|sign)\/([^/?]+)\/([^?]+)/);
+    if (!m) return url;
+    return `${m[1]}public/${m[2]}/${m[3]}`;
+}
+
 // Batch-sign proof URLs from task queue items so private storage files render correctly.
 async function signQueueItems(queue: any[]): Promise<any[]> {
     if (!queue.length) return queue;
@@ -396,6 +406,20 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                             pendingReadIdRef.current = key; // also set pending so back nav refreshes
                             setSelectedUser(u); setProfileTab('chat');
                         }}
+                        onMarkAllRead={() => {
+                            const now = Date.now();
+                            users.forEach(u => {
+                                const key = u.memberId.toLowerCase();
+                                localStorage.setItem('read_' + key, now.toString());
+                                fetch('/api/chat/mark-read', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ role: 'admin', slaveEmail: u.memberId, timestamp: new Date(now).toISOString() }),
+                                }).catch(() => {});
+                            });
+                            // Force re-render by clearing unread map (will be repopulated on next poll)
+                            setUnreadMap(prev => ({ ...prev }));
+                        }}
                     />
                 ) : tab === 'posts' ? (
                     <PostsView posts={posts} onPostCreated={loadPosts} userEmail={userEmail} />
@@ -693,7 +717,7 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                                         </button>
                                         {proofUrl && (
                                             <button onClick={() => onOpenReview(task)} style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                                {(() => { const m = previewUrl?.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/); const proxied = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : previewUrl; return <img src={proxied} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />; })()}
+                                                <img src={toPublicUrl(previewUrl || '')} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block', background: '#000' }} alt="" />
                                                 <div style={{ background: 'rgba(0,0,0,0.55)', padding: '6px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center' }}>TAP TO REVIEW</div>
                                             </button>
                                         )}
@@ -737,10 +761,10 @@ function hasUnread(memberId: string, unreadMap: Record<string, string>): boolean
     return new Date(lastSlaveMsg).getTime() > parseInt(readTime);
 }
 
-function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect, onlineJoinTime }: {
+function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect, onlineJoinTime, onMarkAllRead }: {
     users: DashUser[]; allCount: number; search: string; setSearch: (s: string) => void;
     unreadMap: Record<string, string>; onSelect: (u: DashUser) => void;
-    onlineJoinTime: Record<string, number>;
+    onlineJoinTime: Record<string, number>; onMarkAllRead: () => void;
 }) {
     const now = Date.now();
     const getLastSeenMs = (u: DashUser) => { const t = new Date(u.lastSeen || '').getTime(); return isNaN(t) ? 0 : t; };
@@ -762,13 +786,20 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                     style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', letterSpacing: '1px' }} />
                 {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', color: '#555', fontSize: '0.9rem', cursor: 'pointer', padding: 0, flexShrink: 0 }}>✕</button>}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingLeft: 2, flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 2, flexShrink: 0 }}>
                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#333', letterSpacing: '2px' }}>{sorted.length} OF {allCount} SUBJECTS</span>
-                {sorted.filter(u => getOnlineStatus(u.lastSeen) === 'online').length > 0 && (
-                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#6bcb77', letterSpacing: '2px' }}>
-                        ● {sorted.filter(u => getOnlineStatus(u.lastSeen) === 'online').length} ONLINE
-                    </span>
-                )}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    {withUnread.length > 0 && (
+                        <button onClick={onMarkAllRead} style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#4a9eff', letterSpacing: '1px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, opacity: 0.8 }}>
+                            MARK ALL READ
+                        </button>
+                    )}
+                    {sorted.filter(u => getOnlineStatus(u.lastSeen) === 'online').length > 0 && (
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#6bcb77', letterSpacing: '2px' }}>
+                            ● {sorted.filter(u => getOnlineStatus(u.lastSeen) === 'online').length} ONLINE
+                        </span>
+                    )}
+                </div>
             </div>
             {sorted.map(u => {
                 const status = getOnlineStatus(u.lastSeen);
@@ -1159,7 +1190,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                     {pv.proof_url && (
                                         <button onClick={() => setProofPreview(pv.proof_url!)}
                                             style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
-                                            {(() => { const m = pv.proof_url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/); const src = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : pv.proof_url; return <img src={src} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />; })()}
+                                            <img src={toPublicUrl(pv.proof_url)} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />
                                             <div style={{ background: 'rgba(0,0,0,0.55)', padding: '4px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#666', letterSpacing: '1px', textAlign: 'center' }}>TAP TO ENLARGE</div>
                                         </button>
                                     )}
@@ -1252,7 +1283,7 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             {proofPreview && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column' }} onClick={() => setProofPreview(null)}>
                     <button onClick={() => setProofPreview(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '1.2rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', zIndex: 1 }}>✕</button>
-                    {(() => { const m = proofPreview.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/); const src = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : proofPreview; return <img src={src} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />; })()}
+                    <img src={toPublicUrl(proofPreview)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />
                 </div>
             )}
         </div>
@@ -1589,14 +1620,8 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
-    // Route proof media through the proxy immediately — avoids signed URL expiry issues.
-    // The proxy creates a fresh signed URL server-side and redirects to it.
-    const [displayUrl] = useState(() => {
-        if (!proofUrl) return '';
-        const match = proofUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/);
-        if (match) return `/api/media?bucket=${encodeURIComponent(match[1])}&path=${encodeURIComponent(match[2])}`;
-        return proofUrl; // non-storage URL — use as-is
-    });
+    // Convert signed URL → public URL (media bucket is public, same as chat images)
+    const [displayUrl] = useState(() => toPublicUrl(proofUrl || ''));
     const tiers = [50, 70, 100];
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const touchStartX = useRef(0);
@@ -1849,12 +1874,9 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                 return (
                                     <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px' }}>
                                         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                            {(task.proofUrl || task.proof_url) && (() => {
-                                                const rawUrl = task.proofUrl || task.proof_url;
-                                                const m = rawUrl.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/?]+)\/([^?]+)/);
-                                                const pUrl = m ? `/api/media?bucket=${encodeURIComponent(m[1])}&path=${encodeURIComponent(m[2])}` : rawUrl;
-                                                return <img src={pUrl} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} alt="" />;
-                                            })()}
+                                            {(task.proofUrl || task.proof_url) && (
+                                                <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} alt="" />
+                                            )}
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
                                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

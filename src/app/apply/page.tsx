@@ -448,6 +448,32 @@ export default function ApplyPage() {
     const formRef = useRef(form);
     formRef.current = form;
 
+    // Autosave: the moment email is valid, start persisting every field change to the DB.
+    // Fire-and-forget (no setSaving) so it never blocks the UI.
+    const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        const emailValid = form.email.includes('@') && form.email.includes('.');
+        if (!emailValid) return;
+        if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = setTimeout(() => {
+            const payload = { ...formRef.current, step, applicationId: applicationIdRef.current };
+            fetch('/api/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.applicationId && !applicationIdRef.current) {
+                        applicationIdRef.current = d.applicationId;
+                        setApplicationId(d.applicationId);
+                    }
+                })
+                .catch(() => {});
+        }, 800);
+        return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current); };
+    }, [form, step]);
+
     const saveProgress = async (nextStep: number, extraData?: Partial<FormData>) => {
         const currentForm = formRef.current;
         if (!currentForm.email) return;
