@@ -29,7 +29,7 @@ async function getProfile(memberId: string) {
     let query = getAdmin().from('profiles').select('*');
 
     if (isUuid) {
-        query = query.or(`member_id.eq.${memberId},id.eq.${memberId}`);
+        query = query.or(`member_id.eq.${memberId},ID.eq.${memberId}`);
     } else {
         query = query.ilike('member_id', memberId);
     }
@@ -48,7 +48,7 @@ async function updateProfile(id: string, updates: any) {
     const { data, error } = await getAdmin()
         .from('profiles')
         .update(updates)
-        .eq('id', id)
+        .eq('ID', id)
         .select()
         .single();
 
@@ -97,7 +97,7 @@ export async function getAdminDashboardData() {
             getAdmin().from('profiles').select('*').order('name'),
             getAdmin().from('daily_tasks').select('*'),
             getAdmin().from('system_rules').select('*'),
-            getAdmin().from('tasks').select('member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"'),
+            getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
         ]);
 
@@ -118,9 +118,8 @@ export async function getAdminDashboardData() {
             const profileEmail = (p.member_id || '').toLowerCase();
             const authUuid = authUuidByEmail[profileEmail] || '';
             const matches = (tasksData || []).filter((x: any) =>
-                x.member_id === p.id ||
                 (x.member_id || '').toLowerCase() === profileEmail ||
-                (authUuid && x.member_id === authUuid)
+                x.ID === p.ID
             );
             // Pick the row with the most data (highest kneelCount + CompletedTasks)
             const t = matches.length <= 1 ? matches[0] : matches.reduce((best: any, x: any) => {
@@ -165,7 +164,7 @@ export async function updateScoreAction(memberId: string, amount: number) {
             const slaveRecord: SlaveRecord = { ...profile, score: newScore };
             const report = getHierarchyReport(slaveRecord);
 
-            await updateProfile(profile.id, {
+            await updateProfile(profile.ID, {
                 score: newScore,
                 hierarchy: report.currentRank
             });
@@ -185,8 +184,8 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         const profile = await getProfile(memberId);
         if (!profile) return { success: false };
 
-        // 1. Fetch from tasks table - try UUID first (correct), fall back to email (legacy)
-        let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
+        // 1. Fetch from tasks table - try by ID (UUID) first, fall back to email
+        let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('ID', profile.ID).maybeSingle();
         if (!taskRow && profile.member_id) {
             const { data: legacyRow } = await getAdmin().from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
             taskRow = legacyRow;
@@ -326,12 +325,12 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
         if (needsUpdate) {
             let result;
             if (taskRow) {
-                // Update using whatever member_id the existing row has (UUID or legacy email)
-                result = await getAdmin().from('tasks').update(taskUpdates).eq('member_id', taskRow.member_id);
+                result = await getAdmin().from('tasks').update(taskUpdates).eq('ID', taskRow.ID);
             } else {
-                // New row: always use UUID
+                // New row: use UUID as ID, email as member_id
                 result = await getAdmin().from('tasks').insert({
-                    member_id: profile.id,
+                    ID: profile.ID,
+                    member_id: profile.member_id || '',
                     Name: profile.name || 'Slave',
                     ...taskUpdates
                 });
@@ -341,7 +340,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             if (updateData.forceActive) {
                 try {
                     await getAdmin().from('chats').insert({
-                        member_id: taskRow ? taskRow.member_id : profile.id,
+                        member_id: profile.ID,
                         sender: 'system',
                         sender_email: 'system',
                         message: `NEW DIRECTIVE ASSIGNED`,
@@ -392,7 +391,7 @@ export async function runHierarchyMaintenance() {
 
                 if (profile.hierarchy !== newRank) {
                     console.log(`Updating ${profile.name}: ${profile.hierarchy} -> ${newRank}`);
-                    await updateProfile(profile.id, { hierarchy: newRank });
+                    await updateProfile(profile.ID, { hierarchy: newRank });
                     return 1;
                 }
                 return 0;
@@ -461,7 +460,7 @@ export async function processCoinTransaction(memberId: string, amount: number, r
         const report = getHierarchyReport(tempRecord);
         updates.hierarchy = report.currentRank;
 
-        await updateProfile(profile.id, updates);
+        await updateProfile(profile.ID, updates);
         return { success: true, newBalance: updates.wallet, report };
 
     } catch (e: any) {
@@ -503,7 +502,7 @@ export async function updateProfileAction(memberId: string, data: any) {
         const report = getHierarchyReport(tempRecord);
         updates.hierarchy = report.currentRank;
 
-        await updateProfile(profile.id, updates);
+        await updateProfile(profile.ID, updates);
         return { success: true, hierarchy: updates.hierarchy, report, cost, newBalance: updates.wallet };
 
     } catch (e: any) {
@@ -517,7 +516,7 @@ export async function setHierarchyAction(memberId: string, newRank: string) {
         const profile = await getProfile(memberId);
         if (!profile) return { success: false, error: "User not found" };
 
-        await updateProfile(profile.id, { hierarchy: newRank });
+        await updateProfile(profile.ID, { hierarchy: newRank });
 
         // Return report for new state
         const updatedProfile = { ...profile, hierarchy: newRank };
@@ -661,7 +660,7 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
             const report = getHierarchyReport(tempRecord);
             updates.hierarchy = report.currentRank;
 
-            await updateProfile(profile.id, updates);
+            await updateProfile(profile.ID, updates);
             return { item: { ...profile, ...updates }, report };
         }
         return null;
@@ -724,7 +723,7 @@ export async function insertMessage(msgData: any) {
                         params.previewText = "📷 Media Sent";
                     }
 
-                    await updateProfile(profile.id, { parameters: params });
+                    await updateProfile(profile.ID, { parameters: params });
                 }
             } catch (error) {
                 console.log("Pink Light Update Failed:", error);
@@ -846,7 +845,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
         const profile = await getProfile(userId);
         if (!profile) return false;
 
-        let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
+        let { data: taskRow } = await getAdmin().from('tasks').select('*').eq('ID', profile.ID).maybeSingle();
         if (!taskRow && profile.member_id) {
             const { data: legacyRow } = await getAdmin().from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
             taskRow = legacyRow;
@@ -898,7 +897,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
             taskUpdates.taskQueue = JSON.stringify(queue);
             taskUpdates.Taskdom_History = JSON.stringify(history);
 
-            await updateProfile(profile.id, updates);
+            await updateProfile(profile.ID, updates);
             await getAdmin().from('tasks').update(taskUpdates).eq('member_id', taskRow.member_id);
             if (decision === 'approve') {
                 const { DbService } = await import('@/lib/supabase-service');
@@ -964,7 +963,7 @@ export async function secureUpdateProfileStats(memberId: string, type: 'skipped'
         }
 
         updates.parameters = params;
-        await updateProfile(profile.id, updates);
+        await updateProfile(profile.ID, updates);
         if (type === 'approved') {
             const { DbService } = await import('@/lib/supabase-service');
             await DbService.awardPoints(memberId, 5);
@@ -1208,12 +1207,12 @@ export async function updateProfileView(memberId: string) {
         const generatedView = generateProfileView(templateHtml, replacements);
 
         // Save back to parameters.profile_view
-        await updateProfile(profile.id, {
+        await updateProfile(profile.ID, {
             parameters: { ...params, profile_view: generatedView }
         });
 
-        console.log(`✅ Updated profile view for ${profile.id}`);
-        return { success: true, updatedId: profile.id };
+        console.log(`✅ Updated profile view for ${profile.ID}`);
+        return { success: true, updatedId: profile.ID };
 
     } catch (e: any) {
         console.error("updateProfileView Error:", e);
@@ -1293,7 +1292,7 @@ export async function checkExpiredTasks() {
                 else params.activity_log = activityLog;
 
                 // SAVE UPDATES - deduct 300 coins, no point change
-                await updateProfile(profile.id, {
+                await updateProfile(profile.ID, {
                     routine_history: history,
                     parameters: params,
                     wallet: expiredWallet

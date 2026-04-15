@@ -12,12 +12,12 @@ async function getTasksRow(memberId: string, fields: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
 
     if (isUuid) {
-        const { data } = await supabaseAdmin.from('tasks').select(fields).eq('member_id', memberId).maybeSingle();
+        const { data } = await supabaseAdmin.from('tasks').select(fields).eq('ID', memberId).maybeSingle();
         if (data) return data;
 
-        // Fallback: UUID user but tasks row indexed by email
+        // Fallback: find email via profile, look up task by email
         const { data: profile } = await supabaseAdmin
-            .from('profiles').select('member_id').eq('id', memberId).maybeSingle();
+            .from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
         if (profile?.member_id) {
             const { data: row } = await supabaseAdmin
                 .from('tasks').select(fields).ilike('member_id', profile.member_id).maybeSingle();

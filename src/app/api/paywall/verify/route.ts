@@ -20,7 +20,7 @@ async function unlockPaywall(memberId: string, logEntry: object) {
         if (purchaseHistory.length > 100) purchaseHistory.splice(100);
         params.purchaseHistory = purchaseHistory;
         delete params.paywall;
-        await admin.from('profiles').update({ paywall: false, parameters: params }).eq('id', profile.id);
+        await admin.from('profiles').update({ paywall: false, parameters: params }).eq('ID', profile.ID);
     }
 }
 

@@ -96,8 +96,8 @@ export async function POST(req: Request) {
 
             newWallet = currentWallet - cost;
             // Update wallet by profile UUID if available, else by email
-            const walletUpdateQuery = profile.id
-                ? supabase.from('profiles').update({ wallet: newWallet }).eq('id', profile.id)
+            const walletUpdateQuery = profile.ID
+                ? supabase.from('profiles').update({ wallet: newWallet }).eq('ID', profile.ID)
                 : supabase.from('profiles').update({ wallet: newWallet }).eq('member_id', senderEmail);
             const { error: updateErr } = await walletUpdateQuery;
             if (updateErr) return NextResponse.json({ success: false, error: "Failed to deduct coins." }, { status: 500 });
@@ -121,8 +121,8 @@ export async function POST(req: Request) {
                 const retry = await adminClient.from('chats').insert(insertData).select().single();
                 if (retry.error) {
                     if (!isQueen) {
-                        const rollbackQuery = profile.id
-                            ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('id', profile.id)
+                        const rollbackQuery = profile.ID
+                            ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('ID', profile.ID)
                             : supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
                         await rollbackQuery;
                     }
@@ -131,8 +131,8 @@ export async function POST(req: Request) {
                 return NextResponse.json({ success: true, data: retry.data, newWallet });
             }
             if (!isQueen) {
-                const rollbackQuery = profile.id
-                    ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('id', profile.id)
+                const rollbackQuery = profile.ID
+                    ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('ID', profile.ID)
                     : supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
                 await rollbackQuery;
             }

@@ -13,9 +13,9 @@ export async function POST(req: NextRequest) {
 
         // Look up profile by UUID (profiles.id = UUID)
         const { supabaseAdmin } = require('@/lib/supabase');
-        const { data: profileData } = await supabaseAdmin.from('profiles').select('*').eq('id', memberId).maybeSingle();
+        const { data: profileData } = await supabaseAdmin.from('profiles').select('*').eq('ID', memberId).maybeSingle();
         const profile = profileData;
-        if (!profile || !profile.id) {
+        if (!profile || !profile.ID) {
             return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
         }
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Insufficient Capital. 300 coins required to skip duties.' }, { status: 403 });
         }
 
-        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').eq('member_id', memberId).maybeSingle();
+        const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').eq('ID', memberId).maybeSingle();
 
         // 1 & 2 & 3: Atomic Skip
         const params = { ...(profile.parameters || {}) };
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         const profileDbUpdate = await supabaseAdmin.from('profiles').update({
             wallet: wallet - 300,
             parameters: params
-        }).eq('id', profile.id);
+        }).eq('ID', profile.ID);
 
         let taskDbUpdate;
         let history: any[] = [];
@@ -72,10 +72,11 @@ export async function POST(req: NextRequest) {
                 'Taskdom_History': JSON.stringify(history),
                 taskdom_active_task: null,
                 taskdom_pending_state: null
-            }).eq('member_id', memberId);
+            }).eq('ID', memberId);
         } else {
             taskDbUpdate = await supabaseAdmin.from('tasks').insert({
-                member_id: memberId,
+                ID: memberId,
+                member_id: profile.member_id || '',
                 Name: profile.name || 'Slave',
                 Status: 'fail',
                 'Taskdom_History': JSON.stringify(history),

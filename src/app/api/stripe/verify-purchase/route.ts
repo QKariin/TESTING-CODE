@@ -92,7 +92,7 @@ export async function GET(req: Request) {
         await supabaseAdmin
             .from('profiles')
             .update({ wallet: newBalance, parameters: params })
-            .eq('id', profile.id);
+            .eq('ID', profile.ID);
 
         console.log(`✅ [verify-purchase] Awarded ${coins} coins to ${userEmail || userId}. New balance: ${newBalance}`);
 

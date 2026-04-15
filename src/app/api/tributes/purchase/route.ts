@@ -35,10 +35,10 @@ export async function POST(request: Request) {
             tributeHistory: [{ amount: -tributeCost, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' }, ...(Array.isArray((profile.parameters||{}).tributeHistory) ? (profile.parameters||{}).tributeHistory : [])].slice(0,50),
         };
 
-        const profileUuid = profile.id;
+        const profileUuid = profile.ID;
         const realEmail = profile?.member_id || memberEmail;
 
-        const { error: updateErr } = await supabase.from('profiles').update({ wallet: newWallet, parameters: newParams }).eq('id', profileUuid);
+        const { error: updateErr } = await supabase.from('profiles').update({ wallet: newWallet, parameters: newParams }).eq('ID', profileUuid);
 
         if (updateErr) return NextResponse.json({ success: false, error: 'Failed to update balance' }, { status: 500 });
 

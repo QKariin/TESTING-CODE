@@ -151,7 +151,7 @@ export async function POST(req: Request) {
                     await supabaseAdmin
                         .from('profiles')
                         .update({ wallet: newBalance, parameters: profileParams })
-                        .eq('id', profile.id);
+                        .eq('ID', profile.ID);
                     console.log(`✅ Wallet Updated: ${newBalance} (+${coins})`);
                 } else {
                     console.error(`❌ User not found for coin deposit: ${userEmail || userId}`);
@@ -191,7 +191,7 @@ export async function POST(req: Request) {
                     await supabaseAdmin
                         .from('profiles')
                         .update({ parameters: params })
-                        .eq('id', profile.id);
+                        .eq('ID', profile.ID);
 
                     console.log(`✅ Subscription [${tierId}] activated for existing user.`);
                 } else {

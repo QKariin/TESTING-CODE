@@ -83,7 +83,7 @@ export async function POST(req: Request) {
 
         if (legacy) {
             console.log(`- FINAL MATCH FOUND: ${legacy.id}. Updating profile ID to ${user.id}`);
-            const { error: uError } = await supabaseAdmin.from('profiles').update({ id: user.id }).eq('id', legacy.id);
+            const { error: uError } = await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', legacy.ID);
             if (uError) {
                 console.error(`- UPDATE ERROR:`, uError);
                 return NextResponse.json({ success: false, error: 'Failed to update profile ID' }, { status: 500 });
@@ -102,13 +102,13 @@ export async function POST(req: Request) {
                 console.log(`- Strategy C MATCH in auth.users: Legacy ID is ${legacyUser.id}. Checking for profile...`);
                 const { data: prof, error: cError } = await supabaseAdmin
                     .from('profiles')
-                    .select('id, member_id')
-                    .eq('id', legacyUser.id)
+                    .select('ID, member_id')
+                    .eq('ID', legacyUser.id)
                     .single();
 
                 if (prof) {
-                    console.log(`- Strategy C FINAL MATCH in profiles: ${prof.id}. Linking to ${user.id}`);
-                    await supabaseAdmin.from('profiles').update({ id: user.id }).eq('id', prof.id);
+                    console.log(`- Strategy C FINAL MATCH in profiles: ${prof.ID}. Linking to ${user.id}`);
+                    await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', prof.ID);
                     return NextResponse.json({ success: true, linked: true });
                 } else if (cError && cError.code !== 'PGRST116') {
                     console.error(`- Strategy C PROFILE_ERROR:`, cError);

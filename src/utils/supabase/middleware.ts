@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest) {
         )
 
         // 1. Check for Profile
-        let { data: profile } = await adminSupabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
+        let { data: profile } = await adminSupabase.from('profiles').select('ID').eq('ID', user.id).maybeSingle();
 
         // 2. HYBRID CHECK: If no profile, check legacy table immediately
         let isLegacyMember = false;
@@ -76,7 +76,7 @@ export async function updateSession(request: NextRequest) {
                     .maybeSingle();
 
                 if (legacyProfile) {
-                    await adminSupabase.from('profiles').update({ id: user.id }).eq('id', legacyProfile.id);
+                    await adminSupabase.from('profiles').update({ ID: user.id }).eq('ID', legacyProfile.ID);
                 } else {
                     await adminSupabase.from('profiles').insert({
                         id: user.id,

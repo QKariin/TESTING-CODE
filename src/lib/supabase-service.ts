@@ -17,7 +17,7 @@ export const DbService = {
         const { data: byId } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .eq('id', memberId)
+            .eq('ID', memberId)
             .maybeSingle();
 
         if (byId) return byId;
@@ -53,7 +53,7 @@ export const DbService = {
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
-            .eq('id', id)
+            .eq('ID', id)
             .select()
             .single();
         if (error) throw error;
@@ -77,17 +77,17 @@ export const DbService = {
         const profile = await this.getProfile(memberEmail);
         if (!profile) return;
 
-        // Look up task row by UUID first (correct), fall back to email (legacy)
+        // Look up task row by UUID (ID column) first, fall back to email
         let { data: taskRow } = await supabaseAdmin
             .from('tasks')
-            .select('"Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score", member_id')
-            .eq('member_id', profile.id)
+            .select('"ID", "Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score", member_id')
+            .eq('ID', profile.ID)
             .maybeSingle();
 
         if (!taskRow) {
             const { data: legacyRow } = await supabaseAdmin
                 .from('tasks')
-                .select('"Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score", member_id')
+                .select('"ID", "Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score", member_id')
                 .ilike('member_id', memberEmail)
                 .maybeSingle();
             taskRow = legacyRow;
@@ -100,19 +100,19 @@ export const DbService = {
                 'Weekly Score':  (Number(taskRow['Weekly Score'])  || 0) + points,
                 'Monthly Score': (Number(taskRow['Monthly Score']) || 0) + points,
                 'Yearly Score':  (Number(taskRow['Yearly Score'])  || 0) + points,
-            }).eq('member_id', taskRow.member_id);
+            }).eq('ID', taskRow.ID);
         }
 
         // Keep profiles.score in sync
         await supabaseAdmin.from('profiles')
             .update({ score: Math.max(0, (Number(profile.score) || 0) + points) })
-            .eq('id', profile.id);
+            .eq('ID', profile.ID);
     },
 
     // --- REWARDS & KNEELING ---
     async claimKneel(memberId: string, amount: number, type: 'coins' | 'points') {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error("Profile not linked");
+        if (!profile || !profile.ID) throw new Error("Profile not linked");
 
         const updates: any = {
             parameters: {
@@ -124,7 +124,7 @@ export const DbService = {
 
         if (type === 'coins') updates.wallet = (profile.wallet || 0) + amount;
 
-        const result = await this.updateProfile(profile.id, updates);
+        const result = await this.updateProfile(profile.ID, updates);
         if (type === 'points') await this.awardPoints(memberId, amount);
         return result;
     },
@@ -132,7 +132,7 @@ export const DbService = {
     // --- TRANSACTIONS ---
     async processTransaction(memberId: string, amount: number, category: string) {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error("Profile not linked");
+        if (!profile || !profile.ID) throw new Error("Profile not linked");
 
         const newWallet = (profile.wallet || 0) + amount;
         if (newWallet < 0) throw new Error("Insufficient Capital");
@@ -140,13 +140,13 @@ export const DbService = {
         // Safely execute the update
         const updates: any = { wallet: newWallet };
 
-        return this.updateProfile(profile.id, updates);
+        return this.updateProfile(profile.ID, updates);
     },
 
     // --- FRAGMENTS ---
     async revealFragment(memberId: string) {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error("Profile not linked");
+        if (!profile || !profile.ID) throw new Error("Profile not linked");
 
         const params = profile.parameters || {};
         const revealMap = params.reveal_map || [];
@@ -173,7 +173,7 @@ export const DbService = {
             updates.parameters.reveal_map = [];
         }
 
-        await this.updateProfile(profile.id, updates);
+        await this.updateProfile(profile.ID, updates);
         return { pick, progress, revealMapCount: revealMap.length };
     },
 
@@ -215,27 +215,23 @@ export const DbService = {
     },
 
     // --- TASKS ---
-    // Helper: get the raw tasks row - tries UUID (profiles.id) first, falls back to email
+    // Helper: get the raw tasks row - tries by ID (UUID) first, falls back to email in member_id
     async _getTaskRow(memberId: string) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
         if (isUuid) {
-            // Try by UUID first (already migrated)
-            const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', memberId).maybeSingle();
+            // Try by ID (UUID primary key)
+            const { data } = await supabaseAdmin.from('tasks').select('*').eq('ID', memberId).maybeSingle();
             if (data) return data;
 
-            // Find email-keyed row via profile and MIGRATE it to UUID in-place
+            // Fall back: find email via profile, then look up task by email
             const profile = await this.getProfile(memberId);
             if (profile?.member_id) {
                 const { data: emailRow } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
-                if (emailRow) {
-                    // Migrate: update member_id from email → UUID (one-time, automatic)
-                    await supabaseAdmin.from('tasks').update({ member_id: memberId }).eq('member_id', emailRow.member_id);
-                    return { ...emailRow, member_id: memberId };
-                }
+                if (emailRow) return emailRow;
             }
             return null;
         }
-        // Email-based lookup (legacy or non-UUID caller)
+        // Email-based lookup (member_id column holds email)
         const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', memberId).maybeSingle();
         return data;
     },
@@ -253,22 +249,16 @@ export const DbService = {
             .select('member_id, "Name", "Status", "Taskdom_History"');
         if (error) throw error;
 
-        // Fetch avatar_url from profiles for all members
-        const memberIds = [...new Set((data || []).map((r: any) => r.member_id).filter(Boolean))];
-        // tasks.member_id after migration = UUID = profiles.id. Query by id first.
-        const { data: profileDataById } = await supabaseAdmin
-            .from('profiles')
-            .select('id, member_id, avatar_url')
-            .in('id', memberIds);
+        // Fetch avatar_url from profiles — tasks.member_id is email, tasks.ID is UUID
+        const memberEmails = [...new Set((data || []).map((r: any) => r.member_id).filter(Boolean))];
         const { data: profileDataByEmail } = await supabaseAdmin
             .from('profiles')
-            .select('id, member_id, avatar_url')
-            .in('member_id', memberIds);
-        const allProfileData = [...(profileDataById || []), ...(profileDataByEmail || [])];
+            .select('ID, member_id, avatar_url')
+            .in('member_id', memberEmails);
         const avatarMap = new Map<string, string>();
-        for (const p of allProfileData) {
+        for (const p of (profileDataByEmail || [])) {
             if (p.avatar_url) {
-                if (p.id) avatarMap.set(p.id, p.avatar_url);
+                if (p.ID) avatarMap.set(p.ID, p.avatar_url);
                 if (p.member_id) avatarMap.set(p.member_id?.toLowerCase(), p.avatar_url);
             }
         }
@@ -359,7 +349,7 @@ export const DbService = {
                 'Status': 'approve',
                 'Taskdom_CompletedTasks': String(newCount)
             })
-            .eq('member_id', row.member_id);
+            .eq('ID', row.ID);
 
         // 2. Award points only - no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
@@ -395,15 +385,15 @@ export const DbService = {
         await supabaseAdmin
             .from('tasks')
             .update(taskUpdates)
-            .eq('member_id', row.member_id);
+            .eq('ID', row.ID);
 
         // 2. Sync wallet with profiles table (only for tasks)
         if (!isRoutine) {
             try {
                 const profile = await this.getProfile(profileId);
-                if (profile && profile.id) {
+                if (profile && profile.ID) {
                     const pWallet = Math.max(0, (profile.wallet || 0) - 300);
-                    await this.updateProfile(profile.id, { wallet: pWallet });
+                    await this.updateProfile(profile.ID, { wallet: pWallet });
                 }
             } catch (_) { }
         }
@@ -465,11 +455,12 @@ export const DbService = {
             const { error } = await supabaseAdmin
                 .from('tasks')
                 .update(taskUpdates)
-                .eq('member_id', row.member_id);  // use existing row's member_id (UUID or legacy email)
+                .eq('ID', row.ID);
             if (error) throw error;
         } else {
             const insertData: any = {
-                member_id: profile?.id || memberId,  // always use UUID for new rows
+                ID: profile?.ID || memberId,
+                member_id: profile?.member_id || '',
                 Name: profile?.name || 'Slave',
                 Status: 'pending',
                 'Taskdom_History': newHistory,
@@ -486,11 +477,11 @@ export const DbService = {
         if (isRoutine) {
             try {
                 const profileForHistory = profile || await this.getProfile(memberId);
-                if (profileForHistory?.id) {
+                if (profileForHistory?.ID) {
                     const { data: prof } = await supabaseAdmin
                         .from('profiles')
                         .select('routine_history')
-                        .eq('id', profileForHistory.id)
+                        .eq('ID', profileForHistory.ID)
                         .maybeSingle();
 
                     const prevHistory: string[] = Array.isArray(prof?.routine_history) ? prof.routine_history : [];
@@ -499,7 +490,7 @@ export const DbService = {
                     await supabaseAdmin
                         .from('profiles')
                         .update({ routine_history: updatedHistory })
-                        .eq('id', profileForHistory.id);
+                        .eq('ID', profileForHistory.ID);
                 }
             } catch (histErr) {
                 console.warn('[submitTask] Could not update routine_history:', histErr);
@@ -516,14 +507,14 @@ export const DbService = {
 
     async assignTask(memberId: string, task: any) {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) throw new Error('Profile not linked');
+        if (!profile || !profile.ID) throw new Error('Profile not linked');
 
         const endTime = Date.now() + (24 * 3600 * 1000); // 24 hours default
         const activeTaskData = JSON.stringify({ ...task, assigned_at: new Date().toISOString(), endTime });
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: activeTaskData })
-            .eq('member_id', profile.id);
+            .eq('ID', profile.ID);
 
         if (error) throw error;
         return { success: true };
@@ -531,7 +522,7 @@ export const DbService = {
 
     async clearTask(memberId: string) {
         const profile = await this.getProfile(memberId);
-        if (!profile || !profile.id) {
+        if (!profile || !profile.ID) {
             console.warn('Attempted to clear task for missing profile:', memberId);
             return { success: false, error: 'Profile not found' };
         }
@@ -539,7 +530,7 @@ export const DbService = {
         const { error } = await supabaseAdmin
             .from('tasks')
             .update({ taskdom_active_task: null, taskdom_pending_state: null })
-            .eq('member_id', profile.id);
+            .eq('ID', profile.ID);
 
         if (error) throw error;
         return { success: true };

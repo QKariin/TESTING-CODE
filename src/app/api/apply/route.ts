@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         const payload: any = {
             email: data.email.toLowerCase().trim(),
             step_reached: step,
-            ...(profile?.id ? { member_id: profile.id } : {}),
+            ...(profile?.id ? { member_id: profile.ID } : {}),
         };
 
         // Join array fields to strings for DB storage

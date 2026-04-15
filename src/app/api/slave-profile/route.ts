@@ -40,7 +40,7 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
     // Step 1: fetch profile - by UUID (profiles.id) if UUID, else by email (profiles.member_id)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(emailOrUuid);
     const { data: profileData, error: profileError } = isUuid
-        ? await supabaseAdmin.from('profiles').select('*').eq('id', emailOrUuid).maybeSingle()
+        ? await supabaseAdmin.from('profiles').select('*').eq('ID', emailOrUuid).maybeSingle()
         : await supabaseAdmin.from('profiles').select('*').ilike('member_id', emailOrUuid).maybeSingle();
 
     if (profileError) {
@@ -50,13 +50,13 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
 
     // Step 2: fetch tasks — collect ALL matching rows and pick the richest one.
     // Users may have both an email-keyed row (historical data) and a UUID-keyed row (newer/empty).
-    const profilesId = profileData?.id;
+    const profilesId = profileData?.ID;
     const profileEmail = profileData?.member_id;
 
     const taskCandidates: any[] = [];
     const uuidsToTry = [...new Set([profilesId, authUuidHint].filter(Boolean))] as string[];
     for (const tryId of uuidsToTry) {
-        const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', tryId).maybeSingle();
+        const { data } = await supabaseAdmin.from('tasks').select('*').eq('ID', tryId).maybeSingle();
         if (data) taskCandidates.push(data);
     }
     if (profileEmail) {
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
-            .eq(isUuidEmail ? 'id' : 'member_id', email)
+            .eq(isUuidEmail ? 'ID' : 'member_id', email)
             .select()
             .single();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         }
 
         const { data, error } = isUuidEmail
-            ? await supabaseAdmin.from('profiles').select('*').eq('id', email).maybeSingle()
+            ? await supabaseAdmin.from('profiles').select('*').eq('ID', email).maybeSingle()
             : await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json(stripSensitive(data, isAdmin));

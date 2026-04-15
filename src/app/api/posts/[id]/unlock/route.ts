@@ -22,11 +22,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         // Resolve UUID from profiles
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('id, wallet, hierarchy')
+            .select('ID, wallet, hierarchy')
             .ilike('member_id', email)
             .single();
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-        const memberId = profile.id;
+        const memberId = profile.ID;
 
         const { data: existing } = await supabaseAdmin
             .from('post_unlocks')
@@ -48,14 +48,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const { error: walletErr } = await supabaseAdmin
             .from('profiles')
             .update({ wallet: newWallet })
-            .eq('id', memberId);
+            .eq('ID', memberId);
         if (walletErr) return NextResponse.json({ error: 'Failed to deduct coins' }, { status: 500 });
 
         const { error: unlockErr } = await supabaseAdmin
             .from('post_unlocks')
             .insert({ post_id: postId, member_id: memberId });
         if (unlockErr) {
-            await supabaseAdmin.from('profiles').update({ wallet: profile.wallet }).eq('id', memberId);
+            await supabaseAdmin.from('profiles').update({ wallet: profile.wallet }).eq('ID', memberId);
             return NextResponse.json({ error: unlockErr.message }, { status: 500 });
         }
 

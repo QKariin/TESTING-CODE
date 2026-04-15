@@ -11,19 +11,19 @@ async function getTaskRow(memberId: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
 
     if (isUuid) {
-        // Try UUID-keyed row first
+        // Try by ID (UUID primary key)
         const { data } = await supabaseAdmin
             .from('tasks')
             .select('Taskdom_History')
-            .eq('member_id', memberId)
+            .eq('ID', memberId)
             .maybeSingle();
         if (data) return data;
 
-        // Fall back to email-keyed row (row not yet migrated)
+        // Fall back to email-keyed row
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('member_id')
-            .eq('id', memberId)
+            .eq('ID', memberId)
             .maybeSingle();
         if (profile?.member_id) {
             const { data: row } = await supabaseAdmin
@@ -49,7 +49,7 @@ async function getRoutineStatus(memberId: string, tz: string) {
     // Get routine name from profiles — UUID uses id column, email uses member_id
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
     const { data: profile } = isUuid
-        ? await supabaseAdmin.from('profiles').select('routine').eq('id', memberId).maybeSingle()
+        ? await supabaseAdmin.from('profiles').select('routine').eq('ID', memberId).maybeSingle()
         : await supabaseAdmin.from('profiles').select('routine').ilike('member_id', memberId).maybeSingle();
 
     const routine = profile?.routine || null;

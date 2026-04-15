@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
         await supabaseAdmin.from('global_message_reads').upsert({
             message_id: messageId,
-            user_id: profile.id,
+            user_id: profile.ID,
             user_name: profile.name || userEmail.split('@')[0],
             avatar_url: profile.avatar_url || profile.profile_picture_url || null,
             read_at: new Date().toISOString(),

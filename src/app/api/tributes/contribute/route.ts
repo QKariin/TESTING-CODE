@@ -43,13 +43,13 @@ export async function POST(request: Request) {
             tributeHistory: [{ amount: -contributionAmount, message: `SACRIFICE: ${tributeTitle}`, date: new Date().toISOString(), type: 'expense' }, ...(Array.isArray((profile.parameters||{}).tributeHistory) ? (profile.parameters||{}).tributeHistory : [])].slice(0,50),
         };
 
-        const profileUuid = profile.id;
+        const profileUuid = profile.ID;
 
         // 3. Update wallet + parameters (score via awardPoints below)
         const { error: updateProfileErr } = await supabase
             .from('profiles')
             .update({ wallet: newWallet, parameters: newParams })
-            .eq('id', profileUuid);
+            .eq('ID', profileUuid);
 
         if (updateProfileErr) {
             console.error("Profile update error:", updateProfileErr);

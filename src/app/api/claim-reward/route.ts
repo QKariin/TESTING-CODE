@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
         if (choice === 'coins') {
             updateData = { wallet: (profile.wallet || 0) + COIN_REWARD };
-            const { error } = await supabaseAdmin.from('profiles').update(updateData).eq('id', profile.id);
+            const { error } = await supabaseAdmin.from('profiles').update(updateData).eq('ID', profile.ID);
             if (error) throw error;
         } else {
             await DbService.awardPoints(profile.member_id || profileId, POINT_REWARD);

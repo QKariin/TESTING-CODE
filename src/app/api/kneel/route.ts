@@ -8,34 +8,29 @@ export const dynamic = "force-dynamic";
 
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000; // 1 min dev / 60 min prod
 
-const TASK_FIELDS = 'lastWorship, kneelCount, "today kneeling", kneel_history, member_id';
+const TASK_FIELDS = '"ID", lastWorship, kneelCount, "today kneeling", kneel_history, member_id';
 
-// Resolve the tasks row using UUID — migrate email-keyed rows to UUID in-place.
-// Returns { task, taskMemberId } where taskMemberId is always the UUID after migration.
-async function getTaskRow(memberId: string): Promise<{ task: any; taskMemberId: string }> {
+// Resolve the tasks row. Returns { task, taskId (UUID), taskEmail }.
+async function getTaskRow(memberId: string): Promise<{ task: any; taskId: string; taskEmail: string }> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
 
     if (isUuid) {
-        // Already migrated: row keyed by UUID
-        const { data } = await supabaseAdmin.from('tasks').select(TASK_FIELDS).eq('member_id', memberId).maybeSingle();
-        if (data) return { task: data, taskMemberId: memberId };
+        // Try by ID (UUID primary key)
+        const { data } = await supabaseAdmin.from('tasks').select(TASK_FIELDS).eq('ID', memberId).maybeSingle();
+        if (data) return { task: data, taskId: memberId, taskEmail: data.member_id || '' };
 
-        // Find email-keyed row and migrate it to UUID in-place
-        const { data: profile } = await supabaseAdmin.from('profiles').select('member_id').eq('id', memberId).maybeSingle();
+        // Fall back: get email from profile, then find task by email
+        const { data: profile } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
         if (profile?.member_id) {
             const { data: row } = await supabaseAdmin.from('tasks').select(TASK_FIELDS).ilike('member_id', profile.member_id).maybeSingle();
-            if (row) {
-                // Migrate: update member_id from email → UUID
-                await supabaseAdmin.from('tasks').update({ member_id: memberId }).eq('member_id', row.member_id);
-                return { task: row, taskMemberId: memberId };
-            }
+            if (row) return { task: row, taskId: memberId, taskEmail: profile.member_id };
         }
-        // No existing row — use UUID as the key
-        return { task: null, taskMemberId: memberId };
+        return { task: null, taskId: memberId, taskEmail: profile?.member_id || '' };
     } else {
-        // Email lookup (legacy caller)
+        // Email lookup
         const { data } = await supabaseAdmin.from('tasks').select(TASK_FIELDS).ilike('member_id', memberId).maybeSingle();
-        return { task: data || null, taskMemberId: data?.member_id || memberId };
+        const { data: profile } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberId).maybeSingle();
+        return { task: data || null, taskId: data?.ID || profile?.ID || '', taskEmail: memberId };
     }
 }
 
@@ -44,8 +39,8 @@ export async function POST(req: Request) {
         const { memberId, tz = 'UTC' } = await req.json();
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-        // Fetch current record with UUID + legacy email fallback
-        const { task, taskMemberId } = await getTaskRow(memberId);
+        // Fetch current record
+        const { task, taskId, taskEmail } = await getTaskRow(memberId);
 
         const now = new Date();
         const nowMs = now.getTime();
@@ -81,9 +76,10 @@ export async function POST(req: Request) {
         } catch (_) { }
         kneelHistory.push(now.toISOString());
 
-        // Use the existing row's member_id key so we update the right row (not create a duplicate)
+        // Upsert by ID (UUID primary key)
         const upsertPayload: any = {
-            member_id: taskMemberId,
+            ID: taskId,
+            member_id: taskEmail,
             lastWorship: now.toISOString(),
             kneelCount: String(newKneelCount),
             'today kneeling': String(newTodayKneeling),
@@ -93,17 +89,17 @@ export async function POST(req: Request) {
 
         const { error } = await supabaseAdmin
             .from('tasks')
-            .upsert(upsertPayload, { onConflict: 'member_id' });
+            .upsert(upsertPayload, { onConflict: '"ID"' });
 
         if (error) {
             console.error('[kneel] update error:', error);
-            // Retry without kneel_history in case column doesn't exist yet
             const { error: e2 } = await supabaseAdmin.from('tasks').upsert({
-                member_id: taskMemberId,
+                ID: taskId,
+                member_id: taskEmail,
                 lastWorship: now.toISOString(),
                 kneelCount: String(newKneelCount),
                 'today kneeling': String(newTodayKneeling),
-            }, { onConflict: 'member_id' });
+            }, { onConflict: '"ID"' });
             if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
         }
 

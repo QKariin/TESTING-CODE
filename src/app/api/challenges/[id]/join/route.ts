@@ -13,9 +13,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
         // Resolve UUID from profiles
         const { data: profile } = await supabaseAdmin
-            .from('profiles').select('id, name, avatar_url, wallet').eq('id', user.id).maybeSingle();
+            .from('profiles').select('ID, name, avatar_url, wallet').eq('ID', user.id).maybeSingle();
         if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
-        const memberId = profile.id;
+        const memberId = profile.ID;
 
         // Challenge must exist and be active
         const { data: challenge } = await supabaseAdmin
@@ -55,7 +55,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
                 }
                 await supabaseAdmin.from('profiles')
                     .update({ wallet: currentWallet - lateJoinFee })
-                    .eq('id', memberId);
+                    .eq('ID', memberId);
             }
         }
 

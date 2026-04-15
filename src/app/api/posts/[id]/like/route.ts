@@ -14,11 +14,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         // Resolve UUID from profiles
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('id')
+            .select('ID')
             .ilike('member_id', email)
             .maybeSingle();
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-        const memberId = profile.id;
+        const memberId = profile.ID;
 
         const { data: existing } = await supabaseAdmin
             .from('post_likes')

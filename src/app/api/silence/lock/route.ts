@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         const { error: updateErr } = await admin
             .from('profiles')
             .update({ silence: true, parameters: params })
-            .eq('id', profile.id);
+            .eq('ID', profile.ID);
 
         if (updateErr) return NextResponse.json({ success: false, error: updateErr.message }, { status: 500 });
         return NextResponse.json({ success: true });
