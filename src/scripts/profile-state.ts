@@ -56,7 +56,7 @@ export function initProfileState(data: any) {
 
     setState({
         memberId: data.memberId || data.id || null,  // auth UUID preferred (matches tasks.member_id after migration)
-        email: data.member_id || data.memberId || data.email || null,  // email for display/profile lookup
+        email: data.member_id || data.email || null,  // email for display/profile lookup (never UUID)
         id: data.id,
         wallet: data.wallet || 0,
         score: data.score || 0,

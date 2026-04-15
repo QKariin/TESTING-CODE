@@ -2361,7 +2361,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     const isSys = isSystemMessage(msg);
     // System messages must never appear in the regular chat - they belong in the system log only
     if (isSys) return '';
-    const myEmail = getState().memberId?.toLowerCase();
+    const myEmail = (getState().email || getState().memberId || '').toLowerCase();
     const isMe = !isSys && (senderEmail === 'user' || senderEmail === 'slave' || senderEmail === myEmail);
 
     const ts = new Date(msg.created_at || Date.now()).getTime();
@@ -2725,7 +2725,7 @@ export function openMobChatOverlay() {
 
     // If no messages loaded yet, load them
     const content = document.getElementById('mob_chatContent');
-    const email = getState().memberId;
+    const email = getState().email || getState().memberId;
     if (content && !content.children.length && email) {
         loadChatHistory(email);
     }
@@ -4233,7 +4233,7 @@ export async function loadQueenPosts() {
     }
 
     try {
-        const email = getState().memberId || '';
+        const email = getState().email || '';
         const res = email
             ? await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch', email }) })
             : await fetch('/api/posts', { cache: 'no-store' });
@@ -5212,7 +5212,7 @@ function _openHistoryModal(items: any[], idx: number, resolveUrl: (u: string) =>
 }
 
 export async function unlockPost(postId: string, price: number) {
-    const email = getState().memberId;
+    const email = getState().email;
     if (!email) return;
     if (!confirm(`Unlock this post for ${price} coins?`)) return;
 
@@ -5235,7 +5235,7 @@ export async function unlockPost(postId: string, price: number) {
 }
 
 export async function togglePostLike(postId: string, btnEl: HTMLButtonElement) {
-    const email = getState().memberId;
+    const email = getState().email;
     if (!email) return;
 
     const res = await fetch(`/api/posts/${postId}/like`, {
