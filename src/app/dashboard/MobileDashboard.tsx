@@ -10,6 +10,28 @@ import {
 
 type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen';
 
+// Batch-sign proof URLs from task queue items so private storage files render correctly.
+async function signQueueItems(queue: any[]): Promise<any[]> {
+    if (!queue.length) return queue;
+    const rawUrls: string[] = [];
+    const indices: Array<{ item: any; field: string }> = [];
+    for (const item of queue) {
+        const proof = item.proofUrl || item.proof_url;
+        if (proof) { rawUrls.push(proof); indices.push({ item, field: item.proofUrl !== undefined ? 'proofUrl' : 'proof_url' }); }
+        const thumb = item.thumbnail_url || item.thumbnailUrl;
+        if (thumb) { rawUrls.push(thumb); indices.push({ item, field: item.thumbnail_url !== undefined ? 'thumbnail_url' : 'thumbnailUrl' }); }
+    }
+    if (!rawUrls.length) return queue;
+    try {
+        const res = await fetch('/api/sign-urls', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urls: rawUrls }) });
+        const data = await res.json();
+        if (Array.isArray(data.urls)) {
+            data.urls.forEach((url: string, i: number) => { if (url && indices[i]) indices[i].item[indices[i].field] = url; });
+        }
+    } catch { /* non-critical */ }
+    return queue;
+}
+
 async function sendTaskChatFeedback(senderEmail: string, memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId: string | null) {
     try {
         const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId, memberId });
@@ -120,6 +142,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
             ]);
             setUnreadMap(unread);
             if (listRes.success && listRes.users) {
+                // Sign proof URLs in per-user review queues
+                await Promise.all((listRes.users as any[]).map((u: any) => u.reviewQueue?.length ? signQueueItems(u.reviewQueue) : Promise.resolve()));
                 const mapped: DashUser[] = listRes.users.map((u: any) => ({
                     memberId: u.memberId || '',
                     name: u.name || '',
@@ -138,9 +162,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 }));
                 setUsers(mapped);
             }
-            // Global review queue for home screen
+            // Global review queue for home screen — sign all proof URLs before setting state
             if (listRes.pendingReviews) {
-                setGlobalQueue(listRes.pendingReviews);
+                const signedQueue = await signQueueItems(listRes.pendingReviews);
+                setGlobalQueue(signedQueue);
             }
         } finally { setLoading(false); }
         const d = new Date();
@@ -1540,10 +1565,19 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
+    const [displayUrl, setDisplayUrl] = useState(proofUrl || '');
     const tiers = [50, 70, 100];
     const noteRef = useRef<HTMLTextAreaElement>(null);
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
+
+    // Sign the proof URL in case it wasn't pre-signed (private Supabase storage)
+    useEffect(() => {
+        if (!proofUrl) { setDisplayUrl(''); return; }
+        setDisplayUrl(proofUrl); // show immediately, replace with signed version when ready
+        fetch('/api/sign-urls', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urls: [proofUrl] }) })
+            .then(r => r.json()).then(d => { if (d.urls?.[0]) setDisplayUrl(d.urls[0]); }).catch(() => {});
+    }, [proofUrl]);
 
     // Auto-focus note field when modal opens (skip for routine — no note shown)
     // iOS trick: proxy input was focused synchronously in the tap handler to capture the keyboard.
@@ -1577,11 +1611,11 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
 
             {/* Media area - scrollable if needed */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                {proofUrl ? (
+                {displayUrl ? (
                     isVideo ? (
-                        <video src={proofUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
+                        <video src={displayUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
                     ) : (
-                        <img src={proofUrl} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
+                        <img src={displayUrl} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
                     )
                 ) : (
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222', fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', letterSpacing: '2px' }}>NO MEDIA</div>
@@ -2432,10 +2466,54 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
 }
 
 // ─── QUEEN VIEW ───────────────────────────────────────────────────────────────
+function useNotifStatus() {
+    const getStatus = () => {
+        if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
+        return (window as any).Notification.permission as 'default' | 'granted' | 'denied';
+    };
+    const [status, setStatus] = useState<string>(getStatus);
+    const refresh = () => setStatus(getStatus());
+    return { status, refresh };
+}
+
+async function initAndRequestPush(userEmail: string, onDone: () => void) {
+    const w = window as any;
+    // Init OneSignal if not already done
+    w.OneSignalDeferred = w.OneSignalDeferred || [];
+    w.OneSignalDeferred.push(async (OS: any) => {
+        try {
+            await OS.init({
+                appId: '761d91da-b098-44a7-8d98-75c1cce54dd0',
+                safari_web_id: 'web.onesignal.auto.5f8d50ad-7ec3-4f1c-a2de-134e8949294e',
+                notifyButton: { enable: false },
+                allowLocalhostAsSecureOrigin: true,
+            });
+            await OS.login(userEmail);
+        } catch { /* already inited */ }
+    });
+
+    // Request permission
+    const perm = ('Notification' in window) ? (window as any).Notification.permission : 'unsupported';
+    if (perm === 'denied') {
+        alert('Notifications are blocked. Go to browser Settings → Site Settings → Notifications → find this site → Allow.');
+    } else if (perm === 'granted') {
+        alert('Notifications are already enabled.');
+    } else {
+        const OS = w.OneSignal;
+        if (OS?.Notifications?.requestPermission) {
+            await OS.Notifications.requestPermission();
+        } else {
+            await (window as any).Notification.requestPermission();
+        }
+    }
+    onDone();
+}
+
 function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; onLogout: () => void; users: DashUser[]; stats: any }) {
     const [broadcastText, setBroadcastText] = useState('');
     const [broadcasting, setBroadcasting] = useState(false);
     const [broadcastStatus, setBroadcastStatus] = useState('');
+    const { status: notifStatus, refresh: refreshNotif } = useNotifStatus();
 
     const sendBroadcast = async () => {
         if (!broadcastText.trim() || broadcasting) return;
@@ -2512,6 +2590,29 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
                         </button>
                     ))}
                 </div>
+            </div>
+
+            {/* Notifications */}
+            <div style={S.card}>
+                <div style={S.cardTitle}>PUSH NOTIFICATIONS</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', color: '#666', lineHeight: 1.4 }}>
+                        {notifStatus === 'granted' ? 'Enabled — you will receive alerts when subjects message you.' :
+                         notifStatus === 'denied' ? 'Blocked in browser settings. Tap below for instructions.' :
+                         notifStatus === 'unsupported' ? 'Not supported on this browser.' :
+                         'Enable to receive alerts when subjects message you.'}
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.72rem', fontWeight: 700, color: notifStatus === 'granted' ? '#6bcb77' : notifStatus === 'denied' ? '#ff4444' : '#555', marginLeft: 12, flexShrink: 0 }}>
+                        {notifStatus === 'granted' ? 'ON' : notifStatus === 'denied' ? 'BLOCKED' : 'OFF'}
+                    </div>
+                </div>
+                {notifStatus !== 'unsupported' && (
+                    <button
+                        onClick={() => initAndRequestPush(userEmail, refreshNotif)}
+                        style={{ width: '100%', padding: '13px', background: notifStatus === 'granted' ? 'rgba(107,203,119,0.06)' : 'linear-gradient(135deg,rgba(197,160,89,0.18),rgba(139,105,20,0.12))', border: `1px solid ${notifStatus === 'granted' ? 'rgba(107,203,119,0.25)' : 'rgba(197,160,89,0.4)'}`, borderRadius: 8, color: notifStatus === 'granted' ? '#6bcb77' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
+                        {notifStatus === 'granted' ? '🔔 NOTIFICATIONS ON' : notifStatus === 'denied' ? '⚙ HOW TO UNBLOCK' : '🔔 ENABLE NOTIFICATIONS'}
+                    </button>
+                )}
             </div>
 
             <button onClick={onLogout} style={{ background: 'rgba(255,0,0,0.06)', border: '1px solid rgba(255,0,0,0.18)', color: '#ff4444', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', letterSpacing: '3px', padding: '16px', cursor: 'pointer', borderRadius: 8, width: '100%', flexShrink: 0 }}>

@@ -842,7 +842,7 @@ function _removeTaskCardFromList(taskId: string) {
     if (card) card.remove();
 }
 
-export function renderGlobalReview(filterRoutine: boolean) {
+export async function renderGlobalReview(filterRoutine: boolean) {
     activeListFilter = filterRoutine;
     const modal = document.getElementById('listModal');
     const header = document.getElementById('mListHeader');
@@ -880,19 +880,35 @@ export function renderGlobalReview(filterRoutine: boolean) {
         <div style="font-family:'Rajdhani'; color:#666; font-size:0.9rem; margin-top:5px;">${filtered.length} ITEMS PENDING</div>
     `;
 
+    // Batch-sign all thumbnail/proof URLs before building the grid HTML
+    const rawUrls: string[] = [];
+    const urlMap = new Map<string, string>(); // raw → signed
+    filtered.forEach((t: any) => {
+        const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
+        const src = isVideo ? (t.thumbnail_url || '') : (t.proofUrl || '');
+        if (src && !urlMap.has(src)) { rawUrls.push(src); urlMap.set(src, src); }
+    });
+    if (rawUrls.length) {
+        try {
+            const res = await fetch('/api/sign-urls', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urls: rawUrls }) });
+            const data = await res.json();
+            if (Array.isArray(data.urls)) rawUrls.forEach((u, i) => urlMap.set(u, data.urls[i] || u));
+        } catch { /* non-critical */ }
+    }
+
     grid.innerHTML = filtered.map((t: any) => {
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-        const optUrl = isVideo ? (t.proofUrl || '') : getOptimizedUrl(t.proofUrl || '', 600);
+        const rawSrc = isVideo ? (t.thumbnail_url || '') : (t.proofUrl || '');
+        const resolvedSrc = urlMap.get(rawSrc) || rawSrc;
+        const optUrl = isVideo ? resolvedSrc : getOptimizedUrl(resolvedSrc, 600);
 
-        // Grid cards: images shown directly; videos use preload="metadata" (no autoplay) to show first frame
+        // Grid cards: images shown directly; videos use thumbnail if available
         let mediaBg: string;
         if (isVideo) {
-            const thumbSrc = t.thumbnail_url ? getOptimizedUrl(t.thumbnail_url, 600) : null;
-            if (thumbSrc) {
-                mediaBg = `<img src="${thumbSrc}" class="ops-card-bg" onerror="this.style.display='none'">`;
+            if (resolvedSrc) {
+                mediaBg = `<img src="${resolvedSrc}" class="ops-card-bg" onerror="this.style.display='none'">`;
             } else {
-                // No thumbnail - show placeholder icon, load video only when opened in modal
                 mediaBg = `<div class="ops-card-bg" style="background:#0a0a0a;"></div>`;
             }
             mediaBg += `<div class="ops-card-vid-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>`;
