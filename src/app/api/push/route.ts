@@ -61,13 +61,10 @@ export async function POST(req: Request) {
 }
 
 // PUT /api/push - save OneSignal subscription ID to the user's profile
+// Accepts either Supabase auth session (queen/admin) or explicit memberId in body (subs)
 export async function PUT(req: Request) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     try {
-        const { subscriptionId } = await req.json();
+        const { subscriptionId, memberId: bodyMemberId } = await req.json();
         if (!subscriptionId) return NextResponse.json({ error: 'Missing subscriptionId' }, { status: 400 });
 
         const { createClient: createAdminClient } = await import('@supabase/supabase-js');
@@ -76,9 +73,20 @@ export async function PUT(req: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        const { error } = await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', user.email);
+        // Resolve target: Supabase auth session first, then explicit memberId from body
+        let targetEmail: string | null = null;
+        try {
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.email) targetEmail = user.email;
+        } catch {}
+
+        if (!targetEmail && bodyMemberId) targetEmail = String(bodyMemberId).toLowerCase();
+        if (!targetEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const { error } = await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', targetEmail);
         if (error) console.error('[push/save] DB error:', error.message);
-        else console.log('[push/save] Saved onesignal_id', subscriptionId, 'for', user.email);
+        else console.log('[push/save] Saved onesignal_id', subscriptionId, 'for', targetEmail);
 
         return NextResponse.json({ success: true });
     } catch (err: any) {

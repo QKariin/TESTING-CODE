@@ -102,7 +102,7 @@ export default function ProfilePage() {
     );
     const [activeChallenge, setActiveChallenge] = useState<{ id: string; name: string; theme: string; status: string; start_date?: string; image_url?: string } | null>(null);
     const [desktopChallengeOverlayOpen, setDesktopChallengeOverlayOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 900);
     const [isParticipant, setIsParticipant] = useState(false);
     const [participantStatus, setParticipantStatus] = useState<string | null>(null);
     const [desktopChallengeOpen, setDesktopChallengeOpen] = useState(false);
@@ -2003,7 +2003,7 @@ export default function ProfilePage() {
                     />
                 )}
                 {/* PWA Install Banner — shown on mobile browser when not already installed */}
-                {isMobile && !isStandalone && !installBannerDismissed && (installPrompt || isIOS) && (
+                {isMobile && !isStandalone && !installBannerDismissed && (
                     <div style={{
                         position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000001,
                         background: 'rgba(5,8,18,0.97)',
@@ -2023,7 +2023,7 @@ export default function ProfilePage() {
                                     await installPrompt.prompt();
                                     const { outcome } = await installPrompt.userChoice;
                                     if (outcome === 'accepted') { setInstallPrompt(null); setInstallBannerDismissed(true); }
-                                } else if (isIOS) {
+                                } else {
                                     setShowInstallGuide(true);
                                 }
                             }}
@@ -2033,7 +2033,7 @@ export default function ProfilePage() {
                                 fontFamily: 'Orbitron', fontSize: '0.38rem',
                                 color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
                             }}
-                        >{isIOS ? 'HOW TO' : 'INSTALL'}</button>
+                        >{installPrompt ? 'INSTALL' : 'HOW TO'}</button>
                         <button
                             onClick={() => { localStorage.setItem('installBannerDismissed', '1'); setInstallBannerDismissed(true); }}
                             style={{
@@ -2051,10 +2051,10 @@ export default function ProfilePage() {
                         onClick={() => setShowInstallGuide(false)}>
                         <div style={{ width: '100%', background: 'rgba(5,8,18,0.99)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '16px 16px 0 0', padding: '24px 20px 40px', fontFamily: 'Orbitron, sans-serif' }}
                             onClick={e => e.stopPropagation()}>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>INSTALL ON IPHONE</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>ADD TO HOME SCREEN</div>
                             {[
-                                { step: '1', text: 'Tap the Share button at the bottom of Safari (the box with an arrow pointing up)' },
-                                { step: '2', text: 'Scroll down and tap "Add to Home Screen"' },
+                                { step: '1', text: isIOS ? 'Tap the Share button at the bottom of Safari (box with arrow pointing up)' : 'Tap the browser menu (3 dots) in the top right corner' },
+                                { step: '2', text: isIOS ? 'Scroll down and tap "Add to Home Screen"' : 'Tap "Add to Home screen" or "Install app"' },
                                 { step: '3', text: 'Tap "Add" — done. Open it from your home screen for the full app experience.' },
                             ].map(({ step, text }) => (
                                 <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>

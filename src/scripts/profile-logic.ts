@@ -2133,6 +2133,18 @@ function initOneSignal(memberId: string) {
             } else {
                 await (window as any).Notification.requestPermission();
             }
+            // Save subscription ID to DB so queen can push to this device
+            try {
+                await new Promise(r => setTimeout(r, 1500)); // wait for OS to register
+                const subId = (window as any).OneSignal?.User?.PushSubscription?.id;
+                if (subId) {
+                    await fetch('/api/push', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ subscriptionId: subId, memberId }),
+                    });
+                }
+            } catch {}
             _updateNotifToggleUI();
         });
     }
