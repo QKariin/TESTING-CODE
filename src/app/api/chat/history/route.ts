@@ -30,7 +30,7 @@ export async function GET(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .eq('member_id', memberId)
+                .ilike('member_id', memberId)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .eq('member_id', memberId)
+                .ilike('member_id', memberId)
                 .order('created_at', { ascending: false })
                 .limit(50);
         }
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .eq('member_id', memberId)
+                .ilike('member_id', memberId)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
             query = queryClient
                 .from('chats')
                 .select('*')
-                .eq('member_id', memberId)
+                .ilike('member_id', memberId)
                 .order('created_at', { ascending: false })
                 .limit(50);
         }

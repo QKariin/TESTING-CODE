@@ -84,9 +84,9 @@ function appendToSystemLog(msg: any) {
  * Called when a user is selected in the sidebar.
  */
 export async function initDashboardChat(memberIdOrEmail: string) {
-    // Resolve UUID: look up user by memberId (email) or id (UUID)
-    const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail);
-    const activeId = u?.id || memberIdOrEmail; // always use UUID for chat lookups
+    // chats.member_id is EMAIL — always resolve to email for chat lookups
+    const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail || x.member_id === memberIdOrEmail);
+    const activeId = u?.member_id || u?.email || memberIdOrEmail;
 
     // Guard: if already initialized for this exact user AND channel is alive, skip.
     if (activeChatEmail === activeId && chatChannel) return;
