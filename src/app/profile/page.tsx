@@ -136,7 +136,11 @@ export default function ProfilePage() {
     // PWA install prompt (Android/Chrome)
     useEffect(() => {
         setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true);
-        const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
+        // Pick up prompt captured early in layout.tsx <head> (fires before React hydrates)
+        if ((window as any)._deferredInstallPrompt) {
+            setInstallPrompt((window as any)._deferredInstallPrompt);
+        }
+        const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); (window as any)._deferredInstallPrompt = e; };
         window.addEventListener('beforeinstallprompt', handler as any);
         return () => window.removeEventListener('beforeinstallprompt', handler as any);
     }, []);
