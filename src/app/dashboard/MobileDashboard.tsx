@@ -2569,6 +2569,20 @@ async function initAndRequestPush(userEmail: string, onDone: () => void) {
             await (window as any).Notification.requestPermission();
         }
     }
+
+    // Save subscription ID to DB so incoming message pushes can reach this device
+    try {
+        const OS = w.OneSignal;
+        const subId = OS?.User?.PushSubscription?.id;
+        if (subId) {
+            await fetch('/api/push', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscriptionId: subId }),
+            });
+        }
+    } catch { /* non-critical */ }
+
     onDone();
 }
 
