@@ -22,8 +22,9 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     document.getElementById('mobKneelReward')?.classList.add('hidden');
 
     const currentState = getState();
-    const { raw, id, memberId, wallet, score } = currentState;
+    const { raw, id, memberId, email, wallet, score } = currentState;
     const pid = memberId || id;
+    const chatEmail = email || pid; // chats.member_id stores EMAIL - use email for chat lookups
 
     if (!pid) { _claiming = false; return; }
 
@@ -53,7 +54,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
             return;
         }
 
-        loadChatHistory(pid);
+        loadChatHistory(chatEmail);
     } catch (err) {
         console.error('[REWARD] Save failed', err);
         _claiming = false;
@@ -1162,8 +1163,9 @@ export function cancelRequestWarning() {
 }
 
 export async function executeSkipTask() {
-    const { id, memberId, wallet } = getState();
+    const { id, memberId, email, wallet } = getState();
     const pid = memberId || id;
+    const chatEmail = email || pid;
     if (!pid) return;
 
     if ((wallet || 0) < 300) {
@@ -1231,7 +1233,7 @@ export async function executeSkipTask() {
             ];
             const msg = mockeries[Math.floor(Math.random() * mockeries.length)];
             showTaskFeedback(msg, 'var(--red)');
-            loadChatHistory(pid);
+            loadChatHistory(chatEmail);
         } else {
             cancelSkipTask();
             const sBox = document.getElementById('skipWarningBox');
