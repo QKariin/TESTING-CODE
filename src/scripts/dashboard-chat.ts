@@ -404,9 +404,9 @@ export async function sendMsg() {
         console.warn(`[DASHBOARD-CHAT] Send failed: Missing input ${!inp} or currId ${!activeCurrId}`);
         return;
     }
-    // Resolve UUID for conversation (chats.member_id is UUID)
+    // chats.member_id is EMAIL — resolve user's email for the conversation
     const convUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
-    const conversationUuid = convUser?.id || activeCurrId;
+    const conversationEmail = convUser?.member_id || convUser?.email || activeCurrId;
 
     const text = inp.value.trim();
     if (!text) return;
@@ -444,7 +444,7 @@ export async function sendMsg() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 senderEmail: senderEmail,
-                conversationId: conversationUuid, // UUID - chats.member_id
+                conversationId: conversationEmail, // email - chats.member_id is TEXT
                 content: text,
                 type: 'text'
             })
@@ -479,9 +479,9 @@ export async function handleAdminUpload(file: File) {
     const isVideo = file.type.startsWith('video/');
     const msgType = isVideo ? 'video' : 'photo';
     const objectUrl = URL.createObjectURL(file);
-    // Resolve UUID for conversation
+    // chats.member_id is EMAIL
     const mediaConvUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
-    const mediaConvUuid = mediaConvUser?.id || activeCurrId;
+    const mediaConvEmail = mediaConvUser?.member_id || mediaConvUser?.email || activeCurrId;
 
     // Show preview modal before uploading
     const existing = document.getElementById('__adminMediaPreview');
@@ -546,7 +546,7 @@ export async function handleAdminUpload(file: File) {
             const sendRes = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: userEmail, conversationId: mediaConvUuid, content: url, type: msgType }),
+                body: JSON.stringify({ senderEmail: userEmail, conversationId: mediaConvEmail, content: url, type: msgType }),
             });
             const sendData = await sendRes.json();
             if (sendData.success && sendData.data) {

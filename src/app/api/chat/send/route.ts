@@ -78,8 +78,10 @@ export async function POST(req: Request) {
             }
         }
 
-        // For chats.member_id: use UUID if available, else fall back to email
-        const chatMemberId = isUUID ? rawSender : (senderEmail || rawSender);
+        // chats.member_id is TEXT storing EMAIL — never UUID
+        // Ensure senderEmail is always resolved before using as member_id
+        if (!senderEmail) senderEmail = profile?.member_id?.toLowerCase() || rawSender;
+        const chatMemberId = senderEmail || rawSender;
         const conversationContext = isQueen ? conversationId || chatMemberId : chatMemberId;
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];

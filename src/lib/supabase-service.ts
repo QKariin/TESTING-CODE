@@ -179,13 +179,13 @@ export const DbService = {
 
     // --- MESSAGING ---
     async sendMessage(memberIdOrEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
-        // Resolve to UUID - chats.member_id is always UUID
+        // chats.member_id is EMAIL (text) — resolve UUID to email if needed
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberIdOrEmail);
         let chatMemberId = memberIdOrEmail;
-        if (!isUuid) {
-            // Look up profile by email to get UUID
-            const { data: p } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberIdOrEmail).maybeSingle();
-            if (p?.ID) chatMemberId = p.ID;
+        if (isUuid) {
+            // Resolve UUID to email for chats insert
+            const { data: p } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberIdOrEmail).maybeSingle();
+            if (p?.member_id) chatMemberId = p.member_id;
         }
 
         const { data, error } = await supabaseAdmin

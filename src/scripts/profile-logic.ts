@@ -1826,8 +1826,8 @@ export async function initChatSystem() {
         }
     });
 
-    // Load history once on first init - use userId (UUID) for DB lookup
-    await loadChatHistory(userId || email);
+    // chats.member_id is EMAIL - always query by email
+    await loadChatHistory(email!);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -1843,11 +1843,9 @@ export async function initChatSystem() {
             // NO row filter here - filter in JS instead to support UUID-based member_id
         }, (payload: any) => {
             const msg = payload.new;
-            // Guard - ignore messages for other members (compare against UUID member_id)
+            // chats.member_id is EMAIL - compare against email
             const rowMemberId = (msg.member_id || '').toLowerCase();
-            const matchesUser = userId
-                ? rowMemberId === userId.toLowerCase()
-                : rowMemberId === email!.toLowerCase();
+            const matchesUser = rowMemberId === email!.toLowerCase();
             if (!matchesUser) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
@@ -1896,7 +1894,7 @@ export async function initChatSystem() {
 
     // 3. Polling fallback every 5s - safety net for when Realtime lags or misses events
     if (_chatPollInterval) clearInterval(_chatPollInterval);
-    _chatPollInterval = setInterval(() => _pollNewChatMessages(userId || email!), 5000);
+    _chatPollInterval = setInterval(() => _pollNewChatMessages(email!), 5000);
 
     // Refresh queen presence status every 60s - stored so it can be cleared
     if (_queenInterval) clearInterval(_queenInterval);
