@@ -2036,6 +2036,11 @@ export async function initChatSystem() {
         })
         .subscribe();
 
+    // Start periodic queen status polling (every 2 minutes) so members always see live status
+    if (_queenInterval) clearInterval(_queenInterval);
+    _fetchQueenStatus(); // immediate fetch
+    _queenInterval = setInterval(_fetchQueenStatus, 2 * 60 * 1000);
+
     // 7. Push notifications - use profile UUID (not email) as external user ID
     const profileId = getState().id || email;
     initOneSignal(profileId!);

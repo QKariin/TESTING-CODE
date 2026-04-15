@@ -513,12 +513,25 @@ export default function DashboardPage() {
                 setUserEmail(user.email);
                 setAdminEmail(user.email);
             }
-            if (user?.id) {
-                const ping = () => fetch('/api/tracking/ping', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id, clientData: {} }),
-                }).catch(() => {});
+            if (user?.id || user?.email) {
+                const ping = () => {
+                    // Update via UUID-based tracking ping
+                    if (user.id) {
+                        fetch('/api/tracking/ping', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: user.id, clientData: {} }),
+                        }).catch(() => {});
+                    }
+                    // Also update via email-based presence heartbeat (reliable fallback)
+                    if (user.email) {
+                        fetch('/api/global/presence', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: user.email }),
+                        }).catch(() => {});
+                    }
+                };
                 ping(); // immediate first ping
                 heartbeatInterval = setInterval(ping, 2 * 60 * 1000); // then every 2min
             }
