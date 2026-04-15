@@ -18,8 +18,8 @@ export async function POST(req: Request) {
         // Check if profile already exists for this user
         const { data: existing } = await supabaseAdmin
             .from('profiles')
-            .select('id, member_id')
-            .eq('id', user.id)
+            .select('ID, member_id')
+            .eq('ID', user.id)
             .maybeSingle();
 
         if (existing) return NextResponse.json({ success: true, alreadyExists: true });

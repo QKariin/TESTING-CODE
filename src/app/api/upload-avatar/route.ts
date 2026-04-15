@@ -16,10 +16,10 @@ export async function POST(req: NextRequest) {
         // 1. Look up profile id to use as anonymous filename (never store email in filename)
         const { data: profileRef } = await supabaseAdmin
             .from('profiles')
-            .select('id')
+            .select('ID')
             .ilike('member_id', memberEmail)
             .maybeSingle();
-        const fileId = profileRef?.id || Date.now();
+        const fileId = profileRef?.ID || Date.now();
 
         // Upload to Supabase Storage (avatars bucket)
         const ext = file.name.split('.').pop() || 'jpg';

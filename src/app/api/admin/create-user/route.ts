@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     // 1. Check if profile already exists (by email)
     const { data: existingProfile } = await supabaseAdmin
         .from('profiles')
-        .select('id, member_id')
+        .select('ID, member_id')
         .ilike('member_id', lowerEmail)
         .maybeSingle();
 
@@ -47,8 +47,8 @@ export async function POST(req: Request) {
         // Profile exists - just link it to the auth user
         const { error: linkError } = await supabaseAdmin
             .from('profiles')
-            .update({ id: userId, member_id: lowerEmail })
-            .eq('id', existingProfile.id);
+            .update({ ID: userId, member_id: lowerEmail })
+            .eq('ID', existingProfile.ID);
         if (linkError) return NextResponse.json({ error: linkError.message }, { status: 500 });
     } else {
         // Create fresh profile

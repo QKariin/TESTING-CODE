@@ -49,7 +49,7 @@ export async function GET(req: Request) {
             const { data } = await supabaseAdmin
                 .from('profiles')
                 .select('*')
-                .eq('id', userId)
+                .eq('ID', userId)
                 .maybeSingle();
             profile = data;
         }

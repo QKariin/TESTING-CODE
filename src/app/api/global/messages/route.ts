@@ -36,8 +36,8 @@ export async function POST(req: Request) {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(senderEmail);
     const { data: profile } = await supabaseAdmin
         .from('profiles')
-        .select('id, name, avatar_url, member_id')
-        .or(isUUID ? `id.eq.${senderEmail}` : `member_id.ilike.${senderEmail}`)
+        .select('ID, name, avatar_url, member_id')
+        .or(isUUID ? `ID.eq.${senderEmail}` : `member_id.ilike.${senderEmail}`)
         .maybeSingle();
 
     const realEmail = (profile as any)?.member_id || senderEmail;

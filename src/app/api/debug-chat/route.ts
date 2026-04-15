@@ -19,7 +19,7 @@ export async function GET() {
     // Sample profiles to see what member_id looks like there
     const { data: profiles, error: profErr } = await admin
         .from('profiles')
-        .select('id, member_id, name')
+        .select('ID, member_id, name')
         .limit(5);
 
     return NextResponse.json({

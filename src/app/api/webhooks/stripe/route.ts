@@ -116,7 +116,7 @@ export async function POST(req: Request) {
                     const { data } = await supabaseAdmin
                         .from('profiles')
                         .select('*')
-                        .eq('id', userId)
+                        .eq('ID', userId)
                         .maybeSingle();
                     profile = data;
                 }
