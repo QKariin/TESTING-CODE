@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             const { data, error: profileErr } = await adminClient
                 .from('profiles')
                 .select('*')
-                .eq(isUUID ? 'id' : 'member_id', rawSender)
+                .eq(isUUID ? 'ID' : 'member_id', rawSender)
                 .maybeSingle();
             profile = data;
 
@@ -166,7 +166,7 @@ export async function POST(req: Request) {
                 adminClient
                     .from('profiles')
                     .select('onesignal_id')
-                    .eq(isConvUUID ? 'id' : 'member_id', conversationId)
+                    .eq(isConvUUID ? 'ID' : 'member_id', conversationId)
                     .maybeSingle()
             ).then(({ data: pushProfile }) => {
                 const onesignalId = pushProfile?.onesignal_id;

@@ -820,9 +820,9 @@ export async function getMasterData() {
             const profileEmail = (item.member_id || '').toLowerCase();
             const authUuid = authUuidByEmail[profileEmail] || '';
             const matches = (tasks || []).filter((t: any) =>
-                t.member_id === item.id ||
+                t.ID === item.ID ||
                 (t.member_id || '').toLowerCase() === profileEmail ||
-                (authUuid && t.member_id === authUuid)
+                (authUuid && t.ID === authUuid)
             );
             // Pick the row with the most data (highest kneelCount + CompletedTasks)
             const uTasks = matches.length <= 1 ? matches[0] : matches.reduce((best: any, x: any) => {
@@ -898,7 +898,7 @@ export async function adminReviewTask(userId: string, taskId: string, decision: 
             taskUpdates.Taskdom_History = JSON.stringify(history);
 
             await updateProfile(profile.ID, updates);
-            await getAdmin().from('tasks').update(taskUpdates).eq('member_id', taskRow.member_id);
+            await getAdmin().from('tasks').update(taskUpdates).eq('ID', taskRow.ID);
             if (decision === 'approve') {
                 const { DbService } = await import('@/lib/supabase-service');
                 await DbService.awardPoints(profile.member_id || userId, 50);
@@ -1468,8 +1468,8 @@ export async function ensureProfileExists(user: { id: string, email: string }) {
         // Check if profile exists
         const { data: existing } = await getAdmin()
             .from('profiles')
-            .select('id')
-            .eq('id', user.id)
+            .select('"ID"')
+            .eq('ID', user.id)
             .single();
 
         if (existing) {

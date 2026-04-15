@@ -42,8 +42,8 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
 
     return {
         ...p,
-        id: p.id,
-        memberId: p.id,        // UUID — use p.member_id (email) via spread for display
+        id: p.ID || p.id,
+        memberId: p.ID || p.id,        // UUID — use p.member_id (email) via spread for display
         name: p.name || p.title || 'Unknown',
         hierarchy: p.hierarchy || 'Hall Boy',
         score: Math.max(Number(p.score || 0), Number(t?.Score || 0), Number(t?.score || 0)),
