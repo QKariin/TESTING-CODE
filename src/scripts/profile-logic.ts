@@ -1575,7 +1575,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false): Promi
                 showTaskFeedback(mockeries[Math.floor(Math.random() * mockeries.length)], '#c5a059');
             }
             // Refresh gallery so the pending item appears immediately
-            refreshTaskGallery(pid);
+            refreshTaskGallery(getState().email || _galleryEmail || pid);
             return true;
         } else {
             console.error("Backend submission error:", data.error);

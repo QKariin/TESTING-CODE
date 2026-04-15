@@ -237,7 +237,7 @@ export default function ProfilePage() {
                         }
                         getRandomTask(true);
                         loadQueenPosts();
-                        initGallery(unifiedData.memberId || unifiedData.member_id || '');
+                        initGallery(unifiedData.member_id || unifiedData.email || '');
 
                         // Initialize Chat & Tracking
                         initChatSystem();
@@ -340,7 +340,7 @@ export default function ProfilePage() {
                         }
                         getRandomTask(true);
                         loadQueenPosts();
-                        initGallery(unifiedData.memberId || unifiedData.member_id || '');
+                        initGallery(unifiedData.member_id || unifiedData.email || '');
 
                         // Initialize Chat & Tracking
                         initChatSystem();

@@ -18,12 +18,22 @@ async function getTaskRow(memberId: string) {
             .maybeSingle();
         if (data) return data;
 
-        // UUID user but tasks row might still use email — look up email via profiles
+        // UUID user but tasks row might still use email — look up via profiles
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('member_id')
+            .select('id, member_id')
             .eq('id', memberId)
             .maybeSingle();
+        // Try by profiles.id
+        if (profile?.id && profile.id !== memberId) {
+            const { data: rowById } = await supabaseAdmin
+                .from('tasks')
+                .select('Taskdom_History')
+                .eq('member_id', profile.id)
+                .maybeSingle();
+            if (rowById) return rowById;
+        }
+        // Try by profiles.member_id (email)
         if (profile?.member_id) {
             const { data: row } = await supabaseAdmin
                 .from('tasks')

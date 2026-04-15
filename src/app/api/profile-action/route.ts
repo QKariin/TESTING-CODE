@@ -1,6 +1,7 @@
 // src/app/api/profile-action/route.ts
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
+import { cacheDelete } from '@/lib/api-cache';
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,8 @@ export async function POST(req: Request) {
 
             case 'SUBMIT_TASK':
                 result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl);
+                // Bust routine cache so next poll gets fresh uploadedToday status
+                if (payload.isRoutine) cacheDelete(`routine:`);
                 break;
 
             default:

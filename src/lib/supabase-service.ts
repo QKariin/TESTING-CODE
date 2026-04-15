@@ -222,13 +222,19 @@ export const DbService = {
             const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', memberId).maybeSingle();
             if (data) return data;
         }
-        // Get profile UUID and try that
+        // Get profile (by UUID or email) so we can try all identifiers
         const profile = await this.getProfile(memberId);
+        // Try by profiles.id (UUID)
         if (profile?.id) {
             const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
             if (data) return data;
         }
-        // Legacy fallback: email-based row
+        // Try by profiles.member_id (email) — for rows not yet migrated from email to UUID
+        if (profile?.member_id) {
+            const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
+            if (data) return data;
+        }
+        // Final fallback: treat memberId itself as email
         const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', memberId).maybeSingle();
         return data;
     },
