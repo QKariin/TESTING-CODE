@@ -1,7 +1,17 @@
-// Presence is now handled entirely by Supabase Realtime track() in profile-logic.ts.
-// No DB heartbeat needed - returning null so existing callers don't break.
-export function startPresenceHeartbeat(_userId: string): ReturnType<typeof setInterval> | null {
-    return null;
+// Heartbeat: updates profiles.last_active every 2 minutes so "last seen" stays accurate.
+// The Realtime presence channel (track()) handles the online dot; this handles the timestamp.
+export function startPresenceHeartbeat(userId: string): ReturnType<typeof setInterval> | null {
+    if (!userId) return null;
+
+    const ping = () => {
+        fetch('/api/tracking/ping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, clientData: {} }),
+        }).catch(() => {});
+    };
+
+    return setInterval(ping, 2 * 60 * 1000); // every 2 minutes
 }
 
 export async function trackUserAnalytics(userId: string) {
