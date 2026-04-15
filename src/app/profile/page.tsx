@@ -568,13 +568,13 @@ export default function ProfilePage() {
     };
 
     if (loading) return (
-        <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Orbitron' }}>
+        <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
             LOADING COMMAND CONSOLE...
         </div>
     );
 
     if (silenceActive) return (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647, padding: '24px', boxSizing: 'border-box', fontFamily: 'Orbitron, sans-serif' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647, padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                     <svg viewBox="0 0 24 24" width="52" height="52" fill="rgba(220,60,60,0.7)">
@@ -596,11 +596,11 @@ export default function ProfilePage() {
         {/* ── PAYWALL OVERLAY - outside container so position:fixed works on iOS ── */}
         <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
                 <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                    <div id="paywallReason" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
+                    <div id="paywallReason" style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
                     <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                     <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
                 </div>
@@ -642,7 +642,7 @@ export default function ProfilePage() {
 
             {/* Push notification opt-in banner */}
             <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,6,2,0.97)', border: '1px solid rgba(197,160,89,0.6)', borderRadius: 12, padding: '14px 20px', flexDirection: 'row', alignItems: 'center', gap: 12, boxShadow: '0 4px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', whiteSpace: 'nowrap' }}>
-                <span style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#c5a059' }}>👑 Enable Queen&apos;s notifications</span>
+                <span style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059' }}>👑 Enable Queen&apos;s notifications</span>
                 <button id="pushAllowBtn" style={{ background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
                     <span id="pushAllowLabel">ALLOW</span>
                 </button>
@@ -705,13 +705,13 @@ export default function ProfilePage() {
 
                         <div style={{ marginTop: 25, width: '100%', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 15 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 2, marginBottom: 5 }}>CURRENT CLASSIFICATION</div>
-                            <div id="desk_DashboardRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: 20 }}>...</div>
+                            <div id="desk_DashboardRank" style={{ fontFamily: 'Cinzel', fontSize: '1.4rem', color: '#fff', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: 20 }}>...</div>
 
                             <button id="desk_BenefitsToggle" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                                 <span style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: 1 }}>CURRENT PRIVILEGES</span>
                                 <span style={{ fontSize: '0.6rem', color: '#c5a059' }}>▼</span>
                             </button>
-                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Orbitron', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
+                            <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
                         </div>
 
                         <button onClick={() => (window as any).handleLogout?.()} style={{ marginTop: 20, width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.55rem', letterSpacing: 2, padding: '10px 0', cursor: 'pointer', borderRadius: 6, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(197,160,89,0.4)'; e.currentTarget.style.color = '#c5a059'; }} onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}>
@@ -742,7 +742,7 @@ export default function ProfilePage() {
                                         {openWindowForBanner && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 8px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite' }} />}
                                         {openWindowForBanner ? 'TASK WINDOW OPEN' : 'ACTIVE CHALLENGE'}
                                     </div>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.5px' }}>{activeChallenge.name}</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.5px' }}>{activeChallenge.name}</div>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.34rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '1px' }}>
                                         {openWindowForBanner
                                             ? <CountdownText targetTs={new Date(openWindowForBanner.closes_at).getTime()} prefix="CLOSES IN " />
@@ -756,7 +756,7 @@ export default function ProfilePage() {
 
                         <div style={{ width: '100%', textAlign: 'left', padding: '0 2px', marginBottom: 25, flexShrink: 0 }}>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', marginBottom: 6 }}>PRIVILEGES GRANTED</div>
-                            <ul id="desk_NextBenefits" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Orbitron', paddingLeft: 15, lineHeight: 1.5, margin: 0 }}></ul>
+                            <ul id="desk_NextBenefits" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, margin: 0 }}></ul>
                         </div>
 
                     </div>
@@ -774,7 +774,7 @@ export default function ProfilePage() {
 
                     <div id="gridStat2" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
                         <div className="ribbon-label" style={{ textAlign: 'center' }}>DAILY ROUTINE</div>
-                        <div id="deskRoutineDisplay" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.4, minHeight: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>LOADING...</div>
+                        <div id="deskRoutineDisplay" style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.4, minHeight: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>LOADING...</div>
                         <button
                             id="deskRoutineActionBtn"
                             style={{
@@ -810,7 +810,7 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                     {/* Challenge name */}
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '1px', lineHeight: 1.3, flex: 1, display: 'flex', alignItems: 'center' }}>{activeChallenge.name}</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '1px', lineHeight: 1.3, flex: 1, display: 'flex', alignItems: 'center' }}>{activeChallenge.name}</div>
                                     {/* Timer */}
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1.5px', marginBottom: 10 }}>
                                         {openWindowForBanner
@@ -854,7 +854,7 @@ export default function ProfilePage() {
 
                     <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
+                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
                     </div>
 
@@ -868,12 +868,12 @@ export default function ProfilePage() {
 
                                 {/* Title */}
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: 4 }}>SESSION COMPLETE</div>
-                                <h2 style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '1.15rem', letterSpacing: 3, margin: '0 0 4px', textTransform: 'uppercase', textShadow: '0 0 20px rgba(197,160,89,0.5)' }}>DEVOTION RECOGNIZED</h2>
+                                <h2 style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.15rem', letterSpacing: 3, margin: '0 0 4px', textTransform: 'uppercase', textShadow: '0 0 20px rgba(197,160,89,0.5)' }}>DEVOTION RECOGNIZED</h2>
 
                                 {/* Divider */}
                                 <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, #c5a059, transparent)', margin: '10px 0 16px' }}></div>
 
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 2, marginBottom: 18, textAlign: 'center' }}>Choose your tribute, loyal subject</div>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 2, marginBottom: 18, textAlign: 'center' }}>Choose your tribute, loyal subject</div>
 
                                 {/* Reward cards */}
                                 <div style={{ display: 'flex', flexDirection: 'row', gap: 12, width: '100%' }}>
@@ -881,14 +881,14 @@ export default function ProfilePage() {
                                     <button onClick={() => claimKneelReward('coins')} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(197,160,89,0.12) 0%, rgba(197,160,89,0.04) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 10, padding: '14px 8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s', boxShadow: '0 0 20px rgba(197,160,89,0.1), inset 0 1px 0 rgba(197,160,89,0.15)', outline: 'none' }}>
                                         <div style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 8px rgba(197,160,89,0.6))' }}>🪙</div>
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 700 }}>COINS</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.62rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Add to your treasury</div>
+                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.62rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Add to your treasury</div>
                                     </button>
 
                                     {/* Points option */}
                                     <button onClick={() => claimKneelReward('points')} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(160,180,255,0.08) 0%, rgba(160,180,255,0.02) 100%)', border: '1px solid rgba(160,180,255,0.3)', borderRadius: 10, padding: '14px 8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s', boxShadow: '0 0 20px rgba(160,180,255,0.06), inset 0 1px 0 rgba(160,180,255,0.1)', outline: 'none' }}>
                                         <div style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 0 8px rgba(160,180,255,0.5))' }}>⭐</div>
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#a0b4ff', letterSpacing: '3px', fontWeight: 700 }}>MERIT</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.62rem', color: 'rgba(160,180,255,0.5)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Rise in rank</div>
+                                        <div style={{ fontFamily: 'Cinzel', fontSize: '0.62rem', color: 'rgba(160,180,255,0.5)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Rise in rank</div>
                                     </button>
                                 </div>
 
@@ -898,7 +898,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div style={{ position: 'relative', zIndex: 10, padding: 10, boxSizing: 'border-box' }}>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'Orbitron', fontSize: '0.8rem', letterSpacing: 2, margin: 0, textTransform: 'uppercase' }}>Welcome back,</p>
+                            <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'Cinzel', fontSize: '0.8rem', letterSpacing: 2, margin: 0, textTransform: 'uppercase' }}>Welcome back,</p>
                             <h2 id="heroUserName" style={{ fontFamily: 'Orbitron', fontSize: '2rem', margin: '5px 0', color: 'white', letterSpacing: 2, fontWeight: 700 }}>{profile?.name || "LOYAL SUBJECT"}</h2>
                             <button id="heroKneelBtn" className="mob-kneel-bar" style={{ height: 48, width: 220, cursor: 'pointer', borderRadius: 4, overflow: 'hidden', position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid #c5a059', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, outline: 'none', transition: '0.3s' }}>
                                 <div id="heroKneelFill" className="mob-bar-fill" style={{ width: '0%', background: 'linear-gradient(90deg, #4b0000 0%, #000000 100%)', height: '100%', position: 'absolute', left: 0, top: 0, transition: 'width 0.3s ease', pointerEvents: 'none' }}></div>
@@ -906,7 +906,7 @@ export default function ProfilePage() {
                                     <span id="heroKneelText" style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: 'white', textShadow: '0 1px 3px black', letterSpacing: 2 }}>HOLD TO KNEEL</span>
                                 </div>
                             </button>
-                            <p style={{ color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.85rem', letterSpacing: 1, margin: 0, opacity: 0.8, fontStyle: 'italic' }}>"Your devotion determines your destiny."</p>
+                            <p style={{ color: '#c5a059', fontFamily: 'Cinzel', fontSize: '0.85rem', letterSpacing: 1, margin: 0, opacity: 0.8, fontStyle: 'italic' }}>"Your devotion determines your destiny."</p>
                         </div>
                     </div>
 
@@ -915,15 +915,15 @@ export default function ProfilePage() {
                         <div className="task-interface-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                             <div id="mainButtonsArea" style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <button id="newTaskBtn" onClick={() => getRandomTask()} className="action-btn" style={{ width: '100%', borderRadius: 12, background: '#0075ff', color: 'white', padding: 15, fontWeight: 'bold', letterSpacing: 2 }}>REQUEST TASK</button>
-                                <div id="idleMessage" style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from Queen Karin...</div>
+                                <div id="idleMessage" style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 10 }}>Awaiting direct orders from Queen Karin...</div>
                                 <div id="requestWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 15, alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '15px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
-                                    <div style={{ color: '#ff003c', fontFamily: 'Orbitron', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                    <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
                                     <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '12px', padding: '15px', fontSize: '0.9rem', letterSpacing: '2px' }}>ADD COINS</button>
                                     <button className="text-btn" onClick={() => (window as any).cancelRequestWarning()} style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '10px', width: '100%' }}>RETURN TO SERVE</button>
                                 </div>
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <h2 id="readyText" style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
+                                <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
                                 <div id="activeTimerRow" className="card-timer-row">
                                     <div id="timerH" className="card-t-box">00</div>
                                     <div className="t-sep">:</div>
@@ -932,7 +932,7 @@ export default function ProfilePage() {
                                     <div id="timerS" className="card-t-box">00</div>
                                 </div>
                                 <div id="skipWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 10, alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '15px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
-                                    <div style={{ color: '#ff003c', fontFamily: 'Orbitron', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                    <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
                                     <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: 240, background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '8px', padding: '10px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
                                     <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px', width: 240 }}>RETURN TO SERVE</button>
                                 </div>
@@ -941,8 +941,8 @@ export default function ProfilePage() {
                                     <button id="btnSkip" onClick={() => (window as any).skipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 240 }}>SKIP TASK</button>
                                 </div>
                                 <div id="skipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 10, marginTop: 10, alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.4)', background: 'rgba(20,0,0,0.8)', padding: '15px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
-                                    <div style={{ color: '#ff003c', fontFamily: 'Orbitron', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
-                                    <div style={{ color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', textAlign: 'center', marginBottom: 5 }}>Is that skip worth of <span style={{ color: '#ff003c', fontWeight: 'bold' }}>300 coins</span>, pet?</div>
+                                    <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
+                                    <div style={{ color: '#ccc', fontFamily: 'Cinzel', fontSize: '0.75rem', textAlign: 'center', marginBottom: 5 }}>Is that skip worth of <span style={{ color: '#ff003c', fontWeight: 'bold' }}>300 coins</span>, pet?</div>
                                     <button id="btnConfirmSkip" onClick={() => (window as any).executeSkipTask()} className="action-btn" style={{ width: 280, background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '8px', padding: '10px', fontSize: '0.8rem', letterSpacing: '2px' }}>ACCEPT PENALTY</button>
                                     <button id="btnCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 280, whiteSpace: 'nowrap' }}>NEVERMIND, I WILL SERVE</button>
                                 </div>
@@ -962,7 +962,7 @@ export default function ProfilePage() {
                                     <div id="deskChatOnlineDot" style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
                                 </div>
                                 <div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
                                     <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>-</div>
                                 </div>
                             </div>
@@ -991,7 +991,7 @@ export default function ProfilePage() {
                                                     return `◎ STARTS IN ${h}h ${m}m`;
                                                 })()}
                                             </div>
-                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                                             <button
@@ -1026,7 +1026,7 @@ export default function ProfilePage() {
                             {/* NEW SYSTEM LOG CONTAINER */}
                             <div id="systemLogContainer" className="hidden" style={{ position: 'absolute', top: 15, left: 15, right: 15, bottom: 90, background: 'rgba(5,5,5,0.95)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, boxShadow: '0 15px 35px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 50, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
                                 <div style={{ width: '100%', padding: '15px 20px', background: 'rgba(197,160,89,0.05)', borderBottom: '1px solid rgba(197,160,89,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontFamily: 'Orbitron', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
+                                    <span style={{ fontFamily: 'Cinzel', color: '#c5a059', fontWeight: 'bold' }}>SYSTEM LOGS</span>
                                     <button onClick={() => (window as any).toggleSystemLog()} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '1.2rem' }}>×</button>
                                 </div>
                                 <div id="systemLogContent" className="chat-area" style={{ flex: 1, overflowY: 'auto', padding: 20 }}></div>
@@ -1060,7 +1060,7 @@ export default function ProfilePage() {
                                     )}
                                     <div>
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 2 }}>⚔ CHALLENGE TASKS</div>
-                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700 }}>{activeChallenge.name}</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', fontWeight: 700 }}>{activeChallenge.name}</div>
                                     </div>
                                 </div>
                                 <button onClick={() => setDesktopChallengeOverlayOpen(false)} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.color = '#c5a059'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; }} onMouseOut={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.15)'; }}>✕</button>
@@ -1084,7 +1084,7 @@ export default function ProfilePage() {
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(4, 4, 16, 0.88)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', zIndex: -1, borderRadius: '16px', border: '1px solid rgba(197,160,89,0.15)' }}></div>
 
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '30px', zIndex: 10, position: 'relative' }}>
-                            <span style={{ fontFamily: "'Orbitron', sans-serif", color: '#fff', fontSize: '1.4rem', letterSpacing: '6px', fontWeight: 700, textTransform: 'uppercase', textShadow: '0 0 40px rgba(197,160,89,0.25)' }}>QUEEN<span style={{ color: '#c5a059', margin: '0 10px' }}>✦</span>WISHLIST</span>
+                            <span style={{ fontFamily: "'Cinzel', serif", color: '#fff', fontSize: '1.4rem', letterSpacing: '6px', fontWeight: 700, textTransform: 'uppercase', textShadow: '0 0 40px rgba(197,160,89,0.25)' }}>QUEEN<span style={{ color: '#c5a059', margin: '0 10px' }}>✦</span>WISHLIST</span>
                             <button onClick={() => toggleTributeHunt()} style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontFamily: "'Orbitron', sans-serif", fontSize: '0.55rem', letterSpacing: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.color = '#c5a059'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; e.currentTarget.style.background = 'rgba(197,160,89,0.08)'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.15)'; e.currentTarget.style.background = 'transparent'; }}>✕</button>
                         </div>
                         <div id="huntStoreGridDesk" className="store-grid" style={{ width: '100%', flex: 1, overflowY: 'auto', overflowX: 'hidden', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '30px', padding: '20px 10px', paddingBottom: '30px', zIndex: 10, position: 'relative' }}></div>
@@ -1104,7 +1104,7 @@ export default function ProfilePage() {
                             {/* BOTTOM BOX - link to record / gallery */}
                             <div className="v-card" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '22px 16px', cursor: 'pointer' }} onClick={() => (window as any).switchTab('record')}>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>MY RECORD</div>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>MY RECORD</div>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>ALTAR · GALLERY · HISTORY</div>
                             </div>
                         </div>
@@ -1167,7 +1167,7 @@ export default function ProfilePage() {
 
                         {/* CLOSE */}
                         <div style={{ position: 'absolute', top: 10, right: 0 }}>
-                            <button onClick={() => switchTab('serve')} style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(212,175,55,0.45)', color: '#d4af37', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: 'Orbitron', fontSize: '0.65rem', letterSpacing: 3 }}>✕ CLOSE</button>
+                            <button onClick={() => switchTab('serve')} style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(212,175,55,0.45)', color: '#d4af37', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: 'Cinzel', fontSize: '0.65rem', letterSpacing: 3 }}>✕ CLOSE</button>
                         </div>
 
                         {/* top spacer for close button */}
@@ -1215,19 +1215,19 @@ export default function ProfilePage() {
 
                                             {/* TOP STRIP */}
                                             <div style={{ position: 'absolute', top: '19%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: 'clamp(0.5rem, 1.2vw, 0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px, 0.5vw, 6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', whiteSpace: 'nowrap' }}>{sub.tier}</div>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem, 1.2vw, 0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px, 0.5vw, 6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', whiteSpace: 'nowrap' }}>{sub.tier}</div>
                                             </div>
 
                                             {/* CENTER - PRICE */}
                                             <div style={{ position: 'absolute', top: '35%', left: '10%', right: '10%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                                <span style={{ fontFamily: 'Orbitron', fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: 'clamp(0.35rem, 0.7vw, 0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
+                                                <span style={{ fontFamily: 'Cinzel', fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.35rem, 0.7vw, 0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
                                             </div>
 
                                             {/* BOTTOM STRIP */}
                                             <div style={{ position: 'absolute', bottom: '11%', left: '8%', right: '8%', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
                                                 onClick={() => (window as any).handleSubscribe?.(sub.id)}>
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: 'clamp(0.5rem, 1.1vw, 0.8rem)', color: '#f3e5ab', letterSpacing: 'clamp(2px, 0.5vw, 5px)', textShadow: '0 2px 8px rgba(0,0,0,0.9)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>SUBSCRIBE</div>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem, 1.1vw, 0.8rem)', color: '#f3e5ab', letterSpacing: 'clamp(2px, 0.5vw, 5px)', textShadow: '0 2px 8px rgba(0,0,0,0.9)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>SUBSCRIBE</div>
                                             </div>
                                         </div>
                                     );
@@ -1239,15 +1239,15 @@ export default function ProfilePage() {
                         <div style={{ width: '100%', display: 'flex', alignItems: 'center', margin: '10px 0 30px' }}>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.7))' }} />
                             <div style={{ padding: '0 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, letterSpacing: 8, background: 'linear-gradient(to bottom, #fff8d0, #c8960c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', whiteSpace: 'nowrap' }}>ROYAL EXCHEQUER</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(212,175,55,0.6)', letterSpacing: 6 }}>THE EMPEROR'S TREASURY</div>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '2rem', fontWeight: 900, letterSpacing: 8, background: 'linear-gradient(to bottom, #fff8d0, #c8960c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', whiteSpace: 'nowrap' }}>ROYAL EXCHEQUER</div>
+                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(212,175,55,0.6)', letterSpacing: 6 }}>THE EMPEROR'S TREASURY</div>
                             </div>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(270deg, transparent, rgba(212,175,55,0.7))' }} />
                         </div>
 
                         {/* ── SECTION 2: BUY COINS ── */}
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 30 }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, width: '100%' }}>
                                 {([
                                     { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR' },
@@ -1263,13 +1263,13 @@ export default function ProfilePage() {
                                         <div style={{ width: '100%', paddingBottom: '120%', background: 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block' }} />
                                         <div style={{ position: 'absolute', top: '16%', left: '18%', right: '18%', bottom: '20%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                                             {pkg.badge && (
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>
                                             )}
                                             <i className="fas fa-coins" style={{ fontSize: '1.6rem', color: '#c5a059', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))' }}></i>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 1, textShadow: '0 3px 12px rgba(0,0,0,1)', lineHeight: 1 }}>{pkg.amount}</div>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#d4af37', letterSpacing: 3 }}>ROYAL SILVER</div>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 1, textShadow: '0 3px 12px rgba(0,0,0,1)', lineHeight: 1 }}>{pkg.amount}</div>
+                                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.42rem', color: '#d4af37', letterSpacing: 3 }}>ROYAL SILVER</div>
                                             <div style={{ marginTop: 4, background: 'rgba(0,0,0,0.7)', border: '1px solid #c8960c', borderRadius: 2, padding: '4px 10px' }}>
-                                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: '#f3e5ab', fontWeight: 'bold' }}>{pkg.price}</span>
+                                                <span style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#f3e5ab', fontWeight: 'bold' }}>{pkg.price}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1491,7 +1491,7 @@ export default function ProfilePage() {
                                 <div className="mob-rank-stamp" style={{ right: 'auto', left: '-5px', color: '#fff', borderColor: '#fff' }}>DENIED</div>
                             </div>
                             <h2 className="mob-reward-title" style={{ color: '#ff003c' }}>INSUFFICIENT CAPITAL</h2>
-                            <div id="povertyInsult" style={{ fontFamily: 'Orbitron', color: '#ccc', fontSize: '0.85rem', lineHeight: 1.4, padding: '0 10px' }}>"You cannot afford my attention."</div>
+                            <div id="povertyInsult" style={{ fontFamily: 'Cinzel', color: '#ccc', fontSize: '0.85rem', lineHeight: 1.4, padding: '0 10px' }}>"You cannot afford my attention."</div>
                             <div className="mob-reward-actions" style={{ marginTop: '10px' }}>
                                 <button onClick={() => (window as any).goToExchequer()} className="mob-action-btn" style={{ borderColor: '#ff003c', color: '#ff003c' }}>BOOST WALLET</button>
                                 <button onClick={() => (window as any).closePoverty()} className="mob-action-btn" style={{ borderColor: '#444', color: '#888' }}>APOLOGIZE & RETURN</button>
@@ -1509,12 +1509,12 @@ export default function ProfilePage() {
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.52rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: 6 }}>SESSION COMPLETE</div>
 
                             {/* Title */}
-                            <h2 style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '1.2rem', letterSpacing: 3, margin: '0 0 6px', textTransform: 'uppercase', textShadow: '0 0 22px rgba(197,160,89,0.5)', textAlign: 'center' }}>DEVOTION RECOGNIZED</h2>
+                            <h2 style={{ fontFamily: 'Cinzel', color: '#c5a059', fontSize: '1.2rem', letterSpacing: 3, margin: '0 0 6px', textTransform: 'uppercase', textShadow: '0 0 22px rgba(197,160,89,0.5)', textAlign: 'center' }}>DEVOTION RECOGNIZED</h2>
 
                             {/* Divider */}
                             <div style={{ width: 55, height: 1, background: 'linear-gradient(90deg, transparent, #c5a059, transparent)', margin: '12px 0 14px' }}></div>
 
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, marginBottom: 22, textAlign: 'center' }}>Choose your tribute, loyal subject</div>
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, marginBottom: 22, textAlign: 'center' }}>Choose your tribute, loyal subject</div>
 
                             {/* Reward cards */}
                             <div style={{ display: 'flex', flexDirection: 'row', gap: 12, width: '100%' }}>
@@ -1522,14 +1522,14 @@ export default function ProfilePage() {
                                 <button onClick={() => (window as any).claimKneelReward('coins')} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(197,160,89,0.13) 0%, rgba(197,160,89,0.04) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 12, padding: '16px 8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, boxShadow: '0 0 18px rgba(197,160,89,0.1), inset 0 1px 0 rgba(197,160,89,0.15)', outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
                                     <div style={{ fontSize: '1.5rem', filter: 'drop-shadow(0 0 8px rgba(197,160,89,0.7))' }}>🪙</div>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 700 }}>COINS</div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(197,160,89,0.55)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Add to your treasury</div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(197,160,89,0.55)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Add to your treasury</div>
                                 </button>
 
                                 {/* Merit */}
                                 <button onClick={() => (window as any).claimKneelReward('points')} style={{ flex: 1, background: 'linear-gradient(135deg, rgba(160,180,255,0.09) 0%, rgba(160,180,255,0.02) 100%)', border: '1px solid rgba(160,180,255,0.3)', borderRadius: 12, padding: '16px 8px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, boxShadow: '0 0 18px rgba(160,180,255,0.07), inset 0 1px 0 rgba(160,180,255,0.1)', outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
                                     <div style={{ fontSize: '1.5rem', filter: 'drop-shadow(0 0 8px rgba(160,180,255,0.6))' }}>⭐</div>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#a0b4ff', letterSpacing: '3px', fontWeight: 700 }}>MERIT</div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(160,180,255,0.5)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Rise in rank</div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: 'rgba(160,180,255,0.5)', letterSpacing: 1, textAlign: 'center', lineHeight: 1.5 }}>Rise in rank</div>
                                 </button>
                             </div>
 
@@ -1631,9 +1631,9 @@ export default function ProfilePage() {
                             </div>
                             <div id="mobStatsContent" className="mob-internal-drawer">
                                 <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '15px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
-                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '-'}</div>
-                                    <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
+                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '-'}</div>
+                                    <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
                                 </div>
                                 <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
@@ -1642,7 +1642,7 @@ export default function ProfilePage() {
                                 <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
                                 <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
-                                    <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Orbitron', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
+                                    <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
                                 </div>
                             </div>
                         </div>
@@ -1671,7 +1671,7 @@ export default function ProfilePage() {
                                     <div className="txt-status-red">AWAITING ORDERS</div>
                                     <button id="mobNewTaskBtn" className="lobby-btn" onClick={() => (window as any).mobileRequestTask()}>REQUEST TASK</button>
                                     <div id="mobRequestWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 12, marginTop: '10px', alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '20px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
-                                        <div style={{ color: '#ff003c', fontFamily: 'Orbitron', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                        <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
                                         <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', padding: '15px', borderRadius: '8px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
                                         <button className="text-btn" onClick={() => (window as any).cancelRequestWarning()} style={{ width: '100%', color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '10px' }}>RETURN TO SERVE</button>
                                     </div>
@@ -1687,7 +1687,7 @@ export default function ProfilePage() {
                                         <div id="qm_timerS" className="card-t-box">00</div>
                                     </div>
                                     <div id="mobSkipWarningBox" style={{ display: 'none', flexDirection: 'column', gap: 12, marginTop: '10px', marginBottom: '10px', alignItems: 'center', width: '100%', border: '1px solid rgba(255,0,60,0.5)', background: 'rgba(20,0,0,0.8)', padding: '20px', borderRadius: '8px', backdropFilter: 'blur(5px)' }}>
-                                        <div style={{ color: '#ff003c', fontFamily: 'Orbitron', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
+                                        <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '0.9rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>INSUFFICIENT CAPITAL</div>
                                         <button className="action-btn" onClick={() => (window as any).goToExchequer()} style={{ width: '100%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', padding: '12px', borderRadius: '8px', fontSize: '0.8rem', letterSpacing: '2px' }}>ADD COINS</button>
                                         <button className="text-btn" onClick={() => (window as any).cancelSkipWarning()} style={{ width: '100%', color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: 1, background: 'none', border: 'none', padding: '5px' }}>RETURN TO SERVE</button>
                                     </div>
@@ -1696,8 +1696,8 @@ export default function ProfilePage() {
                                         <button id="mobBtnSkip" className="btn-skip-sm" onClick={() => (window as any).mobileSkipTask()}>SKIP TASK</button>
                                     </div>
                                     <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 15, marginTop: 15, alignItems: 'center', background: 'rgba(20, 0, 0, 0.6)', border: '1px solid rgba(255, 0, 60, 0.4)', boxShadow: '0 0 20px rgba(255, 0, 60, 0.1)', backdropFilter: 'blur(10px)', padding: '25px', borderRadius: '12px', width: '100%' }}>
-                                        <div style={{ color: '#ff003c', fontFamily: 'Orbitron', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
-                                        <div style={{ color: '#ccc', fontFamily: 'Orbitron', fontSize: '0.8rem', textAlign: 'center', marginBottom: 10, lineHeight: 1.5 }}>Is that skip worth of<br /><span style={{ color: '#ff003c', fontWeight: 'bold' }}>300 coins</span>, pet?</div>
+                                        <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
+                                        <div style={{ color: '#ccc', fontFamily: 'Cinzel', fontSize: '0.8rem', textAlign: 'center', marginBottom: 10, lineHeight: 1.5 }}>Is that skip worth of<br /><span style={{ color: '#ff003c', fontWeight: 'bold' }}>300 coins</span>, pet?</div>
                                         <button id="btnMobConfirmSkip" onClick={() => (window as any).executeSkipTask()} className="action-btn" style={{ width: '90%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '8px', padding: '12px', fontSize: '0.85rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.3s ease' }}>ACCEPT PENALTY</button>
                                         <button id="btnMobCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#888', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: '1px', padding: 5, width: '95%', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>NEVERMIND, I WILL SERVE</button>
                                     </div>
@@ -1716,7 +1716,7 @@ export default function ProfilePage() {
                                 <div className="mob-idol side right"><img id="mobRec_Slot3" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Slot 3" onError={(e) => { if (e.currentTarget.dataset.loaded) e.currentTarget.style.display = 'none'; }} /><div className="mob-rank-badge">III</div></div>
                                 <div className="mob-idol center"><img id="mobRec_Slot1" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Slot 1" onError={(e) => { if (e.currentTarget.dataset.loaded) e.currentTarget.style.display = 'none'; }} /><div className="mob-rank-badge main">I</div></div>
                             </div>
-                            <div style={{ textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#666', marginTop: '4px' }}>TAP TO VIEW RECORD</div>
+                            <div style={{ textAlign: 'center', fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', marginTop: '4px' }}>TAP TO VIEW RECORD</div>
                         </div>
 
                         {/* SLAVE RECORDS */}
@@ -1810,7 +1810,7 @@ export default function ProfilePage() {
                     <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, minHeight: 0, position: 'relative', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as any}>
                         <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(4,4,16,0.96)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(197,160,89,0.12)', paddingBottom: '14px' }}>
-                                <span style={{ fontFamily: "'Orbitron', sans-serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
+                                <span style={{ fontFamily: "'Cinzel', serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
                                 <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', fontSize: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
                             </div>
                             <div id="mob_huntStoreGrid" style={{ width: '100%', overflowY: 'auto', paddingBottom: '30px' }}></div>
@@ -1962,7 +1962,7 @@ export default function ProfilePage() {
                         }}
                     >
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
                             <div className="ribbon-label" style={{ fontSize: '0.38rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 2 }}>
                                 {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE' : (() => {
                                     if (!activeChallenge.start_date) return 'STARTING SOON';
@@ -2014,7 +2014,7 @@ export default function ProfilePage() {
                         backdropFilter: 'blur(16px)',
                     }}>
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px' }}>Install as App</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px' }}>Install as App</div>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', opacity: 0.9, marginTop: 2, letterSpacing: '1px' }}>FASTER · FULLSCREEN · NOTIFICATIONS</div>
                         </div>
                         <button
@@ -2049,11 +2049,11 @@ export default function ProfilePage() {
                 {showInstallGuide && (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(8px)' }}
                         onClick={() => setShowInstallGuide(false)}>
-                        <div style={{ width: '100%', background: 'rgba(5,8,18,0.99)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '16px 16px 0 0', padding: '24px 20px 40px', fontFamily: 'Orbitron, sans-serif' }}
+                        <div style={{ width: '100%', background: 'rgba(5,8,18,0.99)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '16px 16px 0 0', padding: '24px 20px 40px', fontFamily: 'Cinzel, serif' }}
                             onClick={e => e.stopPropagation()}>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>INSTALL ON IPHONE</div>
                             {[
-                                { step: '1', text: 'Tap the Share button at the bottom of Safari (box with arrow pointing up)' },
+                                { step: '1', text: 'Tap the Share button at the bottom of Safari (the box with an arrow pointing up)' },
                                 { step: '2', text: 'Scroll down and tap "Add to Home Screen"' },
                                 { step: '3', text: 'Tap "Add" — done. Open it from your home screen for the full app experience.' },
                             ].map(({ step, text }) => (
@@ -2092,14 +2092,14 @@ export default function ProfilePage() {
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 10px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#c5a059', letterSpacing: '3px', fontWeight: 700 }}>TASK WINDOW OPEN</div>
                         </div>
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px' }}>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px' }}>
                             <CountdownText targetTs={new Date(challengeWindowAlert.window.closes_at).getTime()} prefix="CLOSES IN " />
                         </div>
                     </div>
                     <div style={{ padding: '22px 24px' }}>
                         {/* Challenge + task label */}
                         <div style={{ marginBottom: 16 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>
                                 {challengeWindowAlert.challenge?.name || 'Challenge'}
                             </div>
                             <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '2px' }}>
@@ -2116,7 +2116,7 @@ export default function ProfilePage() {
                             const idx = (challengeWindowAlert.window.day_number - 1) * tpd + (challengeWindowAlert.window.window_number - 1);
                             const taskText = (challengeWindowAlert.challenge?.task_names || [])[idx];
                             return taskText ? (
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 18, padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10 }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 18, padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10 }}>
                                     {taskText}
                                 </div>
                             ) : null;
@@ -2128,7 +2128,7 @@ export default function ProfilePage() {
                             <div style={{ fontFamily: 'Orbitron', fontSize: '2.6rem', fontWeight: 900, color: '#c5a059', letterSpacing: '10px', textShadow: '0 0 30px rgba(197,160,89,0.4)', lineHeight: 1 }}>
                                 {challengeWindowAlert.window.verification_code}
                             </div>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', marginTop: 8, letterSpacing: '1px' }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', marginTop: 8, letterSpacing: '1px' }}>
                                 Include this code visibly in your submission
                             </div>
                         </div>
@@ -2204,7 +2204,7 @@ function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onO
         >
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: `0 0 ${hasOpenWindow ? '12px rgba(197,160,89,0.9)' : '6px rgba(197,160,89,0.4)'}`, flexShrink: 0, animation: hasOpenWindow ? 'pulse 2s infinite' : 'none' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{challengeName}</div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{challengeName}</div>
                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', letterSpacing: '1.5px', marginTop: 3, color: hasOpenWindow ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>
                     {hasOpenWindow ? 'TASK WINDOW OPEN - TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
                 </div>
@@ -2354,7 +2354,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
                 <div>
                     <div className="ribbon-label" style={{ fontSize: '0.5rem', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
-                    {data?.challenge && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: '#fff', marginTop: 4 }}>{data.challenge.name}</div>}
+                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', marginTop: 4 }}>{data.challenge.name}</div>}
                 </div>
                 <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: 'rgba(197,160,89,0.5)', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
             </div>
@@ -2383,7 +2383,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     {data.challenge.image_url && (
                                         <img src={data.challenge.image_url} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', float: 'left', marginRight: 12, marginBottom: 4 }} alt="" />
                                     )}
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{data.challenge.name}</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{data.challenge.name}</div>
                                     {data.challenge.description && (
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: data.challenge.image_url ? undefined : 'none' }}>{data.challenge.description}</div>
                                     )}
@@ -2502,7 +2502,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                 <div style={{ margin: '8px 0 16px', background: 'linear-gradient(135deg, rgba(224,48,48,0.06) 0%, rgba(0,0,0,0.4) 100%)', border: '1px solid rgba(224,48,48,0.25)', borderLeft: '3px solid #e03030', borderRadius: 12, padding: '20px 20px 22px', textAlign: 'center' }}>
                                     {/* Big X + label */}
                                     <div style={{ fontSize: '2rem', marginBottom: 6, lineHeight: 1 }}>✗</div>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: '#e03030', fontWeight: 700, letterSpacing: '3px', marginBottom: 10 }}>ELIMINATED</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#e03030', fontWeight: 700, letterSpacing: '3px', marginBottom: 10 }}>ELIMINATED</div>
 
                                     {/* What they missed */}
                                     {elimWindow && (
@@ -2517,11 +2517,11 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     {/* Rejoin offer */}
                                     <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
                                         <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px', marginBottom: 6 }}>SECOND CHANCE</div>
-                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.82rem', color: 'rgba(197,160,89,0.85)' }}>Rejoin for <strong>1,000 coins</strong> and continue from the next task</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: 'rgba(197,160,89,0.85)' }}>Rejoin for <strong>1,000 coins</strong> and continue from the next task</div>
                                     </div>
 
                                     <button onClick={handleRejoin} disabled={rejoining}
-                                        style={{ width: '100%', padding: '13px 0', background: rejoining ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(197,160,89,0.18) 0%, rgba(197,160,89,0.08) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 10, color: rejoining ? '#555' : '#c5a059', fontFamily: 'Orbitron, sans-serif', fontSize: '0.82rem', fontWeight: 700, cursor: rejoining ? 'default' : 'pointer', letterSpacing: '2px' }}>
+                                        style={{ width: '100%', padding: '13px 0', background: rejoining ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(197,160,89,0.18) 0%, rgba(197,160,89,0.08) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 10, color: rejoining ? '#555' : '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', fontWeight: 700, cursor: rejoining ? 'default' : 'pointer', letterSpacing: '2px' }}>
                                         {rejoining ? 'Processing...' : '↩ Rejoin · 1,000 coins'}
                                     </button>
                                     {rejoinMsg && <div style={{ marginTop: 10, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px' }}>{rejoinMsg}</div>}
@@ -2717,9 +2717,9 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                     <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'space-between' }}>
                                         {/* Name + description */}
                                         <div>
-                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 6 }}>{c.name}</div>
+                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 6 }}>{c.name}</div>
                                             {c.description && (
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{c.description}</div>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{c.description}</div>
                                             )}
                                         </div>
 
@@ -2735,7 +2735,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             ].map(({ label, val }) => (
                                                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>{label}</span>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
+                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -2749,12 +2749,12 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 ].map(({ label, val }) => (
                                                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>{label}</span>
-                                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>{val}</span>
+                                                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>{val}</span>
                                                     </div>
                                                 ))}
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>Next task in</span>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>
+                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>
                                                         {nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="" /> : '-'}
                                                     </span>
                                                 </div>
