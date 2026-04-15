@@ -809,30 +809,39 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                 const status = getOnlineStatus(u.lastSeen);
                 const dotC = statusColor(status);
                 const unread = hasUnread(u.memberId, unreadMap);
+                const isOnline = status === 'online';
+                const hasPending = u.reviewQueue.length > 0;
+                // Format last seen for offline users
+                const lastSeenMs = u.lastSeen ? Date.now() - new Date(u.lastSeen).getTime() : null;
+                const lastSeenText = lastSeenMs === null ? 'never seen' : lastSeenMs < 60000 ? 'just now' : lastSeenMs < 3600000 ? `${Math.floor(lastSeenMs / 60000)}m ago` : lastSeenMs < 86400000 ? `${Math.floor(lastSeenMs / 3600000)}h ago` : `${Math.floor(lastSeenMs / 86400000)}d ago`;
+                // SVG paths matching desktop sidebar icons
+                const mailPath = "M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z";
+                const timerPath = "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z";
+                const starPath = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
                 return (
                     <button key={u.memberId} onClick={() => onSelect(u)}
-                        style={{ ...S.userCard, ...(unread ? { border: '1px solid rgba(74,158,255,0.3)', background: 'rgba(74,158,255,0.04)' } : {}) }}>
+                        style={{ ...S.userCard, ...(unread ? { border: '1px solid rgba(74,158,255,0.3)', background: 'rgba(74,158,255,0.04)' } : !isOnline ? { opacity: 0.65 } : {}) }}>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                             <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
-                            <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, background: dotC, borderRadius: '50%', border: '2px solid #030303', boxShadow: status === 'online' ? `0 0 6px ${dotC}` : 'none' }} />
-                            {u.reviewQueue.length > 0 && (
+                            <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, background: dotC, borderRadius: '50%', border: '2px solid #030303', boxShadow: isOnline ? `0 0 6px ${dotC}` : 'none' }} />
+                            {hasPending && (
                                 <div style={{ position: 'absolute', top: -3, right: -3, width: 17, height: 17, background: '#ff4444', borderRadius: '50%', fontSize: '0.90rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, border: '1.5px solid #030303' }}>{u.reviewQueue.length}</div>
                             )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 700 : 400, marginBottom: 5 }}>{u.name}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.88rem', letterSpacing: '1px', padding: '2px 8px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
-                                {status === 'online' && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: dotC }}>● ONLINE</span>}
-                                {status === 'online' && u.hasActiveTask && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#ff8c42' }}>WORKING</span>}
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 700 : 400, marginBottom: 4 }}>{u.name}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', letterSpacing: '1px', padding: '1px 6px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
                             </div>
+                            {!isOnline && (
+                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.56rem', color: '#3a3a3a', letterSpacing: '1px', marginTop: 4 }}>last seen {lastSeenText}</div>
+                            )}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ opacity: unread ? 1 : 0.12 }}>
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill={unread ? '#4a9eff' : '#333'} />
-                                {unread && <circle cx="19" cy="5" r="4" fill="#ff4444" />}
-                            </svg>
-                            {u.reviewQueue.length > 0 && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', color: '#ff8c42' }}>📋 {u.reviewQueue.length}</span>}
+                        {/* 3-icon row: mail · clock · star — matching desktop sidebar */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: unread ? '#ff00de' : '#333', opacity: unread ? 1 : 0.2 }}><path d={mailPath} /></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: u.hasActiveTask ? '#888' : '#333', opacity: u.hasActiveTask ? 1 : 0.2 }}><path d={timerPath} /></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" style={{ fill: hasPending ? '#ff00de' : '#333', opacity: hasPending ? 1 : 0.2 }}><path d={starPath} /></svg>
                         </div>
                         <div style={{ color: '#222', fontSize: '1.4rem', lineHeight: 1, flexShrink: 0, marginLeft: 4 }}>›</div>
                     </button>
