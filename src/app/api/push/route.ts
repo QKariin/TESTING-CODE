@@ -84,7 +84,11 @@ export async function PUT(req: Request) {
         if (!targetEmail && bodyMemberId) targetEmail = String(bodyMemberId).toLowerCase();
         if (!targetEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { error } = await admin.from('profiles').update({ onesignal_id: subscriptionId }).ilike('member_id', targetEmail);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetEmail);
+        const updateQuery = admin.from('profiles').update({ onesignal_id: subscriptionId });
+        const { error } = await (isUuid
+            ? updateQuery.eq('ID', targetEmail)
+            : updateQuery.ilike('member_id', targetEmail));
         if (error) console.error('[push/save] DB error:', error.message);
         else console.log('[push/save] Saved onesignal_id', subscriptionId, 'for', targetEmail);
 

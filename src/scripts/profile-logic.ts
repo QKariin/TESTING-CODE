@@ -2041,9 +2041,8 @@ export async function initChatSystem() {
     _fetchQueenStatus(); // immediate fetch
     _queenInterval = setInterval(_fetchQueenStatus, 2 * 60 * 1000);
 
-    // 7. Push notifications - use profile UUID (not email) as external user ID
-    const profileId = getState().id || email;
-    initOneSignal(profileId!);
+    // 7. Push notifications - always use email as external user ID (consistent with DB lookup)
+    initOneSignal(email);
 }
 
 async function _pollNewChatMessages(memberId: string) {
