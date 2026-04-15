@@ -615,6 +615,19 @@ export async function adminPromoteUser(memberId: string) {
     } catch (_) {}
 }
 
+function _notifyMember(memberId: string, event: 'routine_approved' | 'routine_rejected') {
+    import('@/utils/supabase/client').then(({ createClient }) => {
+        const supabase = createClient();
+        const ch = supabase.channel(`member-notify-${memberId}`);
+        ch.subscribe((status: string) => {
+            if (status === 'SUBSCRIBED') {
+                ch.send({ type: 'broadcast', event, payload: {} });
+                setTimeout(() => supabase.removeChannel(ch), 1500);
+            }
+        });
+    });
+}
+
 async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HTMLElement) {
     if (!taskId || !memberId) return;
     try {
@@ -624,6 +637,7 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
         await adminApproveTaskAction(taskId, memberId, 50, null);
         const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
         if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`;
+        _notifyMember(memberId, 'routine_approved');
     } catch (err) {
         console.error('approveRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
@@ -640,6 +654,7 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
         await adminRejectTaskAction(taskId, memberId);
         const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
         if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`;
+        _notifyMember(memberId, 'routine_rejected');
     } catch (err) {
         console.error('rejectRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');

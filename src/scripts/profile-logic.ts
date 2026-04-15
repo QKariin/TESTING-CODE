@@ -1720,10 +1720,48 @@ let _queenInterval: ReturnType<typeof setInterval> | null = null;
 let _presenceCh: any = null;
 let _tasksChannel: any = null;
 let _statsChannel: any = null;
+let _notifyChannel: any = null;
 let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+
+function _showRoutineToast(approved: boolean) {
+    if (typeof document === 'undefined') return;
+    const existing = document.getElementById('_routineToast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = '_routineToast';
+    const color = approved ? '#00ff00' : '#ff4444';
+    const borderColor = approved ? 'rgba(0,255,0,0.3)' : 'rgba(255,68,68,0.3)';
+    const bgColor = approved ? 'rgba(0,255,0,0.07)' : 'rgba(255,68,68,0.07)';
+    toast.innerHTML = approved
+        ? `<span style="font-size:1rem;margin-right:8px;">✓</span> ROUTINE APPROVED`
+        : `<span style="font-size:1rem;margin-right:8px;">✗</span> ROUTINE REJECTED`;
+    Object.assign(toast.style, {
+        position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%) translateY(-80px)',
+        background: bgColor, border: `1px solid ${borderColor}`,
+        color, fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem',
+        letterSpacing: '3px', padding: '14px 28px', borderRadius: '8px',
+        zIndex: '99999', backdropFilter: 'blur(12px)',
+        boxShadow: `0 0 30px ${borderColor}`,
+        transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+        whiteSpace: 'nowrap',
+    });
+    document.body.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+
+    // Auto-dismiss after 4s
+    setTimeout(() => {
+        toast.style.transform = 'translateX(-50%) translateY(-80px)';
+        setTimeout(() => toast.remove(), 350);
+    }, 4000);
+}
 
 /** Tear down all intervals + realtime channels. Safe to call multiple times. */
 export function cleanupChatSystem() {
@@ -1733,6 +1771,7 @@ export function cleanupChatSystem() {
     if (_chatChannel) { getChatSupabase().removeChannel(_chatChannel); _chatChannel = null; }
     if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
     if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); _statsChannel = null; }
+    if (_notifyChannel) { getChatSupabase().removeChannel(_notifyChannel); _notifyChannel = null; }
     if (_presenceCh) { _presenceCh.unsubscribe(); _presenceCh = null; }
     chatSubscribed = false;
 }
@@ -1971,7 +2010,16 @@ export async function initChatSystem() {
             })
         .subscribe();
 
-    // 5. Push notifications - use profile UUID (not email) as external user ID
+    // 5. Routine approval/rejection broadcast — dashboard notifies member instantly
+    const memberId = getState().memberId || getState().id || email;
+    if (_notifyChannel) getChatSupabase().removeChannel(_notifyChannel);
+    _notifyChannel = getChatSupabase()
+        .channel(`member-notify-${memberId}`)
+        .on('broadcast', { event: 'routine_approved' }, () => _showRoutineToast(true))
+        .on('broadcast', { event: 'routine_rejected' }, () => _showRoutineToast(false))
+        .subscribe();
+
+    // 6. Push notifications - use profile UUID (not email) as external user ID
     const profileId = getState().id || email;
     initOneSignal(profileId!);
 }
