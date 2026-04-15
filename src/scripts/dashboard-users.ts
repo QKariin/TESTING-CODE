@@ -249,7 +249,10 @@ export async function updateDetail(u: any) {
             </div>`;
         }
 
-        container.innerHTML = html;
+        if ((container as any)._lastProgressHtml !== html) {
+            (container as any)._lastProgressHtml = html;
+            container.innerHTML = html;
+        }
     }
 
     const isRoutineDone = u.routineDoneToday === true;
