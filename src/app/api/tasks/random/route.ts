@@ -17,11 +17,15 @@ export async function GET(req: NextRequest) {
         // 1. Check if user already has an active task in the tasks table
         const profile = await DbService.getProfile(memberEmail);
 
-        const { data: taskRow } = await supabaseAdmin
-            .from('tasks')
-            .select('taskdom_active_task')
-            .ilike('member_id', profile?.member_id || memberEmail)
-            .maybeSingle();
+        let taskRow: any = null;
+        if (profile?.ID) {
+            const { data } = await supabaseAdmin.from('tasks').select('taskdom_active_task').eq('ID', profile.ID).maybeSingle();
+            taskRow = data;
+        }
+        if (!taskRow && profile?.member_id) {
+            const { data } = await supabaseAdmin.from('tasks').select('taskdom_active_task').ilike('member_id', profile.member_id).maybeSingle();
+            taskRow = data;
+        }
 
         if (taskRow && taskRow.taskdom_active_task) {
             const activeTask = typeof taskRow.taskdom_active_task === 'string'
@@ -78,10 +82,11 @@ export async function GET(req: NextRequest) {
         const activeTaskPayload = { ...randomTask, assigned_at: new Date().toISOString() };
 
         await supabaseAdmin.from('tasks').upsert({
+            ID: profile?.ID || memberEmail,
             member_id: profile?.member_id || memberEmail,
             Name: profile?.name || memberEmail,
             taskdom_active_task: JSON.stringify(activeTaskPayload)
-        }, { onConflict: 'member_id' });
+        }, { onConflict: '"ID"' });
 
         return NextResponse.json({
             success: true,

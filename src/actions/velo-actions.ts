@@ -1614,7 +1614,7 @@ export async function updateAllLeaderboards() {
             // 1. Get Top Items
             const { data: topProfiles, error: fetchError } = await getAdmin()
                 .from('profiles')
-                .select(`id, name, ${t.col}`)
+                .select(`ID, name, ${t.col}`)
                 .order(t.col, { ascending: false })
                 .limit(t.limit);
 

@@ -184,7 +184,7 @@ export const DbService = {
         let chatMemberId = memberIdOrEmail;
         if (!isUuid) {
             // Look up profile by email to get UUID
-            const { data: p } = await supabaseAdmin.from('profiles').select('"ID"').ilike('member_id', memberIdOrEmail).maybeSingle();
+            const { data: p } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberIdOrEmail).maybeSingle();
             if (p?.ID) chatMemberId = p.ID;
         }
 

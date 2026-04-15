@@ -82,7 +82,7 @@ export default function OnboardingPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { window.location.href = '/login'; return; }
             setUserId(user.id);
-            const { data: profile } = await supabase.from('profiles').select('parameters').eq('id', user.id).maybeSingle();
+            const { data: profile } = await supabase.from('profiles').select('parameters').eq('ID', user.id).maybeSingle();
             if (profile?.parameters?.onboarding_seen === true) { window.location.href = '/profile'; return; }
             setLoading(false);
         };
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
         setSaving(true);
         try {
             const supabase = createClient();
-            const { data: profile } = await supabase.from('profiles').select('parameters').eq('id', userId).maybeSingle();
+            const { data: profile } = await supabase.from('profiles').select('parameters').eq('ID', userId).maybeSingle();
             const existingParams = profile?.parameters || {};
             const updates: any = {
                 name: name.trim(),
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
                 parameters: { ...existingParams, onboarding_seen: true },
             };
             if (photoUrl) updates.avatar_url = photoUrl;
-            await supabase.from('profiles').update(updates).eq('id', userId);
+            await supabase.from('profiles').update(updates).eq('ID', userId);
             goTo('done');
             setTimeout(() => { window.location.href = '/profile'; }, 2200);
         } catch { setSaving(false); }
