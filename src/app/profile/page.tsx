@@ -286,7 +286,7 @@ export default function ProfilePage() {
                 const unifiedData = {
                     ...(rawData && !rawData.error ? rawData : {}),
                     member_id: rawData?.member_id || user.email,   // email (display only)
-                    memberId: rawData?.id || user.id,              // UUID (auth identifier)
+                    memberId: user.id,                             // auth UUID — always matches tasks.member_id
                     email: user.email,
                 };
 

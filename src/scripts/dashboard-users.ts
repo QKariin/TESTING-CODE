@@ -99,13 +99,22 @@ export async function updateDetail(u: any) {
     const profPic = document.getElementById('dProfilePic') as HTMLImageElement;
     const headerBg = document.getElementById('apMirrorHeader');
     const defaultPic = "/queen-karin.png";
-    const finalPic = u.avatar || u.profilePicture || defaultPic;
+    const realAvatar = u.avatar || u.profilePicture || '';
+    const finalPic = realAvatar || defaultPic;
 
     if (profPic) {
         profPic.src = getOptimizedUrl(finalPic, 200);
         profPic.onerror = () => { profPic.src = defaultPic; };
     }
-    if (headerBg) headerBg.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${getOptimizedUrl(finalPic, 400)}')`;
+    // Only set header background when user has a real avatar (not the collar placeholder)
+    if (headerBg) {
+        if (realAvatar) {
+            headerBg.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${getOptimizedUrl(realAvatar, 400)}')`;
+        } else {
+            headerBg.style.backgroundImage = 'none';
+            headerBg.style.background = '#0a0a0a';
+        }
+    }
 
     let realRank = report.currentRank;
     setText('dMirrorHierarchy', realRank.toUpperCase());

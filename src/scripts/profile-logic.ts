@@ -1401,7 +1401,8 @@ export async function updateRoutineWidget() {
 
 export function handleRoutineUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) {
-        submitTaskEvidence(input.files[0], true).then(() => {
+        submitTaskEvidence(input.files[0], true).then((success) => {
+            if (!success) return;  // Don't lock UI if upload failed
             const display = document.getElementById('deskRoutineDisplay');
             const mobDisplay = document.getElementById('mobRoutineDisplay');
             const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
@@ -1472,7 +1473,7 @@ export function triggerTaskEvidencePick() {
     inp.click();
 }
 
-async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
+async function submitTaskEvidence(file: File, isRoutine: boolean = false): Promise<boolean> {
     const { id, memberId, userName } = getState();
     const pid = memberId || id;
     console.log("Starting task submission for:", pid, "File:", file.name, "Size:", file.size, "Routine:", isRoutine);
@@ -1480,7 +1481,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
     if (!pid) {
         console.error("No memberId found in state during submission.");
         alert("Verification failed. Please refresh the page.");
-        return;
+        return false;
     }
 
     // Capture task text from UI
@@ -1530,7 +1531,7 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
                 ? `<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Maximum 2 minutes allowed.<br>Please trim your video and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`
                 : `<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">${isSizeError ? `Video too large (${sizeVal}) - maximum 50MB.` : 'Upload failed - please try again.'}</div>`;
             if (!isRoutine) showUploadNotice(noticeHtml);
-            return;
+            return false;
         }
 
         let thumbnailUrl: string | null = null;
@@ -1575,20 +1576,22 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false) {
             }
             // Refresh gallery so the pending item appears immediately
             refreshTaskGallery(pid);
+            return true;
         } else {
             console.error("Backend submission error:", data.error);
             if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">TRANSMISSION FAILED - ${data.error || 'please try again'}</div>`);
+            return false;
         }
     } catch (err: any) {
         console.error("Critical submission error", err);
         if (!isRoutine) showUploadNotice(`<div style="font-family:'Rajdhani';font-size:0.9rem;color:var(--red);letter-spacing:1px;">UPLOAD FAILED - TASK STILL ACTIVE, TRY AGAIN</div>`);
+        return false;
     } finally {
         if (!isRoutine) {
             if (uploadBtn && originalText) { uploadBtn.innerText = originalText; (uploadBtn as HTMLButtonElement).disabled = false; }
             if (mobTaskBtn && originalMobTaskText) { mobTaskBtn.innerText = originalMobTaskText; (mobTaskBtn as HTMLButtonElement).disabled = false; }
             if (mobRoutineBtn && originalMobRoutineText) mobRoutineBtn.innerText = originalMobRoutineText;
         }
-        // NOTE: routine button reset intentionally omitted - handleRoutineUpload.then() locks it
     }
 }
 export function handleProfileUpload(input?: HTMLInputElement) { _doProfileUpload(); }
@@ -1908,9 +1911,11 @@ export async function initChatSystem() {
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' },
             (payload: any) => {
                 const fresh = payload.new;
-                // Case-insensitive guard
-                const rowEmail = (fresh?.member_id || '').toLowerCase();
-                if (rowEmail !== email.toLowerCase()) return;
+                // Case-insensitive guard — tasks.member_id is UUID after migration
+                const rowMemberId = (fresh?.member_id || '').toLowerCase();
+                const myUuid = (getState().memberId || '').toLowerCase();
+                const myEmail = (getState().email || '').toLowerCase();
+                if (rowMemberId !== myUuid && rowMemberId !== myEmail) return;
 
                 updateRoutineWidget();
                 refreshTaskGallery(email!);

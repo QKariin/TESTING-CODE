@@ -248,11 +248,23 @@ export const DbService = {
 
         // Fetch avatar_url from profiles for all members
         const memberIds = [...new Set((data || []).map((r: any) => r.member_id).filter(Boolean))];
-        const { data: profileData } = await supabaseAdmin
+        // tasks.member_id after migration = UUID = profiles.id. Query by id first.
+        const { data: profileDataById } = await supabaseAdmin
             .from('profiles')
-            .select('member_id, avatar_url')
+            .select('id, member_id, avatar_url')
+            .in('id', memberIds);
+        const { data: profileDataByEmail } = await supabaseAdmin
+            .from('profiles')
+            .select('id, member_id, avatar_url')
             .in('member_id', memberIds);
-        const avatarMap = new Map((profileData || []).map((p: any) => [p.member_id?.toLowerCase(), p.avatar_url]));
+        const allProfileData = [...(profileDataById || []), ...(profileDataByEmail || [])];
+        const avatarMap = new Map<string, string>();
+        for (const p of allProfileData) {
+            if (p.avatar_url) {
+                if (p.id) avatarMap.set(p.id, p.avatar_url);
+                if (p.member_id) avatarMap.set(p.member_id?.toLowerCase(), p.avatar_url);
+            }
+        }
 
         // Collect all pending entries first, then sign URLs in parallel
         const pendingRaw: Array<{ entry: any; row: any; path: string }> = [];
@@ -307,7 +319,7 @@ export const DbService = {
                     proofUrl: finalUrl,
                     member_id: row.member_id,
                     memberName: row['Name'] || 'Slave',
-                    avatarUrl: avatarMap.get(row.member_id?.toLowerCase()) || null,
+                    avatarUrl: avatarMap.get(row.member_id) || avatarMap.get(row.member_id?.toLowerCase()) || null,
                 };
             })
         );
@@ -341,43 +353,6 @@ export const DbService = {
                 'Taskdom_CompletedTasks': String(newCount)
             })
             .eq('member_id', row.member_id);
-
-        // Mirror stats to profiles so they're always readable (same pattern as MERIT → profiles.score)
-        try {
-            const { data: prof } = await supabaseAdmin
-                .from('profiles')
-                .select('id, parameters, bestRoutinestreak')
-                .eq('id', profileId)
-                .maybeSingle();
-            if (prof) {
-                const updatedParams: any = { ...(prof.parameters || {}) };
-                if (!isRoutineEntry) {
-                    // LABOR: mirror completed task count
-                    updatedParams.completed_tasks = newCount;
-                } else {
-                    // CONSISTENCY: count all approved routine entries and update bestRoutinestreak
-                    const routineApproved = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
-                    const currentBest = Number(prof.bestRoutinestreak || updatedParams.routine_streak || 0);
-                    if (routineApproved > currentBest) {
-                        updatedParams.routine_streak = routineApproved;
-                        await supabaseAdmin.from('profiles')
-                            .update({ parameters: updatedParams, bestRoutinestreak: routineApproved })
-                            .eq('id', prof.id);
-                    } else {
-                        await supabaseAdmin.from('profiles')
-                            .update({ parameters: updatedParams })
-                            .eq('id', prof.id);
-                    }
-                    // Early return after routine handling to avoid double-update below
-                    // Still fall through to awardPoints
-                }
-                if (!isRoutineEntry) {
-                    await supabaseAdmin.from('profiles')
-                        .update({ parameters: updatedParams })
-                        .eq('id', prof.id);
-                }
-            }
-        } catch (_) { }
 
         // 2. Award points only - no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);

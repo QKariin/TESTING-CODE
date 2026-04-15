@@ -11,7 +11,7 @@ import {
     adminEmail
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
-import { mediaType as mediaTypeFunction } from './media';
+import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
 import { adminApproveTaskAction, adminRejectTaskAction, adminGetTasksAction, adminAssignTaskAction } from '@/actions/velo-actions';
 import { appendChatMessage } from './dashboard-chat';
 
@@ -221,7 +221,8 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
     }
 
     if (t) {
-        const finalUrl = fullSigned || getOptimizedUrl(t.proofUrl, 1000);
+        const rawUrl = t.proofUrl || '';
+        const finalUrl = fullSigned || (rawUrl ? await getSignedUrl(rawUrl) || rawUrl : '');
         openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
     }
 }
