@@ -185,8 +185,8 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 function PrimaryBtn({ children, onClick, disabled }: any) {
     return (
         <button onClick={onClick} disabled={disabled}
-            className="w-full py-4 border border-amber-500/45 bg-amber-500/[0.06] text-amber-200/85 font-['Cormorant_Garamond'] font-normal text-[1.1rem] tracking-wide transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hover:border-amber-400/65 hover:bg-amber-500/[0.10] hover:text-amber-100/90"
-            style={{ boxShadow: '0 0 18px rgba(197,160,89,0.10)' }}>
+            className="w-full py-4 border border-amber-500/60 bg-amber-500/[0.09] text-amber-100 font-['Cormorant_Garamond'] font-light text-[1.15rem] tracking-[0.12em] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-400/80 hover:bg-amber-500/[0.15] hover:text-white active:scale-[0.99]"
+            style={{ boxShadow: disabled ? 'none' : '0 0 28px rgba(197,160,89,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
             {children}
         </button>
     );
@@ -415,6 +415,10 @@ export default function ApplyPage() {
     const [direction, setDirection] = useState(1);
     const [saving, setSaving] = useState(false);
     const [applicationId, setApplicationId] = useState<string | null>(null);
+    // Ref so handleCheckout always reads the LATEST applicationId without stale closure issues.
+    // React state updates are async — reading applicationId directly after setApplicationId
+    // would still return the old value within the same event handler call.
+    const applicationIdRef = useRef<string | null>(null);
 
     const [form, setForm] = useState<FormData>({
         name: '', email: '', age: '', location: '', height_weight: '',
@@ -449,15 +453,20 @@ export default function ApplyPage() {
         if (!currentForm.email) return;
         setSaving(true);
         try {
-            const payload = { ...currentForm, ...extraData, step: nextStep, applicationId };
+            const payload = { ...currentForm, ...extraData, step: nextStep, applicationId: applicationIdRef.current };
             const res = await fetch('/api/apply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
-            if (data.applicationId) setApplicationId(data.applicationId);
-        } catch { }
+            if (data.applicationId) {
+                applicationIdRef.current = data.applicationId;
+                setApplicationId(data.applicationId);
+            }
+        } catch (e) {
+            console.error('[apply] saveProgress failed:', e);
+        }
         setSaving(false);
     };
 
@@ -471,17 +480,34 @@ export default function ApplyPage() {
     const handleCheckout = async () => {
         setSaving(true);
         try {
-            // Mark honest_confirmation when user proceeds to checkout
             set('honest_confirmation', 'true');
             await saveProgress(9, { honest_confirmation: 'true' });
+
+            // Use ref — applicationIdRef.current is always up to date regardless of React batching
+            const aid = applicationIdRef.current;
+            if (!aid) {
+                alert('Session error — your application could not be saved. Please refresh and try again.');
+                setSaving(false);
+                return;
+            }
+
             const res = await fetch('/api/apply/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ applicationId, email: form.email, name: form.name, amount: form.amount }),
+                body: JSON.stringify({ applicationId: aid, email: formRef.current.email, name: formRef.current.name, amount: formRef.current.amount }),
             });
             const data = await res.json();
-            if (data.url) window.location.href = data.url;
-        } catch { setSaving(false); }
+            if (data.url) {
+                window.location.href = data.url;
+                // Don't reset saving — we're navigating away
+            } else {
+                throw new Error(data.error || 'Payment session could not be created.');
+            }
+        } catch (e: any) {
+            console.error('[apply] checkout failed:', e);
+            alert('Payment error: ' + (e?.message || 'Unknown error. Please try again.'));
+            setSaving(false);
+        }
     };
 
     const variants: Variants = {
@@ -873,7 +899,7 @@ function ExperienceStep({ form, set, onNext, onBack }: any) {
 
 // ---- Step 4: Sliders ----
 
-function HoldKinkButton({ label, onRelease }: { label: string; onRelease: (val: number) => void }) {
+function HoldKinkButton({ label, onRelease, disabled }: { label: string; onRelease: (val: number) => void; disabled?: boolean }) {
     const [liveVal, setLiveVal] = useState(0);
     const [holding, setHolding] = useState(false);
     const [done, setDone] = useState(false);
@@ -882,7 +908,7 @@ function HoldKinkButton({ label, onRelease }: { label: string; onRelease: (val: 
     const holdingRef = useRef(false);
 
     const start = () => {
-        if (done) return;
+        if (done || disabled) return;
         valRef.current = 0;
         setLiveVal(0);
         holdingRef.current = true;
@@ -926,7 +952,7 @@ function HoldKinkButton({ label, onRelease }: { label: string; onRelease: (val: 
     const handlePointerCancel = () => stop();
 
     return (
-        <div className="w-full select-none">
+        <div className="w-full select-none" style={{ opacity: disabled ? 0.3 : 1, pointerEvents: disabled ? 'none' : 'auto', transition: 'opacity 0.3s' }}>
             <div className="text-center mb-6 h-16 flex items-center justify-center">
                 <AnimatePresence mode="wait">
                     {!holding && !done && (
@@ -1096,6 +1122,7 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                                     key={currentIdx}
                                     label={currentLabel}
                                     onRelease={(val) => handleRelease(val, currentLabel)}
+                                    disabled={!!comment}
                                 />
                             </div>
 
