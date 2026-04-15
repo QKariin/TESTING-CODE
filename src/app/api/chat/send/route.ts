@@ -154,32 +154,55 @@ export async function POST(req: Request) {
         }
 
         // Fire push notification in background - don't block the response
+        const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+        const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
+        const ADMIN_EMAIL = 'ceo@qkarin.com';
+
+        function sendPush(onesignalId: string, title: string, body: string, url: string) {
+            if (!ONESIGNAL_KEY || !onesignalId) return;
+            fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${ONESIGNAL_KEY}` },
+                body: JSON.stringify({
+                    app_id: ONESIGNAL_APP_ID,
+                    include_player_ids: [onesignalId],
+                    headings: { en: title },
+                    contents: { en: body },
+                    url,
+                }),
+            }).catch(() => {});
+        }
+
         if (isQueen && conversationId) {
-            // conversationId is UUID - look up by profiles.id
+            // Queen sent to member — notify the member
             const isConvUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
             Promise.resolve(
-                adminClient
-                    .from('profiles')
-                    .select('onesignal_id')
-                    .eq(isConvUUID ? 'ID' : 'member_id', conversationId)
-                    .maybeSingle()
+                adminClient.from('profiles').select('onesignal_id').eq(isConvUUID ? 'ID' : 'member_id', conversationId).maybeSingle()
             ).then(({ data: pushProfile }) => {
-                const onesignalId = pushProfile?.onesignal_id;
-                if (!onesignalId) return;
-                fetch('https://onesignal.com/api/v1/notifications', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
-                    },
-                    body: JSON.stringify({
-                        app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0',
-                        include_player_ids: [onesignalId],
-                        headings: { en: 'Queen Karin' },
-                        contents: { en: typeof content === 'string' ? content.slice(0, 100) : '👑 New message' },
-                        url: 'https://throne.qkarin.com/profile',
-                    }),
-                }).catch(() => {});
+                if (pushProfile?.onesignal_id) {
+                    sendPush(
+                        pushProfile.onesignal_id,
+                        'Queen Karin',
+                        typeof content === 'string' ? content.slice(0, 100) : '👑 New message',
+                        'https://throne.qkarin.com/profile'
+                    );
+                }
+            }).catch(() => {});
+        } else if (!isQueen) {
+            // Member sent to queen — notify the queen
+            const senderName = profile?.name || (senderEmail || '').split('@')[0] || 'Subject';
+            const msgPreview = typeof content === 'string' ? content.slice(0, 100) : '📨 New message';
+            Promise.resolve(
+                adminClient.from('profiles').select('onesignal_id').ilike('member_id', ADMIN_EMAIL).maybeSingle()
+            ).then(({ data: queenProfile }) => {
+                if (queenProfile?.onesignal_id) {
+                    sendPush(
+                        queenProfile.onesignal_id,
+                        senderName,
+                        msgPreview,
+                        'https://throne.qkarin.com/dashboard'
+                    );
+                }
             }).catch(() => {});
         }
 

@@ -132,7 +132,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         silence: u.silence ? { active: true } : undefined,
                     },
                     reviewQueue: u.reviewQueue || [],
-                    lastMessageTime: unread[u.memberId?.toLowerCase()] || null,
+                    lastMessageTime: unread[(u.memberId || '').toLowerCase()] || null,
                     lastSeen: u.lastSeen || null,
                     hasActiveTask: !!u.activeTask,
                 }));
@@ -222,9 +222,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     useEffect(() => {
         if (typeof window === 'undefined' || !users.length) return;
         users.forEach(u => {
-            const newKey = 'read_' + u.memberId;
+            const key = u.memberId.toLowerCase();
+            const newKey = 'read_' + key;
             if (!localStorage.getItem(newKey)) {
-                const oldVal = localStorage.getItem('chat_read_' + u.memberId);
+                const oldVal = localStorage.getItem('chat_read_' + key) || localStorage.getItem('chat_read_' + u.memberId);
                 if (oldVal) { const ms = new Date(oldVal).getTime(); if (!isNaN(ms)) localStorage.setItem(newKey, ms.toString()); }
             }
         });
@@ -233,7 +234,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const markPendingRead = useCallback(() => {
         const id = pendingReadIdRef.current;
-        if (id) { localStorage.setItem('read_' + id, Date.now().toString()); pendingReadIdRef.current = null; }
+        if (id) { localStorage.setItem('read_' + id.toLowerCase(), Date.now().toString()); pendingReadIdRef.current = null; }
     }, []);
 
     const handleLogout = async () => {
@@ -248,9 +249,10 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const onlineCount = users.filter(u => getOnlineStatus(u.lastSeen) === 'online').length;
     const unreadCount = users.filter(u => {
-        const lastSlaveMsg = unreadMap[u.memberId];
+        const key = u.memberId.toLowerCase();
+        const lastSlaveMsg = unreadMap[key];
         if (!lastSlaveMsg) return false;
-        const lastRead = typeof window !== 'undefined' ? localStorage.getItem('read_' + u.memberId) : null;
+        const lastRead = typeof window !== 'undefined' ? localStorage.getItem('read_' + key) : null;
         return !lastRead || new Date(lastSlaveMsg).getTime() > parseInt(lastRead);
     }).length;
     const pendingTotal = globalQueue.length;
@@ -338,11 +340,11 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         unreadMap={unreadMap} onlineJoinTime={onlineJoinTimeRef.current}
                         onSelect={(u) => {
                             markPendingRead();
-                            const lastSlaveMsg = unreadMap[u.memberId];
-                            if (lastSlaveMsg) {
-                                const readTime = localStorage.getItem('read_' + u.memberId);
-                                if (!readTime || new Date(lastSlaveMsg).getTime() > parseInt(readTime)) pendingReadIdRef.current = u.memberId;
-                            }
+                            // Mark as read immediately on open — any new messages that
+                            // arrive while in chat will be caught when we navigate away
+                            const key = u.memberId.toLowerCase();
+                            localStorage.setItem('read_' + key, Date.now().toString());
+                            pendingReadIdRef.current = key; // also set pending so back nav refreshes
                             setSelectedUser(u); setProfileTab('chat');
                         }}
                     />
@@ -678,9 +680,10 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
 
 // ─── SUBJECTS VIEW ───────────────────────────────────────────────────────────
 function hasUnread(memberId: string, unreadMap: Record<string, string>): boolean {
-    const lastSlaveMsg = unreadMap[memberId];
+    const key = memberId.toLowerCase();
+    const lastSlaveMsg = unreadMap[key];
     if (!lastSlaveMsg) return false;
-    const readTime = typeof window !== 'undefined' ? localStorage.getItem('read_' + memberId) : null;
+    const readTime = typeof window !== 'undefined' ? localStorage.getItem('read_' + key) : null;
     if (!readTime) return true;
     return new Date(lastSlaveMsg).getTime() > parseInt(readTime);
 }
@@ -694,7 +697,7 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
     const getLastSeenMs = (u: DashUser) => { const t = new Date(u.lastSeen || '').getTime(); return isNaN(t) ? 0 : t; };
 
     const withUnread = [...users].filter(u => hasUnread(u.memberId, unreadMap))
-        .sort((a, b) => (new Date(unreadMap[a.memberId] || '').getTime()) - (new Date(unreadMap[b.memberId] || '').getTime()));
+        .sort((a, b) => (new Date(unreadMap[b.memberId.toLowerCase()] || '').getTime()) - (new Date(unreadMap[a.memberId.toLowerCase()] || '').getTime()));
     const unreadIds = new Set(withUnread.map(u => u.memberId));
     const onlineNoUnread = [...users].filter(u => getOnlineStatus(u.lastSeen) === 'online' && !unreadIds.has(u.memberId))
         .sort((a, b) => (onlineJoinTime[a.memberId] || now) - (onlineJoinTime[b.memberId] || now));
