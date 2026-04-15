@@ -524,7 +524,6 @@ export default function DashboardPage() {
             }
         };
         getCurrUser();
-        return () => { if (heartbeatInterval) clearInterval(heartbeatInterval); };
 
         // Expose lock state setter so vanilla updateDetail can push state into React
         (window as any)._setActiveLocks = setActiveLocks;
@@ -758,6 +757,7 @@ export default function DashboardPage() {
             .subscribe();
 
         return () => {
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
             supabaseRt.removeChannel(chatsChannel);
             supabaseRt.removeChannel(profilesChannel);
             cleanupPresenceTracking();
