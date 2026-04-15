@@ -11,6 +11,7 @@ async function getTaskRow(memberId: string) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
 
     if (isUuid) {
+        // Try UUID-keyed row first
         const { data } = await supabaseAdmin
             .from('tasks')
             .select('Taskdom_History')
@@ -18,22 +19,12 @@ async function getTaskRow(memberId: string) {
             .maybeSingle();
         if (data) return data;
 
-        // UUID user but tasks row might still use email — look up via profiles
+        // Fall back to email-keyed row (row not yet migrated)
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('id, member_id')
+            .select('member_id')
             .eq('id', memberId)
             .maybeSingle();
-        // Try by profiles.id
-        if (profile?.id && profile.id !== memberId) {
-            const { data: rowById } = await supabaseAdmin
-                .from('tasks')
-                .select('Taskdom_History')
-                .eq('member_id', profile.id)
-                .maybeSingle();
-            if (rowById) return rowById;
-        }
-        // Try by profiles.member_id (email)
         if (profile?.member_id) {
             const { data: row } = await supabaseAdmin
                 .from('tasks')

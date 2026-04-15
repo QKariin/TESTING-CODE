@@ -219,22 +219,23 @@ export const DbService = {
     async _getTaskRow(memberId: string) {
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
         if (isUuid) {
+            // Try by UUID first (already migrated)
             const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', memberId).maybeSingle();
             if (data) return data;
+
+            // Find email-keyed row via profile and MIGRATE it to UUID in-place
+            const profile = await this.getProfile(memberId);
+            if (profile?.member_id) {
+                const { data: emailRow } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
+                if (emailRow) {
+                    // Migrate: update member_id from email → UUID (one-time, automatic)
+                    await supabaseAdmin.from('tasks').update({ member_id: memberId }).eq('member_id', emailRow.member_id);
+                    return { ...emailRow, member_id: memberId };
+                }
+            }
+            return null;
         }
-        // Get profile (by UUID or email) so we can try all identifiers
-        const profile = await this.getProfile(memberId);
-        // Try by profiles.id (UUID)
-        if (profile?.id) {
-            const { data } = await supabaseAdmin.from('tasks').select('*').eq('member_id', profile.id).maybeSingle();
-            if (data) return data;
-        }
-        // Try by profiles.member_id (email) — for rows not yet migrated from email to UUID
-        if (profile?.member_id) {
-            const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', profile.member_id).maybeSingle();
-            if (data) return data;
-        }
-        // Final fallback: treat memberId itself as email
+        // Email-based lookup (legacy or non-UUID caller)
         const { data } = await supabaseAdmin.from('tasks').select('*').ilike('member_id', memberId).maybeSingle();
         return data;
     },
