@@ -34,17 +34,19 @@ export async function GET() {
         ...(pointsRes.data || []).map((r: any) => r.member_id?.toLowerCase()),
     ].filter(Boolean))] as string[];
 
-    // Lookup each profile individually with ilike (case-insensitive) - same pattern as /api/global/messages
+    // Lookup each profile — member_id in chats may be email OR UUID
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const profileMap = new Map<string, any>();
     if (allEmails.length) {
         const profileResults = await Promise.all(
-            allEmails.map((email: string) =>
-                supabaseAdmin
+            allEmails.map((val: string) => {
+                const isUuid = UUID_RE.test(val);
+                return supabaseAdmin
                     .from('profiles')
-                    .select('member_id, id, name, avatar_url')
-                    .ilike('member_id', email)
-                    .maybeSingle()
-            )
+                    .select('member_id, ID, name, avatar_url')
+                    [isUuid ? 'eq' : 'ilike'](isUuid ? 'ID' : 'member_id', val)
+                    .maybeSingle();
+            })
         );
         profileResults.forEach((res, i) => {
             if (res.data) profileMap.set(allEmails[i].toLowerCase(), res.data);
