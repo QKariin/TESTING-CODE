@@ -59,7 +59,7 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         'today kneeling': t?.['today kneeling'] || '0',
         lastWorship: t?.lastWorship || p.lastWorship || null,
         kneelHistory: p.kneel_history || t?.kneel_history || {},
-        taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || 0),
+        taskdom_completed_tasks: Number(t?.['Taskdom_CompletedTasks'] || params.completed_tasks || p.completed_tasks || 0),
         total_coins_spent: Number(params.wishlist_spent || 0) || tributeTotal,
         bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
         routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),

@@ -342,6 +342,43 @@ export const DbService = {
             })
             .eq('member_id', row.member_id);
 
+        // Mirror stats to profiles so they're always readable (same pattern as MERIT → profiles.score)
+        try {
+            const { data: prof } = await supabaseAdmin
+                .from('profiles')
+                .select('id, parameters, bestRoutinestreak')
+                .eq('id', profileId)
+                .maybeSingle();
+            if (prof) {
+                const updatedParams: any = { ...(prof.parameters || {}) };
+                if (!isRoutineEntry) {
+                    // LABOR: mirror completed task count
+                    updatedParams.completed_tasks = newCount;
+                } else {
+                    // CONSISTENCY: count all approved routine entries and update bestRoutinestreak
+                    const routineApproved = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
+                    const currentBest = Number(prof.bestRoutinestreak || updatedParams.routine_streak || 0);
+                    if (routineApproved > currentBest) {
+                        updatedParams.routine_streak = routineApproved;
+                        await supabaseAdmin.from('profiles')
+                            .update({ parameters: updatedParams, bestRoutinestreak: routineApproved })
+                            .eq('id', prof.id);
+                    } else {
+                        await supabaseAdmin.from('profiles')
+                            .update({ parameters: updatedParams })
+                            .eq('id', prof.id);
+                    }
+                    // Early return after routine handling to avoid double-update below
+                    // Still fall through to awardPoints
+                }
+                if (!isRoutineEntry) {
+                    await supabaseAdmin.from('profiles')
+                        .update({ parameters: updatedParams })
+                        .eq('id', prof.id);
+                }
+            }
+        } catch (_) { }
+
         // 2. Award points only - no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
 

@@ -105,6 +105,21 @@ export async function POST(req: Request) {
 
         try { await DbService.sendMessage(memberId, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
 
+        // Mirror kneelCount to profiles.parameters so ENDURANCE stat is always readable
+        // even when the tasks join fails (e.g. legacy UUID mismatch). Same pattern as MERIT writing to profiles.score.
+        try {
+            const { data: prof } = await supabaseAdmin
+                .from('profiles')
+                .select('id, parameters')
+                .eq('id', memberId)
+                .maybeSingle();
+            if (prof) {
+                await supabaseAdmin.from('profiles')
+                    .update({ parameters: { ...(prof.parameters || {}), kneel_count: newKneelCount } })
+                    .eq('id', prof.id);
+            }
+        } catch (_) { }
+
         // Return which hours today had a kneel (for dot grid)
         const kneelHours = [...new Set(kneelHistory.map(ts => {
             try {
