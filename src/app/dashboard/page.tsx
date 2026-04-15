@@ -585,6 +585,7 @@ export default function DashboardPage() {
             (window as any).openProfileUpload = openProfileUpload;
             (window as any).showPosts = () => {
                 setShowChallenges(false);
+                setShowGlobal(false);
                 markPendingRead(); // leaving a chat - mark it as read now
                 showPosts();
                 document.querySelector('.sidebar')?.classList.remove('mob-open');
@@ -620,6 +621,11 @@ export default function DashboardPage() {
             // Additional Bindings from scripts
             (window as any).initDashboard = initDashboard;
             (window as any).handleLogout = handleLogout;
+            // Close any React overlay panels (GLOBAL / CHALLENGES) — called from vanilla JS selUser
+            (window as any)._closeOverlays = () => {
+                setShowGlobal(false);
+                setShowChallenges(false);
+            };
         }
 
         // 1. Initialize System (UI Listeners)
@@ -687,6 +693,8 @@ export default function DashboardPage() {
                 setGlobalTributes(allTributes);
 
                 renderMainDashboard();
+                // Safety net: re-render sidebar after a tick in case DOM wasn't ready
+                setTimeout(() => renderSidebar(), 50);
 
                 if (currId) {
                     const openUser = mappedUsers.find((u: any) => u.memberId === currId || u.member_id === currId);

@@ -2799,16 +2799,16 @@ body {
     background: var(--bg-panel);
     backdrop-filter: var(--glass);
     border-right: 1px solid var(--border);
-    padding: 20px;
+    padding: 8px;
 }
 
 .sb-dash-btn {
     background: var(--bg-card);
-    border-radius: 15px;
-    padding: 15px;
+    border-radius: 8px;
+    padding: 12px 15px;
     text-align: center;
     font-weight: 800;
-    margin-bottom: 30px;
+    margin-bottom: 4px;
     border: 1px solid var(--border);
 }
 

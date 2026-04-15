@@ -279,6 +279,9 @@ function hasUnreadMessageCurrentUser(u: any) {
 export function selUser(id: string) {
     if (id === currId) return;
 
+    // Close any React overlay panels (GLOBAL / CHALLENGES) so the user view is visible
+    (window as any)._closeOverlays?.();
+
     // ── Mark the PREVIOUS user as read (deferred - only now that we're leaving them) ──
     markPendingRead();
 
