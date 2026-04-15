@@ -51,7 +51,8 @@ export function renderSidebar() {
 
     const isUserOnline = (u: any) => {
         if (!u) return false;
-        if (isMemberOnline(u.memberId)) return true;
+        // Presence channel tracks by email (member_id); memberId is UUID - use email for presence check
+        if (isMemberOnline(u.member_id || u.email || '')) return true;
         const ls = getLastSeenMs(u);
         return ls > 0 && (now - ls) / 60000 < 5;
     };

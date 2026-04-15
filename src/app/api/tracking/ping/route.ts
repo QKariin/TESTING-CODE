@@ -62,9 +62,9 @@ export async function POST(req: NextRequest) {
         let query = supabase.from('profiles').update(updateData);
 
         if (isUuid) {
-            query = query.or(`id.eq.${userId},member_id.eq.${userId}`);
+            query = query.eq('ID', userId);
         } else {
-            query = query.eq('member_id', userId);
+            query = query.ilike('member_id', userId);
         }
 
         const { error } = await query;
@@ -73,8 +73,8 @@ export async function POST(req: NextRequest) {
 
             // 1. Fetch current parameters
             let fetchQuery = supabase.from('profiles').select('parameters');
-            if (isUuid) fetchQuery = fetchQuery.or(`id.eq.${userId},member_id.eq.${userId}`);
-            else fetchQuery = fetchQuery.eq('member_id', userId);
+            if (isUuid) fetchQuery = fetchQuery.eq('ID', userId);
+            else fetchQuery = fetchQuery.ilike('member_id', userId);
 
             const { data: profile } = await fetchQuery.maybeSingle();
             const currentParams = profile?.parameters || {};
@@ -87,8 +87,8 @@ export async function POST(req: NextRequest) {
                 },
                 last_active: new Date().toISOString()
             });
-            if (isUuid) fallbackQuery.or(`id.eq.${userId},member_id.eq.${userId}`);
-            else fallbackQuery.eq('member_id', userId);
+            if (isUuid) fallbackQuery.eq('ID', userId);
+            else fallbackQuery.ilike('member_id', userId);
 
             const { error: fallbackError } = await fallbackQuery;
             if (fallbackError) {

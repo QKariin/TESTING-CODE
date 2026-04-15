@@ -51,14 +51,14 @@ export function initDashboard() {
     onPresenceChange(async () => {
         renderSidebar();
         if (!currId) return;
-        if (!isMemberOnline(currId)) return;
+        const currUser = users.find((x: any) => x.memberId === currId);
+        if (!isMemberOnline(currUser?.member_id || '')) return;
         // Member just came online while admin has them open - wake everything up
         const [{ updateDetail }, { initDashboardChat }] = await Promise.all([
             import('./dashboard-users'),
             import('./dashboard-chat'),
         ]);
-        const u = users.find((x: any) => x.memberId === currId);
-        if (u) updateDetail(u);
+        if (currUser) updateDetail(currUser);
         initDashboardChat(currId);
     });
 
@@ -72,10 +72,12 @@ async function refreshQueueFromServer() {
         if (data.globalQueue) {
             setGlobalQueue(data.globalQueue);
             users.forEach((u: any) => {
-                const uid = (u.memberId || u.member_id || '').toLowerCase();
-                u.reviewQueue = data.globalQueue.filter(
-                    (t: any) => (t.member_id || '').toLowerCase() === uid
-                );
+                const uEmail = (u.member_id || '').toLowerCase();
+                const uUuid = (u.memberId || '').toLowerCase();
+                u.reviewQueue = data.globalQueue.filter((t: any) => {
+                    const tId = (t.member_id || '').toLowerCase();
+                    return tId === uEmail || tId === uUuid;
+                });
             });
             renderMainDashboard();
         }
@@ -271,8 +273,8 @@ function startTimerLoop() {
     if (timerInterval) clearInterval(timerInterval);
     const interval = setInterval(() => {
         if (!currId) return;
-        if (!isMemberOnline(currId)) return; // ghost - skip all updates
         const u = users.find(x => x.memberId === currId);
+        if (!isMemberOnline(u?.member_id || '')) return; // ghost - skip all updates
         if (u) updateDetail(u);
     }, 1000);
     setTimerInterval(interval);

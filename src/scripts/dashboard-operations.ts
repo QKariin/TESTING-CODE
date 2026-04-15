@@ -44,9 +44,11 @@ function renderOperationsGrid() {
 
     let html = '<div class="ops-monitor-grid">';
 
-    // 1. TASK CARD (GOLD) - no proof image on the card, loads on click only
+    // 1. TASK CARD (GOLD)
+    const taskBg = latestTask?.proofUrl ? `<img src="${getOptimizedUrl(latestTask.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
     html += `
         <div class="ops-card task" onclick="window.showQueueFiltered(false)">
+            ${taskBg}
             <div class="ops-card-overlay">
                 <div class="ops-card-label">PENDING OPERATIONS</div>
                 <div class="ops-card-title">TASK QUEUE</div>
@@ -55,9 +57,11 @@ function renderOperationsGrid() {
         </div>
     `;
 
-    // 2. ROUTINE CARD (SILVER) - no proof image on the card, loads on click only
+    // 2. ROUTINE CARD (SILVER)
+    const routineBg = latestRoutine?.proofUrl ? `<img src="${getOptimizedUrl(latestRoutine.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
     html += `
         <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
+            ${routineBg}
             <div class="ops-card-overlay">
                 <div class="ops-card-label">DAILY PROTOCOLS</div>
                 <div class="ops-card-title">ROUTINE QUEUE</div>

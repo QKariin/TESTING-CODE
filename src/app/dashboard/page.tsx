@@ -653,7 +653,14 @@ export default function DashboardPage() {
                 const allQueues = data.globalQueue || [];
                 setGlobalQueue(allQueues);
                 mappedUsers.forEach((u: any) => {
-                    u.reviewQueue = allQueues.filter((t: any) => t.member_id === u.memberId || t.ownerId === u.memberId);
+                    const uEmail = (u.member_id || '').toLowerCase();
+                    const uUuid = (u.memberId || '').toLowerCase();
+                    u.reviewQueue = allQueues.filter((t: any) => {
+                        const tId = (t.member_id || '').toLowerCase();
+                        return tId === uEmail || tId === uUuid ||
+                            (t.ownerId || '').toLowerCase() === uEmail ||
+                            (t.ownerId || '').toLowerCase() === uUuid;
+                    });
                 });
 
                 const allTributes = mappedUsers.flatMap((u: any) => {
@@ -912,7 +919,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* ENTER GLOBAL */}
-                        <div className="v-best-sub glass-card span-1" onClick={() => window.location.href = '/global'} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
+                        <div className="v-best-sub glass-card span-1" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
                             <div className="vb-header">
                                 <div className="vb-title" style={{ fontFamily: 'Cinzel', color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
                                 <div className="vb-sub">Community Hub</div>
@@ -922,7 +929,7 @@ export default function DashboardPage() {
                                     <span style={{ fontSize: '1.6rem', color: '#c5a059', opacity: 0.85 }}>◎</span>
                                 </div>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
-                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER ↗</div>
+                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER</div>
                             </div>
                         </div>
 
