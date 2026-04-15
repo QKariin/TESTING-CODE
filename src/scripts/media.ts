@@ -115,6 +115,8 @@ const PRIVATE_PREFIXES = ['task-proofs/', 'chat/', 'admin-chat/', 'chat-media/',
 
 function isPrivateStorageUrl(url: string): boolean {
     if (!url.includes('supabase.co/storage')) return false;
+    // proofs bucket is always private
+    if (url.includes('/storage/v1/object/') && url.includes('/proofs/')) return true;
     return PRIVATE_PREFIXES.some(prefix => url.includes('/' + prefix));
 }
 

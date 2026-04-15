@@ -8,15 +8,15 @@ const PRIVATE_PREFIXES = ['task-proofs/', 'chat/', 'admin-chat/', 'chat-media/',
 const isPrivatePath = (path: string) => PRIVATE_PREFIXES.some(p => path.startsWith(p));
 const SIGNED_URL_EXPIRY = 604800; // 7 days
 
-// Extracts the storage path from a full Supabase Storage URL
-function extractPath(urlOrPath: string): string {
+// Extracts both the bucket name and storage path from a full Supabase Storage URL
+function extractBucketAndPath(urlOrPath: string): { bucket: string; path: string } {
     try {
         const url = new URL(urlOrPath);
-        // e.g. /storage/v1/object/public/media/task-proofs/xxx.jpg
-        const match = url.pathname.match(/\/storage\/v1\/object\/(?:public|authenticated|sign)\/[^/]+\/(.+)/);
-        if (match) return decodeURIComponent(match[1]);
+        // e.g. /storage/v1/object/public/{bucket}/{path}
+        const match = url.pathname.match(/\/storage\/v1\/object\/(?:public|authenticated|sign)\/([^/]+)\/(.+)/);
+        if (match) return { bucket: match[1], path: decodeURIComponent(match[2]) };
     } catch { }
-    return urlOrPath; // already a path
+    return { bucket: 'media', path: urlOrPath }; // fallback
 }
 
 // GET /api/media/url?bucket=media&path=task-proofs/xxx.jpg
@@ -29,14 +29,19 @@ export async function GET(req: NextRequest) {
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { searchParams } = new URL(req.url);
-        const bucket = searchParams.get('bucket') || 'media';
         const rawPath = searchParams.get('path') || searchParams.get('url') || '';
-        const path = extractPath(rawPath);
+
+        // Extract bucket from URL if present, fallback to query param
+        const { bucket: urlBucket, path } = extractBucketAndPath(rawPath);
+        const bucket = searchParams.get('bucket') || urlBucket;
 
         if (!path) return NextResponse.json({ error: 'Missing path' }, { status: 400 });
 
-        if (!isPrivatePath(path)) {
-            // Public path - just return public URL
+        // proofs bucket is always private (requires signing)
+        const isProofsBucket = bucket === 'proofs';
+
+        if (!isProofsBucket && !isPrivatePath(path)) {
+            // Public path in media bucket - return public URL
             const { data: { publicUrl } } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
             return NextResponse.json({ url: publicUrl });
         }
