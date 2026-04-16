@@ -113,26 +113,24 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     await loadDashboardChatHistory(activeId);
 
     // 3. Realtime subscription on shared client
+    // NO row filter — Supabase eq filter is case-sensitive and silently drops events
+    // when casing differs. Filter in JS callback instead (same approach as profile chat).
     chatChannel = _supabase
         .channel('dash-chat-' + activeId)
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
             table: 'chats',
-            filter: `member_id=eq.${activeId}`
         }, (payload) => {
+            const msg = payload.new;
+            if (!msg) return;
+            // Filter in JS: only messages for the active conversation
+            const rowMemberId = (msg.member_id || '').toLowerCase();
+            if (rowMemberId !== activeId.toLowerCase()) return;
             if (activeChatEmail !== activeId) return; // switched user
-            if (payload.new.id !== lastChatMsgId) {
-                appendChatMessage(payload.new);
-            }
+            appendChatMessage(msg);
         })
         .subscribe();
-
-    // 4. Polling fallback - only fires when member is online (presence gate)
-    chatPollInterval = setInterval(() => {
-        if (!isMemberOnline(activeId)) return; // offline - skip
-        pollNewMessages(activeId);
-    }, 120000);
 }
 
 async function pollNewMessages(memberId: string) {
