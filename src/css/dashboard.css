@@ -3608,8 +3608,7 @@ h3,
     left: 0;
     overflow: hidden;
     position: relative !important;
-    background: url('/exchequer_bg_throne_1772566581659.png') no-repeat center center fixed;
-    background-size: cover;
+    background: #0a0a0f;
     z-index: 9999;
 }
 
