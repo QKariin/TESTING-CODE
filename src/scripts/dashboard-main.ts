@@ -400,7 +400,7 @@ export function expandAdminCategory(category: 'accepted' | 'pending' | 'routine'
         if (old) old.remove();
         const overlay = document.createElement('div');
         overlay.id = '__adminCatOverlay';
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;overflow-y:auto;padding:40px 20px;';
+        overlay.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:320px;background:rgba(0,0,0,0.95);z-index:9999;overflow-y:auto;padding:40px 20px;';
         overlay.innerHTML = `
             <div style="max-width:900px;margin:0 auto;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">

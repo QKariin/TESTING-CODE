@@ -82,7 +82,7 @@ function renderWishlistPanel() {
         </div>
 
         <!-- Modal -->
-        <div id="wishlistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+        <div id="wishlistModal" style="display:none;position:fixed;top:0;right:0;bottom:0;left:320px;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
             <div style="background:#0d0d1a;border:1px solid rgba(197,160,89,0.4);border-radius:12px;padding:28px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
                     <div id="wishlistModalTitle" style="font-family:'Orbitron';font-size:1rem;color:#c5a059;letter-spacing:2px;">ADD ITEM</div>

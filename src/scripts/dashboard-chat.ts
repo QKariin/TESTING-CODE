@@ -489,7 +489,7 @@ export async function handleAdminUpload(file: File) {
 
     const overlay = document.createElement('div');
     overlay.id = '__adminMediaPreview';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    overlay.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:320px;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
 
     const mediaEl = isVideo
         ? `<video src="${objectUrl}" controls playsinline style="max-width:100%;max-height:55vh;border-radius:12px;display:block;"></video>`

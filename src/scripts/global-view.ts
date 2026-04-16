@@ -1390,7 +1390,7 @@ async function _loadQueenGallery() {
 
         el.innerHTML = `
             <div class="qk-gal-grid">${grid}</div>
-            <div id="qkGalleryLightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
+            <div id="qkGalleryLightbox" onclick="this.style.display='none'" style="display:none;position:fixed;top:0;right:0;bottom:0;left:320px;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
                 <span id="qkLightboxMedia"></span>
             </div>
         `;

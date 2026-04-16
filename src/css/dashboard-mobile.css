@@ -633,3 +633,8 @@
     opacity: 0.8;
     filter: grayscale(0.5);
 }
+
+/* On mobile, modals cover full screen since sidebar is hidden */
+.modal {
+    left: 0 !important;
+}
