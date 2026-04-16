@@ -106,7 +106,8 @@ export async function POST() {
         const email = (p.member_id || '').toLowerCase();
         const entry = routineMap[email];
         const timestamps = entry?.timestamps || [];
-        const consistency = calcConsistency(timestamps);
+        // One-time bonus: set consistency to total approved uploads so existing users start with a nice number
+        const consistency = timestamps.length;
         const params = p.parameters || {};
 
         await supabaseAdmin
