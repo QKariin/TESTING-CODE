@@ -154,58 +154,50 @@ export async function POST(req: Request) {
         }
 
         // Fire push notification in background - don't block the response
+        // Target by external_id (email) — no DB lookup needed, OneSignal resolves it
         const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
         const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
         const ADMIN_EMAIL = 'ceo@qkarin.com';
 
-        function sendPush(onesignalId: string, title: string, body: string, url: string) {
-            if (!ONESIGNAL_KEY || !onesignalId) return;
-            fetch('https://onesignal.com/api/v1/notifications', {
+        function sendPush(targetEmail: string, title: string, body: string, url: string) {
+            if (!ONESIGNAL_KEY || !targetEmail) return;
+            fetch('https://api.onesignal.com/notifications', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${ONESIGNAL_KEY}` },
                 body: JSON.stringify({
                     app_id: ONESIGNAL_APP_ID,
-                    include_subscription_ids: [onesignalId],
+                    target_channel: 'push',
+                    include_aliases: { external_id: [targetEmail] },
                     headings: { en: title },
                     contents: { en: body },
                     url,
                 }),
             }).then(r => r.json()).then(d => {
-                console.log('[chat/send] push result:', JSON.stringify(d));
+                console.log('[chat/send] push to', targetEmail, ':', JSON.stringify(d));
             }).catch(e => { console.error('[chat/send] push error:', e); });
         }
 
         if (isQueen && conversationId) {
-            // Queen sent to member — notify the member
+            // Queen sent to member — notify the member by their email
             const isConvUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
-            Promise.resolve(
-                adminClient.from('profiles').select('onesignal_id')[isConvUUID ? 'eq' : 'ilike'](isConvUUID ? 'ID' : 'member_id', conversationId).maybeSingle()
-            ).then(({ data: pushProfile }) => {
-                if (pushProfile?.onesignal_id) {
-                    sendPush(
-                        pushProfile.onesignal_id,
-                        'Queen Karin',
-                        typeof content === 'string' ? content.slice(0, 100) : '👑 New message',
-                        'https://throne.qkarin.com/profile'
-                    );
-                }
-            }).catch(() => {});
+            if (isConvUUID) {
+                // Resolve UUID to email first
+                Promise.resolve(
+                    adminClient.from('profiles').select('member_id').eq('ID', conversationId).maybeSingle()
+                ).then(({ data: p }) => {
+                    if (p?.member_id) {
+                        sendPush(p.member_id, 'Queen Karin', typeof content === 'string' ? content.slice(0, 100) : '👑 New message', 'https://throne.qkarin.com/profile');
+                    }
+                }).catch(() => {});
+            } else {
+                // conversationId is already email
+                sendPush(conversationId, 'Queen Karin', typeof content === 'string' ? content.slice(0, 100) : '👑 New message', 'https://throne.qkarin.com/profile');
+            }
         } else if (!isQueen) {
             // Member sent to queen — notify the queen
             const senderName = profile?.name || (senderEmail || '').split('@')[0] || 'Subject';
             const msgPreview = typeof content === 'string' ? content.slice(0, 100) : '📨 New message';
-            Promise.resolve(
-                adminClient.from('profiles').select('onesignal_id').ilike('member_id', ADMIN_EMAIL).maybeSingle()
-            ).then(({ data: queenProfile }) => {
-                if (queenProfile?.onesignal_id) {
-                    sendPush(
-                        queenProfile.onesignal_id,
-                        senderName,
-                        msgPreview,
-                        'https://throne.qkarin.com/dashboard'
-                    );
-                }
-            }).catch(() => {});
+            sendPush(ADMIN_EMAIL, senderName, msgPreview, 'https://throne.qkarin.com/dashboard');
         }
 
         return NextResponse.json({ success: true, data: msgData, newWallet });

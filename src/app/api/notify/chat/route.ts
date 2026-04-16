@@ -42,24 +42,12 @@ export async function POST(req: Request) {
             .maybeSingle();
         const senderName = senderProfile?.name || senderEmail.split('@')[0] || 'Subject';
 
-        // Get queen's OneSignal subscription ID
-        const { data: queenProfile } = await supabaseAdmin
-            .from('profiles')
-            .select('onesignal_id')
-            .ilike('member_id', ADMIN_EMAIL)
-            .maybeSingle();
-
-        const onesignalId = queenProfile?.onesignal_id;
-        if (!onesignalId) {
-            console.warn('[notify/chat] Queen has no onesignal_id saved — enable notifications in the dashboard first');
-            return NextResponse.json({ ok: false, reason: 'queen not subscribed' });
-        }
-
         const msgPreview = typeof content === 'string'
             ? content.replace(/^TASK_FEEDBACK::.*/, '📋 Task feedback').slice(0, 100)
             : '📨 New message';
 
-        const res = await fetch('https://onesignal.com/api/v1/notifications', {
+        // Target queen by external_id (email) — no DB lookup needed
+        const res = await fetch('https://api.onesignal.com/notifications', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -67,7 +55,8 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({
                 app_id: ONESIGNAL_APP_ID,
-                include_subscription_ids: [onesignalId],
+                target_channel: 'push',
+                include_aliases: { external_id: [ADMIN_EMAIL] },
                 headings: { en: senderName },
                 contents: { en: msgPreview },
                 url: 'https://throne.qkarin.com/dashboard',

@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 export const dynamic = 'force-dynamic';
 
 // POST /api/push - send a push notification to a specific user via OneSignal
+// externalId is the user's email (same as their OneSignal external_id)
 export async function POST(req: Request) {
     try {
         const { externalId, title, message } = await req.json();
@@ -12,34 +13,24 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing externalId or message' }, { status: 400 });
         }
 
-        // Look up the user's saved OneSignal subscription ID from their profile
-        const { createClient: createAdminClient } = await import('@supabase/supabase-js');
-        const admin = createAdminClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-        const { data: profile } = await admin
-            .from('profiles')
-            .select('onesignal_id')
-            .ilike('member_id', externalId)
-            .maybeSingle();
-
-        const onesignalId = profile?.onesignal_id;
-        console.log('[push] onesignal_id for', externalId, ':', onesignalId || 'NOT FOUND');
-        if (!onesignalId) {
-            return NextResponse.json({ success: false, error: 'No push subscription for this user' });
+        const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+        const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+        if (!apiKey) {
+            console.error('[push] ONESIGNAL_REST_API_KEY not set');
+            return NextResponse.json({ error: 'Push not configured' }, { status: 500 });
         }
 
-        const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
-        const response = await fetch('https://onesignal.com/api/v1/notifications', {
+        // Target by external_id (email) — no DB lookup needed
+        const response = await fetch('https://api.onesignal.com/notifications', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Key ${process.env.ONESIGNAL_REST_API_KEY}`,
+                'Authorization': `Key ${apiKey}`,
             },
             body: JSON.stringify({
                 app_id: appId,
-                include_subscription_ids: [onesignalId],
+                target_channel: 'push',
+                include_aliases: { external_id: [externalId.toLowerCase()] },
                 headings: { en: title || 'Queen Karin' },
                 contents: { en: message },
                 url: 'https://throne.qkarin.com/profile',
