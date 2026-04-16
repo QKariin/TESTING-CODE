@@ -163,7 +163,7 @@ export async function POST(req: Request) {
             if (!ONESIGNAL_KEY || !targetEmail) return;
             fetch('https://api.onesignal.com/notifications', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${ONESIGNAL_KEY}` },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${ONESIGNAL_KEY}` },
                 body: JSON.stringify({
                     app_id: ONESIGNAL_APP_ID,
                     target_channel: 'push',

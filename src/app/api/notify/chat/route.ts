@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Key ${ONESIGNAL_KEY}`,
+                'Authorization': `Basic ${ONESIGNAL_KEY}`,
             },
             body: JSON.stringify({
                 app_id: ONESIGNAL_APP_ID,
