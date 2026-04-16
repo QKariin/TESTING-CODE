@@ -197,7 +197,7 @@ export function renderSidebar() {
                         <div class="icon-box" title="${hasActiveTask ? 'Active Task' : 'Timer'}"><svg class="svg-icon ${hasActiveTask ? 'active-grey' : 'icon-dim'}" viewBox="0 0 24 24"><path d="${timerPath}"/></svg></div>
                         <div class="icon-box" title="${hasPendingReview ? 'Pending Review' : 'Review'}"><svg class="svg-icon ${hasPendingReview ? 'active-pink' : 'icon-dim'}" viewBox="0 0 24 24"><path d="${starPath}"/></svg></div>
                     </div>
-                    <div class="u-name" style="position:relative;z-index:1;">${clean(u.name)}</div>
+                    <div class="u-name" style="position:relative;z-index:1;font-family:'Cinzel',serif;letter-spacing:2px;">${clean(u.name)}</div>
                     <div class="u-seen ${online ? 'online' : ''}" style="position:relative;z-index:1;">${statusText}</div>
                 </div>
             `;
