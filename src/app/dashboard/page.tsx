@@ -276,6 +276,83 @@ function ChattersPanel() {
     );
 }
 
+function LeadsInlinePanel() {
+    const [leads, setLeads] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [adding, setAdding] = useState<string | null>(null);
+    const [manualEmail, setManualEmail] = useState('');
+    const [addingManual, setAddingManual] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/leads').then(r => r.json()).then(d => {
+            if (d.success) setLeads(d.leads);
+        }).catch(() => {}).finally(() => setLoading(false));
+    }, []);
+
+    const addSub = async (email: string) => {
+        setAdding(email);
+        try {
+            const res = await fetch('/api/admin/create-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, name: email.split('@')[0] }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setLeads(prev => prev.filter(l => l.email.toLowerCase() !== email.toLowerCase()));
+                (window as any)._refreshDashboard?.();
+            } else {
+                alert('Failed: ' + (data.error || 'Unknown error'));
+            }
+        } catch { alert('Network error'); }
+        setAdding(null);
+    };
+
+    const addManual = async () => {
+        if (!manualEmail.trim() || !manualEmail.includes('@')) return;
+        setAddingManual(true);
+        await addSub(manualEmail.trim());
+        setManualEmail('');
+        setAddingManual(false);
+    };
+
+    return (
+        <div className="v-gauge-card glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,80,80,0.15)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(255,80,80,0.12)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 3, height: 12, background: 'rgba(255,80,80,0.7)', borderRadius: 2 }} />
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '2px' }}>KNOCKING AT THE GATE</div>
+                </div>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length}</div>
+            </div>
+            {/* Manual add */}
+            <div style={{ display: 'flex', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+                <input type="email" value={manualEmail} onChange={e => setManualEmail(e.target.value)} placeholder="Add email manually..." onKeyDown={e => { if (e.key === 'Enter') addManual(); }} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.8rem', padding: '5px 10px', outline: 'none' }} />
+                <button onClick={addManual} disabled={addingManual} style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 4, color: '#4ade80', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', opacity: addingManual ? 0.5 : 1 }}>+ ADD</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '2px 0' }}>
+                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
+                {!loading && leads.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO LEADS YET</div>}
+                {leads.map((l: any) => {
+                    const last = new Date(l.last_seen).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    const isAdding = adding === l.email;
+                    return (
+                        <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: 'Rajdhani', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.email}</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.28rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{last}{l.attempts > 1 ? ` · ${l.attempts}×` : ''}</div>
+                            </div>
+                            <button onClick={() => addSub(l.email)} disabled={isAdding} style={{ flexShrink: 0, background: isAdding ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 4, color: '#4ade80', fontFamily: 'Orbitron', fontSize: '0.32rem', padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', opacity: isAdding ? 0.5 : 1 }}>
+                                {isAdding ? '...' : 'ADD'}
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 function LeadsPanel() {
     const [leads, setLeads] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -1033,82 +1110,17 @@ export default function DashboardPage() {
                             <div className="vh-footer">Tap to record →</div>
                         </div>
 
-                        {/* CHALLENGES WIDGET */}
-                        <div className="v-gauge-card glass-card span-1"
-                            onClick={() => setShowChallenges(true)}
-                            style={{ border: `1px solid ${challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)'}`, cursor: 'pointer', transition: 'border-color 0.2s', padding: 0, overflow: 'hidden' }}
-                            onMouseEnter={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.7)' : 'rgba(74,222,128,0.6)') : 'rgba(197,160,89,0.4)')}
-                            onMouseLeave={e => (e.currentTarget.style.borderColor = challengeWidget ? (challengeWidget.isUpcoming ? 'rgba(197,160,89,0.4)' : 'rgba(74,222,128,0.3)') : 'rgba(197,160,89,0.15)')}>
-                            <div className="vg-header" style={{ padding: '12px 16px 10px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>CHALLENGES</div>
-                                    {pendingVerificationCount > 0 && (
-                                        <span style={{ background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.36rem', fontWeight: 700, letterSpacing: '0.5px' }}>
-                                            {pendingVerificationCount} TO VALIDATE
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="vg-sub" style={{ cursor: 'pointer' }} onClick={e => { e.stopPropagation(); setShowChallenges(true); }}>MANAGE ↗</div>
-                            </div>
-                            {challengeWidget ? (
-                                <div style={{ display: 'flex', gap: 0, borderTop: `1px solid ${challengeWidget.isUpcoming ? 'rgba(197,160,89,0.15)' : 'rgba(74,222,128,0.1)'}` }}>
-                                    {/* Image */}
-                                    <div style={{ width: 120, flexShrink: 0, position: 'relative', background: 'rgba(197,160,89,0.04)', minHeight: 200 }}>
-                                        {challengeWidget.image_url
-                                            ? <img src={challengeWidget.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }} alt={challengeWidget.name} />
-                                            : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.15 }}>★</div>
-                                        }
-                                        <div style={{ position: 'absolute', top: 8, left: 8, borderRadius: 6, padding: '3px 8px', fontFamily: 'Orbitron', fontSize: '0.32rem', fontWeight: 700, letterSpacing: '1px', background: challengeWidget.isUpcoming ? 'rgba(251,191,36,0.9)' : 'rgba(74,222,128,0.9)', color: '#000' }}>
-                                            {challengeWidget.isUpcoming ? 'SOON' : 'LIVE'}
-                                        </div>
-                                    </div>
-                                    {/* Info */}
-                                    <div style={{ flex: 1, padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'space-between', minWidth: 0 }}>
-                                        <div>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>{challengeWidget.name}</div>
-                                            {challengeWidget.description && <div style={{ fontFamily: 'Orbitron', fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{challengeWidget.description}</div>}
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                                            {[
-                                                { label: 'Days', val: String(challengeWidget.duration_days ?? '-') },
-                                                { label: 'Tasks a day', val: String(challengeWidget.tasks_per_day ?? '-') },
-                                                { label: 'Window', val: challengeWidget.window_minutes ? `${challengeWidget.window_minutes} min` : '-' },
-                                                { label: 'Still working', val: String(challengeWidget.activeCount) },
-                                                ...(challengeWidget.isUpcoming && challengeWidget.start_date_raw ? [{ label: 'Starts', val: new Date(challengeWidget.start_date_raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }] : []),
-                                                ...(!challengeWidget.isUpcoming ? [{ label: 'Eliminated', val: String(challengeWidget.totalCount - challengeWidget.activeCount) }] : []),
-                                            ].map(({ label, val }) => (
-                                                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.38)' }}>{label}</span>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(197,160,89,0.3)' }}>
-                                            {challengeWidget.isUpcoming ? 'VIEW CHALLENGE' : 'MANAGE CHALLENGE'}
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px 16px' }}>
-                                    <div style={{ fontSize: '2rem', opacity: 0.3 }}>★</div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#333', letterSpacing: '2px', textAlign: 'center' }}>NO ACTIVE CHALLENGE</div>
-                                    <div style={{ padding: '8px 18px', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>CREATE ONE ↗</div>
-                                </div>
-                            )}
-                        </div>
+                        {/* KNOCKING AT THE GATE — inline in challenges slot */}
+                        <LeadsInlinePanel />
 
-                        {/* ENTER GLOBAL */}
-                        <div className="v-best-sub glass-card span-1" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
-                            <div className="vb-header">
-                                <div className="vb-title" style={{ fontFamily: 'Orbitron', color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
-                                <div className="vb-sub">Community Hub</div>
+                        {/* EXCHEQUER — inline in global slot */}
+                        <div className="v-best-sub glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER</div>
+                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
                             </div>
-                            <div className="vb-content">
-                                <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: 'rgba(197,160,89,0.06)', boxShadow: '0 0 24px rgba(197,160,89,0.12)' }}>
-                                    <span style={{ fontSize: '1.6rem', color: '#c5a059', opacity: 0.85 }}>◎</span>
-                                </div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
-                                <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER</div>
+                            <div id="exchequerLogInline" style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
+                                <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
                             </div>
                         </div>
 
@@ -1149,22 +1161,6 @@ export default function DashboardPage() {
                             </div>
                             )}
                         </div>
-
-                        {/* EXCHEQUER - COIN TRANSACTION LOG — queen only */}
-                        {role === 'queen' && (
-                        <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '180px', overflow: 'hidden' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
-                            </div>
-                            <div id="exchequerLog" style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-                                <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
-                            </div>
-                        </div>
-                        )}
-
-                        {/* LEADS (Knocking at the Gate) — queen only, shows emails */}
-                        {role === 'queen' && <LeadsPanel />}
 
                         {/* CHATTERS - manage sub-admin chatters (queen-only) */}
                         {role === 'queen' && <ChattersPanel />}

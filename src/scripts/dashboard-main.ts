@@ -149,7 +149,8 @@ function subscribeToPurchaseNotifications(supabase: any) {
 
 export async function loadExchequerLog() {
     const container = document.getElementById('exchequerLog');
-    if (!container) return;
+    const inlineContainer = document.getElementById('exchequerLogInline');
+    if (!container && !inlineContainer) return;
 
     try {
         const res = await fetch('/api/transactions');
@@ -157,11 +158,13 @@ export async function loadExchequerLog() {
         const transactions: any[] = data.transactions || [];
 
         if (transactions.length === 0) {
-            container.innerHTML = `<div style="padding:20px;text-align:center;font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.15);letter-spacing:2px">NO TRANSACTIONS YET</div>`;
+            const emptyHtml = `<div style="padding:20px;text-align:center;font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.15);letter-spacing:2px">NO TRANSACTIONS YET</div>`;
+            if (container) container.innerHTML = emptyHtml;
+            if (inlineContainer) inlineContainer.innerHTML = emptyHtml;
             return;
         }
 
-        container.innerHTML = transactions.map(tx => {
+        const html = transactions.map(tx => {
             const date = new Date(tx.timestamp);
             const timeStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
                 + ' · ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -198,9 +201,13 @@ export async function loadExchequerLog() {
                 </div>
             `;
         }).join('');
+        if (container) container.innerHTML = html;
+        if (inlineContainer) inlineContainer.innerHTML = html;
     } catch (err) {
         console.error('[exchequer] Failed to load transactions:', err);
-        container.innerHTML = `<div style="padding:20px;text-align:center;font-family:Orbitron;font-size:0.5rem;color:rgba(255,80,80,0.5);letter-spacing:2px">ERROR LOADING</div>`;
+        const errHtml = `<div style="padding:20px;text-align:center;font-family:Orbitron;font-size:0.5rem;color:rgba(255,80,80,0.5);letter-spacing:2px">ERROR LOADING</div>`;
+        if (container) container.innerHTML = errHtml;
+        if (inlineContainer) inlineContainer.innerHTML = errHtml;
     }
 }
 
