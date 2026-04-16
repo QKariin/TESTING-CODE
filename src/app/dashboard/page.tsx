@@ -951,24 +951,8 @@ export default function DashboardPage() {
                 <div id="adminDailyCodeMob" className="mob-top-code">----</div>
             </div>
 
-            {/* SIDEBAR */}
+            {/* SIDEBAR — subs list only */}
             <div className="sidebar">
-                <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
-                <div
-                    className="sb-dash-btn"
-                    onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showPosts(); }}
-                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
-                >✦ POSTS</div>
-                <div
-                    className="sb-dash-btn"
-                    onClick={() => { setShowGlobal(false); setShowChallenges(true); }}
-                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(74,222,128,0.06), transparent)', borderBottom: '1px solid rgba(74,222,128,0.15)', color: showChallenges ? '#4ade80' : '#4ade8099', position: 'relative', cursor: 'pointer', boxShadow: showChallenges ? 'inset 3px 0 0 #4ade80' : 'none' }}
-                >⚔ CHALLENGES{pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}</div>
-                <div
-                    className="sb-dash-btn"
-                    onClick={() => { setShowChallenges(false); setShowGlobal(true); }}
-                    style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.06), transparent)', borderBottom: '1px solid rgba(197,160,89,0.15)', color: showGlobal ? 'var(--gold)' : 'rgba(255,255,255,0.45)', position: 'relative', cursor: 'pointer', boxShadow: showGlobal ? 'inset 3px 0 0 var(--gold)' : 'none' }}
-                >⊕ GLOBAL</div>
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
@@ -1002,33 +986,30 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="v-grid-stats">
-                        <div className="v-stat-card glass-card">
+                        <div className="v-stat-card glass-card" onClick={() => (window as any).showHome()} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
-                                <div className="vs-label">Today's Tributes</div>
-                                <div className="vs-val" id="statTributes">0 <span className="vs-perc">+55%</span></div>
+                                <div className="vs-label" style={{ color: '#c5a059' }}>DASHBOARD</div>
                             </div>
-                            <div className="vs-icon gold-bg">💰</div>
+                            <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⌂</div>
                         </div>
-                        <div className="v-stat-card glass-card">
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
-                                <div className="vs-label">Active Slaves</div>
-                                <div className="vs-val" id="statActive">0 <span className="vs-perc">+5%</span></div>
+                                <div className="vs-label" style={{ color: '#c5a059' }}>POSTS</div>
                             </div>
-                            <div className="vs-icon gold-bg">👤</div>
+                            <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>✦</div>
                         </div>
-                        <div className="v-stat-card glass-card">
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(true); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
                             <div className="vs-info">
-                                <div className="vs-label">Pending Reviews</div>
-                                <div className="vs-val" id="statPending">0 <span className="vs-perc neg">-14%</span></div>
+                                <div className="vs-label" style={{ color: showChallenges ? '#4ade80' : '#4ade8099' }}>CHALLENGES</div>
                             </div>
-                            <div className="vs-icon gold-bg">📝</div>
+                            <div className="vs-icon" style={{ background: 'rgba(74,222,128,0.12)', fontSize: '1.1rem' }}>⚔</div>
+                            {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
                         </div>
-                        <div className="v-stat-card glass-card">
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
-                                <div className="vs-label">Total Failures</div>
-                                <div className="vs-val" id="statSkipped">0 <span className="vs-perc">+8%</span></div>
+                                <div className="vs-label" style={{ color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.45)' }}>GLOBAL</div>
                             </div>
-                            <div className="vs-icon gold-bg">⚠️</div>
+                            <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⊕</div>
                         </div>
                     </div>
 
