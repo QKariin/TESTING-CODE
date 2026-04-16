@@ -55,12 +55,12 @@ export async function POST(req: Request) {
         const { error: profileError } = await supabaseAdmin
             .from('profiles')
             .insert({
-                id: userId,
+                ID: userId,
                 member_id: lowerEmail,
                 name: name || lowerEmail.split('@')[0],
                 hierarchy: hierarchy || 'Hall Boy',
                 score: 0,
-                wallet: wallet ?? 5000,
+                wallet: wallet ?? 1000,
                 parameters: { devotion: 100, ...(parameters || {}) },
             });
         if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
