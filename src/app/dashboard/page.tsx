@@ -945,6 +945,13 @@ export default function DashboardPage() {
 
         const supabaseRt = createClient();
 
+        // ── Debounced sidebar render — max once per 300ms ──────────────────
+        let _sidebarTimer: ReturnType<typeof setTimeout> | null = null;
+        const debouncedRenderSidebar = () => {
+            if (_sidebarTimer) clearTimeout(_sidebarTimer);
+            _sidebarTimer = setTimeout(() => renderSidebar(), 300);
+        };
+
         // ── Realtime: new chat message → sidebar lights up instantly ──────────
         const chatsChannel = supabaseRt
             .channel('chats-admin-live')
@@ -961,7 +968,6 @@ export default function DashboardPage() {
                 if (!memberId) return;
                 const msgTime = new Date(msg.created_at).getTime();
                 const updatedUsers = users.map((u: any) => {
-                    // chats.member_id stores EMAIL — match against user's email (member_id), not UUID (memberId)
                     const uid = (u.member_id || u.memberId || '').toLowerCase();
                     if (uid === memberId) {
                         return { ...u, lastMessageTime: Math.max(u.lastMessageTime || 0, msgTime) };
@@ -969,25 +975,83 @@ export default function DashboardPage() {
                     return u;
                 });
                 setUsers(updatedUsers);
-                renderSidebar();
+                debouncedRenderSidebar();
             })
             .subscribe();
 
-        // ── Realtime: profile update (wallet, score, hierarchy) → refresh user in state ──
+        // ── Realtime: profile changes → surgical update from payload ──────
         const profilesChannel = supabaseRt
             .channel('profiles-admin-live')
             .on('postgres_changes', {
-                event: '*',
+                event: 'UPDATE',
                 schema: 'public',
                 table: 'profiles',
-            }, () => {
-                // Re-fetch full data when any profile changes (INSERT, UPDATE, DELETE)
-                loadLiveAction();
+            }, (payload: any) => {
+                const updated = payload.new;
+                if (!updated) return;
+                const updatedId = updated.ID || updated.id;
+                const found = users.find((u: any) => u.memberId === updatedId || u.id === updatedId);
+                if (!found) return;
+                // Merge changed fields into existing user object
+                if (updated.wallet !== undefined) found.wallet = Number(updated.wallet);
+                if (updated.score !== undefined) found.score = Number(updated.score);
+                if (updated.hierarchy !== undefined) found.hierarchy = updated.hierarchy;
+                if (updated.name !== undefined) found.name = updated.name;
+                if (updated.silence !== undefined) found.silence = updated.silence === true;
+                if (updated.parameters !== undefined) {
+                    found.parameters = { ...found.parameters, ...updated.parameters };
+                    // Sync paywall flag
+                    found.paywall = !!(updated.parameters?.paywall?.active);
+                }
+                if (updated.avatar_url) {
+                    const pic = getOptimizedUrl(updated.avatar_url, 100) || '/collar-placeholder.png';
+                    found.avatar = pic;
+                    found.profilePicture = pic;
+                    found.image = pic;
+                }
+                if (updated.last_active) found.lastSeen = updated.last_active;
+                // Update the currently open user detail if viewing this user
+                if (currId === found.memberId || currId === (found.member_id || '')) {
+                    updateDetail(found);
+                }
+                debouncedRenderSidebar();
+            })
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'profiles',
+            }, (payload: any) => {
+                const newProfile = payload.new;
+                if (!newProfile) return;
+                // Check not already in list
+                const existingId = newProfile.ID || newProfile.id;
+                if (users.find((u: any) => u.memberId === existingId)) return;
+                // Build a minimal user object from the payload
+                const pic = getOptimizedUrl(newProfile.avatar_url || '/collar-placeholder.png', 100) || '/collar-placeholder.png';
+                const newUser = {
+                    ...newProfile,
+                    id: existingId,
+                    memberId: existingId,
+                    name: newProfile.name || (newProfile.member_id || '').split('@')[0],
+                    hierarchy: newProfile.hierarchy || 'Hall Boy',
+                    score: Number(newProfile.score || 0),
+                    wallet: Number(newProfile.wallet || 0),
+                    avatar: pic,
+                    profilePicture: pic,
+                    image: pic,
+                    lastMessageTime: 0,
+                    lastSeen: newProfile.last_active || null,
+                    silence: newProfile.silence === true,
+                    parameters: newProfile.parameters || {},
+                    reviewQueue: [],
+                };
+                users.push(newUser);
+                setUsers([...users]);
+                debouncedRenderSidebar();
             })
             .subscribe();
 
         // ── Realtime: queen-only chat restriction broadcast ──
-        // Instant sync: when queen restricts a chat, chatters remove user immediately
         const restrictChannel = supabaseRt
             .channel('chat-restrict-sync')
             .on('broadcast', { event: 'restrict' }, (payload: any) => {
@@ -995,12 +1059,11 @@ export default function DashboardPage() {
                 const { memberId, restricted } = payload.payload || {};
                 if (!memberId) return;
                 if (restricted) {
-                    // Remove user from sidebar instantly
                     const filtered = users.filter((u: any) => u.memberId !== memberId && u.member_id !== memberId);
                     setUsers(filtered);
-                    renderSidebar();
+                    debouncedRenderSidebar();
                 } else {
-                    // Unrestricted — full re-fetch to get the user back
+                    // Unrestricted — need full re-fetch to get user back
                     loadLiveAction();
                 }
             })
