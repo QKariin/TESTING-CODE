@@ -126,8 +126,7 @@ export async function POST(req: Request) {
             sender_email: senderEmail,
             content,
             type,
-            metadata: { ...metadata, isQueen },
-            ...(chatterEmail ? { chatter_email: chatterEmail } : {}),
+            metadata: { ...metadata, isQueen, ...(chatterEmail ? { chatter_email: chatterEmail } : {}) },
         };
 
         // Insert without .select() to avoid RETURNING id issues if the chats table

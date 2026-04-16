@@ -846,6 +846,16 @@ export default function DashboardPage() {
                 // Safety net: re-render sidebar after a tick in case DOM wasn't ready
                 setTimeout(() => renderSidebar(), 50);
 
+                // Chatters: auto-select first user so they see chat immediately
+                if (roleRef.current === 'chatter' && !currId && visibleUsers.length > 0) {
+                    setTimeout(() => {
+                        const firstUser = visibleUsers[0];
+                        if (firstUser && (window as any).selUser) {
+                            (window as any).selUser(firstUser.memberId || firstUser.member_id);
+                        }
+                    }, 100);
+                }
+
                 if (currId) {
                     const openUser = mappedUsers.find((u: any) => u.memberId === currId || u.member_id === currId);
                     if (openUser) updateDetail(openUser);
@@ -953,12 +963,12 @@ export default function DashboardPage() {
 
             {/* SIDEBAR */}
             <div className="sidebar">
-                <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
-                <div
+                {role === 'queen' && <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>}
+                {role === 'queen' && <div
                     className="sb-dash-btn"
                     onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showPosts(); }}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
-                >✦ POSTS</div>
+                >✦ POSTS</div>}
                 <div
                     className="sb-dash-btn"
                     onClick={() => { setShowGlobal(false); setShowChallenges(true); }}
@@ -992,8 +1002,8 @@ export default function DashboardPage() {
                     <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
                 )}
 
-                {/* 1. HOME VIEW */}
-                <div id="viewHome">
+                {/* 1. HOME VIEW — hidden for chatters */}
+                <div id="viewHome" style={role === 'chatter' ? { display: 'none' } : undefined}>
                     <div className="v-header">
                         <div className="v-header-left">
                             <div className="v-breadcrumb">Pages / Dashboard</div>
@@ -1320,7 +1330,7 @@ export default function DashboardPage() {
                     <button className="upload-fab" onClick={() => (window as any).openProfileUpload(false)}>+</button>
                 </div>
 
-                <div id="viewUser" style={{ display: 'none' }}>
+                <div id="viewUser" style={{ display: role === 'chatter' ? 'block' : 'none' }}>
                     <div className="mob-swipe-hint">← CHAT &nbsp;·&nbsp; DOSSIER →</div>
                     <div className="split">
                         {/* LEFT: COMMAND & FEED */}
