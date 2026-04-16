@@ -529,6 +529,7 @@ export default function DashboardPage() {
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const [showChallenges, setShowChallenges] = useState(false);
     const [showGlobal, setShowGlobal] = useState(false);
+    const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const router = useRouter();
 
     useEffect(() => {
@@ -611,6 +612,7 @@ export default function DashboardPage() {
                     const roleData = await roleRes.json();
                     if (roleData.role === 'chatter' || roleData.role === 'queen') {
                         setDashboardRole(roleData.role);
+                        setRole(roleData.role);
                     }
                 } catch {}
 
@@ -1110,7 +1112,7 @@ export default function DashboardPage() {
                             </div>
 
                             {/* REVENUE & INTEL STREAM — queen only */}
-                            {dashboardRole === 'queen' && (
+                            {role === 'queen' && (
                             <div className="v-feed-card glass-card" style={{ flex: 1, minWidth: 0 }}>
                                 <div className="vf-header">Revenue & Intel Stream</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', padding: '12px 14px' }}>
@@ -1137,7 +1139,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* EXCHEQUER - COIN TRANSACTION LOG — queen only */}
-                        {dashboardRole === 'queen' && (
+                        {role === 'queen' && (
                         <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '180px', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
@@ -1150,10 +1152,10 @@ export default function DashboardPage() {
                         )}
 
                         {/* LEADS (Knocking at the Gate) — queen only, shows emails */}
-                        {dashboardRole === 'queen' && <LeadsPanel />}
+                        {role === 'queen' && <LeadsPanel />}
 
                         {/* CHATTERS - manage sub-admin chatters (queen-only) */}
-                        {dashboardRole === 'queen' && <ChattersPanel />}
+                        {role === 'queen' && <ChattersPanel />}
                     </div>
                 </div>
 
@@ -1471,7 +1473,7 @@ export default function DashboardPage() {
                                         <strong id="dMirrorSlaveSince" style={{ color: '#fff', fontSize: '0.7rem' }}>--/--/--</strong>
                                     </div>
 
-                                    {dashboardRole === 'queen' && ((activeLocks.paywall || activeLocks.silenced) ? (
+                                    {role === 'queen' && ((activeLocks.paywall || activeLocks.silenced) ? (
                                         <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: 'rgba(80,80,80,0.12)', border: '1px solid rgba(150,150,150,0.25)', borderRadius: 8, color: '#888', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={async () => {
                                             const id = (window as any).currId;
                                             if (!id) return;
