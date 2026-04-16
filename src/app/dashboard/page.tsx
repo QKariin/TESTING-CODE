@@ -317,7 +317,7 @@ function LeadsInlinePanel() {
     };
 
     return (
-        <div className="glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,80,80,0.15)', minHeight: 0 }}>
+        <div className="glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,80,80,0.15)', minHeight: 0, maxHeight: 320 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(255,80,80,0.12)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 3, height: 12, background: 'rgba(255,80,80,0.7)', borderRadius: 2 }} />
@@ -1118,7 +1118,7 @@ export default function DashboardPage() {
                                 <LeadsInlinePanel />
 
                                 {/* EXCHEQUER — inline in global slot (dashboard only) */}
-                                <div className="glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                <div className="glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0, maxHeight: 320 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER</div>
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
