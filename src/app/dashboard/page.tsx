@@ -1172,11 +1172,16 @@ export default function DashboardPage() {
                 </div>
 
                 {/* POSTS VIEW */}
-                <div id="viewPosts" style={{ display: 'none', flexDirection: 'column', gap: '25px', padding: '30px', overflowY: 'auto', height: '100%' }}>
-                    <div style={{ borderBottom: '1px solid #222', paddingBottom: '20px' }}>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#c5a059', letterSpacing: '4px', marginBottom: '5px' }}>QUEEN'S DISPATCH</div>
-                        <div style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555', letterSpacing: '2px' }}>PUBLISH POSTS · VISIBLE TO ALL SUBJECTS</div>
+                <div id="viewPosts" style={{ display: 'none', flexDirection: 'column', gap: '0', overflowY: 'auto', height: '100%' }}>
+                    {/* Header bar with close */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(197,160,89,0.2)', flexShrink: 0, background: 'rgba(0,0,0,0.3)' }}>
+                        <div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: '#c5a059', letterSpacing: '4px' }}>QUEEN'S DISPATCH</div>
+                            <div style={{ fontFamily: 'Rajdhani', fontSize: '0.65rem', color: '#555', letterSpacing: '2px', marginTop: 2 }}>PUBLISH POSTS · VISIBLE TO ALL SUBJECTS</div>
+                        </div>
+                        <button onClick={() => (window as any).showHome()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
                     </div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '25px 30px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
 
                     {/* COMPOSE */}
                     <div id="postComposeForm" style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -1263,6 +1268,7 @@ export default function DashboardPage() {
                     <div id="postsListContainer" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <div style={{ color: '#444', fontFamily: 'Orbitron', fontSize: '0.8rem', padding: '20px', textAlign: 'center' }}>Click POSTS to load...</div>
                     </div>
+                    </div>{/* end scrollable content wrapper */}
                 </div>
 
                 {/* 2. PROFILE VIEW */}
