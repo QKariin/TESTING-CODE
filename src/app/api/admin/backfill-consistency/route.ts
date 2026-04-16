@@ -9,11 +9,10 @@ function toDay(d: Date): string {
     return adjusted.toISOString().split('T')[0];
 }
 
-function calcConsistency(routineHistory: string[]): number {
-    if (!routineHistory || routineHistory.length === 0) return 0;
+function calcConsistency(timestamps: string[]): number {
+    if (!timestamps || timestamps.length === 0) return 0;
 
-    // Sort timestamps descending (newest first)
-    const sorted = [...routineHistory]
+    const sorted = [...timestamps]
         .map(ts => new Date(ts))
         .filter(d => !isNaN(d.getTime()))
         .sort((a, b) => b.getTime() - a.getTime());
@@ -29,20 +28,6 @@ function calcConsistency(routineHistory: string[]): number {
         }
     }
 
-    // Walk backwards from the most recent day, counting consecutive days
-    let streak = 1;
-    for (let i = 1; i < days.length; i++) {
-        const prev = new Date(days[i - 1] + 'T12:00:00Z');
-        const curr = new Date(days[i] + 'T12:00:00Z');
-        const diffMs = prev.getTime() - curr.getTime();
-        const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
-        if (diffDays === 1) {
-            streak++;
-        } else {
-            break;
-        }
-    }
-
     // Check if the most recent day is today or yesterday — if not, streak is broken
     const now = new Date();
     const todayDay = toDay(now);
@@ -51,7 +36,20 @@ function calcConsistency(routineHistory: string[]): number {
     const yesterdayDay = toDay(yesterdayDate);
 
     if (days[0] !== todayDay && days[0] !== yesterdayDay) {
-        return 0; // streak is broken
+        return 0;
+    }
+
+    // Walk from most recent, counting consecutive days
+    let streak = 1;
+    for (let i = 1; i < days.length; i++) {
+        const prev = new Date(days[i - 1] + 'T12:00:00Z');
+        const curr = new Date(days[i] + 'T12:00:00Z');
+        const diffDays = Math.round((prev.getTime() - curr.getTime()) / (24 * 60 * 60 * 1000));
+        if (diffDays === 1) {
+            streak++;
+        } else {
+            break;
+        }
     }
 
     return streak;
@@ -64,18 +62,51 @@ export async function POST() {
         { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { data: profiles, error } = await supabaseAdmin
-        .from('profiles')
-        .select('ID, member_id, routine_history, parameters');
+    // Read from tasks.Taskdom_History — that's where routine entries actually live
+    const { data: tasks, error: taskErr } = await supabaseAdmin
+        .from('tasks')
+        .select('ID, member_id, Taskdom_History');
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (taskErr) return NextResponse.json({ error: taskErr.message }, { status: 500 });
+
+    // Build a map: email → routine timestamps (approved ones)
+    const routineMap: Record<string, { userId: string; timestamps: string[] }> = {};
+
+    for (const t of (tasks || [])) {
+        let history: any[] = [];
+        if (Array.isArray(t.Taskdom_History)) history = t.Taskdom_History;
+        else if (typeof t.Taskdom_History === 'string') {
+            try { history = JSON.parse(t.Taskdom_History); } catch { history = []; }
+        }
+
+        const routineTimestamps = history
+            .filter((h: any) => h.isRoutine === true && (h.status === 'approve' || h.status === 'approved'))
+            .map((h: any) => h.timestamp)
+            .filter(Boolean);
+
+        if (t.member_id) {
+            routineMap[t.member_id.toLowerCase()] = {
+                userId: t.ID,
+                timestamps: routineTimestamps,
+            };
+        }
+    }
+
+    // Now update each profile's parameters.consistency
+    const { data: profiles, error: profErr } = await supabaseAdmin
+        .from('profiles')
+        .select('ID, member_id, parameters');
+
+    if (profErr) return NextResponse.json({ error: profErr.message }, { status: 500 });
 
     let updated = 0;
-    const results: { email: string; consistency: number }[] = [];
+    const results: { email: string; consistency: number; routineUploads: number }[] = [];
 
     for (const p of (profiles || [])) {
-        const history: string[] = Array.isArray(p.routine_history) ? p.routine_history : [];
-        const consistency = calcConsistency(history);
+        const email = (p.member_id || '').toLowerCase();
+        const entry = routineMap[email];
+        const timestamps = entry?.timestamps || [];
+        const consistency = calcConsistency(timestamps);
         const params = p.parameters || {};
 
         await supabaseAdmin
@@ -83,7 +114,7 @@ export async function POST() {
             .update({ parameters: { ...params, consistency } })
             .eq('ID', p.ID);
 
-        results.push({ email: p.member_id, consistency });
+        results.push({ email, consistency, routineUploads: timestamps.length });
         updated++;
     }
 
