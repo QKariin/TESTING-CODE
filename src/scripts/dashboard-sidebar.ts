@@ -15,26 +15,28 @@ const soundMemory: { [key: string]: number } = {};
 // Track previous online state to detect actual transitions, not jitter
 const prevOnlineState: Record<string, boolean> = {};
 
-// pendingReadId: user currently open who had unread - read is deferred until we leave them
-let pendingReadId: string | null = null;
+/**
+ * Mark a user's chat as read immediately.
+ * Called when opening a chat — you see it, it's read.
+ */
+export function markAsRead(id: string) {
+    if (!id) return;
+    const now = Date.now();
+    localStorage.setItem('read_' + id, now.toString());
+    // Persist to server
+    fetch('/api/chat/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'admin', slaveEmail: id, timestamp: new Date(now).toISOString() }),
+    }).catch(() => {});
+    delete firstUnreadTime[id];
+}
 
 /**
- * Mark the pending (currently viewed) user as read.
- * Call this when navigating AWAY from a user (selecting another, going home/posts).
+ * @deprecated Kept for backward compat — just calls markAsRead on currId.
  */
 export function markPendingRead() {
-    if (pendingReadId) {
-        const now = Date.now();
-        localStorage.setItem('read_' + pendingReadId, now.toString());
-        // Persist to server (fire and forget)
-        fetch('/api/chat/mark-read', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role: 'admin', slaveEmail: pendingReadId, timestamp: new Date(now).toISOString() }),
-        }).catch(() => {});
-        delete firstUnreadTime[pendingReadId];
-        pendingReadId = null;
-    }
+    if (currId) markAsRead(currId);
 }
 
 export function renderSidebar() {
@@ -68,8 +70,7 @@ export function renderSidebar() {
         if (hasMsg && msgTime > 0 && !firstUnreadTime[u.memberId]) {
             firstUnreadTime[u.memberId] = msgTime;
         }
-        // Clear only if no longer unread AND not the pending-read user (still being viewed)
-        if (!hasMsg && u.memberId !== pendingReadId) {
+        if (!hasMsg) {
             delete firstUnreadTime[u.memberId];
         }
 
@@ -97,13 +98,9 @@ export function renderSidebar() {
     });
 
     // ── Sort into 3 groups ───────────────────────────────────────────────
-    // For GROUP membership: pendingReadId stays in unread group while being viewed
-    const hasUnreadForSort = (u: any) =>
-        u.memberId === pendingReadId ? true : hasUnreadMessage(u);
-
     // Group 1: has unread - FIFO queue: earliest message = top
     const withUnread = users
-        .filter(u => hasUnreadForSort(u))
+        .filter(u => hasUnreadMessage(u))
         .sort((a, b) => (firstUnreadTime[a.memberId] || 0) - (firstUnreadTime[b.memberId] || 0));
 
     const withUnreadIds = new Set(withUnread.map(u => u.memberId));
@@ -282,21 +279,8 @@ export function selUser(id: string) {
     // Close any React overlay panels (GLOBAL / CHALLENGES) so the user view is visible
     (window as any)._closeOverlays?.();
 
-    // ── Mark the PREVIOUS user as read (deferred - only now that we're leaving them) ──
-    markPendingRead();
-
-    // If the user we're opening has unread messages, defer their read mark
-    const u = users.find(x => x.memberId === id);
-    if (u) {
-        const readTime = localStorage.getItem('read_' + id);
-        const hasUnread = readTime
-            ? (u.lastMessageTime || 0) > parseInt(readTime)
-            : (u.lastMessageTime || 0) > 0;
-        if (hasUnread) {
-            pendingReadId = id;
-        }
-    }
-    // NOTE: do NOT write localStorage.read here - deferred until we leave this user
+    // Mark this user's chat as read immediately — you see it, it's read
+    markAsRead(id);
 
     const chatBox = document.getElementById('adminChatBox');
     if (chatBox) chatBox.innerHTML = "";
