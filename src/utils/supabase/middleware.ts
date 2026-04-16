@@ -92,11 +92,23 @@ export async function updateSession(request: NextRequest) {
         const hasAccess = !!profile || isLegacyMember || isCEO;
         const isDashboardPage = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
-        console.log(`[BOUNCER] Access Decision: Profile=${!!profile}, Legacy=${isLegacyMember}, Result=${hasAccess ? 'ALLOWED' : 'DENIED'} | User: ${userEmailNormalized}`);
+        // Check if user is an active chatter (allowed into dashboard)
+        let isChatter = false;
+        if (!isCEO && isDashboardPage) {
+            const { data: chatterRow } = await adminSupabase
+                .from('chatters')
+                .select('id')
+                .eq('email', userEmailNormalized)
+                .eq('is_active', true)
+                .maybeSingle();
+            isChatter = !!chatterRow;
+        }
 
-        if (hasAccess) {
-            // 1. If non-CEO tries to access Dashboard -> go to Profile
-            if (isDashboardPage && !isCEO) {
+        console.log(`[BOUNCER] Access Decision: Profile=${!!profile}, Legacy=${isLegacyMember}, Chatter=${isChatter}, Result=${hasAccess ? 'ALLOWED' : 'DENIED'} | User: ${userEmailNormalized}`);
+
+        if (hasAccess || isChatter) {
+            // 1. If non-CEO and non-chatter tries to access Dashboard -> go to Profile
+            if (isDashboardPage && !isCEO && !isChatter) {
                 console.log(`[BOUNCER] Non-CEO ${userEmailNormalized} attempted Dashboard. Redirecting to /profile.`);
                 return NextResponse.redirect(new URL('/profile', request.url));
             }

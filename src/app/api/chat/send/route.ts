@@ -21,15 +21,31 @@ export async function POST(req: Request) {
 
         let profile: any = null;
         let isQueen = isHardcodedAdmin;
+        let chatterEmail: string | null = null;
 
         const adminClient = createAdminClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
+        // Check if sender is an active chatter
+        if (!isHardcodedAdmin && senderEmail) {
+            const { data: chatterRow } = await adminClient
+                .from('chatters')
+                .select('email')
+                .eq('email', senderEmail.toLowerCase())
+                .eq('is_active', true)
+                .maybeSingle();
+            if (chatterRow) {
+                isQueen = true;
+                chatterEmail = senderEmail.toLowerCase();
+                profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
+            }
+        }
+
         if (isHardcodedAdmin) {
             profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
-        } else {
+        } else if (!chatterEmail) {
             // Look up profile by UUID (profiles.id) or email (profiles.member_id)
             const { data, error: profileErr } = await adminClient
                 .from('profiles')
@@ -110,7 +126,8 @@ export async function POST(req: Request) {
             sender_email: senderEmail,
             content,
             type,
-            metadata: { ...metadata, isQueen }
+            metadata: { ...metadata, isQueen },
+            ...(chatterEmail ? { chatter_email: chatterEmail } : {}),
         };
 
         // Insert without .select() to avoid RETURNING id issues if the chats table

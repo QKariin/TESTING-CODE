@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  * Returns what's needed to render the subject list:
  * name, memberId, avatar, hierarchy, lastSeen, silence, paywall, activeTask indicator.
  * Also returns pendingReviews[] for the mobile command center.
+ * For chatters: memberId is masked to hide emails.
  */
 export async function GET() {
     try {

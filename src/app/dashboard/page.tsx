@@ -20,7 +20,7 @@ import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQ
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
-import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, users, currId } from '@/scripts/dashboard-state';
+import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, setDashboardRole, users, currId, dashboardRole } from '@/scripts/dashboard-state';
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
@@ -183,6 +183,97 @@ function buildGlMsgHtml(msg: any): string {
     const initial = (name[0]||'S').toUpperCase();
     const userAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
     return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
+}
+
+function ChattersPanel() {
+    const [chatters, setChatters] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [newEmail, setNewEmail] = useState('');
+    const [newName, setNewName] = useState('');
+    const [adding, setAdding] = useState(false);
+
+    const loadChatters = () => {
+        fetch('/api/chatter/manage').then(r => r.json()).then(d => {
+            if (d.success) setChatters(d.chatters || []);
+        }).catch(() => {}).finally(() => setLoading(false));
+    };
+
+    useEffect(() => { loadChatters(); }, []);
+
+    const addChatter = async () => {
+        if (!newEmail.trim()) return;
+        setAdding(true);
+        try {
+            const res = await fetch('/api/chatter/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', email: newEmail.trim(), displayName: newName.trim() || undefined }),
+            });
+            const d = await res.json();
+            if (d.success) { setNewEmail(''); setNewName(''); loadChatters(); }
+            else alert(d.error);
+        } catch { alert('Failed to add chatter'); }
+        setAdding(false);
+    };
+
+    const removeChatter = async (email: string) => {
+        if (!confirm(`Remove ${email} as chatter?`)) return;
+        await fetch('/api/chatter/manage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'remove', email }),
+        });
+        loadChatters();
+    };
+
+    return (
+        <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 400 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, background: 'rgba(197,160,89,0.7)', borderRadius: 2 }} />
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>CHATTERS</div>
+                </div>
+                <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{chatters.filter(c => c.is_active).length} ACTIVE</div>
+            </div>
+
+            {/* Add chatter form */}
+            <div style={{ display: 'flex', gap: 6, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="Email"
+                    style={{ flex: 2, background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.8rem', padding: '8px 10px', borderRadius: 4, outline: 'none' }} />
+                <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Name"
+                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.8rem', padding: '8px 10px', borderRadius: 4, outline: 'none' }} />
+                <button onClick={addChatter} disabled={adding}
+                    style={{ flexShrink: 0, background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '8px 14px', borderRadius: 4, cursor: 'pointer', letterSpacing: '1px' }}>
+                    {adding ? '...' : '+ ADD'}
+                </button>
+            </div>
+
+            {/* Chatter list */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
+                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
+                {!loading && chatters.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO CHATTERS</div>}
+                {chatters.map(c => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: c.is_active ? 1 : 0.4 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.is_active ? '#00cc66' : '#555', flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Rajdhani', fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {c.display_name} <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.7rem' }}>({c.email})</span>
+                            </div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', marginTop: 2 }}>
+                                {c.stats?.messages || 0} msgs · {c.stats?.tributes || 0} tributes · since {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </div>
+                        </div>
+                        {c.is_active && (
+                            <button onClick={() => removeChatter(c.email)} title="Remove chatter"
+                                style={{ flexShrink: 0, background: 'none', border: '1px solid rgba(255,80,80,0.2)', borderRadius: 4, color: 'rgba(255,80,80,0.5)', fontSize: '0.6rem', padding: '4px 8px', cursor: 'pointer' }}>
+                                ✕
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 function LeadsPanel() {
@@ -512,6 +603,15 @@ export default function DashboardPage() {
             if (user?.email) {
                 setUserEmail(user.email);
                 setAdminEmail(user.email);
+
+                // Detect role: queen or chatter
+                try {
+                    const roleRes = await fetch('/api/chatter/role');
+                    const roleData = await roleRes.json();
+                    if (roleData.role === 'chatter' || roleData.role === 'queen') {
+                        setDashboardRole(roleData.role);
+                    }
+                } catch {}
 
                 // Init OneSignal so queen receives push notifications on desktop
                 const w = window as any;
@@ -1036,8 +1136,11 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* LEADS - people who tried to log in but haven't paid */}
-                        <LeadsPanel />
+                        {/* LEADS - people who tried to log in but haven't paid (queen-only, shows emails) */}
+                        {dashboardRole === 'queen' && <LeadsPanel />}
+
+                        {/* CHATTERS - manage sub-admin chatters (queen-only) */}
+                        {dashboardRole === 'queen' && <ChattersPanel />}
                     </div>
                 </div>
 

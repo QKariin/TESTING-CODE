@@ -13,6 +13,7 @@ export let broadcastPresets: any[] = [];
 // --- UI STATE ---
 export let currId: string | null = null;
 export let adminEmail: string | null = null;
+export let dashboardRole: 'queen' | 'chatter' = 'queen';
 export let lastChatJson: string = "";
 export let lastGalleryJson: string = "";
 export let lastHistoryJson: string = "";
@@ -58,6 +59,10 @@ export function setCurrId(id: string | null) {
 export function setAdminEmail(email: string | null) {
     adminEmail = email;
     if (typeof window !== 'undefined') (window as any).adminEmail = email;
+}
+export function setDashboardRole(role: 'queen' | 'chatter') {
+    dashboardRole = role;
+    if (typeof window !== 'undefined') (window as any).__dashboardRole = role;
 }
 export function setLastChatJson(json: string) { lastChatJson = json; }
 export function setLastGalleryJson(json: string) { lastGalleryJson = json; }
