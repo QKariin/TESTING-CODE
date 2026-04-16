@@ -107,10 +107,11 @@ export async function updateSession(request: NextRequest) {
         const isCEO = userEmailNormalized === 'ceo@qkarin.com' || userEmailNormalized === 'queen@qkarin.com';
         const hasAccess = !!profile || isLegacyMember || isCEO;
         const isDashboardPage = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+        const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
 
-        // Check if user is an active chatter (allowed into dashboard)
+        // Check if user is an active chatter
         let isChatter = false;
-        if (!isCEO && isDashboardPage) {
+        if (!isCEO && (isDashboardPage || isChatPage)) {
             const { data: chatterRow } = await adminSupabase
                 .from('chatters')
                 .select('id')
@@ -123,9 +124,20 @@ export async function updateSession(request: NextRequest) {
         console.log(`[BOUNCER] Access Decision: Profile=${!!profile}, Legacy=${isLegacyMember}, Chatter=${isChatter}, Result=${hasAccess ? 'ALLOWED' : 'DENIED'} | User: ${userEmailNormalized}`);
 
         if (hasAccess || isChatter) {
-            // 1. If non-CEO and non-chatter tries to access Dashboard -> go to Profile
+            // 1a. Chatters trying to access dashboard -> redirect to /chat
+            if (isDashboardPage && isChatter && !isCEO) {
+                console.log(`[BOUNCER] Chatter ${userEmailNormalized} attempted Dashboard. Redirecting to /chat.`);
+                return NextResponse.redirect(new URL('/chat', request.url));
+            }
+
+            // 1b. If non-CEO and non-chatter tries to access Dashboard -> go to Profile
             if (isDashboardPage && !isCEO && !isChatter) {
                 console.log(`[BOUNCER] Non-CEO ${userEmailNormalized} attempted Dashboard. Redirecting to /profile.`);
+                return NextResponse.redirect(new URL('/profile', request.url));
+            }
+
+            // 1c. Non-chatter trying /chat -> redirect away
+            if (isChatPage && !isChatter && !isCEO) {
                 return NextResponse.redirect(new URL('/profile', request.url));
             }
 

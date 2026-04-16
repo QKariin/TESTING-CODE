@@ -524,6 +524,7 @@ export default function DashboardPage() {
     const [activeLocks, setActiveLocks] = useState<{ paywall: boolean; silenced: boolean }>({ paywall: false, silenced: false });
     const [showLocksModal, setShowLocksModal] = useState(false);
     const [lockedUsers, setLockedUsers] = useState<any[]>([]);
+    const [showChattersModal, setShowChattersModal] = useState(false);
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const [showChallenges, setShowChallenges] = useState(false);
@@ -1111,15 +1112,23 @@ export default function DashboardPage() {
                             {/* REVENUE & INTEL STREAM */}
                             <div className="v-feed-card glass-card" style={{ flex: 1, minWidth: 0 }}>
                                 <div className="vf-header">Revenue & Intel Stream</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', padding: '12px 14px' }}>
-                                    <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', padding: '12px 14px' }}>
+                                    {/* CHATTERS - top priority */}
+                                    <div onClick={() => setShowChattersModal(true)} style={{ aspectRatio: '1', background: 'rgba(100,200,255,0.06)', border: '1px solid rgba(100,200,255,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}>
+                                        <div style={{ fontSize: '1.2rem' }}>💬</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(100,200,255,0.8)', letterSpacing: '2px' }}>CHATTERS</div>
                                     </div>
-                                    <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
+                                    <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}>
+                                        <div style={{ fontSize: '1.2rem' }}>🎁</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
                                     </div>
-                                    <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
+                                    <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}>
+                                        <div style={{ fontSize: '1.2rem' }}>🔒</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
+                                    </div>
+                                    <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                        <div style={{ fontSize: '1.2rem', opacity: 0.15 }}>⚡</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
                                     </div>
                                 </div>
                             </div>
@@ -1636,6 +1645,19 @@ export default function DashboardPage() {
                 setActiveLocks(prev => ({ ...prev, paywall: type === 'paywall' ? true : prev.paywall, silenced: type === 'silence' ? true : prev.silenced }));
                 (window as any)._refreshDashboard?.();
             }} />}
+
+            {/* CHATTERS MANAGEMENT MODAL */}
+            {showChattersModal && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px', borderBottom: '1px solid rgba(100,200,255,0.2)', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'rgba(100,200,255,0.8)', letterSpacing: '4px' }}>CHATTER MANAGEMENT</div>
+                        <button onClick={() => setShowChattersModal(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', maxWidth: 600, margin: '0 auto', width: '100%' }}>
+                        <ChattersPanel />
+                    </div>
+                </div>
+            )}
 
             {/* LOCKS LIST MODAL */}
             {showLocksModal && (
