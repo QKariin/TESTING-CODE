@@ -77,6 +77,7 @@ export async function POST(req: Request) {
         const { error: taskError } = await supabaseAdmin
             .from('tasks')
             .insert({
+                ID: userId,
                 member_id: lowerEmail,
                 Name: name || lowerEmail.split('@')[0],
                 Status: 'idle',
