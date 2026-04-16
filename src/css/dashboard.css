@@ -3755,8 +3755,7 @@ h3,
     top: 0 !important;
     left: 0 !important;
     overflow: hidden !important;
-    background: url('/assets/throne_judgment.png') no-repeat center center fixed !important;
-    background-size: cover !important;
+    background: #0a0a0f !important;
     z-index: 100 !important;
     font-family: 'Orbitron', sans-serif;
 }
