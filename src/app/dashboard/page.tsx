@@ -907,10 +907,33 @@ export default function DashboardPage() {
             })
             .subscribe();
 
+        // ── Realtime: queen-only chat restriction broadcast ──
+        // Instant sync: when queen restricts a chat, chatters remove user immediately
+        const restrictChannel = supabaseRt
+            .channel('chat-restrict-sync')
+            .on('broadcast', { event: 'restrict' }, (payload: any) => {
+                if (roleRef.current !== 'chatter') return;
+                const { memberId, restricted } = payload.payload || {};
+                if (!memberId) return;
+                if (restricted) {
+                    // Remove user from sidebar instantly
+                    const filtered = users.filter((u: any) => u.memberId !== memberId && u.member_id !== memberId);
+                    setUsers(filtered);
+                    renderSidebar();
+                } else {
+                    // Unrestricted — full re-fetch to get the user back
+                    loadLiveAction();
+                }
+            })
+            .subscribe();
+        // Expose for the restrict toggle to broadcast
+        (window as any)._restrictChannel = restrictChannel;
+
         return () => {
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             supabaseRt.removeChannel(chatsChannel);
             supabaseRt.removeChannel(profilesChannel);
+            supabaseRt.removeChannel(restrictChannel);
             cleanupPresenceTracking();
         };
     }, []);
@@ -1488,6 +1511,8 @@ export default function DashboardPage() {
                                             const newVal = !queenOnlyChat;
                                             setQueenOnlyChat(newVal);
                                             await fetch('/api/chat/restrict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id, restricted: newVal }) });
+                                            // Broadcast to chatters so user vanishes/appears instantly
+                                            (window as any)._restrictChannel?.send({ type: 'broadcast', event: 'restrict', payload: { memberId: id, restricted: newVal } });
                                             (window as any)._refreshDashboard?.();
                                         }}>
                                             <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
