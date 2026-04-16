@@ -2578,13 +2578,23 @@ function appendChatCard(msg: any) {
     });
 }
 
+let _sendingChat = false;
 export async function sendChatMessage() {
+    if (_sendingChat) return;
     const { memberId, wallet } = getState();
     const inputDesk = document.getElementById('chatMsgInput') as HTMLInputElement;
     const inputMob = document.getElementById('mob_chatMsgInput') as HTMLInputElement;
     const msg = (inputDesk?.value || inputMob?.value || '').trim();
 
     if (!msg || !memberId) return;
+
+    _sendingChat = true;
+    // Clear input immediately to prevent re-sends
+    if (inputDesk) inputDesk.value = '';
+    if (inputMob) inputMob.value = '';
+
+    // Disable send buttons
+    document.querySelectorAll('.chat-btn-send').forEach(b => (b as HTMLButtonElement).disabled = true);
 
     // Capture and clear reply before sending
     const chatReplyTo = _profileChatReply ? { sender_name: _profileChatReply.name, content: _profileChatReply.text } : null;
@@ -2599,9 +2609,6 @@ export async function sendChatMessage() {
         const data = await res.json();
 
         if (data.success) {
-            if (inputDesk) inputDesk.value = '';
-            if (inputMob) inputMob.value = '';
-
             // Immediately update wallet - use API-returned value, fall back to client-side subtraction
             const newWallet = data.newWallet !== undefined
                 ? data.newWallet
@@ -2614,6 +2621,9 @@ export async function sendChatMessage() {
         }
     } catch (err) {
         console.error("Failed to send message", err);
+    } finally {
+        _sendingChat = false;
+        document.querySelectorAll('.chat-btn-send').forEach(b => (b as HTMLButtonElement).disabled = false);
     }
 }
 
