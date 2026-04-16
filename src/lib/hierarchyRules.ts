@@ -240,7 +240,7 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
         { key: "kneelCount", label: "ENDURANCE", reqKey: "kneels" as keyof typeof req },
         { key: "score", label: "MERIT", reqKey: "points" as keyof typeof req },
         { key: "total_coins_spent", label: "SACRIFICE", reqKey: "spent" as keyof typeof req },
-        { key: "bestRoutinestreak", label: "CONSISTENCY", reqKey: "streak" as keyof typeof req, activeKey: "routinestreak" }
+        { key: "consistency", label: "CONSISTENCY", reqKey: "streak" as keyof typeof req, activeKey: "consistency" }
     ];
 
     statsMap.forEach(s => {
