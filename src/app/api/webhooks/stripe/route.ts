@@ -72,12 +72,12 @@ export async function POST(req: Request) {
                 await supabaseAdmin
                     .from('profiles')
                     .insert({
-                        id: userId,
+                        ID: userId,
                         member_id: userEmail,
                         name: userName,
                         hierarchy: 'Hall Boy',
                         score: 0,
-                        wallet: 5000,
+                        wallet: 1000,
                         parameters: { devotion: 100 }
                     });
 
@@ -85,7 +85,8 @@ export async function POST(req: Request) {
                 await supabaseAdmin
                     .from('tasks')
                     .insert({
-                        member_id: userId,
+                        ID: userId,
+                        member_id: userEmail,
                         Name: userName,
                         Status: 'idle',
                         Taskdom_History: '[]',
@@ -197,7 +198,7 @@ export async function POST(req: Request) {
                 } else {
                     const subUserId = session.client_reference_id || null;
                     await supabaseAdmin.from('profiles').insert({
-                        ...(subUserId ? { id: subUserId } : {}),
+                        ...(subUserId ? { ID: subUserId } : {}),
                         member_id: subEmail,
                         name: "New Subscriber",
                         wallet: 0,

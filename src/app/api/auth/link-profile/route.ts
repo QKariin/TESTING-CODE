@@ -134,12 +134,12 @@ export async function POST(req: Request) {
                 const { data: newProfile, error: createError } = await supabaseAdmin
                     .from('profiles')
                     .insert({
-                        id: user.id,
+                        ID: user.id,
                         member_id: userEmail,
                         name: userEmail.split('@')[0],
                         hierarchy: 'Hall Boy',
-                        wallet: 5000,
-                        avatar_url: '/queen-karin.png',
+                        wallet: 1000,
+                        parameters: { devotion: 100 },
                     })
                     .select()
                     .single();

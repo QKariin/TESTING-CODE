@@ -44,12 +44,12 @@ export async function POST(req: Request) {
         const { error } = await supabaseAdmin
             .from('profiles')
             .insert({
-                id: user.id,
+                ID: user.id,
                 member_id: identifier,
                 name: displayName,
                 hierarchy: 'Hall Boy',
                 score: 0,
-                wallet: 5000,
+                wallet: 1000,
                 parameters: { devotion: 100 }
             });
 
@@ -62,7 +62,8 @@ export async function POST(req: Request) {
         await supabaseAdmin
             .from('tasks')
             .insert({
-                member_id: user.id,
+                ID: user.id,
+                member_id: identifier,
                 Name: displayName,
                 Status: 'idle',
                 Taskdom_History: '[]',
