@@ -530,6 +530,8 @@ export default function DashboardPage() {
     const [showChallenges, setShowChallenges] = useState(false);
     const [showGlobal, setShowGlobal] = useState(false);
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
+    const roleRef = useRef<'queen' | 'chatter'>('queen');
+    const [queenOnlyChat, setQueenOnlyChat] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -613,6 +615,7 @@ export default function DashboardPage() {
                     if (roleData.role === 'chatter' || roleData.role === 'queen') {
                         setDashboardRole(roleData.role);
                         setRole(roleData.role);
+                        roleRef.current = roleData.role;
                     }
                 } catch {}
 
@@ -667,6 +670,7 @@ export default function DashboardPage() {
 
         // Expose lock state setter so vanilla updateDetail can push state into React
         (window as any)._setActiveLocks = setActiveLocks;
+        (window as any)._setQueenOnlyChat = setQueenOnlyChat;
 
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
         if (typeof window !== 'undefined') {
@@ -795,7 +799,11 @@ export default function DashboardPage() {
                     };
                 });
 
-                setUsers(mappedUsers);
+                // Filter out queen-only chats for chatters
+                const visibleUsers = roleRef.current === 'chatter'
+                    ? mappedUsers.filter((u: any) => !u.parameters?.queen_only_chat)
+                    : mappedUsers;
+                setUsers(visibleUsers);
 
                 try {
                     const readRes = await fetch('/api/chat/mark-read?type=admin');
@@ -1472,6 +1480,20 @@ export default function DashboardPage() {
                                         <span style={{ color: '#666', fontSize: '0.7rem' }}>REGISTERED SINCE:</span>
                                         <strong id="dMirrorSlaveSince" style={{ color: '#fff', fontSize: '0.7rem' }}>--/--/--</strong>
                                     </div>
+
+                                    {role === 'queen' && (
+                                        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', marginBottom: 8, background: queenOnlyChat ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${queenOnlyChat ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 8, color: queenOnlyChat ? 'rgba(168,85,247,0.9)' : 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={async () => {
+                                            const id = (window as any).currId;
+                                            if (!id) return;
+                                            const newVal = !queenOnlyChat;
+                                            setQueenOnlyChat(newVal);
+                                            await fetch('/api/chat/restrict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id, restricted: newVal }) });
+                                            (window as any)._refreshDashboard?.();
+                                        }}>
+                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                                            {queenOnlyChat ? 'QUEEN ONLY' : 'RESTRICT FROM CHATTERS'}
+                                        </button>
+                                    )}
 
                                     {role === 'queen' && ((activeLocks.paywall || activeLocks.silenced) ? (
                                         <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: 'rgba(80,80,80,0.12)', border: '1px solid rgba(150,150,150,0.25)', borderRadius: 8, color: '#888', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={async () => {

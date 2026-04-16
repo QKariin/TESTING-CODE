@@ -293,6 +293,10 @@ export async function updateDetail(u: any) {
             silenced: u.silence === true,
         });
     }
+    // Notify React of queen-only-chat state
+    if (typeof window !== 'undefined' && (window as any)._setQueenOnlyChat) {
+        (window as any)._setQueenOnlyChat(!!(u.parameters?.queen_only_chat));
+    }
 }
 
 function renderKneelSection(u: any) {
