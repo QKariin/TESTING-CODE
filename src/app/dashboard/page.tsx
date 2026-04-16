@@ -977,11 +977,11 @@ export default function DashboardPage() {
         const profilesChannel = supabaseRt
             .channel('profiles-admin-live')
             .on('postgres_changes', {
-                event: 'UPDATE',
+                event: '*',
                 schema: 'public',
                 table: 'profiles',
             }, () => {
-                // Re-fetch full data when any profile changes
+                // Re-fetch full data when any profile changes (INSERT, UPDATE, DELETE)
                 loadLiveAction();
             })
             .subscribe();
