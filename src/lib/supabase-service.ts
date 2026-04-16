@@ -471,23 +471,55 @@ export const DbService = {
             if (error) throw error;
         }
 
-        // 4. If routine, also append timestamp to profiles.routine_history
+        // 4. If routine, also append timestamp to profiles.routine_history + update consistency
         if (isRoutine) {
             try {
                 const profileForHistory = profile || await this.getProfile(memberId);
                 if (profileForHistory?.ID) {
                     const { data: prof } = await supabaseAdmin
                         .from('profiles')
-                        .select('routine_history')
+                        .select('routine_history, parameters')
                         .eq('ID', profileForHistory.ID)
                         .maybeSingle();
 
                     const prevHistory: string[] = Array.isArray(prof?.routine_history) ? prof.routine_history : [];
                     const updatedHistory = [...prevHistory, now];
 
+                    // Calculate consistency: +1 if consecutive day, reset to 1 if gap
+                    const params = prof?.parameters || {};
+                    let consistency = 1;
+                    if (prevHistory.length > 0) {
+                        const lastUpload = new Date(prevHistory[prevHistory.length - 1]);
+                        const today = new Date(now);
+                        // Use 6 AM boundary: before 6 AM counts as previous day
+                        const toDay = (d: Date) => {
+                            const adjusted = new Date(d);
+                            if (adjusted.getUTCHours() < 6) adjusted.setUTCDate(adjusted.getUTCDate() - 1);
+                            return adjusted.toISOString().split('T')[0];
+                        };
+                        const lastDay = toDay(lastUpload);
+                        const todayDay = toDay(today);
+                        if (lastDay === todayDay) {
+                            // Same day — keep current consistency
+                            consistency = Number(params.consistency) || 1;
+                        } else {
+                            // Check if yesterday
+                            const yesterday = new Date(today);
+                            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+                            const yesterdayDay = toDay(yesterday);
+                            if (lastDay === yesterdayDay) {
+                                consistency = (Number(params.consistency) || 0) + 1;
+                            }
+                            // else gap → stays 1
+                        }
+                    }
+
                     await supabaseAdmin
                         .from('profiles')
-                        .update({ routine_history: updatedHistory })
+                        .update({
+                            routine_history: updatedHistory,
+                            parameters: { ...params, consistency },
+                        })
                         .eq('ID', profileForHistory.ID);
                 }
             } catch (histErr) {

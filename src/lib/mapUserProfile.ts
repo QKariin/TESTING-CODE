@@ -63,6 +63,7 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         total_coins_spent: Number(params.wishlist_spent || 0) || tributeTotal,
         bestRoutinestreak: routineUploads || Number(p.bestRoutinestreak || params.routine_streak || 0),
         routinestreak: Number(p.routinestreak || params.taskdom_current_streak || 0),
+        consistency: Number(params.consistency || 0),
         routineHistory: history,
         routinehistory: history,
         joinedDate: p.joined_date,
