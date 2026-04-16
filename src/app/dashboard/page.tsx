@@ -846,16 +846,6 @@ export default function DashboardPage() {
                 // Safety net: re-render sidebar after a tick in case DOM wasn't ready
                 setTimeout(() => renderSidebar(), 50);
 
-                // Chatters: auto-select first user so they see chat immediately
-                if (roleRef.current === 'chatter' && !currId && visibleUsers.length > 0) {
-                    setTimeout(() => {
-                        const firstUser = visibleUsers[0];
-                        if (firstUser && (window as any).selUser) {
-                            (window as any).selUser(firstUser.memberId || firstUser.member_id);
-                        }
-                    }, 100);
-                }
-
                 if (currId) {
                     const openUser = mappedUsers.find((u: any) => u.memberId === currId || u.member_id === currId);
                     if (openUser) updateDetail(openUser);
@@ -963,12 +953,12 @@ export default function DashboardPage() {
 
             {/* SIDEBAR */}
             <div className="sidebar">
-                {role === 'queen' && <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>}
-                {role === 'queen' && <div
+                <div className="sb-dash-btn" onClick={() => (window as any).showHome()}>DASHBOARD</div>
+                <div
                     className="sb-dash-btn"
                     onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showPosts(); }}
                     style={{ backgroundImage: 'linear-gradient(135deg, rgba(197,160,89,0.08), transparent)', borderBottom: '1px solid rgba(197,160,89,0.2)', color: '#c5a059' }}
-                >✦ POSTS</div>}
+                >✦ POSTS</div>
                 <div
                     className="sb-dash-btn"
                     onClick={() => { setShowGlobal(false); setShowChallenges(true); }}
@@ -1002,8 +992,8 @@ export default function DashboardPage() {
                     <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
                 )}
 
-                {/* 1. HOME VIEW — hidden for chatters */}
-                <div id="viewHome" style={role === 'chatter' ? { display: 'none' } : undefined}>
+                {/* 1. HOME VIEW */}
+                <div id="viewHome">
                     <div className="v-header">
                         <div className="v-header-left">
                             <div className="v-breadcrumb">Pages / Dashboard</div>
@@ -1330,7 +1320,7 @@ export default function DashboardPage() {
                     <button className="upload-fab" onClick={() => (window as any).openProfileUpload(false)}>+</button>
                 </div>
 
-                <div id="viewUser" style={{ display: role === 'chatter' ? 'block' : 'none' }}>
+                <div id="viewUser" style={{ display: 'none' }}>
                     <div className="mob-swipe-hint">← CHAT &nbsp;·&nbsp; DOSSIER →</div>
                     <div className="split">
                         {/* LEFT: COMMAND & FEED */}
@@ -1388,68 +1378,81 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', background: 'transparent' }}>
-                                <div className="ap-nav">
-                                    <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
-                                    <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
-                                    <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
+                            {/* ADMIN CONTROLS — clean version for chatters (status only), full for queen */}
+                            {role === 'chatter' ? (
+                                /* Chatter: compact status bar only */
+                                <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span id="statusDotChatter" className="status-dot unproductive" style={{ width: 8, height: 8, flexShrink: 0 }}></span>
+                                    <span id="dActiveStatusChatter" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#888', letterSpacing: '2px' }}>UNPRODUCTIVE</span>
+                                    <span style={{ flex: 1 }}></span>
+                                    <span id="dActiveTextChatter" style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as any, maxWidth: '200px' }}></span>
                                 </div>
+                            ) : (
+                                <>
+                                <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', background: 'transparent' }}>
+                                    <div className="ap-nav">
+                                        <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
+                                        <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
+                                        <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
+                                    </div>
 
-                                <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
-                                    <div id="tabOps" className="ap-view active">
-                                        <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
-                                            <div className="at-label-row">
-                                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <span id="statusDot" className="status-dot unproductive"></span>
-                                                    <div className="at-label">CURRENT STATUS</div>
+                                    <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
+                                        <div id="tabOps" className="ap-view active">
+                                            <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
+                                                <div className="at-label-row">
+                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                        <span id="statusDot" className="status-dot unproductive"></span>
+                                                        <div className="at-label">CURRENT STATUS</div>
+                                                    </div>
+                                                    <div id="dActiveStatus" className="at-status-text">UNPRODUCTIVE</div>
                                                 </div>
-                                                <div id="dActiveStatus" className="at-status-text">UNPRODUCTIVE</div>
-                                            </div>
 
-                                            <div id="taskDrawer" className="task-drawer">
-                                                <div id="activeTaskContent">
-                                                    <div className="at-sub-label">ACTIVE DIRECTIVE</div>
-                                                    <div id="dActiveText" className="at-text">None</div>
-                                                    <div id="dActiveTimer" className="at-timer-large">--:--</div>
-                                                    <div className="at-actions" onClick={(e) => e.stopPropagation()}>
-                                                        <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
+                                                <div id="taskDrawer" className="task-drawer">
+                                                    <div id="activeTaskContent">
+                                                        <div className="at-sub-label">ACTIVE DIRECTIVE</div>
+                                                        <div id="dActiveText" className="at-text">None</div>
+                                                        <div id="dActiveTimer" className="at-timer-large">--:--</div>
+                                                        <div className="at-actions" onClick={(e) => e.stopPropagation()}>
+                                                            <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
+                                                        </div>
+                                                    </div>
+                                                    <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
+                                                        <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
                                                     </div>
                                                 </div>
-                                                <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
-                                                    <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
-                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div id="tabIntel" className="ap-view hidden">
-                                        <div id="userQueueSec" style={{ display: 'none' }}></div>
-                                    </div>
-
-                                    <div id="tabRecord" className="ap-view hidden">
-                                        <div id="adminOrbitalCanvas" className="admin-orbital-canvas">
-                                            <div className="altar-label">THE SUPREME ALTAR</div>
+                                        <div id="tabIntel" className="ap-view hidden">
+                                            <div id="userQueueSec" style={{ display: 'none' }}></div>
                                         </div>
-                                        {/* Bento Nodes... */}
+
+                                        <div id="tabRecord" className="ap-view hidden">
+                                            <div id="adminOrbitalCanvas" className="admin-orbital-canvas">
+                                                <div className="altar-label">THE SUPREME ALTAR</div>
+                                            </div>
+                                            {/* Bento Nodes... */}
+                                        </div>
+
                                     </div>
-
                                 </div>
-                            </div>
 
-                            {/* SYSTEM TICKER - click to open service log */}
-                            <div id="dashSystemTicker" className="dash-system-ticker"
-                                onClick={() => (window as any).toggleDashSystemLog()}>
-                                SYSTEM ONLINE
-                            </div>
-
-                            {/* SYSTEM LOG OVERLAY - covers chat area */}
-                            <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
-                                <div className="dash-syslog-header">
-                                    <span>SYSTEM LOGS</span>
-                                    <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
+                                {/* SYSTEM TICKER - click to open service log */}
+                                <div id="dashSystemTicker" className="dash-system-ticker"
+                                    onClick={() => (window as any).toggleDashSystemLog()}>
+                                    SYSTEM ONLINE
                                 </div>
-                                <div id="dashSystemLogContent" className="dash-syslog-body"></div>
-                            </div>
+
+                                {/* SYSTEM LOG OVERLAY - covers chat area */}
+                                <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
+                                    <div className="dash-syslog-header">
+                                        <span>SYSTEM LOGS</span>
+                                        <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
+                                    </div>
+                                    <div id="dashSystemLogContent" className="dash-syslog-body"></div>
+                                </div>
+                                </>
+                            )}
 
                             <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
 

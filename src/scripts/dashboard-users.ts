@@ -506,6 +506,19 @@ function updateActiveTask(u: any) {
         activeStatus.style.color = hasActive ? (isPending ? "var(--pink)" : "var(--gold)") : "#666";
     }
 
+    // Sync chatter compact status bar
+    const chatterDot = document.getElementById('statusDotChatter');
+    const chatterStatus = document.getElementById('dActiveStatusChatter');
+    const chatterText = document.getElementById('dActiveTextChatter');
+    if (chatterDot) chatterDot.className = `status-dot ${hasActive ? 'productive' : 'unproductive'}`;
+    if (chatterStatus) {
+        chatterStatus.innerText = hasActive ? (isPending ? 'PENDING' : 'ACTIVE') : 'UNPRODUCTIVE';
+        chatterStatus.style.color = hasActive ? (isPending ? 'var(--pink)' : 'var(--gold)') : '#888';
+    }
+    if (chatterText) {
+        chatterText.innerText = hasActive && u.activeTask?.taskName ? u.activeTask.taskName : '';
+    }
+
     if (hasActive) {
         if (idleActions) idleActions.style.display = 'none';
         const failBtn = activeTaskContent?.querySelector('.at-fail') as HTMLElement;
