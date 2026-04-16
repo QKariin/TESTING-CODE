@@ -1101,7 +1101,7 @@ export default function DashboardPage() {
                         {/* GLOBAL CHAT */}
                         <GlobalChatPanel userEmail={userEmail} />
 
-                        {/* OPS MONITOR + REVENUE — always side by side */}
+                        {/* OPS MONITOR + REVENUE — side by side (queen only for Revenue) */}
                         <div className="span-2" style={{ display: 'flex', gap: '20px', alignItems: 'stretch' }}>
                             {/* OPERATIONS MONITOR */}
                             <div className="v-monitor-card glass-card" style={{ flex: 1, minWidth: 0 }}>
@@ -1109,7 +1109,8 @@ export default function DashboardPage() {
                                 <div id="opsList"></div>
                             </div>
 
-                            {/* REVENUE & INTEL STREAM */}
+                            {/* REVENUE & INTEL STREAM — queen only */}
+                            {dashboardRole === 'queen' && (
                             <div className="v-feed-card glass-card" style={{ flex: 1, minWidth: 0 }}>
                                 <div className="vf-header">Revenue & Intel Stream</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', padding: '12px 14px' }}>
@@ -1132,9 +1133,11 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                             </div>
+                            )}
                         </div>
 
-                        {/* EXCHEQUER - COIN TRANSACTION LOG */}
+                        {/* EXCHEQUER - COIN TRANSACTION LOG — queen only */}
+                        {dashboardRole === 'queen' && (
                         <div className="glass-card span-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '180px', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER LOG</div>
@@ -1144,8 +1147,9 @@ export default function DashboardPage() {
                                 <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
                             </div>
                         </div>
+                        )}
 
-                        {/* LEADS - people who tried to log in but haven't paid (queen-only, shows emails) */}
+                        {/* LEADS (Knocking at the Gate) — queen only, shows emails */}
                         {dashboardRole === 'queen' && <LeadsPanel />}
 
                         {/* CHATTERS - manage sub-admin chatters (queen-only) */}
