@@ -328,10 +328,11 @@ body {
 }
 
 .u-name {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Cinzel', serif !important;
     font-size: 0.85rem !important;
     font-weight: bold;
     color: #ffffff !important;
+    letter-spacing: 2px !important;
     line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
