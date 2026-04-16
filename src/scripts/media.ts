@@ -111,7 +111,8 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     return "/queen-karin.png";
 }
 
-const PRIVATE_PREFIXES = ['task-proofs/', 'chat/', 'admin-chat/', 'chat-media/', 'challenge-proofs/'];
+// task-proofs/ lives in the public 'media' bucket — no signing needed
+const PRIVATE_PREFIXES = ['admin-chat/', 'chat-media/', 'challenge-proofs/'];
 
 function isPrivateStorageUrl(url: string): boolean {
     if (!url.includes('supabase.co/storage')) return false;

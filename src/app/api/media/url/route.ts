@@ -4,7 +4,8 @@ import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-const PRIVATE_PREFIXES = ['task-proofs/', 'chat/', 'admin-chat/', 'chat-media/', 'challenge-proofs/'];
+// task-proofs/ lives in the public 'media' bucket — no signing needed
+const PRIVATE_PREFIXES = ['admin-chat/', 'chat-media/', 'challenge-proofs/'];
 const isPrivatePath = (path: string) => PRIVATE_PREFIXES.some(p => path.startsWith(p));
 const SIGNED_URL_EXPIRY = 604800; // 7 days
 
