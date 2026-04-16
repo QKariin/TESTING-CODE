@@ -115,6 +115,12 @@ export async function updateDetail(u: any) {
     setText('dMirrorHierarchy', realRank.toUpperCase());
     setText('dMirrorName', u.name || "SLAVE");
 
+    // Sync chatter chat header
+    const chatterAvatar = document.getElementById('chatterHeaderAvatar') as HTMLImageElement;
+    if (chatterAvatar) { chatterAvatar.src = getOptimizedUrl(finalPic, 100); chatterAvatar.onerror = () => { chatterAvatar.src = defaultPic; }; }
+    setText('chatterHeaderName', u.name || 'SLAVE');
+    setText('chatterHeaderRank', realRank.toUpperCase());
+
     const stEl = document.getElementById('dMirrorStatus');
     if (stEl) {
         stEl.innerText = status;

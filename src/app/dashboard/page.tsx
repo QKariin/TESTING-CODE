@@ -1321,6 +1321,92 @@ export default function DashboardPage() {
                 </div>
 
                 <div id="viewUser" style={{ display: 'none' }}>
+                    {role === 'chatter' ? (
+                        /* ── CHATTER: clean split — chat left, info right, no admin clutter ── */
+                        <div className="split" style={{ background: 'transparent' }}>
+                            {/* LEFT: clean chat */}
+                            <div className="chat-panel" style={{ background: 'transparent', border: 'none' }}>
+                                {/* Header: avatar + name + rank */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                                    <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.4)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
+                                    <div>
+                                        <span id="chatterHeaderName" style={{ fontFamily: 'Orbitron', fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>—</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span id="chatterHeaderRank" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '2px' }}>—</span>
+                                            <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+                                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '1px' }}>ENCRYPTED FEED</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="c-body" id="adminChatBox" style={{ flex: 1 }}></div>
+
+                                <div className="c-foot">
+                                    <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
+                                    <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
+                                    <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
+                                </div>
+                            </div>
+
+                            {/* RIGHT: dossier info */}
+                            <div className="action-panel" style={{ background: 'transparent' }}>
+                                <div id="apMirrorHeader" className="ap-mirror-header">
+                                    <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
+                                    <div className="avatar-container">
+                                        <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                    </div>
+                                    <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
+
+                                    <div className="stats-stack-row" style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '16px' }}>
+                                        <div className="stat-item">
+                                            <span className="stat-lbl">MERIT</span>
+                                            <span id="dMirrorPoints" className="stat-val">0</span>
+                                        </div>
+                                        <div className="stat-item">
+                                            <span className="stat-lbl">CAPITAL</span>
+                                            <span id="dMirrorWallet" className="stat-val">0</span>
+                                        </div>
+                                    </div>
+                                    <div id="admin_KneelSection" style={{ width: '100%', padding: '0 20px 20px' }}></div>
+                                </div>
+
+                                <div className="ap-vitals-mirror" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
+                                    <div id="telemetry_section" style={{ marginBottom: '30px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: '8px', overflow: 'hidden' }}>
+                                        <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', cursor: 'pointer', userSelect: 'none' as any }}>
+                                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#888', letterSpacing: '2px' }}>ACTIVE TELEMETRY</span>
+                                            <span id="telemetry_arrow" style={{ color: '#555', fontSize: '1rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
+                                        </div>
+                                        <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '0 15px 15px' }}>
+                                            <div style={{ color: '#444', fontSize: '0.6rem', textAlign: 'center', gridColumn: 'span 2' }}>NO DATA RECEIVED</div>
+                                        </div>
+                                    </div>
+
+                                    <div id="progress_section" style={{ marginBottom: '30px' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center' }}>PROMOTION PROGRESS</div>
+                                        <div id="admin_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#c5a059', textAlign: 'center', margin: '10px 0' }}>LOADING...</div>
+                                        <div id="admin_ProgressContainer"></div>
+                                    </div>
+
+                                    <div id="admin_KinksLimits" style={{ marginBottom: '30px' }}></div>
+
+                                    <div className="queue-section" style={{ marginBottom: '30px' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center', marginBottom: '15px' }}>DIRECTIVE QUEUE</div>
+                                        <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        </div>
+                                    </div>
+
+                                    <div className="footer-stats" style={{ borderTop: '1px solid rgba(197,160,89,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                            <span style={{ color: '#666', fontSize: '0.7rem' }}>REGISTERED SINCE:</span>
+                                            <strong id="dMirrorSlaveSince" style={{ color: '#fff', fontSize: '0.7rem' }}>--/--/--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* ── QUEEN: full split with dossier ── */
+                        <>
                     <div className="mob-swipe-hint">← CHAT &nbsp;·&nbsp; DOSSIER →</div>
                     <div className="split">
                         {/* LEFT: COMMAND & FEED */}
@@ -1378,81 +1464,68 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* ADMIN CONTROLS — clean version for chatters (status only), full for queen */}
-                            {role === 'chatter' ? (
-                                /* Chatter: compact status bar only */
-                                <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <span id="statusDotChatter" className="status-dot unproductive" style={{ width: 8, height: 8, flexShrink: 0 }}></span>
-                                    <span id="dActiveStatusChatter" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#888', letterSpacing: '2px' }}>UNPRODUCTIVE</span>
-                                    <span style={{ flex: 1 }}></span>
-                                    <span id="dActiveTextChatter" style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as any, maxWidth: '200px' }}></span>
+                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', background: 'transparent' }}>
+                                <div className="ap-nav">
+                                    <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
+                                    <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
+                                    <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
                                 </div>
-                            ) : (
-                                <>
-                                <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', background: 'transparent' }}>
-                                    <div className="ap-nav">
-                                        <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
-                                        <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
-                                        <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
-                                    </div>
 
-                                    <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
-                                        <div id="tabOps" className="ap-view active">
-                                            <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
-                                                <div className="at-label-row">
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <span id="statusDot" className="status-dot unproductive"></span>
-                                                        <div className="at-label">CURRENT STATUS</div>
-                                                    </div>
-                                                    <div id="dActiveStatus" className="at-status-text">UNPRODUCTIVE</div>
+                                <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
+                                    <div id="tabOps" className="ap-view active">
+                                        <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
+                                            <div className="at-label-row">
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <span id="statusDot" className="status-dot unproductive"></span>
+                                                    <div className="at-label">CURRENT STATUS</div>
                                                 </div>
+                                                <div id="dActiveStatus" className="at-status-text">UNPRODUCTIVE</div>
+                                            </div>
 
-                                                <div id="taskDrawer" className="task-drawer">
-                                                    <div id="activeTaskContent">
-                                                        <div className="at-sub-label">ACTIVE DIRECTIVE</div>
-                                                        <div id="dActiveText" className="at-text">None</div>
-                                                        <div id="dActiveTimer" className="at-timer-large">--:--</div>
-                                                        <div className="at-actions" onClick={(e) => e.stopPropagation()}>
-                                                            <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
-                                                        </div>
+                                            <div id="taskDrawer" className="task-drawer">
+                                                <div id="activeTaskContent">
+                                                    <div className="at-sub-label">ACTIVE DIRECTIVE</div>
+                                                    <div id="dActiveText" className="at-text">None</div>
+                                                    <div id="dActiveTimer" className="at-timer-large">--:--</div>
+                                                    <div className="at-actions" onClick={(e) => e.stopPropagation()}>
+                                                        <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
                                                     </div>
-                                                    <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
-                                                        <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
-                                                    </div>
+                                                </div>
+                                                <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
+                                                    <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div id="tabIntel" className="ap-view hidden">
-                                            <div id="userQueueSec" style={{ display: 'none' }}></div>
-                                        </div>
-
-                                        <div id="tabRecord" className="ap-view hidden">
-                                            <div id="adminOrbitalCanvas" className="admin-orbital-canvas">
-                                                <div className="altar-label">THE SUPREME ALTAR</div>
-                                            </div>
-                                            {/* Bento Nodes... */}
-                                        </div>
-
                                     </div>
-                                </div>
 
-                                {/* SYSTEM TICKER - click to open service log */}
-                                <div id="dashSystemTicker" className="dash-system-ticker"
-                                    onClick={() => (window as any).toggleDashSystemLog()}>
-                                    SYSTEM ONLINE
-                                </div>
-
-                                {/* SYSTEM LOG OVERLAY - covers chat area */}
-                                <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
-                                    <div className="dash-syslog-header">
-                                        <span>SYSTEM LOGS</span>
-                                        <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
+                                    <div id="tabIntel" className="ap-view hidden">
+                                        <div id="userQueueSec" style={{ display: 'none' }}></div>
                                     </div>
-                                    <div id="dashSystemLogContent" className="dash-syslog-body"></div>
+
+                                    <div id="tabRecord" className="ap-view hidden">
+                                        <div id="adminOrbitalCanvas" className="admin-orbital-canvas">
+                                            <div className="altar-label">THE SUPREME ALTAR</div>
+                                        </div>
+                                        {/* Bento Nodes... */}
+                                    </div>
+
                                 </div>
-                                </>
-                            )}
+                            </div>
+
+                            {/* SYSTEM TICKER - click to open service log */}
+                            <div id="dashSystemTicker" className="dash-system-ticker"
+                                onClick={() => (window as any).toggleDashSystemLog()}>
+                                SYSTEM ONLINE
+                            </div>
+
+                            {/* SYSTEM LOG OVERLAY - covers chat area */}
+                            <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
+                                <div className="dash-syslog-header">
+                                    <span>SYSTEM LOGS</span>
+                                    <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
+                                </div>
+                                <div id="dashSystemLogContent" className="dash-syslog-body"></div>
+                            </div>
 
                             <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
 
@@ -1554,6 +1627,8 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
+                        </>
+                    )}
                 </div>
 
 
