@@ -67,7 +67,7 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({
                 app_id: ONESIGNAL_APP_ID,
-                include_player_ids: [onesignalId],
+                include_subscription_ids: [onesignalId],
                 headings: { en: senderName },
                 contents: { en: msgPreview },
                 url: 'https://throne.qkarin.com/dashboard',

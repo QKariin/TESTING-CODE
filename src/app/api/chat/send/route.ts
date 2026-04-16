@@ -165,12 +165,14 @@ export async function POST(req: Request) {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Key ${ONESIGNAL_KEY}` },
                 body: JSON.stringify({
                     app_id: ONESIGNAL_APP_ID,
-                    include_player_ids: [onesignalId],
+                    include_subscription_ids: [onesignalId],
                     headings: { en: title },
                     contents: { en: body },
                     url,
                 }),
-            }).catch(() => {});
+            }).then(r => r.json()).then(d => {
+                console.log('[chat/send] push result:', JSON.stringify(d));
+            }).catch(e => { console.error('[chat/send] push error:', e); });
         }
 
         if (isQueen && conversationId) {

@@ -512,6 +512,30 @@ export default function DashboardPage() {
             if (user?.email) {
                 setUserEmail(user.email);
                 setAdminEmail(user.email);
+
+                // Init OneSignal so queen receives push notifications on desktop
+                const w = window as any;
+                w.OneSignalDeferred = w.OneSignalDeferred || [];
+                w.OneSignalDeferred.push(async (OS: any) => {
+                    try {
+                        await OS.init({
+                            appId: '761d91da-b098-44a7-8d98-75c1cce54dd0',
+                            safari_web_id: 'web.onesignal.auto.5f8d50ad-7ec3-4f1c-a2de-134e8949294e',
+                            notifyButton: { enable: false },
+                            allowLocalhostAsSecureOrigin: true,
+                        });
+                        await OS.login(user.email);
+                        // Auto-save subscription ID if permission already granted
+                        const subId = OS?.User?.PushSubscription?.id;
+                        if (subId) {
+                            fetch('/api/push', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ subscriptionId: subId }),
+                            }).catch(() => {});
+                        }
+                    } catch { /* already inited */ }
+                });
             }
             if (user?.id || user?.email) {
                 const ping = () => {

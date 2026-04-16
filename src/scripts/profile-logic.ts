@@ -2096,6 +2096,15 @@ function initOneSignal(memberId: string) {
                 allowLocalhostAsSecureOrigin: true,
             });
             await OneSignal.login(memberId);
+            // Always persist the current subscription ID (it may change between sessions)
+            const subId = OneSignal?.User?.PushSubscription?.id;
+            if (subId) {
+                fetch('/api/push', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subscriptionId: subId, memberId }),
+                }).catch(() => {});
+            }
         } catch (e) {
             console.error('[OneSignal] init error:', e);
         }

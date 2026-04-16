@@ -2552,6 +2552,15 @@ async function initAndRequestPush(userEmail: string, onDone: () => void) {
                 allowLocalhostAsSecureOrigin: true,
             });
             await OS.login(userEmail);
+            // Always persist subscription ID after init (it may change between sessions)
+            const subId = OS?.User?.PushSubscription?.id;
+            if (subId) {
+                fetch('/api/push', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subscriptionId: subId }),
+                }).catch(() => {});
+            }
         } catch { /* already inited */ }
     });
 

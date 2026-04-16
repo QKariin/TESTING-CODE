@@ -39,7 +39,7 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({
                 app_id: appId,
-                include_player_ids: [onesignalId],
+                include_subscription_ids: [onesignalId],
                 headings: { en: title || 'Queen Karin' },
                 contents: { en: message },
                 url: 'https://throne.qkarin.com/profile',
