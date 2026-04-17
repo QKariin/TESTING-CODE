@@ -260,10 +260,19 @@ export function reviewTask(decision: 'approve' | 'reject') {
                     console.error("Routine approval error:", err);
                 });
         } else {
-            // NO on a routine = just dismiss, nothing else
-            isConfirming = false;
+            // Reject routine — update server so it doesn't reappear on reload
             import('./dashboard-main').then(m => m.renderMainDashboard());
             closeModal();
+
+            adminRejectTaskAction(taskData.id!, taskData.memberId!)
+                .then(res => {
+                    isConfirming = false;
+                    if (!res?.success) console.error("Routine reject fail:", res?.error);
+                })
+                .catch(err => {
+                    isConfirming = false;
+                    console.error("Routine reject error:", err);
+                });
         }
 
         _removeTaskCardFromList(taskData.id!);

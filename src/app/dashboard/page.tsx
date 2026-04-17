@@ -1051,6 +1051,53 @@ export default function DashboardPage() {
             })
             .subscribe();
 
+        // ── Realtime: tasks table changes → operations monitor updates ──
+        const tasksChannel = supabaseRt
+            .channel('tasks-admin-live')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'tasks',
+            }, (payload: any) => {
+                const updated = payload.new;
+                if (!updated) return;
+                const taskMemberId = (updated.member_id || '').toLowerCase();
+                if (!taskMemberId) return;
+
+                // Parse Taskdom_History for pending entries
+                let history: any[] = [];
+                try { history = JSON.parse(updated['Taskdom_History'] || '[]'); } catch { return; }
+                const pendingEntries = history.filter((t: any) => t.status === 'pending');
+
+                // Build review queue items from pending entries
+                const queueItems = pendingEntries.map((entry: any) => ({
+                    ...entry,
+                    member_id: updated.member_id,
+                    memberName: updated['Name'] || 'Slave',
+                }));
+
+                // Update the matching user's reviewQueue
+                const user = users.find((u: any) => {
+                    const uid = (u.member_id || u.memberId || '').toLowerCase();
+                    return uid === taskMemberId;
+                });
+                if (user) {
+                    user.reviewQueue = queueItems;
+                }
+
+                // Rebuild globalQueue from all users
+                const newGlobalQueue: any[] = [];
+                users.forEach((u: any) => {
+                    if (u.reviewQueue) {
+                        u.reviewQueue.forEach((item: any) => newGlobalQueue.push(item));
+                    }
+                });
+                setGlobalQueue(newGlobalQueue);
+
+                renderMainDashboard();
+            })
+            .subscribe();
+
         // ── Realtime: queen-only chat restriction broadcast ──
         const restrictChannel = supabaseRt
             .channel('chat-restrict-sync')
@@ -1075,6 +1122,7 @@ export default function DashboardPage() {
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             supabaseRt.removeChannel(chatsChannel);
             supabaseRt.removeChannel(profilesChannel);
+            supabaseRt.removeChannel(tasksChannel);
             supabaseRt.removeChannel(restrictChannel);
             cleanupPresenceTracking();
         };
