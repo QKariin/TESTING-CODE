@@ -45,17 +45,14 @@ export async function POST(req: Request) {
 
     const now = new Date().toISOString();
 
-    const { error, count } = await supabaseAdmin
+    const { error } = await supabaseAdmin
         .from('profiles')
         .update({ last_active: now })
-        .ilike('member_id', email)
-        .select('member_id', { count: 'exact', head: true });
+        .ilike('member_id', email);
 
     if (error) {
         console.error('[presence/POST] update last_active failed:', error.message, 'email:', email);
         return NextResponse.json({ success: false, error: error.message });
     }
-
-    console.log('[presence/POST] updated last_active for', email, '| matched rows:', count);
     return NextResponse.json({ success: true, updated: count });
 }
