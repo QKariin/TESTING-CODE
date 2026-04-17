@@ -37,7 +37,7 @@ export async function POST(req: Request) {
                             name: 'Platform Access Fee',
                             description: 'One-time fee for full platform access and account initialization.',
                         },
-                        unit_amount: 5500, // €55.00
+                        unit_amount: 100, // €1.00 (TESTING — revert to 5500 for prod)
                     },
                     quantity: 1,
                 },
