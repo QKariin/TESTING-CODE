@@ -80,15 +80,15 @@ export async function POST(req: NextRequest) {
             const currentParams = profile?.parameters || {};
 
             // 2. Update parameters with merged tracking data
-            const fallbackQuery = supabase.from('profiles').update({
+            let fallbackQuery = supabase.from('profiles').update({
                 parameters: {
                     ...currentParams,
                     tracking_data: trackingData
                 },
                 last_active: new Date().toISOString()
             });
-            if (isUuid) fallbackQuery.eq('ID', userId);
-            else fallbackQuery.ilike('member_id', userId);
+            if (isUuid) fallbackQuery = fallbackQuery.eq('ID', userId);
+            else fallbackQuery = fallbackQuery.ilike('member_id', userId);
 
             const { error: fallbackError } = await fallbackQuery;
             if (fallbackError) {

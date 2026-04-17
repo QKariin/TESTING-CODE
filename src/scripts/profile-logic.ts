@@ -2038,9 +2038,15 @@ export async function initChatSystem() {
         .subscribe();
 
     // Start periodic queen status polling (every 2 minutes) so members always see live status
-    if (_queenInterval) clearInterval(_queenInterval);
-    _fetchQueenStatus(); // immediate fetch
-    _queenInterval = setInterval(_fetchQueenStatus, 2 * 60 * 1000);
+    const QUEEN_EMAILS = ['ceo@qkarin.com'];
+    if (QUEEN_EMAILS.includes(email!)) {
+        // Current user IS the queen — always show online, no need to poll yourself
+        _updateQueenStatus(new Date().toISOString());
+    } else {
+        if (_queenInterval) clearInterval(_queenInterval);
+        _fetchQueenStatus(); // immediate fetch
+        _queenInterval = setInterval(_fetchQueenStatus, 2 * 60 * 1000);
+    }
 
     // 7. Push notifications - always use email as external user ID (consistent with DB lookup)
     initOneSignal(email);
