@@ -2537,6 +2537,20 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         }
     }
 
+    // GIF CARD
+    if (msg.type === 'gif' || (content === '[GIF]' && msg.metadata?.gifUrl)) {
+        const gifUrl = msg.metadata?.gifUrl || content;
+        const gifCard = `
+            <div style="max-width:240px;width:60vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 8px 30px rgba(0,0,0,0.7);">
+                <img src="${gifUrl}" onload="window._scrollChatBottom && window._scrollChatBottom()" style="width:100%;display:block;max-height:200px;object-fit:contain;" onerror="this.style.display='none'" />
+            </div>`;
+        if (isMe) {
+            return `<div class="cb-row cb-row-me"><div class="cb-wrap-me">${gifCard}<div class="chat-ts chat-ts-right">${timeStr}</div></div></div>`;
+        } else {
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen">${gifCard}<div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+        }
+    }
+
     if (msg.type === 'photo') {
         content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
     } else if (msg.type === 'video') {
