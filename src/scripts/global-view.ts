@@ -1037,7 +1037,7 @@ export function openGifPicker() {
         position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
         width:min(420px, 96vw);max-height:55vh;
         background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
-        display:flex;flex-direction:column;overflow:hidden;z-index:999;
+        display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
         box-shadow:0 8px 40px rgba(0,0,0,0.7);
     `;
 
