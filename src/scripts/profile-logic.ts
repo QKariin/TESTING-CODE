@@ -2652,33 +2652,60 @@ export function openProfileGifPicker() {
     const existing = document.getElementById('profileGifPickerOverlay');
     if (existing) existing.remove();
 
-    const overlay = document.createElement('div');
-    overlay.id = 'profileGifPickerOverlay';
-    overlay.style.cssText = `
-        position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-        width:min(420px, 96vw);max-height:55vh;
-        background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
-        display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
-        box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    // Find the chat footer to insert inline panel above it (matching dashboard mobile layout)
+    // Try mobile chat first, then desktop
+    const mobChatTab = document.getElementById('mobChatTabChat');
+    const deskChatFooter = document.querySelector('#chatBox')?.parentElement;
+    let chatFooter: Element | null = null;
+    let parentContainer: Element | null = null;
+
+    if (mobChatTab) {
+        chatFooter = mobChatTab.querySelector('.chat-footer');
+        parentContainer = mobChatTab;
+    }
+    if (!chatFooter && deskChatFooter) {
+        chatFooter = deskChatFooter.querySelector('.chat-footer');
+        parentContainer = deskChatFooter;
+    }
+
+    const panel = document.createElement('div');
+    panel.id = 'profileGifPickerOverlay';
+    panel.style.cssText = `
+        max-height:45vh;overflow-y:auto;
+        border-top:1px solid rgba(197,160,89,0.15);
+        background:#0d0b08;padding:8px;flex-shrink:0;
     `;
 
-    overlay.innerHTML = `
-        <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+    panel.innerHTML = `
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
             <input id="profileGifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
                 style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
-            <button onclick="window.closeProfileGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
+            <button onclick="window.closeProfileGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;">✕</button>
         </div>
-        <div id="profileGifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
-            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+        <div id="profileGifGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>
         </div>
-        <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
+        <div style="padding:5px 0;text-align:right;">
             <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
         </div>
     `;
 
-    document.body.appendChild(overlay);
+    // Insert inline above footer (like dashboard mobile), or fallback to body overlay
+    if (chatFooter && parentContainer) {
+        parentContainer.insertBefore(panel, chatFooter);
+    } else {
+        // Fallback: append to body as overlay
+        panel.style.cssText = `
+            position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+            width:min(420px, 96vw);max-height:55vh;
+            background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+            display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
+            box-shadow:0 8px 40px rgba(0,0,0,0.7);
+        `;
+        document.body.appendChild(panel);
+    }
 
-    const searchInput = overlay.querySelector('#profileGifSearchInput') as HTMLInputElement;
+    const searchInput = panel.querySelector('#profileGifSearchInput') as HTMLInputElement;
     searchInput?.addEventListener('input', () => {
         if (_profileGifTimeout) clearTimeout(_profileGifTimeout);
         _profileGifTimeout = setTimeout(() => _searchProfileGifs(searchInput.value || 'funny'), 400);

@@ -287,7 +287,7 @@ export async function renderChat(messages: any[]) {
         }
 
         const avatarUrl = "/queen-karin.png";
-        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('http')) {
+        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
             contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">

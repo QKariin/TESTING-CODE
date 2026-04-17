@@ -1031,33 +1031,54 @@ export function openGifPicker() {
     const existing = document.getElementById('gifPickerOverlay');
     if (existing) existing.remove();
 
-    const overlay = document.createElement('div');
-    overlay.id = 'gifPickerOverlay';
-    overlay.style.cssText = `
-        position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-        width:min(420px, 96vw);max-height:55vh;
-        background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
-        display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
-        box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    // Find talk panel footer to insert inline (matching dashboard mobile layout)
+    const talkPanel = document.getElementById('mobGlPanel_talk');
+    let talkFooter: Element | null = null;
+    let parentContainer: Element | null = null;
+
+    if (talkPanel) {
+        talkFooter = talkPanel.querySelector('.mob-gl-talk-footer');
+        parentContainer = talkPanel;
+    }
+
+    const panel = document.createElement('div');
+    panel.id = 'gifPickerOverlay';
+    panel.style.cssText = `
+        max-height:45vh;overflow-y:auto;
+        border-top:1px solid rgba(197,160,89,0.15);
+        background:#0d0b08;padding:8px;flex-shrink:0;
     `;
 
-    overlay.innerHTML = `
-        <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+    panel.innerHTML = `
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
             <input id="gifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
                 style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
-            <button onclick="window.closeGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
+            <button onclick="window.closeGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;">✕</button>
         </div>
-        <div id="gifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
-            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+        <div id="gifGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>
         </div>
-        <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
+        <div style="padding:5px 0;text-align:right;">
             <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
         </div>
     `;
 
-    document.body.appendChild(overlay);
+    // Insert inline above footer (like dashboard mobile), or fallback to body overlay
+    if (talkFooter && parentContainer) {
+        parentContainer.insertBefore(panel, talkFooter);
+    } else {
+        // Fallback: fixed overlay for desktop or if container not found
+        panel.style.cssText = `
+            position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+            width:min(420px, 96vw);max-height:55vh;
+            background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+            display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
+            box-shadow:0 8px 40px rgba(0,0,0,0.7);
+        `;
+        document.body.appendChild(panel);
+    }
 
-    const searchInput = overlay.querySelector('#gifSearchInput') as HTMLInputElement;
+    const searchInput = panel.querySelector('#gifSearchInput') as HTMLInputElement;
     searchInput?.addEventListener('input', () => {
         if (_gifSearchTimeout) clearTimeout(_gifSearchTimeout);
         _gifSearchTimeout = setTimeout(() => _searchGifs(searchInput.value || 'funny'), 400);
