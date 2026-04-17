@@ -1,17 +1,29 @@
 // Heartbeat: updates profiles.last_active every 2 minutes so "last seen" stays accurate.
 // The Realtime presence channel (track()) handles the online dot; this handles the timestamp.
-export function startPresenceHeartbeat(userId: string): ReturnType<typeof setInterval> | null {
-    if (!userId) return null;
+export function startPresenceHeartbeat(userId: string, email?: string): ReturnType<typeof setInterval> | null {
+    if (!userId && !email) return null;
 
     const ping = () => {
-        fetch('/api/tracking/ping', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, clientData: {} }),
-        }).catch(() => {});
+        // UUID-based tracking ping
+        if (userId) {
+            fetch('/api/tracking/ping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, clientData: {} }),
+            }).catch(() => {});
+        }
+        // Email-based presence heartbeat (reliable fallback, same as dashboard)
+        if (email) {
+            fetch('/api/global/presence', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            }).catch(() => {});
+        }
     };
 
-    return setInterval(ping, 2 * 60 * 1000); // every 2 minutes
+    ping(); // immediate first ping
+    return setInterval(ping, 2 * 60 * 1000); // then every 2 minutes
 }
 
 export async function trackUserAnalytics(userId: string) {

@@ -269,9 +269,10 @@ export default function ProfilePage() {
 
                         // Initialize Chat & Tracking
                         initChatSystem();
-                        trackUserAnalytics(unifiedData.id);
+                        const uid = unifiedData.ID || unifiedData.memberId || unifiedData.id;
+                        trackUserAnalytics(uid);
                         if (!heartbeatRef.current) {
-                            heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
+                            heartbeatRef.current = startPresenceHeartbeat(uid, unifiedData.email || unifiedData.member_id);
                         }
 
                         // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
@@ -372,9 +373,10 @@ export default function ProfilePage() {
 
                         // Initialize Chat & Tracking
                         initChatSystem();
-                        trackUserAnalytics(unifiedData.id);
+                        const uid = unifiedData.ID || unifiedData.memberId || unifiedData.id;
+                        trackUserAnalytics(uid);
                         if (!heartbeatRef.current) {
-                            heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
+                            heartbeatRef.current = startPresenceHeartbeat(uid, unifiedData.email || unifiedData.member_id);
                         }
 
                         // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
