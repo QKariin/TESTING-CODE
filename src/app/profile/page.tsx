@@ -85,7 +85,10 @@ import {
     _applyPaywall,
     _applySilence,
     togglePushNotifications,
+    openProfileGifPicker,
+    closeProfileGifPicker,
 } from '@/scripts/profile-logic';
+import { openGifPicker, closeGifPicker } from '@/scripts/global-view';
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
@@ -229,6 +232,10 @@ export default function ProfilePage() {
             (window as any).cancelMobGlReply = cancelMobGlReply;
             (window as any).setProfileChatReply = setProfileChatReply;
             (window as any).cancelProfileChatReply = cancelProfileChatReply;
+            (window as any).openProfileGifPicker = openProfileGifPicker;
+            (window as any).closeProfileGifPicker = closeProfileGifPicker;
+            (window as any).openGifPicker = openGifPicker;
+            (window as any).closeGifPicker = closeGifPicker;
         }
 
         async function loadProfile() {
