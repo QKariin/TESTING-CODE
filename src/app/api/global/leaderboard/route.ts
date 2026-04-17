@@ -29,7 +29,7 @@ export async function GET(req: Request) {
             .select(`member_id, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", Taskdom_Points`),
         supabaseAdmin
             .from('profiles')
-            .select('member_id, id, hierarchy, avatar_url'),
+            .select('member_id, id, name, hierarchy, avatar_url'),
     ]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
         .map((t: any) => {
             const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
             return {
-                name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
+                name: prof.name || t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
                 hierarchy: prof.hierarchy || t.Hierarchy || '-',
                 avatar: prof.avatar_url || '',
                 score: parseNum(t[colKey]),

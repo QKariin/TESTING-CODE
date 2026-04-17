@@ -47,7 +47,7 @@ export async function GET() {
     for (const t of (tasks || [])) {
         const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
         const base = {
-            name: t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
+            name: prof.name || t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
             hierarchy: prof.hierarchy || t.Hierarchy || '-',
             avatar: prof.avatar_url || '',
         };
