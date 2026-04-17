@@ -974,7 +974,8 @@ export default function DashboardPage() {
                 const msg = payload.new;
                 if (!msg) return;
                 const isQueenMsg = msg.metadata?.isQueen === true;
-                if (isQueenMsg) return;
+                const isSystemMsg = msg.type === 'system' || (msg.sender_email || '').toLowerCase() === 'system';
+                if (isQueenMsg || isSystemMsg) return;
                 const memberId = (msg.member_id || '').toLowerCase();
                 if (!memberId) return;
                 const msgTime = new Date(msg.created_at).getTime();
