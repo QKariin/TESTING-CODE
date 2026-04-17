@@ -771,6 +771,22 @@ export default function ProfilePage() {
                     </div>
                 )}
 
+                {/* CHALLENGES INLINE PANEL - overlays content area when open */}
+                {desktopChallengeOpen && (
+                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 40, position: 'relative' }}>
+                        <DesktopChallengeModal
+                            challenges={allChallenges}
+                            activeChallenge={activeChallenge}
+                            isParticipant={isParticipant}
+                            participantStatus={participantStatus}
+                            memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                            onClose={() => setDesktopChallengeOpen(false)}
+                            onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
+                            onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                        />
+                    </div>
+                )}
+
                 {/* MAIN CONTENT STAGE */}
                 <div id="viewServingTopDesktop" className="view-wrapper hidden" style={{ position: 'relative' }}>
                     <div id="gridStat1" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
@@ -2158,19 +2174,7 @@ export default function ProfilePage() {
                 </div>
             </div>
         )}
-        {/* Desktop Challenge Modal */}
-        {desktopChallengeOpen && (
-            <DesktopChallengeModal
-                challenges={allChallenges}
-                activeChallenge={activeChallenge}
-                isParticipant={isParticipant}
-                participantStatus={participantStatus}
-                memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
-                onClose={() => setDesktopChallengeOpen(false)}
-                onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
-                onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
-            />
-        )}
+        {/* Desktop Challenge Modal moved inside DESKTOP_APP grid */}
         </>
     );
 }
@@ -2657,23 +2661,24 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
 
     return (
         <div style={{
-            position: 'fixed', inset: 0, zIndex: 10000,
-            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '24px',
-        }} onClick={onClose}>
-            <div style={{
-                background: 'rgba(5,8,18,0.99)',
-                border: '1px solid rgba(197,160,89,0.18)',
-                borderRadius: 16, padding: '28px 32px',
-                maxWidth: 700, width: '100%', maxHeight: '82vh',
-                overflowY: 'auto',
-            }} onClick={e => e.stopPropagation()}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                    <div className="ribbon-label" style={{ fontSize: '0.7rem', letterSpacing: '4px' }}>CHALLENGES</div>
-                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 32, height: 32, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            position: 'absolute', inset: 0, zIndex: 50,
+            background: '#04040e',
+            display: 'flex', flexDirection: 'column',
+            overflow: 'hidden',
+        }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.15)', flexShrink: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, background: '#4ade80', borderRadius: 2 }}></div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: '#4ade80', letterSpacing: '4px', fontWeight: 700 }}>CHALLENGES</div>
                 </div>
+                <button onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '5px 14px', cursor: 'pointer', borderRadius: 4, letterSpacing: '1px' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 5 5 12 12 19"/></svg>
+                    CLOSE
+                </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
 
                 {/* Challenge cards */}
                 {challenges.filter((c: any) => c.status === 'active' || (

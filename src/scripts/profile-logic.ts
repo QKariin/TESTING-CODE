@@ -3791,15 +3791,26 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
     const overlay = document.createElement('div');
     overlay.id = '_reqModal';
     const isMobile = window.innerWidth <= 768;
-    overlay.style.cssText = `position: fixed; top:0; right:0; bottom:0; left:${isMobile ? '0' : '300px'}; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 10000000; display: flex; align-items: center; justify-content: center; padding: 16px; `;
+    overlay.style.cssText = `position: fixed; top:0; right:0; bottom:0; left:${isMobile ? '0' : '450px'}; background: #04040e; z-index: 10000000; display: flex; flex-direction: column; `;
     const box = document.createElement('div');
-    box.style.cssText = `background:#07080f; border: 1px solid #c5a059; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; font-family: 'Orbitron'; `;
+    box.style.cssText = `flex: 1; overflow-y: auto; padding: 24px 32px; font-family: 'Orbitron'; `;
+
+    // Header bar
+    const header = document.createElement('div');
+    header.style.cssText = `display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid rgba(197,160,89,0.15);flex-shrink:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);`;
+    header.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="width:3px;height:14px;background:#c5a059;border-radius:2px;"></div><div style="font-family:Orbitron;font-size:0.85rem;color:#c5a059;letter-spacing:4px;font-weight:700;">${label.toUpperCase()}</div></div>`;
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = `display:flex;align-items:center;gap:6px;background:none;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45);font-family:Orbitron;font-size:0.45rem;padding:5px 14px;cursor:pointer;border-radius:4px;letter-spacing:1px;`;
+    closeBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 5 5 12 12 19"/></svg>CLOSE`;
+    closeBtn.onclick = () => overlay.remove();
+    header.appendChild(closeBtn);
+    overlay.appendChild(header);
 
     const isChip = fieldId === 'kinks' || fieldId === 'limits';
     const isRoutine = fieldId === 'routine';
     const costPerItem = fieldId === 'kinks' ? 100 : fieldId === 'limits' ? 200 : 0;
 
-    let inner = `<div style="color:#c5a059;font-size:0.9rem;letter-spacing:4px;margin-bottom:15px;text-align:center;font-family:'Orbitron';">${label.toUpperCase()}</div>`;
+    let inner = '';
 
     // Process existing values for chips
     const existingChips = isChip && existingValue ? existingValue.split(',').map(s => s.trim()) : [];
