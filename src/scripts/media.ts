@@ -127,17 +127,30 @@ const _signedUrlCache = new Map<string, { url: string; expires: number }>();
 
 export async function getSignedUrl(url: string | null | undefined): Promise<string> {
     if (!url) return "";
-    if (!isPrivateStorageUrl(url)) return url;
     if (url.includes('token=')) return url; // already signed
 
     const cached = _signedUrlCache.get(url);
     if (cached && cached.expires > Date.now()) return cached.url;
 
+    // Handle /api/media/url?... paths — these return JSON { url } that we need to resolve
+    if (url.startsWith('/api/media/url')) {
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.url) {
+                _signedUrlCache.set(url, { url: data.url, expires: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+                return data.url;
+            }
+        } catch { }
+        return "";
+    }
+
+    if (!isPrivateStorageUrl(url)) return url;
+
     try {
         const res = await fetch(`/api/media/url?url=${encodeURIComponent(url)}`);
         const data = await res.json();
         if (data.url) {
-            // Cache for 6 days (signed URL valid for 7)
             _signedUrlCache.set(url, { url: data.url, expires: Date.now() + 6 * 24 * 60 * 60 * 1000 });
             return data.url;
         }
