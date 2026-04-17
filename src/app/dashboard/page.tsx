@@ -20,7 +20,7 @@ import { switchAdminTab, adjustWallet, manageAltar, adminTaskAction, toggleTaskQ
 import { closeChatPreview } from '@/scripts/chat';
 
 // State & Actions
-import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, setDashboardRole, users, currId, dashboardRole } from '@/scripts/dashboard-state';
+import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, setDashboardRole, setAdminReadMap, users, currId, dashboardRole } from '@/scripts/dashboard-state';
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
@@ -865,7 +865,7 @@ export default function DashboardPage() {
 
             if (data.success && data.users) {
                 const mappedUsers = data.users.map((u: any) => {
-                    const msgFromMessages = unreadMap[u.memberId || u.member_id];
+                    const msgFromMessages = unreadMap[(u.member_id || u.memberId || '').toLowerCase()];
                     const msgFromParams = u.parameters?.lastMessageTime;
                     const rawMsgTime = msgFromMessages || msgFromParams || null;
                     const lastMessageTime = rawMsgTime ? new Date(rawMsgTime).getTime() : 0;
@@ -888,12 +888,11 @@ export default function DashboardPage() {
                     const readRes = await fetch('/api/chat/mark-read?type=admin');
                     const readData = await readRes.json();
                     const serverReadMap = readData.chatRead || {};
+                    const readMap: Record<string, number> = {};
                     Object.entries(serverReadMap).forEach(([email, ts]) => {
-                        const key = 'read_' + email;
-                        const localTs = parseInt(localStorage.getItem(key) || '0');
-                        const serverTs = new Date(ts as string).getTime();
-                        if (serverTs > localTs) localStorage.setItem(key, serverTs.toString());
+                        readMap[email.toLowerCase()] = new Date(ts as string).getTime();
                     });
+                    setAdminReadMap(readMap);
                 } catch {}
 
                 setAvailableDailyTasks(data.dailyTasks || []);

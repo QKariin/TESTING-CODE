@@ -1,35 +1,46 @@
 // src/scripts/dashboard-sidebar.ts
 // Dashboard Sidebar Management - Converted to TypeScript
 
-import { users, currId, setCurrId } from './dashboard-state';
+import { users, currId, setCurrId, adminReadMap, markReadInMap } from './dashboard-state';
 import { clean } from './utils';
 import { triggerSound } from './utils';
 import { getOptimizedUrl } from './media';
 import { isMemberOnline } from './dashboard-presence';
 
-// firstUnreadTime: when each user's FIRST unread message arrived
-const firstUnreadTime: Record<string, number> = {};
 // onlineJoinTime: when each user first came online (only set on offline→online transition)
 const onlineJoinTime: Record<string, number> = {};
-const soundMemory: { [key: string]: number } = {};
+const soundMemory: Record<string, number> = {};
 // Track previous online state to detect actual transitions, not jitter
 const prevOnlineState: Record<string, boolean> = {};
 
 /**
+ * Canonical ID for a user — always email, lowercase.
+ * This is the SINGLE identifier used for read state, presence, localStorage sound keys.
+ */
+function canonId(u: any): string {
+    return (u.member_id || u.email || u.memberId || '').toLowerCase();
+}
+
+/**
  * Mark a user's chat as read immediately.
- * Called when opening a chat — you see it, it's read.
+ * Updates in-memory map (instant) and persists to server (async).
  */
 export function markAsRead(id: string) {
     if (!id) return;
     const now = Date.now();
-    localStorage.setItem('read_' + id, now.toString());
+    // Find the user to get canonical email
+    const user = users.find(u => u.memberId === id || canonId(u) === id.toLowerCase());
+    const email = user ? canonId(user) : id.toLowerCase();
+
+    // Update single source of truth
+    markReadInMap(email, now);
+
     // Persist to server
     fetch('/api/chat/mark-read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'admin', slaveEmail: id, timestamp: new Date(now).toISOString() }),
+        body: JSON.stringify({ role: 'admin', slaveEmail: email, timestamp: new Date(now).toISOString() }),
     }).catch(() => {});
-    delete firstUnreadTime[id];
 }
 
 /**
@@ -37,6 +48,44 @@ export function markAsRead(id: string) {
  */
 export function markPendingRead() {
     if (currId) markAsRead(currId);
+}
+
+/**
+ * Check if a user has unread messages.
+ * Compares lastMessageTime against admin_read_at from the DB map.
+ * Returns false if this user's chat is currently open.
+ */
+function hasUnreadMessage(u: any): boolean {
+    const email = canonId(u);
+    if (!email) return false;
+    // If this user's chat is currently open, not unread
+    if (currId === u.memberId || currId === email) return false;
+    const msgTime = u.lastMessageTime || 0;
+    if (msgTime <= 0) return false;
+    const readTime = adminReadMap[email] || 0;
+    return msgTime > readTime;
+}
+
+/**
+ * Same as hasUnreadMessage but doesn't skip the currently open user.
+ * Used for sound notifications.
+ */
+function hasUnreadMessageAny(u: any): boolean {
+    const email = canonId(u);
+    if (!email) return false;
+    const msgTime = u.lastMessageTime || 0;
+    if (msgTime <= 0) return false;
+    const readTime = adminReadMap[email] || 0;
+    return msgTime > readTime;
+}
+
+/**
+ * Check if user is online — presence channel ONLY, no lastSeen fallback.
+ */
+function isUserOnline(u: any): boolean {
+    if (!u) return false;
+    const email = canonId(u);
+    return email ? isMemberOnline(email) : false;
 }
 
 export function renderSidebar() {
@@ -51,66 +100,44 @@ export function renderSidebar() {
         return isNaN(t) ? 0 : t;
     };
 
-    const isUserOnline = (u: any) => {
-        if (!u) return false;
-        // Presence channel tracks by email (member_id); memberId is UUID - use email for presence check
-        if (isMemberOnline(u.member_id || u.email || '')) return true;
-        const ls = getLastSeenMs(u);
-        return ls > 0 && (now - ls) / 60000 < 5;
-    };
-
     // ── Update tracking state ────────────────────────────────────────────
     users.forEach(u => {
+        const email = canonId(u);
         const online = isUserOnline(u);
-        const wasOnline = prevOnlineState[u.memberId] ?? false;
-        const hasMsg = hasUnreadMessage(u);
-        const msgTime = u.lastMessageTime ? new Date(u.lastMessageTime).getTime() : 0;
-
-        // Track first unread time - set only once per streak
-        if (hasMsg && msgTime > 0 && !firstUnreadTime[u.memberId]) {
-            firstUnreadTime[u.memberId] = msgTime;
-        }
-        if (!hasMsg) {
-            delete firstUnreadTime[u.memberId];
-        }
+        const wasOnline = prevOnlineState[email] ?? false;
 
         // ── Online join time: only update on actual offline→online transition ──
-        // This prevents jitter at the 5-min boundary from moving users around
         if (online && !wasOnline) {
-            // Genuine transition: came online now
-            onlineJoinTime[u.memberId] = now;
+            onlineJoinTime[email] = now;
         }
         if (!online) {
-            delete onlineJoinTime[u.memberId];
+            delete onlineJoinTime[email];
         }
-        // Record current state for next render comparison
-        prevOnlineState[u.memberId] = online;
+        prevOnlineState[email] = online;
 
         // Sound notification
-        const lastSoundLS = Number(localStorage.getItem('sound_' + u.memberId) || 0);
-        const lastSoundRAM = soundMemory[u.memberId] || 0;
-        const lastSound = Math.max(lastSoundLS, lastSoundRAM);
-        if (hasUnreadMessageCurrentUser(u) && msgTime > lastSound) {
-            soundMemory[u.memberId] = msgTime;
-            localStorage.setItem('sound_' + u.memberId, msgTime.toString());
+        const lastSound = soundMemory[email] || 0;
+        const msgTime = u.lastMessageTime || 0;
+        if (hasUnreadMessageAny(u) && msgTime > lastSound) {
+            soundMemory[email] = msgTime;
             triggerSound('sfx-notify');
         }
     });
 
-    // ── Sort into 3 groups ───────────────────────────────────────────────
-    // Group 1: has unread - FIFO queue: earliest message = top
+    // ── Sort into 3 tiers ───────────────────────────────────────────────
+    // Tier 1: has unread — newest message first (most recent conversation at top)
     const withUnread = users
         .filter(u => hasUnreadMessage(u))
-        .sort((a, b) => (firstUnreadTime[a.memberId] || 0) - (firstUnreadTime[b.memberId] || 0));
+        .sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
 
     const withUnreadIds = new Set(withUnread.map(u => u.memberId));
 
-    // Group 2: online, no unread - stable by first time seen online
+    // Tier 2: online, no unread — stable by first time seen online
     const onlineNoUnread = users
         .filter(u => isUserOnline(u) && !withUnreadIds.has(u.memberId))
-        .sort((a, b) => (onlineJoinTime[a.memberId] || now) - (onlineJoinTime[b.memberId] || now));
+        .sort((a, b) => (onlineJoinTime[canonId(a)] || now) - (onlineJoinTime[canonId(b)] || now));
 
-    // Group 3: offline, no unread - most recently seen first
+    // Tier 3: offline, no unread — most recently seen first
     const offlineNoUnread = users
         .filter(u => !isUserOnline(u) && !withUnreadIds.has(u.memberId))
         .sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
@@ -131,7 +158,6 @@ export function renderSidebar() {
 
         const isActive = currId === u.memberId;
         const isQueen = u.hierarchy === "Queen";
-        // Visual dot: only show if actually unread (not for the currently open pending user)
         const hasMsg = hasUnreadMessage(u);
         const online = isUserOnline(u);
 
@@ -218,59 +244,6 @@ export function renderSidebar() {
             el.style.transform = 'translateY(0)';
         });
     });
-}
-
-function renderUserIcons(u: any) {
-    let html = '';
-    const hasMsg = hasUnreadMessage(u);
-
-    const mailPath = "M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z";
-    if (hasMsg) {
-        html += `<div class="icon-box" title="New Message"><svg class="svg-icon active-msg" viewBox="0 0 24 24"><path d="${mailPath}"/></svg></div>`;
-    } else {
-        html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${mailPath}"/></svg></div>`;
-    }
-
-    const timerPath = "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z";
-    const hasActiveTask = u.activeTask && (!u.endTime || u.endTime > Date.now());
-    if (hasActiveTask) {
-        html += `<div class="icon-box" title="Active Task"><svg class="svg-icon active-grey" viewBox="0 0 24 24"><path d="${timerPath}"/></svg></div>`;
-    } else {
-        html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${timerPath}"/></svg></div>`;
-    }
-
-    const starPath = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
-    if (u.reviewQueue && u.reviewQueue.length > 0) {
-        html += `<div class="icon-box" title="Pending Review"><svg class="svg-icon active-pink" viewBox="0 0 24 24"><path d="${starPath}"/></svg></div>`;
-    } else {
-        html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${starPath}"/></svg></div>`;
-    }
-
-    const lockPath = "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z";
-    const isSilenced = u.silence === true;
-    const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
-    if (isSilenced) {
-        html += `<div class="icon-box" title="Silenced"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(220,60,60,0.85)"><path d="${lockPath}"/></svg></div>`;
-    } else if (isPaywalled) {
-        html += `<div class="icon-box" title="Paywalled"><svg class="svg-icon" viewBox="0 0 24 24" style="fill:rgba(197,160,89,0.85)"><path d="${lockPath}"/></svg></div>`;
-    } else {
-        html += `<div class="icon-box"><svg class="svg-icon icon-dim" viewBox="0 0 24 24"><path d="${lockPath}"/></svg></div>`;
-    }
-
-    return html;
-}
-
-function hasUnreadMessage(u: any) {
-    if (u.memberId === currId) return false;
-    const readTime = localStorage.getItem('read_' + u.memberId);
-    if (!readTime) return u.lastMessageTime > 0;
-    return u.lastMessageTime > parseInt(readTime);
-}
-
-function hasUnreadMessageCurrentUser(u: any) {
-    const readTime = localStorage.getItem('read_' + u.memberId);
-    if (!readTime) return u.lastMessageTime > 0;
-    return u.lastMessageTime > parseInt(readTime);
 }
 
 export function selUser(id: string) {

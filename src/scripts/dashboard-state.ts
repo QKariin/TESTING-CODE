@@ -43,6 +43,12 @@ export let newbieImmunity: boolean = true;
 export let mediaRecorder: any = null;
 export let audioChunks: any[] = [];
 
+// --- ADMIN READ STATE (single source of truth for unread detection) ---
+// Maps canonical email (lowercase) → read timestamp in ms
+export let adminReadMap: Record<string, number> = {};
+export function setAdminReadMap(map: Record<string, number>) { adminReadMap = map; }
+export function markReadInMap(email: string, ts: number) { adminReadMap[email.toLowerCase()] = ts; }
+
 // --- SETTERS ---
 export function setUsers(newUsers: any[]) { users = newUsers; }
 export function setGlobalQueue(newQueue: any[]) { globalQueue = newQueue; }
