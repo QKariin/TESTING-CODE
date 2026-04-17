@@ -1717,6 +1717,8 @@ let _chatChannel: any = null;
 let _chatPollInterval: ReturnType<typeof setInterval> | null = null;
 let _silenceCheckInterval: ReturnType<typeof setInterval> | null = null;
 let _queenInterval: ReturnType<typeof setInterval> | null = null;
+let _queenReapplyInterval: ReturnType<typeof setInterval> | null = null;
+let _isQueenUser = false;
 let _presenceCh: any = null;
 let _tasksChannel: any = null;
 let _statsChannel: any = null;
@@ -1769,6 +1771,7 @@ export function cleanupChatSystem() {
     if (_chatPollInterval) { clearInterval(_chatPollInterval); _chatPollInterval = null; }
     if (_silenceCheckInterval) { clearInterval(_silenceCheckInterval); _silenceCheckInterval = null; }
     if (_queenInterval) { clearInterval(_queenInterval); _queenInterval = null; }
+    if (_queenReapplyInterval) { clearInterval(_queenReapplyInterval); _queenReapplyInterval = null; }
     if (_chatChannel) { getChatSupabase().removeChannel(_chatChannel); _chatChannel = null; }
     if (_tasksChannel) { getChatSupabase().removeChannel(_tasksChannel); _tasksChannel = null; }
     if (_statsChannel) { getChatSupabase().removeChannel(_statsChannel); _statsChannel = null; }
@@ -2039,14 +2042,25 @@ export async function initChatSystem() {
 
     // Start periodic queen status polling (every 2 minutes) so members always see live status
     const QUEEN_EMAILS = ['ceo@qkarin.com', 'queen@qkarin.com'];
+    if (_queenReapplyInterval) { clearInterval(_queenReapplyInterval); _queenReapplyInterval = null; }
     if (QUEEN_EMAILS.includes(email!)) {
         // Current user IS the queen — always show online, no need to poll yourself
+        _isQueenUser = true;
         _updateQueenStatus(new Date().toISOString());
     } else {
+        _isQueenUser = false;
         if (_queenInterval) clearInterval(_queenInterval);
         _fetchQueenStatus(); // immediate fetch
         _queenInterval = setInterval(_fetchQueenStatus, 2 * 60 * 1000);
     }
+    // Re-apply cached queen status every 3s — React re-renders reset DOM text to "-"
+    _queenReapplyInterval = setInterval(() => {
+        if (_isQueenUser) {
+            _updateQueenStatus(new Date().toISOString());
+        } else if (_cachedQueenIso) {
+            _updateQueenStatus(_cachedQueenIso);
+        }
+    }, 3000);
 
     // 7. Push notifications - always use email as external user ID (consistent with DB lookup)
     initOneSignal(email);
@@ -2396,7 +2410,11 @@ function appendSystemLog(msg: any) {
     });
 }
 
+// Cached queen status — survives React re-renders that reset DOM
+let _cachedQueenIso: string | null = null;
+
 function _updateQueenStatus(lastSeenIso: string | null) {
+    _cachedQueenIso = lastSeenIso;
     const dots = [document.getElementById('mobChatOnlineDot'), document.getElementById('deskChatOnlineDot')];
     const txts = [document.getElementById('mobChatStatusText2'), document.getElementById('deskChatStatusText')];
 
