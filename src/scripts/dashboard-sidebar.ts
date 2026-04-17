@@ -128,24 +128,30 @@ export function renderSidebar() {
     });
 
     // ── Sort into 3 tiers ───────────────────────────────────────────────
-    // Tier 1: has unread — newest message first (most recent conversation at top)
-    const withUnread = users
-        .filter(u => hasUnreadMessage(u))
+    // Tier 1: online with unread — newest message first
+    // Tier 2: online without unread — stable by join time
+    // Tier 3: offline — unread first (by message time), then rest by last seen
+    const onlineWithUnread = users
+        .filter(u => isUserOnline(u) && hasUnreadMessage(u))
         .sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
 
-    const withUnreadIds = new Set(withUnread.map(u => u.memberId));
+    const onlineIds = new Set(onlineWithUnread.map(u => u.memberId));
 
-    // Tier 2: online, no unread — stable by first time seen online
     const onlineNoUnread = users
-        .filter(u => isUserOnline(u) && !withUnreadIds.has(u.memberId))
+        .filter(u => isUserOnline(u) && !onlineIds.has(u.memberId))
         .sort((a, b) => (onlineJoinTime[canonId(a)] || now) - (onlineJoinTime[canonId(b)] || now));
 
-    // Tier 3: offline, no unread — most recently seen first
+    const allOnlineIds = new Set([...onlineIds, ...onlineNoUnread.map(u => u.memberId)]);
+
+    const offlineWithUnread = users
+        .filter(u => !allOnlineIds.has(u.memberId) && hasUnreadMessage(u))
+        .sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
+
     const offlineNoUnread = users
-        .filter(u => !isUserOnline(u) && !withUnreadIds.has(u.memberId))
+        .filter(u => !allOnlineIds.has(u.memberId) && !hasUnreadMessage(u))
         .sort((a, b) => getLastSeenMs(b) - getLastSeenMs(a));
 
-    const sorted = [...withUnread, ...onlineNoUnread, ...offlineNoUnread];
+    const sorted = [...onlineWithUnread, ...onlineNoUnread, ...offlineWithUnread, ...offlineNoUnread];
 
     // ── FLIP: record positions before re-render ──────────────────────────
     const list = document.getElementById('userList');
