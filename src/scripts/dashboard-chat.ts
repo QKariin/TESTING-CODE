@@ -324,6 +324,20 @@ function renderToHtml(m: any) {
         }
     }
 
+    // ── GIF card ── centered, no bubble
+    if (m.type === 'gif' || (content === '[GIF]' && m.metadata?.gifUrl)) {
+        const gifUrl = m.metadata?.gifUrl || content;
+        return `
+            <div class="chat-gift-wrap">
+                <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(var(--gold-rgb),0.35);box-shadow:0 8px 30px rgba(0,0,0,0.7);">
+                    <div style="width:100%;overflow:hidden;background:#0a0703;">
+                        <img src="${gifUrl}" style="width:100%;display:block;max-height:200px;object-fit:contain;" onerror="this.style.display='none'" />
+                    </div>
+                </div>
+                <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+            </div>`;
+    }
+
     // ── Build bubble content ──
     // Dashboard perspective: admin (isMe) → RIGHT, slave → LEFT
     const bubbleClass = isMe ? 'cb-queen' : 'cb-slave';
@@ -580,10 +594,127 @@ export function triggerAdminMediaPick() {
     inp.click();
 }
 
+// ─── PRIVATE CHAT GIF PICKER ──────────────────────────────────────────────────
+
+let _chatGifOpen = false;
+let _chatGifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function _sendChatGif(gifUrl: string) {
+    const activeCurrId = currId || (window as any).currId;
+    if (!activeCurrId) return;
+
+    const convUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
+    const conversationEmail = convUser?.member_id || convUser?.email || activeCurrId;
+
+    let senderEmail: string | null = adminEmail || (window as any).adminEmail || null;
+    if (!senderEmail) return;
+
+    // Optimistic render
+    appendChatMessage({
+        content: gifUrl,
+        type: 'gif',
+        metadata: { isQueen: true, gifUrl },
+        member_id: conversationEmail,
+        sender_email: senderEmail,
+        created_at: new Date().toISOString(),
+    });
+
+    try {
+        await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                senderEmail,
+                conversationId: conversationEmail,
+                content: gifUrl,
+                type: 'gif',
+                metadata: { isQueen: true, gifUrl },
+            }),
+        });
+    } catch {}
+}
+
+export function openChatGifPicker() {
+    if (_chatGifOpen) { closeChatGifPicker(); return; }
+    _chatGifOpen = true;
+
+    const existing = document.getElementById('chatGifPickerOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'chatGifPickerOverlay';
+    overlay.style.cssText = `
+        position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+        width:min(420px, 96vw);max-height:55vh;
+        background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+        display:flex;flex-direction:column;overflow:hidden;z-index:999;
+        box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    `;
+
+    overlay.innerHTML = `
+        <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+            <input id="chatGifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
+            <button onclick="window.closeChatGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
+        </div>
+        <div id="chatGifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+        </div>
+        <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
+            <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const searchInput = overlay.querySelector('#chatGifSearchInput') as HTMLInputElement;
+    searchInput?.addEventListener('input', () => {
+        if (_chatGifTimeout) clearTimeout(_chatGifTimeout);
+        _chatGifTimeout = setTimeout(() => _searchChatGifs(searchInput.value || 'funny'), 400);
+    });
+
+    _searchChatGifs('funny');
+    setTimeout(() => searchInput?.focus(), 50);
+}
+
+async function _searchChatGifs(q: string) {
+    const grid = document.getElementById('chatGifGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+
+    try {
+        const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
+        const { results } = await res.json();
+        if (!results?.length) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
+            return;
+        }
+        grid.innerHTML = results.map((r: any) => `
+            <div onclick="window._selectChatGif('${encodeURIComponent(r.url)}')" style="cursor:pointer;border-radius:6px;overflow:hidden;aspect-ratio:1;background:rgba(255,255,255,0.04);">
+                <img src="${r.preview}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
+            </div>
+        `).join('');
+    } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
+    }
+}
+
+export function closeChatGifPicker() {
+    _chatGifOpen = false;
+    document.getElementById('chatGifPickerOverlay')?.remove();
+}
+
 // Global Bindings
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
     (window as any).triggerAdminMediaPick = triggerAdminMediaPick;
     (window as any).toggleDashSystemLog = toggleDashSystemLog;
+    (window as any).openChatGifPicker = openChatGifPicker;
+    (window as any).closeChatGifPicker = closeChatGifPicker;
+    (window as any)._selectChatGif = (encodedUrl: string) => {
+        const url = decodeURIComponent(encodedUrl);
+        closeChatGifPicker();
+        _sendChatGif(url);
+    };
 }

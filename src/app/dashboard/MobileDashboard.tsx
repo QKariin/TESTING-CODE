@@ -2251,6 +2251,9 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     const [sending, setSending] = useState(false);
     const [sendError, setSendError] = useState('');
     const [loadingMsgs, setLoadingMsgs] = useState(true);
+    const [showGifPicker, setShowGifPicker] = useState(false);
+    const [gifResults, setGifResults] = useState<any[]>([]);
+    const [gifLoading, setGifLoading] = useState(false);
     const scrollBoxRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const prevMsgCountRef = useRef(-1);
@@ -2308,6 +2311,27 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
         setSending(false);
     };
 
+    const searchGifs = async (q: string) => {
+        setGifLoading(true);
+        try {
+            const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q || 'funny')}`);
+            const { results } = await res.json();
+            setGifResults(results || []);
+        } catch { setGifResults([]); }
+        setGifLoading(false);
+    };
+
+    const sendGif = async (gifUrl: string) => {
+        setShowGifPicker(false);
+        if (!adminEmail) return;
+        setSending(true);
+        try {
+            await fetch('/api/chat/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderEmail: adminEmail, conversationId: user.memberId, content: gifUrl, type: 'gif', metadata: { isQueen: true, gifUrl } }) });
+            await fetchMessages();
+        } catch {}
+        setSending(false);
+    };
+
     const chatMsgs = messages.filter(m => !isSystemMessage(m));
     const sysMsgs = messages.filter(m => isSystemMessage(m));
     const canSend = input.trim().length > 0 && !sending;
@@ -2354,6 +2378,18 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                     </div>
                                 );
                             } catch { /* fall through */ }
+                        }
+
+                        if (msg.type === 'gif' || (text === '[GIF]' && msg.metadata?.gifUrl)) {
+                            const gifUrl = msg.metadata?.gifUrl || text;
+                            return (
+                                <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start', padding: '4px 0' }}>
+                                    <div style={{ maxWidth: 240, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06,#110d04,#0a0703)', border: '1px solid rgba(197,160,89,0.35)' }}>
+                                        <img src={gifUrl} style={{ width: '100%', display: 'block', maxHeight: 200, objectFit: 'contain' }} alt="" />
+                                    </div>
+                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.35)', marginTop: 3 }}>{timeStr}</span>
+                                </div>
+                            );
                         }
 
                         if (text.startsWith('TASK_FEEDBACK::')) {
@@ -2409,11 +2445,33 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
 
             {sendError && <div style={{ padding: '6px 14px', background: 'rgba(255,0,0,0.08)', color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', textAlign: 'center' }}>{sendError}</div>}
 
+            {chatTab === 'chat' && showGifPicker && (
+                <div style={{ maxHeight: '45vh', overflowY: 'auto', borderTop: '1px solid rgba(197,160,89,0.15)', background: '#0d0b08', padding: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                        <input type="text" placeholder="Search GIFs..." autoComplete="off"
+                            onChange={e => { clearTimeout((window as any).__gifTimer); (window as any).__gifTimer = setTimeout(() => searchGifs(e.target.value || 'funny'), 400); }}
+                            style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', padding: '7px 11px', borderRadius: 6, outline: 'none' }} />
+                        <button onClick={() => setShowGifPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '1.1rem', cursor: 'pointer' }}>✕</button>
+                    </div>
+                    {gifLoading && <div style={{ textAlign: 'center', padding: 20, fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.2)' }}>LOADING...</div>}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 5 }}>
+                        {gifResults.map((r: any) => (
+                            <div key={r.id} onClick={() => sendGif(r.url)} style={{ cursor: 'pointer', borderRadius: 6, overflow: 'hidden', aspectRatio: '1', background: 'rgba(255,255,255,0.04)' }}>
+                                <img src={r.preview} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ padding: '5px 0', textAlign: 'right' }}><span style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px' }}>via Tenor</span></div>
+                </div>
+            )}
+
             {chatTab === 'chat' && (
                 <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
                     <input type="text" value={input} onChange={e => { setInput(e.target.value); setSendError(''); }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
                         placeholder="Issue command..." autoComplete="off"
                         style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none' }} />
+                    <button onClick={() => { setShowGifPicker(!showGifPicker); if (!showGifPicker) searchGifs('funny'); }}
+                        style={{ background: showGifPicker ? 'rgba(197,160,89,0.15)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: showGifPicker ? '#c5a059' : 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', fontWeight: 700, padding: '10px', cursor: 'pointer', flexShrink: 0, letterSpacing: '1px' }}>GIF</button>
                     <button onTouchEnd={e => { e.preventDefault(); sendMessage(); }} onClick={sendMessage}
                         style={{ background: canSend ? '#c5a059' : '#111', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: canSend ? '#000' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', letterSpacing: '1px', padding: '10px 14px', cursor: canSend ? 'pointer' : 'default', flexShrink: 0, fontWeight: 700, WebkitTapHighlightColor: 'transparent' }}>
                         {sending ? '...' : 'SEND'}

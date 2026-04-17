@@ -1539,6 +1539,7 @@ export default function DashboardPage() {
                                 <div className="c-foot">
                                     <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
                                     <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
+                                    <button onClick={() => (window as any).openChatGifPicker?.()} style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>GIF</button>
                                     <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
                                 </div>
                             </div>
