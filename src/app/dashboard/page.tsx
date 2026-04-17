@@ -892,6 +892,18 @@ export default function DashboardPage() {
                     Object.entries(serverReadMap).forEach(([email, ts]) => {
                         readMap[email.toLowerCase()] = new Date(ts as string).getTime();
                     });
+
+                    // Migration bridge: merge localStorage read state (old system) into DB map
+                    // Takes the newer timestamp from either source
+                    mappedUsers.forEach((u: any) => {
+                        const email = (u.member_id || '').toLowerCase();
+                        if (!email) return;
+                        const localTs = parseInt(localStorage.getItem('read_' + email) || '0');
+                        if (localTs > (readMap[email] || 0)) {
+                            readMap[email] = localTs;
+                        }
+                    });
+
                     setAdminReadMap(readMap);
                 } catch {}
 

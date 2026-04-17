@@ -35,6 +35,9 @@ export function markAsRead(id: string) {
     // Update single source of truth
     markReadInMap(email, now);
 
+    // Keep localStorage in sync (migration bridge)
+    try { localStorage.setItem('read_' + email, now.toString()); } catch {}
+
     // Persist to server
     fetch('/api/chat/mark-read', {
         method: 'POST',
@@ -265,8 +268,15 @@ export function selUser(id: string) {
     const target = document.querySelector(`#userList .u-item[data-id="${id}"]`);
     if (target) target.classList.add('active');
 
-    // Remove the visual mail dot (they're reading it now) but DON'T change sort position
-    if (target) target.classList.remove('has-msg');
+    // Remove the visual mail dot and dim the icon (they're reading it now) but DON'T change sort position
+    if (target) {
+        target.classList.remove('has-msg');
+        const mailSvg = target.querySelector('.active-msg');
+        if (mailSvg) {
+            mailSvg.classList.remove('active-msg');
+            mailSvg.classList.add('icon-dim');
+        }
+    }
 
     const vHome = document.getElementById('viewHome');
     if (vHome) vHome.style.display = 'none';
