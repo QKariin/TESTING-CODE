@@ -54,5 +54,5 @@ export async function POST(req: Request) {
         console.error('[presence/POST] update last_active failed:', error.message, 'email:', email);
         return NextResponse.json({ success: false, error: error.message });
     }
-    return NextResponse.json({ success: true, updated: count });
+    return NextResponse.json({ success: true });
 }
