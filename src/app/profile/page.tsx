@@ -8,6 +8,7 @@ import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scrip
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
+import { GlobalContent } from '@/app/dashboard/GlobalContent';
 // import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import {
@@ -114,6 +115,7 @@ export default function ProfilePage() {
     const [alertUploading, setAlertUploading] = useState(false);
     const [alertUploadDone, setAlertUploadDone] = useState(false);
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
+    const [showGlobal, setShowGlobal] = useState(false);
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
     const dismissedAlertWindowIdRef = useRef<string | null>(null);
     const [dutiesUploadedToday, setDutiesUploadedToday] = useState<boolean | null>(null);
@@ -762,6 +764,13 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
+                {/* GLOBAL INLINE PANEL - overlays content area when open */}
+                {showGlobal && (
+                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 40, position: 'relative' }}>
+                        <GlobalContent onClose={() => setShowGlobal(false)} userEmail={profile?.memberId || profile?.member_id || profile?.email || null} />
+                    </div>
+                )}
+
                 {/* MAIN CONTENT STAGE */}
                 <div id="viewServingTopDesktop" className="view-wrapper hidden" style={{ position: 'relative' }}>
                     <div id="gridStat1" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
@@ -852,7 +861,7 @@ export default function ProfilePage() {
                         )}
                     </div>
 
-                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
+                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: showGlobal ? 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.06))' : 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.22)'}`, gap: 6 }} onClick={() => setShowGlobal(!showGlobal)}>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
                         <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
@@ -1780,7 +1789,6 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* Global view lives at /global route - not rendered here */}
             <div id="globalViewOverlay" style={{ display: 'none' }}></div>
 
             {/* ── MOB CHAT OVERLAY - root level, above MOBILE_APP ── */}
