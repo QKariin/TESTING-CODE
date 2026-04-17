@@ -1923,6 +1923,7 @@ export default function ProfilePage() {
                             placeholder="speak..."
                             onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
                         />
+                        <button onClick={() => (window as any).openGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
                         <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>▶</button>
                     </div>
                 </div>
