@@ -140,8 +140,19 @@ export async function renderChat(messages: any[]) {
         // --- MEDIA HANDLER ---
         if (originalMsg) {
 
+            // A0. GIF CARD
+            if (m.type === 'gif' || (originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
+                const gifUrl = m.metadata?.gifUrl || originalMsg;
+                contentHtml = `
+                <div style="max-width:240px;width:60vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 8px 30px rgba(0,0,0,0.7);">
+                    <div style="width:100%;overflow:hidden;background:#0a0703;">
+                        <img src="${gifUrl}" onload="window.forceBottom()" style="width:100%;display:block;max-height:200px;object-fit:contain;" onerror="this.style.display='none'" />
+                    </div>
+                </div>`;
+            }
+
             // A. PROMOTION CARD
-            if (originalMsg.startsWith('PROMOTION_CARD::')) {
+            else if (originalMsg.startsWith('PROMOTION_CARD::')) {
                 try {
                     const d = JSON.parse(originalMsg.replace('PROMOTION_CARD::', ''));
                     const initials = (d.name || 'S')[0].toUpperCase();

@@ -2627,6 +2627,104 @@ export async function sendChatMessage() {
     }
 }
 
+// ─── PROFILE CHAT GIF PICKER ──────────────────────────────────────────────────
+
+let _profileGifOpen = false;
+let _profileGifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function _sendProfileGif(gifUrl: string) {
+    const { memberId } = getState();
+    if (!memberId) return;
+
+    try {
+        await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId, content: gifUrl, type: 'gif', metadata: { gifUrl } }),
+        });
+    } catch {}
+}
+
+export function openProfileGifPicker() {
+    if (_profileGifOpen) { closeProfileGifPicker(); return; }
+    _profileGifOpen = true;
+
+    const existing = document.getElementById('profileGifPickerOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'profileGifPickerOverlay';
+    overlay.style.cssText = `
+        position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+        width:min(420px, 96vw);max-height:55vh;
+        background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+        display:flex;flex-direction:column;overflow:hidden;z-index:9999;
+        box-shadow:0 8px 40px rgba(0,0,0,0.7);
+    `;
+
+    overlay.innerHTML = `
+        <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
+            <input id="profileGifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
+            <button onclick="window.closeProfileGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
+        </div>
+        <div id="profileGifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+        </div>
+        <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
+            <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const searchInput = overlay.querySelector('#profileGifSearchInput') as HTMLInputElement;
+    searchInput?.addEventListener('input', () => {
+        if (_profileGifTimeout) clearTimeout(_profileGifTimeout);
+        _profileGifTimeout = setTimeout(() => _searchProfileGifs(searchInput.value || 'funny'), 400);
+    });
+
+    _searchProfileGifs('funny');
+    setTimeout(() => searchInput?.focus(), 50);
+}
+
+async function _searchProfileGifs(q: string) {
+    const grid = document.getElementById('profileGifGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+
+    try {
+        const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
+        const { results } = await res.json();
+        if (!results?.length) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
+            return;
+        }
+        grid.innerHTML = results.map((r: any) => `
+            <div onclick="window._selectProfileGif('${encodeURIComponent(r.url)}')" style="cursor:pointer;border-radius:6px;overflow:hidden;aspect-ratio:1;background:rgba(255,255,255,0.04);">
+                <img src="${r.preview}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
+            </div>
+        `).join('');
+    } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
+    }
+}
+
+export function closeProfileGifPicker() {
+    _profileGifOpen = false;
+    document.getElementById('profileGifPickerOverlay')?.remove();
+}
+
+if (typeof window !== 'undefined') {
+    (window as any).openProfileGifPicker = openProfileGifPicker;
+    (window as any).closeProfileGifPicker = closeProfileGifPicker;
+    (window as any)._selectProfileGif = (encodedUrl: string) => {
+        const url = decodeURIComponent(encodedUrl);
+        closeProfileGifPicker();
+        _sendProfileGif(url);
+    };
+}
+
 export async function buyRealCoins(amount: number) {
     try {
         const res = await fetch('/api/stripe/coins', {
