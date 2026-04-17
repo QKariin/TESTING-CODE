@@ -27,6 +27,7 @@ export async function GET() {
         .filter((p: any) => (p.name || '').trim() !== '')
         .map((p: any) => ({
             name: p.name,
+            email: p.member_id || null,
             avatar: p.avatar_url || p.profile_picture_url || null,
             online: !!(p.last_active && p.last_active >= cutoff),
             last_active: p.last_active || null,

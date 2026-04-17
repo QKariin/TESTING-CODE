@@ -2029,8 +2029,9 @@ export async function initChatSystem() {
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload: any) => {
             const row = payload.new;
             if (!row) return;
-            const name = (row.name || row.member_id || '').toUpperCase();
-            if (name.includes('QUEEN') || name.includes('KARIN')) {
+            const email = (row.member_id || '').toLowerCase();
+            const name = (row.name || '').toUpperCase();
+            if (email === 'ceo@qkarin.com' || name.includes('QUEEN') || name.includes('KARIN')) {
                 _updateQueenStatus(row.last_active || null);
             }
         })
@@ -2425,9 +2426,13 @@ async function _fetchQueenStatus() {
     try {
         const res = await fetch('/api/global/presence', { cache: 'no-store' });
         const data = await res.json();
-        const queenEntry = (data.all || []).find((u: any) =>
-            (u.name || '').toUpperCase().includes('QUEEN') || (u.name || '').toUpperCase().includes('KARIN')
-        );
+        const allProfiles = data.all || [];
+        // Find Queen by admin email first, then fallback to name
+        const queenEntry =
+            allProfiles.find((u: any) => (u.email || '').toLowerCase() === 'ceo@qkarin.com') ||
+            allProfiles.find((u: any) =>
+                (u.name || '').toUpperCase().includes('QUEEN') || (u.name || '').toUpperCase().includes('KARIN')
+            );
         if (queenEntry) {
             _updateQueenStatus(queenEntry.last_active || null);
         }
