@@ -211,7 +211,12 @@ export function renderSidebar() {
             const mailPath = "M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z";
             const timerPath = "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z";
             const starPath = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
-            const hasActiveTask = u.activeTask && (!u.endTime || u.endTime > Date.now());
+            // Resolve endTime: use stored value, or calculate from assigned_at + 24h
+            let resolvedEndTime = u.endTime || null;
+            if (!resolvedEndTime && u.activeTask?.assigned_at) {
+                resolvedEndTime = new Date(u.activeTask.assigned_at).getTime() + (24 * 60 * 60 * 1000);
+            }
+            const hasActiveTask = u.activeTask && (!resolvedEndTime || resolvedEndTime > Date.now());
             const hasPendingReview = u.reviewQueue && u.reviewQueue.length > 0;
 
             html += `
