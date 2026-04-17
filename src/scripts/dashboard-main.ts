@@ -323,7 +323,7 @@ export function collapseFeedSection() {
 
 export async function adjustWallet(action: 'add' | 'sub') {
     if (!currId) return;
-    console.log(`Adjusting wallet for ${currId}: ${action}`);
+    console.log(`Adjusting wallet: ${action}`);
 
     const amount = action === 'add' ? 100 : -100;
     const result = await processCoinTransaction(currId, amount, "Admin Manual Adjustment");

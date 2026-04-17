@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from '../lib/hierarchyRules';
 import { uploadToSupabase, getVideoDuration, isVideo, extractAndUploadVideoThumbnail } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
+import { presenceKey } from './dashboard-presence';
 
 let globalTributes: any[] = [];
 export async function handleLogout() {
@@ -1843,7 +1844,7 @@ export async function initChatSystem() {
         email = 'pr.finsko@gmail.com';
     }
 
-    console.log('[CHAT] initChatSystem starting. Auth email:', email, 'userId:', userId);
+    console.log('[CHAT] initChatSystem starting');
 
     if (!email) {
         console.warn('[CHAT] initChatSystem: no email from auth, skipping');
@@ -1865,7 +1866,7 @@ export async function initChatSystem() {
     _presenceCh = supabase.channel('members-online');
     _presenceCh.subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
-            await _presenceCh.track({ email: email!.toLowerCase() });
+            await _presenceCh.track({ id: presenceKey(email!) });
         }
     });
 
