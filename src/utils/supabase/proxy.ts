@@ -147,7 +147,8 @@ export async function updateSession(request: NextRequest) {
             }
 
             // 3. If User on Tribute or Root -> go to Profile
-            if (isTributePage || pathname === '/') {
+            // But let /tribute/success through so it can verify and redirect to /onboarding
+            if ((isTributePage && pathname !== '/tribute/success') || pathname === '/') {
                 return NextResponse.redirect(new URL('/profile', request.url));
             }
 
