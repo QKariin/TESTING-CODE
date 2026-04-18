@@ -1518,9 +1518,9 @@ export default function DashboardPage() {
                 <div id="viewUser" style={{ display: 'none' }}>
                     {role === 'chatter' ? (
                         /* ── CHATTER: efficient split — wide chat left, compact panel right ── */
-                        <div className="split" style={{ background: 'transparent', gridTemplateColumns: '1fr 300px' }}>
-                            {/* LEFT: chat — full space */}
-                            <div className="chat-panel" style={{ background: 'transparent', border: 'none' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                            {/* LEFT: chat — edge to edge, no box */}
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                     <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.4)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
                                     <div>
@@ -1533,7 +1533,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="c-body" id="adminChatBox" style={{ flex: 1 }}></div>
+                                <div className="c-body" id="adminChatBox" style={{ flex: 1, minHeight: 0 }}></div>
 
                                 <div className="c-foot">
                                     <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
@@ -1543,7 +1543,6 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* RIGHT: compact info panel — single scrollable column */}
                             {/* RIGHT: single continuous scrollable panel */}
                             <div style={{ background: '#060606', borderLeft: '1px solid rgba(197,160,89,0.1)', overflowY: 'auto', overflowX: 'hidden', padding: '16px' }}>
                                 {/* Profile */}
