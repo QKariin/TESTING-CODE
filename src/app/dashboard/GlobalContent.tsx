@@ -84,7 +84,7 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
     }, []);
 
     return (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 51, background: '#04040e', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#04040e', display: 'flex', flexDirection: 'column' }}>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(var(--gold-rgb),0.15)', flexShrink: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)' }}>

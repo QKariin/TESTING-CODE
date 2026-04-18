@@ -1170,7 +1170,7 @@ export default function DashboardPage() {
 
                 {/* CHALLENGES INLINE PANEL - overlays content area when open */}
                 {showChallenges && (
-                    <div style={{ position: 'absolute', inset: 0, zIndex: 51, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
                         <ChallengesContent onClose={() => setShowChallenges(false)} />
                     </div>
                 )}
