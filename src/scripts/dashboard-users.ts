@@ -311,6 +311,8 @@ export async function updateDetail(u: any) {
     updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
+    updateChatterRoutine(u);
+    updateChatterPending(u);
 
     // Notify React of lock state for this user
     if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
@@ -648,6 +650,111 @@ export function updateTaskQueue(u: any) {
             <div style="font-family:'Rajdhani', sans-serif; font-size:0.65rem; color:#666; margin-top:10px; text-transform:uppercase; letter-spacing:1px;">Tap to view full queue &rarr;</div>
         </div>
     `;
+}
+
+/** Routine section in chatter right panel — shows today's proof with approve/reject */
+function updateChatterRoutine(u: any) {
+    const container = document.getElementById('chatter_RoutineContent');
+    if (!container) return;
+
+    const routineName = (u.routine || '').toUpperCase();
+    if (!routineName) {
+        container.innerHTML = `<div style="color:#444;font-size:0.55rem;">No routine assigned</div>`;
+        return;
+    }
+
+    const isDone = u.routineDoneToday === true;
+    const todayStr = new Date().toDateString();
+    const history: any[] = u.routineHistory || u.routinehistory || [];
+    const todayEntry = history.slice().reverse().find((h: any) =>
+        h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === todayStr
+    );
+
+    const statusColor = isDone ? '#4ade80' : '#dc3c3c';
+    const statusText = isDone ? 'SUBMITTED' : 'NOT DONE';
+
+    let proofHtml = '';
+    if (todayEntry) {
+        const proofStatus = todayEntry.status;
+        const isVideo = todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i);
+        const thumb = isVideo ? (todayEntry.thumbnail_url || null) : null;
+
+        const mediaHtml = isVideo
+            ? (thumb
+                ? `<div style="position:relative;cursor:pointer;" onclick="window.open('${todayEntry.proofUrl}','_blank')">
+                     <img src="${thumb}" style="width:100%;display:block;border-radius:6px;max-height:180px;object-fit:cover;">
+                     <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);border-radius:6px;">
+                       <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg>
+                     </div>
+                   </div>`
+                : `<div style="background:#0a0a0a;height:70px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;" onclick="window.open('${todayEntry.proofUrl}','_blank')">
+                     <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(197,160,89,0.6)"><path d="M8 5v14l11-7z"/></svg>
+                   </div>`)
+            : `<img src="${todayEntry.proofUrl}" style="width:100%;display:block;border-radius:6px;max-height:200px;object-fit:cover;cursor:pointer;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`;
+
+        let actionHtml = '';
+        if (proofStatus === 'approve') {
+            actionHtml = `<div style="text-align:center;padding:8px;font-family:'Orbitron';font-size:0.5rem;color:#4ade80;letter-spacing:2px;background:rgba(0,200,0,0.08);border-radius:6px;margin-top:6px;">✓ APPROVED</div>`;
+        } else if (proofStatus === 'reject') {
+            actionHtml = `<div style="text-align:center;padding:8px;font-family:'Orbitron';font-size:0.5rem;color:#ff4444;letter-spacing:2px;background:rgba(200,0,0,0.08);border-radius:6px;margin-top:6px;">✗ REJECTED</div>`;
+        } else if (todayEntry.id) {
+            actionHtml = `<div style="display:flex;gap:6px;margin-top:6px;">
+                <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:9px 4px;background:rgba(0,150,0,0.15);color:#4ade80;border:1px solid rgba(0,200,0,0.3);border-radius:6px;font-family:'Orbitron';font-size:0.45rem;letter-spacing:1px;cursor:pointer;font-weight:700;">✓ APPROVE</button>
+                <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:9px 4px;background:rgba(150,0,0,0.15);color:#ff4444;border:1px solid rgba(200,0,0,0.3);border-radius:6px;font-family:'Orbitron';font-size:0.45rem;letter-spacing:1px;cursor:pointer;font-weight:700;">✗ REJECT</button>
+            </div>`;
+        }
+
+        proofHtml = `<div style="margin-top:8px;border-radius:6px;overflow:hidden;">${mediaHtml}</div>${actionHtml}`;
+    }
+
+    container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-family:'Orbitron';font-size:0.5rem;color:#aaa;letter-spacing:1px;">${routineName}</span>
+            <span style="font-family:'Orbitron';font-size:0.42rem;color:${statusColor};letter-spacing:1px;font-weight:700;">${statusText}</span>
+        </div>
+        ${proofHtml}
+    `;
+}
+
+/** Pending review items in chatter right panel */
+function updateChatterPending(u: any) {
+    const section = document.getElementById('chatter_PendingSection');
+    const container = document.getElementById('chatter_PendingContent');
+    if (!section || !container) return;
+
+    const queue = u.reviewQueue || [];
+    if (queue.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+
+    const pendingJson = JSON.stringify(queue);
+    if ((u as any)._lastChatterPendingJson === pendingJson) return;
+    (u as any)._lastChatterPendingJson = pendingJson;
+
+    container.innerHTML = queue.map((t: any) => {
+        const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
+        const actType = isRoutine ? 'ROUTINE' : 'TASK';
+        const actColor = isRoutine ? '#4ade80' : '#c5a059';
+        const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
+
+        return `
+            <div onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')" style="display:flex;align-items:center;gap:10px;padding:8px;background:rgba(0,0,0,0.25);border-radius:6px;cursor:pointer;margin-bottom:6px;border:1px solid rgba(197,160,89,0.1);transition:background 0.15s;" onmouseover="this.style.background='rgba(197,160,89,0.06)'" onmouseout="this.style.background='rgba(0,0,0,0.25)'">
+                <div style="width:40px;height:40px;border-radius:6px;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid #1a1a1a;">
+                    ${isVideo
+                        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)"><path d="M8 5v14l11-7z"/></svg>`
+                        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(197,160,89,0.4)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`}
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Orbitron';font-size:0.42rem;color:${actColor};letter-spacing:1px;font-weight:700;">${actType}</div>
+                    <div style="font-size:0.5rem;color:#666;margin-top:2px;">${dateStr}</div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.35rem;color:#e85d75;letter-spacing:1px;">REVIEW</div>
+            </div>`;
+    }).join('');
 }
 
 export async function adminPromoteUser(memberId: string) {

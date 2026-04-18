@@ -1677,6 +1677,18 @@ export default function DashboardPage() {
                                     <button onClick={() => (window as any).openTaskGallery()} style={{ fontSize: '0.6rem', padding: '9px 0', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.25)', color: '#c5a059', borderRadius: 6, cursor: 'pointer', letterSpacing: '1px', width: '100%', fontWeight: 600 }}>+ Assign Directive</button>
                                 </div>
 
+                                {/* ── ROUTINE ── */}
+                                <div id="chatter_RoutineSection" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Routine</div>
+                                    <div id="chatter_RoutineContent" style={{ color: '#444', fontSize: '0.55rem' }}>No routine assigned</div>
+                                </div>
+
+                                {/* ── PENDING TASKS ── */}
+                                <div id="chatter_PendingSection" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px', display: 'none' }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Pending Review</div>
+                                    <div id="chatter_PendingContent"></div>
+                                </div>
+
                                 {/* ── KNEELING ── */}
                                 <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
                                     <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Kneeling</div>
