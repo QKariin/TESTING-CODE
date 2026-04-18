@@ -12,14 +12,12 @@ export function startPresenceHeartbeat(userId: string, email?: string): ReturnTy
                 body: JSON.stringify({ userId, clientData: {} }),
             }).catch(() => {});
         }
-        // Email-based presence heartbeat (reliable fallback, same as dashboard)
-        if (email) {
-            fetch('/api/global/presence', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
-            }).catch(() => {});
-        }
+        // Presence heartbeat — sends both email and userId for reliable matching
+        fetch('/api/global/presence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email || undefined, userId: userId || undefined }),
+        }).catch(() => {});
     };
 
     ping(); // immediate first ping

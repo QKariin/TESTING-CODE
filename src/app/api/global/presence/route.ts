@@ -39,20 +39,59 @@ export async function GET() {
 }
 
 // POST - heartbeat: update profiles.last_active (same field dashboard uses for online detection)
+// Tries member_id match first, then falls back to auth user UUID lookup.
+// This handles users whose auth email differs from their profile member_id.
 export async function POST(req: Request) {
-    const { email } = await req.json();
-    if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
+    const { email, userId } = await req.json();
+    if (!email && !userId) return NextResponse.json({ error: 'Email or userId required' }, { status: 400 });
 
     const now = new Date().toISOString();
 
-    const { error } = await supabaseAdmin
-        .from('profiles')
-        .update({ last_active: now })
-        .ilike('member_id', email);
+    // Try 1: direct member_id match
+    if (email) {
+        const { data, error } = await supabaseAdmin
+            .from('profiles')
+            .update({ last_active: now })
+            .ilike('member_id', email)
+            .select('member_id');
 
-    if (error) {
-        console.error('[presence/POST] update last_active failed:', error.message, 'email:', email);
-        return NextResponse.json({ success: false, error: error.message });
+        if (!error && data && data.length > 0) {
+            return NextResponse.json({ success: true });
+        }
     }
-    return NextResponse.json({ success: true });
+
+    // Try 2: UUID match (profiles.ID = auth user UUID)
+    if (userId) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+        if (isUuid) {
+            const { data, error } = await supabaseAdmin
+                .from('profiles')
+                .update({ last_active: now })
+                .eq('ID', userId)
+                .select('member_id');
+
+            if (!error && data && data.length > 0) {
+                return NextResponse.json({ success: true });
+            }
+        }
+    }
+
+    // Try 3: name-based fallback for queen (auth email domain mismatch)
+    if (email) {
+        const QUEEN_DOMAINS = ['qkarin.com'];
+        const domain = email.split('@')[1]?.toLowerCase();
+        if (domain && QUEEN_DOMAINS.includes(domain)) {
+            const { data, error } = await supabaseAdmin
+                .from('profiles')
+                .update({ last_active: now })
+                .ilike('name', '%queen%')
+                .select('member_id');
+
+            if (!error && data && data.length > 0) {
+                return NextResponse.json({ success: true });
+            }
+        }
+    }
+
+    return NextResponse.json({ success: false, error: 'No matching profile found' });
 }

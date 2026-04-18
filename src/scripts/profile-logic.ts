@@ -2035,16 +2035,16 @@ export async function initChatSystem() {
             if (!row) return;
             const email = (row.member_id || '').toLowerCase();
             const name = (row.name || '').toUpperCase();
-            if (email === 'ceo@qkarin.com' || email === 'queen@qkarin.com' || name.includes('QUEEN') || name.includes('KARIN')) {
+            if (email.includes('qkarin') || name.includes('QUEEN') || name.includes('KARIN')) {
                 _updateQueenStatus(row.last_active || null);
             }
         })
         .subscribe();
 
     // Start periodic queen status polling (every 60s) so members always see live status
-    const QUEEN_EMAILS = ['ceo@qkarin.com', 'queen@qkarin.com'];
+    const isQueen = email!.toLowerCase().includes('qkarin') || email!.toLowerCase() === 'xxxqkarinxxx@gmail.com';
     if (_queenReapplyInterval) { clearInterval(_queenReapplyInterval); _queenReapplyInterval = null; }
-    if (QUEEN_EMAILS.includes(email!)) {
+    if (isQueen) {
         // Current user IS the queen — always show online, no need to poll yourself
         _isQueenUser = true;
         _updateQueenStatus(new Date().toISOString());
@@ -2452,15 +2452,16 @@ async function _fetchQueenStatus() {
         const res = await fetch('/api/global/presence', { cache: 'no-store' });
         const data = await res.json();
         const allProfiles = data.all || [];
-        // Find Queen by admin email first, then fallback to name
+        // Find Queen by name or email domain
         const queenEntry =
             allProfiles.find((u: any) => {
-                const e = (u.email || '').toLowerCase();
-                return e === 'ceo@qkarin.com' || e === 'queen@qkarin.com';
+                const n = (u.name || '').toUpperCase();
+                return n.includes('QUEEN') || n.includes('KARIN');
             }) ||
-            allProfiles.find((u: any) =>
-                (u.name || '').toUpperCase().includes('QUEEN') || (u.name || '').toUpperCase().includes('KARIN')
-            );
+            allProfiles.find((u: any) => {
+                const e = (u.email || '').toLowerCase();
+                return e === 'ceo@qkarin.com' || e === 'queen@qkarin.com' || e.includes('qkarin');
+            });
         if (queenEntry) {
             _updateQueenStatus(queenEntry.last_active || null);
         }

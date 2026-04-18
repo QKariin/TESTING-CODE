@@ -732,14 +732,12 @@ export default function DashboardPage() {
                             body: JSON.stringify({ userId: user.id, clientData: {} }),
                         }).catch(() => {});
                     }
-                    // Also update via email-based presence heartbeat (reliable fallback)
-                    if (user.email) {
-                        fetch('/api/global/presence', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email: user.email }),
-                        }).catch(() => {});
-                    }
+                    // Also update via email-based presence heartbeat (sends both email + userId)
+                    fetch('/api/global/presence', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: user.email || undefined, userId: user.id || undefined }),
+                    }).catch(() => {});
                 };
                 ping(); // immediate first ping
                 heartbeatInterval = setInterval(ping, 60 * 1000); // then every 60s
