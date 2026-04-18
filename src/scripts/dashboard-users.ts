@@ -512,7 +512,7 @@ function updateActiveTask(u: any) {
         activeStatus.style.color = hasActive ? (isPending ? "var(--pink)" : "var(--gold)") : "#666";
     }
 
-    // Sync chatter compact status bar
+    // Sync chatter compact panel
     const chatterDot = document.getElementById('statusDotChatter');
     const chatterStatus = document.getElementById('dActiveStatusChatter');
     const chatterText = document.getElementById('dActiveTextChatter');
@@ -523,6 +523,18 @@ function updateActiveTask(u: any) {
     }
     if (chatterText) {
         chatterText.innerText = hasActive && u.activeTask?.taskName ? u.activeTask.taskName : '';
+    }
+    // Chatter compact right panel — active directive display
+    const chatterTask = document.getElementById('chatter_ActiveTask');
+    if (chatterTask) {
+        if (hasActive) {
+            const taskName = u.activeTask?.taskName || u.activeTask?.text || u.activeTask?.TaskText || 'ASSIGNED';
+            const statusLabel = isPending ? 'PENDING REVIEW' : 'ACTIVE';
+            const statusColor = isPending ? '#e85d75' : '#c5a059';
+            chatterTask.innerHTML = `<span style="color:${statusColor};font-size:0.42rem;letter-spacing:1px">${statusLabel}</span><div style="color:#aaa;margin-top:3px;font-size:0.5rem">${taskName}</div>`;
+        } else {
+            chatterTask.innerHTML = '<span style="color:#333">NONE</span>';
+        }
     }
 
     if (hasActive) {
