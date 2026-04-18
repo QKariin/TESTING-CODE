@@ -12,7 +12,7 @@ export async function GET() {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         const email = user?.email?.toLowerCase();
-        if (!email) return NextResponse.json({ role: 'none' });
+        if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         if (CEO_EMAILS.includes(email)) {
             return NextResponse.json({ role: 'queen' });

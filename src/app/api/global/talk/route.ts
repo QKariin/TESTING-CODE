@@ -47,10 +47,18 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const { getCaller, isOwnerOrCEO } = await import('@/lib/api-auth');
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const { content, senderEmail } = body;
     if (!content?.trim()) return NextResponse.json({ error: 'Content required' }, { status: 400 });
     if (!senderEmail) return NextResponse.json({ error: 'Sender required' }, { status: 400 });
+
+    if (!isOwnerOrCEO(caller, senderEmail)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const { data, error } = await supabaseAdmin
         .from('chats')

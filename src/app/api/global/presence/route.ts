@@ -42,8 +42,17 @@ export async function GET() {
 // Tries member_id match first, then falls back to auth user UUID lookup.
 // This handles users whose auth email differs from their profile member_id.
 export async function POST(req: Request) {
+    const { getCaller, isOwnerOrCEO } = await import('@/lib/api-auth');
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { email, userId } = await req.json();
     if (!email && !userId) return NextResponse.json({ error: 'Email or userId required' }, { status: 400 });
+
+    const identity = userId || email;
+    if (!isOwnerOrCEO(caller, identity)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const now = new Date().toISOString();
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { getMasterData } from '@/actions/velo-actions';
 import { cached } from '@/lib/api-cache';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ const QUEUE_TTL  = 300_000;  // 5min - review queue (each refresh loads all task
 const TRIBUTE_TTL = 300_000; // 5min - tributes change infrequently
 
 export async function GET(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');

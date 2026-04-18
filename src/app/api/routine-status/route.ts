@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cached } from '@/lib/api-cache';
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
@@ -97,10 +98,14 @@ async function getRoutineStatus(memberId: string, tz: string) {
 }
 
 export async function GET(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId') || searchParams.get('email');
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
+        if (!isOwnerOrCEO(caller, memberId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         const tz = searchParams.get('tz') || 'UTC';
         const key = `routine:${memberId.toLowerCase()}`;
         const data = await cached(key, TTL, () => getRoutineStatus(memberId, tz));
@@ -112,10 +117,14 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await req.json();
         const memberId = body.memberId || body.email;
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
+        if (!isOwnerOrCEO(caller, memberId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         const tz = body.tz || 'UTC';
         const key = `routine:${memberId.toLowerCase()}`;
         const data = await cached(key, TTL, () => getRoutineStatus(memberId, tz));

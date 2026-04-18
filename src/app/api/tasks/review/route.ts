@@ -1,10 +1,15 @@
 // src/app/api/tasks/review/route.ts
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller.email)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+
     try {
         const { submissionId, memberId, action, bonus } = await req.json();
 

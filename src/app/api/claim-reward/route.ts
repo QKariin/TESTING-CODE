@@ -1,16 +1,24 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service'; // Use Admin to bypass RLS for increments
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { choice, memberId, memberEmail } = await req.json();
         // Accept memberId (UUID) as primary, fall back to legacy memberEmail
         const profileId = memberId || memberEmail;
 
         if (!profileId) return NextResponse.json({ error: 'No memberId' }, { status: 400 });
+
+        if (!isOwnerOrCEO(caller, profileId)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         // Define Rewards
         const COIN_REWARD = 10;

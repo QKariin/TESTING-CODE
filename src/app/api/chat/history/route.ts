@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export async function GET(req: Request) {
     try {
+        const caller = await getCaller();
+        if (!caller) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId') || searchParams.get('email');
         const requester = searchParams.get('requester')?.toLowerCase();
 
         if (!memberId) {
             return NextResponse.json({ success: false, error: "memberId is required." }, { status: 400 });
+        }
+
+        if (!isOwnerOrCEO(caller, memberId)) {
+            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
         // Robust administrative client initialization
@@ -76,12 +84,19 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        const caller = await getCaller();
+        if (!caller) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
         const body = await req.json();
         const { memberId: rawMemberId, email, since, requester } = body;
         const memberId = rawMemberId || email; // accept both memberId (UUID) and legacy email
 
         if (!memberId) {
             return NextResponse.json({ success: false, error: "memberId is required." }, { status: 400 });
+        }
+
+        if (!isOwnerOrCEO(caller, memberId)) {
+            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
         // Robust administrative client initialization

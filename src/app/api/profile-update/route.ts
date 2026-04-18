@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +18,19 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await req.json();
         const { memberEmail, field, value, cost } = body;
 
         if (!memberEmail || !field || value === undefined) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        if (!isOwnerOrCEO(caller, memberEmail)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         // Whitelist of allowed fields

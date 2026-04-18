@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,16 @@ async function getTaskRow(memberId: string): Promise<{ task: any; taskId: string
 }
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { memberId, tz = 'UTC' } = await req.json();
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
+
+        if (!isOwnerOrCEO(caller, memberId)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         // Fetch current record
         const { task, taskId, taskEmail } = await getTaskRow(memberId);
