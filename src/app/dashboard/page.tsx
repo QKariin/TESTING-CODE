@@ -1626,7 +1626,10 @@ export default function DashboardPage() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                         <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.88rem', color: '#f0ebe3', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.88rem', color: '#f0ebe3', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
+                                                <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} style={{ cursor: 'pointer', opacity: 0.25, fontSize: '0.55rem', color: '#c5a059', flexShrink: 0, transition: 'opacity 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.7'; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.25'; }} title="Rename user">&#9998;</span>
+                                            </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                                                 <div id="dMirrorHierarchy" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>—</div>
                                                 <div id="dMirrorStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', letterSpacing: '1px' }}>—</div>

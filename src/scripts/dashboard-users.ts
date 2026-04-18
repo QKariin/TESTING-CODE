@@ -794,6 +794,37 @@ export async function adminPromoteUser(memberId: string) {
     } catch (_) {}
 }
 
+export async function adminRenameUser(memberId: string) {
+    if (!memberId) return;
+    const currentName = document.getElementById('dMirrorName')?.textContent || '';
+    const newName = prompt('Rename user across all tables:', currentName);
+    if (!newName || !newName.trim() || newName.trim() === currentName) return;
+
+    try {
+        const res = await fetch('/api/rename-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: memberId, newName: newName.trim() }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Update DOM immediately
+            setText('dMirrorName', data.newName);
+            setText('chatterHeaderName', data.newName);
+            // Update cached user object
+            const u = users.find((x: any) => x.member_id === memberId || x.memberId === memberId);
+            if (u) u.name = data.newName;
+            // Update sidebar list name
+            const listItem = document.querySelector(`[data-uid="${memberId}"] .u-name`) as HTMLElement;
+            if (listItem) listItem.textContent = data.newName;
+        } else {
+            alert('Rename failed: ' + (data.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Rename failed: network error');
+    }
+}
+
 function _notifyMember(memberId: string, event: 'routine_approved' | 'routine_rejected') {
     import('@/utils/supabase/client').then(({ createClient }) => {
         const supabase = createClient();
@@ -846,6 +877,7 @@ if (typeof window !== 'undefined') {
     (window as any).deleteQueueItem = deleteQueueItem;
     (window as any).toggleTaskDrawer = toggleTaskDrawer;
     (window as any).adminPromoteUser = adminPromoteUser;
+    (window as any).adminRenameUser = adminRenameUser;
     (window as any).approveRoutineFromPanel = approveRoutineFromPanel;
     (window as any).rejectRoutineFromPanel = rejectRoutineFromPanel;
 }
