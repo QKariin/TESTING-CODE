@@ -709,24 +709,27 @@ async function updateChatterRoutine(u: any) {
         </div>`;
     }
 
-    // Media element
-    const mediaHtml = isVideo
-        ? `<div style="position:relative;cursor:pointer;" onclick="window.open('${signedUrl}','_blank')">
-             <img src="${signedThumb || ''}" style="width:100%;display:block;min-height:120px;object-fit:cover;${!signedThumb ? 'background:#0a0a0a;' : ''}" onerror="this.style.background='#0a0a0a';this.style.minHeight='120px'">
-             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">
-               <svg width="40" height="40" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg>
-             </div>
-           </div>`
-        : `<img src="${signedUrl}" style="width:100%;display:block;min-height:120px;object-fit:cover;cursor:pointer;" onclick="window.open('${signedUrl}','_blank')" onerror="this.style.background='#0a0a0a';this.style.minHeight='120px'">`;
+    // Small square thumbnail
+    const thumbSrc = isVideo ? (signedThumb || '') : signedUrl;
+    const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><path d="M8 5v14l11-7z"/></svg></div>` : '';
 
     container.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-family:'Orbitron';font-size:0.5rem;color:#aaa;letter-spacing:1px;">${routineName}</span>
-        </div>
-        <div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(197,160,89,0.15);">
-            ${mediaHtml}
-            ${statusBadge}
-            ${actionOverlay}
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div style="position:relative;width:50px;height:50px;border-radius:6px;overflow:hidden;flex-shrink:0;border:1px solid rgba(197,160,89,0.2);cursor:pointer;background:#0a0a0a;" onclick="window.open('${signedUrl}','_blank')">
+                <img src="${thumbSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                ${playIcon}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Orbitron';font-size:0.48rem;color:#aaa;letter-spacing:1px;">${routineName}</div>
+                ${proofStatus === 'approve'
+                    ? `<div style="font-family:'Orbitron';font-size:0.4rem;color:#4ade80;letter-spacing:1px;margin-top:3px;">✓ APPROVED</div>`
+                    : proofStatus === 'reject'
+                    ? `<div style="font-family:'Orbitron';font-size:0.4rem;color:#ff4444;letter-spacing:1px;margin-top:3px;">✗ REJECTED</div>`
+                    : `<div style="display:flex;gap:4px;margin-top:4px;">
+                        <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="padding:5px 10px;background:rgba(0,150,0,0.2);color:#4ade80;border:1px solid rgba(0,200,0,0.3);border-radius:4px;font-family:'Orbitron';font-size:0.38rem;letter-spacing:1px;cursor:pointer;font-weight:700;">✓</button>
+                        <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="padding:5px 10px;background:rgba(150,0,0,0.2);color:#ff4444;border:1px solid rgba(200,0,0,0.3);border-radius:4px;font-family:'Orbitron';font-size:0.38rem;letter-spacing:1px;cursor:pointer;font-weight:700;">✗</button>
+                      </div>`}
+            </div>
         </div>`;
 }
 
@@ -751,38 +754,26 @@ async function updateChatterPending(u: any) {
     if ((u as any)._lastChatterPendingJson === pendingJson) return;
     (u as any)._lastChatterPendingJson = pendingJson;
 
-    // Build cards with proof images directly visible
     const cards: string[] = [];
     for (const t of queue) {
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        const signedUrl = t.proofUrl ? await getSignedUrl(t.proofUrl) : '';
-        const signedThumb = (isVideo && t.thumbnail_url) ? await getSignedUrl(t.thumbnail_url) : null;
-
-        let mediaHtml = '';
-        if (signedUrl) {
-            if (isVideo) {
-                mediaHtml = `<div style="position:relative;">
-                    <img src="${signedThumb || ''}" style="width:100%;display:block;max-height:160px;object-fit:cover;${!signedThumb ? 'background:#0a0a0a;min-height:80px;' : ''}" onerror="this.style.background='#0a0a0a';this.style.minHeight='80px'">
-                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg>
-                    </div>
-                </div>`;
-            } else {
-                mediaHtml = `<img src="${signedUrl}" style="width:100%;display:block;max-height:160px;object-fit:cover;" onerror="this.style.display='none'">`;
-            }
-        }
+        const url = t.proofUrl ? await getSignedUrl(t.proofUrl) : '';
+        const thumb = (isVideo && t.thumbnail_url) ? await getSignedUrl(t.thumbnail_url) : null;
+        const imgSrc = isVideo ? (thumb || '') : url;
+        const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>` : '';
 
         cards.push(`
-            <div onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')" style="border-radius:8px;overflow:hidden;cursor:pointer;border:1px solid rgba(197,160,89,0.12);margin-bottom:8px;background:rgba(0,0,0,0.2);">
-                ${mediaHtml}
-                <div style="padding:8px 10px;display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        <div style="font-family:'Orbitron';font-size:0.42rem;color:#c5a059;letter-spacing:1px;font-weight:700;">TASK</div>
-                        <div style="font-size:0.45rem;color:#555;margin-top:2px;">${dateStr}</div>
-                    </div>
-                    <div style="font-family:'Orbitron';font-size:0.38rem;color:#e85d75;letter-spacing:1px;padding:4px 8px;background:rgba(232,93,117,0.1);border-radius:4px;">REVIEW</div>
+            <div onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')" style="display:flex;align-items:center;gap:10px;padding:6px;background:rgba(0,0,0,0.2);border-radius:6px;cursor:pointer;margin-bottom:4px;border:1px solid rgba(197,160,89,0.08);">
+                <div style="position:relative;width:40px;height:40px;border-radius:5px;overflow:hidden;flex-shrink:0;background:#0a0a0a;border:1px solid #1a1a1a;">
+                    ${imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
+                    ${playIcon}
                 </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-family:'Orbitron';font-size:0.4rem;color:#c5a059;letter-spacing:1px;font-weight:700;">TASK</div>
+                    <div style="font-size:0.42rem;color:#555;margin-top:1px;">${dateStr}</div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.35rem;color:#e85d75;letter-spacing:1px;">REVIEW</div>
             </div>`);
     }
 
