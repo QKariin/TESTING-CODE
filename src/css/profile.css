@@ -4284,9 +4284,9 @@
 .paid-media-card .pm-img-wrap {
     position: relative;
     width: 100%;
-    min-height: 140px;
+    min-height: 160px;
     overflow: hidden;
-    background: #0a0703;
+    background: linear-gradient(135deg, #1a1209, #0d0905, #1a1209);
 }
 .paid-media-card .pm-img-wrap img,
 .paid-media-card .pm-img-wrap video {
@@ -4297,12 +4297,14 @@
 }
 .paid-media-card .pm-img-wrap.pm-locked img,
 .paid-media-card .pm-img-wrap.pm-locked video {
-    filter: blur(24px);
-    transition: filter 0.8s cubic-bezier(0.4,0,0.2,1);
+    filter: blur(14px) brightness(0.65);
+    transform: scale(1.15);
+    transition: filter 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
 }
 .paid-media-card .pm-img-wrap.pm-revealing img,
 .paid-media-card .pm-img-wrap.pm-revealing video {
-    filter: blur(0px);
+    filter: blur(0px) brightness(1);
+    transform: scale(1);
 }
 .paid-media-card .pm-overlay {
     position: absolute;
@@ -4311,10 +4313,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(2px);
+    gap: 14px;
+    background: rgba(0,0,0,0.35);
     transition: opacity 0.5s ease-out;
+    z-index: 2;
 }
 .paid-media-card .pm-overlay.pm-revealing {
     opacity: 0;
@@ -4322,21 +4324,23 @@
 }
 .paid-media-card .pm-price-tag {
     font-family: 'Cinzel', serif;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     color: #c5a059;
     font-weight: 700;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9);
 }
 .paid-media-card .pm-unlock-btn {
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.5rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 2px;
-    padding: 8px 24px;
-    border: 1px solid rgba(197,160,89,0.5);
-    background: linear-gradient(135deg, rgba(197,160,89,0.25), rgba(139,105,20,0.2));
+    letter-spacing: 3px;
+    padding: 12px 32px;
+    border: 2px solid #c5a059;
+    background: linear-gradient(135deg, rgba(197,160,89,0.35), rgba(139,105,20,0.3));
     color: #c5a059;
-    border-radius: 6px;
+    border-radius: 8px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
     cursor: pointer;
     transition: all 0.2s;
 }

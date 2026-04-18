@@ -954,8 +954,24 @@ export async function sendPaidMedia() {
             }),
         });
         const data = await res.json();
-        if (data.success && data.data) {
-            appendChatMessage(data.data);
+        if (data.success) {
+            // Construct message locally for instant append (real row syncs via realtime)
+            const localMsg = {
+                member_id: conversationEmail,
+                sender_email: adminEmail,
+                content: 'PAID_MEDIA',
+                type: 'paid_media',
+                created_at: new Date().toISOString(),
+                metadata: {
+                    isQueen: true,
+                    paid_media_id: data.paidMediaId,
+                    media_url: item.media_url,
+                    media_type: item.media_type,
+                    thumbnail_url: item.thumbnail_url || null,
+                    price,
+                },
+            };
+            appendChatMessage(localMsg);
             _vaultSelectedId = null;
             _renderVault();
             _updateSendBar();

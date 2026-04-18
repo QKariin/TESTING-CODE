@@ -77,6 +77,8 @@ export async function POST(req: Request) {
         }
 
         // 2. Insert chat message of type 'paid_media'
+        // Insert without .select() to avoid RETURNING id issues
+        // (matches pattern in /api/chat/send)
         const insertData = {
             member_id: conversationId,
             sender_email: senderEmail,
@@ -93,23 +95,15 @@ export async function POST(req: Request) {
             },
         };
 
-        const { data: chatMsg, error: chatErr } = await supabaseAdmin
+        const { error: chatErr } = await supabaseAdmin
             .from('chats')
-            .insert(insertData)
-            .select()
-            .single();
+            .insert(insertData);
 
         if (chatErr) {
             // Rollback: delete paid_media row
             await supabaseAdmin.from('paid_media').delete().eq('id', paidMedia.id);
             return NextResponse.json({ error: chatErr.message }, { status: 500 });
         }
-
-        // Update backreference
-        await supabaseAdmin
-            .from('paid_media')
-            .update({ chat_message_id: chatMsg.id })
-            .eq('id', paidMedia.id);
 
         // Push notification to sub
         sendPush(
@@ -119,7 +113,7 @@ export async function POST(req: Request) {
             'https://throne.qkarin.com/profile'
         );
 
-        return NextResponse.json({ success: true, data: chatMsg, paidMediaId: paidMedia.id });
+        return NextResponse.json({ success: true, paidMediaId: paidMedia.id });
     } catch (err: any) {
         console.error('[paid-media/create] error:', err);
         return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });

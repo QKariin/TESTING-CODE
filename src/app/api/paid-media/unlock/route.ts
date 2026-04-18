@@ -94,14 +94,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to unlock media' }, { status: 500 });
         }
 
-        // 7. Insert system message about purchase
-        await supabaseAdmin.from('chats').insert({
-            member_id: pm.member_id,
-            sender_email: 'system',
-            content: `${profile.name || 'Subject'} unlocked paid media — ${pm.price} Capital`,
-            type: 'system',
-            metadata: { isSystem: true },
-        }).catch(() => {});
+        // 7. Insert system message about purchase (ignore errors)
+        try {
+            await supabaseAdmin.from('chats').insert({
+                member_id: pm.member_id,
+                sender_email: 'system',
+                content: `${profile.name || 'Subject'} unlocked paid media — ${pm.price} Capital`,
+                type: 'system',
+                metadata: { isSystem: true },
+            });
+        } catch (_) {}
 
         // 8. Push notification to dashboard
         sendPush(

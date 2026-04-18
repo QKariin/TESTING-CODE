@@ -2502,19 +2502,19 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         const pmType = meta.media_type || 'photo';
         const pmPrice = meta.price || 0;
         const isVid = pmType === 'video' || /\.(mp4|mov|webm)/i.test(pmUrl);
-        // Check if already unlocked from cached state
         const unlocked = _paidMediaUnlocked.has(pmId);
         const mediaTag = isVid
-            ? `<video src="${pmUrl}" preload="none" muted playsinline style="width:100%;max-height:240px;object-fit:cover;display:block;" ${unlocked ? 'controls' : ''}></video>`
-            : `<img src="${getOptimizedUrl(pmUrl, 300)}" style="width:100%;max-height:240px;object-fit:cover;display:block;" onerror="this.style.display='none'" />`;
+            ? `<video src="${pmUrl}" preload="metadata" muted playsinline style="width:100%;max-height:240px;object-fit:cover;display:block;" ${unlocked ? 'controls' : ''}></video>`
+            : `<img src="${getOptimizedUrl(pmUrl, 300)}" style="width:100%;max-height:240px;object-fit:cover;display:block;" />`;
+        const clickAction = unlocked ? `onclick="window._openPaidMediaModal('${pmUrl}','${isVid ? 'video' : 'photo'}')"` : '';
         const overlay = unlocked ? '' : `
             <div class="pm-overlay" id="pmOverlay_${pmId}">
                 <div class="pm-price-tag">♦ ${pmPrice.toLocaleString()}</div>
-                <button class="pm-unlock-btn" onclick="window._unlockPaidMedia('${pmId}',${pmPrice})">UNLOCK</button>
+                <button class="pm-unlock-btn" id="pmBtn_${pmId}" onclick="window._unlockPaidMedia('${pmId}',${pmPrice})">UNLOCK</button>
             </div>`;
         return `
             <div class="chat-gift-wrap">
-                <div class="paid-media-card" id="pmCard_${pmId}">
+                <div class="paid-media-card" id="pmCard_${pmId}" ${clickAction}>
                     <div class="pm-img-wrap ${unlocked ? '' : 'pm-locked'}" id="pmWrap_${pmId}">${mediaTag}${overlay}</div>
                     <div class="pm-footer">
                         <span class="pm-label">EXCLUSIVE MEDIA</span>
@@ -5759,11 +5759,11 @@ async function _unlockPaidMedia(paidMediaId: string, price: number) {
     const memberEmail = email || memberId || '';
 
     if ((wallet || 0) < price) {
-        alert(`Not enough Capital. You need ${price} but have ${wallet || 0}.`);
+        showPovertyModal('this exclusive media');
         return;
     }
 
-    const btn = document.querySelector(`#pmOverlay_${paidMediaId} .pm-unlock-btn`) as HTMLButtonElement;
+    const btn = document.getElementById(`pmBtn_${paidMediaId}`) as HTMLButtonElement;
     if (btn) { btn.textContent = 'UNLOCKING...'; btn.disabled = true; }
 
     try {
@@ -5775,33 +5775,16 @@ async function _unlockPaidMedia(paidMediaId: string, price: number) {
         const data = await res.json();
 
         if (data.success) {
-            // Update wallet
-            const newWallet = data.newWallet ?? (wallet - price);
+            const newWallet = data.newWallet ?? ((wallet || 0) - price);
             setState({ wallet: newWallet });
             document.querySelectorAll('#coins, #mobCoins').forEach(el => {
                 (el as HTMLElement).innerText = newWallet.toLocaleString();
             });
 
             _paidMediaUnlocked.add(paidMediaId);
-
-            // Blur-break animation
-            const wrap = document.getElementById(`pmWrap_${paidMediaId}`);
-            const overlay = document.getElementById(`pmOverlay_${paidMediaId}`);
-            if (wrap) { wrap.classList.remove('pm-locked'); wrap.classList.add('pm-revealing'); }
-            if (overlay) overlay.classList.add('pm-revealing');
-
-            // After animation, enable video controls if needed
-            setTimeout(() => {
-                if (overlay) overlay.remove();
-                const vid = wrap?.querySelector('video');
-                if (vid) vid.controls = true;
-            }, 900);
-
-            // Update status label
-            const statusEl = document.getElementById(`pmStatus_${paidMediaId}`);
-            if (statusEl) { statusEl.textContent = 'UNLOCKED'; statusEl.className = 'pm-status unlocked'; }
+            _revealPaidMedia(paidMediaId, data.mediaUrl, data.mediaType);
         } else if (data.error === 'INSUFFICIENT_FUNDS') {
-            alert(`Not enough Capital. You need ${data.required} but have ${data.current}.`);
+            showPovertyModal('this exclusive media');
         } else {
             alert(data.error || 'Failed to unlock.');
         }
@@ -5812,7 +5795,54 @@ async function _unlockPaidMedia(paidMediaId: string, price: number) {
     if (btn) { btn.textContent = 'UNLOCK'; btn.disabled = false; }
 }
 
-/** Batch-check unlock status for paid media messages in chat history */
+/** Animate the blur-break reveal and make card clickable */
+function _revealPaidMedia(pmId: string, mediaUrl?: string, mediaType?: string) {
+    const wrap = document.getElementById(`pmWrap_${pmId}`);
+    const overlay = document.getElementById(`pmOverlay_${pmId}`);
+    const card = document.getElementById(`pmCard_${pmId}`);
+    const statusEl = document.getElementById(`pmStatus_${pmId}`);
+
+    // Blur-break animation
+    if (wrap) { wrap.classList.remove('pm-locked'); wrap.classList.add('pm-revealing'); }
+    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+
+    setTimeout(() => {
+        if (overlay) overlay.remove();
+        const vid = wrap?.querySelector('video');
+        if (vid) vid.controls = true;
+    }, 900);
+
+    if (statusEl) { statusEl.textContent = 'UNLOCKED'; statusEl.className = 'pm-status unlocked'; }
+
+    // Make card clickable for fullscreen view
+    if (card && mediaUrl) {
+        card.style.cursor = 'pointer';
+        card.onclick = () => _openPaidMediaModal(mediaUrl, mediaType || 'photo');
+    }
+}
+
+/** Fullscreen modal to view unlocked media */
+function _openPaidMediaModal(url: string, type: string) {
+    const existing = document.getElementById('pmModal');
+    if (existing) existing.remove();
+
+    const isVid = type === 'video' || /\.(mp4|mov|webm)/i.test(url);
+    const mediaEl = isVid
+        ? `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:85vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.8);"></video>`
+        : `<img src="${url}" style="max-width:100%;max-height:85vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.8);object-fit:contain;" />`;
+
+    const modal = document.createElement('div');
+    modal.id = 'pmModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.25s ease;';
+    modal.innerHTML = `
+        <div style="position:absolute;top:16px;right:20px;font-size:2rem;color:#fff;cursor:pointer;z-index:2;opacity:0.7;" onclick="this.parentElement.remove()">✕</div>
+        ${mediaEl}
+    `;
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+}
+
+/** Batch-check unlock status for paid media messages on chat load */
 async function _checkPaidMediaUnlocks(messages: any[]) {
     const paidMediaIds = messages
         .filter((m: any) => m.type === 'paid_media' && m.metadata?.paid_media_id)
@@ -5826,21 +5856,14 @@ async function _checkPaidMediaUnlocks(messages: any[]) {
 
     try {
         const res = await fetch(`/api/paid-media/status?ids=${paidMediaIds.join(',')}&email=${encodeURIComponent(memberEmail)}`);
+        if (!res.ok) return;
         const data = await res.json();
         const statuses = data.statuses || {};
 
         Object.entries(statuses).forEach(([id, s]: [string, any]) => {
             if (s.unlocked) {
                 _paidMediaUnlocked.add(id);
-                // Update DOM if already rendered
-                const wrap = document.getElementById(`pmWrap_${id}`);
-                const overlay = document.getElementById(`pmOverlay_${id}`);
-                const statusEl = document.getElementById(`pmStatus_${id}`);
-                if (wrap) { wrap.classList.remove('pm-locked'); }
-                if (overlay) overlay.remove();
-                if (statusEl) { statusEl.textContent = 'UNLOCKED'; statusEl.className = 'pm-status unlocked'; }
-                const vid = wrap?.querySelector('video');
-                if (vid) vid.controls = true;
+                _revealPaidMedia(id, s.mediaUrl);
             }
         });
     } catch {}
@@ -5849,4 +5872,5 @@ async function _checkPaidMediaUnlocks(messages: any[]) {
 // Expose to window for onclick handlers
 if (typeof window !== 'undefined') {
     (window as any)._unlockPaidMedia = _unlockPaidMedia;
+    (window as any)._openPaidMediaModal = _openPaidMediaModal;
 }
