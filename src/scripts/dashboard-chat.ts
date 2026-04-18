@@ -528,7 +528,8 @@ export async function handleAdminUpload(file: File) {
 
     const overlay = document.createElement('div');
     overlay.id = '__adminMediaPreview';
-    overlay.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:320px;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    const sidebarLeft = window.innerWidth <= 900 ? '0px' : '320px';
+    overlay.style.cssText = `position:fixed;top:0;right:0;bottom:0;left:${sidebarLeft};z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;`;
 
     const mediaEl = isVideo
         ? `<video src="${objectUrl}" controls playsinline style="max-width:100%;max-height:55vh;border-radius:12px;display:block;"></video>`
@@ -609,7 +610,7 @@ export function triggerAdminMediaPick() {
     inp.type = 'file';
     inp.accept = 'image/*,video/*';
     inp.multiple = false;
-    inp.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
+    inp.style.cssText = 'position:fixed;top:50%;left:50%;width:1px;height:1px;opacity:0.01;z-index:99999;';
     document.body.appendChild(inp);
     inp.onchange = () => {
         const file = inp.files?.[0];
