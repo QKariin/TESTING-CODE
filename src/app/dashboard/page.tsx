@@ -1569,87 +1569,95 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* RIGHT: single continuous scrollable panel */}
-                            <div style={{ background: '#060606', borderLeft: '1px solid rgba(197,160,89,0.1)', overflowY: 'auto', overflowX: 'hidden', padding: '16px' }}>
-                                {/* Profile */}
-                                <div id="apMirrorHeader" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                                    <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                    <div style={{ minWidth: 0 }}>
-                                        <div id="dMirrorName" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
-                                        <div id="dMirrorHierarchy" style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px', marginTop: 2 }}>—</div>
+                            {/* RIGHT: info panel */}
+                            <div style={{ background: '#060606', borderLeft: '1px solid rgba(255,255,255,0.06)', overflowY: 'auto', overflowX: 'hidden', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                                {/* ── PROFILE CARD ── */}
+                                <div id="apMirrorHeader" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.25)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                        <div style={{ minWidth: 0 }}>
+                                            <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
+                                            <div id="dMirrorHierarchy" style={{ fontSize: '0.6rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '1.5px', marginTop: 1 }}>—</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 0 }}>
+                                        <div style={{ flex: 1, textAlign: 'center', padding: '6px 0', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>Merit</div>
+                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#ddd', fontWeight: 700 }}>0</div>
+                                        </div>
+                                        <div style={{ flex: 1, textAlign: 'center', padding: '6px 0' }}>
+                                            <div style={{ fontSize: '0.55rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>Capital</div>
+                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#ddd', fontWeight: 700 }}>0</div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Stats */}
-                                <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-                                    <div><span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#555', letterSpacing: '2px' }}>MERIT</span><div id="dMirrorPoints" style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: '#ccc', fontWeight: 700 }}>0</div></div>
-                                    <div><span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#555', letterSpacing: '2px' }}>CAPITAL</span><div id="dMirrorWallet" style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: '#ccc', fontWeight: 700 }}>0</div></div>
+                                {/* ── DIRECTIVES CARD ── */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 10 }}>Directives</div>
+
+                                    {/* Status row */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span id="statusDot" className="status-dot unproductive"></span>
+                                            <span style={{ fontSize: '0.6rem', color: '#777' }}>Current Status</span>
+                                        </div>
+                                        <span id="dActiveStatus" style={{ fontSize: '0.6rem', color: '#666', fontWeight: 600, letterSpacing: '1px' }}>UNPRODUCTIVE</span>
+                                    </div>
+
+                                    {/* Active task */}
+                                    <div id="taskDrawer" className="task-drawer open">
+                                        <div id="activeTaskContent" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
+                                            <div style={{ fontSize: '0.5rem', color: '#555', letterSpacing: '1px', marginBottom: 4 }}>Active Directive</div>
+                                            <div id="dActiveText" style={{ fontSize: '0.7rem', color: '#aaa', lineHeight: 1.4, marginBottom: 6 }}>None</div>
+                                            <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.1rem', color: '#555', letterSpacing: '2px', marginBottom: 6 }}>--:--</div>
+                                            <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontSize: '0.5rem', padding: '4px 10px', background: 'rgba(220,60,60,0.1)', border: '1px solid rgba(220,60,60,0.25)', color: '#dc3c3c', borderRadius: 4, cursor: 'pointer' }}>Cancel Task</button>
+                                        </div>
+                                        <div id="idleActions" style={{ display: 'none' }}></div>
+                                    </div>
+
+                                    {/* Queue */}
+                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}></div>
+
+                                    {/* Always-visible assign button */}
+                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontSize: '0.6rem', padding: '9px 0', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.25)', color: '#c5a059', borderRadius: 6, cursor: 'pointer', letterSpacing: '1px', width: '100%', fontWeight: 600 }}>+ Assign Directive</button>
                                 </div>
 
-                                {/* Kneeling */}
-                                <div style={{ marginBottom: 14 }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>KNEELING</div>
+                                {/* ── KNEELING ── */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Kneeling</div>
                                     <div id="admin_KneelSection"></div>
                                 </div>
 
-                                {/* Task Status — full functionality */}
-                                <div style={{ marginBottom: 14 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, cursor: 'pointer' }} onClick={() => (window as any).toggleTaskDrawer()}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>STATUS</span>
-                                        </div>
-                                        <span id="dActiveStatus" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#666', letterSpacing: '1px' }}>UNPRODUCTIVE</span>
-                                    </div>
-                                    <div id="taskDrawer" className="task-drawer open">
-                                        <div id="activeTaskContent">
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 4 }}>ACTIVE DIRECTIVE</div>
-                                            <div id="dActiveText" style={{ fontFamily: 'Orbitron', fontSize: '0.48rem', color: '#888', marginBottom: 4 }}>None</div>
-                                            <div id="dActiveTimer" style={{ fontFamily: 'Orbitron', fontSize: '1rem', color: '#555', letterSpacing: '3px' }}>--:--</div>
-                                            <div style={{ marginTop: 6 }}>
-                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', padding: '5px 12px', background: 'rgba(220,60,60,0.15)', border: '1px solid rgba(220,60,60,0.3)', color: '#dc3c3c', borderRadius: 4, cursor: 'pointer', letterSpacing: '1px' }}>CANCEL TASK</button>
-                                            </div>
-                                        </div>
-                                        <div id="idleActions" style={{ display: 'none', paddingTop: 6 }}>
-                                            <button onClick={() => (window as any).openTaskGallery()} style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 16px', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', borderRadius: 4, cursor: 'pointer', letterSpacing: '2px', width: '100%' }}>ISSUE NEW COMMAND</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Promotion */}
-                                <div id="progress_section" style={{ marginBottom: 14 }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>PROMOTION</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', marginBottom: 4 }}>—</div>
+                                {/* ── PROMOTION ── */}
+                                <div id="progress_section" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Promotion</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.75rem', color: '#c5a059', marginBottom: 6 }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
-                                {/* Telemetry */}
-                                <div id="telemetry_section" style={{ marginBottom: 14 }}>
-                                    <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' as any }}>
-                                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>TELEMETRY</span>
-                                        <span id="telemetry_arrow" style={{ color: '#444', fontSize: '0.65rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
+                                {/* ── TELEMETRY ── */}
+                                <div id="telemetry_section" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                                        <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px' }}>Telemetry</span>
+                                        <span id="telemetry_arrow" style={{ color: '#555', fontSize: '0.7rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
                                     </div>
-                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
-                                        <div style={{ color: '#333', fontSize: '0.45rem', textAlign: 'center', gridColumn: 'span 2' }}>NO DATA</div>
+                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                                        <div style={{ color: '#444', fontSize: '0.55rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
                                     </div>
                                 </div>
 
-                                {/* Kinks */}
-                                <div style={{ marginBottom: 14 }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>KINKS</div>
+                                {/* ── KINKS ── */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Kinks</div>
                                     <div id="admin_KinksLimits"></div>
                                 </div>
 
-                                {/* Directive Queue */}
-                                <div style={{ marginBottom: 14 }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>DIRECTIVE QUEUE</div>
-                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}></div>
-                                </div>
-
-                                {/* Since */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#444', letterSpacing: '1px' }}>SINCE</span>
-                                    <span id="dMirrorSlaveSince" style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#555' }}>—</span>
+                                {/* ── FOOTER ── */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 2px', opacity: 0.4 }}>
+                                    <span style={{ fontSize: '0.5rem', color: '#666' }}>Registered</span>
+                                    <span id="dMirrorSlaveSince" style={{ fontSize: '0.5rem', color: '#666' }}>—</span>
                                 </div>
                             </div>
                         </div>
