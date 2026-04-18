@@ -2332,6 +2332,32 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
         setSending(false);
     };
 
+    const pickPhoto = () => {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*,video/*';
+        inp.style.cssText = 'position:fixed;top:50%;left:50%;width:1px;height:1px;opacity:0.01;z-index:99999;';
+        document.body.appendChild(inp);
+        inp.onchange = async () => {
+            const file = inp.files?.[0];
+            try { document.body.removeChild(inp); } catch {}
+            if (!file || !adminEmail) return;
+            setSending(true);
+            try {
+                const { uploadToSupabase } = await import('@/scripts/mediaSupabase');
+                const url = await uploadToSupabase('media', 'admin-chat', file);
+                if (url === 'failed') { setSendError('Upload failed'); setSending(false); return; }
+                const isVideo = file.type.startsWith('video/');
+                const res = await fetch('/api/chat/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderEmail: adminEmail, conversationId: user.memberId, content: url, type: isVideo ? 'video' : 'photo' }) });
+                const json = await res.json();
+                if (json.success) await fetchMessages();
+                else setSendError(json.error || 'Send failed');
+            } catch (e: any) { setSendError(e?.message || 'Upload error'); }
+            setSending(false);
+        };
+        inp.click();
+    };
+
     const chatMsgs = messages.filter(m => !isSystemMessage(m));
     const sysMsgs = messages.filter(m => isSystemMessage(m));
     const canSend = input.trim().length > 0 && !sending;
@@ -2467,6 +2493,8 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
 
             {chatTab === 'chat' && (
                 <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(197,160,89,0.1)', flexShrink: 0, background: 'rgba(4,4,4,0.98)' }}>
+                    <button onClick={pickPhoto}
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: 'rgba(197,160,89,0.7)', fontFamily: 'Rajdhani,sans-serif', fontSize: '1.3rem', fontWeight: 700, padding: '6px 12px', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' }}>+</button>
                     <input type="text" value={input} onChange={e => { setInput(e.target.value); setSendError(''); }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
                         placeholder="Issue command..." autoComplete="off"
                         style={{ flex: 1, background: 'rgba(14,14,14,0.95)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#fff', padding: '10px 14px', fontFamily: 'Rajdhani,sans-serif', fontSize: '16px', outline: 'none' }} />
