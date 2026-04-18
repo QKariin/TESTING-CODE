@@ -66,14 +66,14 @@ export default function AuthCallbackPage() {
             setStatus('Access granted...');
             const id = identifier.trim().toLowerCase();
             if (id === 'ceo@qkarin.com') {
-                router.replace('/dashboard');
+                window.location.href = '/dashboard';
                 return;
             }
             try {
                 const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: id, full: true }) });
                 const data = await res.json();
                 if (data?.memberId || data?.member_id) {
-                    router.replace('/profile');
+                    window.location.href = '/profile';
                 } else {
                     // No profile - capture as a lead then send to tribute
                     const supabase = createClient();
@@ -84,10 +84,10 @@ export default function AuthCallbackPage() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: id, provider }),
                     }).catch(() => {});
-                    router.replace('/tribute');
+                    window.location.href = '/tribute';
                 }
             } catch {
-                router.replace('/tribute');
+                window.location.href = '/tribute';
             }
         };
 
