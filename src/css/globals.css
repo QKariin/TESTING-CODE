@@ -54,3 +54,22 @@ a {
     color-scheme: dark;
   }
 }
+
+/* ── Global view mobile responsive ── */
+@media (max-width: 768px) {
+  #globalMainView {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+  #globalMainView > div:first-child {
+    grid-row: auto !important;
+    min-height: 55vh !important;
+  }
+  #globalMainView > div {
+    min-height: 220px !important;
+  }
+}
