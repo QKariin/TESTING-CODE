@@ -1520,7 +1520,7 @@ export default function DashboardPage() {
                         /* ── CHATTER: efficient split — wide chat left, compact panel right ── */
                         <div style={{ display: 'grid', gridTemplateColumns: '70% 30%', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             {/* LEFT: chat — edge to edge, no box */}
-                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                     <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.4)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
                                     <div>
@@ -1529,6 +1529,32 @@ export default function DashboardPage() {
                                             <span id="chatterHeaderRank" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '2px' }}>—</span>
                                             <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
                                             <span style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '1px' }}>ENCRYPTED FEED</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Task queue overlay — covers chat panel when open */}
+                                <div id="taskQueueContainer" className="task-queue-overlay hidden">
+                                    <div className="q-head">
+                                        <span id="armoryTitle">COMMAND QUEUE</span>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <input type="text" id="taskSearchInput" placeholder="FILTER..." onInput={() => (window as any).filterTaskGallery()} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.6rem', padding: '5px 10px', borderRadius: '4px', width: '150px' }} />
+                                            <button className="q-close" onClick={() => (window as any).closeTaskGallery()}>&times;</button>
+                                        </div>
+                                    </div>
+                                    <div className="task-gallery-split" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', height: 'calc(100% - 60px)', overflow: 'hidden', position: 'relative' }}>
+                                        <div className="command-queue-section" style={{ borderRight: '1px solid rgba(197,160,89,0.1)', padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)' }}>
+                                            <div style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
+                                            <div id="armoryLiveQueue" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}></div>
+                                        </div>
+                                        <div className="directives-section" style={{ padding: '20px', overflowY: 'auto' }}>
+                                            <div id="glassTaskGrid"></div>
+                                        </div>
+                                        <div id="taskDetailModal" className="task-detail-overlay hidden">
+                                            <div className="task-detail-glass">
+                                                <button className="detail-close" onClick={() => (window as any).closeTaskDetail()}>&times;</button>
+                                                <div id="taskDetailContent"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1566,10 +1592,28 @@ export default function DashboardPage() {
                                     <div id="admin_KneelSection"></div>
                                 </div>
 
-                                {/* Active Directive */}
+                                {/* Task Status — full functionality */}
                                 <div style={{ marginBottom: 14 }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>ACTIVE DIRECTIVE</div>
-                                    <div id="chatter_ActiveTask" style={{ fontFamily: 'Orbitron', fontSize: '0.48rem', color: '#444' }}>NONE</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, cursor: 'pointer' }} onClick={() => (window as any).toggleTaskDrawer()}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <span id="statusDot" className="status-dot unproductive"></span>
+                                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>STATUS</span>
+                                        </div>
+                                        <span id="dActiveStatus" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#666', letterSpacing: '1px' }}>UNPRODUCTIVE</span>
+                                    </div>
+                                    <div id="taskDrawer" className="task-drawer open">
+                                        <div id="activeTaskContent">
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 4 }}>ACTIVE DIRECTIVE</div>
+                                            <div id="dActiveText" style={{ fontFamily: 'Orbitron', fontSize: '0.48rem', color: '#888', marginBottom: 4 }}>None</div>
+                                            <div id="dActiveTimer" style={{ fontFamily: 'Orbitron', fontSize: '1rem', color: '#555', letterSpacing: '3px' }}>--:--</div>
+                                            <div style={{ marginTop: 6 }}>
+                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', padding: '5px 12px', background: 'rgba(220,60,60,0.15)', border: '1px solid rgba(220,60,60,0.3)', color: '#dc3c3c', borderRadius: 4, cursor: 'pointer', letterSpacing: '1px' }}>CANCEL TASK</button>
+                                            </div>
+                                        </div>
+                                        <div id="idleActions" style={{ display: 'none', paddingTop: 6 }}>
+                                            <button onClick={() => (window as any).openTaskGallery()} style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 16px', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', borderRadius: 4, cursor: 'pointer', letterSpacing: '2px', width: '100%' }}>ISSUE NEW COMMAND</button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Promotion */}
