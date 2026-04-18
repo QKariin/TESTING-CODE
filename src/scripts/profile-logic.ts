@@ -5802,15 +5802,17 @@ function _revealPaidMedia(pmId: string, mediaUrl?: string, mediaType?: string) {
     const card = document.getElementById(`pmCard_${pmId}`);
     const statusEl = document.getElementById(`pmStatus_${pmId}`);
 
-    // Blur-break animation
-    if (wrap) { wrap.classList.remove('pm-locked'); wrap.classList.add('pm-revealing'); }
-    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+    // Remove blur directly on the image/video element
+    if (wrap) {
+        wrap.classList.remove('pm-locked');
+        const img = wrap.querySelector('img') as HTMLElement;
+        const vid = wrap.querySelector('video') as HTMLVideoElement;
+        if (img) { img.style.filter = 'none'; img.style.transform = 'scale(1)'; }
+        if (vid) { vid.style.filter = 'none'; vid.style.transform = 'scale(1)'; vid.controls = true; }
+    }
 
-    setTimeout(() => {
-        if (overlay) overlay.remove();
-        const vid = wrap?.querySelector('video');
-        if (vid) vid.controls = true;
-    }, 900);
+    // Remove overlay
+    if (overlay) overlay.remove();
 
     if (statusEl) { statusEl.textContent = 'UNLOCKED'; statusEl.className = 'pm-status unlocked'; }
 
@@ -5863,7 +5865,7 @@ async function _checkPaidMediaUnlocks(messages: any[]) {
         Object.entries(statuses).forEach(([id, s]: [string, any]) => {
             if (s.unlocked) {
                 _paidMediaUnlocked.add(id);
-                _revealPaidMedia(id, s.mediaUrl);
+                _revealPaidMedia(id, s.mediaUrl, s.mediaType);
             }
         });
     } catch {}

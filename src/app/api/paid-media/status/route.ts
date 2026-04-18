@@ -10,25 +10,25 @@ export async function GET(req: Request) {
     const ids = (searchParams.get('ids') || '').split(',').filter(Boolean);
     const email = searchParams.get('email') || '';
 
-    if (!ids.length || !email) {
-        return NextResponse.json({ error: 'ids and email required' }, { status: 400 });
+    if (!ids.length) {
+        return NextResponse.json({ error: 'ids required' }, { status: 400 });
     }
 
     const { data, error } = await supabaseAdmin
         .from('paid_media')
-        .select('id, is_unlocked, media_url')
-        .in('id', ids)
-        .ilike('member_id', email);
+        .select('id, is_unlocked, media_url, media_type')
+        .in('id', ids);
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const statusMap: Record<string, { unlocked: boolean; mediaUrl?: string }> = {};
+    const statusMap: Record<string, { unlocked: boolean; mediaUrl?: string; mediaType?: string }> = {};
     (data || []).forEach((pm: any) => {
         statusMap[pm.id] = {
             unlocked: pm.is_unlocked === true,
             mediaUrl: pm.is_unlocked ? pm.media_url : undefined,
+            mediaType: pm.media_type || 'photo',
         };
     });
 
