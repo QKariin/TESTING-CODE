@@ -1619,110 +1619,101 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ── PROFILE PANEL (default visible) ── */}
-                                <div id="chatterProfilePanel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <div id="chatterProfilePanel" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
 
-                                {/* ── PROFILE CARD ── */}
-                                <div id="apMirrorHeader" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.25)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                {/* ── PROFILE HEADER ── */}
+                                <div id="apMirrorHeader" style={{ padding: '10px 0 12px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.2)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                         <div style={{ minWidth: 0 }}>
-                                            <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
-                                                <div id="dMirrorHierarchy" style={{ fontSize: '0.6rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '1.5px' }}>—</div>
-                                                <span style={{ color: 'rgba(255,255,255,0.1)' }}>·</span>
-                                                <div id="dMirrorStatus" style={{ fontSize: '0.55rem', color: '#666', letterSpacing: '1px' }}>—</div>
+                                            <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: '#eee', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                                <div id="dMirrorHierarchy" style={{ fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', fontWeight: 500 }}>—</div>
+                                                <span style={{ color: 'rgba(255,255,255,0.08)' }}>·</span>
+                                                <div id="dMirrorStatus" style={{ fontSize: '0.5rem', color: '#555' }}>—</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 0 }}>
-                                        <div style={{ flex: 1, textAlign: 'center', padding: '6px 0', borderRight: '1px solid rgba(255,255,255,0.04)' }}>
-                                            <div style={{ fontSize: '0.55rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>Merit</div>
-                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#ddd', fontWeight: 700 }}>0</div>
+                                    <div style={{ display: 'flex' }}>
+                                        <div style={{ flex: 1, textAlign: 'center', padding: '4px 0', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div style={{ fontSize: '0.5rem', color: '#444', marginBottom: 2 }}>Merit</div>
+                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#ccc', fontWeight: 600 }}>0</div>
                                         </div>
-                                        <div style={{ flex: 1, textAlign: 'center', padding: '6px 0' }}>
-                                            <div style={{ fontSize: '0.55rem', color: '#555', letterSpacing: '1px', marginBottom: 2 }}>Capital</div>
-                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#ddd', fontWeight: 700 }}>0</div>
+                                        <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
+                                            <div style={{ fontSize: '0.5rem', color: '#444', marginBottom: 2 }}>Capital</div>
+                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#ccc', fontWeight: 600 }}>0</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ── DIRECTIVES CARD ── */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 10 }}>Directives</div>
-
-                                    {/* Status row */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                {/* ── STATUS + ACTIVE DIRECTIVE ── */}
+                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                             <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span style={{ fontSize: '0.6rem', color: '#777' }}>Current Status</span>
+                                            <span style={{ fontSize: '0.55rem', color: '#666' }}>Status</span>
                                         </div>
-                                        <span id="dActiveStatus" style={{ fontSize: '0.6rem', color: '#666', fontWeight: 600, letterSpacing: '1px' }}>UNPRODUCTIVE</span>
+                                        <span id="dActiveStatus" style={{ fontSize: '0.55rem', color: '#555', fontWeight: 600, letterSpacing: '0.5px' }}>IDLE</span>
                                     </div>
-
-                                    {/* Active task */}
                                     <div id="taskDrawer" className="task-drawer open">
-                                        <div id="activeTaskContent" style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 8, padding: '10px 12px', marginBottom: 10 }}>
-                                            <div style={{ fontSize: '0.5rem', color: '#555', letterSpacing: '1px', marginBottom: 4 }}>Active Directive</div>
-                                            <div id="dActiveText" style={{ fontSize: '0.7rem', color: '#aaa', lineHeight: 1.4, marginBottom: 6 }}>None</div>
-                                            <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.1rem', color: '#555', letterSpacing: '2px', marginBottom: 6 }}>--:--</div>
-                                            <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontSize: '0.5rem', padding: '4px 10px', background: 'rgba(220,60,60,0.1)', border: '1px solid rgba(220,60,60,0.25)', color: '#dc3c3c', borderRadius: 4, cursor: 'pointer' }}>Cancel Task</button>
+                                        <div id="activeTaskContent" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 6, padding: '8px 10px', marginBottom: 6 }}>
+                                            <div style={{ fontSize: '0.45rem', color: '#444', marginBottom: 3 }}>Active Directive</div>
+                                            <div id="dActiveText" style={{ fontSize: '0.65rem', color: '#999', lineHeight: 1.4, marginBottom: 4 }}>None</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#444', letterSpacing: '1px' }}>--:--</div>
+                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontSize: '0.45rem', padding: '3px 8px', background: 'none', border: '1px solid rgba(220,60,60,0.2)', color: '#dc3c3c', borderRadius: 3, cursor: 'pointer' }}>Cancel</button>
+                                            </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                     </div>
-
-                                    {/* Queue */}
-                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}></div>
-
-                                    {/* Always-visible assign button */}
-                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontSize: '0.6rem', padding: '9px 0', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.25)', color: '#c5a059', borderRadius: 6, cursor: 'pointer', letterSpacing: '1px', width: '100%', fontWeight: 600 }}>+ Assign Directive</button>
+                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}></div>
+                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontSize: '0.55rem', padding: '7px 0', background: 'none', border: '1px solid rgba(197,160,89,0.15)', color: 'rgba(197,160,89,0.6)', borderRadius: 5, cursor: 'pointer', width: '100%', fontWeight: 500 }}>+ Assign Directive</button>
                                 </div>
 
-                                {/* ── ROUTINE ── */}
-                                <div id="chatter_RoutineSection" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Routine</div>
+                                {/* ── ROUTINE + PENDING ── */}
+                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 8 }}>Routine & Submissions</div>
                                     <div id="chatter_RoutineContent" style={{ color: '#444', fontSize: '0.55rem' }}>No routine assigned</div>
-                                </div>
-
-                                {/* ── PENDING TASKS ── */}
-                                <div id="chatter_PendingSection" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px', display: 'none' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Pending Review</div>
-                                    <div id="chatter_PendingContent"></div>
+                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 8 }}>
+                                        <div style={{ fontSize: '0.45rem', color: '#444', marginBottom: 5 }}>Pending</div>
+                                        <div id="chatter_PendingContent"></div>
+                                    </div>
                                 </div>
 
                                 {/* ── KNEELING ── */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Kneeling</div>
+                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 6 }}>Kneeling</div>
                                     <div id="admin_KneelSection"></div>
                                 </div>
 
                                 {/* ── PROMOTION ── */}
-                                <div id="progress_section" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Promotion</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.75rem', color: '#c5a059', marginBottom: 6 }}>—</div>
+                                <div id="progress_section" style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 6 }}>Promotion</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginBottom: 6 }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
                                 {/* ── TELEMETRY ── */}
-                                <div id="telemetry_section" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
+                                <div id="telemetry_section" style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                     <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                                        <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px' }}>Telemetry</span>
-                                        <span id="telemetry_arrow" style={{ color: '#555', fontSize: '0.7rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
+                                        <span style={{ fontSize: '0.55rem', color: '#444' }}>Telemetry</span>
+                                        <span id="telemetry_arrow" style={{ color: '#333', fontSize: '0.6rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
                                     </div>
-                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-                                        <div style={{ color: '#444', fontSize: '0.55rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
+                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 8 }}>
+                                        <div style={{ color: '#333', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
                                     </div>
                                 </div>
 
                                 {/* ── KINKS ── */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: '#888', letterSpacing: '1px', marginBottom: 8 }}>Kinks</div>
+                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 6 }}>Kinks</div>
                                     <div id="admin_KinksLimits"></div>
                                 </div>
 
                                 {/* ── FOOTER ── */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 2px', opacity: 0.4 }}>
-                                    <span style={{ fontSize: '0.5rem', color: '#666' }}>Registered</span>
-                                    <span id="dMirrorSlaveSince" style={{ fontSize: '0.5rem', color: '#666' }}>—</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', opacity: 0.3 }}>
+                                    <span style={{ fontSize: '0.45rem', color: '#555' }}>Registered</span>
+                                    <span id="dMirrorSlaveSince" style={{ fontSize: '0.45rem', color: '#555' }}>—</span>
                                 </div>
                                 </div>{/* close chatterProfilePanel */}
                             </div>
