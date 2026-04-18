@@ -4979,6 +4979,12 @@ h3,
     to   { opacity: 0; transform: translateX(40px); }
 }
 
+/* ── CHATTER PANEL AVATAR RING ── */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* ── PAID MEDIA ── */
 .paid-media-card {
     max-width: 260px;
