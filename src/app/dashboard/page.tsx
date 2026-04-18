@@ -1577,31 +1577,45 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ── MEDIA GALLERY PANEL (hidden by default) ── */}
-                                <div id="paidMediaGallery" style={{ display: 'none', padding: '14px', flex: 1, overflowY: 'auto' }}>
-                                    <div
-                                        id="galleryDropZone"
-                                        className="media-gallery-drop"
-                                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }}
-                                        onDragLeave={(e) => { e.currentTarget.classList.remove('dragging'); }}
-                                        onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); (window as any).handleGalleryDrop?.(e.nativeEvent); }}
-                                        onClick={() => (window as any).handleGalleryPick?.()}
-                                    >
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#555', letterSpacing: '2px', marginBottom: 6 }}>DROP MEDIA HERE</div>
-                                        <div style={{ fontSize: '0.65rem', color: '#333' }}>or click to browse</div>
+                                <div id="paidMediaGallery" style={{ display: 'none', flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+
+                                    {/* Upload zone */}
+                                    <div style={{ padding: '10px 14px 0' }}>
+                                        <div
+                                            id="galleryDropZone"
+                                            className="media-gallery-drop"
+                                            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }}
+                                            onDragLeave={(e) => { e.currentTarget.classList.remove('dragging'); }}
+                                            onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); (window as any).handleGalleryDrop?.(e.nativeEvent); }}
+                                            onClick={() => (window as any).handleGalleryPick?.()}
+                                            style={{ padding: '16px 14px' }}
+                                        >
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px' }}>+ ADD TO VAULT</div>
+                                            <div style={{ fontSize: '0.55rem', color: '#333', marginTop: 3 }}>drop or click to upload</div>
+                                        </div>
                                     </div>
 
-                                    <div id="galleryGrid" className="media-gallery-grid"></div>
-
-                                    <div id="galleryPreview" style={{ marginTop: 12 }}></div>
-
-                                    <div style={{ marginTop: 12 }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 6 }}>PRICE (CAPITAL)</div>
-                                        <input id="galleryPriceInput" type="number" min="1" step="1" placeholder="e.g. 500" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron', fontSize: '0.9rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
+                                    {/* Category filter pills */}
+                                    <div id="vaultCategoryBar" style={{ display: 'flex', gap: 4, padding: '10px 14px', overflowX: 'auto', flexShrink: 0 }}>
+                                        {['all', 'feet', 'lifestyle', 'sexy', 'videos'].map(cat => (
+                                            <button key={cat} data-cat={cat} onClick={() => (window as any).filterVault?.(cat)} style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.2)', background: cat === 'all' ? 'rgba(197,160,89,0.15)' : 'transparent', color: cat === 'all' ? '#c5a059' : '#555', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer', whiteSpace: 'nowrap', textTransform: 'uppercase', flexShrink: 0 }}>{cat}</button>
+                                        ))}
                                     </div>
 
-                                    <button id="gallerySendBtn" onClick={() => (window as any).sendPaidMedia?.()} style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
-                                        SEND PAID MEDIA
-                                    </button>
+                                    {/* Vault grid */}
+                                    <div id="vaultGrid" className="media-gallery-grid" style={{ padding: '0 14px' }}></div>
+
+                                    {/* Send bar — sticky at bottom */}
+                                    <div id="vaultSendBar" style={{ display: 'none', padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', background: '#060606', position: 'sticky', bottom: 0 }}>
+                                        <div id="vaultSelectedPreview" style={{ marginBottom: 8 }}></div>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>PRICE</div>
+                                            <input id="galleryPriceInput" type="number" min="1" step="1" placeholder="e.g. 500" style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron', fontSize: '0.7rem', padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
+                                        </div>
+                                        <button id="gallerySendBtn" onClick={() => (window as any).sendPaidMedia?.()} style={{ width: '100%', padding: '10px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
+                                            SEND PAID MEDIA
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* ── PROFILE PANEL (default visible) ── */}

@@ -5122,3 +5122,7 @@ h3,
     color: #c5a059;
     font-size: 1.5rem;
 }
+.media-gallery-grid .mg-thumb.vault-selected {
+    border-color: #c5a059;
+    box-shadow: 0 0 0 2px rgba(197,160,89,0.3);
+}

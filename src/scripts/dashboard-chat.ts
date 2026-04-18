@@ -730,12 +730,15 @@ export function closeChatGifPicker() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// PAID MEDIA GALLERY — chatter right-panel toggle
+// MEDIA VAULT — persistent gallery with categories
 // ═══════════════════════════════════════════════════════════
 
-let _galleryFiles: { file: File; url: string; type: string; thumb?: string }[] = [];
-let _gallerySelectedIndex: number = -1;
+const VAULT_CATEGORIES = ['all', 'feet', 'lifestyle', 'sexy', 'videos'];
+let _vaultItems: any[] = [];
+let _vaultFilter = 'all';
+let _vaultSelectedId: string | null = null;
 let _galleryOpen = false;
+let _vaultLoaded = false;
 
 export function toggleMediaGallery() {
     const profilePanel = document.getElementById('chatterProfilePanel');
@@ -749,6 +752,97 @@ export function toggleMediaGallery() {
     galleryPanel.style.display = _galleryOpen ? '' : 'none';
     if (btnProfile) btnProfile.style.borderBottom = _galleryOpen ? 'none' : '2px solid #c5a059';
     if (btnMedia) btnMedia.style.borderBottom = _galleryOpen ? '2px solid #c5a059' : 'none';
+
+    // Load vault on first open
+    if (_galleryOpen && !_vaultLoaded) {
+        _vaultLoaded = true;
+        _loadVault();
+    }
+}
+
+async function _loadVault() {
+    const grid = document.getElementById('vaultGrid');
+    if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Orbitron;font-size:0.4rem;color:#333;letter-spacing:1px;">LOADING...</div>`;
+
+    try {
+        const res = await fetch('/api/media-vault');
+        const data = await res.json();
+        _vaultItems = data.items || [];
+        _renderVault();
+    } catch {
+        if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Orbitron;font-size:0.4rem;color:#dc3c3c;">FAILED TO LOAD</div>`;
+    }
+}
+
+export function filterVault(category: string) {
+    _vaultFilter = category;
+    _vaultSelectedId = null;
+    _updateSendBar();
+
+    // Update category pill styles
+    document.querySelectorAll('#vaultCategoryBar button').forEach((btn: any) => {
+        const cat = btn.dataset.cat;
+        btn.style.background = cat === category ? 'rgba(197,160,89,0.15)' : 'transparent';
+        btn.style.color = cat === category ? '#c5a059' : '#555';
+    });
+
+    _renderVault();
+}
+
+function _renderVault() {
+    const grid = document.getElementById('vaultGrid');
+    if (!grid) return;
+
+    const filtered = _vaultFilter === 'all'
+        ? _vaultItems
+        : _vaultFilter === 'videos'
+            ? _vaultItems.filter(v => v.media_type === 'video')
+            : _vaultItems.filter(v => v.category === _vaultFilter);
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;font-family:Orbitron;font-size:0.4rem;color:#333;letter-spacing:1px;">NO MEDIA</div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(item => {
+        const isVid = item.media_type === 'video';
+        const selected = item.id === _vaultSelectedId;
+        const tag = isVid
+            ? `<video src="${item.media_url}" muted preload="metadata"></video>`
+            : `<img src="${getOptimizedUrl(item.media_url, 200)}" loading="lazy" />`;
+        return `
+            <div class="mg-thumb${selected ? ' vault-selected' : ''}" onclick="window._selectVaultItem('${item.id}')">
+                ${tag}
+                ${isVid ? '<div style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);border-radius:3px;padding:2px 5px;font-family:Orbitron;font-size:0.3rem;color:#c5a059;">VIDEO</div>' : ''}
+                ${selected ? '<div class="mg-selected">✓</div>' : ''}
+            </div>`;
+    }).join('');
+}
+
+function _selectVaultItem(id: string) {
+    _vaultSelectedId = _vaultSelectedId === id ? null : id;
+    _renderVault();
+    _updateSendBar();
+}
+
+function _updateSendBar() {
+    const bar = document.getElementById('vaultSendBar');
+    const preview = document.getElementById('vaultSelectedPreview');
+    if (!bar) return;
+
+    if (!_vaultSelectedId) {
+        bar.style.display = 'none';
+        return;
+    }
+
+    bar.style.display = '';
+    const item = _vaultItems.find(v => v.id === _vaultSelectedId);
+    if (preview && item) {
+        const isVid = item.media_type === 'video';
+        preview.innerHTML = isVid
+            ? `<video src="${item.media_url}" controls preload="metadata" style="width:100%;max-height:120px;border-radius:8px;"></video>`
+            : `<img src="${getOptimizedUrl(item.media_url, 400)}" style="width:100%;max-height:120px;border-radius:8px;object-fit:contain;" />`;
+    }
 }
 
 export async function handleGalleryDrop(e: DragEvent) {
@@ -759,7 +853,7 @@ export async function handleGalleryDrop(e: DragEvent) {
     const files = e.dataTransfer?.files;
     if (!files || files.length === 0) return;
     for (let i = 0; i < files.length; i++) {
-        await _addGalleryFile(files[i]);
+        await _uploadToVault(files[i]);
     }
 }
 
@@ -771,68 +865,67 @@ export function handleGalleryPick() {
     inp.onchange = async () => {
         if (!inp.files) return;
         for (let i = 0; i < inp.files.length; i++) {
-            await _addGalleryFile(inp.files[i]);
+            await _uploadToVault(inp.files[i]);
         }
     };
     inp.click();
 }
 
-async function _addGalleryFile(file: File) {
-    const grid = document.getElementById('galleryGrid');
-    if (!grid) return;
+async function _uploadToVault(file: File) {
+    const isVid = file.type.startsWith('video/') || /\.(mp4|mov|webm)/i.test(file.name);
 
-    // Show uploading placeholder
-    const idx = _galleryFiles.length;
-    const placeholderId = `gf_${idx}`;
-    grid.insertAdjacentHTML('beforeend', `
-        <div class="mg-thumb" id="${placeholderId}" style="background:#111;display:flex;align-items:center;justify-content:center;">
-            <div style="font-family:Orbitron;font-size:0.35rem;color:#555;letter-spacing:1px;">UPLOADING...</div>
-        </div>
-    `);
+    // Prompt for category
+    const cat = prompt(`Category for "${file.name}":\n\nfeet / lifestyle / sexy / uncategorized`, isVid ? 'videos' : 'uncategorized');
+    const category = (cat || 'uncategorized').toLowerCase().trim();
+
+    // Show uploading indicator
+    const grid = document.getElementById('vaultGrid');
+    const placeholderId = `vault_uploading_${Date.now()}`;
+    if (grid) {
+        grid.insertAdjacentHTML('afterbegin', `
+            <div class="mg-thumb" id="${placeholderId}" style="background:#111;display:flex;align-items:center;justify-content:center;">
+                <div style="font-family:Orbitron;font-size:0.3rem;color:#555;letter-spacing:1px;">UPLOADING...</div>
+            </div>
+        `);
+    }
 
     const url = await uploadToSupabase('media', 'paid-media', file);
     const ph = document.getElementById(placeholderId);
+
     if (url.startsWith('failed')) {
-        if (ph) ph.innerHTML = `<div style="font-family:Orbitron;font-size:0.35rem;color:#dc3c3c;text-align:center;">FAILED</div>`;
+        if (ph) ph.innerHTML = `<div style="font-family:Orbitron;font-size:0.3rem;color:#dc3c3c;">FAILED</div>`;
+        setTimeout(() => ph?.remove(), 2000);
         return;
     }
 
-    const isVid = file.type.startsWith('video/') || /\.(mp4|mov|webm)/i.test(file.name);
-    _galleryFiles.push({ file, url, type: isVid ? 'video' : 'photo' });
-    const realIdx = _galleryFiles.length - 1;
-
-    if (ph) {
-        const tag = isVid
-            ? `<video src="${url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`
-            : `<img src="${getOptimizedUrl(url, 200)}" style="width:100%;height:100%;object-fit:cover;" />`;
-        ph.innerHTML = tag;
-        ph.onclick = () => _selectGalleryItem(realIdx);
-    }
-
-    // Auto-select first upload
-    if (_galleryFiles.length === 1) _selectGalleryItem(0);
-}
-
-function _selectGalleryItem(idx: number) {
-    _gallerySelectedIndex = idx;
-    // Update selection UI
-    document.querySelectorAll('#galleryGrid .mg-thumb .mg-selected').forEach(el => el.remove());
-    const thumb = document.getElementById(`gf_${idx}`) || document.querySelectorAll('#galleryGrid .mg-thumb')[idx];
-    if (thumb) {
-        thumb.insertAdjacentHTML('beforeend', '<div class="mg-selected">✓</div>');
-    }
-    // Show preview
-    const preview = document.getElementById('galleryPreview');
-    if (preview && _galleryFiles[idx]) {
-        const f = _galleryFiles[idx];
-        preview.innerHTML = f.type === 'video'
-            ? `<video src="${f.url}" controls preload="metadata" style="width:100%;max-height:200px;border-radius:8px;"></video>`
-            : `<img src="${getOptimizedUrl(f.url, 400)}" style="width:100%;max-height:200px;border-radius:8px;object-fit:contain;" />`;
+    // Save to vault DB
+    try {
+        const res = await fetch('/api/media-vault', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mediaUrl: url,
+                mediaType: isVid ? 'video' : 'photo',
+                category: isVid ? 'videos' : category,
+                uploaderEmail: adminEmail,
+            }),
+        });
+        const data = await res.json();
+        if (data.success && data.item) {
+            _vaultItems.unshift(data.item);
+            ph?.remove();
+            _renderVault();
+        }
+    } catch {
+        if (ph) ph.innerHTML = `<div style="font-family:Orbitron;font-size:0.3rem;color:#dc3c3c;">SAVE FAILED</div>`;
     }
 }
 
 export async function sendPaidMedia() {
-    if (_gallerySelectedIndex < 0 || !_galleryFiles[_gallerySelectedIndex]) return;
+    if (!_vaultSelectedId) return;
+    const item = _vaultItems.find(v => v.id === _vaultSelectedId);
+    if (!item) return;
+
     const priceInput = document.getElementById('galleryPriceInput') as HTMLInputElement;
     const price = parseInt(priceInput?.value || '0');
     if (!price || price <= 0) {
@@ -841,7 +934,6 @@ export async function sendPaidMedia() {
         return;
     }
 
-    const selected = _galleryFiles[_gallerySelectedIndex];
     const conversationEmail = currId ? (users.find((u: any) => u.memberId === currId)?.member_id || currId) : '';
     if (!conversationEmail) return;
 
@@ -855,45 +947,25 @@ export async function sendPaidMedia() {
             body: JSON.stringify({
                 senderEmail: adminEmail,
                 conversationId: conversationEmail,
-                mediaUrl: selected.url,
-                mediaType: selected.type,
-                thumbnailUrl: selected.thumb || null,
+                mediaUrl: item.media_url,
+                mediaType: item.media_type,
+                thumbnailUrl: item.thumbnail_url || null,
                 price,
             }),
         });
         const data = await res.json();
         if (data.success && data.data) {
             appendChatMessage(data.data);
-            // Remove sent item from gallery
-            _galleryFiles.splice(_gallerySelectedIndex, 1);
-            _gallerySelectedIndex = -1;
-            _renderGalleryGrid();
+            _vaultSelectedId = null;
+            _renderVault();
+            _updateSendBar();
             if (priceInput) priceInput.value = '';
-            const preview = document.getElementById('galleryPreview');
-            if (preview) preview.innerHTML = '';
         }
     } catch (err) {
         console.error('[paid-media] send failed:', err);
     }
 
     if (sendBtn) { sendBtn.textContent = 'SEND PAID MEDIA'; (sendBtn as HTMLButtonElement).disabled = false; }
-}
-
-function _renderGalleryGrid() {
-    const grid = document.getElementById('galleryGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    _galleryFiles.forEach((f, i) => {
-        const tag = f.type === 'video'
-            ? `<video src="${f.url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`
-            : `<img src="${getOptimizedUrl(f.url, 200)}" style="width:100%;height:100%;object-fit:cover;" />`;
-        grid.insertAdjacentHTML('beforeend', `
-            <div class="mg-thumb" id="gf_${i}" onclick="window._selectGalleryItem(${i})">
-                ${tag}
-                ${i === _gallerySelectedIndex ? '<div class="mg-selected">✓</div>' : ''}
-            </div>
-        `);
-    });
 }
 
 // Global Bindings
@@ -913,5 +985,6 @@ if (typeof window !== 'undefined') {
     (window as any).handleGalleryDrop = handleGalleryDrop;
     (window as any).handleGalleryPick = handleGalleryPick;
     (window as any).sendPaidMedia = sendPaidMedia;
-    (window as any)._selectGalleryItem = _selectGalleryItem;
+    (window as any)._selectVaultItem = _selectVaultItem;
+    (window as any).filterVault = filterVault;
 }
