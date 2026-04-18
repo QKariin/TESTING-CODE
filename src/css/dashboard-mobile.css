@@ -518,7 +518,7 @@
     }
 
     .inp { height: 38px; padding: 5px 10px; font-size: 0.9rem; }
-    .btn-send, .btn-plus { height: 38px; width: 38px; font-size: 0.9rem; }
+    .btn-send, .btn-plus { height: 38px; min-width: 38px; width: 38px; font-size: 0.9rem; flex-shrink: 0; display: flex !important; }
 
     /* User header */
     .user-head {
