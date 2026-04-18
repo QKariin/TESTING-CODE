@@ -241,6 +241,31 @@ function renderToHtml(m: any) {
 
     const queenAvatar = `<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
+    // ── Paid media card (dashboard view — always shows clear) ──
+    if (m.type === 'paid_media') {
+        const meta = m.metadata || {};
+        const pmUrl = meta.media_url || '';
+        const pmType = meta.media_type || 'photo';
+        const pmPrice = meta.price || 0;
+        const pmId = meta.paid_media_id || '';
+        const isVideo = pmType === 'video' || /\.(mp4|mov|webm)/i.test(pmUrl);
+        const mediaTag = isVideo
+            ? `<video src="${pmUrl}" preload="none" muted playsinline style="width:100%;max-height:200px;object-fit:cover;display:block;" controls></video>`
+            : `<img src="${getOptimizedUrl(pmUrl, 300)}" style="width:100%;max-height:200px;object-fit:cover;display:block;" onerror="this.style.display='none'" />`;
+        return `
+            <div class="chat-gift-wrap">
+                <div class="paid-media-card">
+                    <div class="pm-img-wrap">${mediaTag}</div>
+                    <div class="pm-footer">
+                        <span class="pm-label">PAID MEDIA</span>
+                        <span class="pm-price-tag" style="font-size:0.7rem;">♦ ${pmPrice.toLocaleString()}</span>
+                        <span class="pm-status" id="pmStatus_${pmId}">SENT</span>
+                    </div>
+                </div>
+                <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+            </div>`;
+    }
+
     // ── Tribute / wishlist card ── centered, no bubble
     if (m.type === 'wishlist') {
         const item = m.metadata || {};
@@ -704,6 +729,173 @@ export function closeChatGifPicker() {
     document.getElementById('chatGifPickerOverlay')?.remove();
 }
 
+// ═══════════════════════════════════════════════════════════
+// PAID MEDIA GALLERY — chatter right-panel toggle
+// ═══════════════════════════════════════════════════════════
+
+let _galleryFiles: { file: File; url: string; type: string; thumb?: string }[] = [];
+let _gallerySelectedIndex: number = -1;
+let _galleryOpen = false;
+
+export function toggleMediaGallery() {
+    const profilePanel = document.getElementById('chatterProfilePanel');
+    const galleryPanel = document.getElementById('paidMediaGallery');
+    const btnProfile = document.getElementById('panelTabProfile');
+    const btnMedia = document.getElementById('panelTabMedia');
+    if (!profilePanel || !galleryPanel) return;
+
+    _galleryOpen = !_galleryOpen;
+    profilePanel.style.display = _galleryOpen ? 'none' : '';
+    galleryPanel.style.display = _galleryOpen ? '' : 'none';
+    if (btnProfile) btnProfile.style.borderBottom = _galleryOpen ? 'none' : '2px solid #c5a059';
+    if (btnMedia) btnMedia.style.borderBottom = _galleryOpen ? '2px solid #c5a059' : 'none';
+}
+
+export async function handleGalleryDrop(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const drop = document.getElementById('galleryDropZone');
+    if (drop) drop.classList.remove('dragging');
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+    for (let i = 0; i < files.length; i++) {
+        await _addGalleryFile(files[i]);
+    }
+}
+
+export function handleGalleryPick() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,video/*';
+    inp.multiple = true;
+    inp.onchange = async () => {
+        if (!inp.files) return;
+        for (let i = 0; i < inp.files.length; i++) {
+            await _addGalleryFile(inp.files[i]);
+        }
+    };
+    inp.click();
+}
+
+async function _addGalleryFile(file: File) {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+
+    // Show uploading placeholder
+    const idx = _galleryFiles.length;
+    const placeholderId = `gf_${idx}`;
+    grid.insertAdjacentHTML('beforeend', `
+        <div class="mg-thumb" id="${placeholderId}" style="background:#111;display:flex;align-items:center;justify-content:center;">
+            <div style="font-family:Orbitron;font-size:0.35rem;color:#555;letter-spacing:1px;">UPLOADING...</div>
+        </div>
+    `);
+
+    const url = await uploadToSupabase('media', 'paid-media', file);
+    const ph = document.getElementById(placeholderId);
+    if (url.startsWith('failed')) {
+        if (ph) ph.innerHTML = `<div style="font-family:Orbitron;font-size:0.35rem;color:#dc3c3c;text-align:center;">FAILED</div>`;
+        return;
+    }
+
+    const isVid = file.type.startsWith('video/') || /\.(mp4|mov|webm)/i.test(file.name);
+    _galleryFiles.push({ file, url, type: isVid ? 'video' : 'photo' });
+    const realIdx = _galleryFiles.length - 1;
+
+    if (ph) {
+        const tag = isVid
+            ? `<video src="${url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`
+            : `<img src="${getOptimizedUrl(url, 200)}" style="width:100%;height:100%;object-fit:cover;" />`;
+        ph.innerHTML = tag;
+        ph.onclick = () => _selectGalleryItem(realIdx);
+    }
+
+    // Auto-select first upload
+    if (_galleryFiles.length === 1) _selectGalleryItem(0);
+}
+
+function _selectGalleryItem(idx: number) {
+    _gallerySelectedIndex = idx;
+    // Update selection UI
+    document.querySelectorAll('#galleryGrid .mg-thumb .mg-selected').forEach(el => el.remove());
+    const thumb = document.getElementById(`gf_${idx}`) || document.querySelectorAll('#galleryGrid .mg-thumb')[idx];
+    if (thumb) {
+        thumb.insertAdjacentHTML('beforeend', '<div class="mg-selected">✓</div>');
+    }
+    // Show preview
+    const preview = document.getElementById('galleryPreview');
+    if (preview && _galleryFiles[idx]) {
+        const f = _galleryFiles[idx];
+        preview.innerHTML = f.type === 'video'
+            ? `<video src="${f.url}" controls preload="metadata" style="width:100%;max-height:200px;border-radius:8px;"></video>`
+            : `<img src="${getOptimizedUrl(f.url, 400)}" style="width:100%;max-height:200px;border-radius:8px;object-fit:contain;" />`;
+    }
+}
+
+export async function sendPaidMedia() {
+    if (_gallerySelectedIndex < 0 || !_galleryFiles[_gallerySelectedIndex]) return;
+    const priceInput = document.getElementById('galleryPriceInput') as HTMLInputElement;
+    const price = parseInt(priceInput?.value || '0');
+    if (!price || price <= 0) {
+        priceInput?.focus();
+        priceInput?.style.setProperty('border-color', '#dc3c3c');
+        return;
+    }
+
+    const selected = _galleryFiles[_gallerySelectedIndex];
+    const conversationEmail = currId ? (users.find((u: any) => u.memberId === currId)?.member_id || currId) : '';
+    if (!conversationEmail) return;
+
+    const sendBtn = document.getElementById('gallerySendBtn');
+    if (sendBtn) { sendBtn.textContent = 'SENDING...'; (sendBtn as HTMLButtonElement).disabled = true; }
+
+    try {
+        const res = await fetch('/api/paid-media/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                senderEmail: adminEmail,
+                conversationId: conversationEmail,
+                mediaUrl: selected.url,
+                mediaType: selected.type,
+                thumbnailUrl: selected.thumb || null,
+                price,
+            }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+            appendChatMessage(data.data);
+            // Remove sent item from gallery
+            _galleryFiles.splice(_gallerySelectedIndex, 1);
+            _gallerySelectedIndex = -1;
+            _renderGalleryGrid();
+            if (priceInput) priceInput.value = '';
+            const preview = document.getElementById('galleryPreview');
+            if (preview) preview.innerHTML = '';
+        }
+    } catch (err) {
+        console.error('[paid-media] send failed:', err);
+    }
+
+    if (sendBtn) { sendBtn.textContent = 'SEND PAID MEDIA'; (sendBtn as HTMLButtonElement).disabled = false; }
+}
+
+function _renderGalleryGrid() {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    _galleryFiles.forEach((f, i) => {
+        const tag = f.type === 'video'
+            ? `<video src="${f.url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`
+            : `<img src="${getOptimizedUrl(f.url, 200)}" style="width:100%;height:100%;object-fit:cover;" />`;
+        grid.insertAdjacentHTML('beforeend', `
+            <div class="mg-thumb" id="gf_${i}" onclick="window._selectGalleryItem(${i})">
+                ${tag}
+                ${i === _gallerySelectedIndex ? '<div class="mg-selected">✓</div>' : ''}
+            </div>
+        `);
+    });
+}
+
 // Global Bindings
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
@@ -717,4 +909,9 @@ if (typeof window !== 'undefined') {
         closeChatGifPicker();
         _sendChatGif(url);
     };
+    (window as any).toggleMediaGallery = toggleMediaGallery;
+    (window as any).handleGalleryDrop = handleGalleryDrop;
+    (window as any).handleGalleryPick = handleGalleryPick;
+    (window as any).sendPaidMedia = sendPaidMedia;
+    (window as any)._selectGalleryItem = _selectGalleryItem;
 }

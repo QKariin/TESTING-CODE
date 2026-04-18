@@ -1568,7 +1568,44 @@ export default function DashboardPage() {
                             </div>
 
                             {/* RIGHT: info panel */}
-                            <div style={{ background: '#060606', borderLeft: '1px solid rgba(255,255,255,0.06)', overflowY: 'auto', overflowX: 'hidden', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <div style={{ background: '#060606', borderLeft: '1px solid rgba(255,255,255,0.06)', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+                                {/* ── TAB BAR: Profile / Media ── */}
+                                <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                                    <button id="panelTabProfile" onClick={() => (window as any).toggleMediaGallery?.()} style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: '2px solid #c5a059', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>PROFILE</button>
+                                    <button id="panelTabMedia" onClick={() => (window as any).toggleMediaGallery?.()} style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: 'none', color: '#555', fontFamily: 'Orbitron', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>MEDIA</button>
+                                </div>
+
+                                {/* ── MEDIA GALLERY PANEL (hidden by default) ── */}
+                                <div id="paidMediaGallery" style={{ display: 'none', padding: '14px', flex: 1, overflowY: 'auto' }}>
+                                    <div
+                                        id="galleryDropZone"
+                                        className="media-gallery-drop"
+                                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragging'); }}
+                                        onDragLeave={(e) => { e.currentTarget.classList.remove('dragging'); }}
+                                        onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); (window as any).handleGalleryDrop?.(e.nativeEvent); }}
+                                        onClick={() => (window as any).handleGalleryPick?.()}
+                                    >
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#555', letterSpacing: '2px', marginBottom: 6 }}>DROP MEDIA HERE</div>
+                                        <div style={{ fontSize: '0.65rem', color: '#333' }}>or click to browse</div>
+                                    </div>
+
+                                    <div id="galleryGrid" className="media-gallery-grid"></div>
+
+                                    <div id="galleryPreview" style={{ marginTop: 12 }}></div>
+
+                                    <div style={{ marginTop: 12 }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 6 }}>PRICE (CAPITAL)</div>
+                                        <input id="galleryPriceInput" type="number" min="1" step="1" placeholder="e.g. 500" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron', fontSize: '0.9rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
+                                    </div>
+
+                                    <button id="gallerySendBtn" onClick={() => (window as any).sendPaidMedia?.()} style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
+                                        SEND PAID MEDIA
+                                    </button>
+                                </div>
+
+                                {/* ── PROFILE PANEL (default visible) ── */}
+                                <div id="chatterProfilePanel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
                                 {/* ── PROFILE CARD ── */}
                                 <div id="apMirrorHeader" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: '14px' }}>
@@ -1661,6 +1698,7 @@ export default function DashboardPage() {
                                     <span style={{ fontSize: '0.5rem', color: '#666' }}>Registered</span>
                                     <span id="dMirrorSlaveSince" style={{ fontSize: '0.5rem', color: '#666' }}>—</span>
                                 </div>
+                                </div>{/* close chatterProfilePanel */}
                             </div>
                         </div>
                     ) : (
