@@ -421,8 +421,8 @@
     }
 
     /* Horizontal scroll container */
-    .split {
-        display: flex;
+    .split, .chatter-split {
+        display: flex !important;
         flex-direction: row;
         flex: 1;
         overflow-x: scroll;
@@ -430,9 +430,34 @@
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        grid-template-columns: none !important;
     }
 
-    .split::-webkit-scrollbar { display: none; }
+    .split::-webkit-scrollbar, .chatter-split::-webkit-scrollbar { display: none; }
+
+    /* Chatter split: chat panel = first swipe page */
+    .chatter-split > div:first-child {
+        flex: none;
+        min-width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        scroll-snap-align: start;
+        background: #050505;
+    }
+
+    /* Chatter split: profile panel = second swipe page */
+    .chatter-split > div:last-child {
+        flex: none;
+        min-width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-snap-align: start;
+        background: #040404;
+        -webkit-overflow-scrolling: touch;
+    }
 
     /* Chat panel - first page */
     .chat-panel {
