@@ -1619,101 +1619,100 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ── PROFILE PANEL (default visible) ── */}
-                                <div id="chatterProfilePanel" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <div id="chatterProfilePanel" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-                                {/* ── PROFILE HEADER ── */}
-                                <div id="apMirrorHeader" style={{ padding: '10px 0 12px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.2)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                        <div style={{ minWidth: 0 }}>
+                                {/* ── PROFILE CARD ── */}
+                                <div id="apMirrorHeader" style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.15)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                        <div style={{ minWidth: 0, flex: 1 }}>
                                             <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: '#eee', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                                                <div id="dMirrorHierarchy" style={{ fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', fontWeight: 500 }}>—</div>
+                                                <div id="dMirrorHierarchy" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', fontWeight: 600 }}>—</div>
                                                 <span style={{ color: 'rgba(255,255,255,0.08)' }}>·</span>
-                                                <div id="dMirrorStatus" style={{ fontSize: '0.5rem', color: '#555' }}>—</div>
+                                                <div id="dMirrorStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: '#555' }}>—</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex' }}>
-                                        <div style={{ flex: 1, textAlign: 'center', padding: '4px 0', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ fontSize: '0.5rem', color: '#444', marginBottom: 2 }}>Merit</div>
-                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#ccc', fontWeight: 600 }}>0</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                        <div style={{ background: 'rgba(197,160,89,0.04)', borderRadius: 8, padding: '8px 0', textAlign: 'center' }}>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: '#555', fontWeight: 600, letterSpacing: '1px', marginBottom: 2 }}>MERIT</div>
+                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#c5a059', fontWeight: 600 }}>0</div>
                                         </div>
-                                        <div style={{ flex: 1, textAlign: 'center', padding: '4px 0' }}>
-                                            <div style={{ fontSize: '0.5rem', color: '#444', marginBottom: 2 }}>Capital</div>
-                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#ccc', fontWeight: 600 }}>0</div>
+                                        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: '8px 0', textAlign: 'center' }}>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: '#555', fontWeight: 600, letterSpacing: '1px', marginBottom: 2 }}>CAPITAL</div>
+                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#ddd', fontWeight: 600 }}>0</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ── STATUS + ACTIVE DIRECTIVE ── */}
-                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                {/* ── ACTIVE DIRECTIVE ── */}
+                                <div style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span style={{ fontSize: '0.55rem', color: '#666' }}>Status</span>
+                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: '#777', fontWeight: 600 }}>Directive</span>
                                         </div>
-                                        <span id="dActiveStatus" style={{ fontSize: '0.55rem', color: '#555', fontWeight: 600, letterSpacing: '0.5px' }}>IDLE</span>
+                                        <span id="dActiveStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: '#555', fontWeight: 700, letterSpacing: '0.5px' }}>IDLE</span>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
-                                        <div id="activeTaskContent" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 6, padding: '8px 10px', marginBottom: 6 }}>
-                                            <div style={{ fontSize: '0.45rem', color: '#444', marginBottom: 3 }}>Active Directive</div>
-                                            <div id="dActiveText" style={{ fontSize: '0.65rem', color: '#999', lineHeight: 1.4, marginBottom: 4 }}>None</div>
+                                        <div id="activeTaskContent" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 8, padding: '10px 12px', marginBottom: 8, border: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div id="dActiveText" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.75rem', color: '#999', lineHeight: 1.4, marginBottom: 6 }}>None</div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#444', letterSpacing: '1px' }}>--:--</div>
-                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontSize: '0.45rem', padding: '3px 8px', background: 'none', border: '1px solid rgba(220,60,60,0.2)', color: '#dc3c3c', borderRadius: 3, cursor: 'pointer' }}>Cancel</button>
+                                                <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#555', letterSpacing: '2px' }}>--:--</div>
+                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', padding: '3px 10px', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.15)', color: 'rgba(220,60,60,0.7)', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
                                             </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                     </div>
-                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}></div>
-                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontSize: '0.55rem', padding: '7px 0', background: 'none', border: '1px solid rgba(197,160,89,0.15)', color: 'rgba(197,160,89,0.6)', borderRadius: 5, cursor: 'pointer', width: '100%', fontWeight: 500 }}>+ Assign Directive</button>
+                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}></div>
+                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', padding: '8px 0', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.12)', color: 'rgba(197,160,89,0.6)', borderRadius: 6, cursor: 'pointer', width: '100%', fontWeight: 600, letterSpacing: '0.5px', transition: 'all 0.2s' }}>+ Assign Directive</button>
                                 </div>
 
-                                {/* ── ROUTINE + PENDING ── */}
-                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 8 }}>Routine & Submissions</div>
-                                    <div id="chatter_RoutineContent" style={{ color: '#444', fontSize: '0.55rem' }}>No routine assigned</div>
-                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 8 }}>
-                                        <div style={{ fontSize: '0.45rem', color: '#444', marginBottom: 5 }}>Pending</div>
+                                {/* ── ROUTINE & SUBMISSIONS ── */}
+                                <div style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: '#666', fontWeight: 600, letterSpacing: '1px', marginBottom: 10 }}>ROUTINE</div>
+                                    <div id="chatter_RoutineContent" style={{ fontFamily: "'Rajdhani',sans-serif", color: '#444', fontSize: '0.6rem' }}>No routine assigned</div>
+                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: '#555', fontWeight: 600, letterSpacing: '1px', marginBottom: 6 }}>PENDING</div>
                                         <div id="chatter_PendingContent"></div>
                                     </div>
                                 </div>
 
                                 {/* ── KNEELING ── */}
-                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 6 }}>Kneeling</div>
+                                <div style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: '#666', fontWeight: 600, letterSpacing: '1px', marginBottom: 8 }}>KNEELING</div>
                                     <div id="admin_KneelSection"></div>
                                 </div>
 
                                 {/* ── PROMOTION ── */}
-                                <div id="progress_section" style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 6 }}>Promotion</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginBottom: 6 }}>—</div>
+                                <div id="progress_section" style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: '#666', fontWeight: 600, letterSpacing: '1px', marginBottom: 8 }}>PROMOTION</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginBottom: 8 }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
                                 {/* ── TELEMETRY ── */}
-                                <div id="telemetry_section" style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                <div id="telemetry_section" style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
                                     <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                                        <span style={{ fontSize: '0.55rem', color: '#444' }}>Telemetry</span>
-                                        <span id="telemetry_arrow" style={{ color: '#333', fontSize: '0.6rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
+                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: '#666', fontWeight: 600, letterSpacing: '1px' }}>TELEMETRY</span>
+                                        <span id="telemetry_arrow" style={{ color: '#444', fontSize: '0.6rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
                                     </div>
-                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 8 }}>
-                                        <div style={{ color: '#333', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
+                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+                                        <div style={{ fontFamily: "'Rajdhani',sans-serif", color: '#444', fontSize: '0.55rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
                                     </div>
                                 </div>
 
                                 {/* ── KINKS ── */}
-                                <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ fontSize: '0.55rem', color: '#444', marginBottom: 6 }}>Kinks</div>
+                                <div style={{ background: 'rgba(15,15,20,0.6)', backdropFilter: 'blur(12px)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 12, padding: '14px' }}>
+                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: '#666', fontWeight: 600, letterSpacing: '1px', marginBottom: 8 }}>KINKS & LIMITS</div>
                                     <div id="admin_KinksLimits"></div>
                                 </div>
 
                                 {/* ── FOOTER ── */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', opacity: 0.3 }}>
-                                    <span style={{ fontSize: '0.45rem', color: '#555' }}>Registered</span>
-                                    <span id="dMirrorSlaveSince" style={{ fontSize: '0.45rem', color: '#555' }}>—</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', opacity: 0.3 }}>
+                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#555' }}>Registered</span>
+                                    <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#555' }}>—</span>
                                 </div>
                                 </div>{/* close chatterProfilePanel */}
                             </div>
