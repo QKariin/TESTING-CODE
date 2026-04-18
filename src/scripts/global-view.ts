@@ -737,6 +737,24 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         </div>`;
     }
 
+    // ── Photo Card ── same card style as GIF
+    if (msg.media_url && msg.media_type === 'image' && !content.startsWith('UPDATE_PHOTO_CARD::') && !content.startsWith('GIFT_SENT::')) {
+        const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+            <div style="width:60%;min-width:220px;max-width:360px;">
+                <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                    <div style="width:100%;overflow:hidden;background:#0a0703;">
+                        <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:240px;object-fit:cover;" />
+                    </div>
+                    <div style="padding:10px 16px 14px;text-align:center;border-top:1px solid rgba(197,160,89,0.12);">
+                        <div style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${name}</div>
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+            </div>
+        </div>`;
+    }
+
     // UPDATE PHOTO CARD
     if (content.startsWith('UPDATE_PHOTO_CARD::')) {
         try {
