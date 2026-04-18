@@ -58,18 +58,21 @@ a {
 /* ── Global view mobile responsive ── */
 @media (max-width: 768px) {
   #globalMainView {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    gap: 12px !important;
-    padding: 12px !important;
-  }
-  #globalMainView > div:first-child {
-    grid-row: auto !important;
-    min-height: 55vh !important;
+    gap: 14px !important;
+    padding: 14px !important;
   }
   #globalMainView > div {
-    min-height: 220px !important;
+    width: 92% !important;
+    max-width: 420px !important;
+    min-height: 240px !important;
+    flex-shrink: 0 !important;
+  }
+  #globalMainView > div:first-child {
+    min-height: 60vh !important;
   }
 }
