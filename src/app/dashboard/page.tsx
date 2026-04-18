@@ -1619,116 +1619,111 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ── PROFILE PANEL (default visible) ── */}
-                                <div id="chatterProfilePanel" style={{ padding: 0, display: 'flex', flexDirection: 'column', gap: 0, background: 'linear-gradient(180deg, rgba(12,10,8,0.98) 0%, rgba(6,5,4,0.99) 100%)' }}>
+                                <div id="chatterProfilePanel" style={{ padding: 0, display: 'flex', flexDirection: 'column', gap: 0, background: '#060606' }}>
 
-                                {/* ── HERO HEADER — dramatic banner with avatar ── */}
-                                <div id="apMirrorHeader" style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid rgba(197,160,89,0.12)' }}>
-                                    {/* Ambient glow behind avatar */}
-                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 120, height: 120, background: 'radial-gradient(circle, rgba(197,160,89,0.08) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
-                                    <div style={{ padding: '28px 20px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                                        {/* Avatar with luminous ring */}
-                                        <div style={{ position: 'relative', marginBottom: 14 }}>
-                                            <div style={{ position: 'absolute', inset: -3, borderRadius: '50%', background: 'conic-gradient(from 0deg, rgba(197,160,89,0.4), rgba(197,160,89,0.05), rgba(197,160,89,0.4))', animation: 'spin 8s linear infinite' }}></div>
-                                            <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(12,10,8,1)', position: 'relative', zIndex: 1 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                        </div>
-                                        {/* Name */}
-                                        <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#f0ebe3', fontWeight: 700, letterSpacing: '1.5px', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textShadow: '0 0 20px rgba(197,160,89,0.15)' }}>—</div>
-                                        {/* Rank & Status row */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                                            <div id="dMirrorHierarchy" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700, textTransform: 'uppercase' }}>—</div>
-                                            <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(197,160,89,0.3)' }}></div>
-                                            <div id="dMirrorStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#555', letterSpacing: '1px' }}>—</div>
-                                        </div>
-                                        {/* Merit & Capital — elegant horizontal strip */}
-                                        <div style={{ display: 'flex', gap: 0, marginTop: 18, width: '100%', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.08)' }}>
-                                            <div style={{ flex: 1, padding: '10px 0', textAlign: 'center', background: 'linear-gradient(135deg, rgba(197,160,89,0.06) 0%, rgba(197,160,89,0.02) 100%)', borderRight: '1px solid rgba(197,160,89,0.06)' }}>
-                                                <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.05rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>0</div>
-                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', fontWeight: 600, letterSpacing: '2px', marginTop: 4 }}>MERIT</div>
+                                {/* ═══ SUBJECT HEADER — left-aligned, compact ═══ */}
+                                <div id="apMirrorHeader" style={{ padding: '18px 18px 0', background: 'linear-gradient(180deg, rgba(15,12,8,0.95) 0%, rgba(6,6,6,1) 100%)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.88rem', color: '#f0ebe3', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                                                <div id="dMirrorHierarchy" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>—</div>
+                                                <div id="dMirrorStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', letterSpacing: '1px' }}>—</div>
                                             </div>
-                                            <div style={{ flex: 1, padding: '10px 0', textAlign: 'center', background: 'rgba(255,255,255,0.015)' }}>
-                                                <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.05rem', color: '#e8e4de', fontWeight: 700, lineHeight: 1 }}>0</div>
-                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.2)', fontWeight: 600, letterSpacing: '2px', marginTop: 4 }}>CAPITAL</div>
-                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* ── Stats strip — numbers with thin vertical separators ── */}
+                                    <div style={{ display: 'flex', marginTop: 18, marginBottom: 0, paddingBottom: 16, borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.15rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>0</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.35)', fontWeight: 600, letterSpacing: '2.5px', marginTop: 5 }}>MERIT</div>
+                                        </div>
+                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', margin: '0 16px', alignSelf: 'stretch' }}></div>
+                                        <div style={{ flex: 1 }}>
+                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.15rem', color: '#e0dbd4', fontWeight: 700, lineHeight: 1 }}>0</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.18)', fontWeight: 600, letterSpacing: '2.5px', marginTop: 5 }}>CAPITAL</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ── Thin gold separator ── */}
-                                <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(197,160,89,0.15) 30%, rgba(197,160,89,0.15) 70%, transparent 100%)' }}></div>
+                                {/* ═══ SECTIONS — each with colored left accent ═══ */}
+                                <div style={{ padding: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-                                {/* ── Scrollable sections ── */}
-                                <div style={{ padding: '6px 16px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-
-                                {/* ── ACTIVE DIRECTIVE ── */}
-                                <div style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                {/* ── DIRECTIVE — gold accent ── */}
+                                <div style={{ borderLeft: '3px solid rgba(197,160,89,0.35)', padding: '16px 18px', margin: '0', background: 'linear-gradient(90deg, rgba(197,160,89,0.03) 0%, transparent 40%)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', fontWeight: 400, letterSpacing: '2px' }}>DIRECTIVE</span>
+                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' }}>Directive</span>
                                         </div>
-                                        <span id="dActiveStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#444', fontWeight: 700, letterSpacing: '1.5px', padding: '2px 8px', borderRadius: 3, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>IDLE</span>
+                                        <span id="dActiveStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#444', fontWeight: 700, letterSpacing: '1.5px' }}>IDLE</span>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
-                                        <div id="activeTaskContent" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(10,8,6,0.3) 100%)', borderRadius: 8, padding: '12px 14px', marginBottom: 8, border: '1px solid rgba(197,160,89,0.04)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02)' }}>
-                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.72rem', color: '#999', lineHeight: 1.5, marginBottom: 8 }}>None</div>
+                                        <div id="activeTaskContent" style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 6, padding: '12px 14px', marginBottom: 8, border: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.72rem', color: '#888', lineHeight: 1.5, marginBottom: 8 }}>None</div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.1rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', fontWeight: 400 }}>--:--</div>
-                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '4px 12px', background: 'transparent', border: '1px solid rgba(180,50,50,0.2)', color: 'rgba(180,50,50,0.5)', borderRadius: 4, cursor: 'pointer', fontWeight: 600, letterSpacing: '0.5px', transition: 'all 0.2s' }}>Cancel</button>
+                                                <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.15rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', fontWeight: 400 }}>--:--</div>
+                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '4px 14px', background: 'transparent', border: '1px solid rgba(180,50,50,0.15)', color: 'rgba(180,50,50,0.4)', borderRadius: 4, cursor: 'pointer', fontWeight: 600, letterSpacing: '1px', transition: 'all 0.2s' }}>Cancel</button>
                                             </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                     </div>
                                     <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}></div>
-                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', padding: '9px 0', background: 'transparent', border: '1px solid rgba(197,160,89,0.1)', color: 'rgba(197,160,89,0.45)', borderRadius: 6, cursor: 'pointer', width: '100%', fontWeight: 700, letterSpacing: '2px', transition: 'all 0.3s', textTransform: 'uppercase' }}>+ Assign Directive</button>
+                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '8px 0', background: 'transparent', border: '1px dashed rgba(197,160,89,0.15)', color: 'rgba(197,160,89,0.35)', borderRadius: 4, cursor: 'pointer', width: '100%', fontWeight: 700, letterSpacing: '2.5px', transition: 'all 0.3s', textTransform: 'uppercase' }}>+ Assign</button>
                                 </div>
 
-                                {/* ── ROUTINE & SUBMISSIONS ── */}
-                                <div style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 10, fontWeight: 400 }}>ROUTINE</div>
+                                {/* ── ROUTINE — green accent ── */}
+                                <div style={{ borderLeft: '3px solid rgba(74,222,128,0.25)', padding: '16px 18px', background: 'linear-gradient(90deg, rgba(74,222,128,0.015) 0%, transparent 40%)' }}>
+                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', fontWeight: 700, letterSpacing: '3px', marginBottom: 10, textTransform: 'uppercase' }}>Routine</div>
                                     <div id="chatter_RoutineContent" style={{ fontFamily: "'Rajdhani',sans-serif", color: '#444', fontSize: '0.6rem' }}>No routine assigned</div>
-                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(197,160,89,0.05)' }}>
-                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 8, fontWeight: 400 }}>PENDING</div>
+                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(74,222,128,0.06)' }}>
+                                        <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(232,93,117,0.5)', fontWeight: 700, letterSpacing: '3px', marginBottom: 8, textTransform: 'uppercase' }}>Pending Review</div>
                                         <div id="chatter_PendingContent"></div>
                                     </div>
                                 </div>
 
-                                {/* ── KNEELING ── */}
-                                <div style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 8, fontWeight: 400 }}>KNEELING</div>
+                                {/* ── KNEELING — blue accent ── */}
+                                <div style={{ borderLeft: '3px solid rgba(100,180,255,0.2)', padding: '14px 18px', background: 'linear-gradient(90deg, rgba(100,180,255,0.01) 0%, transparent 40%)' }}>
                                     <div id="admin_KneelSection"></div>
                                 </div>
 
-                                {/* ── PROMOTION ── */}
-                                <div id="progress_section" style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 6, fontWeight: 400 }}>PROMOTION</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', marginBottom: 10, fontWeight: 600, letterSpacing: '1px' }}>—</div>
+                                {/* ── PROMOTION — violet accent ── */}
+                                <div id="progress_section" style={{ borderLeft: '3px solid rgba(180,130,255,0.2)', padding: '16px 18px', background: 'linear-gradient(90deg, rgba(180,130,255,0.01) 0%, transparent 40%)' }}>
+                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', fontWeight: 700, letterSpacing: '3px', marginBottom: 4, textTransform: 'uppercase' }}>Promotion</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: 'rgba(180,130,255,0.45)', marginBottom: 12, fontWeight: 400, letterSpacing: '1px' }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
-                                {/* ── TELEMETRY (collapsible) ── */}
-                                <div id="telemetry_section" style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                                        <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', fontWeight: 400 }}>TELEMETRY</span>
-                                        <span id="telemetry_arrow" style={{ color: 'rgba(197,160,89,0.25)', fontSize: '0.5rem', transition: 'transform 0.3s ease', display: 'inline-block', transform: 'rotate(-90deg)' }}>&#9662;</span>
+                                {/* ── TELEMETRY + KINKS — compact collapsible row ── */}
+                                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+                                    {/* Telemetry half */}
+                                    <div id="telemetry_section" style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)'; } }} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: '#444', fontWeight: 700, letterSpacing: '2px' }}>INTEL</span>
+                                            <span id="telemetry_arrow" style={{ color: '#333', fontSize: '0.45rem', transition: 'transform 0.3s', display: 'inline-block', transform: 'rotate(-90deg)' }}>&#9662;</span>
+                                        </div>
+                                        <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 16px 14px' }}>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", color: '#333', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
+                                        </div>
                                     </div>
-                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-                                        <div style={{ fontFamily: "'Rajdhani',sans-serif", color: '#333', fontSize: '0.55rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
+                                    {/* Kinks half */}
+                                    <div style={{ flex: 1 }}>
+                                        <div onClick={() => { const c = document.getElementById('admin_KinksLimits'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'block'; } }} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: '#444', fontWeight: 700, letterSpacing: '2px' }}>KINKS</span>
+                                            <span style={{ color: '#333', fontSize: '0.45rem' }}>&#9662;</span>
+                                        </div>
+                                        <div id="admin_KinksLimits" style={{ display: 'none', padding: '0 16px 14px' }}></div>
                                     </div>
-                                </div>
-
-                                {/* ── KINKS & LIMITS ── */}
-                                <div style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 8, fontWeight: 400 }}>KINKS & LIMITS</div>
-                                    <div id="admin_KinksLimits"></div>
                                 </div>
 
                                 {/* ── FOOTER ── */}
-                                <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0 4px', opacity: 0.2 }}>
-                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', letterSpacing: '1px' }}>REGISTERED </span>
-                                    <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', letterSpacing: '1px', marginLeft: 4 }}>—</span>
+                                <div style={{ padding: '10px 18px', opacity: 0.15 }}>
+                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1.5px' }}>REG </span>
+                                    <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1px' }}>—</span>
                                 </div>
 
-                                </div>{/* close scrollable sections */}
+                                </div>{/* close sections */}
                                 </div>{/* close chatterProfilePanel */}
                             </div>
                         </div>
