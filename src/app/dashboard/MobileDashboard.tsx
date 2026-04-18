@@ -10,8 +10,9 @@ import {
 import { initProfileState } from '@/scripts/profile-state';
 import {
     openMobGlobal, closeMobGlobal, switchMobGlTab, switchMobGlPeriod,
-    sendMobGlMessage, handleMobGlKey,
+    sendMobGlMessage, handleMobGlKey, setMobGlReply, cancelMobGlReply,
 } from '@/scripts/profile-logic';
+import '@/css/profile-mobile.css';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen' | 'global';
 
@@ -2811,6 +2812,7 @@ function isSystemMessage(msg: any): boolean {
 }
 
 // ─── MOBILE GLOBAL VIEW ──────────────────────────────────────────────────────
+// Exact same layout + data as /profile mobile Global overlay
 function MobGlobalView({ userEmail }: { userEmail: string }) {
     const [glTab, setGlTab] = useState<'rank' | 'talk' | 'challenges' | 'updates'>('talk');
     const initialized = useRef(false);
@@ -2818,17 +2820,21 @@ function MobGlobalView({ userEmail }: { userEmail: string }) {
     useEffect(() => {
         if (initialized.current) return;
         initialized.current = true;
+        // Init profile state so sendMobGlMessage knows who we are
         initProfileState({ member_id: userEmail || 'queen@qkarin.com', email: userEmail, name: 'QUEEN' });
-        // Register functions on window for DOM event handlers
+        // Register all window functions that DOM event handlers (onclick in generated HTML) need
         (window as any).switchMobGlTab = switchMobGlTab;
         (window as any).switchMobGlPeriod = switchMobGlPeriod;
         (window as any).sendMobGlMessage = sendMobGlMessage;
         (window as any).handleMobGlKey = handleMobGlKey;
+        (window as any).setMobGlReply = setMobGlReply;
+        (window as any).cancelMobGlReply = cancelMobGlReply;
         (window as any).closeMobGlobal = () => {};
+        // Load initial tab
+        switchMobGlTab('talk');
     }, [userEmail]);
 
     useEffect(() => {
-        // Load content when tab changes
         switchMobGlTab(glTab);
     }, [glTab]);
 
@@ -2841,46 +2847,9 @@ function MobGlobalView({ userEmail }: { userEmail: string }) {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: 'rgba(2,5,18,0.99)' }}>
-            <style>{`
-                .mob-gl-tabs { display: flex; flex-shrink: 0; border-bottom: 1px solid rgba(197,160,89,0.15); background: rgba(0,0,0,0.4); }
-                .mob-gl-tab { flex: 1; padding: 14px 6px; background: none; border: none; color: #666; font-family: 'Orbitron',sans-serif; font-size: 0.65rem; letter-spacing: 2px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s; }
-                .mob-gl-tab.active { color: #c5a059; border-bottom: 2px solid #c5a059; }
-                .mob-gl-panel { display: flex; flex: 1; overflow: hidden; }
-                .mob-gl-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 12px; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-                .mob-gl-period-bar { display: flex; flex-shrink: 0; gap: 6px; padding: 10px 12px; border-bottom: 1px solid rgba(197,160,89,0.1); }
-                .mob-gl-period-btn { flex: 1; padding: 7px 4px; background: rgba(255,255,255,0.03); border: 1px solid rgba(197,160,89,0.2); color: #555; font-family: 'Orbitron',sans-serif; font-size: 0.42rem; letter-spacing: 1.5px; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
-                .mob-gl-period-btn.active { background: rgba(197,160,89,0.12); border-color: rgba(197,160,89,0.5); color: #c5a059; }
-                .mob-gl-rank-row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-                .mob-gl-rank-row--top { padding: 14px 10px; gap: 13px; }
-                .mob-gl-rank-row--rank1 { background: rgba(255,215,0,0.05); border-bottom: 1px solid rgba(255,215,0,0.1); }
-                .mob-gl-rank-row--rank2 { background: rgba(192,192,192,0.04); border-bottom: 1px solid rgba(192,192,192,0.08); }
-                .mob-gl-rank-row--rank3 { background: rgba(205,127,50,0.04); border-bottom: 1px solid rgba(205,127,50,0.08); }
-                .mob-gl-rank-medal { font-size: 1.5rem; line-height: 1; flex-shrink: 0; width: 28px; text-align: center; }
-                .mob-gl-rank-num { font-family: 'Orbitron',sans-serif; font-size: 0.6rem; color: #333; min-width: 20px; text-align: center; }
-                .mob-gl-rank-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(197,160,89,0.3); flex-shrink: 0; }
-                .mob-gl-rank-avatar--top { width: 44px; height: 44px; border-width: 2px; border-color: rgba(197,160,89,0.5); }
-                .mob-gl-rank-avatar-placeholder { width: 34px; height: 34px; border-radius: 50%; background: rgba(197,160,89,0.08); border: 1px solid rgba(197,160,89,0.15); flex-shrink: 0; }
-                .mob-gl-rank-info { flex: 1; min-width: 0; }
-                .mob-gl-rank-name { font-family: 'Rajdhani',sans-serif; font-size: 0.95rem; color: rgba(255,255,255,0.85); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                .mob-gl-rank-name--top { font-size: 1.05rem; color: #fff; }
-                .mob-gl-rank-tier { font-family: 'Orbitron',sans-serif; font-size: 0.4rem; letter-spacing: 1.5px; color: rgba(197,160,89,0.5); margin-top: 2px; }
-                .mob-gl-rank-score { font-family: 'Cinzel',serif; font-size: 0.95rem; color: rgba(197,160,89,0.7); font-weight: 700; flex-shrink: 0; }
-                .mob-gl-rank-score--top { font-size: 1.1rem; color: #c5a059; }
-                .mob-gl-talk-msg { display: flex; gap: 10px; padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-                .mob-gl-talk-name { font-family: 'Rajdhani',sans-serif; font-size: 0.85rem; color: #c5a059; font-weight: 600; }
-                .mob-gl-talk-content { font-family: 'Rajdhani',sans-serif; font-size: 0.92rem; color: rgba(255,255,255,0.75); line-height: 1.4; word-break: break-word; }
-                .mob-gl-talk-time { font-family: 'Orbitron',sans-serif; font-size: 0.35rem; color: #333; letter-spacing: 1px; margin-top: 4px; }
-                .mob-gl-talk-footer { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid rgba(197,160,89,0.15); flex-shrink: 0; background: rgba(0,0,0,0.5); }
-                .mob-gl-talk-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(197,160,89,0.2); color: #fff; font-family: 'Rajdhani',sans-serif; font-size: 0.95rem; padding: 10px 14px; outline: none; border-radius: 8px; min-width: 0; }
-                .mob-gl-talk-input::placeholder { color: rgba(255,255,255,0.2); }
-                .mob-gl-talk-send { background: linear-gradient(135deg, #c5a059, #a07830); border: none; color: #000; font-family: 'Orbitron',sans-serif; font-size: 0.7rem; font-weight: 700; padding: 10px 16px; cursor: pointer; border-radius: 8px; flex-shrink: 0; letter-spacing: 1px; }
-                .mob-gl-reply-btn { background: none; border: none; color: rgba(197,160,89,0.3); font-size: 0.7rem; cursor: pointer; padding: 2px 6px; }
-                .mob-gl-reply-btn:active { background: rgba(197,160,89,0.3); color: #c5a059; }
-            `}</style>
-
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(197,160,89,0.25)', borderTop: '3px solid rgba(197,160,89,0.55)', background: 'rgba(197,160,89,0.03)', flexShrink: 0 }}>
-                <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: '#c5a059', letterSpacing: '4px', fontWeight: 'bold' }}>◎ GLOBAL</span>
+            {/* Header — same as profile mobile */}
+            <div className="mob-overlay-header">
+                <span className="mob-overlay-title">◎ GLOBAL</span>
             </div>
 
             {/* Tab bar */}
