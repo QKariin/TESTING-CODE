@@ -1,4 +1,4 @@
-// Heartbeat: updates profiles.last_active every 2 minutes so "last seen" stays accurate.
+// Heartbeat: updates profiles.last_active every 60s so "last seen" stays accurate.
 // The Realtime presence channel (track()) handles the online dot; this handles the timestamp.
 export function startPresenceHeartbeat(userId: string, email?: string): ReturnType<typeof setInterval> | null {
     if (!userId && !email) return null;
@@ -23,7 +23,7 @@ export function startPresenceHeartbeat(userId: string, email?: string): ReturnTy
     };
 
     ping(); // immediate first ping
-    return setInterval(ping, 2 * 60 * 1000); // then every 2 minutes
+    return setInterval(ping, 60 * 1000); // then every 60s
 }
 
 export async function trackUserAnalytics(userId: string) {

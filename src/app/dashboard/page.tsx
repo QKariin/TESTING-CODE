@@ -742,7 +742,7 @@ export default function DashboardPage() {
                     }
                 };
                 ping(); // immediate first ping
-                heartbeatInterval = setInterval(ping, 2 * 60 * 1000); // then every 2min
+                heartbeatInterval = setInterval(ping, 60 * 1000); // then every 60s
             }
         };
         getCurrUser();
@@ -1578,7 +1578,11 @@ export default function DashboardPage() {
                                         <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.25)', flexShrink: 0 }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                         <div style={{ minWidth: 0 }}>
                                             <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: '#fff', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
-                                            <div id="dMirrorHierarchy" style={{ fontSize: '0.6rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '1.5px', marginTop: 1 }}>—</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                                                <div id="dMirrorHierarchy" style={{ fontSize: '0.6rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '1.5px' }}>—</div>
+                                                <span style={{ color: 'rgba(255,255,255,0.1)' }}>·</span>
+                                                <div id="dMirrorStatus" style={{ fontSize: '0.55rem', color: '#666', letterSpacing: '1px' }}>—</div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 0 }}>
@@ -1801,7 +1805,8 @@ export default function DashboardPage() {
                                 <div className="avatar-container">
                                     <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                 </div>
-                                <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#fff', marginBottom: '10px' }}>NAME</div>
+                                <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#fff', marginBottom: '4px' }}>NAME</div>
+                                <div id="dMirrorStatus" style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#666', letterSpacing: '2px', textAlign: 'center', marginBottom: '10px' }}>—</div>
 
                                 <div className="stats-stack-row" style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '16px' }}>
                                     <div className="stat-item">

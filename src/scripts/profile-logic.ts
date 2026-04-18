@@ -2041,7 +2041,7 @@ export async function initChatSystem() {
         })
         .subscribe();
 
-    // Start periodic queen status polling (every 2 minutes) so members always see live status
+    // Start periodic queen status polling (every 60s) so members always see live status
     const QUEEN_EMAILS = ['ceo@qkarin.com', 'queen@qkarin.com'];
     if (_queenReapplyInterval) { clearInterval(_queenReapplyInterval); _queenReapplyInterval = null; }
     if (QUEEN_EMAILS.includes(email!)) {
@@ -2052,7 +2052,7 @@ export async function initChatSystem() {
         _isQueenUser = false;
         if (_queenInterval) clearInterval(_queenInterval);
         _fetchQueenStatus(); // immediate fetch
-        _queenInterval = setInterval(_fetchQueenStatus, 2 * 60 * 1000);
+        _queenInterval = setInterval(_fetchQueenStatus, 60 * 1000);
     }
     // Re-apply cached queen status every 3s — React re-renders reset DOM text to "-"
     _queenReapplyInterval = setInterval(() => {

@@ -10,6 +10,7 @@ import { clean, raw, formatTimer } from './utils';
 import { getSignedUrl, mediaType as mediaTypeFunction, getOptimizedUrl } from './media';
 
 import { getHierarchyReport } from '../lib/hierarchyRules';
+import { isMemberOnline } from './dashboard-presence';
 
 // --- Theme helpers (reads runtime theme from window.__dashTheme) ---
 function _tHex(): string { return (window as any).__dashTheme?.hex || '#c5a059'; }
@@ -91,9 +92,28 @@ export async function updateDetail(u: any) {
     if (!report) return;
 
     const now = Date.now();
+    const memberEmail = u.member_id || '';
+    // Check both: Realtime presence (instant) and DB last_active (persistent)
+    const presenceOnline = isMemberOnline(memberEmail);
     const ls = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
-    let diff = Math.floor((now - ls) / 60000);
-    let status = (ls > 0 && diff < 2) ? "ONLINE" : (ls > 0 ? diff + " MIN AGO" : "OFFLINE");
+    const diffMs = now - ls;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHrs = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    let status: string;
+    if (presenceOnline || (ls > 0 && diffMin < 5)) {
+        status = "ONLINE";
+    } else if (ls <= 0) {
+        status = "OFFLINE";
+    } else if (diffDays >= 2) {
+        status = `${diffDays}d AGO`;
+    } else if (diffDays === 1) {
+        status = "YESTERDAY";
+    } else if (diffHrs >= 1) {
+        status = `${diffHrs}h AGO`;
+    } else {
+        status = `${diffMin}m AGO`;
+    }
     const isOnline = status === "ONLINE";
 
     const profPic = document.getElementById('dProfilePic') as HTMLImageElement;
