@@ -775,14 +775,14 @@ export default function ProfilePage() {
 
                 {/* GLOBAL INLINE PANEL - overlays content area when open */}
                 {showGlobal && (
-                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 40, position: 'relative' }}>
+                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 1000, position: 'relative' }}>
                         <GlobalContent onClose={() => setShowGlobal(false)} userEmail={profile?.memberId || profile?.member_id || profile?.email || null} />
                     </div>
                 )}
 
                 {/* CHALLENGES INLINE PANEL - overlays content area when open */}
                 {desktopChallengeOpen && (
-                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 40, position: 'relative' }}>
+                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 1000, position: 'relative' }}>
                         <DesktopChallengeModal
                             challenges={allChallenges}
                             activeChallenge={activeChallenge}
