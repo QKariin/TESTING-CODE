@@ -31,7 +31,20 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Capture PWA install prompt as early as possible — before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window._deferredInstallPrompt=e;});` }} />
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('beforeinstallprompt',function(e){
+            e.preventDefault();
+            window._deferredInstallPrompt=e;
+            var d=document.getElementById('_pwa_debug');
+            if(d){d.textContent='✅ Install prompt ready — button will show INSTALL';d.style.background='#1a3a1a';}
+          });
+          window.addEventListener('load',function(){
+            setTimeout(function(){
+              var d=document.getElementById('_pwa_debug');
+              if(d && !window._deferredInstallPrompt){d.textContent='❌ No install prompt — Chrome blocked it (engagement/SW issue)';}
+            },3000);
+          });
+        `}} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

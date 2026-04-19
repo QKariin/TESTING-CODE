@@ -2210,6 +2210,24 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
+                    <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>
+                        <div style={{ marginBottom: 4, color: 'rgba(197,160,89,0.5)', letterSpacing: 1 }}>DEBUG INFO</div>
+                        <div>SW: {'serviceWorker' in navigator ? '✅ supported' : '❌ not supported'}</div>
+                        <div id="_pwa_debug_inline">Install prompt: ⏳ checking...</div>
+                        <script dangerouslySetInnerHTML={{ __html: `
+                            (function(){
+                                function update(){
+                                    var el=document.getElementById('_pwa_debug_inline');
+                                    if(!el) return;
+                                    if(window._deferredInstallPrompt){el.textContent='Install prompt: ✅ ready (INSTALL button should work)';}
+                                    else{el.textContent='Install prompt: ❌ not fired by Chrome';}
+                                }
+                                setTimeout(update,2000);
+                                window.addEventListener('beforeinstallprompt',function(){setTimeout(update,100);});
+                            })();
+                        `}} />
+                    </div>
+
                     <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', fontWeight: 600, color: '#c5a059', letterSpacing: '1px', cursor: 'pointer' }}>Got it</button>
                 </div>
             </div>
