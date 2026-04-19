@@ -134,32 +134,31 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                     </div>
 
                     {/* LEADERBOARD */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(var(--gold-rgb),0.03)', border: '1px solid rgba(var(--gold-rgb),0.18)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
-                        <div style={{ padding: '10px 14px 0', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                                    <div style={{ width: '3px', height: '14px', background: 'linear-gradient(var(--gold),var(--accent))', borderRadius: '2px' }}></div>
-                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.52rem', color: 'var(--gold)', letterSpacing: '2px' }}>LEADERBOARD</span>
-                                </div>
-                                <button onClick={() => openGlobalSection('leaderboard')} style={{ background: 'rgba(var(--gold-rgb),0.08)', border: '1px solid rgba(var(--gold-rgb),0.2)', color: 'var(--gold)', fontFamily: 'Orbitron', fontSize: '0.36rem', padding: '3px 8px', cursor: 'pointer', borderRadius: '3px', letterSpacing: '1px' }}>EXPAND</button>
+                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ width: '3px', height: '14px', background: 'var(--gold)', borderRadius: '2px' }}></div>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'var(--gold)', letterSpacing: '2px', fontWeight: 700 }}>LEADERBOARD</span>
                             </div>
-                            <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
-                                {(['today', 'weekly', 'monthly', 'alltime'] as const).map(p => (
-                                    <button key={p} id={`lbChip_${p}`} onClick={() => loadLeaderboardPreview(p)} style={{ padding: '2px 7px', background: p === 'today' ? 'rgba(var(--gold-rgb),0.18)' : 'transparent', border: `1px solid ${p === 'today' ? 'rgba(var(--gold-rgb),0.4)' : 'rgba(255,255,255,0.07)'}`, color: p === 'today' ? 'var(--gold)' : 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.36rem', cursor: 'pointer', borderRadius: '3px', letterSpacing: '1px' }}>
-                                        {p === 'alltime' ? 'ALL' : p.toUpperCase()}
-                                    </button>
-                                ))}
-                            </div>
-                            <div style={{ height: '1px', background: 'rgba(var(--gold-rgb),0.1)', marginLeft: '-14px', marginRight: '-14px' }}></div>
+                            <button onClick={() => openGlobalSection('leaderboard')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.36rem', padding: '3px 8px', cursor: 'pointer', borderRadius: '3px', letterSpacing: '1px' }}>EXPAND</button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px', padding: '8px 14px', flexShrink: 0 }}>
+                            {(['today', 'weekly', 'monthly', 'alltime'] as const).map(p => (
+                                <button key={p} id={`lbChip_${p}`} onClick={() => loadLeaderboardPreview(p)} style={{ padding: '2px 7px', background: p === 'today' ? 'rgba(var(--gold-rgb),0.18)' : 'transparent', border: `1px solid ${p === 'today' ? 'rgba(var(--gold-rgb),0.4)' : 'rgba(255,255,255,0.07)'}`, color: p === 'today' ? 'var(--gold)' : 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.36rem', cursor: 'pointer', borderRadius: '3px', letterSpacing: '1px' }}>
+                                    {p === 'alltime' ? 'ALL' : p.toUpperCase()}
+                                </button>
+                            ))}
                         </div>
                         <div id="globalPreview_leaderboard" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}></div>
                     </div>
 
                     {/* ACADEMY */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(var(--gold-rgb),0.07), rgba(var(--gold-rgb),0.02))', border: '1px solid rgba(var(--gold-rgb),0.25)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(var(--gold-rgb),0.12)', flexShrink: 0 }}>
-                            <div style={{ width: '3px', height: '14px', background: 'var(--gold)', borderRadius: '2px', marginRight: '8px' }}></div>
-                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'var(--gold)', letterSpacing: '2px', fontWeight: 700 }}>ACADEMY</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '12px', overflow: 'hidden', minHeight: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ width: '3px', height: '14px', background: 'var(--gold)', borderRadius: '2px' }}></div>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'var(--gold)', letterSpacing: '2px', fontWeight: 700 }}>ACADEMY</span>
+                            </div>
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 10px', gap: '10px' }}>
                             <img src="/academy-obedience.png" alt="Obedience Academy" style={{ width: '85%', maxWidth: '240px' }} />
