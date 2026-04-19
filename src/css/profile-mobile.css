@@ -2361,37 +2361,50 @@
     .mob-gl-talk-footer {
         display: flex;
         flex-shrink: 0;
+        align-items: center;
         gap: 8px;
         padding: 10px 12px;
-        border-top: 1px solid rgba(197, 160, 89, 0.15);
-        background: rgba(0, 0, 0, 0.5);
         padding-bottom: max(10px, env(safe-area-inset-bottom));
+        border-top: 1px solid rgba(197, 160, 89, 0.3);
+        background: #050505;
+        box-sizing: border-box;
     }
 
     .mob-gl-talk-input {
         flex: 1;
-        background: rgba(255, 255, 255, 0.04);
+        height: 42px;
+        background: #111;
         border: 1px solid rgba(197, 160, 89, 0.25);
-        color: #ccc;
-        font-family: 'Crimson Text', serif;
+        color: #fff;
+        font-family: 'Cinzel', serif;
         font-size: 16px;
+        letter-spacing: 0.5px;
         padding: 10px 14px;
-        border-radius: 6px;
+        border-radius: 10px;
         outline: none;
+        transition: border-color 0.2s;
+        touch-action: manipulation;
+    }
+
+    .mob-gl-talk-input:focus {
+        border-color: rgba(197, 160, 89, 0.7);
     }
 
     .mob-gl-talk-input::placeholder {
         color: #333;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.55rem;
+        letter-spacing: 2px;
     }
 
     .mob-gl-talk-send {
-        background: rgba(197, 160, 89, 0.15);
-        border: 1px solid rgba(197, 160, 89, 0.4);
+        background: none;
+        border: none;
         color: #c5a059;
-        font-size: 0.9rem;
-        padding: 10px 16px;
-        border-radius: 6px;
+        font-size: 1.1rem;
+        padding: 8px 10px;
         cursor: pointer;
+        flex-shrink: 0;
     }
 
     /* Updates */
