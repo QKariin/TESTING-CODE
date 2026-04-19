@@ -8,6 +8,12 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        // If user already has a valid session (e.g. PWA relaunch), skip login
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) window.location.href = '/profile';
+        });
+
         const reset = () => setLoading(false);
         window.addEventListener('focus', reset);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });

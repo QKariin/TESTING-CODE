@@ -1,8 +1,9 @@
 {
+  "id": "queen-karin-pwa",
   "name": "Queen Karin",
   "short_name": "QK",
   "description": "Queen Karin — exclusive membership community",
-  "start_url": "/",
+  "start_url": "/profile",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
