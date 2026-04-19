@@ -1,6 +1,6 @@
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
 
-const APP_CACHE = 'qk-app-v5';
+const APP_CACHE = 'qk-app-v6';
 const MEDIA_CACHE = 'qk-media-v1';
 const SHELL = ['/dashboard', '/profile', '/icons/collar-192.png', '/icons/collar-512.png'];
 const MEDIA_EXTENSIONS = /\.(png|jpg|jpeg|gif|webp|svg|avif|bmp|mp4|webm|mov|m4v)(\?|$)/i;
