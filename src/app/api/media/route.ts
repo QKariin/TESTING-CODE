@@ -24,6 +24,19 @@ export async function GET(req: NextRequest) {
         } else if (rawUrl) {
             const match = rawUrl.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/([^/?]+)\/([^?]+)/);
             if (!match) {
+                // Not a Supabase URL — try to proxy it directly (Wix, Cloudinary, etc.)
+                if (rawUrl.startsWith('http')) {
+                    try {
+                        const extRes = await fetch(rawUrl, { redirect: 'follow' });
+                        if (extRes.ok && extRes.body) {
+                            const ct = extRes.headers.get('content-type') || 'image/jpeg';
+                            return new NextResponse(extRes.body, {
+                                status: 200,
+                                headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=3600' },
+                            });
+                        }
+                    } catch { /* fall through to error */ }
+                }
                 console.error('[media proxy] no match for URL:', rawUrl.slice(0, 120));
                 return NextResponse.json({ error: 'Not a Supabase storage URL' }, { status: 400 });
             }
@@ -74,6 +87,8 @@ function guessContentType(path: string): string {
         mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm',
         jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
         gif: 'image/gif', webp: 'image/webp', avif: 'image/avif',
+        heic: 'image/heic', heif: 'image/heif', tiff: 'image/tiff',
+        tif: 'image/tiff', bmp: 'image/bmp', svg: 'image/svg+xml',
     };
     return map[ext] || 'application/octet-stream';
 }

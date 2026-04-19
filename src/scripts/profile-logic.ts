@@ -5175,6 +5175,34 @@ export async function renderHistoryAndAltar(profileData: any) {
     }
     if (!raw.length) return;
 
+    // Pre-normalize all proofUrls: convert Wix format, resolve /api/media/url paths, filter invalid
+    raw.forEach((t: any) => {
+        if (!t.proofUrl || t.proofUrl === 'SKIPPED' || t.proofUrl === 'FORCED' || t.proofUrl.startsWith('failed')) {
+            t.proofUrl = null;
+            return;
+        }
+        // Convert Wix URLs to actual HTTP URLs
+        if (t.proofUrl.startsWith('wix:')) {
+            t.proofUrl = getOptimizedUrl(t.proofUrl) || null;
+            return;
+        }
+        // Convert /api/media/url (returns JSON) to /api/media (returns image)
+        if (t.proofUrl.startsWith('/api/media/url')) {
+            try {
+                const qs = t.proofUrl.split('?')[1] || '';
+                const params = new URLSearchParams(qs);
+                const bucket = params.get('bucket') || 'media';
+                const path = params.get('path') || params.get('url') || '';
+                if (path) {
+                    t.proofUrl = `/api/media?bucket=${bucket}&path=${encodeURIComponent(path)}`;
+                } else {
+                    t.proofUrl = null;
+                }
+            } catch { t.proofUrl = null; }
+            return;
+        }
+    });
+
     const allApproved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
     const routines = allApproved.filter((t: any) => t.isRoutine);
     const tasks = allApproved.filter((t: any) => !t.isRoutine).sort((a: any, b: any) =>
@@ -5328,13 +5356,17 @@ export function toggleAltarSection(section: string) {
 }
 
 
-// onerror fallback: retry via /api/media proxy when a Supabase image fails to load
-const _imgFallback = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+// onerror fallback: 1st fail → retry via /api/media proxy; 2nd fail → show placeholder
+const _imgFallback = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else if(!this.dataset.gave_up){this.dataset.gave_up='1';this.style.opacity='0.25';this.src='/queen-karin.png';}"`;
 
 function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLElement | null {
     const resolveUrl = _altarResolveUrl || ((u: string) => u);
-    const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
+    let url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
     if (!url) return null;
+    // Final safety: skip obviously invalid URLs
+    if (url === 'SKIPPED' || url === 'FORCED' || url.startsWith('failed')) return null;
+    // Normalize Wix URLs that slipped through
+    if (url.startsWith('wix:')) { url = getOptimizedUrl(url); if (!url) return null; }
     const isVid = _isVideo(url);
     const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
     const meritBadge = t.meritAwarded
@@ -5385,7 +5417,7 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
         const url = resolveUrl(t.proofUrl);
         const isVid = _isVideo(url);
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
-        const _slotFallback = (img: HTMLImageElement) => { if (!img.dataset.retried) { img.dataset.retried = '1'; img.src = '/api/media?url=' + encodeURIComponent(img.src); } };
+        const _slotFallback = (img: HTMLImageElement) => { if (!img.dataset.retried) { img.dataset.retried = '1'; img.src = '/api/media?url=' + encodeURIComponent(img.src); } else if (!img.dataset.gave_up) { img.dataset.gave_up = '1'; img.style.opacity = '0.25'; img.src = '/queen-karin.png'; } };
         if (isVid) {
             const img = document.createElement('img');
             img.id = slotIds[i];
