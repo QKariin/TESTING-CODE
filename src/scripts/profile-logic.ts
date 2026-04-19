@@ -3053,17 +3053,29 @@ export function openMobChatOverlay() {
     setTimeout(scrollToBottom, 400);
     setTimeout(scrollToBottom, 900);
 
-    // Prevent touch scroll from leaking out of #mob_chatBox to the overlay/body
+    // Prevent ALL touch scroll from leaking out of scrollable areas
     if (!(el as any).__touchLocked) {
         (el as any).__touchLocked = true;
+        const scrollableIds = ['mob_chatBox', 'mob_systemLogContent', 'mob_huntStoreGrid'];
+        let startY = 0;
+        el.addEventListener('touchstart', (e: TouchEvent) => {
+            startY = e.touches[0].clientY;
+        }, { passive: true });
         el.addEventListener('touchmove', (e: TouchEvent) => {
-            // Only allow scroll inside #mob_chatBox — block everything else
+            // Find if touch is inside a scrollable container
+            let scrollable: HTMLElement | null = null;
             let target = e.target as HTMLElement | null;
             while (target && target !== el) {
-                if (target.id === 'mob_chatBox' || target.id === 'mob_systemLogContent' || target.id === 'mob_huntStoreGrid') return; // allow
+                if (scrollableIds.includes(target.id)) { scrollable = target; break; }
                 target = target.parentElement;
             }
-            e.preventDefault();
+            // Not inside a scrollable area — block completely
+            if (!scrollable) { e.preventDefault(); return; }
+            // Inside scrollable area — clamp at boundaries so it never chains to parent
+            const dy = e.touches[0].clientY - startY;
+            const atTop = scrollable.scrollTop <= 0 && dy > 0;
+            const atBottom = scrollable.scrollTop >= (scrollable.scrollHeight - scrollable.clientHeight - 1) && dy < 0;
+            if (atTop || atBottom) e.preventDefault();
         }, { passive: false });
     }
 
