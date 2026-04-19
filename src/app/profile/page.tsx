@@ -443,6 +443,7 @@ export default function ProfilePage() {
     // }, []);
 
     // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
+    const checkChallengeRef = useRef<() => Promise<void>>();
     useEffect(() => {
         async function checkChallenge() {
             try {
@@ -511,8 +512,18 @@ export default function ProfilePage() {
                 }
             } catch {}
         }
-        checkChallenge(); // load once - challenges don't change frequently, no polling needed
+        checkChallengeRef.current = checkChallenge;
+        checkChallenge();
     }, []);
+
+    // Auto-refresh when a challenge window is about to open
+    useEffect(() => {
+        if (!nextChallengeWindowTs) return;
+        const delay = nextChallengeWindowTs - Date.now() + 2000; // 2s grace for server clock
+        if (delay <= 0) { checkChallengeRef.current?.(); return; }
+        const t = setTimeout(() => checkChallengeRef.current?.(), delay);
+        return () => clearTimeout(t);
+    }, [nextChallengeWindowTs]);
 
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
     useEffect(() => {
