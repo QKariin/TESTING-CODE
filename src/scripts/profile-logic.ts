@@ -219,14 +219,12 @@ function renderTributes() {
         return;
     }
 
-    // 1. Desktop Quick Connect - Last tribute info + 2 pinned gifts
+    // 1. Desktop Quick Connect - Last tribute info + coffee + random wishlist item
     if (globalTributes.length >= 1) {
-        const pinned = ['coffee', 'lunch'];
-        const pinnedItems = pinned
-            .map(keyword => globalTributes.find(t => t.title?.toLowerCase().includes(keyword)))
-            .filter(Boolean) as typeof globalTributes;
-        // Only show 1 featured item in the quick tribute box; full list opens via SPOIL ME
-        const quickItems = pinnedItems.length >= 1 ? [pinnedItems[0]] : globalTributes.slice(0, 1);
+        const coffeeItem = globalTributes.find(t => t.title?.toLowerCase().includes('coffee'));
+        const otherItems = globalTributes.filter(t => t !== coffeeItem);
+        const randomItem = otherItems.length > 0 ? otherItems[Math.floor(Math.random() * otherItems.length)] : null;
+        const quickItems = [coffeeItem, randomItem].filter(Boolean) as typeof globalTributes;
 
         // Last tribute info - read from THIS user's own profile parameters (per-user, not global)
         const st = getState();
