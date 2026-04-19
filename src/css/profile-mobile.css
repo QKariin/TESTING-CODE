@@ -1748,7 +1748,7 @@
         top: 0;
         height: 100dvh;
         overflow: hidden;
-        overscroll-behavior: none;
+        overscroll-behavior: contain;
     }
 
     .mob-overlay-header {
@@ -1811,13 +1811,14 @@
         height: 0 !important;
     }
 
-    /* Chat overlay specific - strict flex column, only #mob_chatBox scrolls */
+    /* Chat overlay specific - mirrors .mob-gl-panel: overflow:hidden constrains
+       the scroll container so touch never leaks to the overlay */
     #mobChatTabChat {
         display: flex;
         flex-direction: column;
         flex: 1;
         min-height: 0;
-        /* NO overflow:hidden here - that's what clips messages */
+        overflow: hidden;
     }
 
     #mob_chatBox {
