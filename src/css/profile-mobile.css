@@ -412,22 +412,11 @@
         filter: drop-shadow(0 0 10px rgba(197, 160, 89, 0.18));
     }
 
-    /* Sparkle stars at pill edges */
+    /* Sparkle stars at pill edges — removed by request */
     .mob-kneel-outer::before,
     .mob-kneel-outer::after {
-        content: '✦';
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255, 240, 180, 0.78);
-        font-size: 0.65rem;
-        z-index: 10;
-        pointer-events: none;
-        text-shadow: 0 0 10px rgba(255, 215, 100, 0.95), 0 0 22px rgba(197, 160, 89, 0.7);
+        display: none !important;
     }
-
-    .mob-kneel-outer::before { left: -8px; }
-    .mob-kneel-outer::after  { right: -8px; }
 
     .mob-kneel-zone {
         width: 100% !important;
@@ -513,9 +502,66 @@
         animation-play-state: running !important;
     }
 
-    .mob-kneel-bar::before,
+    .mob-kneel-bar::before {
+        content: '';
+        pointer-events: none;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        translate: -50% -50%;
+        --size: calc(100% - var(--kneel-shadow-size) * 3);
+        --position: 2px;
+        --space: calc(var(--position) * 2);
+        width: var(--size);
+        height: var(--size);
+        background: radial-gradient(
+            circle at var(--position) var(--position),
+            white calc(var(--position) / 4),
+            transparent 0
+        ) padding-box;
+        background-size: var(--space) var(--space);
+        background-repeat: space;
+        mask-image: conic-gradient(
+            from calc(var(--kneel-gradient-angle) + 45deg),
+            black,
+            transparent 10% 90%,
+            black
+        );
+        border-radius: inherit;
+        opacity: 0.4;
+        z-index: 0;
+        animation: kneel-gradient-angle var(--kneel-duration) linear infinite,
+                   kneel-gradient-angle calc(var(--kneel-duration) / 0.4) linear infinite reverse paused;
+        animation-composition: add;
+    }
+
+    /* Inner shimmer glow */
     .mob-kneel-bar::after {
-        display: none !important;
+        content: '';
+        pointer-events: none;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        translate: -50% -50%;
+        width: 100%;
+        aspect-ratio: 1;
+        background: linear-gradient(
+            -50deg,
+            transparent,
+            var(--kneel-highlight),
+            transparent
+        );
+        mask-image: radial-gradient(circle at bottom, transparent 40%, black);
+        opacity: 0.5;
+        z-index: 0;
+        animation: kneel-shimmer var(--kneel-duration) linear infinite paused,
+                   kneel-shimmer calc(var(--kneel-duration) / 0.4) linear infinite reverse paused;
+        animation-composition: add;
+    }
+
+    .mob-kneel-bar:active::before,
+    .mob-kneel-bar:active::after {
+        animation-play-state: running !important;
     }
 
     /* Prevent text selection / iOS callout on every child element */
