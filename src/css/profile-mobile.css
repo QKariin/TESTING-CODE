@@ -1745,8 +1745,9 @@
     /* Full-screen mode for chat overlay — hides bottom nav, extends to bottom */
     .mob-overlay.mob-chat-fullscreen {
         bottom: 0;
+        top: 0;
         height: 100dvh;
-        height: -webkit-fill-available;
+        overflow: hidden;
     }
 
     .mob-overlay-header {
@@ -1757,7 +1758,9 @@
         padding: calc(env(safe-area-inset-top) + 20px) 20px 20px;
         border-bottom: 1px solid rgba(197, 160, 89, 0.25);
         border-top: 3px solid rgba(197, 160, 89, 0.55);
-        background: rgba(197, 160, 89, 0.03);
+        background: rgba(2, 5, 18, 0.99);
+        position: relative;
+        z-index: 2;
     }
 
     .mob-overlay-title-wrap {
