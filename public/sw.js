@@ -1,8 +1,8 @@
 try { importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch(e) {}
 
-const APP_CACHE = 'qk-app-v6';
+const APP_CACHE = 'qk-app-v7';
 const MEDIA_CACHE = 'qk-media-v1';
-const SHELL = ['/dashboard', '/profile', '/icons/collar-192.png', '/icons/collar-512.png'];
+const SHELL = ['/icons/collar-192.png', '/icons/collar-512.png'];
 const MEDIA_EXTENSIONS = /\.(png|jpg|jpeg|gif|webp|svg|avif|bmp|mp4|webm|mov|m4v)(\?|$)/i;
 const MAX_MEDIA_ENTRIES = 120;
 
