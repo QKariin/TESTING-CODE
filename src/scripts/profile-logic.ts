@@ -3073,6 +3073,8 @@ export function openMobQueenWall() {
 export function closeMobQueenWall() {
     const el = document.getElementById('mobQueenWallOverlay');
     if (!el) return;
+    // Pause all playing videos before hiding
+    el.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); });
     el.classList.remove('mob-overlay-open');
     setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     _setNavActive('profile');
@@ -5299,7 +5301,7 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const thumbUrl = _resolveThumbUrl(t, resolveUrl);
     const media = isVid
         ? `<img src="${thumbUrl || '/queen-karin.png'}" class="altar-card-media" loading="lazy" />`
-        : `<img src="${getOptimizedUrl(url, 400)}" class="altar-card-media" loading="lazy" />`;
+        : `<img src="${url}" class="altar-card-media" loading="lazy" />`;
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
@@ -5380,7 +5382,7 @@ function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const media = isVid
             ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`
-            : `<img src="${getOptimizedUrl(url, 300)}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
+            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
         return `
             <div style="position:relative;overflow:hidden;border-radius:4px;cursor:pointer;" onclick="void(0)">
                 ${media}

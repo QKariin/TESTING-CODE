@@ -298,12 +298,13 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
         window.location.href = '/login';
     };
 
+    const nonAdmin = users.filter(u => u.memberId.toLowerCase() !== userEmail.toLowerCase());
     const filtered = search
-        ? users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.memberId.toLowerCase().includes(search.toLowerCase()))
-        : users;
+        ? nonAdmin.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.memberId.toLowerCase().includes(search.toLowerCase()))
+        : nonAdmin;
 
-    const onlineCount = users.filter(u => getOnlineStatus(u.lastSeen) === 'online').length;
-    const unreadCount = users.filter(u => {
+    const onlineCount = nonAdmin.filter(u => getOnlineStatus(u.lastSeen) === 'online').length;
+    const unreadCount = nonAdmin.filter(u => {
         const key = u.memberId.toLowerCase();
         const lastSlaveMsg = unreadMap[key];
         if (!lastSlaveMsg) return false;
@@ -312,7 +313,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     }).length;
     const pendingTotal = globalQueue.length;
     const stats = {
-        active: users.length,
+        active: nonAdmin.length,
         online: onlineCount,
         pending: pendingTotal,
         kneelMins: users.reduce((s, u) => s + (u.parameters?.totalKneelMinutes || 0), 0),
@@ -2812,17 +2813,15 @@ function isSystemMessage(msg: any): boolean {
 }
 
 // ─── MOBILE GLOBAL VIEW ──────────────────────────────────────────────────────
-// Exact same layout + data as /profile mobile Global overlay
+// Exact same layout + data as /profile mobile Global overlay.
+// Display is controlled entirely by switchMobGlTab (DOM) — no React state for panels.
 function MobGlobalView({ userEmail }: { userEmail: string }) {
-    const [glTab, setGlTab] = useState<'rank' | 'talk' | 'challenges' | 'updates'>('talk');
     const initialized = useRef(false);
 
     useEffect(() => {
         if (initialized.current) return;
         initialized.current = true;
-        // Init profile state so sendMobGlMessage knows who we are
         initProfileState({ member_id: userEmail || 'queen@qkarin.com', email: userEmail, name: 'QUEEN' });
-        // Register all window functions that DOM event handlers (onclick in generated HTML) need
         (window as any).switchMobGlTab = switchMobGlTab;
         (window as any).switchMobGlPeriod = switchMobGlPeriod;
         (window as any).sendMobGlMessage = sendMobGlMessage;
@@ -2830,40 +2829,27 @@ function MobGlobalView({ userEmail }: { userEmail: string }) {
         (window as any).setMobGlReply = setMobGlReply;
         (window as any).cancelMobGlReply = cancelMobGlReply;
         (window as any).closeMobGlobal = () => {};
-        // Load initial tab
+        // Load talk tab on mount — same as profile
         switchMobGlTab('talk');
     }, [userEmail]);
 
-    useEffect(() => {
-        switchMobGlTab(glTab);
-    }, [glTab]);
-
-    const tabs = [
-        { key: 'rank' as const, label: 'RANK' },
-        { key: 'talk' as const, label: 'TALK' },
-        { key: 'challenges' as const, label: 'CHALLENGES' },
-        { key: 'updates' as const, label: 'NEWS' },
-    ];
-
     return (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: 'rgba(2,5,18,0.99)' }}>
-            {/* Header — same as profile mobile */}
+            {/* Header */}
             <div className="mob-overlay-header">
                 <span className="mob-overlay-title">◎ GLOBAL</span>
             </div>
 
             {/* Tab bar */}
             <div className="mob-gl-tabs">
-                {tabs.map(t => (
-                    <button key={t.key} id={`mobGlTab_${t.key}`} className={`mob-gl-tab${glTab === t.key ? ' active' : ''}`}
-                        onClick={() => { setGlTab(t.key); switchMobGlTab(t.key); }}>
-                        {t.label}
-                    </button>
-                ))}
+                <button id="mobGlTab_rank" className="mob-gl-tab" onClick={() => switchMobGlTab('rank')}>RANK</button>
+                <button id="mobGlTab_talk" className="mob-gl-tab active" onClick={() => switchMobGlTab('talk')}>TALK</button>
+                <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => switchMobGlTab('challenges')}>CHALLENGES</button>
+                <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => switchMobGlTab('updates')}>NEWS</button>
             </div>
 
             {/* RANK panel */}
-            <div id="mobGlPanel_rank" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: glTab === 'rank' ? 'flex' : 'none' }}>
+            <div id="mobGlPanel_rank" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                 <div className="mob-gl-period-bar">
                     <button id="mobGlPeriod_today" className="mob-gl-period-btn active" onClick={() => switchMobGlPeriod('today')}>TODAY</button>
                     <button id="mobGlPeriod_weekly" className="mob-gl-period-btn" onClick={() => switchMobGlPeriod('weekly')}>WEEK</button>
@@ -2874,8 +2860,8 @@ function MobGlobalView({ userEmail }: { userEmail: string }) {
             </div>
 
             {/* TALK panel */}
-            <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: glTab === 'talk' ? 'flex' : 'none' }}>
-                <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1 }}></div>
+            <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, minHeight: 0, display: 'flex' }}>
+                <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1, minHeight: 0 }}></div>
                 <div className="mob-gl-talk-footer">
                     <input type="text" id="mobGlTalkInput" className="mob-gl-talk-input" placeholder="speak..."
                         onKeyDown={(e) => handleMobGlKey(e.nativeEvent)} />
@@ -2885,12 +2871,12 @@ function MobGlobalView({ userEmail }: { userEmail: string }) {
             </div>
 
             {/* CHALLENGES panel */}
-            <div id="mobGlPanel_challenges" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: glTab === 'challenges' ? 'flex' : 'none' }}>
+            <div id="mobGlPanel_challenges" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                 <div id="mobGlChallengesFeed" className="mob-gl-scroll"></div>
             </div>
 
             {/* UPDATES panel */}
-            <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: glTab === 'updates' ? 'flex' : 'none' }}>
+            <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                 <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
             </div>
         </div>

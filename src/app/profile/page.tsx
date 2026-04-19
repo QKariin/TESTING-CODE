@@ -1388,7 +1388,7 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Define your preferences</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">50 ₡</span>
+                                    <span className="hub-action-cost">100 ₡</span>
                                 </button>
                                 <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
                                     <div className="hub-action-left">
@@ -1398,7 +1398,7 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Set your hard boundaries</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">50 ₡</span>
+                                    <span className="hub-action-cost">200 ₡</span>
                                 </button>
                                 <button className="hub-action-row" id="notifToggleRow" onClick={() => (window as any).togglePushNotifications()}>
                                     <div className="hub-action-left">
