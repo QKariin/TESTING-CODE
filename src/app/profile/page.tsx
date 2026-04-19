@@ -2452,7 +2452,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
         .slice(0, 3);
 
     return (
-        <div style={embedded ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'transparent' } : { position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+        <div style={embedded ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'transparent' } : { position: 'fixed', top: 0, left: 0, right: 0, bottom: 'calc(60px + env(safe-area-inset-bottom))', zIndex: 1000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
             <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
 
             {/* Header - only shown on mobile (embedded overlay has its own header) */}
