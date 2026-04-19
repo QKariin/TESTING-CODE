@@ -2142,7 +2142,7 @@ export default function ProfilePage() {
                             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Scroll down and tap "Add to Home Screen"</div>
                         </div>
                         <div style={{ padding: '10px 0 0 36px' }}>
-                            <img src="/install-step2.jpg" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                            <img src="/install-safari.png" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
                         </div>
                     </div>
 
@@ -2163,7 +2163,7 @@ export default function ProfilePage() {
                             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap "Add to Home Screen"</div>
                         </div>
                         <div style={{ padding: '10px 0 0 36px' }}>
-                            <img src="/install-step1.jpg" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                            <img src="/install-chrome.png" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
                         </div>
                     </div>
 
