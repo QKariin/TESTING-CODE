@@ -48,13 +48,22 @@ export async function GET(req: NextRequest) {
 
         console.log(`[media proxy] bucket=${bucket} path=${filePath.slice(0, 80)}`);
 
-        // Primary strategy: create a fresh signed URL and redirect (efficient — no streaming)
+        // Try signed URL first, then fetch the content directly (no redirect — avoids CORS issues)
         const { data: signed, error: signErr } = await supabaseAdmin.storage
             .from(bucket)
             .createSignedUrl(filePath, 3600);
 
         if (signed?.signedUrl) {
-            return NextResponse.redirect(signed.signedUrl, 307);
+            try {
+                const signedRes = await fetch(signed.signedUrl);
+                if (signedRes.ok && signedRes.body) {
+                    const ct = signedRes.headers.get('content-type') || guessContentType(filePath);
+                    return new NextResponse(signedRes.body, {
+                        status: 200,
+                        headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=3600' },
+                    });
+                }
+            } catch {}
         }
 
         console.warn(`[media proxy] sign failed (${signErr?.message}), trying download`);

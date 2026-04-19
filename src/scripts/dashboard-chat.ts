@@ -371,9 +371,12 @@ function renderToHtml(m: any) {
 
     let bubble = '';
     if (m.type === 'photo') {
-        bubble = `<div class="${bubbleClass}"><img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" style="cursor:pointer" onclick="openChatPreview('${encodeURIComponent(content)}', false)" /></div>`;
+        const rawImgUrl = getOptimizedUrl(content, 300);
+        const imgUrl = rawImgUrl.includes('supabase.co/storage') ? `/api/media?url=${encodeURIComponent(rawImgUrl)}` : rawImgUrl;
+        bubble = `<div class="${bubbleClass}"><img src="${imgUrl}" class="chat-img-attachment" style="cursor:pointer" onclick="openChatPreview('${encodeURIComponent(content)}', false)" /></div>`;
     } else if (m.type === 'video') {
-        bubble = `<div class="${bubbleClass}" style="padding:4px;"><video src="${content}" controls playsinline preload="none" class="chat-img-attachment"></video></div>`;
+        const vidUrl = content.includes('supabase.co/storage') ? `/api/media?url=${encodeURIComponent(content)}` : content;
+        bubble = `<div class="${bubbleClass}" style="padding:4px;"><video src="${vidUrl}" controls playsinline preload="none" class="chat-img-attachment"></video></div>`;
     } else {
         let safeHtml = purifier.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, '<br>');
