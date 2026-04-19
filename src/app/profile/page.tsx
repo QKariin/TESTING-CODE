@@ -1089,7 +1089,7 @@ export default function ProfilePage() {
                                 </div>
                             )}
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
-                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 20px 10px 20px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
+                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
                                 <div id="chatContent" className="chat-area" style={{ padding: '0 20px 20px 20px' }}></div>
                             </div>
 
@@ -1885,6 +1885,7 @@ export default function ProfilePage() {
                             </div>
                             <div id="mob_huntStoreGrid" style={{ width: '100%', overflowY: 'auto', paddingBottom: '30px' }}></div>
                         </div>
+                        <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).switchMobChatTab('service')}>SYSTEM ONLINE</div>
                         <div id="mob_chatContent" className="chat-area"></div>
                     </div>
                     <div className="chat-footer">
