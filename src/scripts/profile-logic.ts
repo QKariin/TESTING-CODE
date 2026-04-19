@@ -5223,6 +5223,8 @@ function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
     const merit = hero.meritAwarded ? `+${hero.meritAwarded} MERIT` : '';
     const thumbUrl = _resolveThumbUrl(hero, resolveUrl);
 
+    const _heroFallback = () => { if (!imgMain.dataset.retried) { imgMain.dataset.retried = '1'; imgMain.src = '/api/media?url=' + encodeURIComponent(imgMain.src); } };
+    imgMain.onerror = _heroFallback;
     if (_isVideo(url)) {
         imgMain.src = thumbUrl || '/queen-karin.png';
         imgMain.style.display = 'block';
@@ -5289,6 +5291,9 @@ export function toggleAltarSection(section: string) {
 }
 
 
+// onerror fallback: retry via /api/media proxy when a Supabase image fails to load
+const _imgFallback = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+
 function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLElement | null {
     const resolveUrl = _altarResolveUrl || ((u: string) => u);
     const url = t.proofUrl ? resolveUrl(t.proofUrl) : null;
@@ -5300,8 +5305,8 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
         : '';
     const thumbUrl = _resolveThumbUrl(t, resolveUrl);
     const media = isVid
-        ? `<img src="${thumbUrl || '/queen-karin.png'}" class="altar-card-media" loading="lazy" />`
-        : `<img src="${url}" class="altar-card-media" loading="lazy" />`;
+        ? `<img src="${thumbUrl || '/queen-karin.png'}" class="altar-card-media" loading="lazy" ${_imgFallback} />`
+        : `<img src="${url}" class="altar-card-media" loading="lazy" ${_imgFallback} />`;
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
@@ -5343,16 +5348,19 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
         const url = resolveUrl(t.proofUrl);
         const isVid = _isVideo(url);
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
+        const _slotFallback = (img: HTMLImageElement) => { if (!img.dataset.retried) { img.dataset.retried = '1'; img.src = '/api/media?url=' + encodeURIComponent(img.src); } };
         if (isVid) {
             const img = document.createElement('img');
             img.id = slotIds[i];
             img.src = thumbUrl || '/queen-karin.png';
             img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+            img.onerror = () => _slotFallback(img);
             el.replaceWith(img);
         } else {
             const img = el as HTMLImageElement;
-            img.dataset.loaded = 'true'; // signal onerror it's now a real URL
-            img.style.display = '';       // un-hide if onerror ran on placeholder
+            img.dataset.loaded = 'true';
+            img.style.display = '';
+            img.onerror = () => _slotFallback(img);
             img.src = url;
             img.style.pointerEvents = 'none';
         }
@@ -5381,8 +5389,8 @@ function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u
         const dateStr = new Date(t.timestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const media = isVid
-            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`
-            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />`;
+            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" ${_imgFallback} />`
+            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" ${_imgFallback} />`;
         return `
             <div style="position:relative;overflow:hidden;border-radius:4px;cursor:pointer;" onclick="void(0)">
                 ${media}
@@ -5404,8 +5412,8 @@ function _renderFailedGrid(containerId: string, failed: any[], resolveUrl: (u: s
         const isVid = _isVideo(url);
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         return isVid
-            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`
-            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" />`;
+            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" ${_imgFallback} />`
+            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" ${_imgFallback} />`;
     }).join('');
 }
 
@@ -5424,8 +5432,8 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const mediaP = url
             ? (isVidP
-                ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy">`
-                : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy">`)
+                ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy" ${_imgFallback}>`
+                : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy" ${_imgFallback}>`)
             : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0a0a;font-size:2rem;">⏳</div>`;
         card.innerHTML = `
             <div style="position:relative;">
@@ -5453,8 +5461,8 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         const isVid = _isVideo(url);
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const mediaHTML = isVid
-            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`
-            : `<img src="${getOptimizedUrl(url, 400)}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" />`;
+            ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" ${_imgFallback} />`
+            : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" ${_imgFallback} />`;
         const meritBadge = t.meritAwarded ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#c5a059;font-family:Orbitron;font-size:0.38rem;padding:3px 7px;border-radius:3px;letter-spacing:1px;">+${t.meritAwarded}</div>` : '';
 
         card.innerHTML = `
