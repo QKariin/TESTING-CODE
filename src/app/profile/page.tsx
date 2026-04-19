@@ -90,6 +90,36 @@ import {
     closeProfileGifPicker,
 } from '@/scripts/profile-logic';
 
+function PwaDebugInfo() {
+    const [swStatus, setSwStatus] = useState('checking...');
+    const [manifestStatus, setManifestStatus] = useState('checking...');
+    useEffect(() => {
+        // SW registration status
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg) setSwStatus(`✅ active (scope: ${reg.scope})`);
+                else setSwStatus('❌ not registered');
+            });
+        } else {
+            setSwStatus('❌ not supported');
+        }
+        // Manifest reachable?
+        fetch('/site.webmanifest').then(r => {
+            setManifestStatus(r.ok ? `✅ ok (${r.status})` : `❌ ${r.status}`);
+        }).catch(e => setManifestStatus(`❌ fetch error: ${e.message}`));
+    }, []);
+    return (
+        <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.8 }}>
+            <div style={{ marginBottom: 4, color: 'rgba(197,160,89,0.5)', letterSpacing: 1 }}>DEBUG INFO</div>
+            <div>SW: {swStatus}</div>
+            <div>Manifest: {manifestStatus}</div>
+            <div>Prompt: {(window as any)._deferredInstallPrompt ? '✅ ready' : '❌ not fired'}</div>
+            <div>Standalone: {window.matchMedia('(display-mode: standalone)').matches ? 'yes' : 'no'}</div>
+            <div>Origin: {window.location.origin}</div>
+        </div>
+    );
+}
+
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
@@ -2210,11 +2240,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>
-                        <div style={{ marginBottom: 4, color: 'rgba(197,160,89,0.5)', letterSpacing: 1 }}>DEBUG INFO</div>
-                        <div>SW: {'serviceWorker' in navigator ? '✅ supported' : '❌ not supported'}</div>
-                        <div>Install prompt: {installPrompt ? '✅ ready — INSTALL button should work' : '❌ not fired by Chrome'}</div>
-                    </div>
+                    <PwaDebugInfo />
 
                     <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', fontWeight: 600, color: '#c5a059', letterSpacing: '1px', cursor: 'pointer' }}>Got it</button>
                 </div>
