@@ -57,6 +57,7 @@ import {
     loadQueenPosts,
     initGallery,
     renderHistoryAndAltar,
+    loadAltarTop3,
     openAltarDrawer,
     closeAltarDrawer,
     toggleAltarSection,
@@ -268,6 +269,7 @@ export default function ProfilePage() {
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
                     setState({ cooldownMinutes: 1 }); // DEV: 1 min cooldown on localhost
+                    loadAltarTop3(TEST_EMAIL); // Fire early — fills altar slots instantly
                     setTimeout(() => {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
@@ -341,6 +343,7 @@ export default function ProfilePage() {
 
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
+                    loadAltarTop3(unifiedData.memberId || unifiedData.member_id || user.email || ''); // Fire early — fills altar slots instantly
 
                     // Store lock state - applied after loading screen clears (DOM not ready yet)
                     pendingLockRef.current = {

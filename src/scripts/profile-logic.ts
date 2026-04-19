@@ -5327,6 +5327,60 @@ export async function loadQueenPosts() {
     }
 }
 
+// ─── ALTAR: FAST TOP-3 LOADER ─────────────────────────────────────────────────
+// Called early on page load — fetches only the 3 best-rated tasks with
+// pre-signed URLs from a lightweight endpoint, no full profile needed.
+export async function loadAltarTop3(memberId: string) {
+    if (!memberId) return;
+    try {
+        const res = await fetch(`/api/altar?memberId=${encodeURIComponent(memberId)}`);
+        const { top3 } = await res.json();
+        if (!top3?.length) return;
+
+        const slotIds = ['mobRec_Slot1', 'mobRec_Slot2', 'mobRec_Slot3'];
+        const fallback = (img: HTMLImageElement) => {
+            if (!img.dataset.retried) { img.dataset.retried = '1'; img.src = '/api/media?url=' + encodeURIComponent(img.src); }
+            else if (!img.dataset.gave_up) { img.dataset.gave_up = '1'; img.style.opacity = '0.25'; img.src = '/queen-karin.png'; }
+        };
+
+        top3.forEach((t: any, i: number) => {
+            const el = document.getElementById(slotIds[i]);
+            if (!el) return;
+            const isVid = t.proofType === 'video' || /\.(mp4|mov|webm)/i.test(t.proofUrl || '');
+            const url = isVid ? (t.thumbnailUrl || '/queen-karin.png') : t.proofUrl;
+
+            if (el.tagName === 'IMG') {
+                const img = el as HTMLImageElement;
+                // Don't overwrite if renderHistoryAndAltar already filled it
+                if (img.dataset.loaded) return;
+                img.onerror = () => fallback(img);
+                img.src = url;
+                img.style.pointerEvents = 'none';
+            } else {
+                const img = document.createElement('img');
+                img.id = slotIds[i];
+                img.src = url;
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+                img.onerror = () => fallback(img);
+                el.replaceWith(img);
+            }
+        });
+
+        // Also fill the desktop hero with #1
+        const heroImg = document.getElementById('imgAltarMain') as HTMLImageElement | null;
+        const heroTitle = document.getElementById('titleAltarMain');
+        if (heroImg && top3[0] && !heroImg.dataset.loaded) {
+            const t = top3[0];
+            const isVid = t.proofType === 'video' || /\.(mp4|mov|webm)/i.test(t.proofUrl || '');
+            heroImg.src = isVid ? (t.thumbnailUrl || '/queen-karin.png') : t.proofUrl;
+            heroImg.onerror = () => fallback(heroImg);
+            if (heroTitle) heroTitle.textContent = t.text || '';
+        }
+    } catch (err) {
+        console.warn('[ALTAR] fast top3 load failed:', err);
+    }
+}
+
 // ─── ALTAR & HISTORY GALLERY (RECORDS TAB) ───────────────────────────────────
 export async function renderHistoryAndAltar(profileData: any) {
     let raw: any[] = [];
