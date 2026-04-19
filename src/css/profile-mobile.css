@@ -93,8 +93,7 @@
         overflow-x: hidden !important;
         -webkit-overflow-scrolling: touch !important;
         touch-action: pan-y !important;
-        overscroll-behavior: none !important;
-        will-change: scroll-position;
+        overscroll-behavior-x: none;
         display: block;
         padding: 0;
         z-index: 1;
