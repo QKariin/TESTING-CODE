@@ -227,7 +227,7 @@ export default function ProfilePage() {
             (window as any).openAltarDrawer = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openAltarDrawer(); };
             (window as any).closeAltarDrawer = () => { setMobOverlayOpen(false); closeAltarDrawer(); };
             (window as any).toggleAltarSection = toggleAltarSection;
-            (window as any).mobNavTo = (t: string) => { setChallengePanelOpen(false); mobNavTo(t); };
+            (window as any).mobNavTo = (t: any) => { setChallengePanelOpen(false); mobNavTo(t); };
             (window as any).openMobChatOverlay = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobChatOverlay(); };
             (window as any).closeMobChatOverlay = () => { setMobOverlayOpen(false); closeMobChatOverlay(); };
             (window as any).switchMobChatTab = switchMobChatTab;
