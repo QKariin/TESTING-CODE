@@ -936,14 +936,11 @@
     }
 
     .mob-nav-queen-ring {
-        width: 65px;
-        height: 65px;
+        width: 75px;
+        height: 75px;
         border-radius: 50%;
-        border: 2px solid rgba(255, 0, 0, 0.75);
-        box-shadow:
-            0 0 0 3px rgba(255, 0, 0, 0.15),
-            0 0 18px rgba(255, 0, 0, 0.45),
-            0 0 40px rgba(255, 0, 0, 0.15);
+        border: none;
+        box-shadow: none;
         overflow: hidden;
         background: #000;
         transition: box-shadow 0.2s;
@@ -1011,9 +1008,7 @@
     }
 
     .mob-nav-queen-btn:active .mob-nav-queen-ring {
-        box-shadow:
-            0 0 0 3px rgba(255, 0, 0, 0.3),
-            0 0 24px rgba(255, 0, 0, 0.7);
+        opacity: 0.7;
     }
 
     /* Shrink queen avatar when keyboard is open */
