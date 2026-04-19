@@ -2023,19 +2023,24 @@ export default function ProfilePage() {
                 {/* Mobile banner - only on mobile, landing page (no overlay open), non-participants */}
                 {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && !challengeBannerDismissed && (
                     <div
+                        onClick={() => { setChallengePanelId(activeChallenge.id); setChallengePanelOpen(true); }}
                         style={{
                             position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000002,
                             background: 'rgba(5,8,18,0.97)',
                             border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.35)'}`,
-                            borderRadius: 14, padding: '10px 14px',
-                            display: 'flex', alignItems: 'center', gap: 12,
+                            borderRadius: 14, padding: '14px 16px',
+                            display: 'flex', alignItems: 'center', gap: 14,
                             boxShadow: `0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.08)'}`,
                             backdropFilter: 'blur(16px)',
+                            cursor: 'pointer',
                         }}
                     >
+                        {activeChallenge.image_url && (
+                            <img src={activeChallenge.image_url} style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.25)'}` }} />
+                        )}
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
-                            <div className="ribbon-label" style={{ fontSize: '0.38rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 2 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                            <div className="ribbon-label" style={{ fontSize: '0.42rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 4 }}>
                                 {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE' : (() => {
                                     if (!activeChallenge.start_date) return 'STARTING SOON';
                                     const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
@@ -2045,24 +2050,23 @@ export default function ProfilePage() {
                                 })()}
                             </div>
                         </div>
-                        <button
-                            onClick={() => setChallengePanelOpen(true)}
+                        <div
                             style={{
                                 background: activeChallenge.status === 'active' ? 'linear-gradient(135deg, #4ade80, #16a34a)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
-                                borderRadius: 8, padding: '5px 12px', border: 'none',
-                                fontFamily: 'Orbitron', fontSize: '0.38rem',
-                                color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                                borderRadius: 8, padding: '7px 16px', border: 'none',
+                                fontFamily: 'Orbitron', fontSize: '0.42rem',
+                                color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0,
                             }}
-                        >JOIN</button>
+                        >JOIN</div>
                         <button
-                            onClick={() => { sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
+                            onClick={(e) => { e.stopPropagation(); sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
                             style={{
                                 background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: 8, padding: '5px 10px',
+                                borderRadius: 8, padding: '7px 10px',
                                 fontFamily: 'Orbitron', fontSize: '0.38rem',
                                 color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
                             }}
-                        >DISMISS</button>
+                        >X</button>
                     </div>
                 )}
                 {/* Mobile participant banner - shows for enrolled members with active challenge */}
