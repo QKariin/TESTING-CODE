@@ -2127,43 +2127,58 @@ export default function ProfilePage() {
                         <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>It takes 10 seconds. Then it feels like a real app.</div>
                     </div>
 
-                    {/* Step 1 — Share / Menu */}
-                    <div style={{ marginBottom: 18 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059' }}>1</div>
-                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>Tap Share or Menu in your browser</div>
-                        </div>
-                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, paddingLeft: 38 }}>
-                            In Safari it's the square with an arrow at the bottom. In Chrome it's the three dots at the top right.
-                        </div>
-                    </div>
-
-                    {/* Step 2 — Add to Home Screen */}
-                    <div style={{ marginBottom: 14 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059' }}>2</div>
-                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>Find "Add to Home Screen"</div>
-                        </div>
-                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, paddingLeft: 38, marginBottom: 12 }}>
-                            Scroll down in the menu until you see it. Looks like this:
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, paddingLeft: 38, overflowX: 'auto' }}>
-                            <img src="/install-step1.jpg" style={{ height: 120, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                            <img src="/install-step2.jpg" style={{ height: 120, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                        </div>
-                    </div>
-
-                    {/* Step 3 — Confirm */}
+                    {/* SAFARI */}
                     <div style={{ marginBottom: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059' }}>3</div>
-                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>Tap "Add" to install</div>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 14, textAlign: 'center' }}>IF YOU USE SAFARI</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>1</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap the Share button at the <span style={{ color: '#c5a059' }}>bottom</span> of your screen</div>
                         </div>
-                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, paddingLeft: 38, marginBottom: 12 }}>
-                            Keep "Open as Web App" on, then tap Add. Done — open it from your home screen.
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.88rem', color: 'rgba(255,255,255,0.35)', paddingLeft: 36, marginBottom: 12 }}>It's the square with an arrow pointing up</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>2</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Scroll down and tap "Add to Home Screen"</div>
                         </div>
-                        <div style={{ paddingLeft: 38 }}>
-                            <img src="/install-step3.jpg" style={{ height: 130, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <div style={{ padding: '10px 0 0 36px' }}>
+                            <img src="/install-step2.jpg" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                        </div>
+                    </div>
+
+                    <div style={{ width: '50%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 auto 20px' }} />
+
+                    {/* CHROME */}
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 14, textAlign: 'center' }}>IF YOU USE CHROME</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>1</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap the three dots at the <span style={{ color: '#c5a059' }}>top right</span></div>
+                        </div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.88rem', color: 'rgba(255,255,255,0.35)', paddingLeft: 36, marginBottom: 12 }}>That opens the browser menu</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>2</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap "Add to Home Screen"</div>
+                        </div>
+                        <div style={{ padding: '10px 0 0 36px' }}>
+                            <img src="/install-step1.jpg" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                        </div>
+                    </div>
+
+                    <div style={{ width: '50%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 auto 20px' }} />
+
+                    {/* Final step — same for both */}
+                    <div style={{ marginBottom: 22 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 14, textAlign: 'center' }}>LAST STEP</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>3</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Keep "Open as Web App" on and tap Add</div>
+                        </div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.88rem', color: 'rgba(255,255,255,0.35)', paddingLeft: 36, marginBottom: 12 }}>That's it. Open it from your home screen now.</div>
+                        <div style={{ padding: '0 0 0 36px' }}>
+                            <img src="/install-step3.jpg" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
                         </div>
                     </div>
 
