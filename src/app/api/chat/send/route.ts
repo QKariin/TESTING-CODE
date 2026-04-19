@@ -163,7 +163,7 @@ export async function POST(req: Request) {
         if (type === 'wishlist' && !msgErr) {
             try {
                 const meta = metadata || {};
-                await adminClient.from('global_messages').insert({
+                const { error: globalErr } = await adminClient.from('global_messages').insert({
                     sender_email: 'system',
                     sender_name: 'SYSTEM',
                     sender_avatar: null,
@@ -175,7 +175,8 @@ export async function POST(req: Request) {
                         price: meta.price || 0,
                     })}`,
                 });
-            } catch (_) {}
+                if (globalErr) console.error('[chat/send] global tribute card insert failed:', globalErr.message);
+            } catch (e: any) { console.error('[chat/send] global tribute card error:', e.message); }
         }
 
         // Fire push notification in background - don't block the response

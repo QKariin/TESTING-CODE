@@ -9,11 +9,13 @@ const supabaseAdmin = createClient(
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-    const { data, error } = await supabaseAdmin
+    // Fetch newest 100 messages (descending), then reverse so oldest→newest for display
+    const { data: rawData, error } = await supabaseAdmin
         .from('global_messages')
         .select('*')
-        .order('created_at', { ascending: true, nullsFirst: true })
+        .order('created_at', { ascending: false })
         .limit(100);
+    const data = (rawData || []).reverse();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

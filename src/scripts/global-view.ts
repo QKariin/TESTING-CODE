@@ -597,7 +597,14 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     }
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
-    if (scrollBottom || wasNear) requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
+    if (scrollBottom || wasNear) {
+        // Double-RAF + timeout to ensure scroll after full paint and image loads
+        requestAnimationFrame(() => {
+            feed.scrollTop = feed.scrollHeight;
+            requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
+        });
+        setTimeout(() => { feed.scrollTop = feed.scrollHeight; }, 300);
+    }
 }
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
