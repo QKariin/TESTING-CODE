@@ -849,7 +849,7 @@
 
     /* ── MOBILE BOTTOM NAV ── */
     #mobHomeScroll {
-        padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+        padding-bottom: calc(60px + env(safe-area-inset-bottom)) !important;
     }
 
     .mob-bottom-nav {
@@ -858,7 +858,7 @@
         left: 0;
         right: 0;
         z-index: 9999999;
-        height: calc(85px + env(safe-area-inset-bottom));
+        height: calc(60px + env(safe-area-inset-bottom));
         padding-bottom: env(safe-area-inset-bottom);
         background: rgba(4, 4, 12, 0.96);
         backdrop-filter: blur(20px);
@@ -1727,7 +1727,7 @@
         top: 0;
         left: 0;
         right: 0;
-        bottom: calc(80px + env(safe-area-inset-bottom));
+        bottom: calc(60px + env(safe-area-inset-bottom));
         z-index: 1000001;
         background: #020512;
         display: flex;
