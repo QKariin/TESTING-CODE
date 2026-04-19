@@ -443,6 +443,7 @@ export default function ProfilePage() {
     // }, []);
 
     // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
+    const checkChallengeRef = useRef<() => Promise<void>>(null);
     useEffect(() => {
         async function checkChallenge() {
             try {
@@ -511,8 +512,18 @@ export default function ProfilePage() {
                 }
             } catch {}
         }
-        checkChallenge(); // load once - challenges don't change frequently, no polling needed
+        checkChallengeRef.current = checkChallenge;
+        checkChallenge();
     }, []);
+
+    // Auto-refresh when a challenge window is about to open
+    useEffect(() => {
+        if (!nextChallengeWindowTs) return;
+        const delay = nextChallengeWindowTs - Date.now() + 2000; // 2s grace for server clock
+        if (delay <= 0) { checkChallengeRef.current?.(); return; }
+        const t = setTimeout(() => checkChallengeRef.current?.(), delay);
+        return () => clearTimeout(t);
+    }, [nextChallengeWindowTs]);
 
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
     useEffect(() => {
@@ -863,7 +874,7 @@ export default function ProfilePage() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                                         {openWindowForBanner && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 8px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite' }} />}
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>
-                                            {openWindowForBanner ? 'TASK WINDOW OPEN' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
+                                            {openWindowForBanner ? 'LIVE TASK' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
                                         </div>
                                     </div>
                                     {/* Challenge name */}
@@ -2313,9 +2324,9 @@ function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onO
         >
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: `0 0 ${hasOpenWindow ? '12px rgba(197,160,89,0.9)' : '6px rgba(197,160,89,0.4)'}`, flexShrink: 0, animation: hasOpenWindow ? 'pulse 2s infinite' : 'none' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{challengeName}</div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{hasOpenWindow ? 'LIVE TASK' : challengeName}</div>
                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', letterSpacing: '1.5px', marginTop: 3, color: hasOpenWindow ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>
-                    {hasOpenWindow ? 'TASK WINDOW OPEN - TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
+                    {hasOpenWindow ? 'TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
                 </div>
             </div>
             <div style={{
@@ -2559,9 +2570,12 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
                                     const minLeft = Math.floor(secsLeft / 60);
                                     const placeLabels: Record<number, string> = { 1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd' };
+                                    const tpd = data.challenge?.tasks_per_day || 1;
+                                    const taskIdx = (w.day_number - 1) * tpd + (w.window_number - 1);
+                                    const taskName = (data.challenge?.task_names || [])[taskIdx];
                                     return (
                                         <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.45)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && w.verification_code) ? 14 : 0 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && (w.verification_code || taskName)) ? 14 : 0 }}>
                                                 <div>
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
                                                         DAY {w.day_number} · TASK {w.window_number}
@@ -2592,8 +2606,13 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                                     </button>
                                                 )}
                                             </div>
+                                            {!done && taskName && (
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, padding: '10px 14px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
+                                                    {taskName}
+                                                </div>
+                                            )}
                                             {!done && w.verification_code && (
-                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center' }}>
+                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center', marginTop: taskName ? 8 : 0 }}>
                                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE - SHOW IN PHOTO</div>
                                                     <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, color: '#4ade80', letterSpacing: '6px', textShadow: '0 0 16px rgba(74,222,128,0.4)' }}>{w.verification_code}</div>
                                                 </div>
