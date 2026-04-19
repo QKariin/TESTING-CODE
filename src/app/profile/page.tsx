@@ -689,9 +689,7 @@ export default function ProfilePage() {
                 <button id="pushAllowBtn" style={{ flex: 1, background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '8px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
                     <span id="pushAllowLabel">ALLOW NOTIFS</span>
                 </button>
-                <button id="pwaInstallBtn" onClick={() => { const p = (window as any)._deferredInstallPrompt; if (p) { p.prompt(); p.userChoice.then(() => { (window as any)._deferredInstallPrompt = null; const b = document.getElementById('pwaInstallBtn'); if (b) b.style.display = 'none'; }); } else { alert('To install: tap the browser menu (⋮) → "Add to Home screen" or "Install app".'); } }} style={{ flex: 1, display: 'inline-block', background: 'linear-gradient(135deg, #3a6bc5, #1a3a8b)', border: 'none', borderRadius: 8, padding: '8px 14px', color: '#fff', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
-                    INSTALL APP
-                </button>
+                <button id="pwaInstallBtn" style={{ display: 'none' }} />
                 <button id="pushDismissBtn" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#666', cursor: 'pointer', fontSize: '0.9rem', padding: '8px 12px' }}>✕</button>
                 </div>
             </div>
