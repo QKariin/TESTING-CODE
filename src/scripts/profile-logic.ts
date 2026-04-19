@@ -2184,9 +2184,19 @@ function initOneSignal(memberId: string) {
 
     dismissBtn?.addEventListener('click', dismiss);
 
-    // Show sooner in PWA (500ms), later in browser (3s)
-    const delay = isPwa ? 500 : 3000;
-    setTimeout(() => { banner.style.display = 'flex'; }, delay);
+    // Only auto-show in PWA (already installed, safe to prompt). In browser, wait for scroll
+    // to avoid Chrome classifying automatic permission prompts as spam.
+    if (isPwa) {
+        setTimeout(() => { banner.style.display = 'flex'; }, 500);
+    } else {
+        const onScroll = () => {
+            if (window.scrollY > 300) {
+                banner.style.display = 'flex';
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+    }
 }
 
 function _updateNotifToggleUI() {
