@@ -2955,29 +2955,16 @@ export function openMobRoutine() {
 
 // ─── MOB CHAT OVERLAY ────────────────────────────────────────────────────────
 function _closeAllMobOverlays(except?: string) {
-    let wasBodyLocked = false;
     ['mobChatOverlay', 'mobQueenWallOverlay', 'mobGlobalOverlay'].forEach(id => {
         if (id === except) return;
         const el = document.getElementById(id);
         if (!el) return;
-        // If closing the chat overlay, need to unlock body scroll
-        if (id === 'mobChatOverlay' && el.classList.contains('mob-chat-fullscreen')) wasBodyLocked = true;
         el.classList.remove('mob-overlay-open');
         el.classList.remove('mob-chat-fullscreen');
         el.style.height = '';
         el.style.top = '';
         setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     });
-    // Unlock body scroll if chat overlay was closed
-    if (wasBodyLocked) {
-        const chatEl = document.getElementById('mobChatOverlay');
-        const savedY = (chatEl as any)?.__savedScrollY || 0;
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.top = '';
-        window.scrollTo(0, savedY);
-    }
     // Restore bottom nav if we're not opening the chat overlay (which hides it)
     if (except !== 'mobChatOverlay') {
         const nav = document.getElementById('mobBottomNav');
@@ -3021,13 +3008,6 @@ export function openMobChatOverlay() {
     const nav = document.getElementById('mobBottomNav');
     if (nav) nav.style.display = 'none';
     el.classList.add('mob-chat-fullscreen');
-
-    // Lock body scroll — prevents iOS from scrolling the page when keyboard opens
-    (el as any).__savedScrollY = window.scrollY;
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.top = `-${window.scrollY}px`;
 
     // Step 1: display:flex - browser resets scrollTop=0 on any child scroll containers.
     el.style.display = 'flex';
@@ -3089,8 +3069,9 @@ export function openMobChatOverlay() {
         const onVPResize = () => {
             if (!el.classList.contains('mob-overlay-open')) return;
             const vp = window.visualViewport!;
-            // Body is position:fixed so offsetTop stays 0 — just set height
+            // Resize overlay to visual viewport and pin to its top
             el.style.height = vp.height + 'px';
+            el.style.top = vp.offsetTop + 'px';
             // Scroll chat to bottom so latest messages stay visible above keyboard
             requestAnimationFrame(() => {
                 const box = document.getElementById('mob_chatBox');
@@ -3110,13 +3091,6 @@ export function closeMobChatOverlay() {
     // Reset inline styles from visualViewport handler
     el.style.height = '';
     el.style.top = '';
-    // Unlock body scroll
-    const savedY = (el as any).__savedScrollY || 0;
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.top = '';
-    window.scrollTo(0, savedY);
     setTimeout(() => {
         if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none';
         // Restore bottom nav
