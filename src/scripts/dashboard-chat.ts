@@ -132,7 +132,33 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             if (msg.metadata?.isQueen === true) return;
             appendChatMessage(msg);
         })
-        .subscribe();
+        .subscribe((status: string) => {
+            console.log(`[DASH-CHAT] subscription status: ${status}`);
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                // Realtime died — polling will cover us
+                console.warn('[DASH-CHAT] realtime subscription lost, polling active');
+            }
+        });
+
+    // Polling fallback — catches anything realtime misses (network drops, tab hidden)
+    chatPollInterval = setInterval(() => pollNewMessages(activeId), 15000);
+}
+
+/** Force-reconnect the chat channel + poll immediately. Called on tab visibility restore. */
+export function reconnectDashboardChat() {
+    if (!activeChatEmail) return;
+    const activeId = activeChatEmail;
+    // Poll immediately to catch missed messages
+    pollNewMessages(activeId);
+    // If channel died, re-init
+    if (chatChannel) {
+        const state = chatChannel.state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[DASH-CHAT] channel dead, re-initializing');
+            activeChatEmail = null; // reset guard so initDashboardChat runs
+            initDashboardChat(activeId);
+        }
+    }
 }
 
 async function pollNewMessages(memberId: string) {

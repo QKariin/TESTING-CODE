@@ -24,7 +24,9 @@ import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, se
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
 import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
-import { cleanupPresenceTracking } from '@/scripts/dashboard-presence';
+import { cleanupPresenceTracking, reconnectPresence } from '@/scripts/dashboard-presence';
+import { reconnectDashboardChat } from '@/scripts/dashboard-chat';
+import { reconnectDashboardMain } from '@/scripts/dashboard-main';
 
 const PAYWALL_PRESETS = [
     "Monthly tribute not received. Pay now.",
@@ -1128,7 +1130,34 @@ export default function DashboardPage() {
         // Expose for the restrict toggle to broadcast
         (window as any)._restrictChannel = restrictChannel;
 
+        // ── Visibility handler: reconnect everything when tab becomes active ──
+        const handleVisibility = () => {
+            if (document.visibilityState !== 'visible') return;
+            console.log('[DASHBOARD] tab visible — reconnecting realtime...');
+
+            // Reconnect page-level channels if they died
+            const reconnectChannel = (ch: any, name: string) => {
+                if (ch && (ch.state === 'errored' || ch.state === 'closed')) {
+                    console.log(`[DASHBOARD] ${name} channel dead, removing`);
+                    supabaseRt.removeChannel(ch);
+                }
+            };
+            reconnectChannel(chatsChannel, 'chats');
+            reconnectChannel(profilesChannel, 'profiles');
+            reconnectChannel(tasksChannel, 'tasks');
+
+            // Reconnect chat, presence, and task watcher modules
+            reconnectDashboardChat();
+            reconnectPresence();
+            reconnectDashboardMain();
+
+            // Re-render sidebar to pick up any missed updates
+            debouncedRenderSidebar();
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibility);
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             supabaseRt.removeChannel(chatsChannel);
             supabaseRt.removeChannel(profilesChannel);

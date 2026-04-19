@@ -110,7 +110,7 @@ function subscribeToDashboardTaskUpdates() {
 
     // Polling fallback - catches anything the realtime subscription misses
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
-    _dashboardPollInterval = setInterval(refreshQueueFromServer, 300000);
+    _dashboardPollInterval = setInterval(refreshQueueFromServer, 60000);
 
     // Subscribe to profiles for purchase notifications
     subscribeToPurchaseNotifications(supabase);
@@ -121,6 +121,20 @@ let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
 
 // Tracks the last seen purchase notification sessionId to avoid duplicates
 let _lastSeenPurchaseSession: string | null = null;
+
+/** Force-reconnect task watcher + poll immediately. Called on tab visibility restore. */
+export function reconnectDashboardMain() {
+    refreshQueueFromServer();
+    if (_tasksWatchChannel) {
+        const state = (_tasksWatchChannel as any).state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[DASHBOARD-MAIN] reconnecting task watcher...');
+            _tasksWatchChannel = null;
+            _purchaseWatchChannel = null;
+            subscribeToDashboardTaskUpdates();
+        }
+    }
+}
 
 function subscribeToPurchaseNotifications(supabase: any) {
     if (_purchaseWatchChannel) return;

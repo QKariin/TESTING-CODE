@@ -67,7 +67,23 @@ export function initPresenceTracking() {
                 _notify();
             }
         })
-        .subscribe();
+        .subscribe((status: string) => {
+            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                console.warn('[PRESENCE] channel lost, will reconnect on visibility');
+            }
+        });
+}
+
+/** Force-reconnect presence channel. Called on tab visibility restore. */
+export function reconnectPresence() {
+    if (_channel) {
+        const state = (_channel as any).state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[PRESENCE] reconnecting...');
+            cleanupPresenceTracking();
+            initPresenceTracking();
+        }
+    }
 }
 
 /** True if the member is currently connected. Hashes email before lookup. */

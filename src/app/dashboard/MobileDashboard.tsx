@@ -223,6 +223,19 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
             .subscribe();
         return () => { supabase.removeChannel(ch); };
     }, [loadData]);
+
+    // Visibility handler: reload data when tab becomes active again
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                console.log('[MOB-DASH] tab visible — refreshing...');
+                loadData();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+        return () => document.removeEventListener('visibilitychange', handleVisibility);
+    }, [loadData]);
+
     useEffect(() => { if (tab === 'posts') loadPosts(); }, [tab, loadPosts]);
 
     // Fetch full profile data (wallet, score, routine, paywall detail, silence detail)
