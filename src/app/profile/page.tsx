@@ -1088,8 +1088,8 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             )}
-                            <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
-                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
+                            <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
+                            <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 0 }}>
                                 <div id="chatContent" className="chat-area" style={{ padding: '0 20px 20px 20px' }}></div>
                             </div>
 
