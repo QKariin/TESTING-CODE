@@ -1062,7 +1062,7 @@ export default function ProfilePage() {
                             {/* Desktop chat header - shows who you're messaging */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
                                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                                    <img src="/queen-karin.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                    <img src="/queen-nav.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" onError={(e) => { e.currentTarget.src = '/queen-nav.png' }} />
                                     <div id="deskChatOnlineDot" style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
                                 </div>
                                 <div>
@@ -1892,7 +1892,7 @@ export default function ProfilePage() {
                 <div className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
                         <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
-                            <img src="/queen-karin.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
+                            <img src="/queen-nav.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
                             <div id="mobChatOnlineDot" style={{ position: 'absolute', bottom: 2, right: 2, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
                         </div>
                         <div>

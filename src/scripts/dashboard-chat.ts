@@ -239,7 +239,7 @@ function renderToHtml(m: any) {
     const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const content = m.content || m.message || "";
 
-    const queenAvatar = `<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
+    const queenAvatar = `<img src="/queen-nav.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
     // ── Paid media card (dashboard view — always shows clear) ──
     if (m.type === 'paid_media') {

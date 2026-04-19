@@ -505,7 +505,7 @@ function showNewMessageBanner(preview: string) {
     const escaped = preview.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     banner.innerHTML = `
         <div style="display:flex; align-items:flex-start; gap:14px;">
-            <img src="/queen-karin.png" style="flex-shrink:0; width:44px; height:44px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(197,160,89,0.6);" onerror="this.style.display='none'" />
+            <img src="/queen-nav.png" style="flex-shrink:0; width:44px; height:44px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(197,160,89,0.6);" onerror="this.style.display='none'" />
             <div style="flex:1; min-width:0;">
                 <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">✦ New Message</div>
                 <div style="font-family:'Orbitron', sans-serif; font-size:1.1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${escaped}</div>
@@ -2500,7 +2500,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
 
     const timeStr = showTime ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-    const queenAvatar = `<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
+    const queenAvatar = `<img src="/queen-nav.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
     // Paid media card → sub sees blurred media with unlock button
     if (msg.type === 'paid_media') {
@@ -2612,7 +2612,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                     ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
                 </div>`;
         } catch (_) {
-            return `<div class="cb-row cb-row-queen">${`<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`}<div class="cb-wrap-queen"><div class="cb-queen">📋 Task Feedback</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
+            return `<div class="cb-row cb-row-queen">${`<img src="/queen-nav.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`}<div class="cb-wrap-queen"><div class="cb-queen">📋 Task Feedback</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
         }
     }
 
@@ -3557,7 +3557,7 @@ function _buildMobGlBubble(msg: any): string {
     if (isQueen) {
         const qAvHtml = av
             ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
-            : `<img src="/queen-karin.png" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
+            : `<img src="/queen-nav.png" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
         return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
                 <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
