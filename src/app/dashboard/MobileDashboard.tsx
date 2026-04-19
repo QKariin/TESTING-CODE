@@ -1321,6 +1321,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editName, setEditName] = useState('');
+    const [editWinMinutes, setEditWinMinutes] = useState(windowMinutes);
     const [saving, setSaving] = useState<string | null>(null);
     const [pushing, setPushing] = useState<string | null>(null);
     const [stopping, setStopping] = useState<string | null>(null);
@@ -1341,7 +1342,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
         setSaving(w.id);
         try {
             const opensAt = new Date(`${editDate}T${editTime}`);
-            const closesAt = new Date(opensAt.getTime() + windowMinutes * 60 * 1000);
+            const closesAt = new Date(opensAt.getTime() + editWinMinutes * 60 * 1000);
             const res = await fetch(`/api/challenges/windows/${w.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opens_at: opensAt.toISOString(), closes_at: closesAt.toISOString() }) });
             if (!res.ok) return;
             // Save task name
@@ -1381,7 +1382,7 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                         {isOpen && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', animation: 'pulse 1.2s infinite', flexShrink: 0 }} />}
                                         <div style={{ flex: 1 }} />
                                         {!isEditing && !isPast && (
-                                            <button onClick={() => { setEditDate(opensDate.toISOString().slice(0, 10)); setEditTime(opensDate.toTimeString().slice(0, 5)); setEditName(taskName); setEditingId(w.id); }}
+                                            <button onClick={() => { setEditDate(opensDate.toISOString().slice(0, 10)); setEditTime(opensDate.toTimeString().slice(0, 5)); setEditName(taskName); const wDur = Math.round((closesDate.getTime() - opensDate.getTime()) / 60000); setEditWinMinutes(wDur > 0 ? wDur : windowMinutes); setEditingId(w.id); }}
                                                 style={{ padding: '5px 10px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.78rem', cursor: 'pointer' }}>Edit</button>
                                         )}
                                         {!isEditing && isOpen && (
@@ -1412,6 +1413,9 @@ function ChWindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, ta
                                                     style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', padding: '7px 10px', outline: 'none' }} />
                                                 <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
                                                     style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', padding: '7px 10px', outline: 'none' }} />
+                                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', color: '#555', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                    <input type="number" min={5} max={480} value={editWinMinutes} onChange={e => setEditWinMinutes(Number(e.target.value))} style={{ width: 48, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 5, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.90rem', padding: '7px 6px', outline: 'none', textAlign: 'center' }} />m
+                                                </span>
                                             </div>
                                             <div style={{ display: 'flex', gap: 6 }}>
                                                 <button onClick={() => saveEdit(w)} disabled={saving === w.id}

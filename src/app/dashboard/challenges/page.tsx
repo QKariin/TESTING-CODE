@@ -659,6 +659,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editName, setEditName] = useState('');
+    const [editWinMinutes, setEditWinMinutes] = useState(windowMinutes);
     const [saving, setSaving] = useState<string | null>(null);
     const [pushing, setPushing] = useState<string | null>(null);
     const [stopping, setStopping] = useState<string | null>(null);
@@ -687,6 +688,8 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
         setEditDate(d.toISOString().slice(0, 10));
         setEditTime(d.toTimeString().slice(0, 5));
         setEditName(getTaskName(w));
+        const wDuration = Math.round((new Date(w.closes_at).getTime() - new Date(w.opens_at).getTime()) / 60000);
+        setEditWinMinutes(wDuration > 0 ? wDuration : windowMinutes);
         setEditingId(w.id);
     };
 
@@ -695,7 +698,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
         try {
             // Save window time
             const opensAt = new Date(`${editDate}T${editTime}`);
-            const closesAt = new Date(opensAt.getTime() + windowMinutes * 60 * 1000);
+            const closesAt = new Date(opensAt.getTime() + editWinMinutes * 60 * 1000);
             const res = await fetch(`/api/challenges/windows/${w.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -925,7 +928,7 @@ function WindowsManager({ windows, challengeId, windowMinutes, tasksPerDay, task
                                                         style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '7px 12px', outline: 'none' }} />
                                                     <input type="time" value={editTime} onChange={e => setEditTime(e.target.value)}
                                                         style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', padding: '7px 12px', outline: 'none' }} />
-                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#444' }}>+{windowMinutes}m window</span>
+                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: '#444', display: 'flex', alignItems: 'center', gap: 4 }}>+<input type="number" min={5} max={480} value={editWinMinutes} onChange={e => setEditWinMinutes(Number(e.target.value))} style={{ width: 44, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', padding: '4px 6px', outline: 'none', textAlign: 'center' }} />m</span>
                                                     <div style={{ flex: 1 }} />
                                                     <button onClick={() => saveEdit(w)} disabled={isSaving} style={{ padding: '7px 20px', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 7, color: '#4ade80', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 700, letterSpacing: '1px' }}>
                                                         {isSaving ? 'Saving...' : '✓ Save'}
