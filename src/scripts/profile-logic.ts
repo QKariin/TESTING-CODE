@@ -2623,9 +2623,13 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     }
 
     if (msg.type === 'photo') {
-        content = `<img src="${getOptimizedUrl(content, 300)}" class="chat-img-attachment" />`;
+        const rawImgUrl = getOptimizedUrl(content, 300);
+        // Use /api/media proxy for Supabase URLs (handles both public & private buckets)
+        const imgUrl = rawImgUrl.includes('supabase.co/storage') ? `/api/media?url=${encodeURIComponent(rawImgUrl)}` : rawImgUrl;
+        content = `<img src="${imgUrl}" class="chat-img-attachment" />`;
     } else if (msg.type === 'video') {
-        content = `<video src="${content}" class="chat-img-attachment" controls playsinline preload="none" style="max-width:100%;border-radius:8px;"></video>`;
+        const vidUrl = content.includes('supabase.co/storage') ? `/api/media?url=${encodeURIComponent(content)}` : content;
+        content = `<video src="${vidUrl}" class="chat-img-attachment" controls playsinline preload="none" style="max-width:100%;border-radius:8px;"></video>`;
     }
 
     if (isMe) {
