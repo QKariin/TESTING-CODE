@@ -3398,9 +3398,9 @@ function _initMobGlRealtime() {
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
             (payload: any) => {
                 const msg = payload.new;
-                const msgContent = msg.message || '';
-                if (_mobGlPendingSent.has(msgContent)) {
-                    _mobGlPendingSent.delete(msgContent);
+                const dedupKey = msg.media_url || msg.message || '';
+                if (_mobGlPendingSent.has(dedupKey)) {
+                    _mobGlPendingSent.delete(dedupKey);
                     return;
                 }
                 _appendMobGlMessage(msg);
@@ -3784,6 +3784,9 @@ async function _sendMobGlGif(gifUrl: string) {
     const { memberId, id, raw } = getState();
     const senderEmail = memberId || id;
     if (!senderEmail) return;
+
+    // Track for dedup - realtime will fire for our own message too
+    _mobGlPendingSent.add(gifUrl);
 
     // Optimistic render into the mobile global feed
     _appendMobGlMessage({
