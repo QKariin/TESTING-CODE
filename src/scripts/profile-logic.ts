@@ -3004,11 +3004,6 @@ export function openMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
 
-    // Hide bottom nav and go fullscreen
-    const nav = document.getElementById('mobBottomNav');
-    if (nav) nav.style.display = 'none';
-    el.classList.add('mob-chat-fullscreen');
-
     // Step 1: display:flex - browser resets scrollTop=0 on any child scroll containers.
     el.style.display = 'flex';
 
@@ -3053,26 +3048,37 @@ export function openMobChatOverlay() {
     setTimeout(scrollToBottom, 400);
     setTimeout(scrollToBottom, 900);
 
-    // Shrink queen avatar button when keyboard opens
+    // When input focused (typing): hide bottom nav, go fullscreen, handle keyboard
+    // When input blurred: restore nav, exit fullscreen
     const input = document.getElementById('mob_chatMsgInput');
-    const queenBtn = document.querySelector('.mob-nav-queen-btn') as HTMLElement | null;
-    if (input && queenBtn && !(input as any).__mobChatFocusAttached) {
+    if (input && !(input as any).__mobChatFocusAttached) {
         (input as any).__mobChatFocusAttached = true;
-        input.addEventListener('focus', () => queenBtn.classList.add('mob-nav-queen-shrink'));
-        input.addEventListener('blur', () => queenBtn.classList.remove('mob-nav-queen-shrink'));
+        input.addEventListener('focus', () => {
+            const nav = document.getElementById('mobBottomNav');
+            if (nav) nav.style.display = 'none';
+            el.classList.add('mob-chat-fullscreen');
+            const queenBtn = document.querySelector('.mob-nav-queen-btn') as HTMLElement | null;
+            if (queenBtn) queenBtn.classList.add('mob-nav-queen-shrink');
+        });
+        input.addEventListener('blur', () => {
+            const nav = document.getElementById('mobBottomNav');
+            if (nav) nav.style.display = '';
+            el.classList.remove('mob-chat-fullscreen');
+            el.style.height = '';
+            el.style.top = '';
+            const queenBtn = document.querySelector('.mob-nav-queen-btn') as HTMLElement | null;
+            if (queenBtn) queenBtn.classList.remove('mob-nav-queen-shrink');
+        });
     }
 
-    // iOS keyboard: resize overlay to match visual viewport so header stays pinned
-    // and chat footer stays above the keyboard
+    // iOS keyboard: resize overlay to visual viewport when typing
     if (window.visualViewport && !(el as any).__vpAttached) {
         (el as any).__vpAttached = true;
         const onVPResize = () => {
-            if (!el.classList.contains('mob-overlay-open')) return;
+            if (!el.classList.contains('mob-chat-fullscreen')) return;
             const vp = window.visualViewport!;
-            // Resize overlay to visual viewport and pin to its top
             el.style.height = vp.height + 'px';
             el.style.top = vp.offsetTop + 'px';
-            // Scroll chat to bottom so latest messages stay visible above keyboard
             requestAnimationFrame(() => {
                 const box = document.getElementById('mob_chatBox');
                 if (box) box.scrollTop = box.scrollHeight + 9999;
@@ -3086,6 +3092,9 @@ export function openMobChatOverlay() {
 export function closeMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
+    // Dismiss keyboard first
+    const input = document.getElementById('mob_chatMsgInput') as HTMLInputElement | null;
+    if (input) input.blur();
     el.classList.remove('mob-overlay-open');
     el.classList.remove('mob-chat-fullscreen');
     // Reset inline styles from visualViewport handler

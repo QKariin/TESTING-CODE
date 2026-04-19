@@ -1944,15 +1944,31 @@ export default function ProfilePage() {
                 <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                     <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1 }}></div>
                     <div className="mob-gl-talk-footer">
-                        <input
-                            type="text"
-                            id="mobGlTalkInput"
-                            className="mob-gl-talk-input"
-                            placeholder="speak..."
-                            onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
-                        />
-                        <button onClick={() => (window as any).openGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
-                        <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>▶</button>
+                        <div className="chat-input-wrapper" style={{ flex: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                            <button className="chat-btn-plus" onClick={() => (window as any).handleGlobalMediaPlus?.()} style={{ position: 'absolute', left: 8, zIndex: 2, background: 'none', border: 'none', color: 'rgba(197,160,89,0.6)', fontSize: '1.3rem', cursor: 'pointer', padding: '0 4px' }}>+</button>
+                            <input
+                                type="text"
+                                id="mobGlTalkInput"
+                                className="mob-gl-talk-input"
+                                placeholder="speak..."
+                                style={{ paddingLeft: 36 }}
+                                onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
+                            />
+                        </div>
+                        <button onClick={() => (window as any).openGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
+                        <button onClick={() => (window as any).toggleTributeHunt?.()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#c5a059' }}>
+                                <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                <path d="M12 8v12"></path>
+                                <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                            </svg>
+                        </button>
+                        <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
