@@ -513,36 +513,9 @@
         animation-play-state: running !important;
     }
 
-    .mob-kneel-bar::before {
-        display: none;
-    }
-
-    /* Inner shimmer glow */
+    .mob-kneel-bar::before,
     .mob-kneel-bar::after {
-        content: '';
-        pointer-events: none;
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        translate: -50% -50%;
-        width: 100%;
-        aspect-ratio: 1;
-        background: linear-gradient(
-            -50deg,
-            transparent,
-            var(--kneel-highlight),
-            transparent
-        );
-        mask-image: radial-gradient(circle at bottom, transparent 40%, black);
-        opacity: 0.5;
-        z-index: 0;
-        animation: kneel-shimmer var(--kneel-duration) linear infinite paused,
-                   kneel-shimmer calc(var(--kneel-duration) / 0.4) linear infinite reverse paused;
-        animation-composition: add;
-    }
-
-    .mob-kneel-bar:active::after {
-        animation-play-state: running !important;
+        display: none !important;
     }
 
     /* Prevent text selection / iOS callout on every child element */
@@ -2012,9 +1985,9 @@
     #mob_chatContent .cb-row {
         display: flex;
         align-items: flex-end;
-        gap: 8px;
-        padding: 0 10px;
-        margin-bottom: 8px;
+        gap: 6px;
+        padding: 0 4px;
+        margin-bottom: 4px;
     }
     #mob_chatContent .cb-row-me    { justify-content: flex-end; }
     #mob_chatContent .cb-row-queen { justify-content: flex-start; }
@@ -2057,7 +2030,7 @@
         font-size: 0.82rem;
         line-height: 1.55;
         letter-spacing: 0.2px;
-        padding: 10px 14px;
+        padding: 6px 10px;
         border-radius: 16px 16px 16px 3px;
         word-break: break-word;
         white-space: pre-wrap;
@@ -2072,7 +2045,7 @@
         font-size: 0.82rem;
         line-height: 1.55;
         letter-spacing: 0.2px;
-        padding: 10px 14px;
+        padding: 6px 10px;
         border-radius: 16px 16px 3px 16px;
         word-break: break-word;
         white-space: pre-wrap;

@@ -2490,7 +2490,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     const showTime = (ts - compare) > 5 * 60 * 1000;
     _lastRenderedChatTs = ts;
 
-    const timeStr = new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = showTime ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
     const queenAvatar = `<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`;
 
@@ -2521,7 +2521,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                         <span class="pm-status ${unlocked ? 'unlocked' : 'locked'}" id="pmStatus_${pmId}">${unlocked ? 'UNLOCKED' : `♦ ${pmPrice}`}</span>
                     </div>
                 </div>
-                <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
             </div>`;
     }
 
@@ -2539,7 +2539,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                         <div class="chat-gift-title">${meta.title || ''}</div>
                     </div>
                 </div>
-                <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
             </div>
         `;
     }
@@ -2574,9 +2574,9 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                     <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto;"></div>
                 </div>
             </div>`;
-            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div></div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
         } catch (_) {
-            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">✦ Rank Promotion</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">✦ Rank Promotion</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
         }
     }
 
@@ -2601,10 +2601,10 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                             ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${fbNote}</div>` : ''}
                         </div>
                     </div>
-                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
                 </div>`;
         } catch (_) {
-            return `<div class="cb-row cb-row-queen">${`<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`}<div class="cb-wrap-queen"><div class="cb-queen">📋 Task Feedback</div><div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+            return `<div class="cb-row cb-row-queen">${`<img src="/queen-karin.png" class="cb-queen-av" alt="Q" onerror="this.style.display='none'" />`}<div class="cb-wrap-queen"><div class="cb-queen">📋 Task Feedback</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
         }
     }
 
@@ -2616,9 +2616,9 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                 <img src="${gifUrl}" onload="window._scrollChatBottom && window._scrollChatBottom()" style="width:100%;display:block;max-height:200px;object-fit:contain;" onerror="this.style.display='none'" />
             </div>`;
         if (isMe) {
-            return `<div class="cb-row cb-row-me"><div class="cb-wrap-me">${gifCard}<div class="chat-ts chat-ts-right">${timeStr}</div></div></div>`;
+            return `<div class="cb-row cb-row-me"><div class="cb-wrap-me">${gifCard}${timeStr ? `<div class="chat-ts chat-ts-right">${timeStr}</div>` : ''}</div></div>`;
         } else {
-            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen">${gifCard}<div class="chat-ts chat-ts-left">${timeStr}</div></div></div>`;
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen">${gifCard}${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
         }
     }
 
@@ -2634,7 +2634,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             <div class="cb-row cb-row-me">
                 <div class="cb-wrap-me">
                     <div class="cb-slave">${content}</div>
-                    <div class="chat-ts chat-ts-right">${timeStr}</div>
+                    ${timeStr ? `<div class="chat-ts chat-ts-right">${timeStr}</div>` : ''}
                 </div>
             </div>
         `;
@@ -2645,7 +2645,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                 ${queenAvatar}
                 <div class="cb-wrap-queen">
                     <div class="cb-queen">${content}</div>
-                    <div class="chat-ts chat-ts-left">${timeStr}</div>
+                    ${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}
                 </div>
             </div>
         `;
