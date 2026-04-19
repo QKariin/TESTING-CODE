@@ -1811,36 +1811,7 @@
         height: 0 !important;
     }
 
-    /* Chat overlay specific - mirrors .mob-gl-panel: overflow:hidden constrains
-       the scroll container so touch never leaks to the overlay */
-    #mobChatTabChat {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-    }
-
-    /* Override desktop .chat-body-frame rules that break flex scroll layout */
-    #mob_chatBox {
-        flex: 1 !important;
-        min-height: 0 !important;
-        height: auto !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
-        overscroll-behavior: contain;
-        scrollbar-width: none !important;
-        -ms-overflow-style: none !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        width: auto !important;
-        position: relative !important;
-    }
-    #mob_chatBox::-webkit-scrollbar { display: none; width: 0; }
+    /* Private chat uses same .mob-gl-panel + .mob-gl-scroll as global — no extra overrides needed */
 
     #mob_chatContent {
         padding: 16px 0 12px;

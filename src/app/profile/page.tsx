@@ -1859,8 +1859,8 @@ export default function ProfilePage() {
                 </div>
 
                 {/* CHAT TAB */}
-                <div id="mobChatTabChat" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-                    <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, minHeight: 0, position: 'relative', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as any}>
+                <div id="mobChatTabChat" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                    <div id="mob_chatBox" className="mob-gl-scroll" style={{ flex: 1, position: 'relative' }}>
                         <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(4,4,16,0.96)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
                             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(197,160,89,0.12)', paddingBottom: '14px' }}>
                                 <span style={{ fontFamily: "'Cinzel', serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
