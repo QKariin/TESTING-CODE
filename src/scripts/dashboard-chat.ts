@@ -128,8 +128,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             const rowMemberId = (msg.member_id || '').toLowerCase();
             if (rowMemberId !== activeId.toLowerCase()) return;
             if (activeChatEmail !== activeId) return; // switched user
-            // Skip queen's own messages — already appended instantly by sendMsg()
-            if (msg.metadata?.isQueen === true) return;
+            // Queen messages sent from THIS tab are already appended by sendMsg()
+            // — the dedup guard in appendChatMessage() handles it via _renderedMsgIds.
+            // Don't skip here so queen messages from OTHER devices still show up.
             appendChatMessage(msg);
         })
         .subscribe((status: string) => {
