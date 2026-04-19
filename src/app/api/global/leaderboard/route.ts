@@ -20,13 +20,13 @@ export async function GET(req: Request) {
 
     const colKey = period === 'weekly' ? 'Weekly Score'
         : period === 'monthly' ? 'Monthly Score'
-        : period === 'alltime' ? 'Taskdom_Points'
+        : period === 'alltime' ? 'Score'
         : 'Daily Score';
 
     const [{ data: tasks, error }, { data: profiles }] = await Promise.all([
         supabaseAdmin
             .from('tasks')
-            .select(`member_id, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", Taskdom_Points`),
+            .select(`member_id, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", "Score"`),
         supabaseAdmin
             .from('profiles')
             .select('member_id, id, name, hierarchy, avatar_url'),
