@@ -88,7 +88,6 @@ import {
     openProfileGifPicker,
     closeProfileGifPicker,
 } from '@/scripts/profile-logic';
-import { openGifPicker, closeGifPicker } from '@/scripts/global-view';
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
@@ -253,8 +252,7 @@ export default function ProfilePage() {
             (window as any).cancelProfileChatReply = cancelProfileChatReply;
             (window as any).openProfileGifPicker = openProfileGifPicker;
             (window as any).closeProfileGifPicker = closeProfileGifPicker;
-            (window as any).openGifPicker = openGifPicker;
-            (window as any).closeGifPicker = closeGifPicker;
+            // mobGlGifPicker window assignments are handled in profile-logic.ts
         }
 
         async function loadProfile() {
@@ -1955,7 +1953,7 @@ export default function ProfilePage() {
                                 onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
                             />
                         </div>
-                        <button onClick={() => (window as any).openGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
+                        <button onClick={() => (window as any).openMobGlGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
                         <button onClick={() => (window as any).toggleTributeHunt?.()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#c5a059' }}>
                                 <rect x="3" y="8" width="18" height="12" rx="1"></rect>

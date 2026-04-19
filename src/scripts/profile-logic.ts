@@ -3642,6 +3642,26 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
+    // GIF CARD
+    if (msg.media_type === 'gif' || (content === '[GIF]' && msg.media_url)) {
+        const gifUrl = msg.media_url;
+        const gifCard = `
+            <div style="max-width:240px;width:60vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 8px 30px rgba(0,0,0,0.7);">
+                <img src="${gifUrl}" style="width:100%;display:block;max-height:200px;object-fit:contain;" onerror="this.style.display='none'" />
+            </div>`;
+        return `<div class="mob-gl-talk-msg">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
+                    ${avatarHtml}
+                    <span class="mob-gl-talk-name">${name}</span>
+                    <span class="mob-gl-talk-time"> · ${time}</span>
+                </div>
+                ${replyBtn}
+            </div>
+            ${gifCard}
+        </div>`;
+    }
+
     // UPDATE MERIT CARD
     if (content.startsWith('UPDATE_MERIT_CARD::')) {
         try {
@@ -3679,6 +3699,7 @@ function _buildMobGlBubble(msg: any): string {
         </div>
         ${quoteHtml ? `<div style="margin-bottom:3px;">${quoteHtml}</div>` : ''}
         ${contentEl}
+        ${mediaHtml}
     </div>`;
 }
 
@@ -3752,6 +3773,133 @@ export async function sendMobGlMessage() {
 
 export function handleMobGlKey(e: KeyboardEvent) {
     if (e.key === 'Enter') sendMobGlMessage();
+}
+
+// ─── MOBILE GLOBAL GIF PICKER ────────────────────────────────────────────────
+
+let _mobGlGifOpen = false;
+let _mobGlGifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function _sendMobGlGif(gifUrl: string) {
+    const { memberId, id, raw } = getState();
+    const senderEmail = memberId || id;
+    if (!senderEmail) return;
+
+    // Optimistic render into the mobile global feed
+    _appendMobGlMessage({
+        sender_name: raw?.name || senderEmail.split('@')[0] || 'SUBJECT',
+        sender_email: senderEmail,
+        message: '[GIF]',
+        media_url: gifUrl,
+        media_type: 'gif',
+        created_at: new Date().toISOString(),
+    });
+
+    try {
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '[GIF]', senderEmail, media_url: gifUrl, media_type: 'gif' }),
+        });
+    } catch {}
+}
+
+export function openMobGlGifPicker() {
+    if (_mobGlGifOpen) { closeMobGlGifPicker(); return; }
+    _mobGlGifOpen = true;
+
+    const existing = document.getElementById('mobGlGifPickerOverlay');
+    if (existing) existing.remove();
+
+    const talkPanel = document.getElementById('mobGlPanel_talk');
+    let talkFooter: Element | null = null;
+    let parentContainer: Element | null = null;
+
+    if (talkPanel) {
+        talkFooter = talkPanel.querySelector('.mob-gl-talk-footer');
+        parentContainer = talkPanel;
+    }
+
+    const panel = document.createElement('div');
+    panel.id = 'mobGlGifPickerOverlay';
+    panel.style.cssText = `
+        max-height:45vh;overflow-y:auto;
+        border-top:1px solid rgba(197,160,89,0.15);
+        background:#0d0b08;padding:8px;flex-shrink:0;
+    `;
+
+    panel.innerHTML = `
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input id="mobGlGifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
+            <button onclick="window.closeMobGlGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;">✕</button>
+        </div>
+        <div id="mobGlGifGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>
+        </div>
+        <div style="padding:5px 0;text-align:right;">
+            <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+        </div>
+    `;
+
+    if (talkFooter && parentContainer) {
+        parentContainer.insertBefore(panel, talkFooter);
+    } else {
+        panel.style.cssText = `
+            position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+            width:min(420px, 96vw);max-height:55vh;
+            background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
+            display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
+            box-shadow:0 8px 40px rgba(0,0,0,0.7);
+        `;
+        document.body.appendChild(panel);
+    }
+
+    const searchInput = panel.querySelector('#mobGlGifSearchInput') as HTMLInputElement;
+    searchInput?.addEventListener('input', () => {
+        if (_mobGlGifTimeout) clearTimeout(_mobGlGifTimeout);
+        _mobGlGifTimeout = setTimeout(() => _searchMobGlGifs(searchInput.value || 'funny'), 400);
+    });
+
+    _searchMobGlGifs('funny');
+    setTimeout(() => searchInput?.focus(), 50);
+}
+
+async function _searchMobGlGifs(q: string) {
+    const grid = document.getElementById('mobGlGifGrid');
+    if (!grid) return;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+
+    try {
+        const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
+        const { results } = await res.json();
+        if (!results?.length) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
+            return;
+        }
+        grid.innerHTML = results.map((r: any) => `
+            <div onclick="window._selectMobGlGif('${encodeURIComponent(r.url)}')" style="cursor:pointer;border-radius:6px;overflow:hidden;aspect-ratio:1;background:rgba(255,255,255,0.04);">
+                <img src="${r.preview}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'">
+            </div>
+        `).join('');
+    } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
+    }
+}
+
+export function closeMobGlGifPicker() {
+    _mobGlGifOpen = false;
+    document.getElementById('mobGlGifPickerOverlay')?.remove();
+}
+
+if (typeof window !== 'undefined') {
+    (window as any).openMobGlGifPicker = openMobGlGifPicker;
+    (window as any).closeMobGlGifPicker = closeMobGlGifPicker;
+    (window as any)._selectMobGlGif = (encodedUrl: string) => {
+        const url = decodeURIComponent(encodedUrl);
+        closeMobGlGifPicker();
+        _sendMobGlGif(url);
+    };
 }
 
 async function _loadMobGlChallenges() {
