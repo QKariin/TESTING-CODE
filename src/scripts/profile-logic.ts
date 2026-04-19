@@ -2965,11 +2965,9 @@ function _closeAllMobOverlays(except?: string) {
         el.style.top = '';
         setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     });
-    // Restore bottom nav if we're not opening the chat overlay (which hides it)
-    if (except !== 'mobChatOverlay') {
-        const nav = document.getElementById('mobBottomNav');
-        if (nav) nav.style.display = '';
-    }
+    // Always restore bottom nav when switching overlays
+    const nav = document.getElementById('mobBottomNav');
+    if (nav) nav.style.display = '';
     if (except !== 'altar') closeAltarDrawer();
     closeLobby();
 }
