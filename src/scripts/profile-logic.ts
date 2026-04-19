@@ -6185,3 +6185,114 @@ if (typeof window !== 'undefined') {
     (window as any)._unlockPaidMedia = _unlockPaidMedia;
     (window as any)._openPaidMediaModal = _openPaidMediaModal;
 }
+
+// ─── QUEEN'S GALLERY ─────────────────────────────────────────────────────────
+
+const GALLERY_LABELS: Record<string, string> = {
+    femdom: 'FEMDOM',
+    regularlife: 'DAILY LIFE',
+    feet: 'FEET',
+};
+
+let _galleryData: any[] | null = null;
+
+export function switchMobQwTab(tab: 'wall' | 'gallery') {
+    ['wall', 'gallery'].forEach(t => {
+        const btn = document.getElementById(`mobQwTab_${t}`);
+        const panel = document.getElementById(`mobQwPanel_${t}`);
+        if (btn) btn.classList.toggle('active', t === tab);
+        if (panel) panel.style.display = t === tab ? 'flex' : 'none';
+    });
+    if (tab === 'gallery' && !_galleryData) _loadGalleryAlbums();
+}
+
+async function _loadGalleryAlbums() {
+    const el = document.getElementById('mobGalleryContent');
+    if (!el) return;
+    el.innerHTML = `<div style="text-align:center;padding:40px 0;color:#333;font-family:'Orbitron',sans-serif;font-size:0.5rem;letter-spacing:2px;">LOADING...</div>`;
+    try {
+        const res = await fetch('/api/gallery');
+        const json = await res.json();
+        _galleryData = json.albums || [];
+    } catch {
+        _galleryData = [];
+    }
+    _renderGalleryAlbums(el);
+}
+
+function _renderGalleryAlbums(el: HTMLElement) {
+    if (!_galleryData || _galleryData.length === 0) {
+        el.innerHTML = `<div style="text-align:center;padding:60px 20px;"><div style="font-family:'Cinzel',serif;font-size:1.1rem;color:rgba(197,160,89,0.4);margin-bottom:10px;">Gallery</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#333;letter-spacing:2px;">NO CONTENT YET</div></div>`;
+        return;
+    }
+
+    const cardsHtml = _galleryData.map((album: any) => {
+        const coverUrl = album.coverUrl ? getOptimizedUrl(album.coverUrl, 400) : '';
+        const label = GALLERY_LABELS[album.category] || album.label || album.category.toUpperCase();
+        return `
+        <div class="mob-gallery-album-card" onclick="window.openGalleryAlbum('${album.category}')">
+            ${coverUrl ? `<img class="mob-gallery-album-cover" src="${coverUrl}" alt="" loading="lazy" onerror="this.style.display='none'" />` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"></div>`}
+            <div class="mob-gallery-album-info">
+                <div class="mob-gallery-album-name">${label}</div>
+                <div class="mob-gallery-album-count">${album.count} PHOTO${album.count !== 1 ? 'S' : ''}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `
+        <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:#c5a059;letter-spacing:3px;margin-bottom:18px;">Gallery</div>
+        <div class="mob-gallery-albums">${cardsHtml}</div>
+    `;
+}
+
+export function openGalleryAlbum(category: string) {
+    const el = document.getElementById('mobGalleryContent');
+    if (!el || !_galleryData) return;
+
+    const album = _galleryData.find((a: any) => a.category === category);
+    if (!album) return;
+
+    const label = GALLERY_LABELS[category] || album.label || category.toUpperCase();
+    const items = album.items || [];
+
+    const gridHtml = items.map((item: any) => {
+        const thumb = getOptimizedUrl(item.thumbnail_url || item.media_url, 300);
+        const full = item.media_url;
+        const isPaid = (item.price || 0) > 0;
+        const isVideo = item.media_type === 'video';
+
+        if (isPaid) {
+            return `
+            <div class="mob-gallery-thumb mob-gallery-thumb-locked">
+                <img src="${thumb}" alt="" loading="lazy" />
+                <div class="mob-gallery-lock-overlay">
+                    <span style="font-size:1.2rem;">🔒</span>
+                    <span class="mob-gallery-lock-price"><i class="fas fa-coins"></i> ${item.price}</span>
+                </div>
+            </div>`;
+        }
+
+        const clickAction = isVideo
+            ? `onclick="window._openPaidMediaModal('${full}','video')"`
+            : `onclick="window._openPaidMediaModal('${full}','photo')"`;
+
+        return `
+        <div class="mob-gallery-thumb" ${clickAction}>
+            <img src="${thumb}" alt="" loading="lazy" />
+            ${isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;"><span style="color:#fff;font-size:0.9rem;margin-left:2px;">▶</span></div></div>` : ''}
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `
+        <button class="mob-gallery-back" onclick="window.backToGalleryAlbums()">‹ BACK</button>
+        <div class="mob-gallery-album-title">${label}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#444;letter-spacing:2px;text-align:center;margin-bottom:16px;">${items.length} PHOTO${items.length !== 1 ? 'S' : ''}</div>
+        <div class="mob-gallery-grid">${gridHtml}</div>
+    `;
+}
+
+export function backToGalleryAlbums() {
+    const el = document.getElementById('mobGalleryContent');
+    if (!el) return;
+    _renderGalleryAlbums(el);
+}

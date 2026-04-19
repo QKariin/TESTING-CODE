@@ -67,6 +67,9 @@ import {
     switchMobChatTab,
     openMobQueenWall,
     closeMobQueenWall,
+    switchMobQwTab,
+    openGalleryAlbum,
+    backToGalleryAlbums,
     openMobGlobal,
     closeMobGlobal,
     switchMobGlTab,
@@ -263,6 +266,9 @@ export default function ProfilePage() {
             (window as any).switchMobChatTab = switchMobChatTab;
             (window as any).openMobQueenWall = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
             (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
+            (window as any).switchMobQwTab = switchMobQwTab;
+            (window as any).openGalleryAlbum = openGalleryAlbum;
+            (window as any).backToGalleryAlbums = backToGalleryAlbums;
             (window as any).openMobGlobal = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobGlobal(); };
             (window as any).closeMobGlobal = () => { setMobOverlayOpen(false); closeMobGlobal(); };
             (window as any).switchMobGlTab = switchMobGlTab;
@@ -1955,8 +1961,19 @@ export default function ProfilePage() {
                     </div>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobQueenWall()}>✕</button>
                 </div>
-                <div className="mob-qwall-scroll">
-                    <div id="mobQWallContent"></div>
+                <div className="mob-qw-tabs">
+                    <button id="mobQwTab_wall" className="mob-qw-tab active" onClick={() => (window as any).switchMobQwTab('wall')}>WALL</button>
+                    <button id="mobQwTab_gallery" className="mob-qw-tab" onClick={() => (window as any).switchMobQwTab('gallery')}>GALLERY</button>
+                </div>
+                <div id="mobQwPanel_wall" className="mob-qw-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div className="mob-qwall-scroll">
+                        <div id="mobQWallContent"></div>
+                    </div>
+                </div>
+                <div id="mobQwPanel_gallery" className="mob-qw-panel" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div className="mob-gallery-scroll">
+                        <div id="mobGalleryContent"></div>
+                    </div>
                 </div>
             </div>
 
