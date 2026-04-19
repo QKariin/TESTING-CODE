@@ -2120,58 +2120,60 @@ export default function ProfilePage() {
         {showInstallGuide && (
             <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(12px)' }}
                 onClick={() => setShowInstallGuide(false)}>
-                <div style={{ width: '100%', background: 'linear-gradient(180deg, rgba(12,10,20,0.99), rgba(5,4,12,0.99))', border: '1px solid rgba(197,160,89,0.25)', borderRadius: '20px 20px 0 0', padding: '28px 22px 44px' }}
+                <div style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(180deg, rgba(12,10,20,0.99), rgba(5,4,12,0.99))', border: '1px solid rgba(197,160,89,0.25)', borderRadius: '20px 20px 0 0', padding: '28px 22px 44px' }}
                     onClick={e => e.stopPropagation()}>
-                    <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 22 }}>
                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', letterSpacing: '1px', marginBottom: 6 }}>Add to Home Screen</div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>It takes 10 seconds. Then it feels like a real app.</div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>It takes 10 seconds. Then it feels like a real app.</div>
                     </div>
 
-                    {/* Safari instructions */}
-                    <div style={{ marginBottom: 16 }}>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ display: 'inline-block', width: 18, height: 18, borderRadius: 4, background: 'linear-gradient(135deg, #0070f0, #00a0ff)', textAlign: 'center', lineHeight: '18px', fontSize: '0.55rem' }}>S</span>
-                            SAFARI
+                    {/* Step 1 — Share / Menu */}
+                    <div style={{ marginBottom: 18 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059' }}>1</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>Tap Share or Menu in your browser</div>
                         </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10, paddingLeft: 4 }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>1.</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap the <span style={{ color: '#fff' }}>Share</span> icon at the bottom <span style={{ fontSize: '0.9rem' }}>(the square with an arrow)</span></div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10, paddingLeft: 4 }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>2.</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Scroll down, tap <span style={{ color: '#fff' }}>"Add to Home Screen"</span></div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingLeft: 4 }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>3.</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap <span style={{ color: '#fff' }}>Add</span>. That's it.</div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, paddingLeft: 38 }}>
+                            In Safari it's the square with an arrow at the bottom. In Chrome it's the three dots at the top right.
                         </div>
                     </div>
 
-                    <div style={{ width: '60%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '16px auto' }} />
+                    {/* Step 2 — Add to Home Screen */}
+                    <div style={{ marginBottom: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059' }}>2</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>Find "Add to Home Screen"</div>
+                        </div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, paddingLeft: 38, marginBottom: 12 }}>
+                            Scroll down in the menu until you see it. Looks like this:
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, paddingLeft: 38, overflowX: 'auto' }}>
+                            <img src="/install-step1.jpg" style={{ height: 120, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                            <img src="/install-step2.jpg" style={{ height: 120, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                        </div>
+                    </div>
 
-                    {/* Chrome instructions */}
+                    {/* Step 3 — Confirm */}
                     <div style={{ marginBottom: 20 }}>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ display: 'inline-block', width: 18, height: 18, borderRadius: 4, background: 'linear-gradient(135deg, #ea4335, #fbbc05, #34a853, #4285f4)', textAlign: 'center', lineHeight: '18px', fontSize: '0.55rem' }}>C</span>
-                            CHROME
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059' }}>3</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>Tap "Add" to install</div>
                         </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10, paddingLeft: 4 }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>1.</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap the <span style={{ color: '#fff' }}>three dots</span> menu (top right)</div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, paddingLeft: 38, marginBottom: 12 }}>
+                            Keep "Open as Web App" on, then tap Add. Done — open it from your home screen.
                         </div>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingLeft: 4 }}>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>2.</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap <span style={{ color: '#fff' }}>"Add to Home Screen"</span> and confirm</div>
+                        <div style={{ paddingLeft: 38 }}>
+                            <img src="/install-step3.jpg" style={{ height: 130, borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)' }} />
                         </div>
                     </div>
 
                     <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, textAlign: 'center' }}>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
                             No app store needed. It opens fullscreen, loads instantly, and you'll get notifications from your Queen directly on your phone.
                         </div>
                     </div>
 
-                    <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#c5a059', letterSpacing: '1px', cursor: 'pointer' }}>Got it</button>
+                    <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', fontWeight: 600, color: '#c5a059', letterSpacing: '1px', cursor: 'pointer' }}>Got it</button>
                 </div>
             </div>
         )}
