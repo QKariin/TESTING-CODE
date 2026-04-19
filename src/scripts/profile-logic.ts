@@ -2960,8 +2960,16 @@ function _closeAllMobOverlays(except?: string) {
         const el = document.getElementById(id);
         if (!el) return;
         el.classList.remove('mob-overlay-open');
+        el.classList.remove('mob-chat-fullscreen');
+        el.style.height = '';
+        el.style.top = '';
         setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     });
+    // Restore bottom nav if we're not opening the chat overlay (which hides it)
+    if (except !== 'mobChatOverlay') {
+        const nav = document.getElementById('mobBottomNav');
+        if (nav) nav.style.display = '';
+    }
     if (except !== 'altar') closeAltarDrawer();
     closeLobby();
 }
@@ -2995,6 +3003,11 @@ export function openMobChatOverlay() {
     _closeAllMobOverlays('mobChatOverlay');
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
+
+    // Hide bottom nav and go fullscreen
+    const nav = document.getElementById('mobBottomNav');
+    if (nav) nav.style.display = 'none';
+    el.classList.add('mob-chat-fullscreen');
 
     // Step 1: display:flex - browser resets scrollTop=0 on any child scroll containers.
     el.style.display = 'flex';
@@ -3048,13 +3061,37 @@ export function openMobChatOverlay() {
         input.addEventListener('focus', () => queenBtn.classList.add('mob-nav-queen-shrink'));
         input.addEventListener('blur', () => queenBtn.classList.remove('mob-nav-queen-shrink'));
     }
+
+    // iOS keyboard: resize overlay to visualViewport so header stays visible
+    if (window.visualViewport && !(el as any).__vpAttached) {
+        (el as any).__vpAttached = true;
+        const onVPResize = () => {
+            if (!el.classList.contains('mob-overlay-open')) return;
+            const vp = window.visualViewport!;
+            el.style.height = vp.height + 'px';
+            el.style.top = vp.offsetTop + 'px';
+            // Keep chat scrolled to bottom when keyboard opens
+            if (b) b.scrollTop = b.scrollHeight + 9999;
+        };
+        window.visualViewport.addEventListener('resize', onVPResize);
+        window.visualViewport.addEventListener('scroll', onVPResize);
+    }
 }
 
 export function closeMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
     el.classList.remove('mob-overlay-open');
-    setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
+    el.classList.remove('mob-chat-fullscreen');
+    // Reset inline styles from visualViewport handler
+    el.style.height = '';
+    el.style.top = '';
+    setTimeout(() => {
+        if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none';
+        // Restore bottom nav
+        const nav = document.getElementById('mobBottomNav');
+        if (nav) nav.style.display = '';
+    }, 360);
     _setNavActive('profile');
 }
 

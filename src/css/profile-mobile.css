@@ -1742,6 +1742,13 @@
         transform: translateY(0);
     }
 
+    /* Full-screen mode for chat overlay — hides bottom nav, extends to bottom */
+    .mob-overlay.mob-chat-fullscreen {
+        bottom: 0;
+        height: 100dvh;
+        height: -webkit-fill-available;
+    }
+
     .mob-overlay-header {
         flex-shrink: 0;
         display: flex;
