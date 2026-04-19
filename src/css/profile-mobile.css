@@ -931,14 +931,13 @@
         cursor: pointer;
         padding: 0;
         position: relative;
-        /* Lifts the ring above the bar and offsets it down so bottom clips off-screen */
-        margin-top: -40px;
-        transform: translateY(20px);
+        margin-top: -30px;
+        transform: translateY(14px);
     }
 
     .mob-nav-queen-ring {
-        width: 90px;
-        height: 90px;
+        width: 65px;
+        height: 65px;
         border-radius: 50%;
         border: 2px solid rgba(255, 0, 0, 0.75);
         box-shadow:

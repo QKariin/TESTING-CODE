@@ -1995,7 +1995,7 @@ export default function ProfilePage() {
                 </button>
                 <button className="mob-nav-queen-btn" onClick={() => (window as any).openMobChatOverlay()}>
                     <div className="mob-nav-queen-ring">
-                        <img id="navQueenPic" src="/queen-karin.png" className="mob-nav-queen-img" alt="Queen" />
+                        <img id="navQueenPic" src="/queen-nav.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
                     <div id="mobMsgBadge">
                         <svg viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
