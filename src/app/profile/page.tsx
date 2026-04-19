@@ -2113,10 +2113,9 @@ export default function ProfilePage() {
                             onClick={e => e.stopPropagation()}>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>INSTALL ON IPHONE</div>
                             {[
-                                { step: '1', text: 'Open this page in Safari (if you\'re not already using it)' },
-                                { step: '2', text: 'Tap the Share button at the bottom of Safari (the box with an arrow pointing up)' },
-                                { step: '3', text: 'Scroll down and tap "Add to Home Screen"' },
-                                { step: '4', text: 'Tap "Add" — done. Open from your home screen for the full experience.' },
+                                { step: '1', text: 'Tap the Share button at the bottom of your browser (the box with an arrow pointing up)' },
+                                { step: '2', text: 'Scroll down and tap "Add to Home Screen"' },
+                                { step: '3', text: 'Tap "Add" — done. Open from your home screen for the full experience.' },
                             ].map(({ step, text }) => (
                                 <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>
                                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#c5a059' }}>{step}</div>
