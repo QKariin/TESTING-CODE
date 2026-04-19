@@ -1056,6 +1056,7 @@
         overflow: hidden;
         transform: translateY(100%);
         transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+        overscroll-behavior: contain;
     }
 
     .altar-drawer.open {
@@ -1733,6 +1734,8 @@
         flex-direction: column;
         transform: translateY(100%);
         transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     .mob-overlay.mob-overlay-open {
@@ -1932,6 +1935,8 @@
         flex: 1;
         overflow-y: auto;
         padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* ── Mobile Chat Bubbles ── */
@@ -2188,6 +2193,7 @@
         padding: 12px;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
+        overscroll-behavior: contain;
     }
 
     .mob-gl-period-bar {
