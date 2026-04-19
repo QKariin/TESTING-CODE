@@ -2118,28 +2118,60 @@ export default function ProfilePage() {
         )}
         {/* Install guide overlay */}
         {showInstallGuide && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(8px)' }}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(12px)' }}
                 onClick={() => setShowInstallGuide(false)}>
-                <div style={{ width: '100%', background: 'rgba(5,8,18,0.99)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '16px 16px 0 0', padding: '24px 20px 40px', fontFamily: 'Cinzel, serif' }}
+                <div style={{ width: '100%', background: 'linear-gradient(180deg, rgba(12,10,20,0.99), rgba(5,4,12,0.99))', border: '1px solid rgba(197,160,89,0.25)', borderRadius: '20px 20px 0 0', padding: '28px 22px 44px' }}
                     onClick={e => e.stopPropagation()}>
-                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>INSTALL ON YOUR PHONE</div>
-                    {[
-                        { step: '1', text: 'Tap the Share button at the bottom of your browser (the box with an arrow pointing up)' },
-                        { step: '2', text: 'Scroll down and tap "Add to Home Screen"' },
-                        { step: '3', text: 'Tap "Add" — done. Open from your home screen for the full experience.' },
-                    ].map(({ step, text }) => (
-                        <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#c5a059' }}>{step}</div>
-                            <div style={{ fontSize: '0.82rem', color: '#bbb', lineHeight: 1.5, paddingTop: 4 }}>{text}</div>
+                    <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', letterSpacing: '1px', marginBottom: 6 }}>Add to Home Screen</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>It takes 10 seconds. Then it feels like a real app.</div>
+                    </div>
+
+                    {/* Safari instructions */}
+                    <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ display: 'inline-block', width: 18, height: 18, borderRadius: 4, background: 'linear-gradient(135deg, #0070f0, #00a0ff)', textAlign: 'center', lineHeight: '18px', fontSize: '0.55rem' }}>S</span>
+                            SAFARI
                         </div>
-                    ))}
-                    <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginTop: 8, marginBottom: 16 }}>
-                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 6 }}>WHY IT'S BETTER</div>
-                        <div style={{ fontSize: '0.78rem', color: '#888', lineHeight: 1.6 }}>
-                            Runs fullscreen — no browser bar taking your space. Loads faster from home screen. You'll receive push notifications when your Queen sends you a task or message. It behaves like a real app, not a website.
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10, paddingLeft: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>1.</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap the <span style={{ color: '#fff' }}>Share</span> icon at the bottom <span style={{ fontSize: '0.9rem' }}>(the square with an arrow)</span></div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10, paddingLeft: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>2.</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Scroll down, tap <span style={{ color: '#fff' }}>"Add to Home Screen"</span></div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingLeft: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>3.</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap <span style={{ color: '#fff' }}>Add</span>. That's it.</div>
                         </div>
                     </div>
-                    <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '12px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, fontFamily: 'Orbitron,monospace', fontSize: '0.52rem', color: '#c5a059', letterSpacing: '2px', cursor: 'pointer' }}>CLOSE</button>
+
+                    <div style={{ width: '60%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '16px auto' }} />
+
+                    {/* Chrome instructions */}
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ display: 'inline-block', width: 18, height: 18, borderRadius: 4, background: 'linear-gradient(135deg, #ea4335, #fbbc05, #34a853, #4285f4)', textAlign: 'center', lineHeight: '18px', fontSize: '0.55rem' }}>C</span>
+                            CHROME
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10, paddingLeft: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>1.</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap the <span style={{ color: '#fff' }}>three dots</span> menu (top right)</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingLeft: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', flexShrink: 0, marginTop: 2 }}>2.</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>Tap <span style={{ color: '#fff' }}>"Add to Home Screen"</span> and confirm</div>
+                        </div>
+                    </div>
+
+                    <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
+                            No app store needed. It opens fullscreen, loads instantly, and you'll get notifications from your Queen directly on your phone.
+                        </div>
+                    </div>
+
+                    <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#c5a059', letterSpacing: '1px', cursor: 'pointer' }}>Got it</button>
                 </div>
             </div>
         )}
