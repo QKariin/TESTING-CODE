@@ -683,15 +683,17 @@ export default function ProfilePage() {
             <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" onChange={(e: any) => handleChatMediaUpload(e.target)} />
 
             {/* Push notification opt-in banner */}
-            <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,6,2,0.97)', border: '1px solid rgba(197,160,89,0.6)', borderRadius: 12, padding: '14px 20px', flexDirection: 'row', alignItems: 'center', gap: 12, boxShadow: '0 4px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', whiteSpace: 'nowrap' }}>
-                <span style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059' }}>👑 Enable Queen&apos;s notifications</span>
-                <button id="pushAllowBtn" style={{ background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
-                    <span id="pushAllowLabel">ALLOW</span>
+            <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,6,2,0.97)', border: '1px solid rgba(197,160,89,0.6)', borderRadius: 12, padding: '14px 16px', flexDirection: 'column', alignItems: 'stretch', gap: 10, boxShadow: '0 4px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', width: 'calc(100vw - 32px)', maxWidth: 360 }}>
+                <span style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059', textAlign: 'center' }}>👑 Enable Queen&apos;s notifications</span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button id="pushAllowBtn" style={{ flex: 1, background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '8px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
+                    <span id="pushAllowLabel">ALLOW NOTIFS</span>
                 </button>
-                <button id="pwaInstallBtn" onClick={() => { const p = (window as any)._deferredInstallPrompt; if (p) { p.prompt(); p.userChoice.then(() => { (window as any)._deferredInstallPrompt = null; const b = document.getElementById('pwaInstallBtn'); if (b) b.style.display = 'none'; }); } else { alert('To install: tap the browser menu (⋮) → "Add to Home screen" or "Install app".'); } }} style={{ display: 'inline-block', background: 'linear-gradient(135deg, #3a6bc5, #1a3a8b)', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#fff', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
+                <button id="pwaInstallBtn" onClick={() => { const p = (window as any)._deferredInstallPrompt; if (p) { p.prompt(); p.userChoice.then(() => { (window as any)._deferredInstallPrompt = null; const b = document.getElementById('pwaInstallBtn'); if (b) b.style.display = 'none'; }); } else { alert('To install: tap the browser menu (⋮) → "Add to Home screen" or "Install app".'); } }} style={{ flex: 1, display: 'inline-block', background: 'linear-gradient(135deg, #3a6bc5, #1a3a8b)', border: 'none', borderRadius: 8, padding: '8px 14px', color: '#fff', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
                     INSTALL APP
                 </button>
-                <button id="pushDismissBtn" style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>✕</button>
+                <button id="pushDismissBtn" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#666', cursor: 'pointer', fontSize: '0.9rem', padding: '8px 12px' }}>✕</button>
+                </div>
             </div>
 
             {/* UNIVERSAL DESKTOP APP */}
