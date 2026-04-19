@@ -60,8 +60,8 @@ export function getOptimizedUrl(url: string | null | undefined, width: number = 
     // Normalize http:// → https:// so Next.js image optimizer and browsers accept the URL
     url = url.replace(/^http:\/\//i, "https://");
     if (url === "FORCED" || url === "SKIPPED") return "/queen-karin.png";
-    if (url.includes("token=")) return url; // Already a signed URL
     // Supabase storage URLs - return direct URL (avoids /_next/image 400s when files are missing)
+    // Includes signed URLs with token= (they'll be proxied via /api/media)
     if (url.includes("supabase.co/storage")) {
         return url;
     }

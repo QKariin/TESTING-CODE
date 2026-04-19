@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 // Private folders - serve via signed URLs, not public URLs
 // Note: 'chat/' removed - chat images live in the public 'media' bucket and use permanent public URLs
-const PRIVATE_PREFIXES = ['task-proofs/', 'admin-chat/', 'chat-media/', 'challenge-proofs/'];
+const PRIVATE_PREFIXES = ['task-proofs/', 'chat-media/', 'challenge-proofs/'];
 const isPrivatePath = (path: string) => PRIVATE_PREFIXES.some(p => path.startsWith(p));
 
 // Signed URL expiry: 7 days (604800 seconds) - refreshed on next load
