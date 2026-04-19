@@ -513,39 +513,8 @@
         animation-play-state: running !important;
     }
 
-    /* Rotating dot pattern */
     .mob-kneel-bar::before {
-        content: '';
-        pointer-events: none;
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        translate: -50% -50%;
-        width: calc(100% - var(--kneel-shadow-size, 2px) * 3);
-        height: calc(100% - var(--kneel-shadow-size, 2px) * 3);
-        background: radial-gradient(
-            circle at 2px 2px,
-            rgba(197, 160, 89, 0.5) 0.5px,
-            transparent 0
-        ) padding-box;
-        background-size: 4px 4px;
-        background-repeat: space;
-        mask-image: conic-gradient(
-            from calc(var(--kneel-gradient-angle) + 45deg),
-            black,
-            transparent 10% 90%,
-            black
-        );
-        border-radius: inherit;
-        opacity: 0.4;
-        z-index: 0;
-        animation: kneel-gradient-angle var(--kneel-duration) linear infinite,
-                   kneel-gradient-angle calc(var(--kneel-duration) / 0.4) linear infinite reverse paused;
-        animation-composition: add;
-    }
-
-    .mob-kneel-bar:active::before {
-        animation-play-state: running !important;
+        display: none;
     }
 
     /* Inner shimmer glow */
