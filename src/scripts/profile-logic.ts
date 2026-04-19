@@ -3053,6 +3053,20 @@ export function openMobChatOverlay() {
     setTimeout(scrollToBottom, 400);
     setTimeout(scrollToBottom, 900);
 
+    // Prevent touch scroll from leaking out of #mob_chatBox to the overlay/body
+    if (!(el as any).__touchLocked) {
+        (el as any).__touchLocked = true;
+        el.addEventListener('touchmove', (e: TouchEvent) => {
+            // Only allow scroll inside #mob_chatBox — block everything else
+            let target = e.target as HTMLElement | null;
+            while (target && target !== el) {
+                if (target.id === 'mob_chatBox' || target.id === 'mob_systemLogContent' || target.id === 'mob_huntStoreGrid') return; // allow
+                target = target.parentElement;
+            }
+            e.preventDefault();
+        }, { passive: false });
+    }
+
     // Shrink queen avatar button when keyboard opens
     const input = document.getElementById('mob_chatMsgInput');
     const queenBtn = document.querySelector('.mob-nav-queen-btn') as HTMLElement | null;
