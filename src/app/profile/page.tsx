@@ -2071,19 +2071,19 @@ export default function ProfilePage() {
                         onOpen={() => { setChallengePanelOpen(true); setChallengePanelId(activeChallenge.id); }}
                     />
                 )}
-                {/* PWA Install Banner — shown on mobile browser when not already installed */}
-                {isMobile && !isStandalone && !installBannerDismissed && (installPrompt || isIOS) && (
+                {/* PWA Install Banner — always shown on mobile browser */}
+                {isMobile && !isStandalone && (
                     <div style={{
-                        position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000001,
-                        background: 'rgba(5,8,18,0.97)',
-                        border: '1px solid rgba(197,160,89,0.35)',
-                        borderRadius: 14, padding: '10px 14px',
+                        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000001,
+                        background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(5,8,18,0.98))',
+                        borderBottom: '1px solid rgba(197,160,89,0.35)',
+                        padding: '10px 14px',
                         display: 'flex', alignItems: 'center', gap: 12,
-                        boxShadow: '0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px rgba(197,160,89,0.08)',
+                        boxShadow: '0 2px 24px rgba(0,0,0,0.6)',
                         backdropFilter: 'blur(16px)',
                     }}>
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px' }}>Install as App</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px' }}>Get the App</div>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', opacity: 0.9, marginTop: 2, letterSpacing: '1px' }}>FASTER · FULLSCREEN · NOTIFICATIONS</div>
                         </div>
                         <button
@@ -2091,8 +2091,8 @@ export default function ProfilePage() {
                                 if (installPrompt) {
                                     await installPrompt.prompt();
                                     const { outcome } = await installPrompt.userChoice;
-                                    if (outcome === 'accepted') { setInstallPrompt(null); setInstallBannerDismissed(true); }
-                                } else if (isIOS) {
+                                    if (outcome === 'accepted') { setInstallPrompt(null); }
+                                } else {
                                     setShowInstallGuide(true);
                                 }
                             }}
@@ -2102,19 +2102,10 @@ export default function ProfilePage() {
                                 fontFamily: 'Orbitron', fontSize: '0.38rem',
                                 color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
                             }}
-                        >{isIOS ? 'HOW TO' : 'INSTALL'}</button>
-                        <button
-                            onClick={() => { localStorage.setItem('installBannerDismissed', '1'); setInstallBannerDismissed(true); }}
-                            style={{
-                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: 8, padding: '5px 10px',
-                                fontFamily: 'Orbitron', fontSize: '0.38rem',
-                                color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
-                            }}
-                        >DISMISS</button>
+                        >{installPrompt ? 'INSTALL' : 'HOW TO'}</button>
                     </div>
                 )}
-                {/* iOS install guide overlay */}
+                {/* Install guide overlay — iOS instructions */}
                 {showInstallGuide && (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(8px)' }}
                         onClick={() => setShowInstallGuide(false)}>
@@ -2122,9 +2113,10 @@ export default function ProfilePage() {
                             onClick={e => e.stopPropagation()}>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.62rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 16, textAlign: 'center' }}>INSTALL ON IPHONE</div>
                             {[
-                                { step: '1', text: 'Tap the Share button at the bottom of Safari (the box with an arrow pointing up)' },
-                                { step: '2', text: 'Scroll down and tap "Add to Home Screen"' },
-                                { step: '3', text: 'Tap "Add" — done. Open it from your home screen for the full app experience.' },
+                                { step: '1', text: 'Open this page in Safari (if you\'re not already using it)' },
+                                { step: '2', text: 'Tap the Share button at the bottom of Safari (the box with an arrow pointing up)' },
+                                { step: '3', text: 'Scroll down and tap "Add to Home Screen"' },
+                                { step: '4', text: 'Tap "Add" — done. Open from your home screen for the full experience.' },
                             ].map(({ step, text }) => (
                                 <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 16 }}>
                                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#c5a059' }}>{step}</div>
