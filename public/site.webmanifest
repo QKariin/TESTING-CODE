@@ -2,7 +2,7 @@
   "name": "Queen Karin",
   "short_name": "QK",
   "description": "Queen Karin — exclusive membership community",
-  "start_url": "/login",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
