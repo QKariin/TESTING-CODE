@@ -148,7 +148,7 @@
         border-radius: 50%;
         border: 2px solid #c5a059;
         box-shadow: 0 0 40px rgba(197, 160, 89, 0.4), inset 0 0 20px rgba(197, 160, 89, 0.2);
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.55);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         display: flex;
@@ -157,6 +157,19 @@
         justify-content: center;
         gap: 0;
         padding: 0;
+        overflow: hidden;
+    }
+
+    /* Blur fallback for Android — painted behind content */
+    .halo-circle-lg::before {
+        content: '';
+        position: absolute;
+        inset: -40px;
+        background: inherit;
+        filter: blur(18px);
+        -webkit-filter: blur(18px);
+        z-index: -1;
+        border-radius: 50%;
     }
 
     .halo-name-lg {
@@ -244,6 +257,7 @@
         justify-content: space-around;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         margin-bottom: 30px;
         height: auto;
     }
@@ -301,6 +315,7 @@
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         cursor: pointer;
         position: relative;
         box-shadow: 0 0 12px rgba(197, 160, 89, 0.1);
@@ -637,6 +652,7 @@
         align-items: flex-start !important;
         padding-top: 80px !important;
         backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         animation: fadeIn 0.3s ease;
     }
 
