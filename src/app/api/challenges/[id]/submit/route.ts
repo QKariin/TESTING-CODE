@@ -9,7 +9,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const memberId = user.id;
+        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
+        const memberId = prof?.member_id || user.email || '';
         const { windowId, proofUrl } = await request.json();
         if (!windowId || !proofUrl)
             return NextResponse.json({ success: false, error: 'Missing windowId or proofUrl' }, { status: 400 });
@@ -85,7 +86,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const memberId = user.id;
+        // Resolve member_id (email) from profiles — challenge_participants uses email, not UUID
+        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
+        const memberId = prof?.member_id || user.email || '';
 
         const [{ data: challenge }, { data: windows }, { data: myCompletions }, { data: participant }] = await Promise.all([
             supabaseAdmin.from('challenges')

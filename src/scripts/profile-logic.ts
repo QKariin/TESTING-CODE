@@ -3911,8 +3911,16 @@ async function _loadMobGlChallenges() {
     if (!container) return;
     container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
     try {
-        const res = await fetch('/api/challenges', { cache: 'no-store' });
-        const { challenges } = await res.json();
+        const [chalRes, partRes] = await Promise.all([
+            fetch('/api/challenges', { cache: 'no-store' }),
+            fetch('/api/challenges/my-status', { cache: 'no-store' }).catch(() => null),
+        ]);
+        const { challenges } = await chalRes.json();
+        const myStatuses: Record<string, string> = {};
+        if (partRes?.ok) {
+            const partJson = await partRes.json();
+            (partJson.participations || []).forEach((p: any) => { myStatuses[p.challenge_id] = p.status; });
+        }
         const now = Date.now();
         const active = (challenges || []).filter((c: any) => c.status === 'active');
         const upcoming = (challenges || []).filter((c: any) =>
@@ -3963,7 +3971,10 @@ async function _loadMobGlChallenges() {
                             ${c.description ? `<div style="font-family:'Orbitron',sans-serif;font-size:0.58rem;color:rgba(255,255,255,0.35);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
                         </div>
                         <div style="display:flex;flex-direction:column;">${statsHtml}</div>
-                        <button onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();" style="width:100%;padding:9px 0;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.52rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</button>
+                        ${myStatuses[c.id]
+                            ? `<div style="width:100%;padding:9px 0;border-radius:8px;border:1px solid rgba(74,222,128,0.3);text-align:center;background:rgba(74,222,128,0.08);color:#4ade80;font-family:'Orbitron';font-size:0.42rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;" onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();">${myStatuses[c.id] === 'active' ? '✓ ENROLLED' : myStatuses[c.id] === 'eliminated' ? 'ELIMINATED' : myStatuses[c.id].toUpperCase()}</div>`
+                            : `<button onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();" style="width:100%;padding:9px 0;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.52rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</button>`
+                        }
                     </div>
                 </div>
             </div>`;

@@ -13,11 +13,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             .from('challenges').select('id, name, status, image_url').eq('id', challengeId).single();
         if (!challenge) return NextResponse.json({ success: false, error: 'Challenge not found' }, { status: 404 });
 
-        // Resolve UUID from profiles
+        // Resolve profile
         const { data: profile } = await supabaseAdmin
-            .from('profiles').select('ID, name, avatar_url').ilike('member_id', memberEmail).maybeSingle();
+            .from('profiles').select('ID, member_id, name, avatar_url').ilike('member_id', memberEmail).maybeSingle();
         if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
-        const memberId = profile.ID;
+        const memberId = profile.member_id;
 
         // Check if already a participant
         const { data: existing } = await supabaseAdmin

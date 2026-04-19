@@ -239,7 +239,7 @@ export default function ProfilePage() {
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
             (window as any)._mobJoinChallenge = mobJoinChallenge;
-            (window as any)._openChallengePanel = (_e: Event, id: string) => { setChallengePanelId(id); setChallengePanelOpen(true); };
+            (window as any)._openChallengePanel = (_e: Event, id: string) => { setMobOverlayOpen(false); closeMobGlobal(); setChallengePanelId(id); setChallengePanelOpen(true); };
             (window as any).handleMobGlKey = handleMobGlKey;
             (window as any).toggleSystemLog = toggleSystemLog;
             (window as any).renderKneelDots = renderKneelDots;
