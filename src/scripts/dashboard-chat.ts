@@ -232,9 +232,13 @@ async function loadDashboardChatHistory(memberId: string) {
 
 export function appendChatMessage(msg: any) {
     // Prevent duplicates from instant-append + realtime sync
-    const msgId = msg.id ? String(msg.id) : null;
+    const msgId = msg.id ? String(msg.id) : (msg._dedup || null);
     if (msgId && _renderedMsgIds.has(msgId)) return;
     if (msgId) _renderedMsgIds.add(msgId);
+    // Also track by content+timestamp so realtime delivery of the same message is caught
+    const contentKey = `${msg.content || ''}::${msg.created_at || ''}`;
+    if (contentKey.length > 4 && _renderedMsgIds.has(contentKey)) return;
+    if (contentKey.length > 4) _renderedMsgIds.add(contentKey);
     lastChatMsgId = msg.id;
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 

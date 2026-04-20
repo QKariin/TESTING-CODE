@@ -138,12 +138,8 @@ export async function POST(req: Request) {
             metadata: { ...metadata, isQueen, ...(chatterEmail ? { chatter_email: chatterEmail } : {}) },
         };
 
-        // Insert with .select() to get the real id back for client-side dedup
-        const { data: insertedRow, error: msgErr } = await adminClient
-            .from('chats')
-            .insert(insertData)
-            .select('id, created_at')
-            .single();
+        // Insert without .select() — chats table PK column name varies
+        const { error: msgErr } = await adminClient.from('chats').insert(insertData);
 
         if (msgErr) {
             if (!isQueen) {
@@ -155,11 +151,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
         }
 
-        // Merge DB id + created_at into the message data for client-side dedup
+        // Client-side dedup key — realtime will deliver the DB row with actual PK,
+        // but dashboard-chat uses content+timestamp to deduplicate
+        const nowIso = new Date().toISOString();
         const msgData = {
             ...insertData,
-            id: insertedRow?.id,
-            created_at: insertedRow?.created_at || new Date().toISOString(),
+            _dedup: `${senderEmail}:${nowIso}`,
+            created_at: nowIso,
         };
 
         // When a tribute/wishlist is sent, also post a card to global chat
