@@ -98,13 +98,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 await DbService.sendMessage(completion.member_id, personalMsg, 'system');
             } catch (_) {}
 
-            // Global chat
-            try {
-                await supabaseAdmin.from('global_messages').insert({
-                    sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
-                    message: `CHALLENGE_TASK_CARD::${JSON.stringify(cardPayload)}`,
-                });
-            } catch (_) {}
+            // Global chat — only if participant is still active
+            const { data: partCheck } = await supabaseAdmin
+                .from('challenge_participants').select('status')
+                .eq('challenge_id', id).ilike('member_id', completion.member_id).maybeSingle();
+            if (partCheck?.status === 'active') {
+                try {
+                    await supabaseAdmin.from('global_messages').insert({
+                        sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                        message: `CHALLENGE_TASK_CARD::${JSON.stringify(cardPayload)}`,
+                    });
+                } catch (_) {}
+            }
 
             return NextResponse.json({ success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1 });
         } else {

@@ -10,9 +10,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     // Fetch newest 100 messages (descending), then reverse so oldest→newest for display
+    // Filter out rows with NULL created_at to prevent ghost messages sorting weirdly
     const { data: rawData, error } = await supabaseAdmin
         .from('global_messages')
         .select('*')
+        .not('created_at', 'is', null)
         .order('created_at', { ascending: false })
         .limit(100);
     const data = (rawData || []).reverse();
