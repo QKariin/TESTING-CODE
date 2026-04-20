@@ -66,6 +66,7 @@ export function closeGlobalView() {
     if (ov) ov.style.display = 'none';
     _stopPoll();
     _stopUpdatesRealtime();
+    _pauseAllVideos();
 }
 
 export function closeGlobalSection() { _showMain(); }
@@ -74,6 +75,7 @@ export function closeGlobalSection() { _showMain(); }
 
 function _showMain() {
     _stopPoll();
+    _pauseAllVideos();
     _setHeader('', false);
     const main = document.getElementById('globalMainView');
     if (main) main.style.display = 'grid';
@@ -106,10 +108,18 @@ function _stopUpdatesRealtime() {
     if (updatesChannel) { updatesChannel.unsubscribe(); updatesChannel = null; }
 }
 
+/** Pause all playing videos in the global view overlay. */
+function _pauseAllVideos() {
+    const ov = document.getElementById('globalViewOverlay');
+    if (!ov) return;
+    ov.querySelectorAll('video').forEach(v => { v.pause(); });
+}
+
 // ─── OPEN EXPANDED ────────────────────────────────────────────────────────────
 
 export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 'spenders' | 'queen' | 'exchequer') {
     _stopPoll();
+    _pauseAllVideos();
     const main = document.getElementById('globalMainView');
     if (main) main.style.display = 'none';
     _hidePanels();
@@ -873,10 +883,10 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const mediaHtml = msg.media_url ? (
         msg.media_type === 'video'
-            ? `<video src="${msg.media_url}" controls playsinline preload="none" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;"></video>`
+            ? `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);"><video src="${msg.media_url}" controls playsinline preload="none" ${_vidErr} style="width:100%;max-height:220px;object-fit:cover;display:block;"></video></div>`
             : isGif
                 ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
-                : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:280px;object-fit:cover;display:block;" />`
+                : `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);"><img src="${msg.media_url}" ${_imgErr} style="width:100%;max-height:240px;object-fit:cover;display:block;" /></div>`
     ) : '';
 
     // ── QUEEN bubble (gold frame, full-width feed style) ──
