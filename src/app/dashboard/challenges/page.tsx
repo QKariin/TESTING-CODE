@@ -13,6 +13,7 @@ interface Challenge {
     start_date: string | null; end_date: string | null; created_at: string;
     participant_total?: number; participant_active?: number; participant_eliminated?: number;
     is_template?: boolean; image_url?: string | null; task_names?: string[] | null;
+    is_evergreen?: boolean; slot_duration_minutes?: number; evergreen_join_cost?: number; evergreen_rejoin_cost?: number;
 }
 
 interface Window_ {
@@ -962,6 +963,7 @@ function CreateTab({ allChallenges, onCreate }: {
         first_place_points: 10, second_place_points: 7, third_place_points: 5,
         start_date: '', start_time: '08:00',
         image_url: '',
+        is_evergreen: false, slot_duration_minutes: 360, evergreen_join_cost: 0, evergreen_rejoin_cost: 1000,
     });
     const [submitting, setSubmitting] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
@@ -1048,11 +1050,23 @@ function CreateTab({ allChallenges, onCreate }: {
     };
 
     const handleSubmit = async () => {
-        if (!form.name || !form.start_date) return;
+        if (!form.name) return;
+        if (!form.is_evergreen && !form.start_date) return;
         setSubmitting(true);
         try {
-            const startDt = new Date(`${form.start_date}T${form.start_time}:00`);
-            await onCreate({ ...form, start_date: startDt.toISOString(), task_times: taskTimes, task_names: taskNames });
+            if (form.is_evergreen) {
+                await onCreate({
+                    ...form,
+                    start_date: null,
+                    is_evergreen: true,
+                    slot_duration_minutes: form.slot_duration_minutes,
+                    evergreen_join_cost: form.evergreen_join_cost || null,
+                    evergreen_rejoin_cost: form.evergreen_rejoin_cost,
+                });
+            } else {
+                const startDt = new Date(`${form.start_date}T${form.start_time}:00`);
+                await onCreate({ ...form, start_date: startDt.toISOString(), task_times: taskTimes, task_names: taskNames });
+            }
         } finally {
             setSubmitting(false);
         }
@@ -1080,6 +1094,7 @@ function CreateTab({ allChallenges, onCreate }: {
                         {allChallenges.map(c => (
                             <div key={c.id} className="ch-template-card" onClick={() => prefill(c)}>
                                 <span className={`ch-template-badge badge-${c.status}`}>{c.status.toUpperCase()}</span>
+                                {(c as any).is_evergreen && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#4ade80', letterSpacing: '1px', marginLeft: 8 }}>EVERGREEN</span>}
                                 <div className="ch-template-name">{c.name}</div>
                                 <div className="ch-template-meta">
                                     <span>{c.duration_days} days · {c.tasks_per_day}×/day · {c.window_minutes}min windows</span>
@@ -1120,6 +1135,23 @@ function CreateTab({ allChallenges, onCreate }: {
                         <textarea className="ch-input" placeholder="What is this challenge about..." value={form.description} onChange={e => set('description', e.target.value)} />
                     </div>
 
+                    {/* Challenge Type Toggle */}
+                    <div className="ch-field">
+                        <label className="ch-label">CHALLENGE TYPE</label>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <button type="button" onClick={() => set('is_evergreen', false)}
+                                style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${!form.is_evergreen ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.06)'}`, background: !form.is_evergreen ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: !form.is_evergreen ? '#c5a059' : '#555', letterSpacing: '2px', marginBottom: 4 }}>CLASSIC</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>Fixed start date, shared windows</div>
+                            </button>
+                            <button type="button" onClick={() => set('is_evergreen', true)}
+                                style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${form.is_evergreen ? 'rgba(74,222,128,0.5)' : 'rgba(255,255,255,0.06)'}`, background: form.is_evergreen ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: form.is_evergreen ? '#4ade80' : '#555', letterSpacing: '2px', marginBottom: 4 }}>EVERGREEN</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>Join anytime, personal timeline</div>
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Cover Image */}
                     <div className="ch-field">
                         <label className="ch-label">COVER IMAGE (OPTIONAL)</label>
@@ -1145,34 +1177,78 @@ function CreateTab({ allChallenges, onCreate }: {
                     </div>
 
                     {/* Schedule */}
-                    <div className="ch-form-grid-3">
-                        <div className="ch-field">
-                            <label className="ch-label">DURATION (DAYS)</label>
-                            <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} />
+                    {form.is_evergreen ? (
+                        <div className="ch-form-grid">
+                            <div className="ch-field">
+                                <label className="ch-label">DURATION (DAYS)</label>
+                                <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} />
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">TASKS PER DAY</label>
+                                <input type="number" className="ch-input" min={1} max={3} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(3, Math.max(1, Number(e.target.value))))} />
+                            </div>
                         </div>
-                        <div className="ch-field">
-                            <label className="ch-label">TASKS PER DAY</label>
-                            <input type="number" className="ch-input" min={1} max={10} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(10, Math.max(1, Number(e.target.value))))} />
+                    ) : (
+                        <div className="ch-form-grid-3">
+                            <div className="ch-field">
+                                <label className="ch-label">DURATION (DAYS)</label>
+                                <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} />
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">TASKS PER DAY</label>
+                                <input type="number" className="ch-input" min={1} max={10} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(10, Math.max(1, Number(e.target.value))))} />
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">WINDOW DURATION (MIN)</label>
+                                <input type="number" className="ch-input" min={5} max={120} value={form.window_minutes} onChange={e => set('window_minutes', Number(e.target.value))} />
+                            </div>
                         </div>
-                        <div className="ch-field">
-                            <label className="ch-label">WINDOW DURATION (MIN)</label>
-                            <input type="number" className="ch-input" min={5} max={120} value={form.window_minutes} onChange={e => set('window_minutes', Number(e.target.value))} />
-                        </div>
-                    </div>
+                    )}
+
+                    {form.is_evergreen && (
+                        <>
+                            <div className="ch-form-grid-3">
+                                <div className="ch-field">
+                                    <label className="ch-label">SLOT DURATION (MIN)</label>
+                                    <input type="number" className="ch-input" min={30} max={360} value={form.slot_duration_minutes} onChange={e => set('slot_duration_minutes', Math.min(360, Math.max(30, Number(e.target.value))))} />
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', marginTop: 4 }}>360 = full 6hr slot</div>
+                                </div>
+                                <div className="ch-field">
+                                    <label className="ch-label">JOIN COST (COINS)</label>
+                                    <input type="number" className="ch-input" min={0} value={form.evergreen_join_cost} onChange={e => set('evergreen_join_cost', Number(e.target.value))} />
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', marginTop: 4 }}>0 = auto by duration</div>
+                                </div>
+                                <div className="ch-field">
+                                    <label className="ch-label">REJOIN COST (COINS)</label>
+                                    <input type="number" className="ch-input" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} />
+                                </div>
+                            </div>
+                            <div style={{ padding: '12px 16px', background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 8 }}>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#666', lineHeight: 1.5 }}>
+                                    Evergreen challenges are always active. Each participant starts their own personal Day 1 when they join.
+                                    They pick time slots (morning/afternoon/evening) and tasks appear in their schedule.
+                                    {form.evergreen_join_cost === 0 && <span style={{ color: '#4ade80' }}> Auto join cost: {form.duration_days <= 7 ? '2,000' : form.duration_days <= 14 ? '5,000' : '10,000'} coins.</span>}
+                                </div>
+                            </div>
+                        </>
+                    )}
 
                     {/* Start date */}
-                    <div className="ch-form-grid">
-                        <div className="ch-field">
-                            <label className="ch-label">START DATE</label>
-                            <input type="date" className="ch-input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
+                    {!form.is_evergreen && (
+                        <div className="ch-form-grid">
+                            <div className="ch-field">
+                                <label className="ch-label">START DATE</label>
+                                <input type="date" className="ch-input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">START TIME</label>
+                                <input type="time" className="ch-input" value={form.start_time} onChange={e => set('start_time', e.target.value)} />
+                            </div>
                         </div>
-                        <div className="ch-field">
-                            <label className="ch-label">START TIME</label>
-                            <input type="time" className="ch-input" value={form.start_time} onChange={e => set('start_time', e.target.value)} />
-                        </div>
-                    </div>
+                    )}
 
                     {/* Daily Task Schedule - per day */}
+                    {!form.is_evergreen && (
                     <div>
                         <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>DAILY TASK SCHEDULE</label>
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
@@ -1250,6 +1326,7 @@ function CreateTab({ allChallenges, onCreate }: {
                             ))}
                         </div>
                     </div>
+                    )}
 
                     {/* Points */}
                     <div>
@@ -1279,10 +1356,10 @@ function CreateTab({ allChallenges, onCreate }: {
                     </div>
 
                     {/* Total windows preview */}
-                    <div style={{ padding: '12px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8 }}>
+                    <div style={{ padding: '12px 16px', background: form.is_evergreen ? 'rgba(74,222,128,0.04)' : 'rgba(197,160,89,0.04)', border: `1px solid ${form.is_evergreen ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.1)'}`, borderRadius: 8 }}>
                         <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>
-                            TOTAL WINDOWS: </span>
-                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#c5a059', fontWeight: 700 }}>
+                            {form.is_evergreen ? 'TASKS PER PARTICIPANT: ' : 'TOTAL WINDOWS: '}</span>
+                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: form.is_evergreen ? '#4ade80' : '#c5a059', fontWeight: 700 }}>
                             {form.duration_days * form.tasks_per_day}
                         </span>
                         <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>
@@ -1290,8 +1367,8 @@ function CreateTab({ allChallenges, onCreate }: {
                         </span>
                     </div>
 
-                    <button className="ch-submit-btn" disabled={submitting || !form.name || !form.start_date} onClick={handleSubmit}>
-                        {submitting ? 'CREATING...' : '⚔ CREATE & GENERATE WINDOWS'}
+                    <button className="ch-submit-btn" disabled={submitting || !form.name || (!form.is_evergreen && !form.start_date)} onClick={handleSubmit}>
+                        {submitting ? 'CREATING...' : form.is_evergreen ? '⚔ CREATE EVERGREEN CHALLENGE' : '⚔ CREATE & GENERATE WINDOWS'}
                     </button>
                 </div>
             </div>

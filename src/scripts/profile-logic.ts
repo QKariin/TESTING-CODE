@@ -3543,6 +3543,42 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
+    // CHALLENGE INVITE CARD
+    if (content.startsWith('CHALLENGE_INVITE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('CHALLENGE_INVITE_CARD::', ''));
+            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#0d0a04 60%,#0a0803 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:130px;background:#0a0803;overflow:hidden;${bgImg}">
+                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);"></div>
+                            <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                                <div style="font-family:'Orbitron',sans-serif;font-size:2rem;color:rgba(197,160,89,0.6);">⚔</div>
+                            </div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,8,3,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:2px;">⚔ CHALLENGE INVITATION</span></div>
+                        </div>
+                        <div style="padding:12px 16px 16px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:6px;">${(d.challengeName||'').toUpperCase()}</div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:#777;margin-bottom:10px;">${d.durationDays||'?'} days · ${d.tasksPerDay||'?'} tasks/day · ${(d.joinCost||0).toLocaleString()} coins</div>
+                            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;">
+                                <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;">
+                                    <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
+                                    <span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span>
+                                </div>
+                            </div>
+                            <div onclick="(window._openChallengePanel||function(){})(event,'${d.challengeId}');event.stopPropagation();" style="padding:8px 20px;background:linear-gradient(135deg,rgba(197,160,89,0.2),rgba(197,160,89,0.08));border:1px solid rgba(197,160,89,0.4);border-radius:8px;cursor:pointer;display:inline-block;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:2px;font-weight:700;">TAP TO JOIN ⚔</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
             ? `<div style="position:relative;width:100%;background:#000;border-radius:8px;margin-top:8px;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;border-radius:8px;"><div style="width:50px;height:50px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">▶</div></div><video data-src="${msg.media_url}" playsinline preload="none" style="width:100%;border-radius:8px;max-height:260px;object-fit:cover;display:block;pointer-events:none;"></video></div>`

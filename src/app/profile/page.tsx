@@ -2407,6 +2407,8 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const pendingWindowRef = useRef<string | null>(null);
+    const [selectedSlots, setSelectedSlots] = useState<string[]>(['morning']);
+    const [detectedTimezone, setDetectedTimezone] = useState<string>('UTC');
 
     const load = useCallback(async () => {
         try {
@@ -2418,6 +2420,10 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 
     useEffect(() => { load(); }, [load]);
 
+    useEffect(() => {
+        try { setDetectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch {}
+    }, []);
+
     const showToast = (msg: string, ok: boolean) => {
         setToast({ msg, ok });
         setTimeout(() => setToast(null), 3500);
@@ -2426,14 +2432,26 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const handleJoin = async () => {
         setJoining(true);
         try {
-            const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
+            const isEvergreen = data?.challenge?.is_evergreen;
+            const body: any = {};
+            if (isEvergreen) {
+                body.timezone = detectedTimezone;
+                body.chosen_slots = selectedSlots;
+            }
+            const res = await fetch(`/api/challenges/${challengeId}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
             const json = await res.json();
             if (json.success) {
                 const msg = json.already_joined
                     ? 'Already enrolled'
-                    : json.late_join_fee
-                        ? `✓ Joined! ${json.late_join_fee} coins late fee charged.`
-                        : '✓ Joined! Good luck.';
+                    : json.is_evergreen
+                        ? `✓ Joined! ${json.coins_charged || 0} coins charged. ${json.windows_created} windows created.`
+                        : json.late_join_fee
+                            ? `✓ Joined! ${json.late_join_fee} coins late fee charged.`
+                            : '✓ Joined! Good luck.';
                 showToast(msg, true);
                 load();
                 if (!json.already_joined && onJoined) onJoined();
@@ -2446,17 +2464,24 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const handleRejoin = async () => {
         setRejoining(true);
         try {
+            const isEvergreen = data?.challenge?.is_evergreen;
+            const body: any = { member_email: memberEmail };
+            if (isEvergreen) {
+                body.timezone = detectedTimezone;
+                body.chosen_slots = selectedSlots;
+            }
             const res = await fetch(`/api/challenges/${challengeId}/rejoin`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member_email: memberEmail }),
+                body: JSON.stringify(body),
             });
             const json = await res.json();
             if (json.success) {
-                setRejoinMsg(`✓ Back in! ${json.coins_charged} coins charged.`);
+                setRejoinMsg(json.is_evergreen
+                    ? `✓ Back in! ${json.coins_charged} coins. Day 1 restarted.`
+                    : `✓ Back in! ${json.coins_charged} coins charged.`);
                 load();
             } else {
-                // Insufficient coins - send to wallet boost
                 if (json.error?.toLowerCase().includes('need') || json.error?.toLowerCase().includes('coin')) {
                     if ((window as any).goToExchequer) (window as any).goToExchequer();
                 } else {
@@ -2558,20 +2583,65 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: data.challenge.image_url ? undefined : 'none' }}>{data.challenge.description}</div>
                                     )}
                                     <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
-                                        {data.challenge.duration_days}d · {data.challenge.tasks_per_day}×/day · {data.challenge.window_minutes}min windows
+                                        {data.challenge.is_evergreen
+                                            ? `${data.challenge.duration_days}d · ${data.challenge.tasks_per_day}×/day · EVERGREEN`
+                                            : `${data.challenge.duration_days}d · ${data.challenge.tasks_per_day}×/day · ${data.challenge.window_minutes}min windows`
+                                        }
                                     </div>
 
-                                    {/* Not joined → JOIN button */}
+                                    {/* Not joined → JOIN button (with slot picker for evergreen) */}
                                     {!data.participant && (
-                                        <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                            <div>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 3 }}>CHALLENGE ACTIVE</div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#777' }}>Do you want to participate?</div>
+                                        <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 10, padding: '14px 16px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: data.challenge.is_evergreen ? 14 : 0 }}>
+                                                <div>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 3 }}>
+                                                        {data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#777' }}>
+                                                        {data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
+                                                    </div>
+                                                </div>
+                                                {!data.challenge.is_evergreen && (
+                                                    <button onClick={handleJoin} disabled={joining}
+                                                        style={{ flexShrink: 0, padding: '10px 20px', background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: joining ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700 }}>
+                                                        {joining ? '...' : '⚔ JOIN'}
+                                                    </button>
+                                                )}
                                             </div>
-                                            <button onClick={handleJoin} disabled={joining}
-                                                style={{ flexShrink: 0, padding: '10px 20px', background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: joining ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700 }}>
-                                                {joining ? '...' : '⚔ JOIN'}
-                                            </button>
+                                            {data.challenge.is_evergreen && (
+                                                <>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>
+                                                        PICK {data.challenge.tasks_per_day} TIME SLOT{data.challenge.tasks_per_day > 1 ? 'S' : ''}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                                        {(['morning', 'afternoon', 'evening'] as const).map(slot => {
+                                                            const selected = selectedSlots.includes(slot);
+                                                            const labels: Record<string, string> = { morning: '☀ MORNING', afternoon: '◐ AFTERNOON', evening: '☽ EVENING' };
+                                                            const times: Record<string, string> = { morning: '6AM-12PM', afternoon: '12PM-6PM', evening: '6PM-12AM' };
+                                                            return (
+                                                                <button key={slot} onClick={() => {
+                                                                    if (selected) {
+                                                                        setSelectedSlots(prev => prev.filter(s => s !== slot));
+                                                                    } else if (selectedSlots.length < data.challenge.tasks_per_day) {
+                                                                        setSelectedSlots(prev => [...prev, slot]);
+                                                                    }
+                                                                }}
+                                                                style={{ flex: 1, padding: '10px 8px', borderRadius: 8, border: `1px solid ${selected ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.06)'}`, background: selected ? 'rgba(197,160,89,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
+                                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: selected ? '#c5a059' : '#555', letterSpacing: '1px', marginBottom: 2 }}>{labels[slot]}</div>
+                                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>{times[slot]}</div>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: '#555', marginBottom: 12 }}>
+                                                        Timezone: {detectedTimezone}
+                                                    </div>
+                                                    <button onClick={handleJoin} disabled={joining || selectedSlots.length !== data.challenge.tasks_per_day}
+                                                        style={{ width: '100%', padding: '12px 20px', background: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'default' : 'pointer', fontWeight: 700 }}>
+                                                        {joining ? '...' : `⚔ JOIN · ${selectedSlots.length}/${data.challenge.tasks_per_day} SLOTS`}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     )}
 

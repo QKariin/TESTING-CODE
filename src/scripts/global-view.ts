@@ -311,6 +311,7 @@ async function _loadTalkPreview() {
                         (m.message||'').startsWith('PROMOTION_CARD::') ? '✦ RANK PROMOTION' :
                         (m.message||'').startsWith('CHALLENGE_JOIN_CARD::') ? '⚔ JOINED CHALLENGE' :
                         (m.message||'').startsWith('CHALLENGE_ELIM_CARD::') ? '✕ ELIMINATED' :
+                        (m.message||'').startsWith('CHALLENGE_INVITE_CARD::') ? '⚔ CHALLENGE INVITE' :
                         m.message}</div>
                 </div>
             </div>`;
@@ -727,6 +728,42 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                             <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:4px 14px;">
                                 <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
                                 <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;">STILL IN: ${d.activeCount||0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
+    // ── Challenge Invite Card ──
+    if (content.startsWith('CHALLENGE_INVITE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('CHALLENGE_INVITE_CARD::', ''));
+            const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+                <div style="width:60%;min-width:240px;max-width:480px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#0d0a04 60%,#0a0803 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:140px;background:#0a0803;overflow:hidden;${bgImg}">
+                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);"></div>
+                            <div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                                <div style="font-family:'Orbitron',sans-serif;font-size:2.2rem;color:rgba(197,160,89,0.6);">⚔</div>
+                            </div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,8,3,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">⚔ CHALLENGE INVITATION</span></div>
+                        </div>
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${(d.challengeName||'').toUpperCase()}</div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:#777;margin-bottom:12px;">${d.durationDays||'?'} days · ${d.tasksPerDay||'?'} tasks/day · ${(d.joinCost||0).toLocaleString()} coins</div>
+                            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
+                                <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:4px 14px;">
+                                    <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span>
+                                    <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span>
+                                </div>
+                            </div>
+                            <div style="padding:10px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.2),rgba(197,160,89,0.08));border:1px solid rgba(197,160,89,0.4);border-radius:8px;cursor:pointer;display:inline-block;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:#c5a059;letter-spacing:2px;font-weight:700;">TAP TO JOIN ⚔</span>
                             </div>
                         </div>
                     </div>
