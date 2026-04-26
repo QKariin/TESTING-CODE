@@ -10,6 +10,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
             .from('challenges').select('*').eq('id', id).single();
         if (cErr || !challenge) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
 
+        const isEvergreen = challenge.is_evergreen;
+
         const [{ data: windows }, { data: completions }, { data: participants }, { data: pending }] = await Promise.all([
             supabaseAdmin.from('challenge_windows').select('*').eq('challenge_id', id).order('opens_at', { ascending: true }),
             supabaseAdmin.from('challenge_completions').select('*').eq('challenge_id', id),
@@ -41,10 +43,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
         const now = new Date();
 
-        // Auto-eliminate: active participants who missed a closed window (skip windows before they joined)
+        // Auto-eliminate: active participants who missed a closed window
         for (const p of (participants || []).filter((p: any) => p.status === 'active')) {
             const joinedAt = p.joined_at ? new Date(p.joined_at) : new Date(0);
-            for (const w of (windows || []).filter((w: any) => new Date(w.closes_at) < now && new Date(w.closes_at) > joinedAt)) {
+
+            // For evergreen: check only this participant's personal windows
+            // For classic: check shared windows (member_id IS NULL), skip windows before they joined
+            const relevantWindows = isEvergreen
+                ? (windows || []).filter((w: any) => w.member_id && w.member_id.toLowerCase() === p.member_id.toLowerCase())
+                : (windows || []).filter((w: any) => !w.member_id);
+
+            for (const w of relevantWindows.filter((w: any) => new Date(w.closes_at) < now && new Date(w.closes_at) > joinedAt)) {
                 const done = (completions || []).some((c: any) => c.window_id === w.id && c.member_id.toLowerCase() === p.member_id.toLowerCase());
                 if (!done) {
                     await supabaseAdmin.from('challenge_participants').update({
@@ -54,7 +63,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                     }).eq('challenge_id', id).eq('member_id', p.member_id);
                     p.status = 'eliminated';
                     p.eliminated_on_window_id = w.id;
-                    // Post elimination card - fetch profile directly with ilike for reliable name lookup
+                    // Post elimination card
                     try {
                         const { data: elimProf } = await supabaseAdmin.from('profiles')
                             .select('name, avatar_url').ilike('member_id', p.member_id).maybeSingle();
@@ -65,7 +74,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                                 name: elimProf?.name || p.member_id.split('@')[0],
                                 photo: elimProf?.avatar_url || null,
                                 challengeName: challenge.name,
-                                challengeImage: (challenge as any).image_url || null,
+                                challengeImage: challenge.image_url || null,
                                 activeCount: remaining,
                             })}`,
                         });

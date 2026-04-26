@@ -25,6 +25,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
         if (!win) return NextResponse.json({ success: false, error: 'Window not found' }, { status: 404 });
 
+        // For evergreen personal windows, verify ownership
+        if (win.member_id && win.member_id.toLowerCase() !== memberId.toLowerCase()) {
+            return NextResponse.json({ success: false, error: 'This window belongs to another participant' }, { status: 403 });
+        }
+
         const now = new Date();
         if (now < new Date(win.opens_at))
             return NextResponse.json({ success: false, error: 'Window not yet open' }, { status: 400 });
@@ -90,18 +95,29 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
         const memberId = prof?.member_id || user.email || '';
 
-        const [{ data: challenge }, { data: windows }, { data: myCompletions }, { data: participant }] = await Promise.all([
+        const [{ data: challenge }, { data: myCompletions }, { data: participant }] = await Promise.all([
             supabaseAdmin.from('challenges')
-                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points, task_names')
+                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points, task_names, is_evergreen, slot_duration_minutes')
                 .eq('id', challengeId).single(),
-            supabaseAdmin.from('challenge_windows')
-                .select('*').eq('challenge_id', challengeId).order('opens_at', { ascending: true }),
             supabaseAdmin.from('challenge_completions')
                 .select('id, window_id, verified, completed_at, response_time_seconds, proof_url')
                 .eq('challenge_id', challengeId).eq('member_id', memberId),
             supabaseAdmin.from('challenge_participants')
-                .select('status, joined_at').eq('challenge_id', challengeId).eq('member_id', memberId).maybeSingle(),
+                .select('status, joined_at, timezone, chosen_slots, personal_start, personal_end')
+                .eq('challenge_id', challengeId).eq('member_id', memberId).maybeSingle(),
         ]);
+
+        // For evergreen: fetch only this user's personal windows
+        // For classic: fetch shared windows (member_id IS NULL)
+        const isEvergreen = (challenge as any)?.is_evergreen;
+        let windowsQuery = supabaseAdmin.from('challenge_windows')
+            .select('*').eq('challenge_id', challengeId).order('opens_at', { ascending: true });
+        if (isEvergreen) {
+            windowsQuery = windowsQuery.eq('member_id', memberId);
+        } else {
+            windowsQuery = windowsQuery.is('member_id', null);
+        }
+        const { data: windows } = await windowsQuery;
 
         // Compute per-task placement and aggregate stats
         const verified = (myCompletions || []).filter((c: any) => c.verified);

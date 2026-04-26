@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getJoinCost } from '@/lib/evergreen-windows';
 
 export async function GET() {
     try {
@@ -46,21 +47,74 @@ export async function POST(request: Request) {
             points_per_completion = 20,
             first_place_points = 10, second_place_points = 7, third_place_points = 5,
             start_date, image_url = null, task_times = null, task_names = null,
+            // Evergreen fields
+            is_evergreen = false, slot_duration_minutes = 360,
+            evergreen_join_cost = null, evergreen_rejoin_cost = 1000,
         } = body;
 
-        if (!name || !duration_days || !tasks_per_day || !window_minutes || !start_date)
+        // Classic challenges require start_date; evergreen don't
+        if (!name || !duration_days || !tasks_per_day)
             return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
 
+        if (!is_evergreen && !start_date)
+            return NextResponse.json({ success: false, error: 'Classic challenges require a start date' }, { status: 400 });
+
+        if (!is_evergreen && !window_minutes)
+            return NextResponse.json({ success: false, error: 'Classic challenges require window_minutes' }, { status: 400 });
+
+        const durationNum = Number(duration_days);
+        const tpd = Number(tasks_per_day);
+
+        if (is_evergreen) {
+            // ── EVERGREEN CHALLENGE ──
+            const joinCost = evergreen_join_cost ?? getJoinCost(durationNum);
+
+            const { data: challenge, error: cErr } = await supabaseAdmin
+                .from('challenges')
+                .insert({
+                    name, theme, description, status: 'active', is_template: false,
+                    is_evergreen: true,
+                    duration_days: durationNum, tasks_per_day: tpd,
+                    window_minutes: Number(slot_duration_minutes),
+                    slot_duration_minutes: Number(slot_duration_minutes),
+                    evergreen_join_cost: joinCost,
+                    evergreen_rejoin_cost: Number(evergreen_rejoin_cost),
+                    points_per_completion: Number(points_per_completion),
+                    first_place_points: Number(first_place_points),
+                    second_place_points: Number(second_place_points),
+                    third_place_points: Number(third_place_points),
+                    start_date: null, end_date: null,
+                    image_url: image_url || null,
+                    task_names: task_names || null,
+                })
+                .select().single();
+
+            if (cErr) throw cErr;
+
+            // No global windows for evergreen — they're generated per participant on join
+
+            // Auto-create badge definitions
+            await supabaseAdmin.from('badges').insert([
+                { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common' },
+                { challenge_id: challenge.id, type: 'finisher', name: `${name} - Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare' },
+                { challenge_id: challenge.id, type: 'champion', name: `${name} - Champion`, description: `Won the ${name} challenge`, rarity: 'legendary' },
+            ]);
+
+            return NextResponse.json({ success: true, challenge, windows_created: 0, is_evergreen: true });
+        }
+
+        // ── CLASSIC CHALLENGE (unchanged) ──
+        const wmin = Number(window_minutes);
         const startDt = new Date(start_date);
         const endDt = new Date(startDt);
-        endDt.setDate(endDt.getDate() + Number(duration_days));
+        endDt.setDate(endDt.getDate() + durationNum);
 
         const { data: challenge, error: cErr } = await supabaseAdmin
             .from('challenges')
             .insert({
                 name, theme, description, status: 'draft', is_template: true,
-                duration_days: Number(duration_days), tasks_per_day: Number(tasks_per_day),
-                window_minutes: Number(window_minutes),
+                duration_days: durationNum, tasks_per_day: tpd,
+                window_minutes: wmin,
                 points_per_completion: Number(points_per_completion),
                 first_place_points: Number(first_place_points),
                 second_place_points: Number(second_place_points),
@@ -76,12 +130,9 @@ export async function POST(request: Request) {
 
         // Generate windows - use provided task_times or distribute evenly 08:00–22:00
         const windows: any[] = [];
-        const tpd = Number(tasks_per_day);
-        const wmin = Number(window_minutes);
-        for (let day = 1; day <= Number(duration_days); day++) {
+        for (let day = 1; day <= durationNum; day++) {
             const dayDate = new Date(startDt);
             dayDate.setDate(dayDate.getDate() + (day - 1));
-            // Support both 1D (same every day) and 2D (per-day) task_times
             const dayTimes = task_times && Array.isArray(task_times[0]) ? task_times[day - 1] : task_times;
             for (let w = 0; w < tpd; w++) {
                 let opensAt: Date;
@@ -90,7 +141,6 @@ export async function POST(request: Request) {
                     opensAt = new Date(dayDate);
                     opensAt.setHours(h, m, 0, 0);
                 } else {
-                    // Fallback: evenly distributed 08:00–22:00
                     const interval = Math.floor((14 * 60) / (tpd + 1));
                     opensAt = new Date(dayDate);
                     opensAt.setHours(8, 0, 0, 0);
