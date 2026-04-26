@@ -344,8 +344,8 @@ export function selUser(id: string) {
     // Mark this user's chat as read immediately — you see it, it's read
     markAsRead(id);
 
-    const chatBox = document.getElementById('adminChatBox');
-    if (chatBox) chatBox.innerHTML = "";
+    // Don't clear chatBox here — initDashboardChat saves the current chat to cache
+    // first, then replaces it with cached or fresh content
 
     setCurrId(id);
 
