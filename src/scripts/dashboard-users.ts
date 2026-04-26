@@ -785,13 +785,19 @@ export async function adminPromoteUser(memberId: string) {
         const res = await fetch('/api/promote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: memberId })
+            body: JSON.stringify({ memberId })
         });
         const data = await res.json();
         if (data.success && data.promoted) {
             window.location.reload();
+        } else {
+            console.error('[promote] Failed:', data.error || data);
+            alert('Promotion failed: ' + (data.error || 'Unknown error'));
         }
-    } catch (_) {}
+    } catch (err) {
+        console.error('[promote] Request error:', err);
+        alert('Promotion request failed');
+    }
 }
 
 export async function adminRenameUser(memberId: string) {

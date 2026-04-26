@@ -13,14 +13,14 @@ export async function POST(req: Request) {
     if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     try {
-        const { memberEmail } = await req.json();
-        if (!memberEmail) return NextResponse.json({ error: 'Missing memberEmail' }, { status: 400 });
+        const { memberId } = await req.json();
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-        // 1. Fetch Profile
+        // 1. Fetch Profile by UUID
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .ilike('member_id', memberEmail)
+            .eq('ID', memberId)
             .maybeSingle();
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
