@@ -2291,7 +2291,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
 
     const fetchMessages = useCallback(async () => {
         try {
-            const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.memberId, ...(adminEmail ? { requester: adminEmail } : {}) }) });
+            const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: user.memberId }) });
             const json = await res.json();
             if (json.success && json.messages) setMessages(json.messages);
         } finally { setLoadingMsgs(false); }
