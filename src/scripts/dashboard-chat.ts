@@ -22,6 +22,18 @@ let lastChatMsgTimestamp: string | null = null;
 let activeChatEmail: string | null = null;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
+// ── Chat cache — stores rendered HTML + state per user so switching back is instant ──
+interface ChatCacheEntry {
+    html: string;          // rendered chat box innerHTML
+    sysHtml: string;       // system log innerHTML
+    lastMsgId: string | null;
+    lastTimestamp: string | null;
+    dedupIds: Set<string>;
+    cachedAt: number;
+}
+const _chatCache = new Map<string, ChatCacheEntry>();
+const CACHE_MAX_ENTRIES = 30; // keep last 30 conversations in memory
+
 // ── Service / System message helpers ────────────────────────────────────────
 
 function isSystemMessage(msg: any): boolean {
@@ -92,6 +104,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     // Guard: if already initialized for this exact user AND channel is alive, skip.
     if (activeChatEmail === activeId && chatChannel) return;
 
+    // ── Save current chat to cache before switching ──
+    _saveChatToCache();
+
     activeChatEmail = activeId;
 
     // 1. Clean up existing subscription + poll on the SAME client instance
@@ -103,15 +118,43 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         clearInterval(chatPollInterval);
         chatPollInterval = null;
     }
-    lastChatMsgId = null;
-    lastChatMsgTimestamp = null;
-    _renderedMsgIds.clear();
 
-    const b = document.getElementById('adminChatBox');
-    if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+    // ── Try restoring from cache — show instantly, then sync new messages ──
+    const cached = _chatCache.get(activeId.toLowerCase());
+    if (cached) {
+        // Restore cached state
+        lastChatMsgId = cached.lastMsgId;
+        lastChatMsgTimestamp = cached.lastTimestamp;
+        _renderedMsgIds.clear();
+        cached.dedupIds.forEach(id => _renderedMsgIds.add(id));
 
-    // 2. Load history
-    await loadDashboardChatHistory(activeId);
+        // Show cached HTML instantly
+        const b = document.getElementById('adminChatBox');
+        if (b) {
+            b.innerHTML = cached.html;
+            _attachImgScrollHandlers(b);
+            forceBottom();
+        }
+        const logEl = document.getElementById('dashSystemLogContent');
+        if (logEl && cached.sysHtml) {
+            logEl.innerHTML = cached.sysHtml;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Sync any new messages that arrived while we were away (non-blocking)
+        pollNewMessages(activeId);
+    } else {
+        // No cache — fresh load
+        lastChatMsgId = null;
+        lastChatMsgTimestamp = null;
+        _renderedMsgIds.clear();
+
+        const b = document.getElementById('adminChatBox');
+        if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+
+        // Load history from server
+        await loadDashboardChatHistory(activeId);
+    }
 
     // 3. Realtime subscription on shared client
     // NO row filter — Supabase eq filter is case-sensitive and silently drops events
@@ -144,6 +187,34 @@ export async function initDashboardChat(memberIdOrEmail: string) {
 
     // Polling fallback — catches anything realtime misses (network drops, tab hidden)
     chatPollInterval = setInterval(() => pollNewMessages(activeId), 15000);
+}
+
+/** Save the currently visible chat to the in-memory cache */
+function _saveChatToCache() {
+    if (!activeChatEmail) return;
+    const b = document.getElementById('adminChatBox');
+    const logEl = document.getElementById('dashSystemLogContent');
+    if (!b) return;
+
+    const entry: ChatCacheEntry = {
+        html: b.innerHTML,
+        sysHtml: logEl?.innerHTML || '',
+        lastMsgId: lastChatMsgId,
+        lastTimestamp: lastChatMsgTimestamp,
+        dedupIds: new Set(_renderedMsgIds),
+        cachedAt: Date.now(),
+    };
+    _chatCache.set(activeChatEmail.toLowerCase(), entry);
+
+    // Evict oldest entries if cache is too large
+    if (_chatCache.size > CACHE_MAX_ENTRIES) {
+        let oldestKey = '';
+        let oldestTime = Infinity;
+        _chatCache.forEach((v, k) => {
+            if (v.cachedAt < oldestTime) { oldestTime = v.cachedAt; oldestKey = k; }
+        });
+        if (oldestKey) _chatCache.delete(oldestKey);
+    }
 }
 
 /** Force-reconnect the chat channel + poll immediately. Called on tab visibility restore. */

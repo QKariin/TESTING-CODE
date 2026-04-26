@@ -6,6 +6,7 @@ import { clean } from './utils';
 import { triggerSound } from './utils';
 import { getOptimizedUrl } from './media';
 import { isMemberOnline } from './dashboard-presence';
+import { updateDetail } from './dashboard-users';
 
 // onlineJoinTime: when each user first came online (only set on offline→online transition)
 const onlineJoinTime: Record<string, number> = {};
@@ -370,13 +371,12 @@ export function selUser(id: string) {
     const vUser = document.getElementById('viewUser');
     if (vUser) { vUser.style.display = 'flex'; vUser.classList.add('active'); }
 
-    // Trigger update for user detail and chat
-    Promise.all([
-        import('./dashboard-users'),
-        import('./dashboard-chat')
-    ]).then(([{ updateDetail }, { initDashboardChat }]) => {
-        const openUser = users.find(x => x.memberId === id);
-        if (openUser) updateDetail(openUser);
+    // Update detail panel instantly — no async delay
+    const openUser = users.find(x => x.memberId === id);
+    if (openUser) updateDetail(openUser);
+
+    // Load chat (async — needs network fetch, but uses cache when available)
+    import('./dashboard-chat').then(({ initDashboardChat }) => {
         initDashboardChat(id);
     });
 }
