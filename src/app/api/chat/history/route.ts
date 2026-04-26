@@ -40,7 +40,7 @@ export async function GET(req: Request) {
 
         const since = searchParams.get('since'); // ISO timestamp - return only newer messages
 
-        const chatColumns = 'id,member_id,sender_email,content,type,metadata,created_at';
+        const chatColumns = '*';
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
             if (profile?.member_id) chatMemberId = profile.member_id;
         }
 
-        const chatCols = 'id,member_id,sender_email,content,type,metadata,created_at';
+        const chatCols = '*';
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
