@@ -7,6 +7,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
 import { clean } from './utils';
 import { uploadToSupabase } from './mediaSupabase';
+import { updateSidebarItem } from './dashboard-sidebar';
 
 // Fallback if DOMPurify is not available or needs to be used from global
 const purifier = (typeof window !== 'undefined' && (window as any).DOMPurify) || { sanitize: (s: string) => s };
@@ -241,6 +242,16 @@ export function appendChatMessage(msg: any) {
     if (contentKey.length > 4) _renderedMsgIds.add(contentKey);
     lastChatMsgId = msg.id;
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
+
+    // Update sidebar card for this conversation — shows unread dot instantly
+    if (msg.created_at && activeChatEmail) {
+        const msgTs = new Date(msg.created_at).getTime();
+        const u = users.find(x => (x.memberId || '').toLowerCase() === activeChatEmail!.toLowerCase());
+        if (u && msgTs > (u.lastMessageTime || 0)) {
+            u.lastMessageTime = msgTs;
+            updateSidebarItem(u.memberId);
+        }
+    }
 
     // System message → route to log panel, update ticker
     if (isSystemMessage(msg)) {

@@ -4,11 +4,11 @@
 import {
     users, currId, globalQueue, globalTributes,
     setUsers, setGlobalQueue, setGlobalTributes, setAvailableDailyTasks,
-    setQueenContent, setStickerConfig, setBroadcastPresets, setTimerInterval, timerInterval,
+    setQueenContent, setStickerConfig, setBroadcastPresets,
     setArmoryTarget, setCurrId
 } from './dashboard-state';
 
-import { renderSidebar } from './dashboard-sidebar';
+import { renderSidebar, updateSidebarItem } from './dashboard-sidebar';
 import { initPresenceTracking, isMemberOnline, onPresenceChange } from './dashboard-presence';
 import { renderOperationsMonitor } from './dashboard-operations';
 import { renderOverview, pushActivity } from './dashboard-overview';
@@ -47,9 +47,21 @@ export function initDashboard() {
     subscribeToDashboardTaskUpdates();
     loadExchequerLog();
 
-    // When a member comes online: re-render sidebar dot + restart their chat/detail
+    // When a member comes online/offline: update only the cards that actually changed
+    const _prevOnline: Record<string, boolean> = {};
     onPresenceChange(async () => {
-        renderSidebar();
+        // Find which users flipped online/offline and update only those
+        users.forEach((u: any) => {
+            const email = (u.member_id || u.email || u.memberId || '').toLowerCase();
+            if (!email) return;
+            const nowOnline = isMemberOnline(email);
+            const wasOnline = _prevOnline[email] ?? false;
+            if (nowOnline !== wasOnline) {
+                _prevOnline[email] = nowOnline;
+                updateSidebarItem(u.memberId);
+            }
+        });
+
         if (!currId) return;
         const currUser = users.find((x: any) => x.memberId === currId);
         if (!isMemberOnline(currUser?.member_id || '')) return;
@@ -296,14 +308,11 @@ function updateStatsDeck() {
 }
 
 function startTimerLoop() {
-    if (timerInterval) clearInterval(timerInterval);
-    const interval = setInterval(() => {
-        if (!currId) return;
-        const u = users.find(x => x.memberId === currId);
-        if (!isMemberOnline(u?.member_id || '')) return; // ghost - skip all updates
-        if (u) updateDetail(u);
-    }, 1000);
-    setTimerInterval(interval);
+    // Removed: was calling updateDetail() every 1 second, rebuilding the entire
+    // detail panel DOM ~60 times/minute even when nothing changed.
+    // The task countdown timer already has its own dedicated setInterval inside
+    // updateDetail() (dashboard-users.ts line 589). All other updates are
+    // event-driven (presence changes, realtime messages, user actions).
 }
 
 export function switchAdminTab(tab: 'ops' | 'intel' | 'record') {
