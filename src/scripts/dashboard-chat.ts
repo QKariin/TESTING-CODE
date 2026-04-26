@@ -251,16 +251,8 @@ async function pollNewMessages(memberId: string) {
 
 async function loadDashboardChatHistory(memberId: string) {
     try {
-        const supabase = createClient();
-        let { data: { user } } = await supabase.auth.getUser();
-
-        // LOCAL DEV BYPASS: If no user found on localhost, assume it's CEO
-        let userEmail = user?.email;
-        if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-            userEmail = 'ceo@qkarin.com';
-        }
-
-        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId, ...(userEmail ? { requester: userEmail } : {}) }) });
+        // No auth check needed here — the API route handles auth via getCaller()
+        const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId }) });
         const data = await res.json();
         if (data.success) {
             const msgs = data.messages || [];

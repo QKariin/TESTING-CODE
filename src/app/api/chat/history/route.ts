@@ -40,12 +40,13 @@ export async function GET(req: Request) {
 
         const since = searchParams.get('since'); // ISO timestamp - return only newer messages
 
+        const chatColumns = 'id,member_id,sender_email,content,type,metadata,created_at';
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select(chatColumns)
                 .ilike('member_id', chatMemberIdGet)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
@@ -53,7 +54,7 @@ export async function GET(req: Request) {
             // Initial load: get LAST 50 messages
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select(chatColumns)
                 .ilike('member_id', chatMemberIdGet)
                 .order('created_at', { ascending: false })
                 .limit(50);
@@ -118,12 +119,13 @@ export async function POST(req: Request) {
             if (profile?.member_id) chatMemberId = profile.member_id;
         }
 
+        const chatCols = 'id,member_id,sender_email,content,type,metadata,created_at';
         let query: any;
         if (since) {
             // Polling: get all messages newer than timestamp
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select(chatCols)
                 .ilike('member_id', chatMemberId)
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
@@ -131,7 +133,7 @@ export async function POST(req: Request) {
             // Initial load: get LAST 50 messages
             query = queryClient
                 .from('chats')
-                .select('*')
+                .select(chatCols)
                 .ilike('member_id', chatMemberId)
                 .order('created_at', { ascending: false })
                 .limit(50);
