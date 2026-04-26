@@ -41,27 +41,52 @@ export function initPresenceTracking() {
     const supabase = createClient();
     _channel = supabase.channel('members-online');
 
+    // Grace period tracking — don't mark someone offline on a single missing sync
+    const _absentCount: Record<string, number> = {};
+    const OFFLINE_THRESHOLD = 2; // must be absent from 2+ consecutive syncs
+
     _channel
         .on('presence', { event: 'sync' }, () => {
             const state = _channel!.presenceState<{ id?: string; email?: string }>();
-            const prev = new Set(onlineMembers);
 
-            onlineMembers.clear();
+            // Build the set of keys present in this sync event
+            const nowPresent = new Set<string>();
             Object.values(state)
                 .flat()
                 .forEach((p: any) => {
-                    // Accept hashed id (new) or raw email (legacy) for backwards compat
                     if (p?.id) {
-                        onlineMembers.add(p.id);
+                        nowPresent.add(p.id);
                     } else if (p?.email) {
-                        onlineMembers.add(presenceKey(p.email));
+                        nowPresent.add(presenceKey(p.email));
                     }
                 });
 
-            // Only notify if the set actually changed
-            const changed =
-                onlineMembers.size !== prev.size ||
-                [...onlineMembers].some(e => !prev.has(e));
+            // If sync returned 0 members but we had members before, it's a reconnect — skip
+            if (nowPresent.size === 0 && onlineMembers.size > 0) return;
+
+            let changed = false;
+
+            // Add newly appeared members immediately
+            for (const key of nowPresent) {
+                delete _absentCount[key];
+                if (!onlineMembers.has(key)) {
+                    onlineMembers.add(key);
+                    changed = true;
+                }
+            }
+
+            // For members that disappeared, increment absent counter
+            // Only remove after they've been absent for OFFLINE_THRESHOLD consecutive syncs
+            for (const key of onlineMembers) {
+                if (!nowPresent.has(key)) {
+                    _absentCount[key] = (_absentCount[key] || 0) + 1;
+                    if (_absentCount[key] >= OFFLINE_THRESHOLD) {
+                        onlineMembers.delete(key);
+                        delete _absentCount[key];
+                        changed = true;
+                    }
+                }
+            }
 
             if (changed) {
                 _notify();

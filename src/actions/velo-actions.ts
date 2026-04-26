@@ -758,21 +758,37 @@ export async function loadUserMessages(memberId: string) {
 
 
 // --- 11b. UNREAD MESSAGE STATUS (for dashboard notifications) ---
-// Queries the 'chats' table (same table used by /api/chat/send + /api/chat/history)
+// Returns the latest non-system, non-queen message timestamp per user.
+// Uses the chat_last_message view if available, otherwise falls back to a query.
 export async function getUnreadMessageStatus(): Promise<Record<string, string>> {
     try {
+        // Try the view first (created by chat_read_state_migration.sql)
+        const { data: viewData, error: viewErr } = await getAdmin()
+            .from('chat_last_message')
+            .select('member_id, last_message_at');
+
+        if (!viewErr && viewData && viewData.length > 0) {
+            const result: Record<string, string> = {};
+            for (const row of viewData) {
+                if (!row.member_id) continue;
+                result[row.member_id.toLowerCase()] = row.last_message_at;
+            }
+            return result;
+        }
+
+        // Fallback: query chats directly — get latest message per user (no 500 limit)
+        // We fetch the most recent message per member_id by ordering and deduplicating
         const { data, error } = await getAdmin()
             .from('chats')
             .select('member_id, created_at, metadata, type, sender_email')
             .order('created_at', { ascending: false })
-            .limit(500);
+            .limit(2000);
         if (error || !data) return {};
-        // Keep only the latest real user message per member - skip admin and system messages
         const result: Record<string, string> = {};
         for (const row of data) {
             if (!row.member_id) continue;
             const key = row.member_id.toLowerCase();
-            if (result[key]) continue; // already have a newer one
+            if (result[key]) continue;
             const isQueenMsg = row.metadata?.isQueen === true;
             const isSystemMsg = row.type === 'system' || (row.sender_email || '').toLowerCase() === 'system';
             if (!isQueenMsg && !isSystemMsg) {
