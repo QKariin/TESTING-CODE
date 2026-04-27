@@ -23,7 +23,7 @@ import { closeChatPreview } from '@/scripts/chat';
 import { setUsers, setAvailableDailyTasks, setGlobalQueue, setGlobalTributes, setAdminEmail, setDashboardRole, setAdminReadMap, users, currId, dashboardRole } from '@/scripts/dashboard-state';
 import { getAdminDashboardData, getUnreadMessageStatus } from '@/actions/velo-actions';
 import { getOptimizedUrl } from '@/scripts/media';
-import { renderSidebar, markPendingRead } from '@/scripts/dashboard-sidebar';
+import { renderSidebar, markPendingRead, updateSidebarItem } from '@/scripts/dashboard-sidebar';
 import { cleanupPresenceTracking, reconnectPresence } from '@/scripts/dashboard-presence';
 import { reconnectDashboardChat } from '@/scripts/dashboard-chat';
 import { reconnectDashboardMain } from '@/scripts/dashboard-main';
@@ -973,6 +973,8 @@ export default function DashboardPage() {
         };
 
         // ── Realtime: new chat message → sidebar lights up instantly ──────────
+        // Primary handler is in dashboard-main.ts (subscribeToGlobalChat).
+        // This is a backup channel — mutates in-place, no array replacement.
         const chatsChannel = supabaseRt
             .channel('chats-admin-live')
             .on('postgres_changes', {
@@ -988,15 +990,16 @@ export default function DashboardPage() {
                 const memberId = (msg.member_id || '').toLowerCase();
                 if (!memberId) return;
                 const msgTime = new Date(msg.created_at).getTime();
-                const updatedUsers = users.map((u: any) => {
+                if (!msgTime) return;
+                const found = users.find((u: any) => {
                     const uid = (u.member_id || u.memberId || '').toLowerCase();
-                    if (uid === memberId) {
-                        return { ...u, lastMessageTime: Math.max(u.lastMessageTime || 0, msgTime) };
-                    }
-                    return u;
+                    return uid === memberId;
                 });
-                setUsers(updatedUsers);
-                debouncedRenderSidebar();
+                if (found && msgTime > (found.lastMessageTime || 0)) {
+                    found.lastMessageTime = msgTime;
+                    found.lastSeen = new Date(msgTime).toISOString();
+                    updateSidebarItem(found.memberId);
+                }
             })
             .subscribe();
 
@@ -1140,15 +1143,15 @@ export default function DashboardPage() {
         (window as any)._restrictChannel = restrictChannel;
 
         // ── Visibility handler: reconnect everything when tab becomes active ──
-        const handleVisibility = () => {
+        const handleVisibility = async () => {
             if (document.visibilityState !== 'visible') return;
             console.log('[DASHBOARD] tab visible — reconnecting realtime...');
 
-            // Reconnect page-level channels if they died
+            // Re-subscribe dead page-level channels (don't just remove — re-subscribe!)
             const reconnectChannel = (ch: any, name: string) => {
                 if (ch && (ch.state === 'errored' || ch.state === 'closed')) {
-                    console.log(`[DASHBOARD] ${name} channel dead, removing`);
-                    supabaseRt.removeChannel(ch);
+                    console.log(`[DASHBOARD] ${name} channel dead, re-subscribing`);
+                    ch.subscribe();
                 }
             };
             reconnectChannel(chatsChannel, 'chats');
@@ -1159,6 +1162,22 @@ export default function DashboardPage() {
             reconnectDashboardChat();
             reconnectPresence();
             reconnectDashboardMain();
+
+            // Catch up on missed unread messages while tab was hidden
+            try {
+                const unreadMap = await getUnreadMessageStatus();
+                users.forEach((u: any) => {
+                    const email = (u.member_id || '').toLowerCase();
+                    if (!email) return;
+                    const serverTs = unreadMap[email];
+                    if (serverTs) {
+                        const ts = new Date(serverTs).getTime();
+                        if (ts > (u.lastMessageTime || 0)) {
+                            u.lastMessageTime = ts;
+                        }
+                    }
+                });
+            } catch {}
 
             // Re-render sidebar to pick up any missed updates
             debouncedRenderSidebar();

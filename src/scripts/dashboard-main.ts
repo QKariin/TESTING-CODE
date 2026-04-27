@@ -58,6 +58,10 @@ export function initDashboard() {
             const wasOnline = _prevOnline[email] ?? false;
             if (nowOnline !== wasOnline) {
                 _prevOnline[email] = nowOnline;
+                // If user just came online, update lastSeen so sidebar shows correct time
+                if (nowOnline) {
+                    u.lastSeen = new Date().toISOString();
+                }
                 updateSidebarItem(u.memberId);
             }
         });
@@ -125,6 +129,10 @@ function subscribeToDashboardTaskUpdates() {
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
     _dashboardPollInterval = setInterval(refreshQueueFromServer, 60000);
 
+    // Periodic unread poll — catches missed messages even when all realtime channels are dead
+    if (_unreadPollInterval) clearInterval(_unreadPollInterval);
+    _unreadPollInterval = setInterval(refreshUnreadStatus, 45000);
+
     // Subscribe to profiles for purchase notifications
     subscribeToPurchaseNotifications(supabase);
 
@@ -162,30 +170,85 @@ function subscribeToGlobalChat(supabase: ReturnType<typeof createClient>) {
             });
             if (u && msgTs > (u.lastMessageTime || 0)) {
                 u.lastMessageTime = msgTs;
+                // User is clearly active if they're sending messages — update lastSeen
+                u.lastSeen = new Date(msgTs).toISOString();
                 updateSidebarItem(u.memberId);
             }
         });
     _globalChatChannel.subscribe();
 }
 
-// Polling interval reference so it can be cleared if subscribeToDashboardTaskUpdates is called again
+// Polling interval references
 let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
+let _unreadPollInterval: ReturnType<typeof setInterval> | null = null;
+
+/** Fetch unread message status for all users — fallback when realtime channels die */
+async function refreshUnreadStatus() {
+    try {
+        const { getUnreadMessageStatus } = await import('@/actions/velo-actions');
+        const unreadMap = await getUnreadMessageStatus();
+        let changed = false;
+        users.forEach((u: any) => {
+            const email = (u.member_id || '').toLowerCase();
+            if (!email) return;
+            const serverTs = unreadMap[email];
+            if (serverTs) {
+                const ts = new Date(serverTs).getTime();
+                if (ts > (u.lastMessageTime || 0)) {
+                    u.lastMessageTime = ts;
+                    u.lastSeen = serverTs;
+                    changed = true;
+                    updateSidebarItem(u.memberId);
+                }
+            }
+        });
+        if (changed) renderSidebar();
+    } catch {}
+}
 
 // Tracks the last seen purchase notification sessionId to avoid duplicates
 let _lastSeenPurchaseSession: string | null = null;
 
-/** Force-reconnect task watcher + poll immediately. Called on tab visibility restore. */
+/** Force-reconnect all channels independently. Called on tab visibility restore. */
 export function reconnectDashboardMain() {
     refreshQueueFromServer();
+
+    // Check each channel independently — one dying shouldn't block others
+    let needsResub = false;
+
     if (_tasksWatchChannel) {
         const state = (_tasksWatchChannel as any).state;
         if (state === 'errored' || state === 'closed') {
-            console.log('[DASHBOARD-MAIN] reconnecting task watcher...');
+            console.log('[DASHBOARD-MAIN] tasks channel dead, will reconnect');
             _tasksWatchChannel = null;
-            _purchaseWatchChannel = null;
-            _globalChatChannel = null;
-            subscribeToDashboardTaskUpdates();
+            needsResub = true;
         }
+    } else {
+        needsResub = true;
+    }
+
+    if (_purchaseWatchChannel) {
+        const state = (_purchaseWatchChannel as any).state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[DASHBOARD-MAIN] purchase channel dead, will reconnect');
+            _purchaseWatchChannel = null;
+            needsResub = true;
+        }
+    }
+
+    if (_globalChatChannel) {
+        const state = (_globalChatChannel as any).state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[DASHBOARD-MAIN] global chat channel dead, will reconnect');
+            _globalChatChannel = null;
+            needsResub = true;
+        }
+    } else {
+        needsResub = true;
+    }
+
+    if (needsResub) {
+        subscribeToDashboardTaskUpdates();
     }
 }
 
