@@ -119,9 +119,12 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         chatPollInterval = null;
     }
 
-    // ── Try restoring from cache — show instantly, then sync new messages ──
+    // ── Try restoring from cache — but invalidate if stale (>5min) ──
     const cached = _chatCache.get(activeId.toLowerCase());
-    if (cached) {
+    const cacheAge = cached ? Date.now() - cached.cachedAt : Infinity;
+    const CACHE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
+
+    if (cached && cacheAge < CACHE_MAX_AGE) {
         // Restore cached state
         lastChatMsgId = cached.lastMsgId;
         lastChatMsgTimestamp = cached.lastTimestamp;
@@ -144,7 +147,8 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         // Sync any new messages that arrived while we were away (non-blocking)
         pollNewMessages(activeId);
     } else {
-        // No cache — fresh load
+        // No cache or stale cache — fresh load from server
+        if (cached) _chatCache.delete(activeId.toLowerCase());
         lastChatMsgId = null;
         lastChatMsgTimestamp = null;
         _renderedMsgIds.clear();
@@ -152,7 +156,7 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         const b = document.getElementById('adminChatBox');
         if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
-        // Load history from server
+        // Load history from server (with retry on auth failure)
         await loadDashboardChatHistory(activeId);
     }
 
@@ -221,17 +225,21 @@ function _saveChatToCache() {
 export function reconnectDashboardChat() {
     if (!activeChatEmail) return;
     const activeId = activeChatEmail;
-    // Poll immediately to catch missed messages
-    pollNewMessages(activeId);
-    // If channel died, re-init
+
+    // If channel died, full re-init (clears cache to get fresh data)
     if (chatChannel) {
         const state = chatChannel.state;
         if (state === 'errored' || state === 'closed') {
             console.log('[DASH-CHAT] channel dead, re-initializing');
+            _chatCache.delete(activeId.toLowerCase()); // force fresh load
             activeChatEmail = null; // reset guard so initDashboardChat runs
             initDashboardChat(activeId);
+            return;
         }
     }
+
+    // Channel alive — poll for missed messages
+    pollNewMessages(activeId);
 }
 
 async function pollNewMessages(memberId: string) {
@@ -239,58 +247,93 @@ async function pollNewMessages(memberId: string) {
     if (!lastChatMsgTimestamp) return;
     try {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId, since: lastChatMsgTimestamp }) });
+        if (!res.ok) {
+            console.warn('[DASH-CHAT] poll failed:', res.status);
+            return;
+        }
         const data = await res.json();
-        if (!data.success) return;
+        if (!data.success) {
+            console.warn('[DASH-CHAT] poll returned not success:', data.error);
+            return;
+        }
         const newMsgs = (data.messages || []).filter((m: any) => {
             const id = m.id ? String(m.id) : null;
             return id && !_renderedMsgIds.has(id);
         });
         newMsgs.forEach((m: any) => appendChatMessage(m));
-    } catch (_) {}
+    } catch (err) {
+        console.warn('[DASH-CHAT] poll error:', err);
+    }
 }
 
-async function loadDashboardChatHistory(memberId: string) {
+async function loadDashboardChatHistory(memberId: string, _retryCount = 0) {
     try {
-        // No auth check needed here — the API route handles auth via getCaller()
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId }) });
+
+        // Auth failure (401/403) — session might be refreshing. Retry once after 2s.
+        if (!res.ok && _retryCount < 2) {
+            console.warn(`[DASH-CHAT] history load failed (${res.status}), retrying in 2s...`);
+            await new Promise(r => setTimeout(r, 2000));
+            if (activeChatEmail !== memberId) return; // user switched during wait
+            return loadDashboardChatHistory(memberId, _retryCount + 1);
+        }
+
         const data = await res.json();
-        if (data.success) {
-            const msgs = data.messages || [];
-            if (msgs.length > 0) {
-                const last = msgs[msgs.length - 1];
-                lastChatMsgId = last.id;
-                lastChatMsgTimestamp = last.created_at || new Date().toISOString();
-            } else {
-                lastChatMsgTimestamp = new Date().toISOString();
+
+        if (!data.success) {
+            // Still failing after retries — show error instead of silent empty
+            if (_retryCount >= 2) {
+                console.error('[DASH-CHAT] history load failed after retries:', data.error);
+                const b = document.getElementById('adminChatBox');
+                if (b) b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Orbitron; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
+                b?.addEventListener('click', () => {
+                    if (activeChatEmail === memberId) loadDashboardChatHistory(memberId, 0);
+                }, { once: true });
             }
+            return;
+        }
 
-            // Split: system messages → log panel, chat messages → chat box
-            const sysMsgs = msgs.filter((m: any) => isSystemMessage(m));
-            const chatMsgs = msgs.filter((m: any) => !isSystemMessage(m));
+        const msgs = data.messages || [];
+        if (msgs.length > 0) {
+            const last = msgs[msgs.length - 1];
+            lastChatMsgId = last.id;
+            lastChatMsgTimestamp = last.created_at || new Date().toISOString();
+        } else {
+            lastChatMsgTimestamp = new Date().toISOString();
+        }
 
-            // Populate system log
-            const logEl = document.getElementById('dashSystemLogContent');
-            if (logEl) {
-                logEl.innerHTML = sysMsgs.map((m: any) => getSystemLogHtml(m)).join('');
-                logEl.scrollTop = logEl.scrollHeight;
-            }
-            // Update ticker with most recent system message
-            if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
+        // Split: system messages → log panel, chat messages → chat box
+        const sysMsgs = msgs.filter((m: any) => isSystemMessage(m));
+        const chatMsgs = msgs.filter((m: any) => !isSystemMessage(m));
 
-            // Populate dedup set from history
-            chatMsgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+        // Populate system log
+        const logEl = document.getElementById('dashSystemLogContent');
+        if (logEl) {
+            logEl.innerHTML = sysMsgs.map((m: any) => getSystemLogHtml(m)).join('');
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        // Update ticker with most recent system message
+        if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
-            // Populate chat
-            const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
-            const b = document.getElementById('adminChatBox');
-            if (b) {
-                b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
-                _attachImgScrollHandlers(b);
-                forceBottom();
-            }
+        // Populate dedup set from history
+        chatMsgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+
+        // Populate chat
+        const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
+        const b = document.getElementById('adminChatBox');
+        if (b) {
+            b.innerHTML = html + '<div id="chat-anchor" style="height:1px;"></div>';
+            _attachImgScrollHandlers(b);
+            forceBottom();
         }
     } catch (err) {
-        console.error("Failed to load dashboard chat history:", err);
+        console.error('[DASH-CHAT] history load error:', err);
+        if (_retryCount < 2) {
+            await new Promise(r => setTimeout(r, 2000));
+            if (activeChatEmail === memberId) {
+                return loadDashboardChatHistory(memberId, _retryCount + 1);
+            }
+        }
     }
 }
 

@@ -51,21 +51,20 @@ export async function GET(req: Request) {
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
-            // Initial load: get LAST 50 messages
+            // Initial load: get LAST 200 messages
             query = queryClient
                 .from('chats')
                 .select(chatColumns)
                 .ilike('member_id', chatMemberIdGet)
                 .order('created_at', { ascending: false })
-                .limit(50);
+                .limit(200);
         }
 
         const { data, error } = await query;
 
         if (error) {
             console.error("[API/Chat/History] GET query error:", error.message, error.code);
-            // Return empty messages instead of 500 so the UI doesn't break
-            return NextResponse.json({ success: true, messages: [] });
+            return NextResponse.json({ success: false, error: 'Query failed', messages: [] }, { status: 500 });
         }
 
         const messages = (data || []).sort((a: any, b: any) =>
@@ -79,7 +78,7 @@ export async function GET(req: Request) {
 
     } catch (err: any) {
         console.error("[API/Chat/History] GET error:", err.message);
-        return NextResponse.json({ success: true, messages: [] });
+        return NextResponse.json({ success: false, error: 'Server error', messages: [] }, { status: 500 });
     }
 }
 
@@ -130,20 +129,20 @@ export async function POST(req: Request) {
                 .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
-            // Initial load: get LAST 50 messages
+            // Initial load: get LAST 200 messages
             query = queryClient
                 .from('chats')
                 .select(chatCols)
                 .ilike('member_id', chatMemberId)
                 .order('created_at', { ascending: false })
-                .limit(50);
+                .limit(200);
         }
 
         const { data, error } = await query;
 
         if (error) {
             console.error("[API/Chat/History] POST query error:", error.message, error.code);
-            return NextResponse.json({ success: true, messages: [] });
+            return NextResponse.json({ success: false, error: 'Query failed', messages: [] }, { status: 500 });
         }
 
         const messages = (data || []).sort((a: any, b: any) =>
@@ -157,6 +156,6 @@ export async function POST(req: Request) {
 
     } catch (err: any) {
         console.error("[API/Chat/History] POST error:", err.message);
-        return NextResponse.json({ success: true, messages: [] });
+        return NextResponse.json({ success: false, error: 'Server error', messages: [] }, { status: 500 });
     }
 }
