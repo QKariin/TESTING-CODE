@@ -1743,6 +1743,11 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
+                                {/* ── ROUTINE CALENDAR ── */}
+                                <div id="routineCalendarSection" style={{ display: 'none', borderLeft: '3px solid rgba(74,222,128,0.15)', padding: '12px 18px', background: 'linear-gradient(90deg, rgba(74,222,128,0.008) 0%, transparent 40%)' }}>
+                                    <div id="routineCalendarGrid"></div>
+                                </div>
+
                                 {/* ── KNEELING — blue accent ── */}
                                 <div style={{ borderLeft: '3px solid rgba(100,180,255,0.2)', padding: '14px 18px', background: 'linear-gradient(90deg, rgba(100,180,255,0.01) 0%, transparent 40%)' }}>
                                     <div id="admin_KneelSection"></div>

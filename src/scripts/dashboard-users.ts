@@ -313,6 +313,7 @@ export async function updateDetail(u: any) {
     updateTaskQueue(u);
     updateChatterRoutine(u);
     updateChatterPending(u);
+    renderRoutineCalendar(u);
 
     // Notify React of lock state for this user
     if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
@@ -777,6 +778,101 @@ async function updateChatterPending(u: any) {
     }
 
     container.innerHTML = cards.join('');
+}
+
+/** Routine calendar — shows each day of the current month with upload status */
+function renderRoutineCalendar(u: any) {
+    const section = document.getElementById('routineCalendarSection');
+    const grid = document.getElementById('routineCalendarGrid');
+    if (!section || !grid) return;
+
+    const routine = u.routine || '';
+    if (!routine) { section.style.display = 'none'; return; }
+
+    const history: any[] = u.routineHistory || u.routinehistory || [];
+    const routineEntries = history.filter((h: any) => h.isRoutine && h.timestamp);
+
+    // Build a map: date string → status
+    const dayMap: Record<string, string> = {};
+    routineEntries.forEach((h: any) => {
+        const d = new Date(h.timestamp);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        // If multiple entries for same day, priority: approve > pending > reject
+        const prev = dayMap[key];
+        if (!prev || h.status === 'approve' || (h.status === 'pending' && prev === 'reject')) {
+            dayMap[key] = h.status || 'pending';
+        }
+    });
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const today = now.getDate();
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const monthName = now.toLocaleString('en', { month: 'short' }).toUpperCase();
+
+    // Count current streak (consecutive days with upload, not rejected)
+    let streak = 0;
+    for (let d = today; d >= 1; d--) {
+        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const status = dayMap[key];
+        if (d === today && !status) continue; // today not uploaded yet is ok
+        if (status && status !== 'reject') { streak++; } else { break; }
+    }
+
+    const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+    let cells = dayLabels.map(l =>
+        `<div style="font-family:Orbitron;font-size:0.3rem;color:#444;text-align:center;padding:2px 0;">${l}</div>`
+    ).join('');
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDay; i++) {
+        cells += `<div></div>`;
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const status = dayMap[key];
+        const isToday = d === today;
+        const isFuture = d > today;
+
+        let bg = 'transparent';
+        let color = isFuture ? '#222' : '#333';
+        let border = 'transparent';
+
+        if (status === 'approve') {
+            bg = 'rgba(74,222,128,0.2)'; color = '#4ade80'; border = 'rgba(74,222,128,0.4)';
+        } else if (status === 'pending') {
+            bg = 'rgba(250,204,21,0.15)'; color = '#facc15'; border = 'rgba(250,204,21,0.35)';
+        } else if (status === 'reject') {
+            bg = 'rgba(255,68,68,0.15)'; color = '#ff4444'; border = 'rgba(255,68,68,0.35)';
+        } else if (!isFuture && d < today) {
+            // Past day with no upload
+            bg = 'rgba(255,255,255,0.02)'; color = '#2a2a2a';
+        }
+
+        const todayRing = isToday ? 'box-shadow:0 0 0 1px rgba(197,160,89,0.5);' : '';
+
+        cells += `<div style="text-align:center;padding:3px 0;font-family:Orbitron;font-size:0.35rem;color:${color};background:${bg};border:1px solid ${border};border-radius:3px;${todayRing}" title="${key}: ${status || (isFuture ? 'future' : 'missed')}">${d}</div>`;
+    }
+
+    section.style.display = '';
+    grid.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:Orbitron;font-size:0.38rem;color:#555;letter-spacing:2px;">${monthName} ${year}</span>
+            <span style="font-family:Orbitron;font-size:0.38rem;color:rgba(74,222,128,0.6);letter-spacing:1px;">${streak > 0 ? streak + 'D STREAK' : ''}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">
+            ${cells}
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;justify-content:center;">
+            <span style="font-size:0.3rem;color:#4ade80;">● approved</span>
+            <span style="font-size:0.3rem;color:#facc15;">● pending</span>
+            <span style="font-size:0.3rem;color:#ff4444;">● rejected</span>
+            <span style="font-size:0.3rem;color:#2a2a2a;">● missed</span>
+        </div>`;
 }
 
 export async function adminPromoteUser(memberId: string) {

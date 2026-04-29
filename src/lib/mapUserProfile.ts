@@ -32,7 +32,7 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         }
     } catch { }
 
-    const routineUploads = history.filter((h: any) => h.isRoutine && h.status === 'approve').length;
+    const routineUploads = history.filter((h: any) => h.isRoutine && h.status !== 'reject').length;
     const tributeTotal = parseTributeTotal(t?.['Tribute History']);
 
     const rawPic = p.avatar_url || p.profile_picture_url || params?.avatar_url || params?.photoUrl || '';

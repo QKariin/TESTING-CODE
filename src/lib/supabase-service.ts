@@ -484,9 +484,9 @@ export const DbService = {
 
                     const params = prof?.parameters || {};
 
-                    // Find last approved routine timestamp from Taskdom_History (already in memory)
+                    // Find last routine upload (pending or approved — only rejected breaks streak)
                     const approvedRoutines = history
-                        .filter((h: any) => h.isRoutine === true && (h.status === 'approve' || h.status === 'approved') && h.timestamp)
+                        .filter((h: any) => h.isRoutine === true && h.status !== 'reject' && h.timestamp)
                         .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
                     const toDay = (d: Date) => {
