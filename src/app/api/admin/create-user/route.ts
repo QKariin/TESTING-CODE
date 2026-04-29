@@ -20,11 +20,8 @@ export async function POST(req: Request) {
 
     const lowerEmail = email.toLowerCase();
 
-    // 0. Create Supabase Auth user so they can actually log in
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: lowerEmail,
-        email_confirm: true,
-    });
+    // 0. Create Supabase Auth user AND send them an invite email to set their password
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.inviteUserByEmail(lowerEmail);
 
     // If already registered, look up their existing auth user
     let userId: string;
