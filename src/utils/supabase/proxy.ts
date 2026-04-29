@@ -67,10 +67,22 @@ export async function updateSession(request: NextRequest) {
             }
         )
 
-        // 1. Check for Profile
-        let { data: profile } = await adminSupabase.from('profiles').select('ID').eq('ID', user.id).maybeSingle();
+        // 1. Check for Profile — by UUID first, then by email (handles ID mismatch)
+        let { data: profile } = await adminSupabase
+            .from('profiles')
+            .select('ID')
+            .or(`ID.eq.${user.id}${userEmailNormalized ? `,member_id.ilike.${userEmailNormalized}` : ''}`)
+            .maybeSingle();
 
-        // 2. HYBRID CHECK: If no profile, check legacy table immediately
+        // Auto-fix: profile exists but ID doesn't match auth user — link it
+        if (profile && profile.ID !== user.id) {
+            console.log(`[BOUNCER] Linking profile ${profile.ID} → ${user.id} for ${userEmailNormalized}`);
+            await adminSupabase.from('profiles').update({ ID: user.id }).eq('ID', profile.ID);
+            // Also fix the tasks row if it exists
+            await adminSupabase.from('tasks').update({ ID: user.id }).eq('ID', profile.ID);
+        }
+
+        // 2. HYBRID CHECK: If no profile at all, check legacy tasks table
         let isLegacyMember = false;
         if (!profile && userEmailNormalized) {
             const { data: legacyMatch } = await adminSupabase
@@ -82,25 +94,16 @@ export async function updateSession(request: NextRequest) {
 
             if (legacyMatch) {
                 isLegacyMember = true;
-                console.log(`[BOUNCER] Legacy Member detected: ${userEmailNormalized}. Granting Hybrid Access.`);
+                console.log(`[BOUNCER] Legacy Member detected: ${userEmailNormalized}. Creating profile.`);
 
-                // --- Background Linking Effort ---
-                const { data: legacyProfile } = await adminSupabase
-                    .from('profiles')
-                    .select('ID')
-                    .or(`member_id.ilike.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
-                    .maybeSingle();
-
-                if (legacyProfile) {
-                    await adminSupabase.from('profiles').update({ ID: user.id }).eq('ID', legacyProfile.ID);
-                } else {
-                    await adminSupabase.from('profiles').insert({
-                        id: user.id,
-                        member_id: userEmailNormalized,
-                        name: userEmailNormalized.split('@')[0],
-                        hierarchy: 'Slave'
-                    });
-                }
+                await adminSupabase.from('profiles').insert({
+                    ID: user.id,
+                    member_id: userEmailNormalized,
+                    name: userEmailNormalized.split('@')[0],
+                    hierarchy: 'Hall Boy'
+                });
+                // Fix the tasks row ID too
+                await adminSupabase.from('tasks').update({ ID: user.id }).ilike('member_id', userEmailNormalized);
             }
         }
 
