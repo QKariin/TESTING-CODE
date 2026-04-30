@@ -43,12 +43,15 @@ export async function GET(req: Request) {
         const chatColumns = '*';
         let query: any;
         if (since) {
-            // Polling: get all messages newer than timestamp
+            // Polling: get messages strictly newer than timestamp (gt, not gte)
+            // Using gte caused the last message to be re-fetched on every poll,
+            // leading to duplicates when client-side dedup failed.
+            // Realtime subscription covers the same-timestamp edge case.
             query = queryClient
                 .from('chats')
                 .select(chatColumns)
                 .ilike('member_id', chatMemberIdGet)
-                .gte('created_at', since)
+                .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
             // Initial load: get LAST 200 messages
@@ -121,12 +124,12 @@ export async function POST(req: Request) {
         const chatCols = '*';
         let query: any;
         if (since) {
-            // Polling: get all messages newer than timestamp
+            // Polling: get messages strictly newer than timestamp (gt, not gte)
             query = queryClient
                 .from('chats')
                 .select(chatCols)
                 .ilike('member_id', chatMemberId)
-                .gte('created_at', since)
+                .gt('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
             // Initial load: get LAST 200 messages
