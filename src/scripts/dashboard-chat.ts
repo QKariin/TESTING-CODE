@@ -1,7 +1,7 @@
 // src/scripts/dashboard-chat.ts
 // Dashboard Chat Management - Refactored for Supabase Realtime
 
-import { currId, users, adminEmail } from './dashboard-state';
+import { currId, users, adminEmail, getAdminEmailFallback } from './dashboard-state';
 import { isMemberOnline } from './dashboard-presence';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
@@ -277,10 +277,10 @@ async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, 
             signal: signal,
         });
 
-        // Auth failure — retry up to 2x with 2s delay
-        if (!res.ok && _retryCount < 2) {
-            console.warn(`[DASH-CHAT] history load failed (${res.status}), retrying in 2s...`);
-            await new Promise(r => setTimeout(r, 2000));
+        // Failure — retry up to 4x with 1s delay
+        if (!res.ok && _retryCount < 4) {
+            console.warn(`[DASH-CHAT] history load failed (${res.status}), retry ${_retryCount + 1}/4...`);
+            await new Promise(r => setTimeout(r, 1000));
             if (signal?.aborted || activeChatEmail !== memberId) return;
             return loadDashboardChatHistory(memberId, signal, _retryCount + 1);
         }
@@ -291,13 +291,7 @@ async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, 
         const data = await res.json();
 
         if (!data.success) {
-            if (_retryCount >= 2) {
-                const b = document.getElementById('adminChatBox');
-                if (b) b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Orbitron; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
-                b?.addEventListener('click', () => {
-                    if (activeChatEmail === memberId) loadDashboardChatHistory(memberId, undefined, 0);
-                }, { once: true });
-            }
+            if (_retryCount >= 4) _showRetryUI(memberId);
             return;
         }
 
@@ -336,20 +330,32 @@ async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, 
     } catch (err: any) {
         if (err?.name === 'AbortError') return;
         console.error('[DASH-CHAT] history load error:', err);
-        if (_retryCount < 2) {
-            await new Promise(r => setTimeout(r, 2000));
+        if (_retryCount < 4) {
+            await new Promise(r => setTimeout(r, 1000));
             if (signal?.aborted || activeChatEmail !== memberId) return;
             return loadDashboardChatHistory(memberId, signal, _retryCount + 1);
         }
-        // Show error after all retries exhausted (network exceptions too, not just API errors)
-        if (activeChatEmail === memberId) {
-            const b = document.getElementById('adminChatBox');
-            if (b) b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Orbitron; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
-            b?.addEventListener('click', () => {
-                if (activeChatEmail === memberId) loadDashboardChatHistory(memberId, undefined, 0);
-            }, { once: true });
-        }
+        if (activeChatEmail === memberId) _showRetryUI(memberId);
     }
+}
+
+function _showRetryUI(memberId: string) {
+    const b = document.getElementById('adminChatBox');
+    if (!b) return;
+    b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Orbitron; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
+    b.addEventListener('click', () => {
+        if (activeChatEmail === memberId) {
+            b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+            loadDashboardChatHistory(memberId, undefined, 0);
+        }
+    }, { once: true });
+    // Auto-retry after 5s
+    setTimeout(() => {
+        if (activeChatEmail === memberId && b.textContent?.includes('LINK FAILED')) {
+            b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+            loadDashboardChatHistory(memberId, undefined, 0);
+        }
+    }, 5000);
 }
 
 export function appendChatMessage(msg: any) {
@@ -621,12 +627,11 @@ export async function sendMsg() {
     inp.disabled = true;
     if (btn) btn.disabled = true;
 
-    // Resolve admin email: state → window fallback → Supabase auth
-    let senderEmail: string | null = adminEmail || (window as any).adminEmail || null;
+    // Resolve admin email: state → window → sessionStorage → Supabase auth
+    let senderEmail: string | null = getAdminEmailFallback();
     if (!senderEmail) {
         try {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await _supabase.auth.getUser();
             senderEmail = user?.email || null;
             if (senderEmail) {
                 const { setAdminEmail } = await import('./dashboard-state');
@@ -636,7 +641,7 @@ export async function sendMsg() {
     }
     if (!senderEmail) {
         console.error(`[DASHBOARD-CHAT] Send failed: Admin email not available.`);
-        alert("Authentication Error: Admin email not found. Please ensure you are logged in.");
+        alert("Authentication Error: Admin email not found. Please refresh the page.");
         inp.disabled = false;
         if (btn) btn.disabled = false;
         return;
@@ -742,9 +747,11 @@ export async function handleAdminUpload(file: File) {
                 return;
             }
 
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            let userEmail = user?.email;
+            let userEmail = getAdminEmailFallback();
+            if (!userEmail) {
+                const { data: { user } } = await _supabase.auth.getUser();
+                userEmail = user?.email || null;
+            }
             if (!userEmail && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
                 userEmail = 'ceo@qkarin.com';
             }
@@ -799,7 +806,7 @@ async function _sendChatGif(gifUrl: string) {
     const convUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
     const conversationEmail = convUser?.member_id || convUser?.email || activeCurrId;
 
-    let senderEmail: string | null = adminEmail || (window as any).adminEmail || null;
+    let senderEmail: string | null = getAdminEmailFallback();
     if (!senderEmail) return;
 
     try {

@@ -64,7 +64,20 @@ export function setCurrId(id: string | null) {
 }
 export function setAdminEmail(email: string | null) {
     adminEmail = email;
-    if (typeof window !== 'undefined') (window as any).adminEmail = email;
+    if (typeof window !== 'undefined') {
+        (window as any).adminEmail = email;
+        try { if (email) sessionStorage.setItem('_adminEmail', email); } catch {}
+    }
+}
+
+export function getAdminEmailFallback(): string | null {
+    if (adminEmail) return adminEmail;
+    if (typeof window !== 'undefined') {
+        const w = (window as any).adminEmail;
+        if (w) return w;
+        try { return sessionStorage.getItem('_adminEmail') || null; } catch {}
+    }
+    return null;
 }
 export function setDashboardRole(role: 'queen' | 'chatter') {
     dashboardRole = role;
