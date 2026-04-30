@@ -105,7 +105,6 @@ async function refreshQueueFromServer() {
 // Module-level refs - prevent duplicate subscriptions and allow cleanup
 let _tasksWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let _purchaseWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
-let _globalChatChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 
 function subscribeToDashboardTaskUpdates() {
     // Guard against duplicate subscriptions
@@ -136,47 +135,9 @@ function subscribeToDashboardTaskUpdates() {
     // Subscribe to profiles for purchase notifications
     subscribeToPurchaseNotifications(supabase);
 
-    // Global chat subscription — catches new messages for ALL users (not just the open chat)
-    // This is what makes the unread mail icon appear instantly in the sidebar
-    subscribeToGlobalChat(supabase);
+    // Global chat sidebar updates handled by chats-admin-live channel in page.tsx
 }
 
-/** Subscribe to ALL new chat inserts so sidebar unread dots work for every user */
-function subscribeToGlobalChat(supabase: ReturnType<typeof createClient>) {
-    if (_globalChatChannel) return;
-
-    _globalChatChannel = supabase
-        .channel('dashboard_global_chat')
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chats',
-        }, (payload) => {
-            const msg = payload.new;
-            if (!msg || !msg.member_id) return;
-            // Skip queen/system messages — same filter as getUnreadMessageStatus
-            if (msg.type === 'system') return;
-            if ((msg.sender_email || '').toLowerCase() === 'system') return;
-            if (msg.metadata?.isQueen === true) return;
-
-            const memberEmail = msg.member_id.toLowerCase();
-            const msgTs = new Date(msg.created_at).getTime();
-            if (!msgTs) return;
-
-            // Find matching user and update their lastMessageTime
-            const u = users.find((x: any) => {
-                const email = (x.member_id || x.email || x.memberId || '').toLowerCase();
-                return email === memberEmail;
-            });
-            if (u && msgTs > (u.lastMessageTime || 0)) {
-                u.lastMessageTime = msgTs;
-                // User is clearly active if they're sending messages — update lastSeen
-                u.lastSeen = new Date(msgTs).toISOString();
-                updateSidebarItem(u.memberId);
-            }
-        });
-    _globalChatChannel.subscribe();
-}
 
 // Polling interval references
 let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
@@ -236,16 +197,7 @@ export function reconnectDashboardMain() {
         }
     }
 
-    if (_globalChatChannel) {
-        const state = (_globalChatChannel as any).state;
-        if (state === 'errored' || state === 'closed') {
-            console.log('[DASHBOARD-MAIN] global chat channel dead, will reconnect');
-            _globalChatChannel = null;
-            needsResub = true;
-        }
-    } else {
-        needsResub = true;
-    }
+    // Global chat sidebar updates handled by chats-admin-live channel in page.tsx
 
     if (needsResub) {
         subscribeToDashboardTaskUpdates();

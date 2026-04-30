@@ -48,7 +48,7 @@ export async function GET(req: Request) {
                 .from('chats')
                 .select(chatColumns)
                 .ilike('member_id', chatMemberIdGet)
-                .gt('created_at', since)
+                .gte('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
             // Initial load: get LAST 200 messages
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
                 .from('chats')
                 .select(chatCols)
                 .ilike('member_id', chatMemberId)
-                .gt('created_at', since)
+                .gte('created_at', since)
                 .order('created_at', { ascending: true });
         } else {
             // Initial load: get LAST 200 messages
