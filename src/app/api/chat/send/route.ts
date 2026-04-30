@@ -124,8 +124,8 @@ export async function POST(req: Request) {
             newWallet = currentWallet - cost;
             // Update wallet by profile UUID if available, else by email
             const walletUpdateQuery = profile.ID
-                ? supabase.from('profiles').update({ wallet: newWallet }).eq('ID', profile.ID)
-                : supabase.from('profiles').update({ wallet: newWallet }).eq('member_id', senderEmail);
+                ? adminClient.from('profiles').update({ wallet: newWallet }).eq('ID', profile.ID)
+                : adminClient.from('profiles').update({ wallet: newWallet }).eq('member_id', senderEmail);
             const { error: updateErr } = await walletUpdateQuery;
             if (updateErr) return NextResponse.json({ success: false, error: "Failed to deduct coins." }, { status: 500 });
         }
@@ -144,8 +144,8 @@ export async function POST(req: Request) {
         if (msgErr) {
             if (!isQueen) {
                 const rollbackQuery = profile.ID
-                    ? supabase.from('profiles').update({ wallet: profile.wallet }).eq('ID', profile.ID)
-                    : supabase.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
+                    ? adminClient.from('profiles').update({ wallet: profile.wallet }).eq('ID', profile.ID)
+                    : adminClient.from('profiles').update({ wallet: profile.wallet }).eq('member_id', senderEmail);
                 await rollbackQuery;
             }
             return NextResponse.json({ success: false, error: `Failed to store message: ${msgErr.message}` }, { status: 500 });
