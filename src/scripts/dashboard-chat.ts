@@ -175,22 +175,22 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             // Filter in JS: only messages for the active conversation
             const rowMemberId = (msg.member_id || '').toLowerCase();
             if (rowMemberId !== activeId.toLowerCase()) return;
-            if (activeChatEmail !== activeId) return; // switched user
-            // Queen messages sent from THIS tab are already appended by sendMsg()
-            // — the dedup guard in appendChatMessage() handles it via _renderedMsgIds.
-            // Don't skip here so queen messages from OTHER devices still show up.
+            // Use activeChatEmail (live reference) to check if user switched
+            if (activeChatEmail?.toLowerCase() !== activeId.toLowerCase()) return;
             appendChatMessage(msg);
         })
         .subscribe((status: string) => {
             console.log(`[DASH-CHAT] subscription status: ${status}`);
             if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                // Realtime died — polling will cover us
                 console.warn('[DASH-CHAT] realtime subscription lost, polling active');
             }
         });
 
     // Polling fallback — catches anything realtime misses (network drops, tab hidden)
-    chatPollInterval = setInterval(() => pollNewMessages(activeId), 15000);
+    // Use activeChatEmail (live reference) instead of captured activeId to avoid stale closure
+    chatPollInterval = setInterval(() => {
+        if (activeChatEmail) pollNewMessages(activeChatEmail);
+    }, 15000);
 }
 
 /** Save the currently visible chat to the in-memory cache */
@@ -231,11 +231,20 @@ export function reconnectDashboardChat() {
         const state = chatChannel.state;
         if (state === 'errored' || state === 'closed') {
             console.log('[DASH-CHAT] channel dead, re-initializing');
+            // Stop old polling interval before re-init creates a new one
+            if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
             _chatCache.delete(activeId.toLowerCase()); // force fresh load
             activeChatEmail = null; // reset guard so initDashboardChat runs
             initDashboardChat(activeId);
             return;
         }
+    } else {
+        // No channel at all — full re-init
+        if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
+        _chatCache.delete(activeId.toLowerCase());
+        activeChatEmail = null;
+        initDashboardChat(activeId);
+        return;
     }
 
     // Channel alive — poll for missed messages
@@ -243,7 +252,8 @@ export function reconnectDashboardChat() {
 }
 
 async function pollNewMessages(memberId: string) {
-    if (activeChatEmail !== memberId) return;
+    if (activeChatEmail?.toLowerCase() !== memberId.toLowerCase()) return;
+    // If no timestamp yet (history hasn't loaded), skip silently — polling will retry next interval
     if (!lastChatMsgTimestamp) return;
     try {
         const res = await fetch('/api/chat/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId, since: lastChatMsgTimestamp }) });
@@ -258,7 +268,10 @@ async function pollNewMessages(memberId: string) {
         }
         const newMsgs = (data.messages || []).filter((m: any) => {
             const id = m.id ? String(m.id) : null;
-            return id && !_renderedMsgIds.has(id);
+            const contentKey = `${m.content || ''}::${m.created_at || ''}`;
+            if (id && _renderedMsgIds.has(id)) return false;
+            if (contentKey.length > 4 && _renderedMsgIds.has(contentKey)) return false;
+            return true;
         });
         newMsgs.forEach((m: any) => appendChatMessage(m));
     } catch (err) {
@@ -315,8 +328,8 @@ async function loadDashboardChatHistory(memberId: string, _retryCount = 0) {
         // Update ticker with most recent system message
         if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
-        // Populate dedup set from history
-        chatMsgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+        // Populate dedup set from ALL messages (chat + system) so realtime doesn't re-add them
+        msgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
 
         // Populate chat
         const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
