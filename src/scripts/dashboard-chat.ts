@@ -97,6 +97,8 @@ function appendToSystemLog(msg: any) {
  * Initializes the chat listener for a specific user (Slave).
  * Called when a user is selected in the sidebar.
  */
+let _initLock: string | null = null; // prevents duplicate async inits
+
 export async function initDashboardChat(memberIdOrEmail: string) {
     // chats.member_id stores UUID — resolve to UUID for chat lookups
     const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail || x.member_id === memberIdOrEmail);
@@ -104,6 +106,10 @@ export async function initDashboardChat(memberIdOrEmail: string) {
 
     // Guard: if already initialized for this exact user AND channel is alive, skip.
     if (activeChatEmail?.toLowerCase() === activeId.toLowerCase() && chatChannel) return;
+
+    // Prevent duplicate async inits — if another init is in progress for the same user, skip
+    if (_initLock === activeId.toLowerCase()) return;
+    _initLock = activeId.toLowerCase();
 
     // ── KILL everything from previous user — abort in-flight requests ──
     if (chatAbortController) chatAbortController.abort();
@@ -194,6 +200,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     chatPollInterval = setInterval(() => {
         if (activeChatEmail) pollNewMessages(activeChatEmail);
     }, 15000);
+
+    // Release init lock
+    if (_initLock === activeId.toLowerCase()) _initLock = null;
 }
 
 /** Save the currently visible chat to the in-memory cache */
@@ -235,6 +244,7 @@ export function reconnectDashboardChat() {
 
     if (needsFullReinit) {
         console.log('[DASH-CHAT] channel dead or missing, re-initializing');
+        _initLock = null; // clear lock so reinit can proceed
         _chatCache.delete(activeId.toLowerCase());
         activeChatEmail = null; // reset guard so initDashboardChat runs
         initDashboardChat(activeId);

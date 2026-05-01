@@ -5,11 +5,13 @@ import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 // Build a query that finds chats by UUID or email (backward compat for old records)
 function buildChatQuery(queryClient: any, chatCols: string, memberId: string, email: string | null) {
     // If we have both UUID and email, query both for backward compat
+    // Values must be double-quoted in .or() to prevent PostgREST from
+    // interpreting dots/@ in emails as filter syntax separators
     if (email && email !== memberId) {
         return queryClient
             .from('chats')
             .select(chatCols)
-            .or(`member_id.eq.${memberId},member_id.ilike.${email}`);
+            .or(`member_id.eq."${memberId}",member_id.ilike."${email}"`);
     }
     // UUID-only or email-only
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
