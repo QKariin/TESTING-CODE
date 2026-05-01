@@ -8,7 +8,7 @@ import {
     setMediaRecorder, setAudioChunks, mediaRecorder, audioChunks,
     setDragSrcIndex, dragSrcIndex,
     armoryTarget, setArmoryTarget, setGlobalQueue,
-    adminEmail
+    adminEmail, getAdminEmailFallback
 } from './dashboard-state';
 import { clean, raw, getOptimizedUrl } from './utils';
 import { mediaType as mediaTypeFunction, getSignedUrl } from './media';
@@ -30,7 +30,7 @@ function stripHtml(html: string) {
 
 // Sends a single task-feedback card into the member's chat (both parties see it)
 async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId?: string | null): Promise<void> {
-    const sender = adminEmail || (window as any).adminEmail;
+    const sender = getAdminEmailFallback();
     if (!sender || !memberId) return;
     try {
         const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId });
