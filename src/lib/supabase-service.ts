@@ -179,12 +179,12 @@ export const DbService = {
 
     // --- MESSAGING ---
     async sendMessage(memberIdOrEmail: string, text: string, sender: string = 'system', mediaUrl: string | null = null) {
-        // chats.member_id stores UUID — resolve email to UUID if needed
+        // chats.member_id must be EMAIL (FK → profiles.member_id)
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberIdOrEmail);
         let chatMemberId = memberIdOrEmail;
-        if (!isUuid) {
-            const { data: p } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberIdOrEmail).maybeSingle();
-            if (p?.ID) chatMemberId = p.ID;
+        if (isUuid) {
+            const { data: p } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberIdOrEmail).maybeSingle();
+            if (p?.member_id) chatMemberId = p.member_id.toLowerCase();
         }
 
         const { error } = await supabaseAdmin
@@ -246,14 +246,20 @@ export const DbService = {
             .select('member_id, "Name", "Status", "Taskdom_History"');
         if (error) throw error;
 
-        // Fetch avatar_url from profiles — tasks.member_id is email, tasks.ID is UUID
-        const memberEmails = [...new Set((data || []).map((r: any) => r.member_id).filter(Boolean))];
-        const { data: profileDataByEmail } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, member_id, avatar_url')
-            .in('member_id', memberEmails);
+        // Fetch avatar_url + UUID from profiles — tasks.member_id may be email (legacy) or UUID
+        const memberIds = [...new Set((data || []).map((r: any) => r.member_id as string).filter(Boolean))] as string[];
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const memberEmails = memberIds.filter(m => !uuidRe.test(m));
+        const memberUuids = memberIds.filter(m => uuidRe.test(m));
+        const profileQueries = [];
+        if (memberEmails.length) profileQueries.push(supabaseAdmin.from('profiles').select('ID, member_id, avatar_url').in('member_id', memberEmails));
+        if (memberUuids.length) profileQueries.push(supabaseAdmin.from('profiles').select('ID, member_id, avatar_url').in('ID', memberUuids));
+        const profileResults = await Promise.all(profileQueries);
+        const allProfiles = profileResults.flatMap(r => r.data || []);
         const avatarMap = new Map<string, string>();
-        for (const p of (profileDataByEmail || [])) {
+        const emailToUuid = new Map<string, string>();
+        for (const p of allProfiles) {
+            if (p.member_id && p.ID) emailToUuid.set(p.member_id.toLowerCase(), p.ID);
             if (p.avatar_url) {
                 if (p.ID) avatarMap.set(p.ID, p.avatar_url);
                 if (p.member_id) avatarMap.set(p.member_id?.toLowerCase(), p.avatar_url);
@@ -307,13 +313,16 @@ export const DbService = {
                         }
                     }
                 }
+                const rawMid = row.member_id || '';
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawMid);
+                const resolvedMid = isUuid ? rawMid : (emailToUuid.get(rawMid.toLowerCase()) || rawMid);
                 return {
                     ...entry,
                     id: entry.id,
                     proofUrl: finalUrl,
-                    member_id: row.member_id,
+                    member_id: resolvedMid,
                     memberName: row['Name'] || 'Slave',
-                    avatarUrl: avatarMap.get(row.member_id) || avatarMap.get(row.member_id?.toLowerCase()) || null,
+                    avatarUrl: avatarMap.get(resolvedMid) || avatarMap.get(rawMid?.toLowerCase()) || null,
                 };
             })
         );

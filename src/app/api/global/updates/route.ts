@@ -140,13 +140,9 @@ export async function POST(req: Request) {
 
     const { data: urlData } = supabaseAdmin.storage.from('media').getPublicUrl(path);
 
-    // Resolve email to UUID for chats.member_id
-    let chatMemberId = senderEmail;
-    const { data: senderProfile } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', senderEmail).maybeSingle();
-    if (senderProfile?.ID) chatMemberId = senderProfile.ID;
-
+    // chats.member_id stores email (FK → profiles.member_id)
     const { error: insertErr } = await supabaseAdmin.from('chats').insert({
-        member_id: chatMemberId,
+        member_id: senderEmail,
         content: JSON.stringify({ url: urlData.publicUrl, caption }),
         type: 'global_update',
         sender: 'subject',

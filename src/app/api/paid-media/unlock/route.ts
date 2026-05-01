@@ -97,7 +97,7 @@ export async function POST(req: Request) {
         // 7. Insert system message about purchase (ignore errors)
         try {
             await supabaseAdmin.from('chats').insert({
-                member_id: profile.ID,
+                member_id: profile.member_id || profile.ID,
                 sender_email: 'system',
                 content: `${profile.name || 'Subject'} unlocked paid media — ${pm.price} Capital`,
                 type: 'system',

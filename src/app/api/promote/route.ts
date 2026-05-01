@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         // Insert as 'queen' sender so it shows in the chat box (not the system log)
         try {
             await supabaseAdmin.from('chats').insert({
-                member_id: memberId,
+                member_id: exactEmail || memberId,
                 sender_email: 'queen',
                 content: cardMsg,
                 type: 'text',

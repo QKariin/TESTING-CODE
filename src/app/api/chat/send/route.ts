@@ -106,21 +106,18 @@ export async function POST(req: Request) {
         // Resolve senderEmail for display
         if (!senderEmail) senderEmail = profile?.member_id?.toLowerCase() || rawSender;
 
-        // chats.member_id stores UUID (profiles.ID) — resolve to UUID
-        // For member sending: use their profile UUID
-        // For queen sending: use conversationId (target member's UUID)
-        const senderUUID = profile?.ID || (isUUID ? rawSender : null);
-
-        // Resolve conversationId to UUID if it's an email
-        let conversationUUID = conversationId;
-        if (conversationId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)) {
-            // conversationId is email — resolve to UUID
-            const { data: convProfile } = await adminClient.from('profiles').select('ID').eq('member_id', conversationId.toLowerCase()).maybeSingle();
-            if (convProfile?.ID) conversationUUID = convProfile.ID;
+        // chats.member_id must be EMAIL (FK → profiles.member_id)
+        // For member sending: use their email
+        // For queen sending: resolve conversationId to target member's email
+        let conversationEmail = conversationId;
+        if (conversationId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)) {
+            // conversationId is UUID — resolve to email
+            const { data: convProfile } = await adminClient.from('profiles').select('member_id').eq('ID', conversationId).maybeSingle();
+            if (convProfile?.member_id) conversationEmail = convProfile.member_id.toLowerCase();
         }
 
-        const chatMemberId = senderUUID || senderEmail || rawSender;
-        const conversationContext = isQueen ? conversationUUID || chatMemberId : chatMemberId;
+        const chatMemberId = senderEmail || rawSender;
+        const conversationContext = isQueen ? (conversationEmail || chatMemberId) : chatMemberId;
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 

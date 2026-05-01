@@ -51,10 +51,10 @@ export async function POST(request: Request) {
 
         const msgText = `TRIBUTE PURCHASED: ${tributeTitle} (-${tributeCost} <i class="fas fa-coins" style="color:#c5a059;"></i>)`;
 
-        // System chat message - use UUID for member_id
+        // System chat message - use email for member_id (FK → profiles.member_id)
         try {
             await supabase.from('chats').insert({
-                member_id: profileUuid,
+                member_id: realEmail,
                 sender_email: 'system',
                 content: msgText,
                 type: 'system',
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             const { data: tributeRow } = await supabase.from('wishlist').select('image, display_url').eq('id', tributeId).maybeSingle();
             const tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
             await supabase.from('chats').insert({
-                member_id: profileUuid,
+                member_id: realEmail,
                 sender_email: realEmail,
                 content: `Purchased "${tributeTitle}"`,
                 type: 'wishlist',

@@ -131,12 +131,21 @@ export async function getAdminDashboardData() {
         });
 
         // Build review queue from already-fetched tasks data - no extra DB call, no URL signing (proofs load on click)
+        // Resolve email-keyed tasks.member_id → profile UUID so mobile dashboard lookups always match
+        const emailToProfileUuid: Record<string, string> = {};
+        for (const p of (profiles || [])) {
+            if (p.member_id && p.ID) emailToProfileUuid[p.member_id.toLowerCase()] = p.ID;
+        }
+        const _isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
         const reviewQueue: any[] = [];
         for (const row of (tasksData || [])) {
             let history: any[] = [];
             try { history = typeof row['Taskdom_History'] === 'string' ? JSON.parse(row['Taskdom_History']) : (row['Taskdom_History'] || []); } catch { }
+            const rawMid = row.member_id || '';
+            const resolvedMid = _isUuid(rawMid) ? rawMid : (emailToProfileUuid[rawMid.toLowerCase()] || rawMid);
             for (const entry of history.filter((e: any) => e.status === 'pending')) {
-                reviewQueue.push({ ...entry, member_id: row.member_id });
+                reviewQueue.push({ ...entry, member_id: resolvedMid });
             }
         }
 
@@ -340,7 +349,7 @@ export async function secureUpdateTaskAction(memberId: string, updateData: any) 
             if (updateData.forceActive) {
                 try {
                     await getAdmin().from('chats').insert({
-                        member_id: profile.ID,
+                        member_id: profile.member_id || profile.ID,
                         sender: 'system',
                         sender_email: 'system',
                         message: `NEW DIRECTIVE ASSIGNED`,

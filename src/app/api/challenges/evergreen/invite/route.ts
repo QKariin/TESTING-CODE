@@ -36,9 +36,12 @@ export async function POST(request: Request) {
             activeCount: count || 0,
         };
 
-        // Insert invite card into the user's personal chat (member_id is UUID)
+        // Insert invite card — chats.member_id stores email (FK → profiles.member_id)
+        let chatEmail = member_id;
+        const { data: _invProf } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', member_id).maybeSingle();
+        if (_invProf?.member_id) chatEmail = _invProf.member_id.toLowerCase();
         const { error: chatErr } = await supabaseAdmin.from('chats').insert({
-            member_id: member_id,
+            member_id: chatEmail,
             sender_email: 'system',
             sender_name: 'SYSTEM',
             content: `CHALLENGE_INVITE_CARD::${JSON.stringify(cardData)}`,
