@@ -93,7 +93,7 @@ export async function POST(req: Request) {
             if (!profile) {
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (authUser?.id === rawSender || authUser?.email?.toLowerCase() === senderEmail) {
-                    profile = { ID: authUser.id, hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
+                    profile = { ID: authUser!.id, hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
                     isQueen = true;
                 } else {
                     return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
