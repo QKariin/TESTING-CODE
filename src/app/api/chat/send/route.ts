@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         // Accept memberId (UUID) as primary, fall back to senderEmail for backward compat
         const rawSender = rawMemberId || rawSenderEmail;
         let senderEmail = rawSenderEmail?.toLowerCase();
-        let conversationId = rawConversationId?.toLowerCase();
+        let conversationId = rawConversationId; // keep original case for UUID
 
         if (!rawSender || !content) {
             return NextResponse.json({ success: false, error: "Missing required fields." }, { status: 400 });
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         if (isHardcodedAdmin) {
             profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
         } else if (!chatterEmail) {
-            // Look up profile by UUID (profiles.id) or email (profiles.member_id)
+            // Look up profile by UUID (profiles.ID) or email (profiles.member_id)
             const { data, error: profileErr } = await adminClient
                 .from('profiles')
                 .select('*')
@@ -64,12 +64,12 @@ export async function POST(req: Request) {
             profile = data;
 
             if (profile) {
-                // Always resolve senderEmail from profile for display purposes
+                // Resolve senderEmail from profile for display purposes
                 senderEmail = profile.member_id?.toLowerCase() || senderEmail;
             }
 
             if (profileErr || !profile) {
-                // 🔄 PROFILE AUTO-CREATION: Ensure every chat sender has a profile.
+                // PROFILE AUTO-CREATION: Ensure every chat sender has a profile.
                 if (!isUUID && senderEmail) {
                     const { data: newProfile, error: createErr } = await adminClient
                         .from('profiles')
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
             if (!profile) {
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (authUser?.id === rawSender || authUser?.email?.toLowerCase() === senderEmail) {
-                    profile = { hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
+                    profile = { ID: authUser.id, hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
                     isQueen = true;
                 } else {
                     return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
@@ -103,11 +103,24 @@ export async function POST(req: Request) {
             }
         }
 
-        // chats.member_id is TEXT storing EMAIL — never UUID
-        // Ensure senderEmail is always resolved before using as member_id
+        // Resolve senderEmail for display
         if (!senderEmail) senderEmail = profile?.member_id?.toLowerCase() || rawSender;
-        const chatMemberId = senderEmail || rawSender;
-        const conversationContext = isQueen ? conversationId || chatMemberId : chatMemberId;
+
+        // chats.member_id stores UUID (profiles.ID) — resolve to UUID
+        // For member sending: use their profile UUID
+        // For queen sending: use conversationId (target member's UUID)
+        const senderUUID = profile?.ID || (isUUID ? rawSender : null);
+
+        // Resolve conversationId to UUID if it's an email
+        let conversationUUID = conversationId;
+        if (conversationId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)) {
+            // conversationId is email — resolve to UUID
+            const { data: convProfile } = await adminClient.from('profiles').select('ID').eq('member_id', conversationId.toLowerCase()).maybeSingle();
+            if (convProfile?.ID) conversationUUID = convProfile.ID;
+        }
+
+        const chatMemberId = senderUUID || senderEmail || rawSender;
+        const conversationContext = isQueen ? conversationUUID || chatMemberId : chatMemberId;
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 
@@ -122,7 +135,6 @@ export async function POST(req: Request) {
             if (currentWallet < cost) return NextResponse.json({ success: false, error: "Insufficient coins" }, { status: 402 });
 
             newWallet = currentWallet - cost;
-            // Update wallet by profile UUID if available, else by email
             const walletUpdateQuery = profile.ID
                 ? adminClient.from('profiles').update({ wallet: newWallet }).eq('ID', profile.ID)
                 : adminClient.from('profiles').update({ wallet: newWallet }).eq('member_id', senderEmail);
@@ -174,7 +186,6 @@ export async function POST(req: Request) {
         }
 
         // Fire push notification in background - don't block the response
-        // Target by external_id (email) — no DB lookup needed, OneSignal resolves it
         const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
         const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
         const ADMIN_EMAIL = 'ceo@qkarin.com';
@@ -189,6 +200,7 @@ export async function POST(req: Request) {
                     target_channel: 'push',
                     include_aliases: { external_id: [targetEmail] },
                     headings: { en: title },
+                    subtitle: { en: 'Throne' },
                     contents: { en: body },
                     url,
                 }),
@@ -197,27 +209,33 @@ export async function POST(req: Request) {
             }).catch(e => { console.error('[chat/send] push error:', e); });
         }
 
+        // Build human-readable push preview — strip internal card prefixes
+        function pushPreview(raw: any): string {
+            if (typeof raw !== 'string') return 'New message';
+            if (raw.startsWith('TASK_FEEDBACK::')) return 'Task reviewed';
+            if (raw.startsWith('PROMOTION_CARD::')) return 'You have been promoted!';
+            if (raw.startsWith('CHALLENGE_INVITE_CARD::')) return 'New challenge invitation';
+            if (raw.startsWith('UPDATE_TRIBUTE_CARD::')) return 'Tribute update';
+            return raw.slice(0, 100);
+        }
+
         if (isQueen && conversationId) {
             // Queen sent to member — notify the member by their email
             const isConvUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
             if (isConvUUID) {
-                // Resolve UUID to email first
                 Promise.resolve(
                     adminClient.from('profiles').select('member_id').eq('ID', conversationId).maybeSingle()
                 ).then(({ data: p }) => {
                     if (p?.member_id) {
-                        sendPush(p.member_id, 'Queen Karin', typeof content === 'string' ? content.slice(0, 100) : '👑 New message', 'https://throne.qkarin.com/profile');
+                        sendPush(p.member_id, 'Queen Karin', pushPreview(content), 'https://throne.qkarin.com/profile');
                     }
                 }).catch(() => {});
             } else {
-                // conversationId is already email
-                sendPush(conversationId, 'Queen Karin', typeof content === 'string' ? content.slice(0, 100) : '👑 New message', 'https://throne.qkarin.com/profile');
+                sendPush(conversationId, 'Queen Karin', pushPreview(content), 'https://throne.qkarin.com/profile');
             }
         } else if (!isQueen) {
-            // Member sent to queen — notify the queen
             const senderName = profile?.name || (senderEmail || '').split('@')[0] || 'Subject';
-            const msgPreview = typeof content === 'string' ? content.slice(0, 100) : '📨 New message';
-            sendPush(ADMIN_EMAIL, senderName, msgPreview, 'https://throne.qkarin.com/dashboard');
+            sendPush(ADMIN_EMAIL, senderName, pushPreview(content), 'https://throne.qkarin.com/dashboard');
         }
 
         return NextResponse.json({ success: true, data: msgData, newWallet });

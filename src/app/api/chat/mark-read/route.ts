@@ -12,22 +12,30 @@ function getAdmin() {
 }
 
 // POST /api/chat/mark-read
-// Body (admin): { role: 'admin', slaveEmail: string, timestamp?: string }
-// Body (slave): { role: 'slave', email: string }
+// Body (admin): { role: 'admin', slaveEmail: string (UUID or email), timestamp?: string }
+// Body (slave): { role: 'slave', email: string (UUID or email) }
 export async function POST(req: Request) {
     const admin = getAdmin();
     const body = await req.json();
     const { role } = body;
 
     if (role === 'admin') {
-        const { slaveEmail, timestamp } = body;
-        if (!slaveEmail) return NextResponse.json({ error: 'slaveEmail required' }, { status: 400 });
-        const ts = timestamp || new Date().toISOString();
+        const rawId = body.slaveEmail || body.memberId;
+        if (!rawId) return NextResponse.json({ error: 'slaveEmail/memberId required' }, { status: 400 });
+        const ts = body.timestamp || new Date().toISOString();
 
-        // Atomic upsert — no read-modify-write race on JSON blob
+        // Resolve to UUID if email was passed
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
+        let memberId = rawId;
+        if (!isUuid) {
+            const { data: p } = await admin.from('profiles').select('ID').ilike('member_id', rawId).maybeSingle();
+            if (p?.ID) memberId = p.ID;
+        }
+
+        // Atomic upsert — member_email column stores UUID
         const { error } = await admin.from('chat_read_state').upsert({
             admin_email: 'ceo@qkarin.com',
-            member_email: slaveEmail.toLowerCase(),
+            member_email: memberId,
             last_read_at: ts,
         }, { onConflict: 'admin_email,member_email' });
 
@@ -38,7 +46,7 @@ export async function POST(req: Request) {
                 .ilike('member_id', 'ceo@qkarin.com').maybeSingle();
             const params = adminProfile?.parameters || {};
             const chatRead = params.admin_chat_read || {};
-            chatRead[slaveEmail.toLowerCase()] = ts;
+            chatRead[memberId] = ts;
             await admin.from('profiles')
                 .update({ parameters: { ...params, admin_chat_read: chatRead } })
                 .ilike('member_id', 'ceo@qkarin.com');
@@ -48,17 +56,20 @@ export async function POST(req: Request) {
     }
 
     if (role === 'slave') {
-        const { email } = body;
-        if (!email) return NextResponse.json({ error: 'email required' }, { status: 400 });
+        const rawId = body.email || body.memberId;
+        if (!rawId) return NextResponse.json({ error: 'email/memberId required' }, { status: 400 });
 
-        const { data: profile } = await admin
-            .from('profiles').select('parameters')
-            .ilike('member_id', email).maybeSingle();
+        // Support both UUID and email lookup
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
+        const { data: profile } = isUuid
+            ? await admin.from('profiles').select('parameters').eq('ID', rawId).maybeSingle()
+            : await admin.from('profiles').select('parameters').ilike('member_id', rawId).maybeSingle();
 
         const params = profile?.parameters || {};
-        await admin.from('profiles')
-            .update({ parameters: { ...params, slave_chat_read_at: new Date().toISOString() } })
-            .ilike('member_id', email);
+        const updateQuery = isUuid
+            ? admin.from('profiles').update({ parameters: { ...params, slave_chat_read_at: new Date().toISOString() } }).eq('ID', rawId)
+            : admin.from('profiles').update({ parameters: { ...params, slave_chat_read_at: new Date().toISOString() } }).ilike('member_id', rawId);
+        await updateQuery;
 
         return NextResponse.json({ success: true });
     }
@@ -66,7 +77,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid role' }, { status: 400 });
 }
 
-// GET /api/chat/mark-read?type=admin - returns admin's full chat_read map
+// GET /api/chat/mark-read?type=admin - returns admin's full chat_read map (keyed by UUID)
 // GET /api/chat/mark-read?type=slave&email=xxx - returns slave's slave_chat_read_at
 export async function GET(req: Request) {
     const admin = getAdmin();
@@ -94,9 +105,12 @@ export async function GET(req: Request) {
     }
 
     if (type === 'slave') {
-        const email = searchParams.get('email');
-        if (!email) return NextResponse.json({ error: 'email required' }, { status: 400 });
-        const { data } = await admin.from('profiles').select('parameters').ilike('member_id', email).maybeSingle();
+        const rawId = searchParams.get('email') || searchParams.get('memberId');
+        if (!rawId) return NextResponse.json({ error: 'email/memberId required' }, { status: 400 });
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
+        const { data } = isUuid
+            ? await admin.from('profiles').select('parameters').eq('ID', rawId).maybeSingle()
+            : await admin.from('profiles').select('parameters').ilike('member_id', rawId).maybeSingle();
         return NextResponse.json({ slaveReadAt: data?.parameters?.slave_chat_read_at || null });
     }
 

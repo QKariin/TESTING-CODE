@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update({ hierarchy: nextRank })
-            .eq('member_id', exactEmail);
+            .eq('ID', memberId);
 
         if (updateError) {
             console.error('[promote] Update error:', updateError);
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         // Insert as 'queen' sender so it shows in the chat box (not the system log)
         try {
             await supabaseAdmin.from('chats').insert({
-                member_id: exactEmail,
+                member_id: memberId,
                 sender_email: 'queen',
                 content: cardMsg,
                 type: 'text',

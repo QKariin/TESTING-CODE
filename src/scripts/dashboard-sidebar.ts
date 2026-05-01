@@ -15,11 +15,11 @@ const soundMemory: Record<string, number> = {};
 const prevOnlineState: Record<string, boolean> = {};
 
 /**
- * Canonical ID for a user — always email, lowercase.
+ * Canonical ID for a user — UUID (memberId), lowercase.
  * This is the SINGLE identifier used for read state, presence, localStorage sound keys.
  */
 function canonId(u: any): string {
-    return (u.member_id || u.email || u.memberId || '').toLowerCase();
+    return (u.memberId || u.member_id || u.email || '').toLowerCase();
 }
 
 /**
@@ -29,21 +29,21 @@ function canonId(u: any): string {
 export function markAsRead(id: string) {
     if (!id) return;
     const now = Date.now();
-    // Find the user to get canonical email
+    // Find the user to get canonical UUID
     const user = users.find(u => u.memberId === id || canonId(u) === id.toLowerCase());
-    const email = user ? canonId(user) : id.toLowerCase();
+    const uuid = user ? canonId(user) : id.toLowerCase();
 
     // Update single source of truth
-    markReadInMap(email, now);
+    markReadInMap(uuid, now);
 
     // Keep localStorage in sync (migration bridge)
-    try { localStorage.setItem('read_' + email, now.toString()); } catch {}
+    try { localStorage.setItem('read_' + uuid, now.toString()); } catch {}
 
     // Persist to server
     fetch('/api/chat/mark-read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'admin', slaveEmail: email, timestamp: new Date(now).toISOString() }),
+        body: JSON.stringify({ role: 'admin', slaveEmail: uuid, timestamp: new Date(now).toISOString() }),
     }).catch(() => {});
 }
 

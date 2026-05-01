@@ -164,8 +164,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 const readRes = await fetch('/api/chat/mark-read?type=admin');
                 const readData = await readRes.json();
                 const serverReadMap: Record<string, string> = readData.chatRead || {};
-                Object.entries(serverReadMap).forEach(([email, ts]) => {
-                    const key = 'read_' + email.toLowerCase();
+                Object.entries(serverReadMap).forEach(([id, ts]) => {
+                    const key = 'read_' + id.toLowerCase();
                     const localTs = parseInt(localStorage.getItem(key) || '0');
                     const serverTs = new Date(ts).getTime();
                     if (serverTs > localTs) localStorage.setItem(key, serverTs.toString());

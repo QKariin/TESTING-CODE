@@ -98,9 +98,9 @@ function appendToSystemLog(msg: any) {
  * Called when a user is selected in the sidebar.
  */
 export async function initDashboardChat(memberIdOrEmail: string) {
-    // chats.member_id is EMAIL — always resolve to email for chat lookups
+    // chats.member_id stores UUID — resolve to UUID for chat lookups
     const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail || x.member_id === memberIdOrEmail);
-    const activeId = u?.member_id || u?.email || memberIdOrEmail;
+    const activeId = u?.memberId || memberIdOrEmail;
 
     // Guard: if already initialized for this exact user AND channel is alive, skip.
     if (activeChatEmail?.toLowerCase() === activeId.toLowerCase() && chatChannel) return;
@@ -165,7 +165,10 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     // If user switched during await, bail — everything was already cleaned up by the new call
     if (signal.aborted) return;
 
-    // Realtime subscription — filter in JS (Supabase eq filter is case-sensitive)
+    // Realtime subscription — filter in JS
+    // activeId is UUID; also match old email-based records
+    const activeUser = users.find((x: any) => x.memberId === activeId);
+    const activeUserEmail = (activeUser?.member_id || activeUser?.email || '').toLowerCase();
     chatChannel = _supabase
         .channel('dash-chat-' + activeId)
         .on('postgres_changes', {
@@ -176,7 +179,8 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             const msg = payload.new;
             if (!msg) return;
             const rowMemberId = (msg.member_id || '').toLowerCase();
-            if (rowMemberId !== activeId.toLowerCase()) return;
+            // Match by UUID (new) or email (old)
+            if (rowMemberId !== activeId.toLowerCase() && rowMemberId !== activeUserEmail) return;
             if (activeChatEmail?.toLowerCase() !== activeId.toLowerCase()) return;
             appendChatMessage(msg);
         })
@@ -360,8 +364,14 @@ function _showRetryUI(memberId: string) {
 
 export function appendChatMessage(msg: any) {
     // Guard: only render messages for the currently active conversation
+    // Compare by UUID (new) or email (old records) — both must match the active user
     if (activeChatEmail && msg.member_id) {
-        if ((msg.member_id || '').toLowerCase() !== activeChatEmail.toLowerCase()) return;
+        const msgMid = (msg.member_id || '').toLowerCase();
+        const activeId = activeChatEmail.toLowerCase();
+        // Also check email for backward compat (old records store email)
+        const activeUser = users.find((x: any) => (x.memberId || '').toLowerCase() === activeId);
+        const activeEmail = (activeUser?.member_id || activeUser?.email || '').toLowerCase();
+        if (msgMid !== activeId && msgMid !== activeEmail) return;
     }
 
     // Prevent duplicates — use real DB id (now returned by send API)
@@ -616,9 +626,9 @@ export async function sendMsg() {
         console.warn(`[DASHBOARD-CHAT] Send failed: Missing input ${!inp} or currId ${!activeCurrId}`);
         return;
     }
-    // chats.member_id is EMAIL — resolve user's email for the conversation
+    // chats.member_id stores UUID — resolve to UUID for the conversation
     const convUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
-    const conversationEmail = convUser?.member_id || convUser?.email || activeCurrId;
+    const conversationUUID = convUser?.memberId || activeCurrId;
 
     const text = inp.value.trim();
     if (!text) return;
@@ -655,7 +665,7 @@ export async function sendMsg() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 senderEmail: senderEmail,
-                conversationId: conversationEmail, // email - chats.member_id is TEXT
+                conversationId: conversationUUID,
                 content: text,
                 type: 'text'
             })
@@ -690,9 +700,9 @@ export async function handleAdminUpload(file: File) {
     const isVideo = file.type.startsWith('video/');
     const msgType = isVideo ? 'video' : 'photo';
     const objectUrl = URL.createObjectURL(file);
-    // chats.member_id is EMAIL
+    // chats.member_id stores UUID
     const mediaConvUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
-    const mediaConvEmail = mediaConvUser?.member_id || mediaConvUser?.email || activeCurrId;
+    const mediaConvUUID = mediaConvUser?.memberId || activeCurrId;
 
     // Show preview modal before uploading
     const existing = document.getElementById('__adminMediaPreview');
@@ -760,7 +770,7 @@ export async function handleAdminUpload(file: File) {
             const sendRes = await fetch('/api/chat/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: userEmail, conversationId: mediaConvEmail, content: url, type: msgType }),
+                body: JSON.stringify({ senderEmail: userEmail, conversationId: mediaConvUUID, content: url, type: msgType }),
             });
             const sendData = await sendRes.json();
             if (sendData.success && sendData.data) {
@@ -804,7 +814,7 @@ async function _sendChatGif(gifUrl: string) {
     if (!activeCurrId) return;
 
     const convUser = users.find((x: any) => x.memberId === activeCurrId || x.id === activeCurrId);
-    const conversationEmail = convUser?.member_id || convUser?.email || activeCurrId;
+    const conversationUUID = convUser?.memberId || activeCurrId;
 
     let senderEmail: string | null = getAdminEmailFallback();
     if (!senderEmail) return;
@@ -815,7 +825,7 @@ async function _sendChatGif(gifUrl: string) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 senderEmail,
-                conversationId: conversationEmail,
+                conversationId: conversationUUID,
                 content: gifUrl,
                 type: 'gif',
                 metadata: { isQueen: true, gifUrl },

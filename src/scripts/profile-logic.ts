@@ -1868,8 +1868,8 @@ export async function initChatSystem() {
         }
     });
 
-    // chats.member_id is EMAIL - always query by email
-    await loadChatHistory(email!);
+    // chats.member_id stores UUID — query by UUID, fallback to email
+    await loadChatHistory(userId || email!);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -1885,9 +1885,9 @@ export async function initChatSystem() {
             // NO row filter here - filter in JS instead to support UUID-based member_id
         }, (payload: any) => {
             const msg = payload.new;
-            // chats.member_id is EMAIL - compare against email
+            // chats.member_id stores UUID — compare against both UUID and email for backward compat
             const rowMemberId = (msg.member_id || '').toLowerCase();
-            const matchesUser = rowMemberId === email!.toLowerCase();
+            const matchesUser = rowMemberId === (userId || '').toLowerCase() || rowMemberId === email!.toLowerCase();
             if (!matchesUser) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
@@ -3044,9 +3044,9 @@ export function openMobChatOverlay() {
 
     // If no messages loaded yet, load them
     const content = document.getElementById('mob_chatContent');
-    const email = getState().email || getState().memberId;
-    if (content && !content.children.length && email) {
-        loadChatHistory(email);
+    const chatId = getState().memberId || getState().email;
+    if (content && !content.children.length && chatId) {
+        loadChatHistory(chatId);
     }
 
     // Safety net scrolls - in case content is loaded async after animation
@@ -4493,7 +4493,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
 
         renderProfileSidebar(patchedProfile);
-        loadChatHistory(email);
+        loadChatHistory(memberId || id || email);
     } else {
         showErr('Save failed: ' + (data.error || 'Unknown error'));
     }

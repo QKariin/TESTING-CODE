@@ -874,7 +874,7 @@ export default function DashboardPage() {
 
             if (data.success && data.users) {
                 const mappedUsers = data.users.map((u: any) => {
-                    const msgFromMessages = unreadMap[(u.member_id || u.memberId || '').toLowerCase()];
+                    const msgFromMessages = unreadMap[(u.memberId || u.member_id || '').toLowerCase()];
                     const msgFromParams = u.parameters?.lastMessageTime;
                     const rawMsgTime = msgFromMessages || msgFromParams || null;
                     const lastMessageTime = rawMsgTime ? new Date(rawMsgTime).getTime() : 0;
@@ -898,18 +898,18 @@ export default function DashboardPage() {
                     const readData = await readRes.json();
                     const serverReadMap = readData.chatRead || {};
                     const readMap: Record<string, number> = {};
-                    Object.entries(serverReadMap).forEach(([email, ts]) => {
-                        readMap[email.toLowerCase()] = new Date(ts as string).getTime();
+                    Object.entries(serverReadMap).forEach(([id, ts]) => {
+                        readMap[id.toLowerCase()] = new Date(ts as string).getTime();
                     });
 
-                    // Migration bridge: merge localStorage read state (old system) into DB map
+                    // Migration bridge: merge localStorage read state into DB map
                     // Takes the newer timestamp from either source
                     mappedUsers.forEach((u: any) => {
-                        const email = (u.member_id || '').toLowerCase();
-                        if (!email) return;
-                        const localTs = parseInt(localStorage.getItem('read_' + email) || '0');
-                        if (localTs > (readMap[email] || 0)) {
-                            readMap[email] = localTs;
+                        const uuid = (u.memberId || '').toLowerCase();
+                        if (!uuid) return;
+                        const localTs = parseInt(localStorage.getItem('read_' + uuid) || '0');
+                        if (localTs > (readMap[uuid] || 0)) {
+                            readMap[uuid] = localTs;
                         }
                     });
 
@@ -987,13 +987,15 @@ export default function DashboardPage() {
                 const isQueenMsg = msg.metadata?.isQueen === true;
                 const isSystemMsg = msg.type === 'system' || (msg.sender_email || '').toLowerCase() === 'system';
                 if (isQueenMsg || isSystemMsg) return;
-                const memberId = (msg.member_id || '').toLowerCase();
-                if (!memberId) return;
+                const msgMemberId = (msg.member_id || '').toLowerCase();
+                if (!msgMemberId) return;
                 const msgTime = new Date(msg.created_at).getTime();
                 if (!msgTime) return;
+                // Match by UUID (new records) or email (old records)
                 const found = users.find((u: any) => {
-                    const uid = (u.member_id || u.memberId || '').toLowerCase();
-                    return uid === memberId;
+                    const uuid = (u.memberId || '').toLowerCase();
+                    const email = (u.member_id || '').toLowerCase();
+                    return msgMemberId === uuid || msgMemberId === email;
                 });
                 if (found && msgTime > (found.lastMessageTime || 0)) {
                     found.lastMessageTime = msgTime;
@@ -1167,9 +1169,9 @@ export default function DashboardPage() {
             try {
                 const unreadMap = await getUnreadMessageStatus();
                 users.forEach((u: any) => {
-                    const email = (u.member_id || '').toLowerCase();
-                    if (!email) return;
-                    const serverTs = unreadMap[email];
+                    const uuid = (u.memberId || '').toLowerCase();
+                    if (!uuid) return;
+                    const serverTs = unreadMap[uuid];
                     if (serverTs) {
                         const ts = new Date(serverTs).getTime();
                         if (ts > (u.lastMessageTime || 0)) {

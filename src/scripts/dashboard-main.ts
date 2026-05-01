@@ -150,9 +150,9 @@ async function refreshUnreadStatus() {
         const unreadMap = await getUnreadMessageStatus();
         let changed = false;
         users.forEach((u: any) => {
-            const email = (u.member_id || '').toLowerCase();
-            if (!email) return;
-            const serverTs = unreadMap[email];
+            const uuid = (u.memberId || '').toLowerCase();
+            if (!uuid) return;
+            const serverTs = unreadMap[uuid];
             if (serverTs) {
                 const ts = new Date(serverTs).getTime();
                 if (ts > (u.lastMessageTime || 0)) {

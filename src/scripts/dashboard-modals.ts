@@ -33,14 +33,12 @@ async function sendChatFeedback(memberId: string, mediaUrl: string | null, media
     const sender = getAdminEmailFallback();
     if (!sender || !memberId) return;
     try {
-        // memberId is UUID — resolve to email because chats.member_id stores email
-        const u = users.find(x => x.memberId === memberId);
-        const conversationEmail = u?.member_id || u?.email || memberId;
+        // memberId is UUID — pass directly, chats.member_id stores UUID
         const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId });
         const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senderEmail: sender, conversationId: conversationEmail, content: 'TASK_FEEDBACK::' + payload, type: 'text' })
+            body: JSON.stringify({ senderEmail: sender, conversationId: memberId, content: 'TASK_FEEDBACK::' + payload, type: 'text' })
         });
         const data = await res.json();
         // Optimistically append so the card shows immediately regardless of poll/online status
