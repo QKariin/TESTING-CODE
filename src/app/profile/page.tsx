@@ -91,6 +91,8 @@ import {
     togglePushNotifications,
     openProfileGifPicker,
     closeProfileGifPicker,
+    _openMobPostDetail,
+    _closeMobPostDetail,
 } from '@/scripts/profile-logic';
 
 
@@ -291,6 +293,8 @@ export default function ProfilePage() {
             (window as any).cancelProfileChatReply = cancelProfileChatReply;
             (window as any).openProfileGifPicker = openProfileGifPicker;
             (window as any).closeProfileGifPicker = closeProfileGifPicker;
+            (window as any)._openMobPostDetail = _openMobPostDetail;
+            (window as any)._closeMobPostDetail = _closeMobPostDetail;
             // mobGlGifPicker window assignments are handled in profile-logic.ts
         }
 

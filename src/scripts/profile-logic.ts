@@ -3142,62 +3142,130 @@ export function closeMobQueenWall() {
     _setNavActive('profile');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _mobQueenPosts: any[] = [];
+
 async function _loadMobQueenPosts() {
     const container = document.getElementById('mobQWallContent');
     if (!container) return;
-    // Don't reload if already has content
     if (container.children.length > 0) return;
     container.innerHTML = `<div style="text-align:center;padding:50px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
     try {
-        const res = await fetch('/api/posts', { cache: 'no-store' });
+        const email = getState().email || '';
+        const res = email
+            ? await fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch', email }) })
+            : await fetch('/api/posts', { cache: 'no-store' });
         const data = await res.json();
         if (!data.success || !data.posts?.length) {
             container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Orbitron;font-size:0.75rem;letter-spacing:3px">NO TRANSMISSIONS YET</div>`;
             return;
         }
-        container.innerHTML = data.posts.map((p: any) => {
-            const locked = !p.userHasAccess;
-            const isVideo = p.media_type === 'video';
-            const d = new Date(p.created_at || p._createdDate || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
-
-            // Media section
-            let mediaHTML = '';
-            if (p.media_url) {
-                if (locked) {
-                    const previewUrl = p.thumbnail_url || (!isVideo ? getOptimizedUrl(p.media_url, 600) : null);
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;">
-                        ${previewUrl ? `<img src="${previewUrl}" alt="" style="width:100%;display:block;object-fit:cover;max-height:260px;filter:blur(12px) brightness(0.35);transform:scale(1.06);" onerror="this.style.display='none'" />` : `<div style="width:100%;height:180px;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}
-                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.45);">
-                            <div style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(197,160,89,0.5);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;">
-                                ${isVideo
-                                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polygon points="6,4 20,12 6,20" fill="rgba(197,160,89,0.8)"/></svg>`
-                                    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(197,160,89,0.7)" stroke-width="1.8" stroke-linecap="round"/></svg>`
-                                }
-                            </div>
-                            ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.48rem;color:#c5a059;letter-spacing:1.5px;display:flex;align-items:center;gap:5px;"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#c5a059" stroke-width="1.8" fill="none"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 0 1 0 3H10.5a1.5 1.5 0 0 0 0 3H15" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round"/></svg>${p.price} COINS</div>` : ''}
-                            ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.38rem;color:#555;letter-spacing:1.5px;">REQUIRES ${(p.min_rank || '').toUpperCase()}</div>` : ''}
-                            ${p.price > 0 ? `<button onclick="window.unlockPost('${p.id}', ${p.price})" style="background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.45rem;letter-spacing:2px;padding:8px 18px;border-radius:2px;cursor:pointer;font-weight:700;">UNLOCK</button>` : ''}
-                        </div>
-                    </div>`;
-                } else if (isVideo) {
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');var t=this.querySelector('.vid-thumb');if(t)t.style.display='none';if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');this.onclick=null;this.style.cursor='default';v.play().catch(function(){});}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div>${p.thumbnail_url ? `<img src="${p.thumbnail_url}" class="vid-thumb" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" />` : ''}<video src="${p.media_url}" playsinline preload="metadata" style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
-                } else {
-                    mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
-                }
-            }
-
-            return `<div class="mob-qwall-post">
-                ${mediaHTML}
-                <div class="mob-qwall-post-body">
-                    ${p.title ? `<div class="mob-qwall-post-title">${p.title}</div>` : ''}
-                    ${!locked && p.content ? `<div class="mob-qwall-post-content">${p.content}</div>` : ''}
-                    <div class="mob-qwall-post-date">${d}</div>
-                </div>
-            </div>`;
-        }).join('');
+        _mobQueenPosts = data.posts;
+        _renderMobQueenGrid(container);
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#333;font-family:Orbitron;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
+}
+
+function _renderMobQueenGrid(container: HTMLElement) {
+    const posts = _mobQueenPosts;
+    const cells = posts.map((p: any, i: number) => {
+        const locked = !p.userHasAccess;
+        const isVideo = p.media_type === 'video';
+        const hasMedia = p.media_url && !String(p.media_url).startsWith('failed');
+        const thumbSrc = p.thumbnail_url || (!isVideo && hasMedia ? getOptimizedUrl(p.media_url, 400) : '');
+
+        const imgHtml = thumbSrc
+            ? `<img src="${thumbSrc}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;${locked ? 'filter:blur(8px) brightness(0.3);transform:scale(1.08);' : ''}" onerror="this.style.display='none'" />`
+            : hasMedia && !isVideo
+                ? `<img src="${getOptimizedUrl(p.media_url, 400)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;${locked ? 'filter:blur(8px) brightness(0.3);transform:scale(1.08);' : ''}" onerror="this.style.display='none'" />`
+                : `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(197,160,89,0.3);">👑</div>`;
+
+        const videoIcon = isVideo && !locked ? `<div style="position:absolute;top:8px;right:8px;z-index:2;"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" opacity="0.9"><polygon points="9.5,7 9.5,17 18,12"/><rect x="4" y="6" width="2" height="12" rx="1" fill="white"/></svg></div>` : '';
+
+        const lockOverlay = locked ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-linecap="round"/></svg></div>` : '';
+
+        return `<div class="qw-grid-cell" onclick="window._openMobPostDetail(${i})" style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#080808;">${imgHtml}${videoIcon}${lockOverlay}</div>`;
+    }).join('');
+
+    container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">${cells}</div>`;
+}
+
+function _buildMobPostDetailHtml(startIndex: number): string {
+    const posts = _mobQueenPosts;
+    const postsHtml = posts.slice(startIndex).map((p: any) => {
+        const locked = !p.userHasAccess;
+        const isVideo = p.media_type === 'video';
+        const d = new Date(p.created_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+        const likeCount = p.likes || 0;
+        const liked = p.userHasLiked || false;
+
+        let mediaHtml = '';
+        if (p.media_url && !String(p.media_url).startsWith('failed')) {
+            if (locked) {
+                const previewUrl = p.thumbnail_url || (!isVideo ? getOptimizedUrl(p.media_url, 600) : '');
+                mediaHtml = `<div style="position:relative;width:100%;overflow:hidden;">
+                    ${previewUrl ? `<img src="${previewUrl}" alt="" style="width:100%;display:block;object-fit:cover;max-height:500px;filter:blur(14px) brightness(0.3);transform:scale(1.06);" />` : `<div style="width:100%;height:250px;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.4);">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-linecap="round"/></svg>
+                        ${p.price > 0 ? `<div style="font-family:Orbitron;font-size:0.5rem;color:#c5a059;letter-spacing:1.5px;">${p.price} COINS</div>` : ''}
+                        ${p.min_rank && p.min_rank !== 'Hall Boy' ? `<div style="font-family:Orbitron;font-size:0.38rem;color:#555;letter-spacing:1.5px;">REQUIRES ${(p.min_rank || '').toUpperCase()}</div>` : ''}
+                        ${p.price > 0 ? `<button onclick="window.unlockPost('${p.id}', ${p.price})" style="background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.45rem;letter-spacing:2px;padding:8px 18px;border-radius:2px;cursor:pointer;font-weight:700;">UNLOCK</button>` : ''}
+                    </div>
+                </div>`;
+            } else if (isVideo) {
+                mediaHtml = `<div style="position:relative;width:100%;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');var t=this.querySelector('.vid-thumb');if(t)t.style.display='none';if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');this.onclick=null;this.style.cursor='default';v.play().catch(function(){});}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div>${p.thumbnail_url ? `<img src="${p.thumbnail_url}" class="vid-thumb" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" />` : ''}<video src="${p.media_url}" playsinline preload="metadata" style="width:100%;display:block;object-fit:cover;pointer-events:none;"></video></div>`;
+            } else {
+                mediaHtml = `<img src="${getOptimizedUrl(p.media_url, 800)}" alt="" style="width:100%;display:block;object-fit:cover;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}" />`;
+            }
+        }
+
+        const likeId = String(p.id);
+        const heartSvg = `<svg width="22" height="22" viewBox="0 0 24 24" fill="${liked ? '#e03050' : 'none'}" stroke="${liked ? '#e03050' : 'rgba(255,255,255,0.7)'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+
+        return `<div style="border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:16px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;">
+                <img src="/queen-nav.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);" />
+                <div style="flex:1;">
+                    <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;">QUEEN KARIN</div>
+                    <div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.35);">${d}</div>
+                </div>
+            </div>
+            ${mediaHtml}
+            <div style="padding:10px 14px 0;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+                    <button onclick="window.togglePostLike('${likeId}',this.querySelector('svg'))" style="background:none;border:none;cursor:pointer;padding:2px;">${heartSvg}</button>
+                    <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;" id="likeCount_${likeId}">${likeCount}</span>
+                </div>
+                ${p.title ? `<div style="font-family:Cinzel,serif;font-size:0.95rem;color:#c5a059;margin-bottom:4px;">${p.title}</div>` : ''}
+                ${!locked && p.content ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.75);line-height:1.5;">${p.content}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    return `<div id="mobPostDetailView" style="position:absolute;inset:0;z-index:10;background:#060606;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;align-items:center;padding:12px 14px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <button onclick="window._closeMobPostDetail()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.7);font-size:1.4rem;padding:4px 8px;margin-right:10px;">&#8592;</button>
+            <div style="font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.8);letter-spacing:3px;">POSTS</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">${postsHtml}</div>
+    </div>`;
+}
+
+export function _openMobPostDetail(index: number) {
+    const panel = document.getElementById('mobQwPanel_wall');
+    if (!panel) return;
+    // Remove existing detail view if any
+    document.getElementById('mobPostDetailView')?.remove();
+    panel.insertAdjacentHTML('beforeend', _buildMobPostDetailHtml(index));
+}
+
+export function _closeMobPostDetail() {
+    const detail = document.getElementById('mobPostDetailView');
+    if (!detail) return;
+    // Pause any playing videos
+    detail.querySelectorAll('video').forEach(v => v.pause());
+    detail.remove();
 }
 
 // ─── MOB GLOBAL OVERLAY ──────────────────────────────────────────────────────

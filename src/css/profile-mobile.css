@@ -2035,9 +2035,29 @@
     #mobQueenWallOverlay .mob-qwall-scroll {
         flex: 1;
         overflow-y: auto;
-        padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+        padding: 0;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
+    }
+
+    /* Instagram-style grid */
+    .qw-insta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+    }
+    .qw-grid-cell {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        cursor: pointer;
+        background: #080808;
+    }
+    .qw-grid-cell img,
+    .qw-grid-cell video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     /* ── Mobile Chat Bubbles ── */
