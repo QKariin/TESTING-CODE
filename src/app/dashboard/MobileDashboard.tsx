@@ -2801,7 +2801,21 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
     const [broadcastText, setBroadcastText] = useState('');
     const [broadcasting, setBroadcasting] = useState(false);
     const [broadcastStatus, setBroadcastStatus] = useState('');
+    const [syncing, setSyncing] = useState(false);
+    const [syncResult, setSyncResult] = useState('');
     const { status: notifStatus, refresh: refreshNotif } = useNotifStatus();
+
+    const syncLeads = async () => {
+        if (syncing) return;
+        setSyncing(true); setSyncResult('');
+        try {
+            const res = await fetch('/api/push/sync-leads', { method: 'POST' });
+            const data = await res.json();
+            if (data.error) { setSyncResult('ERROR: ' + data.error); }
+            else { setSyncResult(`SYNCED ${data.synced}/${data.total} leads (${data.skippedExisting} already have profiles)${data.failed ? `, ${data.failed} failed` : ''}`); }
+        } catch (err: any) { setSyncResult('ERROR: ' + err.message); }
+        setSyncing(false);
+    };
 
     const sendBroadcast = async () => {
         if (!broadcastText.trim() || broadcasting) return;
@@ -2860,6 +2874,21 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
                 <button disabled={broadcasting || !broadcastText.trim()} onClick={sendBroadcast}
                     style={{ width: '100%', padding: '13px', background: !broadcasting && broadcastText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${!broadcasting && broadcastText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: !broadcasting && broadcastText.trim() ? '#c5a059' : '#333', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', fontWeight: 700, letterSpacing: '1.5px', cursor: !broadcasting && broadcastText.trim() ? 'pointer' : 'default' }}>
                     {broadcasting ? `SENDING TO ${users.length} SUBJECTS...` : `BROADCAST TO ALL (${users.length})`}
+                </button>
+            </div>
+
+            {/* Sync Leads */}
+            <div style={S.card}>
+                <div style={S.cardTitle}>SYNC LEADS TO ONESIGNAL</div>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#555', lineHeight: 1.4, marginBottom: 10 }}>
+                    Push all emails from gate knockers &amp; applications into OneSignal so you can email them.
+                </div>
+                {syncResult && (
+                    <div style={{ background: syncResult.startsWith('ERROR') ? 'rgba(255,51,51,0.1)' : 'rgba(107,203,119,0.1)', border: `1px solid ${syncResult.startsWith('ERROR') ? 'rgba(255,51,51,0.3)' : 'rgba(107,203,119,0.3)'}`, borderRadius: 6, padding: '8px 12px', fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: syncResult.startsWith('ERROR') ? '#ff6666' : '#6bcb77', marginBottom: 8, textAlign: 'center' }}>{syncResult}</div>
+                )}
+                <button disabled={syncing} onClick={syncLeads}
+                    style={{ width: '100%', padding: '13px', background: syncing ? '#111' : 'rgba(139,0,0,0.12)', border: `1px solid ${syncing ? '#222' : 'rgba(139,0,0,0.35)'}`, borderRadius: 8, color: syncing ? '#333' : '#8b0000', fontFamily: 'Orbitron,monospace', fontSize: '0.86rem', fontWeight: 700, letterSpacing: '1.5px', cursor: syncing ? 'default' : 'pointer' }}>
+                    {syncing ? 'SYNCING...' : 'SYNC ALL LEADS'}
                 </button>
             </div>
 
