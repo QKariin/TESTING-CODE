@@ -2971,6 +2971,8 @@ function _closeAllMobOverlays(except?: string) {
         if (id === except) return;
         const el = document.getElementById(id);
         if (!el) return;
+        // Close Queen Wall detail view so grid shows on re-open
+        if (id === 'mobQueenWallOverlay') _closeMobPostDetail();
         el.querySelectorAll('video').forEach(v => v.pause());
         el.classList.remove('mob-overlay-open');
         el.classList.remove('mob-chat-fullscreen');
@@ -3135,6 +3137,8 @@ export function openMobQueenWall() {
 export function closeMobQueenWall() {
     const el = document.getElementById('mobQueenWallOverlay');
     if (!el) return;
+    // Always close detail view so grid shows on re-open
+    _closeMobPostDetail();
     // Pause all playing videos before hiding
     el.querySelectorAll('video').forEach(v => v.pause());
     el.classList.remove('mob-overlay-open');
