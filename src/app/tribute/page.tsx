@@ -11,7 +11,16 @@ export default function TributePage() {
     const [mounted, setMounted] = useState(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const PROMO_END = new Date('2026-05-05T00:00:00Z').getTime();
+    // 72h from first visit — stored in localStorage so it persists
+    const [promoEnd] = useState(() => {
+        if (typeof window === 'undefined') return Date.now() + 72 * 3600000;
+        const stored = localStorage.getItem('promo72h_end');
+        if (stored) return parseInt(stored, 10);
+        const end = Date.now() + 72 * 3600000;
+        localStorage.setItem('promo72h_end', String(end));
+        return end;
+    });
+    const PROMO_END = promoEnd;
 
     useEffect(() => {
         setMounted(true);
@@ -57,8 +66,8 @@ export default function TributePage() {
                 @keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
                 @keyframes pulse2 { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
                 @keyframes borderGlow {
-                    0%,100% { border-color: rgba(220,50,80,0.2); box-shadow: 0 0 30px rgba(220,50,80,0.08), inset 0 0 30px rgba(220,50,80,0.03); }
-                    50% { border-color: rgba(220,50,80,0.45); box-shadow: 0 0 50px rgba(220,50,80,0.15), inset 0 0 50px rgba(220,50,80,0.05); }
+                    0%,100% { border-color: rgba(139,0,0,0.2); box-shadow: 0 0 30px rgba(139,0,0,0.08), inset 0 0 30px rgba(139,0,0,0.03); }
+                    50% { border-color: rgba(139,0,0,0.45); box-shadow: 0 0 50px rgba(139,0,0,0.15), inset 0 0 50px rgba(139,0,0,0.05); }
                 }
                 @keyframes shimmer {
                     0% { background-position: -200% center; }
@@ -83,7 +92,7 @@ export default function TributePage() {
                     0% { left: -100%; }
                     50%,100% { left: 100%; }
                 }
-                .tribute-cta:hover { transform: scale(1.03) !important; box-shadow: 0 8px 50px rgba(220,50,80,0.5) !important; }
+                .tribute-cta:hover { transform: scale(1.03) !important; box-shadow: 0 8px 50px rgba(139,0,0,0.5) !important; }
                 .tribute-cta:active { transform: scale(0.98) !important; }
             `}</style>
 
@@ -93,12 +102,12 @@ export default function TributePage() {
             {/* Dark gradient overlay */}
             <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(2,2,2,0.75) 35%, rgba(2,2,2,0.95) 65%, #020202 100%)', zIndex: 0 }} />
             {/* Red accent glow at top */}
-            <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '50vh', background: 'radial-gradient(ellipse at center top, rgba(220,50,80,0.08) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '50vh', background: 'radial-gradient(ellipse at center top, rgba(139,0,0,0.08) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
             {/* Gold accent glow bottom */}
             <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100vw', height: '40vh', background: 'radial-gradient(ellipse at center bottom, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
             {/* Scanline effect */}
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
-                <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(220,50,80,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
+                <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
             </div>
             {/* Noise texture */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.015, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
@@ -108,9 +117,9 @@ export default function TributePage() {
 
                 {/* ── TOP BADGE ── */}
                 <div style={{ textAlign: 'center', animation: mounted ? 'slideDown 0.6s ease-out both' : 'none', marginBottom: 28 }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(220,50,80,0.06)', border: '1px solid rgba(220,50,80,0.25)', borderRadius: 100, padding: '5px 20px' }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e03050', animation: 'pulse2 1.5s infinite', boxShadow: '0 0 10px rgba(220,50,80,0.6)' }} />
-                        <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: '#e03050', letterSpacing: '4px' }}>LIVE — 72H ONLY</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.25)', borderRadius: 100, padding: '5px 20px' }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#8b0000', animation: 'pulse2 1.5s infinite', boxShadow: '0 0 10px rgba(139,0,0,0.6)' }} />
+                        <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.36rem', color: '#8b0000', letterSpacing: '4px' }}>LIVE — 72H ONLY</span>
                     </div>
                 </div>
 
@@ -118,19 +127,19 @@ export default function TributePage() {
                 <div style={{ textAlign: 'center', animation: mounted ? 'slideUp 0.8s ease-out 0.1s both' : 'none', marginBottom: 10 }}>
                     {/* Queen avatar with animated ring */}
                     <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto 22px' }}>
-                        <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', border: '1.5px solid rgba(220,50,80,0.3)', animation: 'ringPulse 3s ease-in-out infinite' }} />
-                        <div style={{ position: 'absolute', inset: -12, borderRadius: '50%', border: '1px solid rgba(220,50,80,0.1)', animation: 'ringPulse 3s ease-in-out infinite 0.5s' }} />
-                        <img src="/queen-karin.png" alt="Queen Karin" style={{ width: 110, height: 110, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.4)', boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(220,50,80,0.15)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <div style={{ position: 'absolute', inset: -6, borderRadius: '50%', border: '1.5px solid rgba(139,0,0,0.3)', animation: 'ringPulse 3s ease-in-out infinite' }} />
+                        <div style={{ position: 'absolute', inset: -12, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.1)', animation: 'ringPulse 3s ease-in-out infinite 0.5s' }} />
+                        <img src="/queen-karin.png" alt="Queen Karin" style={{ width: 110, height: 110, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.4)', boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(139,0,0,0.15)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     </div>
 
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '8px', marginBottom: 10 }}>QUEEN KARIN PRESENTS</div>
                     <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.6rem,5.5vw,2.6rem)', color: '#fff', letterSpacing: '3px', textTransform: 'uppercase', margin: '0 0 6px', fontWeight: 700, lineHeight: 1.1 }}>
                         FULL HOUSE
                     </h1>
-                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.1rem,4vw,1.8rem)', margin: 0, fontWeight: 400, lineHeight: 1.1, background: 'linear-gradient(90deg, #e03050, #ff6080, #e03050)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'shimmer 3s linear infinite', letterSpacing: '6px' }}>
+                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.1rem,4vw,1.8rem)', margin: 0, fontWeight: 400, lineHeight: 1.1, background: 'linear-gradient(90deg, #8b0000, #c41020, #8b0000)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'shimmer 3s linear infinite', letterSpacing: '6px' }}>
                         OPEN CALL
                     </h2>
-                    <div style={{ width: 60, height: 1.5, background: 'linear-gradient(90deg, transparent, #e03050, transparent)', margin: '18px auto 0' }} />
+                    <div style={{ width: 60, height: 1.5, background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '18px auto 0' }} />
                 </div>
 
                 {/* ── QUOTE ── */}
@@ -151,16 +160,16 @@ export default function TributePage() {
                         ].map((t, i) => (
                             <div key={t.label} style={{ position: 'relative' }}>
                                 <div style={{
-                                    background: 'rgba(220,50,80,0.04)', border: '1px solid rgba(220,50,80,0.15)', borderRadius: 8,
+                                    background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 8,
                                     padding: '14px 0', minWidth: 80, textAlign: 'center',
                                     backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
                                     animation: 'countTick 1s ease-in-out infinite',
                                     animationDelay: `${i * 0.15}s`,
                                 }}>
-                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(1.4rem,4vw,2rem)', color: '#fff', fontWeight: 700, lineHeight: 1, textShadow: '0 0 20px rgba(220,50,80,0.3)' }}>{t.val}</div>
-                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.26rem', color: 'rgba(220,50,80,0.4)', letterSpacing: '3px', marginTop: 5 }}>{t.label}</div>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(1.4rem,4vw,2rem)', color: '#fff', fontWeight: 700, lineHeight: 1, textShadow: '0 0 20px rgba(139,0,0,0.3)' }}>{t.val}</div>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.26rem', color: 'rgba(139,0,0,0.4)', letterSpacing: '3px', marginTop: 5 }}>{t.label}</div>
                                 </div>
-                                {i < 2 && <div style={{ position: 'absolute', right: -8, top: '35%', fontFamily: 'Orbitron', fontSize: '1.2rem', color: 'rgba(220,50,80,0.25)', fontWeight: 700 }}>:</div>}
+                                {i < 2 && <div style={{ position: 'absolute', right: -8, top: '35%', fontFamily: 'Orbitron', fontSize: '1.2rem', color: 'rgba(139,0,0,0.25)', fontWeight: 700 }}>:</div>}
                             </div>
                         ))}
                     </div>
@@ -171,24 +180,24 @@ export default function TributePage() {
                     <div style={{
                         position: 'relative', borderRadius: 16, padding: '36px 28px 32px', overflow: 'hidden',
                         background: 'linear-gradient(160deg, rgba(15,5,10,0.95), rgba(5,2,8,0.98))',
-                        border: '1px solid rgba(220,50,80,0.2)',
+                        border: '1px solid rgba(139,0,0,0.2)',
                         animation: 'borderGlow 4s ease-in-out infinite',
                     }}>
                         {/* Inner glow */}
-                        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '80%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(220,50,80,0.4), transparent)' }} />
-                        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '40%', height: '60px', background: 'radial-gradient(ellipse, rgba(220,50,80,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '80%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.4), transparent)' }} />
+                        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '40%', height: '60px', background: 'radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
                         {/* Discount badge */}
-                        <div style={{ position: 'absolute', top: 14, right: 14, background: '#e03050', borderRadius: 4, padding: '3px 10px', fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: '#fff', letterSpacing: '1.5px', fontWeight: 700 }}>-47%</div>
+                        <div style={{ position: 'absolute', top: 14, right: 14, background: '#8b0000', borderRadius: 4, padding: '3px 10px', fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: '#fff', letterSpacing: '1.5px', fontWeight: 700 }}>-47%</div>
 
                         <div style={{ textAlign: 'center' }}>
                             {/* Old price struck */}
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.18)', textDecoration: 'line-through', letterSpacing: '2px', marginBottom: 2 }}>&euro;55</div>
                             {/* New price */}
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4rem)', color: '#fff', fontWeight: 700, lineHeight: 1, marginBottom: 2, textShadow: '0 4px 30px rgba(220,50,80,0.2)' }}>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4rem)', color: '#fff', fontWeight: 700, lineHeight: 1, marginBottom: 2, textShadow: '0 4px 30px rgba(139,0,0,0.2)' }}>
                                 &euro;29
                             </div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.34rem', color: 'rgba(220,50,80,0.6)', letterSpacing: '4px', marginBottom: 22 }}>ONE-TIME ACCESS</div>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.34rem', color: 'rgba(139,0,0,0.6)', letterSpacing: '4px', marginBottom: 22 }}>ONE-TIME ACCESS</div>
 
                             {/* Divider with diamond */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 auto 20px', maxWidth: 260 }}>
@@ -244,9 +253,9 @@ export default function TributePage() {
                             fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.85rem,2.5vw,1.05rem)', fontWeight: 700, letterSpacing: '4px', textTransform: 'uppercase',
                             cursor: loading ? 'not-allowed' : 'pointer',
                             padding: '22px 0', borderRadius: 10, border: 'none', width: '100%',
-                            background: 'linear-gradient(135deg, #e03050 0%, #c01030 50%, #e03050 100%)',
+                            background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)',
                             backgroundSize: '200% auto',
-                            color: '#fff', boxShadow: '0 6px 40px rgba(220,50,80,0.3)',
+                            color: '#fff', boxShadow: '0 6px 40px rgba(139,0,0,0.3)',
                             opacity: loading ? 0.6 : 1,
                             transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                         }}>
@@ -257,12 +266,12 @@ export default function TributePage() {
                 </div>
 
                 {status && (
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: '#e03050', letterSpacing: '2px', textAlign: 'center', marginBottom: 12 }}>{status}</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: '#8b0000', letterSpacing: '2px', textAlign: 'center', marginBottom: 12 }}>{status}</div>
                 )}
 
                 {/* ── URGENCY ── */}
                 <div style={{ textAlign: 'center', animation: mounted ? 'slideUp 1s ease-out 0.8s both' : 'none', marginBottom: 36 }}>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(220,50,80,0.35)', letterSpacing: '4px', marginBottom: 6 }}>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(139,0,0,0.35)', letterSpacing: '4px', marginBottom: 6 }}>
                         THIS PRICE WILL NOT BE OFFERED AGAIN
                     </div>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.18)' }}>
