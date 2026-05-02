@@ -2972,7 +2972,7 @@ function _closeAllMobOverlays(except?: string) {
         const el = document.getElementById(id);
         if (!el) return;
         // Stop any playing videos before hiding
-        el.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); });
+        el.querySelectorAll('video').forEach(v => v.pause());
         el.classList.remove('mob-overlay-open');
         el.classList.remove('mob-chat-fullscreen');
         el.style.height = '';
@@ -3137,7 +3137,7 @@ export function closeMobQueenWall() {
     const el = document.getElementById('mobQueenWallOverlay');
     if (!el) return;
     // Pause all playing videos before hiding
-    el.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); });
+    el.querySelectorAll('video').forEach(v => v.pause());
     el.classList.remove('mob-overlay-open');
     setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     _setNavActive('profile');
