@@ -5298,7 +5298,7 @@ export async function loadQueenPosts() {
                         ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
                         : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<div style="position:relative;width:100%;height:100%;cursor:pointer;${heroPost.thumbnail_url ? `background-image:url('${heroPost.thumbnail_url}');background-size:cover;background-position:center;` : ''}" onclick="window.openQkLightbox('video','${heroPost.media_url}')"><div class="qk-play-icon qk-play-hero">▶</div></div>`
+                    ? `<div style="position:relative;width:100%;height:100%;cursor:pointer;" onclick="window.openQkLightbox('video','${heroPost.media_url}')">${heroPost.thumbnail_url ? `<img src="${heroPost.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : ''}<div class="qk-play-icon qk-play-hero">▶</div></div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
@@ -5355,16 +5355,15 @@ export async function loadQueenPosts() {
             const liked = p.userHasLiked || false;
             const isVideo = p.media_type === 'video';
             const cardHasMedia = p.media_url && !String(p.media_url).startsWith('failed');
-            const vidThumbStyle = isVideo && p.thumbnail_url ? `background-image:url('${p.thumbnail_url}');background-size:cover;background-position:center;border:2px solid red;` : isVideo ? `background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);border:2px solid orange;` : '';
             const cardMediaHTML = !cardHasMedia ? `<div class="qk-card-img-placeholder">👑</div>` :
                 locked
                     ? (isVideo
-                        ? `<div class="qk-card-img qk-card-media" style="${p.thumbnail_url ? `background-image:url('${p.thumbnail_url}');background-size:cover;background-position:center;filter:blur(10px) brightness(0.45);transform:scale(1.05);` : `background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);`}"></div>`
+                        ? `<div class="qk-card-img qk-card-media">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(10px) brightness(0.45);transform:scale(1.05);" />` : `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}</div>`
                         : p.thumbnail_url
                             ? `<div class="qk-card-img qk-card-media qk-blurred"><img src="${p.thumbnail_url}" alt="" /></div>`
                             : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
                     : isVideo
-                        ? `<div class="qk-card-img qk-card-media" style="${vidThumbStyle}" onclick="window.openQkLightbox('video','${p.media_url}')"><div class="qk-play-icon">▶</div></div>`
+                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : ''}<div class="qk-play-icon">▶</div></div>`
                         : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">
