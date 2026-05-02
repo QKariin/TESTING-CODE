@@ -611,7 +611,11 @@ export async function loadQueenPostsDashboard() {
                 ${p.media_url && !p.media_url.startsWith('failed') ? `
                     <div style="width:100%;border-radius:6px;border:1px solid #222;overflow:hidden;">
                         ${p.media_type === 'video'
-                            ? `<video src="${p.media_url}" controls style="width:100%;max-height:300px;display:block;background:#000;"></video>`
+                            ? `<video src="${p.media_url}" controls style="width:100%;max-height:300px;display:block;background:#000;"></video>
+                               <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;">
+                                   ${p.thumbnail_url ? `<img src="${p.thumbnail_url}" style="width:60px;height:40px;object-fit:cover;border-radius:3px;border:1px solid #333;" />` : '<span style="font-family:Orbitron;font-size:0.45rem;color:#ff6b6b;">NO THUMBNAIL</span>'}
+                                   <button id="regenThumb_${p.id}" onclick="window.regenThumbnail('${p.id}','${p.media_url}')" style="background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.4);color:var(--gold);font-family:Orbitron;font-size:0.45rem;padding:4px 10px;border-radius:3px;cursor:pointer;letter-spacing:1px;">REGEN THUMB</button>
+                               </div>`
                             : `<img src="${getOptimizedUrl(p.media_url, 400)}" style="width:100%;object-fit:cover;max-height:300px;display:block;" onerror="this.insertAdjacentHTML('afterend','<div style=\\'color:#ff4444;font-family:Orbitron;font-size:0.55rem;padding:8px;\\'>IMAGE FAILED TO LOAD - Supabase \\'media\\' bucket may not be public</div>');this.remove();" />`
                         }
                         <div style="font-family:monospace;font-size:0.55rem;color:#444;padding:4px 8px;word-break:break-all;">${p.media_url}</div>
@@ -858,6 +862,41 @@ export async function deleteQueenPost(id: string) {
     }
 }
 
+// ─── REGENERATE VIDEO THUMBNAIL ──────────────────────────────────────────────
+
+export async function regenThumbnail(postId: string, videoUrl: string) {
+    const btn = document.getElementById(`regenThumb_${postId}`) as HTMLButtonElement;
+    if (btn) { btn.disabled = true; btn.innerText = 'GENERATING...'; }
+
+    try {
+        const { regenerateThumbnailFromUrl } = await import('./mediaSupabase');
+        const thumbUrl = await regenerateThumbnailFromUrl(videoUrl);
+
+        if (!thumbUrl) {
+            alert('Failed to generate thumbnail — video may have CORS restrictions or be too short.');
+            if (btn) { btn.disabled = false; btn.innerText = 'REGEN THUMB'; }
+            return;
+        }
+
+        const res = await fetch('/api/posts', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: postId, thumbnail_url: thumbUrl })
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (btn) { btn.innerText = 'DONE ✓'; btn.style.color = '#4CAF50'; }
+            setTimeout(() => loadQueenPostsDashboard(), 1500);
+        } else {
+            alert('Save failed: ' + data.error);
+            if (btn) { btn.disabled = false; btn.innerText = 'REGEN THUMB'; }
+        }
+    } catch (err) {
+        alert('Error regenerating thumbnail.');
+        if (btn) { btn.disabled = false; btn.innerText = 'REGEN THUMB'; }
+    }
+}
+
 // ─── TASK REVIEW ACTIONS (CEO) ───────────────────────────────────────────────
 
 export async function reviewTask(submissionId: string, memberId: string) {
@@ -956,6 +995,7 @@ if (typeof window !== 'undefined') {
     (window as any).submitQueenPost = submitQueenPost;
     (window as any).deleteQueenPost = deleteQueenPost;
     (window as any).updateQueenPost = updateQueenPost;
+    (window as any).regenThumbnail = regenThumbnail;
     (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
     (window as any).reviewTask = reviewTask;
     (window as any).approveFromGallery = reviewTask; // alias for backward compat

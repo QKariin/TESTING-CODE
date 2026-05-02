@@ -3164,7 +3164,7 @@ async function _loadMobQueenPosts() {
             let mediaHTML = '';
             if (p.media_url) {
                 if (locked) {
-                    const previewUrl = p.thumbnail_url ? `/api/media?url=${encodeURIComponent(p.thumbnail_url)}` : (!isVideo ? getOptimizedUrl(p.media_url, 600) : null);
+                    const previewUrl = p.thumbnail_url || (!isVideo ? getOptimizedUrl(p.media_url, 600) : null);
                     mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;">
                         ${previewUrl ? `<img src="${previewUrl}" alt="" style="width:100%;display:block;object-fit:cover;max-height:260px;filter:blur(12px) brightness(0.35);transform:scale(1.06);" onerror="this.style.display='none'" />` : `<div style="width:100%;height:180px;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}
                         <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.45);">
@@ -3180,8 +3180,7 @@ async function _loadMobQueenPosts() {
                         </div>
                     </div>`;
                 } else if (isVideo) {
-                    const mobThumbProxy = p.thumbnail_url ? `/api/media?url=${encodeURIComponent(p.thumbnail_url)}` : '';
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');var t=this.querySelector('.vid-thumb');if(t)t.style.display='none';if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');this.onclick=null;this.style.cursor='default';v.play().catch(function(){});}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div>${mobThumbProxy ? `<img src="${mobThumbProxy}" class="vid-thumb" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" />` : ''}<video src="${p.media_url}" playsinline preload="metadata" style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');var t=this.querySelector('.vid-thumb');if(t)t.style.display='none';if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');this.onclick=null;this.style.cursor='default';v.play().catch(function(){});}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div>${p.thumbnail_url ? `<img src="${p.thumbnail_url}" class="vid-thumb" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" />` : ''}<video src="${p.media_url}" playsinline preload="metadata" style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
                 } else {
                     mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
                 }
@@ -5290,16 +5289,15 @@ export async function loadQueenPosts() {
         const heroLocked = !heroPost.userHasAccess;
         const heroIsVideo = heroPost.media_type === 'video';
         const heroHasMedia = heroPost.media_url && !String(heroPost.media_url).startsWith('failed');
-        const heroThumbProxy = heroPost.thumbnail_url ? `/api/media?url=${encodeURIComponent(heroPost.thumbnail_url)}` : '';
         const heroMediaHTML = !heroHasMedia ? `<div class="qk-hero-img-placeholder">👑</div>` :
             heroLocked
-                ? (heroThumbProxy
-                    ? `<img src="${heroThumbProxy}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`
+                ? (heroPost.thumbnail_url
+                    ? `<img src="${heroPost.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`
                     : heroIsVideo
                         ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
                         : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<div style="position:relative;width:100%;height:100%;cursor:pointer;" onclick="window.openQkLightbox('video','${heroPost.media_url}')">${heroThumbProxy ? `<img src="${heroThumbProxy}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : ''}<div class="qk-play-icon qk-play-hero">▶</div></div>`
+                    ? `<div style="position:relative;width:100%;height:100%;cursor:pointer;" onclick="window.openQkLightbox('video','${heroPost.media_url}')">${heroPost.thumbnail_url ? `<img src="${heroPost.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : ''}<div class="qk-play-icon qk-play-hero">▶</div></div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
@@ -5356,16 +5354,15 @@ export async function loadQueenPosts() {
             const liked = p.userHasLiked || false;
             const isVideo = p.media_type === 'video';
             const cardHasMedia = p.media_url && !String(p.media_url).startsWith('failed');
-            const thumbProxy = p.thumbnail_url ? `/api/media?url=${encodeURIComponent(p.thumbnail_url)}` : '';
             const cardMediaHTML = !cardHasMedia ? `<div class="qk-card-img-placeholder">👑</div>` :
                 locked
                     ? (isVideo
-                        ? `<div class="qk-card-img qk-card-media">${thumbProxy ? `<img src="${thumbProxy}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(10px) brightness(0.45);transform:scale(1.05);" />` : `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}</div>`
+                        ? `<div class="qk-card-img qk-card-media">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(10px) brightness(0.45);transform:scale(1.05);" />` : `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`}</div>`
                         : p.thumbnail_url
-                            ? `<div class="qk-card-img qk-card-media qk-blurred"><img src="${thumbProxy}" alt="" /></div>`
+                            ? `<div class="qk-card-img qk-card-media qk-blurred"><img src="${p.thumbnail_url}" alt="" /></div>`
                             : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
                     : isVideo
-                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')">${thumbProxy ? `<img src="${thumbProxy}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : ''}<div class="qk-play-icon">▶</div></div>`
+                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : ''}<div class="qk-play-icon">▶</div></div>`
                         : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">

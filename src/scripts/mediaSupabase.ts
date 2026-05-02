@@ -135,7 +135,54 @@ export async function uploadToSupabase(bucketName: string, folderPath: string, f
 }
 
 /**
- * Extracts a frame from a video file at ~1s, uploads it as a JPEG thumbnail,
+ * Generates a thumbnail from a video URL (for existing posts).
+ * Loads the video, seeks to ~3s, grabs a frame, uploads as JPEG.
+ */
+export async function regenerateThumbnailFromUrl(videoUrl: string): Promise<string | null> {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.crossOrigin = 'anonymous';
+        video.src = videoUrl;
+
+        const timeout = setTimeout(() => { resolve(null); }, 30000);
+
+        const grabFrame = async () => {
+            clearTimeout(timeout);
+            try {
+                const maxW = 800;
+                const w = Math.min(video.videoWidth || 800, maxW);
+                const h = video.videoHeight && video.videoWidth
+                    ? Math.round(w * video.videoHeight / video.videoWidth)
+                    : Math.round(w * 9 / 16);
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { resolve(null); return; }
+                ctx.drawImage(video, 0, 0, w, h);
+                canvas.toBlob(async (blob) => {
+                    if (!blob) { resolve(null); return; }
+                    const thumbFile = new File([blob], 'thumb.jpg', { type: 'image/jpeg' });
+                    const url = await uploadFileDirectly('media', 'queen_posts_thumbs', thumbFile);
+                    resolve(url.startsWith('failed') ? null : url);
+                }, 'image/jpeg', 0.82);
+            } catch { resolve(null); }
+        };
+
+        video.onseeked = grabFrame;
+        video.onloadeddata = () => {
+            const seekTo = Math.min(3, (video.duration || 0) * 0.25);
+            video.currentTime = seekTo > 0 && isFinite(seekTo) ? seekTo : 0;
+        };
+        video.onerror = () => { clearTimeout(timeout); resolve(null); };
+    });
+}
+
+/**
+ * Extracts a frame from a video file at ~3s, uploads it as a JPEG thumbnail,
  * and returns the public URL. Returns null silently on any failure.
  */
 export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<string | null> {
@@ -188,20 +235,16 @@ export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<s
         video.onseeked = grabFrame;
 
         video.onloadeddata = () => {
-            // Seek to 1s, or 10% of duration, whichever is less
-            const seekTo = Math.min(1, (video.duration || 0) * 0.1);
-            if (seekTo > 0 && isFinite(seekTo)) {
-                video.currentTime = seekTo;
-            } else {
-                // Duration unknown - try seeking to 0 and grab immediately
-                video.currentTime = 0;
-            }
+            // Seek to 3s or 25% of duration — avoids black intro frames
+            const seekTo = Math.min(3, (video.duration || 0) * 0.25);
+            video.currentTime = seekTo > 0 && isFinite(seekTo) ? seekTo : 0;
         };
 
         // If onloadeddata never fires, fall back to onloadedmetadata
         video.onloadedmetadata = () => {
-            if (video.readyState >= 2) return; // onloadeddata already handled it
-            video.currentTime = Math.min(1, (video.duration || 0) * 0.1);
+            if (video.readyState >= 2) return;
+            const seekTo = Math.min(3, (video.duration || 0) * 0.25);
+            video.currentTime = seekTo > 0 && isFinite(seekTo) ? seekTo : 0;
         };
 
         video.onerror = () => { clearTimeout(timeout); cleanup(); resolve(null); };

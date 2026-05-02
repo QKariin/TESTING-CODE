@@ -12,6 +12,16 @@ const getAdmin = () => createServerClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Convert thumbnail_url from public URL to a signed URL that browsers can access
+async function signThumbnailUrl(url: string | null): Promise<string | null> {
+    if (!url) return null;
+    const match = url.match(/\/storage\/v1\/object\/(?:public|authenticated)\/([^/?]+)\/([^?]+)/);
+    if (!match) return url;
+    const [, bucket, path] = match;
+    const { data } = await supabaseAdmin.storage.from(bucket).createSignedUrl(decodeURIComponent(path), 3600);
+    return data?.signedUrl || url;
+}
+
 async function fetchAnnotatedPosts(email: string) {
     const { data: posts, error } = await supabaseAdmin
         .from('social_feed')
@@ -22,7 +32,13 @@ async function fetchAnnotatedPosts(email: string) {
     if (error) throw error;
     if (!posts?.length) return [];
 
-    if (!email) return posts.map((p: any) => ({ ...p, userHasAccess: true, userHasLiked: false }));
+    // Sign thumbnail URLs so browsers can access them directly
+    const signedPosts = await Promise.all(posts.map(async (p: any) => ({
+        ...p,
+        thumbnail_url: await signThumbnailUrl(p.thumbnail_url),
+    })));
+
+    if (!email) return signedPosts.map((p: any) => ({ ...p, userHasAccess: true, userHasLiked: false }));
 
     const [profileRes, unlocksRes, likesRes] = await Promise.all([
         supabaseAdmin.from('profiles').select('hierarchy').ilike('member_id', email).maybeSingle(),
@@ -34,7 +50,7 @@ async function fetchAnnotatedPosts(email: string) {
     const unlockedIds = new Set((unlocksRes.data || []).map((r: any) => r.post_id));
     const likedIds    = new Set((likesRes.data  || []).map((r: any) => r.post_id));
 
-    return posts.map((p: any) => ({
+    return signedPosts.map((p: any) => ({
         ...p,
         userHasAccess: rankMeetsRequirement(userRank, p.min_rank || 'Hall Boy') || unlockedIds.has(p.id),
         userHasLiked:  likedIds.has(p.id),
@@ -133,11 +149,16 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
-        const { id, min_rank, price } = await request.json();
+        const { id, min_rank, price, thumbnail_url } = await request.json();
         if (!id) return NextResponse.json({ success: false, error: 'No ID' }, { status: 400 });
 
+        const updateData: any = {};
+        if (min_rank !== undefined) updateData.min_rank = min_rank;
+        if (price !== undefined) updateData.price = price;
+        if (thumbnail_url !== undefined) updateData.thumbnail_url = thumbnail_url;
+
         const admin = getAdmin();
-        const { error } = await admin.from('social_feed').update({ min_rank, price }).eq('id', id);
+        const { error } = await admin.from('social_feed').update(updateData).eq('id', id);
         if (error) throw error;
 
         return NextResponse.json({ success: true });
