@@ -2971,6 +2971,7 @@ function _closeAllMobOverlays(except?: string) {
         if (id === except) return;
         const el = document.getElementById(id);
         if (!el) return;
+        el.querySelectorAll('video').forEach(v => v.pause());
         el.classList.remove('mob-overlay-open');
         el.classList.remove('mob-chat-fullscreen');
         el.style.height = '';
@@ -3179,7 +3180,7 @@ async function _loadMobQueenPosts() {
                         </div>
                     </div>`;
                 } else if (isVideo) {
-                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div><video data-src="${p.media_url}" playsinline preload="none" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
+                    mediaHTML = `<div style="position:relative;width:100%;overflow:hidden;background:#000;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.oncanplay=function(){v.play().catch(function(){});v.oncanplay=null;};}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">▶</div></div><video data-src="${p.media_url}" playsinline preload="none"${p.thumbnail_url ? ` poster="${p.thumbnail_url}"` : ''} style="width:100%;display:block;max-height:340px;object-fit:cover;pointer-events:none;"></video></div>`;
                 } else {
                     mediaHTML = `<img src="${getOptimizedUrl(p.media_url, 600)}" alt="" style="width:100%;display:block;object-fit:cover;max-height:340px;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}else{this.style.display='none';}" />`;
                 }
@@ -3582,7 +3583,7 @@ function _buildMobGlBubble(msg: any): string {
     const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';
     const mediaHtml = msg.media_url
         ? (msg.media_type === 'video'
-            ? `<div style="position:relative;width:100%;background:#000;border-radius:8px;margin-top:8px;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.play();}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;border-radius:8px;"><div style="width:50px;height:50px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">▶</div></div><video data-src="${msg.media_url}" playsinline preload="none" style="width:100%;border-radius:8px;max-height:260px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
+            ? `<div style="position:relative;width:100%;background:#000;border-radius:8px;margin-top:8px;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');v.setAttribute('src',v.dataset.src);v.load();v.oncanplay=function(){v.play().catch(function(){});v.oncanplay=null;};}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;border-radius:8px;"><div style="width:50px;height:50px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">▶</div></div><video data-src="${msg.media_url}" playsinline preload="none" style="width:100%;border-radius:8px;max-height:260px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')" />`)
         : '';
 
@@ -5296,7 +5297,7 @@ export async function loadQueenPosts() {
                         ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
                         : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<video src="${heroPost.media_url}" muted playsinline preload="none" onclick="window.openQkLightbox('video','${heroPost.media_url}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                    ? `<video src="${heroPost.media_url}" muted playsinline preload="metadata"${heroPost.thumbnail_url ? ` poster="${heroPost.thumbnail_url}"` : ''} onclick="window.openQkLightbox('video','${heroPost.media_url}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
@@ -5361,7 +5362,7 @@ export async function loadQueenPosts() {
                             ? `<div class="qk-card-img qk-card-media" style="background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`
                             : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
                     : isVideo
-                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')"><video src="${p.media_url}" muted playsinline preload="none" class="qk-card-video"></video><div class="qk-play-icon">▶</div></div>`
+                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" class="qk-card-video" style="width:100%;height:100%;object-fit:cover;" />` : `<video src="${p.media_url}" muted playsinline preload="metadata" class="qk-card-video"></video>`}<div class="qk-play-icon">▶</div></div>`
                         : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">
@@ -5963,10 +5964,14 @@ export function openQkLightbox(type: 'image' | 'video', src: string) {
     const content = document.getElementById('qkLightboxContent');
     if (!lb || !content) return;
     content.innerHTML = type === 'video'
-        ? `<video src="${src}" controls autoplay playsinline style="max-width:95vw;max-height:88vh;border-radius:4px;"></video>`
+        ? `<video src="${src}" controls playsinline style="max-width:95vw;max-height:88vh;border-radius:4px;"></video>`
         : `<img src="${src}" style="max-width:95vw;max-height:88vh;object-fit:contain;border-radius:4px;" />`;
     lb.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    if (type === 'video') {
+        const vid = content.querySelector('video');
+        if (vid) vid.play().catch(() => {});
+    }
 }
 
 export function closeQkLightbox() {
