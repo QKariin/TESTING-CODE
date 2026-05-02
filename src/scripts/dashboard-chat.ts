@@ -273,6 +273,8 @@ async function pollNewMessages(memberId: string, signal?: AbortSignal) {
         const newMsgs = (data.messages || []).filter((m: any) => {
             const id = m.id ? String(m.id) : null;
             if (id && _renderedMsgIds.has(id)) return false;
+            const dk = `${(m.sender_email || '')}::${(m.content || '').slice(0, 80)}::${m.created_at || ''}`;
+            if (dk.length > 10 && _renderedMsgIds.has(dk)) return false;
             return true;
         });
         newMsgs.forEach((m: any) => appendChatMessage(m));
@@ -332,7 +334,11 @@ async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, 
         if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
         // Populate dedup set from ALL messages so realtime doesn't re-add them
-        msgs.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+        msgs.forEach((m: any) => {
+            if (m.id) _renderedMsgIds.add(String(m.id));
+            const dk = `${(m.sender_email || '')}::${(m.content || '').slice(0, 80)}::${m.created_at || ''}`;
+            if (dk.length > 10) _renderedMsgIds.add(dk);
+        });
 
         const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
         const b = document.getElementById('adminChatBox');
@@ -388,6 +394,11 @@ export function appendChatMessage(msg: any) {
     const msgId = msg.id ? String(msg.id) : null;
     if (msgId && _renderedMsgIds.has(msgId)) return;
     if (msgId) _renderedMsgIds.add(msgId);
+    // Fallback dedup by content+sender+timestamp — catches duplicates when id is
+    // missing or differs between API response and realtime payload
+    const _dedupKey = `${(msg.sender_email || '')}::${(msg.content || '').slice(0, 80)}::${msg.created_at || ''}`;
+    if (_dedupKey.length > 10 && _renderedMsgIds.has(_dedupKey)) return;
+    if (_dedupKey.length > 10) _renderedMsgIds.add(_dedupKey);
     lastChatMsgId = msg.id;
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 
