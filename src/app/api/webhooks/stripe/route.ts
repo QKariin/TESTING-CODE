@@ -77,8 +77,8 @@ export async function POST(req: Request) {
                         name: userName,
                         hierarchy: 'Hall Boy',
                         score: 0,
-                        wallet: 5000,
-                        parameters: { devotion: 100 }
+                        wallet: 1111,
+                        parameters: { devotion: 100, promo72h: true }
                     });
 
                 // Create tasks row so task assignment works immediately
