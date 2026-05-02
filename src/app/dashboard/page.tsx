@@ -301,12 +301,28 @@ function LeadsInlinePanel() {
     const [adding, setAdding] = useState<string | null>(null);
     const [manualEmail, setManualEmail] = useState('');
     const [addingManual, setAddingManual] = useState(false);
+    const [syncing, setSyncing] = useState(false);
+    const [syncMsg, setSyncMsg] = useState('');
 
     useEffect(() => {
         fetch('/api/leads').then(r => r.json()).then(d => {
             if (d.success) setLeads(d.leads);
         }).catch(() => {}).finally(() => setLoading(false));
+        // Auto-sync leads to OneSignal on load
+        fetch('/api/push/sync-leads', { method: 'POST' }).then(r => r.json()).then(d => {
+            if (d.synced > 0) setSyncMsg(`${d.synced} synced`);
+        }).catch(() => {});
     }, []);
+
+    const syncLeads = async () => {
+        setSyncing(true); setSyncMsg('');
+        try {
+            const res = await fetch('/api/push/sync-leads', { method: 'POST' });
+            const d = await res.json();
+            setSyncMsg(d.error ? 'Error' : `${d.synced}/${d.total} synced`);
+        } catch { setSyncMsg('Error'); }
+        setSyncing(false);
+    };
 
     const addSub = async (email: string) => {
         setAdding(email);
@@ -342,7 +358,11 @@ function LeadsInlinePanel() {
                     <div style={{ width: 3, height: 12, background: 'rgba(255,80,80,0.7)', borderRadius: 2 }} />
                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '2px' }}>KNOCKING AT THE GATE</div>
                 </div>
-                <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {syncMsg && <span style={{ fontFamily: 'Orbitron', fontSize: '0.28rem', color: '#4ade80', letterSpacing: '1px' }}>{syncMsg}</span>}
+                    <button onClick={syncLeads} disabled={syncing} style={{ background: 'rgba(139,0,0,0.1)', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 3, color: '#8b0000', fontFamily: 'Orbitron', fontSize: '0.28rem', padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', opacity: syncing ? 0.5 : 1 }}>{syncing ? '...' : 'SYNC'}</button>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length}</div>
+                </div>
             </div>
             {/* Manual add */}
             <div style={{ display: 'flex', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
