@@ -205,9 +205,9 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const loadPosts = useCallback(async () => {
         try {
-            const supabase = createClient();
-            const { data } = await supabase.from('queen_posts').select('*').order('created_at', { ascending: false }).limit(30);
-            setPosts(data || []);
+            const res = await fetch('/api/posts');
+            const data = await res.json();
+            setPosts(data.success && data.posts ? data.posts : []);
         } catch { setPosts([]); }
     }, []);
 
@@ -2560,29 +2560,33 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
         if (!body.trim()) return;
         setSubmitting(true);
         let mediaUrl: string | null = null;
+        let thumbnailUrl: string | null = null;
 
         try {
-            // Upload image if present
+            let media_type = 'text';
+            // Upload media if present
             if (imageFile) {
-                setUploadProgress('Uploading image...');
-                const path = `queen_posts/${Date.now()}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                const signRes = await fetch('/api/upload/signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bucket: 'media', path }) });
-                const signData = await signRes.json();
-                if (signData.signedUrl) {
-                    await fetch(signData.signedUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } });
-                    mediaUrl = signData.publicUrl;
+                setUploadProgress('Uploading...');
+                const { uploadToSupabase, isVideo: checkIsVideo, extractAndUploadVideoThumbnail } = await import('@/scripts/mediaSupabase');
+                const fileIsVideo = checkIsVideo(imageFile);
+                media_type = fileIsVideo ? 'video' : 'image';
+                const url = await uploadToSupabase('media', 'queen_posts', imageFile);
+                if (url.startsWith('failed')) throw new Error('Upload failed');
+                mediaUrl = url;
+                if (fileIsVideo) {
+                    setUploadProgress('Generating thumbnail...');
+                    thumbnailUrl = await extractAndUploadVideoThumbnail(imageFile);
                 }
                 setUploadProgress('');
             }
 
-            const supabase = createClient();
-            await supabase.from('queen_posts').insert({
-                title: title.trim() || null,
-                body: body.trim(),
-                media_url: mediaUrl,
-                created_at: new Date().toISOString(),
-                author: userEmail,
+            const res = await fetch('/api/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title.trim() || null, content: body.trim(), media_url: mediaUrl, thumbnail_url: thumbnailUrl, media_type }),
             });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
             setTitle(''); setBody(''); setImageFile(null); setImagePreview(null);
             await onPostCreated();
         } catch (e) { console.error(e); }
@@ -2626,7 +2630,7 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
             ) : posts.map((post: any) => (
                 <div key={post.id} style={{ background: 'rgba(12,12,12,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px' }}>
                     {post.title && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.95rem', color: '#c5a059', marginBottom: 8 }}>{post.title}</div>}
-                    <div style={{ fontSize: '0.9rem', color: '#bbb', lineHeight: 1.7 }}>{post.body}</div>
+                    <div style={{ fontSize: '0.9rem', color: '#bbb', lineHeight: 1.7 }}>{post.content || post.body}</div>
                     {post.media_url && (
                         post.media_url.match(/\.(mp4|mov|webm)/i)
                             ? <video src={post.media_url} controls playsInline style={{ width: '100%', borderRadius: 8, marginTop: 10, maxHeight: 220 }} />
