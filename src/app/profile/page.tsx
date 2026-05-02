@@ -1369,20 +1369,21 @@ export default function ProfilePage() {
                             <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, width: '100%' }}>
                                 {([
-                                    { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR' },
-                                    { amount: '70,000', price: '€500', coins: 70000, badge: 'BEST VALUE' },
-                                    { amount: '30,000', price: '€250', coins: 30000, badge: null },
-                                    { amount: '12,000', price: '€100', coins: 12000, badge: null },
-                                    { amount: '5,500', price: '€50', coins: 5500, badge: null },
-                                ] as { amount: string, price: string, coins: number, badge: string | null }[]).map(pkg => (
+                                    { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR', promo: false },
+                                    { amount: '70,000', price: '€500', coins: 70000, badge: 'BEST VALUE', promo: false },
+                                    { amount: '30,000', price: '€250', coins: 30000, badge: null, promo: false },
+                                    { amount: '12,000', price: '€100', coins: 12000, badge: null, promo: false },
+                                    { amount: '5,500', price: '€50', coins: 5500, badge: null, promo: false },
+                                    { amount: '1,111', price: '€29', coins: 1111, badge: '72H PROMO', promo: true },
+                                ] as { amount: string, price: string, coins: number, badge: string | null, promo: boolean }[]).map(pkg => (
                                     <div key={pkg.coins} onClick={() => (window as any).buyRealCoins(pkg.coins)}
                                         style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.25s ease', width: 320, flexShrink: 0 }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}>
-                                        <div style={{ width: '100%', paddingBottom: '120%', background: 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block' }} />
+                                        <div style={{ width: '100%', paddingBottom: '120%', background: pkg.promo ? 'linear-gradient(160deg,#1a0820,#0d040a)' : 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block', border: pkg.promo ? '1px solid rgba(220,50,80,0.4)' : undefined, borderRadius: pkg.promo ? 4 : undefined }} />
                                         <div style={{ position: 'absolute', top: '16%', left: '18%', right: '18%', bottom: '20%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                                             {pkg.badge && (
-                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: pkg.promo ? '#e03050' : '#c8960c', letterSpacing: 2, border: `1px solid ${pkg.promo ? '#e03050' : '#c8960c'}`, padding: '2px 6px', borderRadius: 2, animation: pkg.promo ? 'pulse 2s infinite' : undefined }}>{pkg.badge}</div>
                                             )}
                                             <i className="fas fa-coins" style={{ fontSize: '1.6rem', color: '#c5a059', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))' }}></i>
                                             <div style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 1, textShadow: '0 3px 12px rgba(0,0,0,1)', lineHeight: 1 }}>{pkg.amount}</div>
@@ -1682,6 +1683,11 @@ export default function ProfilePage() {
                                 <div className="lobby-title">EXCHEQUER</div>
                             </div>
                             <div className="coin-grid">
+                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(1111)} style={{ border: '1px solid rgba(220,50,80,0.5)', background: 'linear-gradient(135deg,rgba(220,50,80,0.08),rgba(0,0,0,0.3))', gridColumn: '1 / -1' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#e03050', letterSpacing: '2px', marginBottom: 2 }}>72H PROMO</div>
+                                    <div className="coin-amount" style={{ color: '#fff' }}>1,111</div>
+                                    <div className="coin-price" style={{ color: '#e03050' }}>€29.00</div>
+                                </div>
                                 <div className="coin-tile" onClick={() => (window as any).buyRealCoins(1000)}>
                                     <div className="coin-amount">1,000</div>
                                     <div className="coin-price">€10.00</div>

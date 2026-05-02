@@ -484,8 +484,7 @@ export async function updateProfileAction(memberId: string, data: any) {
         if (!profile) return { success: false, error: "User not found" };
 
         let cost = 0;
-        if (data.name) cost += 100;
-        if (data.photo) cost += 200;
+        // Name change and photo upload are free
         if (data.limits && Array.isArray(data.limits)) cost += (data.limits.length * 200);
         if (data.kinks && Array.isArray(data.kinks)) cost += (data.kinks.length * 100);
 
