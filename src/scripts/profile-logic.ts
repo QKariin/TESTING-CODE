@@ -3136,7 +3136,7 @@ export function closeMobQueenWall() {
     const el = document.getElementById('mobQueenWallOverlay');
     if (!el) return;
     // Pause all playing videos before hiding
-    el.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); });
+    el.querySelectorAll('video').forEach(v => v.pause());
     el.classList.remove('mob-overlay-open');
     setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     _setNavActive('profile');
@@ -5298,7 +5298,7 @@ export async function loadQueenPosts() {
                         ? `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#18120a 0%,#0a0808 55%,#060606 100%);"></div>`
                         : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="" style="width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(0.25);pointer-events:none;" />`)
                 : heroIsVideo
-                    ? `<video src="${heroPost.media_url}" muted playsinline preload="metadata"${heroPost.thumbnail_url ? ` poster="${heroPost.thumbnail_url}"` : ''} onclick="window.openQkLightbox('video','${heroPost.media_url}')" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}" style="width:100%;height:100%;object-fit:cover;cursor:pointer;"></video><div class="qk-play-icon qk-play-hero">▶</div>`
+                    ? `<div style="position:relative;width:100%;height:100%;cursor:pointer;" onclick="var v=this.querySelector('video');var t=this.querySelector('.hero-vid-thumb');if(t)t.style.display='none';this.querySelector('.qk-play-hero').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');this.onclick=null;this.style.cursor='default';v.play().catch(function(){});window.openQkLightbox('video','${heroPost.media_url}');">${heroPost.thumbnail_url ? `<img src="${heroPost.thumbnail_url}" class="hero-vid-thumb" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" />` : ''}<video src="${heroPost.media_url}" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;pointer-events:none;"></video><div class="qk-play-icon qk-play-hero" style="z-index:2;">▶</div></div>`
                     : `<img src="${getOptimizedUrl(heroPost.media_url, 800)}" alt="${heroPost.title || 'Queen Karin'}" onclick="window.openQkLightbox('image','${getOptimizedUrl(heroPost.media_url, 1200)}')" style="width:100%;height:100%;object-fit:cover;object-position:center top;cursor:pointer;" />`;
         const heroHTML = `
         <div class="qk-hero">
@@ -5363,7 +5363,7 @@ export async function loadQueenPosts() {
                             ? `<div class="qk-card-img qk-card-media" style="background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);"></div>`
                             : `<div class="qk-card-img qk-card-media qk-blurred"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="" /></div>`)
                     : isVideo
-                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" class="qk-card-video" style="width:100%;height:100%;object-fit:cover;" />` : `<video src="${p.media_url}" muted playsinline preload="metadata" class="qk-card-video"></video>`}<div class="qk-play-icon">▶</div></div>`
+                        ? `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('video','${p.media_url}')">${p.thumbnail_url ? `<img src="${p.thumbnail_url}" alt="" class="qk-card-video" style="width:100%;height:100%;object-fit:cover;" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent('${p.thumbnail_url}');}else{this.style.display='none';}" />` : `<video src="${p.media_url}" muted playsinline preload="auto" class="qk-card-video"></video>`}<div class="qk-play-icon">▶</div></div>`
                         : `<div class="qk-card-img qk-card-media" onclick="window.openQkLightbox('image','${getOptimizedUrl(p.media_url, 1200)}')"><img src="${getOptimizedUrl(p.media_url, 400)}" alt="${p.title || ''}" /></div>`;
             return `
                     <div class="qk-card${locked ? ' qk-card-locked' : ''}">
