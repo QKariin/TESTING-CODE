@@ -93,6 +93,10 @@ import {
     closeProfileGifPicker,
     _openMobPostDetail,
     _closeMobPostDetail,
+    _openMobCreatePost,
+    _closeMobCreatePost,
+    _onMobCreatePostFile,
+    _submitMobPost,
 } from '@/scripts/profile-logic';
 
 
@@ -295,6 +299,10 @@ export default function ProfilePage() {
             (window as any).closeProfileGifPicker = closeProfileGifPicker;
             (window as any)._openMobPostDetail = _openMobPostDetail;
             (window as any)._closeMobPostDetail = _closeMobPostDetail;
+            (window as any)._openMobCreatePost = _openMobCreatePost;
+            (window as any)._closeMobCreatePost = _closeMobCreatePost;
+            (window as any)._onMobCreatePostFile = _onMobCreatePostFile;
+            (window as any)._submitMobPost = _submitMobPost;
             // mobGlGifPicker window assignments are handled in profile-logic.ts
         }
 

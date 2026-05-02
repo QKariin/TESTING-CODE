@@ -3171,28 +3171,163 @@ async function _loadMobQueenPosts() {
     }
 }
 
+function _isCeoUser(): boolean {
+    const email = (getState().email || getState().memberId || '').toLowerCase();
+    return email === 'ceo@qkarin.com' || email === 'queen@qkarin.com';
+}
+
 function _renderMobQueenGrid(container: HTMLElement) {
     const posts = _mobQueenPosts;
+
+    // CEO gets a header bar with "QUEENS DISPATCH" button
+    const ceoBar = _isCeoUser()
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(197,160,89,0.12);">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <img src="/queen-nav.png" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);" />
+                <span style="font-family:Orbitron;font-size:0.4rem;color:rgba(255,255,255,0.5);letter-spacing:2px;">YOUR FEED</span>
+            </div>
+            <button onclick="window._openMobCreatePost()" style="display:flex;align-items:center;gap:6px;background:none;border:1px solid rgba(197,160,89,0.4);padding:7px 14px;border-radius:2px;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span style="font-family:Orbitron;font-size:0.35rem;color:#c5a059;letter-spacing:2px;">QUEENS DISPATCH</span>
+            </button>
+        </div>`
+        : '';
+
     const cells = posts.map((p: any, i: number) => {
         const locked = !p.userHasAccess;
-        const isVideo = p.media_type === 'video';
+        const isVid = p.media_type === 'video';
         const hasMedia = p.media_url && !String(p.media_url).startsWith('failed');
-        const thumbSrc = p.thumbnail_url || (!isVideo && hasMedia ? getOptimizedUrl(p.media_url, 400) : '');
+        const thumbSrc = p.thumbnail_url || (!isVid && hasMedia ? getOptimizedUrl(p.media_url, 400) : '');
 
         const imgHtml = thumbSrc
             ? `<img src="${thumbSrc}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;${locked ? 'filter:blur(8px) brightness(0.3);transform:scale(1.08);' : ''}" onerror="this.style.display='none'" />`
-            : hasMedia && !isVideo
+            : hasMedia && !isVid
                 ? `<img src="${getOptimizedUrl(p.media_url, 400)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;${locked ? 'filter:blur(8px) brightness(0.3);transform:scale(1.08);' : ''}" onerror="this.style.display='none'" />`
                 : `<div style="width:100%;height:100%;background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(197,160,89,0.3);">👑</div>`;
 
-        const videoIcon = isVideo && !locked ? `<div style="position:absolute;top:8px;right:8px;z-index:2;"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" opacity="0.9"><polygon points="9.5,7 9.5,17 18,12"/><rect x="4" y="6" width="2" height="12" rx="1" fill="white"/></svg></div>` : '';
+        const videoIcon = isVid && !locked ? `<div style="position:absolute;top:8px;right:8px;z-index:2;"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" opacity="0.9"><polygon points="9.5,7 9.5,17 18,12"/><rect x="4" y="6" width="2" height="12" rx="1" fill="white"/></svg></div>` : '';
 
         const lockOverlay = locked ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke-linecap="round"/></svg></div>` : '';
 
         return `<div class="qw-grid-cell" onclick="window._openMobPostDetail(${i})" style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;background:#080808;">${imgHtml}${videoIcon}${lockOverlay}</div>`;
     }).join('');
 
-    container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">${cells}</div>`;
+    container.innerHTML = `${ceoBar}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">${cells}</div>`;
+}
+
+// ── Mobile Create Post ───────────────────────────────────────────────────────
+let _mobCreatePostFile: File | null = null;
+
+export function _openMobCreatePost() {
+    const panel = document.getElementById('mobQwPanel_wall');
+    if (!panel) return;
+    document.getElementById('mobCreatePostView')?.remove();
+
+    const html = `<div id="mobCreatePostView" style="position:absolute;inset:0;z-index:10;background:#060606;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="display:flex;align-items:center;padding:12px 14px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <button onclick="window._closeMobCreatePost()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.7);font-size:1.4rem;padding:4px 8px;margin-right:10px;">&#8592;</button>
+            <div style="flex:1;font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.8);letter-spacing:3px;">NEW POST</div>
+            <button id="mobCreatePostSubmitBtn" onclick="window._submitMobPost()" style="background:#c5a059;color:#000;border:none;font-family:Orbitron;font-size:0.4rem;letter-spacing:2px;padding:8px 16px;border-radius:2px;cursor:pointer;font-weight:700;">POST</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px 14px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
+            <div id="mobCreatePostPreview" style="width:100%;min-height:200px;background:#0a0a0a;border:1px dashed rgba(197,160,89,0.3);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;overflow:hidden;" onclick="document.getElementById('mobCreatePostFileInput').click()">
+                <div id="mobCreatePostPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.4)" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                    <span style="font-family:Orbitron;font-size:0.4rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">TAP TO ADD PHOTO / VIDEO</span>
+                </div>
+            </div>
+            <input type="file" id="mobCreatePostFileInput" accept="image/*,video/*" style="display:none" onchange="window._onMobCreatePostFile(this)" />
+            <input id="mobCreatePostTitle" type="text" placeholder="Title (optional)" style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(197,160,89,0.15);color:#c5a059;font-family:Cinzel,serif;font-size:1rem;padding:10px 0;margin-bottom:12px;outline:none;" />
+            <textarea id="mobCreatePostContent" placeholder="Write a caption..." rows="3" style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(197,160,89,0.15);color:rgba(255,255,255,0.8);font-family:Rajdhani,sans-serif;font-size:0.9rem;padding:10px 0;margin-bottom:16px;outline:none;resize:none;line-height:1.5;"></textarea>
+            <div id="mobCreatePostStatus" style="font-family:Orbitron;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:1.5px;text-align:center;"></div>
+        </div>
+    </div>`;
+
+    panel.insertAdjacentHTML('beforeend', html);
+    _mobCreatePostFile = null;
+}
+
+export function _closeMobCreatePost() {
+    _mobCreatePostFile = null;
+    document.getElementById('mobCreatePostView')?.remove();
+}
+
+export function _onMobCreatePostFile(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    if (!file) return;
+    _mobCreatePostFile = file;
+
+    const preview = document.getElementById('mobCreatePostPreview');
+    if (!preview) return;
+
+    const placeholder = document.getElementById('mobCreatePostPlaceholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // Show preview
+    if (isVideo(file)) {
+        const url = URL.createObjectURL(file);
+        preview.innerHTML = `<video src="${url}" playsinline muted style="width:100%;max-height:400px;object-fit:cover;display:block;" onloadeddata="this.currentTime=1"></video>`;
+    } else {
+        const url = URL.createObjectURL(file);
+        preview.innerHTML = `<img src="${url}" style="width:100%;max-height:400px;object-fit:cover;display:block;" />`;
+    }
+}
+
+export async function _submitMobPost() {
+    const title = (document.getElementById('mobCreatePostTitle') as HTMLInputElement)?.value?.trim() || '';
+    const content = (document.getElementById('mobCreatePostContent') as HTMLTextAreaElement)?.value?.trim() || '';
+    const status = document.getElementById('mobCreatePostStatus');
+    const btn = document.getElementById('mobCreatePostSubmitBtn') as HTMLButtonElement;
+
+    if (!title && !content && !_mobCreatePostFile) {
+        if (status) status.textContent = 'ADD A PHOTO OR WRITE SOMETHING';
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'POSTING...'; btn.style.opacity = '0.5'; }
+    if (status) status.textContent = _mobCreatePostFile ? 'UPLOADING MEDIA...' : 'CREATING POST...';
+
+    try {
+        let media_url: string | null = null;
+        let thumbnail_url: string | null = null;
+        let media_type = 'text';
+
+        if (_mobCreatePostFile) {
+            const file = _mobCreatePostFile;
+            const fileIsVideo = isVideo(file);
+            media_type = fileIsVideo ? 'video' : 'image';
+
+            if (status) status.textContent = 'UPLOADING...';
+            const url = await uploadToSupabase('media', 'queen_posts', file);
+            if (url.startsWith('failed')) throw new Error('Upload failed — ' + url);
+            media_url = url;
+
+            // Generate thumbnail for videos
+            if (fileIsVideo) {
+                if (status) status.textContent = 'GENERATING THUMBNAIL...';
+                thumbnail_url = await extractAndUploadVideoThumbnail(file);
+            }
+        }
+
+        if (status) status.textContent = 'SAVING POST...';
+        const res = await fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title || null, content: content || null, media_url, thumbnail_url, media_type }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to create post');
+
+        // Close form, clear cache, and reload grid
+        _closeMobCreatePost();
+        const container = document.getElementById('mobQWallContent');
+        if (container) container.innerHTML = '';
+        _mobQueenPosts = [];
+        _loadMobQueenPosts();
+    } catch (err: any) {
+        if (status) status.textContent = err.message?.includes('VIDEO_TOO_LONG') ? err.message.split(':').pop() : 'FAILED: ' + (err.message || 'UNKNOWN ERROR');
+        if (btn) { btn.disabled = false; btn.textContent = 'POST'; btn.style.opacity = '1'; }
+    }
 }
 
 function _buildMobPostDetailHtml(startIndex: number): string {
