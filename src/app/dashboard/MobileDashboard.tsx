@@ -2537,8 +2537,10 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     );
 }
 
-// ─── POSTS VIEW ───────────────────────────────────────────────────────────────
+// ─── POSTS VIEW (Instagram-style) ─────────────────────────────────────────────
 function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCreated: () => void; userEmail: string }) {
+    const [view, setView] = useState<'grid' | 'detail' | 'compose'>('grid');
+    const [detailIndex, setDetailIndex] = useState(0);
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -2557,14 +2559,13 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
     };
 
     const submitPost = async () => {
-        if (!body.trim()) return;
+        if (!body.trim() && !imageFile) return;
         setSubmitting(true);
         let mediaUrl: string | null = null;
         let thumbnailUrl: string | null = null;
 
         try {
             let media_type = 'text';
-            // Upload media if present
             if (imageFile) {
                 setUploadProgress('Uploading...');
                 const { uploadToSupabase, isVideo: checkIsVideo, extractAndUploadVideoThumbnail } = await import('@/scripts/mediaSupabase');
@@ -2583,64 +2584,148 @@ function PostsView({ posts, onPostCreated, userEmail }: { posts: any[]; onPostCr
             const res = await fetch('/api/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: title.trim() || null, content: body.trim(), media_url: mediaUrl, thumbnail_url: thumbnailUrl, media_type }),
+                body: JSON.stringify({ title: title.trim() || null, content: body.trim() || null, media_url: mediaUrl, thumbnail_url: thumbnailUrl, media_type }),
             });
             const result = await res.json();
             if (!result.success) throw new Error(result.error);
             setTitle(''); setBody(''); setImageFile(null); setImagePreview(null);
+            setView('grid');
             await onPostCreated();
         } catch (e) { console.error(e); }
         setSubmitting(false);
     };
 
-    const inp: React.CSSProperties = { background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', padding: '10px 14px', outline: 'none', width: '100%' };
+    const getThumbSrc = (post: any) => {
+        if (post.thumbnail_url) return post.thumbnail_url;
+        if (post.media_type !== 'video' && post.media_url && !String(post.media_url).startsWith('failed')) return post.media_url;
+        return '';
+    };
 
-    return (
-        <div style={S.scroll}>
-            {/* Compose */}
-            <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '18px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.86rem', color: '#c5a059', letterSpacing: '4px', marginBottom: 2 }}>QUEEN'S DISPATCH</div>
-                <input type="text" placeholder="Title (optional)" value={title} onChange={e => setTitle(e.target.value)} style={inp} />
-                <textarea placeholder="Write your decree..." value={body} onChange={e => setBody(e.target.value)} rows={4}
-                    style={{ ...inp, resize: 'none', lineHeight: 1.6 } as React.CSSProperties} />
-
-                {/* Image upload */}
-                <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleImagePick} style={{ display: 'none' }} />
-                {imagePreview ? (
-                    <div style={{ position: 'relative', width: '100%' }}>
-                        <img src={imagePreview} style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.2)' }} alt="" />
-                        <button onClick={() => { setImageFile(null); setImagePreview(null); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.8)', border: '1px solid #333', borderRadius: '50%', width: 28, height: 28, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.86rem' }}>✕</button>
-                    </div>
-                ) : (
-                    <button onClick={() => fileInputRef.current?.click()} style={{ width: '100%', padding: '10px', background: 'rgba(197,160,89,0.03)', border: '1px dashed rgba(197,160,89,0.15)', borderRadius: 8, color: '#555', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', letterSpacing: '2px', cursor: 'pointer' }}>
-                        + ADD PHOTO / VIDEO
+    // ── COMPOSE VIEW ──
+    if (view === 'compose') {
+        const inp: React.CSSProperties = { background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 0, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', padding: '10px 14px', outline: 'none', width: '100%', boxSizing: 'border-box' };
+        return (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#060606' }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                    <button onClick={() => setView('grid')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontSize: '1.4rem', padding: '4px 8px', marginRight: 10 }}>&larr;</button>
+                    <div style={{ flex: 1, fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.8)', letterSpacing: '3px' }}>QUEENS DISPATCH</div>
+                    <button onClick={submitPost} disabled={submitting || (!body.trim() && !imageFile)}
+                        style={{ background: (!submitting && (body.trim() || imageFile)) ? '#c5a059' : '#1a1a1a', color: (!submitting && (body.trim() || imageFile)) ? '#000' : '#444', border: 'none', fontFamily: 'Orbitron', fontSize: '0.4rem', letterSpacing: '2px', padding: '8px 16px', borderRadius: 2, cursor: 'pointer', fontWeight: 700 }}>
+                        {submitting ? 'POSTING...' : 'POST'}
                     </button>
-                )}
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px' }}>
+                    <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleImagePick} style={{ display: 'none' }} />
+                    {imagePreview ? (
+                        <div style={{ position: 'relative', width: '100%', marginBottom: 16 }}>
+                            <img src={imagePreview} style={{ width: '100%', maxHeight: 400, objectFit: 'cover', display: 'block' }} alt="" />
+                            <button onClick={() => { setImageFile(null); setImagePreview(null); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.8)', border: '1px solid #333', borderRadius: '50%', width: 28, height: 28, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.86rem' }}>✕</button>
+                        </div>
+                    ) : (
+                        <div onClick={() => fileInputRef.current?.click()} style={{ width: '100%', minHeight: 200, background: '#0a0a0a', border: '1px dashed rgba(197,160,89,0.3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: 16 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.4)" strokeWidth={1.2}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px' }}>TAP TO ADD PHOTO / VIDEO</span>
+                            </div>
+                        </div>
+                    )}
+                    <input type="text" placeholder="Title (optional)" value={title} onChange={e => setTitle(e.target.value)}
+                        style={{ ...inp, borderBottom: '1px solid rgba(197,160,89,0.15)', color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '1rem', padding: '10px 0', marginBottom: 12 }} />
+                    <textarea placeholder="Write a caption..." value={body} onChange={e => setBody(e.target.value)} rows={3}
+                        style={{ ...inp, borderBottom: '1px solid rgba(197,160,89,0.15)', color: 'rgba(255,255,255,0.8)', padding: '10px 0', resize: 'none', lineHeight: 1.5, marginBottom: 16 } as React.CSSProperties} />
+                    {uploadProgress && <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', textAlign: 'center', letterSpacing: '1.5px' }}>{uploadProgress}</div>}
+                </div>
+            </div>
+        );
+    }
 
-                {uploadProgress && <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.90rem', color: '#c5a059', textAlign: 'center', letterSpacing: '1px' }}>{uploadProgress}</div>}
+    // ── DETAIL VIEW (scrollable feed from tapped post) ──
+    if (view === 'detail') {
+        return (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#060606' }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                    <button onClick={() => setView('grid')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontSize: '1.4rem', padding: '4px 8px', marginRight: 10 }}>&larr;</button>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.8)', letterSpacing: '3px' }}>POSTS</div>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
+                    {posts.slice(detailIndex).map((post: any) => {
+                        const isVid = post.media_type === 'video';
+                        const d = new Date(post.created_at || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+                        return (
+                            <div key={post.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 16, marginBottom: 16 }}>
+                                {/* Header */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px' }}>
+                                    <img src="/queen-nav.png" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="" />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: '#c5a059', letterSpacing: '2px' }}>QUEEN KARIN</div>
+                                        <div style={{ fontFamily: 'Rajdhani', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>{d}</div>
+                                    </div>
+                                </div>
+                                {/* Media */}
+                                {post.media_url && !String(post.media_url).startsWith('failed') && (
+                                    isVid ? (
+                                        <video src={post.media_url} controls playsInline preload="metadata" style={{ width: '100%', display: 'block', objectFit: 'cover' }} poster={post.thumbnail_url || undefined} />
+                                    ) : (
+                                        <img src={post.media_url} style={{ width: '100%', display: 'block', objectFit: 'cover' }} alt="" />
+                                    )
+                                )}
+                                {/* Text */}
+                                <div style={{ padding: '10px 14px 0' }}>
+                                    {post.title && <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: '#c5a059', marginBottom: 4 }}>{post.title}</div>}
+                                    {(post.content || post.body) && <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{post.content || post.body}</div>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
 
-                <button onClick={submitPost} disabled={submitting || !body.trim()}
-                    style={{ background: !submitting && body.trim() ? '#c5a059' : '#1a1a1a', color: !submitting && body.trim() ? '#000' : '#444', border: 'none', borderRadius: 8, fontFamily: 'Orbitron,sans-serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', padding: '14px', cursor: !submitting && body.trim() ? 'pointer' : 'default' }}>
-                    {submitting ? 'PUBLISHING...' : 'PUBLISH DECREE'}
+    // ── GRID VIEW (Instagram-style) ──
+    return (
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#060606' }}>
+            {/* Header with create button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img src="/queen-nav.png" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="" />
+                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>YOUR FEED</span>
+                </div>
+                <button onClick={() => setView('compose')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid rgba(197,160,89,0.4)', padding: '7px 14px', borderRadius: 2, cursor: 'pointer' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#c5a059', letterSpacing: '2px' }}>QUEENS DISPATCH</span>
                 </button>
             </div>
-
-            {posts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', color: '#1e1e1e', letterSpacing: '2px' }}>NO POSTS YET</div>
-            ) : posts.map((post: any) => (
-                <div key={post.id} style={{ background: 'rgba(12,12,12,0.95)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 10, padding: '16px' }}>
-                    {post.title && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.95rem', color: '#c5a059', marginBottom: 8 }}>{post.title}</div>}
-                    <div style={{ fontSize: '0.9rem', color: '#bbb', lineHeight: 1.7 }}>{post.content || post.body}</div>
-                    {post.media_url && (
-                        post.media_url.match(/\.(mp4|mov|webm)/i)
-                            ? <video src={post.media_url} controls playsInline style={{ width: '100%', borderRadius: 8, marginTop: 10, maxHeight: 220 }} />
-                            : <img src={post.media_url} style={{ width: '100%', borderRadius: 8, marginTop: 10, objectFit: 'cover', maxHeight: 220 }} alt="" />
-                    )}
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#2a2a2a', letterSpacing: '1.5px', marginTop: 12 }}>
-                        {post.created_at ? new Date(post.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+            {/* Grid */}
+            <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
+                {posts.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#333', letterSpacing: '3px' }}>NO TRANSMISSIONS YET</div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+                        {posts.map((post: any, i: number) => {
+                            const thumb = getThumbSrc(post);
+                            const isVid = post.media_type === 'video';
+                            return (
+                                <div key={post.id} onClick={() => { setDetailIndex(i); setView('detail'); }}
+                                    style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', cursor: 'pointer', background: '#080808' }}>
+                                    {thumb ? (
+                                        <img src={thumb} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                    ) : (
+                                        <div style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at center,#15100a 0%,#080808 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <span style={{ fontSize: '1.5rem', color: 'rgba(197,160,89,0.3)' }}>👑</span>
+                                        </div>
+                                    )}
+                                    {isVid && (
+                                        <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="white" opacity={0.9}><polygon points="9.5,7 9.5,17 18,12"/><rect x="4" y="6" width="2" height="12" rx="1" fill="white"/></svg>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
-                </div>
-            ))}
+                )}
+            </div>
         </div>
     );
 }
