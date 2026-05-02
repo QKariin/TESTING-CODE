@@ -40,6 +40,30 @@ export async function POST(req: Request) {
                 result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl);
                 // Bust routine cache so next poll gets fresh uploadedToday status
                 if (payload.isRoutine) cacheDelete(`routine:`);
+
+                // Push notification to admin
+                try {
+                    const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+                    const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
+                    if (ONESIGNAL_KEY) {
+                        const profile = await DbService.getProfile(memberId);
+                        const name = profile?.name || 'A subject';
+                        const label = payload.isRoutine ? 'Daily Routine' : 'Task';
+                        fetch('https://api.onesignal.com/notifications', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${ONESIGNAL_KEY}` },
+                            body: JSON.stringify({
+                                app_id: ONESIGNAL_APP_ID,
+                                target_channel: 'push',
+                                include_aliases: { external_id: ['ceo@qkarin.com'] },
+                                headings: { en: `${label} Submitted` },
+                                subtitle: { en: 'Throne' },
+                                contents: { en: `${name} submitted ${payload.isRoutine ? 'their daily routine' : 'task evidence'}` },
+                                url: 'https://throne.qkarin.com/dashboard',
+                            }),
+                        }).catch(() => {});
+                    }
+                } catch (_) {}
                 break;
 
             default:
