@@ -3433,7 +3433,7 @@ function _buildMobGlBubble(msg: any): string {
     void isMe; // reserved for future alignment; queen is sole Cinzel user
     const name = msg.sender_name || msg.sender_email?.split('@')[0] || 'SUBJECT';
     const content = msg.message || '';
-    const msgId = msg.id || '';
+    const msgId = String(msg.id || '');
     const nameSafe = name.replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
     const contentSafe = content.slice(0, 80).replace(/'/g, '&#39;').replace(/\\/g, '\\\\').replace(/\n/g, ' ');
     const SVG_REPLY_MOB = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;

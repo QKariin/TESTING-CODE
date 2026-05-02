@@ -673,7 +673,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const isQueen = msg.is_queen === true || msg.sender_name === 'QUEEN KARIN';
     const content = msg.message || '';
     const time = new Date(msg.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const msgId = msg.id || '';
+    const msgId = String(msg.id || '');
     const name = msg.sender_name || 'SUBJECT';
     const av = msg.sender_avatar;
     const senderNameSafe = name.replace(/'/g, '&#39;').replace(/\\/g, '\\\\');
