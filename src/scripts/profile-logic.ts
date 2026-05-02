@@ -5355,7 +5355,7 @@ export async function loadQueenPosts() {
             const liked = p.userHasLiked || false;
             const isVideo = p.media_type === 'video';
             const cardHasMedia = p.media_url && !String(p.media_url).startsWith('failed');
-            const vidThumbStyle = isVideo && p.thumbnail_url ? `background-image:url('${p.thumbnail_url}');background-size:cover;background-position:center;` : isVideo ? `background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);` : '';
+            const vidThumbStyle = isVideo && p.thumbnail_url ? `background-image:url('${p.thumbnail_url}');background-size:cover;background-position:center;border:2px solid red;` : isVideo ? `background:radial-gradient(ellipse at center,#15100a 0%,#080808 100%);border:2px solid orange;` : '';
             const cardMediaHTML = !cardHasMedia ? `<div class="qk-card-img-placeholder">👑</div>` :
                 locked
                     ? (isVideo
