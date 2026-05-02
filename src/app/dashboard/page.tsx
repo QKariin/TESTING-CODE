@@ -178,13 +178,21 @@ function buildGlMsgHtml(msg: any): string {
     if (msg.sender_name === 'SYSTEM') return '';
 
     // Media inline
+    const hasPhoto = msg.media_url && msg.media_type !== 'gif' && msg.media_type !== 'video';
     const mediaHtml = msg.media_url && msg.media_type !== 'gif' ? (
         msg.media_type === 'video'
             ? `<video src="${msg.media_url}" controls playsinline preload="metadata" ${_vidErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;"></video>`
-            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;" />`
+            : `<img src="${msg.media_url}" ${_imgErr} style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')" />`
     ) : '';
 
-    // Queen bubble
+    // Queen photo post card (Instagram-style)
+    if (isQueen && hasPhoto) {
+        const qAvSrc = av || '/queen-karin.png';
+        const captionText = content && content !== '[PHOTO]' ? content : '';
+        return `<div style="margin-bottom:12px;"><div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);"><div style="display:flex;align-items:center;gap:8px;padding:10px 14px;"><img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-karin.png'"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.45);">${time}</span></div><div style="width:100%;max-height:420px;overflow:hidden;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;object-fit:cover;max-height:420px;" /></div>${captionText?`<div style="padding:8px 14px 10px;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Orbitron';font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div></div>`:''}</div></div>`;
+    }
+
+    // Queen bubble (text or video)
     if (isQueen) {
         const qAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
         return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
@@ -828,6 +836,23 @@ export default function DashboardPage() {
             (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
             (window as any).closeChatPreview = closeChatPreview;
             (window as any).toggleDashSystemLog = () => import('@/scripts/dashboard-chat').then(m => m.toggleDashSystemLog());
+            // Global chat lightbox for photo posts
+            if (!(window as any)._openGlobalLightbox) {
+                (window as any)._openGlobalLightbox = (url: string) => {
+                    let lb = document.getElementById('globalChatLightbox');
+                    if (!lb) {
+                        lb = document.createElement('div');
+                        lb.id = 'globalChatLightbox';
+                        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px);';
+                        lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
+                        lb.addEventListener('click', () => { lb!.style.display = 'none'; });
+                        document.body.appendChild(lb);
+                    }
+                    const media = document.getElementById('globalChatLightboxMedia');
+                    if (media) media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+                    lb.style.display = 'flex';
+                };
+            }
 
             // Mobile nav controller
             (window as any).mobNav = (tab: string) => {

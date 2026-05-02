@@ -256,6 +256,37 @@ export default function ProfilePage() {
             (window as any).closeQkLightbox = closeQkLightbox;
             (window as any).setMobGlReply = setMobGlReply;
             (window as any).cancelMobGlReply = cancelMobGlReply;
+            // Global chat lightbox + like
+            if (!(window as any)._openGlobalLightbox) {
+                (window as any)._openGlobalLightbox = (url: string) => {
+                    let lb = document.getElementById('globalChatLightbox');
+                    if (!lb) {
+                        lb = document.createElement('div');
+                        lb.id = 'globalChatLightbox';
+                        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
+                        lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
+                        lb.addEventListener('click', () => { lb!.style.display = 'none'; });
+                        document.body.appendChild(lb);
+                    }
+                    const media = document.getElementById('globalChatLightboxMedia');
+                    if (media) media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+                    lb.style.display = 'flex';
+                };
+            }
+            if (!(window as any)._toggleGlobalLike) {
+                (window as any)._toggleGlobalLike = (id: string, btn: HTMLElement) => {
+                    const key = 'gl_liked_msgs';
+                    let arr: string[] = []; try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+                    const idx = arr.indexOf(id);
+                    const liked = idx === -1;
+                    if (liked) arr.push(id); else arr.splice(idx, 1);
+                    try { localStorage.setItem(key, JSON.stringify(arr)); } catch {}
+                    const svg = btn.querySelector('svg');
+                    if (svg) { svg.setAttribute('fill', liked ? '#e03050' : 'none'); svg.setAttribute('stroke', liked ? '#e03050' : 'rgba(255,255,255,0.3)'); }
+                    btn.style.transform = 'scale(1.3)';
+                    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+                };
+            }
             (window as any).setProfileChatReply = setProfileChatReply;
             (window as any).cancelProfileChatReply = cancelProfileChatReply;
             (window as any).openProfileGifPicker = openProfileGifPicker;

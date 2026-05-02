@@ -52,6 +52,53 @@ const DEFAULT_AVATAR = '/collar-placeholder.png';
 const MEDAL_COLORS = ['#c5a059', '#9ca3af', '#cd7f32'];
 const MEDALS = ['🥇', '🥈', '🥉'];
 
+// ─── LIKES (localStorage-based per user) ──────────────────────────────────────
+
+const _LIKES_KEY = 'gl_liked_msgs';
+
+function _getLikedSet(): Set<string> {
+    try { return new Set(JSON.parse(localStorage.getItem(_LIKES_KEY) || '[]')); } catch { return new Set(); }
+}
+
+function _isLiked(id: string): boolean { return _getLikedSet().has(id); }
+
+function _toggleLike(id: string): boolean {
+    const s = _getLikedSet();
+    const nowLiked = !s.has(id);
+    if (nowLiked) s.add(id); else s.delete(id);
+    try { localStorage.setItem(_LIKES_KEY, JSON.stringify([...s])); } catch {}
+    return nowLiked;
+}
+
+if (typeof window !== 'undefined') {
+    (window as any)._toggleGlobalLike = (id: string, btn: HTMLElement) => {
+        const liked = _toggleLike(id);
+        const svg = btn.querySelector('svg');
+        if (svg) {
+            svg.setAttribute('fill', liked ? '#e03050' : 'none');
+            svg.setAttribute('stroke', liked ? '#e03050' : 'rgba(255,255,255,0.3)');
+        }
+        // Pop animation
+        btn.style.transform = 'scale(1.3)';
+        setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+    };
+
+    (window as any)._openGlobalLightbox = (url: string) => {
+        let lb = document.getElementById('globalChatLightbox');
+        if (!lb) {
+            lb = document.createElement('div');
+            lb.id = 'globalChatLightbox';
+            lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
+            lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
+            lb.addEventListener('click', () => { lb!.style.display = 'none'; });
+            document.body.appendChild(lb);
+        }
+        const media = document.getElementById('globalChatLightboxMedia');
+        if (media) media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+        lb.style.display = 'flex';
+    };
+}
+
 // ─── OPEN / CLOSE ─────────────────────────────────────────────────────────────
 
 export function openGlobalView() {
@@ -918,15 +965,50 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const isGif = false;
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
+    const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';
+    const hasVideo = msg.media_url && msg.media_type === 'video';
     const mediaHtml = msg.media_url ? (
-        msg.media_type === 'video'
+        hasVideo
             ? `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);"><video src="${msg.media_url}" controls playsinline preload="none" ${_vidErr} style="width:100%;max-height:220px;object-fit:cover;display:block;"></video></div>`
             : isGif
                 ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
-                : `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);"><img src="${msg.media_url}" ${_imgErr} style="width:100%;max-height:240px;object-fit:cover;display:block;" /></div>`
+                : `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;max-height:240px;object-fit:cover;display:block;" /></div>`
     ) : '';
 
-    // ── QUEEN bubble (gold frame, full-width feed style) ──
+    // Like button helper
+    const likeId = msgId || `${(msg.created_at || '')}::${(msg.sender_email || '')}`;
+    const liked = _isLiked(likeId);
+    const heartSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="${liked ? '#e03050' : 'none'}" stroke="${liked ? '#e03050' : 'rgba(255,255,255,0.3)'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+    const likeBtn = `<button class="gl-like-btn" onclick="event.stopPropagation();window._toggleGlobalLike('${likeId.replace(/'/g, "\\'")}',this)" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;gap:4px;transition:transform 0.15s;" title="Like">${heartSvg}</button>`;
+
+    // ── QUEEN bubble — photo post card (Instagram-style) ──
+    if (isQueen && hasPhoto) {
+        const qAvSrc = av || '/queen-karin.png';
+        const captionText = content && content !== '[PHOTO]' ? content : '';
+        return `<div class="gl-msg-row" style="margin-bottom:12px;">
+            <div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;">
+                    <img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-karin.png'">
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                    </div>
+                    <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.45);">${time}</span>
+                </div>
+                <div style="width:100%;max-height:420px;overflow:hidden;cursor:pointer;position:relative;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')">
+                    <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;object-fit:cover;max-height:420px;" />
+                </div>
+                <div style="padding:8px 14px 10px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:${captionText ? '6' : '0'}px;">
+                        ${likeBtn}
+                        ${replyBtn}
+                    </div>
+                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Orbitron';font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // ── QUEEN bubble (gold frame, text or video) ──
     if (isQueen) {
         const qAv = av
             ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
@@ -939,7 +1021,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
                         <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                     </div>
-                    ${replyBtn}
+                    <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
                 </div>
                 ${quoteHtml}${isGif ? '' : `<div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
                 ${mediaHtml}
@@ -960,7 +1042,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
                     <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                 </div>
-                ${replyBtn}
+                <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
             </div>
             ${quoteHtml}${isGif ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>`}
             ${mediaHtml}
