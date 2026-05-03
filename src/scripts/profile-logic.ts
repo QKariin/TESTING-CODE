@@ -893,63 +893,94 @@ export function showCertificate() {
     const tasks = Number(raw?.Taskdom_CompletedTasks || raw?.taskdom_completed_tasks || 0);
     const sacrifice = Number(raw?.total_coins_spent || 0);
     const score = Number(raw?.score || state.score || 0);
-    const since = raw?.created_at ? new Date(raw.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : 'Unknown';
+    const since = raw?.created_at ? new Date(raw.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
     const streak = Number(raw?.bestRoutinestreak || raw?.routinestreak || 0);
 
     const overlay = document.createElement('div');
     overlay.id = 'certOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;box-sizing:border-box;overflow-y:auto;';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;';
 
     const card = document.createElement('div');
     card.id = 'certCard';
-    card.style.cssText = 'width:340px;max-width:90vw;background:linear-gradient(170deg,#0c0a04,#13100a,#0c0a04);border:2px solid rgba(197,160,89,0.5);border-radius:20px;padding:28px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 40px rgba(197,160,89,0.08);position:relative;overflow:hidden;margin-top:40px;';
+    card.style.cssText = 'width:355px;max-width:92vw;background:linear-gradient(175deg,#0a0806 0%,#0f0c08 30%,#0a0806 60%,#0d0b07 100%);border:1.5px solid rgba(197,160,89,0.35);border-radius:4px;padding:0;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.95),0 0 1px rgba(197,160,89,0.4);position:relative;overflow:hidden;margin-top:24px;';
 
-    const crownSvg = '<svg width="36" height="27" viewBox="0 0 26 20" fill="#c5a059"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>';
     const initial = name[0].toUpperCase();
+    const crownSvg = '<svg width="28" height="21" viewBox="0 0 26 20" fill="rgba(197,160,89,0.7)"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>';
 
-    const statRow = (label: string, value: string) =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(197,160,89,0.08);">
-            <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.4);letter-spacing:2px;">${label}</span>
-            <span style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:#fff;font-weight:600;">${value}</span>
+    const statLine = (label: string, value: string) =>
+        `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(197,160,89,0.06);">
+            <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(197,160,89,0.45);letter-spacing:1px;font-weight:400;">${label}</span>
+            <span style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.85);font-weight:600;letter-spacing:1px;">${value}</span>
         </div>`;
 
     card.innerHTML = `
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(197,160,89,0.06) 0%,transparent 70%);pointer-events:none;"></div>
-        <div style="margin-bottom:12px;">${crownSvg}</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.6);letter-spacing:4px;margin-bottom:14px;">CERTIFICATE OF SERVICE</div>
-        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 16px;"></div>
-        <div style="width:56px;height:56px;border-radius:50%;border:2px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;background:radial-gradient(circle,rgba(197,160,89,0.1),transparent);margin:0 auto 12px;box-shadow:0 0 20px rgba(197,160,89,0.12);">${initial}</div>
-        <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:#fff;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">${name}</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.6);letter-spacing:3px;margin-bottom:14px;">${rank.toUpperCase()}</div>
-        <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.85);letter-spacing:2px;line-height:1.5;margin-bottom:16px;">I SERVE<br><span style="font-size:1.2rem;color:#c5a059;font-weight:700;">QUEEN KARIN</span></div>
-        <div style="width:50%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:0 auto 14px;"></div>
-        <div style="text-align:left;padding:0 6px;">
-            ${statRow('KNEELING', kneels.toLocaleString())}
-            ${statRow('LABOR', tasks.toLocaleString())}
-            ${statRow('DEVOTION', score.toLocaleString())}
-            ${statRow('SACRIFICE', sacrifice.toLocaleString() + ' C')}
-            ${statRow('BEST STREAK', streak + ' DAYS')}
-            ${statRow('SERVING SINCE', since)}
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(197,160,89,0.04) 0%,transparent 60%);pointer-events:none;"></div>
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent 10%,rgba(197,160,89,0.3) 50%,transparent 90%);"></div>
+
+        <!-- QKARIN.COM — THE BRAND -->
+        <div style="padding:28px 24px 0;">
+            <div style="font-family:'Cinzel',serif;font-size:1.6rem;color:#c5a059;font-weight:700;letter-spacing:6px;margin-bottom:2px;">QKARIN</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.4);letter-spacing:8px;font-weight:400;">.COM</div>
+            <div style="width:80px;height:1px;background:rgba(197,160,89,0.2);margin:16px auto 0;"></div>
         </div>
-        <div style="width:50%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.15),transparent);margin:14px auto 12px;"></div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.35);letter-spacing:2px;">QKARIN.COM</div>
+
+        <!-- CERTIFICATE HEADER -->
+        <div style="padding:16px 24px 0;">
+            <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(197,160,89,0.5);letter-spacing:5px;font-weight:400;">CERTIFICATE OF SERVICE</div>
+        </div>
+
+        <!-- CROWN + INITIAL -->
+        <div style="padding:20px 0 6px;display:flex;flex-direction:column;align-items:center;">
+            <div style="margin-bottom:12px;">${crownSvg}</div>
+            <div style="width:64px;height:64px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.35);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.6rem;color:rgba(197,160,89,0.8);background:radial-gradient(circle,rgba(197,160,89,0.06) 0%,transparent 100%);letter-spacing:2px;">${initial}</div>
+        </div>
+
+        <!-- NAME + RANK -->
+        <div style="padding:10px 24px 0;">
+            <div style="font-family:'Cinzel',serif;font-size:1.3rem;color:rgba(255,255,255,0.92);font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;">${name}</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.5);letter-spacing:4px;font-weight:400;">${rank.toUpperCase()}</div>
+        </div>
+
+        <!-- I SERVE QUEEN KARIN -->
+        <div style="padding:20px 24px 0;">
+            <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:0 auto 16px;"></div>
+            <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:4px;font-weight:400;margin-bottom:4px;">I SERVE</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;font-weight:700;letter-spacing:4px;">QUEEN KARIN</div>
+            <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:16px auto 0;"></div>
+        </div>
+
+        <!-- STATS -->
+        <div style="padding:16px 28px 6px;text-align:left;">
+            ${statLine('Kneeling', kneels.toLocaleString())}
+            ${statLine('Labor', tasks.toLocaleString())}
+            ${statLine('Devotion', score.toLocaleString())}
+            ${statLine('Sacrifice', sacrifice.toLocaleString())}
+            ${statLine('Best Streak', streak.toString())}
+            ${since ? statLine('Serving Since', since) : ''}
+        </div>
+
+        <!-- FOOTER BRAND -->
+        <div style="padding:16px 24px 24px;">
+            <div style="width:60px;height:1px;background:rgba(197,160,89,0.12);margin:0 auto 14px;"></div>
+            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(197,160,89,0.3);letter-spacing:4px;">QKARIN.COM</div>
+        </div>
     `;
 
     const btnWrap = document.createElement('div');
-    btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-top:20px;width:340px;max-width:90vw;';
+    btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-top:16px;width:355px;max-width:92vw;padding-bottom:40px;';
 
     const shareBtn = document.createElement('button');
-    shareBtn.style.cssText = 'width:100%;padding:14px;border-radius:10px;border:1px solid rgba(197,160,89,0.4);background:rgba(197,160,89,0.08);color:#c5a059;font-family:Orbitron,sans-serif;font-size:0.65rem;letter-spacing:3px;cursor:pointer;';
+    shareBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.25);background:rgba(197,160,89,0.04);color:rgba(197,160,89,0.8);font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:4px;cursor:pointer;font-weight:600;';
     shareBtn.textContent = 'SAVE & SHARE';
     shareBtn.onclick = () => _saveCertificate();
 
     const uploadBtn = document.createElement('button');
-    uploadBtn.style.cssText = 'width:100%;padding:14px;border-radius:10px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.06);color:#4ade80;font-family:Orbitron,sans-serif;font-size:0.65rem;letter-spacing:3px;cursor:pointer;';
-    uploadBtn.textContent = 'UPLOAD PROOF — EARN 1,000 C';
+    uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
+    uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 1,000 C';
     uploadBtn.onclick = () => _uploadCertProof();
 
     const closeBtn = document.createElement('button');
-    closeBtn.style.cssText = 'width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);font-family:Orbitron,sans-serif;font-size:0.55rem;letter-spacing:3px;cursor:pointer;';
+    closeBtn.style.cssText = 'width:100%;padding:12px;border-radius:4px;border:none;background:transparent;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:4px;cursor:pointer;';
     closeBtn.textContent = 'CLOSE';
     closeBtn.onclick = () => overlay.remove();
 
