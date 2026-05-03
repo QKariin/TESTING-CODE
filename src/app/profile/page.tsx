@@ -1557,10 +1557,10 @@ export default function ProfilePage() {
                                 <div className="hub-section-label">KNEELING HISTORY</div>
                                 <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px', width: '100%' }}></div>
                                 <div className="hub-kneel-bar-wrap">
-                                    <div style={{ position: 'relative', height: '32px', borderRadius: '4px', border: '1px solid rgba(197,160,89,0.25)', background: 'linear-gradient(90deg, rgba(0,0,0,0.9), rgba(10,8,4,0.95))', overflow: 'hidden' }}>
-                                        <div id="kneelDailyFill" style={{ position: 'absolute', top: 0, left: 0, width: '0%', height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #c5a059, #f0d080)', transition: 'width 0.5s ease' }}></div>
+                                    <div style={{ position: 'relative', height: '32px', borderRadius: '4px', border: '1px solid rgba(197,160,89,0.15)', background: '#000', overflow: 'hidden' }}>
+                                        <div id="kneelDailyFill" style={{ position: 'absolute', top: 0, left: 0, width: '0%', height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, rgba(197,160,89,0.35), rgba(197,160,89,0.12))', transition: 'width 0.5s ease' }}></div>
                                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>0 / 8</span>
+                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'rgba(197,160,89,0.85)', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>0 / 8</span>
                                         </div>
                                     </div>
                                     <div className="hub-kneel-legend">

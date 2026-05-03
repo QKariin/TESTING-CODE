@@ -84,12 +84,14 @@ export function updateKneelingHoursUI(todayCount: number) {
         deskCard.style.boxShadow = '0 0 20px rgba(197,160,89,0.2)';
     }
 
-    // Mobile bar
+    // Mobile bar (Queen Hub) — subtle gold on black
     const mobFill = document.getElementById('kneelDailyFill');
     const mobText = document.getElementById('kneelDailyText');
     if (mobFill) {
         mobFill.style.width = `${pct}%`;
-        mobFill.style.background = isOverGoal ? goldFill : goldSolid;
+        mobFill.style.background = isOverGoal
+            ? 'linear-gradient(90deg, rgba(197,160,89,0.45), rgba(197,160,89,0.15))'
+            : 'linear-gradient(90deg, rgba(197,160,89,0.35), rgba(197,160,89,0.12))';
     }
     if (mobText) mobText.textContent = display;
 }
