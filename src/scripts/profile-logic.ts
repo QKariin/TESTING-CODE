@@ -512,7 +512,7 @@ function showNewMessageBanner(preview: string, mediaUrl?: string) {
             <div style="flex:1; min-width:0;">
                 <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">
                     <svg width="10" height="8" viewBox="0 0 26 20" fill="#c5a059" style="vertical-align:middle;margin-right:4px;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>New Message</div>
-                <div style="font-family:'Orbitron', sans-serif; font-size:1.1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${escaped}</div>
+                <div style="font-family:'Rajdhani', sans-serif; font-size:1.05rem; color:rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; font-weight:500;">${escaped}</div>
             </div>
         </div>
         ${mediaBlock}
