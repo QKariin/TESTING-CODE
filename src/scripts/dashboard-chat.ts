@@ -21,6 +21,7 @@ let chatAbortController: AbortController | null = null;
 let lastChatMsgId: string | null = null;
 let lastChatMsgTimestamp: string | null = null;
 let activeChatEmail: string | null = null;
+let _chatGen = 0; // increments on every user switch — stale callbacks check this
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
 
 // ── Chat cache — stores rendered HTML + state per user so switching back is instant ──
@@ -97,65 +98,40 @@ function appendToSystemLog(msg: any) {
  * Initializes the chat listener for a specific user (Slave).
  * Called when a user is selected in the sidebar.
  */
-let _initLock: string | null = null; // prevents duplicate async inits
-
 export async function initDashboardChat(memberIdOrEmail: string) {
-    // chats.member_id stores UUID — resolve to UUID for chat lookups
     const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail || x.member_id === memberIdOrEmail);
     const activeId = u?.memberId || memberIdOrEmail;
 
-    // Guard: if already initialized for this exact user AND channel is alive, skip.
-    if (activeChatEmail?.toLowerCase() === activeId.toLowerCase() && chatChannel) return;
+    // ── KILL everything from previous user ──
+    // Increment generation — every old callback will see a stale number and bail
+    const gen = ++_chatGen;
 
-    // Prevent duplicate async inits — if another init is in progress for the same user, skip
-    if (_initLock === activeId.toLowerCase()) return;
-    _initLock = activeId.toLowerCase();
-
-    // ── KILL everything from previous user — abort in-flight requests ──
     if (chatAbortController) chatAbortController.abort();
     chatAbortController = new AbortController();
-    const signal = chatAbortController.signal;
 
-    // Save current chat to cache before switching
     _saveChatToCache();
+
+    if (chatChannel) { _supabase.removeChannel(chatChannel); chatChannel = null; }
+    if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
 
     activeChatEmail = activeId;
 
-    // Clean up existing subscription + poll
-    if (chatChannel) {
-        _supabase.removeChannel(chatChannel);
-        chatChannel = null;
-    }
-    if (chatPollInterval) {
-        clearInterval(chatPollInterval);
-        chatPollInterval = null;
-    }
-
-    // ── Try restoring from cache — but invalidate if stale (>5min) ──
+    // ── Restore from cache or fetch fresh ──
     const cached = _chatCache.get(activeId.toLowerCase());
     const cacheAge = cached ? Date.now() - cached.cachedAt : Infinity;
-    const CACHE_MAX_AGE = 5 * 60 * 1000;
 
-    if (cached && cacheAge < CACHE_MAX_AGE) {
+    if (cached && cacheAge < 5 * 60 * 1000) {
         lastChatMsgId = cached.lastMsgId;
         lastChatMsgTimestamp = cached.lastTimestamp;
         _renderedMsgIds.clear();
         cached.dedupIds.forEach(id => _renderedMsgIds.add(id));
 
         const b = document.getElementById('adminChatBox');
-        if (b) {
-            b.innerHTML = cached.html;
-            _attachImgScrollHandlers(b);
-            forceBottom();
-        }
+        if (b) { b.innerHTML = cached.html; _attachImgScrollHandlers(b); forceBottom(); }
         const logEl = document.getElementById('dashSystemLogContent');
-        if (logEl && cached.sysHtml) {
-            logEl.innerHTML = cached.sysHtml;
-            logEl.scrollTop = logEl.scrollHeight;
-        }
+        if (logEl && cached.sysHtml) { logEl.innerHTML = cached.sysHtml; logEl.scrollTop = logEl.scrollHeight; }
 
-        // Catch up on missed messages (non-blocking, abortable)
-        pollNewMessages(activeId, signal);
+        pollNewMessages(activeId, gen);
     } else {
         if (cached) _chatCache.delete(activeId.toLowerCase());
         lastChatMsgId = null;
@@ -165,44 +141,32 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         const b = document.getElementById('adminChatBox');
         if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
-        await loadDashboardChatHistory(activeId, signal);
+        await loadDashboardChatHistory(activeId, gen);
     }
 
-    // If user switched during await, bail — everything was already cleaned up by the new call
-    if (signal.aborted) return;
+    // Stale? Another user was clicked during await — stop here
+    if (gen !== _chatGen) return;
 
-    // Realtime subscription — filter in JS
-    // activeId is UUID; also match old email-based records
+    // ── Realtime subscription ──
     const activeUser = users.find((x: any) => x.memberId === activeId);
     const activeUserEmail = (activeUser?.member_id || activeUser?.email || '').toLowerCase();
     chatChannel = _supabase
-        .channel('dash-chat-' + activeId)
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chats',
-        }, (payload) => {
+        .channel('dash-chat-' + activeId + '-' + gen)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, (payload) => {
+            if (gen !== _chatGen) return; // stale
             const msg = payload.new;
             if (!msg) return;
             const rowMemberId = (msg.member_id || '').toLowerCase();
-            // Match by UUID (new) or email (old)
             if (rowMemberId !== activeId.toLowerCase() && rowMemberId !== activeUserEmail) return;
-            if (activeChatEmail?.toLowerCase() !== activeId.toLowerCase()) return;
             appendChatMessage(msg);
         })
-        .subscribe((status: string) => {
-            if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                console.warn('[DASH-CHAT] realtime lost, polling covers');
-            }
-        });
+        .subscribe();
 
-    // Polling fallback — reads live activeChatEmail each tick
+    // Polling fallback
     chatPollInterval = setInterval(() => {
-        if (activeChatEmail) pollNewMessages(activeChatEmail);
+        if (gen !== _chatGen) { clearInterval(chatPollInterval!); chatPollInterval = null; return; }
+        pollNewMessages(activeId, gen);
     }, 15000);
-
-    // Release init lock
-    if (_initLock === activeId.toLowerCase()) _initLock = null;
 }
 
 /** Save the currently visible chat to the in-memory cache */
@@ -243,33 +207,29 @@ export function reconnectDashboardChat() {
         chatChannel.state === 'closed';
 
     if (needsFullReinit) {
-        console.log('[DASH-CHAT] channel dead or missing, re-initializing');
-        _initLock = null; // clear lock so reinit can proceed
         _chatCache.delete(activeId.toLowerCase());
-        activeChatEmail = null; // reset guard so initDashboardChat runs
+        activeChatEmail = null;
         initDashboardChat(activeId);
         return;
     }
 
-    // Channel alive — poll for missed messages
-    pollNewMessages(activeId);
+    pollNewMessages(activeId, _chatGen);
 }
 
-async function pollNewMessages(memberId: string, signal?: AbortSignal) {
-    if (activeChatEmail?.toLowerCase() !== memberId.toLowerCase()) return;
+async function pollNewMessages(memberId: string, gen: number) {
+    if (gen !== _chatGen) return;
     if (!lastChatMsgTimestamp) return;
     try {
         const res = await fetch('/api/chat/history', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ memberId, since: lastChatMsgTimestamp }),
-            signal: signal,
         });
+        if (gen !== _chatGen) return;
         if (!res.ok) return;
-        if (activeChatEmail?.toLowerCase() !== memberId.toLowerCase()) return;
         const data = await res.json();
+        if (gen !== _chatGen) return;
         if (!data.success) return;
-        if (activeChatEmail?.toLowerCase() !== memberId.toLowerCase()) return;
         const newMsgs = (data.messages || []).filter((m: any) => {
             const id = m.id ? String(m.id) : null;
             if (id && _renderedMsgIds.has(id)) return false;
@@ -277,42 +237,36 @@ async function pollNewMessages(memberId: string, signal?: AbortSignal) {
             if (dk.length > 10 && _renderedMsgIds.has(dk)) return false;
             return true;
         });
+        if (gen !== _chatGen) return;
         newMsgs.forEach((m: any) => appendChatMessage(m));
-    } catch (err: any) {
-        if (err?.name === 'AbortError') return;
-        console.warn('[DASH-CHAT] poll error:', err);
+    } catch {
+        // silently drop — stale or network error
     }
 }
 
-async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, _retryCount = 0) {
+async function loadDashboardChatHistory(memberId: string, gen: number, _retryCount = 0) {
     try {
         const res = await fetch('/api/chat/history', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ memberId }),
-            signal: signal,
         });
 
-        // Failure — retry up to 4x with 1s delay
-        if (!res.ok && _retryCount < 4) {
-            console.warn(`[DASH-CHAT] history load failed (${res.status}), retry ${_retryCount + 1}/4...`);
-            await new Promise(r => setTimeout(r, 1000));
-            if (signal?.aborted || activeChatEmail !== memberId) return;
-            return loadDashboardChatHistory(memberId, signal, _retryCount + 1);
-        }
+        if (gen !== _chatGen) return;
 
-        // Stale check after network wait
-        if (signal?.aborted || activeChatEmail !== memberId) return;
+        if (!res.ok && _retryCount < 4) {
+            await new Promise(r => setTimeout(r, 1000));
+            if (gen !== _chatGen) return;
+            return loadDashboardChatHistory(memberId, gen, _retryCount + 1);
+        }
 
         const data = await res.json();
+        if (gen !== _chatGen) return;
 
         if (!data.success) {
-            if (_retryCount >= 4) _showRetryUI(memberId);
+            if (_retryCount >= 4) _showRetryUI(memberId, gen);
             return;
         }
-
-        // Final stale check before touching the DOM
-        if (signal?.aborted || activeChatEmail !== memberId) return;
 
         const msgs = data.messages || [];
         if (msgs.length > 0) {
@@ -333,12 +287,13 @@ async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, 
         }
         if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
-        // Populate dedup set from ALL messages so realtime doesn't re-add them
         msgs.forEach((m: any) => {
             if (m.id) _renderedMsgIds.add(String(m.id));
             const dk = `${(m.sender_email || '')}::${(m.content || '').slice(0, 80)}::${m.created_at || ''}`;
             if (dk.length > 10) _renderedMsgIds.add(dk);
         });
+
+        if (gen !== _chatGen) return;
 
         const html = chatMsgs.map((m: any) => renderToHtml(m)).join('');
         const b = document.getElementById('adminChatBox');
@@ -348,32 +303,31 @@ async function loadDashboardChatHistory(memberId: string, signal?: AbortSignal, 
             forceBottom();
         }
     } catch (err: any) {
-        if (err?.name === 'AbortError') return;
-        console.error('[DASH-CHAT] history load error:', err);
+        if (gen !== _chatGen) return;
         if (_retryCount < 4) {
             await new Promise(r => setTimeout(r, 1000));
-            if (signal?.aborted || activeChatEmail !== memberId) return;
-            return loadDashboardChatHistory(memberId, signal, _retryCount + 1);
+            if (gen !== _chatGen) return;
+            return loadDashboardChatHistory(memberId, gen, _retryCount + 1);
         }
-        if (activeChatEmail === memberId) _showRetryUI(memberId);
+        _showRetryUI(memberId, gen);
     }
 }
 
-function _showRetryUI(memberId: string) {
+function _showRetryUI(memberId: string, gen: number) {
+    if (gen !== _chatGen) return;
     const b = document.getElementById('adminChatBox');
     if (!b) return;
     b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Orbitron; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
     b.addEventListener('click', () => {
-        if (activeChatEmail === memberId) {
+        if (gen === _chatGen) {
             b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
-            loadDashboardChatHistory(memberId, undefined, 0);
+            loadDashboardChatHistory(memberId, gen, 0);
         }
     }, { once: true });
-    // Auto-retry after 5s
     setTimeout(() => {
-        if (activeChatEmail === memberId && b.textContent?.includes('LINK FAILED')) {
+        if (gen === _chatGen && b.textContent?.includes('LINK FAILED')) {
             b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
-            loadDashboardChatHistory(memberId, undefined, 0);
+            loadDashboardChatHistory(memberId, gen, 0);
         }
     }, 5000);
 }
