@@ -4613,7 +4613,8 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
-    const contentEl = `<span class="mob-gl-talk-content">${content}</span>`;
+    const isGifText = content === '[GIF]' && mediaHtml;
+    const contentEl = isGifText ? '' : `<span class="mob-gl-talk-content">${content}</span>`;
 
     return `<div class="mob-gl-talk-msg">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
