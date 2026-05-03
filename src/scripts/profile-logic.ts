@@ -1276,6 +1276,13 @@ function _uploadCertProof() {
                 btn.style.cursor = 'not-allowed';
                 btn.onclick = null;
             }
+
+            // Update local state so reopening certificate keeps button locked
+            const currentRaw = (window as any).__currentProfileRaw || getState().raw || {};
+            const updatedParams = { ...(currentRaw.parameters || {}), last_cert_proof_at: new Date().toISOString() };
+            const updatedRaw = { ...currentRaw, parameters: updatedParams };
+            setState({ raw: updatedRaw });
+            (window as any).__currentProfileRaw = updatedRaw;
         } catch (e: any) {
             console.error('[CERT] Upload failed:', e);
             if (btn) { btn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C'; btn.disabled = false; btn.style.opacity = '1'; }

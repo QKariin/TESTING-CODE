@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         // Check 72h cooldown
         const params = profile.parameters || {};
         const lastProof = params.last_cert_proof_at ? new Date(params.last_cert_proof_at).getTime() : 0;
-        const cooldownMs = 72 * 60 * 60 * 1000;
+        const cooldownMs = 7 * 24 * 60 * 60 * 1000; // 7 days
         if (lastProof && Date.now() - lastProof < cooldownMs) {
             const hoursLeft = Math.ceil((cooldownMs - (Date.now() - lastProof)) / 3600000);
             return NextResponse.json({ error: `You can submit again in ${hoursLeft}h` }, { status: 429 });
