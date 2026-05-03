@@ -18,16 +18,17 @@ export async function GET(req: Request) {
         : period === 'alltime' ? 'Score'
         : 'Daily Score';
 
-    const [{ data: tasks, error }, { data: profiles }] = await Promise.all([
+    const [{ data: tasks, error }, { data: profiles, error: profErr }] = await Promise.all([
         supabaseAdmin
             .from('tasks')
             .select(`member_id, ID, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", "Score"`),
         supabaseAdmin
             .from('profiles')
-            .select('member_id, id, name, hierarchy, avatar_url, profile_picture_url, parameters'),
+            .select('member_id, id, name, hierarchy, avatar_url, parameters'),
     ]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (profErr) console.error('[leaderboard] profiles query error:', profErr.message);
 
     // profiles keyed by member_id (email) AND by id (UUID) for robust matching
     const profileByEmail = new Map<string, any>();
@@ -40,7 +41,7 @@ export async function GET(req: Request) {
     function getAvatar(prof: any): string {
         if (!prof) return '';
         const params = prof.parameters || {};
-        return prof.avatar_url || prof.profile_picture_url || params.avatar_url || params.photoUrl || '';
+        return prof.avatar_url || params.avatar_url || params.photoUrl || '';
     }
 
     interface LeaderboardEntry {
