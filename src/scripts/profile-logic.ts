@@ -1058,16 +1058,24 @@ function _drawCertificate(
 
     // ── TOP: CERTIFICATE OF SERVICE headline ──
     ctx.textAlign = 'center';
-    ctx.font = '400 16px Cinzel, serif';
-    ctx.fillStyle = 'rgba(197,160,89,0.5)';
-    ctx.fillText('CERTIFICATE OF SERVICE', cx, 58);
+    ctx.font = '400 18px Cinzel, serif';
+    ctx.fillStyle = 'rgba(197,160,89,0.55)';
+    ctx.letterSpacing = '8px';
+    ctx.fillText('CERTIFICATE  OF  SERVICE', cx, 60);
+    ctx.letterSpacing = '0px';
 
-    const topDiv = ctx.createLinearGradient(200, 0, W - 200, 0);
-    topDiv.addColorStop(0, 'transparent');
-    topDiv.addColorStop(0.5, 'rgba(197,160,89,0.25)');
-    topDiv.addColorStop(1, 'transparent');
-    ctx.fillStyle = topDiv;
-    ctx.fillRect(200, 72, W - 400, 1);
+    // Decorative dividers flanking headline
+    const topDivL = ctx.createLinearGradient(60, 0, cx - 160, 0);
+    topDivL.addColorStop(0, 'transparent');
+    topDivL.addColorStop(1, 'rgba(197,160,89,0.25)');
+    ctx.fillStyle = topDivL;
+    ctx.fillRect(60, 56, cx - 220, 1);
+
+    const topDivR = ctx.createLinearGradient(cx + 160, 0, W - 60, 0);
+    topDivR.addColorStop(0, 'rgba(197,160,89,0.25)');
+    topDivR.addColorStop(1, 'transparent');
+    ctx.fillStyle = topDivR;
+    ctx.fillRect(cx + 160, 56, W - 220 - cx, 1);
 
     // ── LEFT SIDE ──
     const leftCx = 260;
@@ -1076,28 +1084,30 @@ function _drawCertificate(
     ctx.textAlign = 'center';
     ctx.font = '700 36px Cinzel, serif';
     ctx.fillStyle = white;
-    ctx.fillText(d.name, leftCx, 125);
+    ctx.fillText(d.name, leftCx, 130);
 
     // RANK
     ctx.font = '400 22px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.6)';
-    ctx.fillText(d.rank, leftCx, 160);
+    ctx.letterSpacing = '4px';
+    ctx.fillText(d.rank, leftCx, 168);
+    ctx.letterSpacing = '0px';
 
     // Gold divider under rank
-    const divGrad1 = ctx.createLinearGradient(120, 0, 400, 0);
+    const divGrad1 = ctx.createLinearGradient(100, 0, 420, 0);
     divGrad1.addColorStop(0, 'transparent');
     divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
     divGrad1.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad1;
-    ctx.fillRect(120, 178, 280, 1);
+    ctx.fillRect(100, 190, 320, 1);
 
     // Avatar — circular, between rank and serving since
-    let avatarBottom = 190;
+    let avatarBottom = 205;
     if (d.images.avatar) {
-        const avSize = 120;
+        const avSize = 130;
         const avX = leftCx - avSize / 2;
-        const avY = 195;
-        avatarBottom = avY + avSize + 15;
+        const avY = 210;
+        avatarBottom = avY + avSize + 18;
 
         ctx.save();
         ctx.beginPath();
@@ -1109,22 +1119,24 @@ function _drawCertificate(
 
         // Gold circle border
         ctx.beginPath();
-        ctx.arc(leftCx, avY + avSize / 2, avSize / 2 + 1, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(197,160,89,0.4)';
+        ctx.arc(leftCx, avY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(197,160,89,0.35)';
         ctx.lineWidth = 2;
         ctx.stroke();
     }
 
     // Serving Since
     if (d.since) {
-        const sinceY = avatarBottom + 15;
+        const sinceY = avatarBottom + 18;
         ctx.textAlign = 'center';
         ctx.font = '400 14px Cinzel, serif';
         ctx.fillStyle = 'rgba(197,160,89,0.4)';
+        ctx.letterSpacing = '3px';
         ctx.fillText('Serving Since', leftCx, sinceY);
+        ctx.letterSpacing = '0px';
         ctx.font = '600 18px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText(d.since, leftCx, sinceY + 26);
+        ctx.fillText(d.since, leftCx, sinceY + 28);
     }
 
     // Signature at bottom of left side
@@ -1149,8 +1161,8 @@ function _drawCertificate(
     ctx.fillRect(vx, 85, 1, H - 135);
 
     // ── RIGHT SIDE: Stats ──
-    const rightStart = 590;
-    const rightEnd = W - 80;
+    const rightStart = 580;
+    const rightEnd = W - 70;
     const stats: [string, string][] = [
         ['Points Earned', d.score.toLocaleString()],
         ['Tasks Completed', d.tasks.toLocaleString()],
@@ -1159,8 +1171,8 @@ function _drawCertificate(
         ['Best Streak', d.streak.toString()],
     ];
 
-    const statStartY = 140;
-    const statGap = 85;
+    const statStartY = 135;
+    const statGap = 95;
 
     stats.forEach(([label, value], i) => {
         const y = statStartY + i * statGap;
