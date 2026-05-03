@@ -1255,12 +1255,21 @@ function _uploadCertProof() {
         try {
             if (btn) { btn.textContent = 'UPLOADING...'; btn.disabled = true; btn.style.opacity = '0.5'; }
 
-            // Send file directly to API (server handles storage upload)
-            const form = new FormData();
-            form.append('memberId', userId);
-            form.append('file', file);
+            // Step 1: Upload image via signed URL (bypasses Vercel body limit)
+            const mediaUrl = await uploadToSupabase('media', 'cert-proofs', file);
+            console.log('[CERT] Upload result:', mediaUrl);
+            if (!mediaUrl || mediaUrl.startsWith('failed')) {
+                if (btn) { btn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C'; btn.disabled = false; btn.style.opacity = '1'; }
+                alert('Upload failed. Please try again.');
+                return;
+            }
 
-            const res = await fetch('/api/cert-proof', { method: 'POST', body: form });
+            // Step 2: Submit proof via API (cooldown check + chat message)
+            const res = await fetch('/api/cert-proof', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'submit', memberId: userId, mediaUrl }),
+            });
             const data = await res.json();
             if (!res.ok) {
                 if (btn) { btn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C'; btn.disabled = false; btn.style.opacity = '1'; }
