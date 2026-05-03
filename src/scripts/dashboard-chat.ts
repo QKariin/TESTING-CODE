@@ -537,6 +537,7 @@ function renderToHtml(m: any) {
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(var(--gold-rgb),0.5),transparent);margin:0 auto 8px;"></div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(var(--gold-rgb),0.65);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE COURT</div>
                             <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(var(--gold-rgb),0.06);border:1px solid rgba(var(--gold-rgb),0.25);border-radius:20px;padding:3px 12px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:2px;">${(d.rank || 'HALL BOY').toUpperCase()}</span></div>
+                            <button onclick="event.stopPropagation();window._shareNewMemberOnX('${purifier.sanitize(d.name || '').replace(/'/g, "\\'")}','${(d.rank || 'Hall Boy').replace(/'/g, "\\'")}','${(d.avatar || '').replace(/'/g, "\\'")}')" style="display:block;margin:10px auto 0;padding:5px 16px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.5);color:#fff;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;">SHARE ON X</button>
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
@@ -1225,4 +1226,163 @@ if (typeof window !== 'undefined') {
     (window as any).sendPaidMedia = sendPaidMedia;
     (window as any)._selectVaultItem = _selectVaultItem;
     (window as any).filterVault = filterVault;
+    (window as any)._shareNewMemberOnX = _shareNewMemberOnX;
+}
+
+function _shareNewMemberOnX(name: string, rank: string, avatarUrl: string) {
+    const W = 1200, H = 630;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+
+    function draw(avImg: HTMLImageElement | null, sigImg: HTMLImageElement | null) {
+        // Background
+        ctx.fillStyle = '#0a0806';
+        ctx.fillRect(0, 0, W, H);
+        const grad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.6);
+        grad.addColorStop(0, 'rgba(197,160,89,0.06)');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Borders
+        ctx.strokeStyle = 'rgba(197,160,89,0.35)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(16, 16, W - 32, H - 32);
+        ctx.strokeStyle = 'rgba(197,160,89,0.1)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(24, 24, W - 48, H - 48);
+
+        const gold = '#c5a059';
+        const white = 'rgba(255,255,255,0.9)';
+        const cx = W / 2;
+
+        // Headline
+        ctx.textAlign = 'center';
+        ctx.font = '700 28px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.7)';
+        ctx.letterSpacing = '8px';
+        ctx.fillText('A NEW SUBJECT', cx, 80);
+        ctx.letterSpacing = '0px';
+        ctx.font = '400 15px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.45)';
+        ctx.letterSpacing = '5px';
+        ctx.fillText('HAS ENTERED THE COURT', cx, 110);
+        ctx.letterSpacing = '0px';
+
+        // Divider
+        const topDiv = ctx.createLinearGradient(200, 0, W - 200, 0);
+        topDiv.addColorStop(0, 'transparent');
+        topDiv.addColorStop(0.5, 'rgba(197,160,89,0.3)');
+        topDiv.addColorStop(1, 'transparent');
+        ctx.fillStyle = topDiv;
+        ctx.fillRect(200, 130, W - 400, 1);
+
+        // Avatar
+        const avSize = 160;
+        const avY = 170;
+        if (avImg) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avImg, cx - avSize / 2, avY, avSize, avSize);
+            ctx.restore();
+            ctx.beginPath();
+            ctx.arc(cx, avY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(197,160,89,0.4)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        } else {
+            // Initial circle
+            ctx.beginPath();
+            ctx.arc(cx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(197,160,89,0.08)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(197,160,89,0.4)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.font = '700 60px Cinzel, serif';
+            ctx.fillStyle = gold;
+            ctx.textAlign = 'center';
+            ctx.fillText((name || 'S')[0].toUpperCase(), cx, avY + avSize / 2 + 20);
+        }
+
+        // Name
+        ctx.textAlign = 'center';
+        ctx.font = '700 38px Cinzel, serif';
+        ctx.fillStyle = white;
+        ctx.fillText(name.toUpperCase(), cx, avY + avSize + 55);
+
+        // Rank
+        ctx.font = '400 22px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.6)';
+        ctx.letterSpacing = '4px';
+        ctx.fillText(rank.toUpperCase(), cx, avY + avSize + 90);
+        ctx.letterSpacing = '0px';
+
+        // Divider under rank
+        const btmDiv = ctx.createLinearGradient(300, 0, W - 300, 0);
+        btmDiv.addColorStop(0, 'transparent');
+        btmDiv.addColorStop(0.5, 'rgba(197,160,89,0.25)');
+        btmDiv.addColorStop(1, 'transparent');
+        ctx.fillStyle = btmDiv;
+        ctx.fillRect(300, avY + avSize + 108, W - 600, 1);
+
+        // Signature
+        if (sigImg) {
+            const sigW = 240;
+            const sigH = sigW * (sigImg.naturalHeight / sigImg.naturalWidth);
+            ctx.globalAlpha = 0.45;
+            ctx.drawImage(sigImg, cx - sigW / 2, H - sigH - 35, sigW, sigH);
+            ctx.globalAlpha = 1.0;
+        }
+
+        // Export
+        canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            const file = new File([blob], 'new-member.png', { type: 'image/png' });
+            if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                try {
+                    await navigator.share({ files: [file], text: `A new subject has entered my court 👑 @qkarin_com #QKarin`, title: 'New Member' });
+                    return;
+                } catch (_) {}
+            }
+            // Desktop: download + open X
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'new-member.png'; a.click();
+            URL.revokeObjectURL(url);
+            const text = `A new subject has entered my court 👑 @qkarin_com #QKarin`;
+            setTimeout(() => window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank'), 500);
+        }, 'image/png');
+    }
+
+    // Load images
+    let avImg: HTMLImageElement | null = null;
+    let sigImg: HTMLImageElement | null = null;
+    let pending = 2;
+    function done() { pending--; if (pending <= 0) draw(avImg, sigImg); }
+
+    const sig = new Image();
+    sig.crossOrigin = 'anonymous';
+    sig.onload = () => { sigImg = sig; done(); };
+    sig.onerror = () => done();
+    sig.src = '/signature.svg';
+
+    if (avatarUrl) {
+        fetch(avatarUrl, { mode: 'cors' })
+            .then(r => r.blob())
+            .then(blob => {
+                const u = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => { avImg = img; URL.revokeObjectURL(u); done(); };
+                img.onerror = () => { URL.revokeObjectURL(u); done(); };
+                img.src = u;
+            })
+            .catch(() => done());
+    } else {
+        done();
+    }
 }
