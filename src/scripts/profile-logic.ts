@@ -1029,17 +1029,20 @@ async function _saveCertificate() {
     sigImg.onerror = () => onLoaded();
     sigImg.src = '/signature.svg';
 
-    // Avatar — always fetch as blob (most reliable, avoids CORS flakiness)
+    // Avatar — fetch as blob, try proxy if direct fails
     if (avatarUrl && avatarUrl !== '/collar-placeholder.png') {
-        fetch(avatarUrl)
-            .then(r => r.blob())
+        const loadAvatarBlob = (url: string) => fetch(url)
+            .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.blob(); })
             .then(blob => {
                 const blobUrl = URL.createObjectURL(blob);
                 const avImg = new Image();
                 avImg.onload = () => { images.avatar = avImg; URL.revokeObjectURL(blobUrl); onLoaded(); };
                 avImg.onerror = () => { URL.revokeObjectURL(blobUrl); onLoaded(); };
                 avImg.src = blobUrl;
-            })
+            });
+
+        loadAvatarBlob(avatarUrl)
+            .catch(() => loadAvatarBlob(`/api/media?url=${encodeURIComponent(avatarUrl)}`))
             .catch(() => onLoaded());
     } else {
         onLoaded();
