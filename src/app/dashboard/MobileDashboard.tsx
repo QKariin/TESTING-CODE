@@ -2439,21 +2439,17 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                 const wIni = (d.name || 'S')[0].toUpperCase();
                                 return (
                                     <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0' }}>
-                                        <div style={{ width: '80%', maxWidth: 300, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06,#110d04)', border: '1px solid rgba(197,160,89,0.45)' }}>
-                                            <div style={{ position: 'relative', width: '100%', height: 90, background: 'linear-gradient(135deg,rgba(197,160,89,0.06),rgba(197,160,89,0.02))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <div style={{ width: 48, height: 48, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontSize: '1.2rem', color: '#c5a059', background: 'rgba(197,160,89,0.06)', zIndex: 1 }}>{wIni}</div>
-                                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom,transparent 50%,#0e0b06 100%)' }} />
-                                                <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', background: 'rgba(10,7,2,0.9)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 20, padding: '3px 10px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5"><path d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16"/><path d="M3 21h18"/><path d="M9 21V10h6v11"/><path d="M12 3v4"/></svg>
-                                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '3px' }}>NEW TRIBUTE</span>
-                                                </div>
+                                        <div style={{ width: 260, maxWidth: '72vw', borderRadius: 16, overflow: 'hidden', background: 'linear-gradient(170deg,#0c0a04 0%,#13100a 50%,#0c0a04 100%)', border: '1px solid rgba(197,160,89,0.6)', boxShadow: '0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.08)' }}>
+                                            <div style={{ width: '100%', padding: '18px 0 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'radial-gradient(ellipse at center top,rgba(197,160,89,0.1) 0%,transparent 70%)' }}>
+                                                <div style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(197,160,89,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: '#c5a059', background: 'radial-gradient(circle,rgba(197,160,89,0.12) 0%,rgba(197,160,89,0.03) 100%)', boxShadow: '0 0 20px rgba(197,160,89,0.15),0 0 40px rgba(197,160,89,0.05)' }}>{wIni}</div>
                                             </div>
-                                            <div style={{ padding: '10px 14px 14px', textAlign: 'center' }}>
-                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.88rem', color: '#fff', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' as const, marginBottom: 4 }}>{d.name}</div>
-                                                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.45rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '2px', marginBottom: 6 }}>{(d.rank || 'HALL BOY').toUpperCase()}</div>
-                                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 20, padding: '2px 10px' }}>
-                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="#c5a059" stroke="none"><circle cx="12" cy="12" r="10" fill="rgba(197,160,89,0.2)" stroke="#c5a059" strokeWidth="1.5"/><text x="12" y="16" textAnchor="middle" fontSize="12" fontWeight="700" fill="#c5a059">C</text></svg>
-                                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '1px' }}>{(d.coins || 1111).toLocaleString()} COINS</span>
+                                            <div style={{ padding: '4px 16px 18px', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase' as const, marginBottom: 6 }}>{d.name}</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent)', margin: '0 auto 8px' }} />
+                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.65)', letterSpacing: 3, marginBottom: 10 }}>HAS ENTERED THE COURT</div>
+                                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 20, padding: '3px 12px' }}>
+                                                    <svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>
+                                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.42rem', color: '#c5a059', letterSpacing: 2 }}>{(d.rank || 'HALL BOY').toUpperCase()}</span>
                                                 </div>
                                             </div>
                                         </div>
