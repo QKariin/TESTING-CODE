@@ -978,8 +978,153 @@ export function showCertificate() {
     closeLobby();
 }
 
-function _saveCertificate() {
-    alert('Take a screenshot of the certificate and share it on your socials!');
+async function _saveCertificate() {
+    const state = getState();
+    const raw = (window as any).__currentProfileRaw || state.raw || state;
+    const name = (raw?.name || 'LOYAL SUBJECT').toUpperCase();
+    const rank = ((state as any).rank || raw?.hierarchy || 'Hall Boy').toUpperCase();
+    const kneels = Number(raw?.kneelCount || 0);
+    const tasks = Number(raw?.Taskdom_CompletedTasks || raw?.taskdom_completed_tasks || 0);
+    const sacrifice = Number(raw?.total_coins_spent || 0);
+    const score = Number(raw?.score || state.score || 0);
+    const sinceRaw = raw?.joined_date || raw?.created_at || '';
+    const since = sinceRaw ? new Date(sinceRaw).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+    const streak = Number(raw?.bestRoutinestreak || raw?.routinestreak || 0);
+
+    const W = 750;
+    const H = 1050;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+
+    // Background
+    ctx.fillStyle = '#0a0806';
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle radial glow
+    const grad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.7);
+    grad.addColorStop(0, 'rgba(197,160,89,0.04)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Border
+    ctx.strokeStyle = 'rgba(197,160,89,0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, W - 40, H - 40);
+
+    // Inner border
+    ctx.strokeStyle = 'rgba(197,160,89,0.1)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(30, 30, W - 60, H - 60);
+
+    const gold = '#c5a059';
+    const goldMuted = 'rgba(197,160,89,0.45)';
+    const white = 'rgba(255,255,255,0.9)';
+    const cx = W / 2;
+
+    // QKARIN.COM
+    ctx.textAlign = 'center';
+    ctx.font = '700 42px Cinzel, serif';
+    ctx.fillStyle = gold;
+    ctx.fillText('QKARIN.COM', cx, 100);
+
+    // CERTIFICATE OF SERVICE
+    ctx.font = '400 15px Cinzel, serif';
+    ctx.fillStyle = goldMuted;
+    ctx.letterSpacing = '5px';
+    ctx.fillText('CERTIFICATE OF SERVICE', cx, 135);
+
+    // Gold divider
+    const divGrad1 = ctx.createLinearGradient(100, 0, W - 100, 0);
+    divGrad1.addColorStop(0, 'transparent');
+    divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
+    divGrad1.addColorStop(1, 'transparent');
+    ctx.fillStyle = divGrad1;
+    ctx.fillRect(100, 160, W - 200, 1);
+
+    // NAME
+    ctx.font = '700 34px Cinzel, serif';
+    ctx.fillStyle = white;
+    ctx.fillText(name, cx, 215);
+
+    // RANK
+    ctx.font = '400 20px Cinzel, serif';
+    ctx.fillStyle = 'rgba(197,160,89,0.6)';
+    ctx.fillText(rank, cx, 250);
+
+    // Gold divider under rank
+    const divGrad2 = ctx.createLinearGradient(150, 0, W - 150, 0);
+    divGrad2.addColorStop(0, 'transparent');
+    divGrad2.addColorStop(0.5, 'rgba(197,160,89,0.35)');
+    divGrad2.addColorStop(1, 'transparent');
+    ctx.fillStyle = divGrad2;
+    ctx.fillRect(150, 275, W - 300, 1);
+
+    // Stats
+    const stats: [string, string][] = [
+        ['Kneeling', kneels.toLocaleString()],
+        ['Tasks Completed', tasks.toLocaleString()],
+        ['Points Earned', score.toLocaleString()],
+        ['Sacrifice', sacrifice.toLocaleString()],
+        ['Best Streak', streak.toString()],
+    ];
+    if (since) stats.push(['Serving Since', since]);
+
+    const statStartY = 320;
+    const statGap = 65;
+    const padX = 80;
+
+    stats.forEach(([label, value], i) => {
+        const y = statStartY + i * statGap;
+
+        // Label
+        ctx.textAlign = 'left';
+        ctx.font = '400 17px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.45)';
+        ctx.fillText(label, padX, y);
+
+        // Value
+        ctx.textAlign = 'right';
+        ctx.font = '600 22px Cinzel, serif';
+        ctx.fillStyle = white;
+        ctx.fillText(value, W - padX, y);
+
+        // Divider line
+        ctx.fillStyle = 'rgba(197,160,89,0.06)';
+        ctx.fillRect(padX, y + 15, W - padX * 2, 1);
+    });
+
+    // Footer
+    ctx.textAlign = 'center';
+    ctx.font = '400 13px Cinzel, serif';
+    ctx.fillStyle = 'rgba(197,160,89,0.25)';
+    ctx.fillText('QKARIN.COM', cx, H - 55);
+
+    // Convert to blob and save/share
+    canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'qkarin-certificate.png', { type: 'image/png' });
+
+        // Mobile: use Share API to get "Save Image" option
+        if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+            try {
+                await navigator.share({ files: [file], title: 'My Service Certificate' });
+                return;
+            } catch (e) {
+                // User cancelled or share failed — fall through to download
+            }
+        }
+
+        // Desktop / fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'qkarin-certificate.png';
+        a.click();
+        URL.revokeObjectURL(url);
+    }, 'image/png');
 }
 
 function _uploadCertProof() {
@@ -1014,7 +1159,7 @@ function _uploadCertProof() {
 
             // Close overlay and show confirmation
             document.getElementById('certOverlay')?.remove();
-            alert('Proof uploaded! Queen will review and award your 1,000 coins.');
+            alert('Proof uploaded! Queen will review and award your 300 coins.');
         } catch (e: any) {
             console.error('[CERT] Upload failed:', e);
             alert('Upload failed. Please try again.');
