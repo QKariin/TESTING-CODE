@@ -1653,6 +1653,18 @@ function ChHistoryTab({ challenges, onView }: { challenges: MChallenge[]; onView
 
 // ─── TASK REVIEW MODAL ────────────────────────────────────────────────────────
 // Full-screen: media on top, actions at bottom. Single step - no extra dialogs.
+function DailyCodeBadge() {
+    const d = new Date();
+    const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    const code = String((seed * 7 + 1337) % 9000 + 1000);
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 16px', margin: '0 16px 8px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10 }}>
+            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>DAILY CODE</span>
+            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', fontWeight: 900, color: '#c5a059', letterSpacing: '5px' }}>{code}</span>
+        </div>
+    );
+}
+
 function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
     proofUrl?: string; isVideo: boolean; name: string; avatar: string; rank?: string;
     text: string; isRoutine: boolean; busy: boolean;
@@ -1709,6 +1721,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222', fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', letterSpacing: '2px' }}>NO MEDIA</div>
                 )}
                 <div style={{ padding: '12px 16px', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#777', lineHeight: 1.5 }}>{text}</div>
+                <DailyCodeBadge />
             </div>
 
             {/* Actions - always visible at bottom */}

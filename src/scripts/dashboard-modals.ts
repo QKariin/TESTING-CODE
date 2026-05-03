@@ -148,7 +148,16 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
             </div>`;
     }
 
-    textEl.innerHTML = clean(taskText || 'No description provided.');
+    // Daily verification code
+    const _d = new Date();
+    const _seed = _d.getFullYear() * 10000 + (_d.getMonth() + 1) * 100 + _d.getDate();
+    const _dailyCode = String((_seed * 7 + 1337) % 9000 + 1000);
+
+    textEl.innerHTML = clean(taskText || 'No description provided.')
+        + `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;padding:10px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.15);border-radius:8px;">
+            <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">DAILY CODE</span>
+            <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;color:#c5a059;letter-spacing:5px;">${_dailyCode}</span>
+        </div>`;
 
     // Clear note from previous session
     const quickNote = document.getElementById('taskQuickNote') as HTMLTextAreaElement;
