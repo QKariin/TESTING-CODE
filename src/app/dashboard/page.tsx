@@ -1052,6 +1052,9 @@ export default function DashboardPage() {
                 const isQueenMsg = msg.metadata?.isQueen === true;
                 const isSystemMsg = msg.type === 'system' || (msg.sender_email || '').toLowerCase() === 'system';
                 if (isQueenMsg || isSystemMsg) return;
+                // Skip admin-sent messages — only slave messages trigger unread
+                const senderLc = (msg.sender_email || '').toLowerCase();
+                if (senderLc && senderLc === (userEmail || '').toLowerCase()) return;
                 const msgMemberId = (msg.member_id || '').toLowerCase();
                 if (!msgMemberId) return;
                 const msgTime = new Date(msg.created_at).getTime();

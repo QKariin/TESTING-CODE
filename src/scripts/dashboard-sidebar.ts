@@ -3,14 +3,12 @@
 
 import { users, currId, setCurrId, adminReadMap, markReadInMap } from './dashboard-state';
 import { clean } from './utils';
-import { triggerSound } from './utils';
 import { getOptimizedUrl } from './media';
 import { isMemberOnline } from './dashboard-presence';
 import { updateDetail } from './dashboard-users';
 
 // onlineJoinTime: when each user first came online (only set on offline→online transition)
 const onlineJoinTime: Record<string, number> = {};
-const soundMemory: Record<string, number> = {};
 // Track previous online state to detect actual transitions, not jitter
 const prevOnlineState: Record<string, boolean> = {};
 
@@ -72,19 +70,6 @@ function hasUnreadMessage(u: any): boolean {
     if (!email) return false;
     // If this user's chat is currently open, not unread
     if (currId === u.memberId || currId === email) return false;
-    const msgTime = u.lastMessageTime || 0;
-    if (msgTime <= 0) return false;
-    const readTime = adminReadMap[email] || 0;
-    return msgTime > readTime;
-}
-
-/**
- * Same as hasUnreadMessage but doesn't skip the currently open user.
- * Used for sound notifications.
- */
-function hasUnreadMessageAny(u: any): boolean {
-    const email = canonId(u);
-    if (!email) return false;
     const msgTime = u.lastMessageTime || 0;
     if (msgTime <= 0) return false;
     const readTime = adminReadMap[email] || 0;
@@ -250,14 +235,7 @@ export function updateSidebarItem(memberId: string) {
     if (!online) delete onlineJoinTime[pid];
     prevOnlineState[pid] = online;
 
-    // Sound notification
-    const cid = canonId(u);
-    const lastSound = soundMemory[cid] || 0;
-    const msgTime = u.lastMessageTime || 0;
-    if (hasUnreadMessageAny(u) && msgTime > lastSound) {
-        soundMemory[cid] = msgTime;
-        triggerSound('sfx-notify');
-    }
+    // (Sound notification removed per user request)
 
     // Find existing card and replace its content
     const existing = list.querySelector<HTMLElement>(`.u-item[data-id="${memberId}"]`);
@@ -326,7 +304,7 @@ function reorderSidebar(newOrder: string[]) {
     });
 }
 
-/** Update presence tracking state + sound notifications for all users */
+/** Update presence tracking state for all users */
 function updateTrackingState(now: number) {
     users.forEach(u => {
         const pid = presenceId(u);
@@ -336,13 +314,7 @@ function updateTrackingState(now: number) {
         if (!online) delete onlineJoinTime[pid];
         prevOnlineState[pid] = online;
 
-        const cid = canonId(u);
-        const lastSound = soundMemory[cid] || 0;
-        const msgTime = u.lastMessageTime || 0;
-        if (hasUnreadMessageAny(u) && msgTime > lastSound) {
-            soundMemory[cid] = msgTime;
-            triggerSound('sfx-notify');
-        }
+        // (Sound notification removed per user request)
     });
 }
 
@@ -352,7 +324,10 @@ export function selUser(id: string) {
     // Close any React overlay panels (GLOBAL / CHALLENGES) so the user view is visible
     (window as any)._closeOverlays?.();
 
-    // Mark this user's chat as read immediately — you see it, it's read
+    // Mark PREVIOUS user as read before switching — they were just viewed
+    if (currId) markAsRead(currId);
+
+    // Mark new user's chat as read immediately — you see it, it's read
     markAsRead(id);
 
     // Don't clear chatBox here — initDashboardChat saves the current chat to cache

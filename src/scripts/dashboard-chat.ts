@@ -363,7 +363,11 @@ export function appendChatMessage(msg: any) {
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 
     // Update sidebar card for this conversation — shows unread dot instantly
-    if (msg.created_at && activeChatEmail) {
+    // Skip admin-sent messages — only slave messages should trigger unread
+    const senderLc = (msg.sender_email || '').toLowerCase();
+    const adminLc = (getAdminEmailFallback() || '').toLowerCase();
+    const isAdminMsg = adminLc && senderLc === adminLc;
+    if (msg.created_at && activeChatEmail && !isAdminMsg) {
         const msgTs = new Date(msg.created_at).getTime();
         const u = users.find(x => (x.memberId || '').toLowerCase() === activeChatEmail!.toLowerCase());
         if (u && msgTs > (u.lastMessageTime || 0)) {

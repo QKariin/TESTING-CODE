@@ -799,7 +799,10 @@ export async function getUnreadMessageStatus(): Promise<Record<string, string>> 
             if (result[key]) continue;
             const isQueenMsg = row.metadata?.isQueen === true;
             const isSystemMsg = row.type === 'system' || (row.sender_email || '').toLowerCase() === 'system';
-            if (!isQueenMsg && !isSystemMsg) {
+            // Skip admin/chatter-sent messages — only slave messages trigger unread
+            const senderLc = (row.sender_email || '').toLowerCase();
+            const isAdminMsg = senderLc === 'ceo@qkarin.com' || row.metadata?.chatter_email;
+            if (!isQueenMsg && !isSystemMsg && !isAdminMsg) {
                 result[key] = row.created_at;
             }
         }
