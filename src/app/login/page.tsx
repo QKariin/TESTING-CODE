@@ -39,7 +39,7 @@ export default function LoginPage() {
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'twitter',
-            options: { redirectTo: `${window.location.origin}/auth/callback` }
+            options: { redirectTo: `${window.location.origin}/auth/callback`, scopes: 'users.read tweet.read' }
         });
         if (error) { setError(error.message); setLoading(false); }
     };

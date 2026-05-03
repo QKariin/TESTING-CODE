@@ -22,18 +22,28 @@ export async function POST(req: Request) {
             .eq('ID', user.id)
             .maybeSingle();
 
-        if (existing) return NextResponse.json({ success: true, alreadyExists: true });
-
         // Verify Stripe payment
         const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        // If profile exists but has a twitter_ placeholder, update with real Stripe email
+        if (existing) {
+            const stripeEmailFix = session.customer_details?.email?.trim().toLowerCase();
+            if (stripeEmailFix && existing.member_id && existing.member_id.startsWith('twitter_')) {
+                await supabaseAdmin.from('profiles').update({ member_id: stripeEmailFix }).eq('ID', user.id);
+                await supabaseAdmin.from('tasks').update({ member_id: stripeEmailFix }).eq('ID', user.id);
+                console.log(`[tribute/verify] Fixed twitter placeholder → ${stripeEmailFix} for ${user.id}`);
+            }
+            return NextResponse.json({ success: true, alreadyExists: true });
+        }
         if (session.payment_status !== 'paid') {
             return NextResponse.json({ error: 'Payment not completed' }, { status: 402 });
         }
 
-        // Determine identifier
+        // Determine identifier — prefer real email from auth or Stripe over twitter placeholder
+        const stripeEmail = session.customer_details?.email?.trim().toLowerCase();
         const identifier = user.email
+            || stripeEmail
             || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : null)
-            || session.customer_details?.email
             || user.id;
 
         const displayName = user.user_metadata?.full_name
