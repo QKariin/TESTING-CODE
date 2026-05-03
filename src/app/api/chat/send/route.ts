@@ -214,6 +214,10 @@ export async function POST(req: Request) {
             if (raw.startsWith('WELCOME_CARD::')) return 'New tribute has entered the court';
             if (raw.startsWith('CHALLENGE_INVITE_CARD::')) return 'New challenge invitation';
             if (raw.startsWith('UPDATE_TRIBUTE_CARD::')) return 'Tribute update';
+            if (raw.startsWith('UPDATE_PHOTO_CARD::')) return 'New photo';
+            if (raw === '[GIF]' || raw === '[PHOTO]') return 'New message';
+            // URLs (http/https or common image/gif extensions) — show generic text
+            if (/^https?:\/\//i.test(raw) || /\.(gif|jpg|jpeg|png|webp|mp4|mov)(\?|$)/i.test(raw)) return 'New message';
             return raw.slice(0, 100);
         }
 

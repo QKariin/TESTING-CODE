@@ -496,24 +496,29 @@ function showGiftToast(title: string, amount: number, merit: number) {
 }
 
 // ─── New Message Banner: slides in when Queen sends a message ───────────────
-function showNewMessageBanner(preview: string) {
+function showNewMessageBanner(preview: string, mediaUrl?: string) {
     const existing = document.getElementById('queenMsgBanner');
     if (existing) existing.remove();
 
     const banner = document.createElement('div');
     banner.id = 'queenMsgBanner';
     const escaped = preview.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const mediaBlock = mediaUrl
+        ? `<div style="margin-top:10px;border-radius:10px;overflow:hidden;max-height:160px;border:1px solid rgba(197,160,89,0.15);"><img src="${mediaUrl}" style="width:100%;max-height:160px;object-fit:contain;display:block;" onerror="this.parentElement.style.display='none'" /></div>`
+        : '';
     banner.innerHTML = `
         <div style="display:flex; align-items:flex-start; gap:14px;">
             <img src="/queen-nav.png" style="flex-shrink:0; width:44px; height:44px; border-radius:50%; object-fit:cover; border:1.5px solid rgba(197,160,89,0.6);" onerror="this.style.display='none'" />
             <div style="flex:1; min-width:0;">
-                <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">✦ New Message</div>
+                <div style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; letter-spacing:3px; text-transform:uppercase; margin-bottom:6px;">
+                    <svg width="10" height="8" viewBox="0 0 26 20" fill="#c5a059" style="vertical-align:middle;margin-right:4px;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>New Message</div>
                 <div style="font-family:'Orbitron', sans-serif; font-size:1.1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${escaped}</div>
             </div>
         </div>
+        ${mediaBlock}
         <div style="display:flex; gap:8px; margin-top:14px;">
             <button onclick="document.getElementById('queenMsgBanner').remove();" style="flex:1; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.5); border:1px solid rgba(255,255,255,0.1); padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.5rem; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)';" onmouseout="this.style.background='rgba(255,255,255,0.06)';">DISMISS</button>
-            <button onclick="document.getElementById('queenMsgBanner').remove(); if(typeof window.openMobChatOverlay==='function') window.openMobChatOverlay();" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.5rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">OPEN CHAT ♥</button>
+            <button onclick="document.getElementById('queenMsgBanner').remove(); if(typeof window.openMobChatOverlay==='function') window.openMobChatOverlay();" style="flex:2; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:9px 0; border-radius:8px; font-family:'Orbitron', sans-serif; font-size:0.5rem; font-weight:700; letter-spacing:1px; cursor:pointer;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">OPEN CHAT</button>
         </div>
     `;
     Object.assign(banner.style, {
@@ -1912,8 +1917,13 @@ export async function initChatSystem() {
                     if (ring) ring.classList.add('has-new-msg');
                     try { const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play(); } catch (_) {}
                     // Show in-app message banner
-                    const preview = typeof msg.content === 'string' ? msg.content.slice(0, 80) : '👑 New message';
-                    showNewMessageBanner(preview);
+                    const rawContent = typeof msg.content === 'string' ? msg.content : '';
+                    const isGifMsg = msg.type === 'gif' || (rawContent === '[GIF]' && msg.metadata?.gifUrl);
+                    const isUrlMsg = /^https?:\/\//i.test(rawContent) || /\.(gif|jpg|jpeg|png|webp|mp4|mov)(\?|$)/i.test(rawContent);
+                    const gifSrc = isGifMsg ? (msg.metadata?.gifUrl || rawContent) : (isUrlMsg && /\.(gif)/i.test(rawContent) ? rawContent : null);
+                    const imgSrc = !gifSrc && isUrlMsg && /\.(jpg|jpeg|png|webp)/i.test(rawContent) ? rawContent : null;
+                    const preview = (isGifMsg || isUrlMsg) ? 'New message' : rawContent.slice(0, 80) || 'New message';
+                    showNewMessageBanner(preview, gifSrc || imgSrc || undefined);
                 }
             }
 
