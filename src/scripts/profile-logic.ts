@@ -4179,14 +4179,14 @@ async function _loadMobGlLeaderboard(period: string) {
             return;
         }
         const MEDALS_MOB = ['🥇', '🥈', '🥉'];
-        const MEDAL_COLORS_MOB = ['#FFD700', '#C0C0C0', '#CD7F32'];
+        const MEDAL_COLORS_MOB = ['#c5a059', '#C0C0C0', '#CD7F32'];
         const top3 = entries.slice(0, 3);
         const rest = entries.slice(3);
 
         const top3Html = top3.map((e: any, i: number) => `
             <div class="mob-gl-rank-row mob-gl-rank-row--top mob-gl-rank-row--rank${i + 1}">
                 <div class="mob-gl-rank-medal">${MEDALS_MOB[i]}</div>
-                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar mob-gl-rank-avatar--top" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder mob-gl-rank-avatar--top"></div>`}
+                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar mob-gl-rank-avatar--top" alt="" onerror="this.onerror=null;this.style.display='none';this.parentElement.insertAdjacentHTML('afterbegin','<div class=\\'mob-gl-rank-avatar-placeholder mob-gl-rank-avatar--top\\'></div>')"/>` : `<div class="mob-gl-rank-avatar-placeholder mob-gl-rank-avatar--top"></div>`}
                 <div class="mob-gl-rank-info">
                     <div class="mob-gl-rank-name mob-gl-rank-name--top">${e.name || e.member_id || 'SLAVE'}</div>
                     ${e.hierarchy ? `<div class="mob-gl-rank-tier" style="color:${MEDAL_COLORS_MOB[i]}">${e.hierarchy}</div>` : ''}
@@ -4198,7 +4198,7 @@ async function _loadMobGlLeaderboard(period: string) {
         const restHtml = rest.map((e: any, i: number) => `
             <div class="mob-gl-rank-row">
                 <span class="mob-gl-rank-num">${i + 4}</span>
-                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar" alt="" onerror="this.style.display='none'"/>` : `<div class="mob-gl-rank-avatar-placeholder"></div>`}
+                ${e.avatar ? `<img src="${e.avatar}" class="mob-gl-rank-avatar" alt="" onerror="this.onerror=null;this.style.display='none';this.parentElement.insertAdjacentHTML('afterbegin','<div class=\\'mob-gl-rank-avatar-placeholder\\'></div>')"/>` : `<div class="mob-gl-rank-avatar-placeholder"></div>`}
                 <div class="mob-gl-rank-info">
                     <div class="mob-gl-rank-name">${e.name || e.member_id || 'SLAVE'}</div>
                     ${e.hierarchy ? `<div class="mob-gl-rank-tier">${e.hierarchy}</div>` : ''}

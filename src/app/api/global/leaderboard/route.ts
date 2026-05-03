@@ -21,16 +21,27 @@ export async function GET(req: Request) {
     const [{ data: tasks, error }, { data: profiles }] = await Promise.all([
         supabaseAdmin
             .from('tasks')
-            .select(`member_id, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", "Score"`),
+            .select(`member_id, ID, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", "Score"`),
         supabaseAdmin
             .from('profiles')
-            .select('member_id, id, name, hierarchy, avatar_url'),
+            .select('member_id, id, name, hierarchy, avatar_url, profile_picture_url, parameters'),
     ]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // profiles keyed by member_id (which is the email address)
-    const profileMap = new Map((profiles || []).map((p: any) => [p.member_id?.toLowerCase(), p]));
+    // profiles keyed by member_id (email) AND by id (UUID) for robust matching
+    const profileByEmail = new Map<string, any>();
+    const profileByUuid = new Map<string, any>();
+    (profiles || []).forEach((p: any) => {
+        if (p.member_id) profileByEmail.set(p.member_id.toLowerCase(), p);
+        if (p.id) profileByUuid.set(p.id.toLowerCase(), p);
+    });
+
+    function getAvatar(prof: any): string {
+        if (!prof) return '';
+        const params = prof.parameters || {};
+        return prof.avatar_url || prof.profile_picture_url || params.avatar_url || params.photoUrl || '';
+    }
 
     interface LeaderboardEntry {
         name: string;
@@ -42,11 +53,13 @@ export async function GET(req: Request) {
 
     const entries: LeaderboardEntry[] = (tasks || [])
         .map((t: any) => {
-            const prof: any = profileMap.get(t.member_id?.toLowerCase()) || {};
+            const key = (t.member_id || '').toLowerCase();
+            const taskUuid = (t.ID || '').toLowerCase();
+            const prof: any = profileByEmail.get(key) || profileByUuid.get(taskUuid) || profileByUuid.get(key) || {};
             return {
                 name: prof.name || t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
-                hierarchy: prof.hierarchy || t.Hierarchy || '-',
-                avatar: prof.avatar_url || '',
+                hierarchy: prof.hierarchy || t.Hierarchy || 'Hall Boy',
+                avatar: getAvatar(prof),
                 score: parseNum(t[colKey]),
                 member_number: prof.id || null,
             };
