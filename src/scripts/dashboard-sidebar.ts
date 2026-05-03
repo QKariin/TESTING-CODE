@@ -16,10 +16,18 @@ const prevOnlineState: Record<string, boolean> = {};
 
 /**
  * Canonical ID for a user — UUID (memberId), lowercase.
- * This is the SINGLE identifier used for read state, presence, localStorage sound keys.
+ * Used for read state, localStorage sound keys. NOT for presence (use presenceId).
  */
 function canonId(u: any): string {
     return (u.memberId || u.member_id || u.email || '').toLowerCase();
+}
+
+/**
+ * Presence-safe ID — email (member_id) first, then fallback.
+ * Profile pages track() with presenceKey(email), so we MUST hash the email, not UUID.
+ */
+function presenceId(u: any): string {
+    return (u.member_id || u.email || u.memberId || '').toLowerCase();
 }
 
 /**
@@ -85,10 +93,11 @@ function hasUnreadMessageAny(u: any): boolean {
 
 /**
  * Check if user is online — presence channel ONLY, no lastSeen fallback.
+ * Uses presenceId (email) because profile pages track with presenceKey(email).
  */
 function isUserOnline(u: any): boolean {
     if (!u) return false;
-    const email = canonId(u);
+    const email = presenceId(u);
     return email ? isMemberOnline(email) : false;
 }
 
@@ -182,7 +191,7 @@ function getSortedUsers(now: number): any[] {
 
     const onlineNoUnread = users
         .filter(u => isUserOnline(u) && !onlineIds.has(u.memberId))
-        .sort((a, b) => (onlineJoinTime[canonId(a)] || now) - (onlineJoinTime[canonId(b)] || now));
+        .sort((a, b) => (onlineJoinTime[presenceId(a)] || now) - (onlineJoinTime[presenceId(b)] || now));
     const allOnlineIds = new Set([...onlineIds, ...onlineNoUnread.map(u => u.memberId)]);
 
     const offlineWithUnread = users
@@ -234,18 +243,19 @@ export function updateSidebarItem(memberId: string) {
     if (!u) return;
 
     // Update tracking state for just this user
-    const email = canonId(u);
+    const pid = presenceId(u);
     const online = isUserOnline(u);
-    const wasOnline = prevOnlineState[email] ?? false;
-    if (online && !wasOnline) onlineJoinTime[email] = now;
-    if (!online) delete onlineJoinTime[email];
-    prevOnlineState[email] = online;
+    const wasOnline = prevOnlineState[pid] ?? false;
+    if (online && !wasOnline) onlineJoinTime[pid] = now;
+    if (!online) delete onlineJoinTime[pid];
+    prevOnlineState[pid] = online;
 
     // Sound notification
-    const lastSound = soundMemory[email] || 0;
+    const cid = canonId(u);
+    const lastSound = soundMemory[cid] || 0;
     const msgTime = u.lastMessageTime || 0;
     if (hasUnreadMessageAny(u) && msgTime > lastSound) {
-        soundMemory[email] = msgTime;
+        soundMemory[cid] = msgTime;
         triggerSound('sfx-notify');
     }
 
@@ -319,17 +329,18 @@ function reorderSidebar(newOrder: string[]) {
 /** Update presence tracking state + sound notifications for all users */
 function updateTrackingState(now: number) {
     users.forEach(u => {
-        const email = canonId(u);
+        const pid = presenceId(u);
         const online = isUserOnline(u);
-        const wasOnline = prevOnlineState[email] ?? false;
-        if (online && !wasOnline) onlineJoinTime[email] = now;
-        if (!online) delete onlineJoinTime[email];
-        prevOnlineState[email] = online;
+        const wasOnline = prevOnlineState[pid] ?? false;
+        if (online && !wasOnline) onlineJoinTime[pid] = now;
+        if (!online) delete onlineJoinTime[pid];
+        prevOnlineState[pid] = online;
 
-        const lastSound = soundMemory[email] || 0;
+        const cid = canonId(u);
+        const lastSound = soundMemory[cid] || 0;
         const msgTime = u.lastMessageTime || 0;
         if (hasUnreadMessageAny(u) && msgTime > lastSound) {
-            soundMemory[email] = msgTime;
+            soundMemory[cid] = msgTime;
             triggerSound('sfx-notify');
         }
     });
