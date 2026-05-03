@@ -977,7 +977,7 @@ body {
 }
 
 .list-m-content {
-    width: 95vw !important;
+    width: calc(95vw - 320px) !important;
     max-width: 1400px !important;
     height: 90vh !important;
     background: rgba(5, 5, 5, 0.98) !important;
