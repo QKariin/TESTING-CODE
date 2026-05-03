@@ -889,7 +889,8 @@ export function showCertificate() {
     const tasks = Number(raw?.Taskdom_CompletedTasks || raw?.taskdom_completed_tasks || 0);
     const sacrifice = Number(raw?.total_coins_spent || 0);
     const score = Number(raw?.score || state.score || 0);
-    const since = raw?.created_at ? new Date(raw.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+    const sinceRaw = raw?.joined_date || raw?.created_at || '';
+    const since = sinceRaw ? new Date(sinceRaw).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
     const streak = Number(raw?.bestRoutinestreak || raw?.routinestreak || 0);
 
     const overlay = document.createElement('div');
@@ -956,6 +957,10 @@ export function showCertificate() {
     const uploadBtn = document.createElement('button');
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
     uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
+
+    const tagNote = document.createElement('div');
+    tagNote.style.cssText = 'font-family:Cinzel,serif;font-size:0.65rem;color:rgba(197,160,89,0.5);text-align:center;letter-spacing:1px;line-height:1.5;';
+    tagNote.textContent = 'Tag @QKarin in your post to qualify';
     uploadBtn.onclick = () => _uploadCertProof();
 
     const closeBtn = document.createElement('button');
@@ -964,6 +969,7 @@ export function showCertificate() {
     closeBtn.onclick = () => overlay.remove();
 
     btnWrap.appendChild(shareBtn);
+    btnWrap.appendChild(tagNote);
     btnWrap.appendChild(uploadBtn);
     btnWrap.appendChild(closeBtn);
     overlay.appendChild(card);
