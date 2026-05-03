@@ -22,6 +22,11 @@ let cachedFillers: any[] = [];
 let fillerUserId: string | null = null;
 const mainDashboardExpandedTasks = new Set<string>();
 
+// --- DETAIL PANEL GENERATION COUNTER ---
+// Incremented every time updateDetail is called for a new user.
+// Async sub-functions check this before writing to DOM to prevent stale data.
+let _detailGen = 0;
+
 function calculateRoutineStreak(historyStr: string | any[]): number {
     if (!historyStr) return 0;
 
@@ -126,6 +131,8 @@ function calculateInternalStreak(historyStr: string | any[]): number {
 
 export async function updateDetail(u: any) {
     if (!u) return;
+
+    const gen = ++_detailGen;
 
     const report = getHierarchyReport(u);
     if (!report) return;
@@ -350,8 +357,8 @@ export async function updateDetail(u: any) {
     updateReviewQueue(u);
     updateActiveTask(u);
     updateTaskQueue(u);
-    updateChatterRoutine(u);
-    updateChatterPending(u);
+    updateChatterRoutine(u, gen);
+    updateChatterPending(u, gen);
     renderRoutineCalendar(u);
 
     // Notify React of lock state for this user
@@ -693,7 +700,7 @@ export function updateTaskQueue(u: any) {
 }
 
 /** Routine + Pending section in chatter right panel — shows proof images directly */
-async function updateChatterRoutine(u: any) {
+async function updateChatterRoutine(u: any, gen?: number) {
     const container = document.getElementById('chatter_RoutineContent');
     if (!container) return;
 
@@ -731,6 +738,7 @@ async function updateChatterRoutine(u: any) {
     // Sign the URL if needed
     const signedUrl = await getSignedUrl(todayEntry.proofUrl);
     const signedThumb = todayEntry.thumbnail_url ? await getSignedUrl(todayEntry.thumbnail_url) : null;
+    if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
     const proofStatus = todayEntry.status;
     const isVideo = todayEntry.proofUrl?.match(/\.(mp4|mov|webm)/i);
 
@@ -773,7 +781,7 @@ async function updateChatterRoutine(u: any) {
 }
 
 /** Pending review items (non-routine tasks) in chatter right panel */
-async function updateChatterPending(u: any) {
+async function updateChatterPending(u: any, gen?: number) {
     const section = document.getElementById('chatter_PendingSection');
     const container = document.getElementById('chatter_PendingContent');
     if (!section || !container) return;
@@ -795,10 +803,12 @@ async function updateChatterPending(u: any) {
 
     const cards: string[] = [];
     for (const t of queue) {
+        if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
         const url = t.proofUrl ? await getSignedUrl(t.proofUrl) : '';
         const thumb = (isVideo && t.thumbnail_url) ? await getSignedUrl(t.thumbnail_url) : null;
+        if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
         const imgSrc = isVideo ? (thumb || '') : url;
         const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>` : '';
 
