@@ -48,7 +48,50 @@ async function sendChatFeedback(memberId: string, mediaUrl: string | null, media
     }
 }
 
+function ensureLightbox(): HTMLElement {
+    let lb = document.getElementById('mediaLightbox');
+    if (!lb) {
+        lb = document.createElement('div');
+        lb.id = 'mediaLightbox';
+        lb.className = 'media-lightbox';
+        lb.innerHTML = '<span class="lb-close" onclick="window.closeLightbox()">&times;</span>';
+        lb.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+        document.body.appendChild(lb);
+    }
+    return lb;
+}
+
+export function openLightbox(url: string, isVideo: boolean) {
+    const lb = ensureLightbox();
+    // Remove old media
+    lb.querySelectorAll('img, video').forEach(el => el.remove());
+    if (isVideo) {
+        const v = document.createElement('video');
+        v.src = url;
+        v.controls = true;
+        v.autoplay = true;
+        v.style.cursor = 'default';
+        lb.appendChild(v);
+    } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cursor = 'default';
+        lb.appendChild(img);
+    }
+    lb.classList.add('active');
+}
+
+export function closeLightbox() {
+    const lb = document.getElementById('mediaLightbox');
+    if (lb) {
+        lb.querySelectorAll('video').forEach(v => { v.pause(); v.src = ''; });
+        lb.classList.remove('active');
+    }
+}
+
 export function closeModal() {
+    closeLightbox();
     const modal = document.getElementById('reviewModal');
     if (modal) {
         // Stop any playing video before hiding
@@ -118,12 +161,30 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     actionsEl.style.backgroundRepeat = 'no-repeat';
     actionsEl.style.backgroundPosition = 'top';
 
-    // Media - original behavior restored
+    // Media - contained in box, click opens lightbox
     if (mediaUrl) {
         if (isVideo) {
             mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" class="m-img">`;
+        }
+        // Attach lightbox click handler
+        const mediaEl = mediaBox.querySelector('.m-img') as HTMLElement;
+        if (mediaEl) {
+            mediaEl.style.cursor = 'zoom-in';
+            if (isVideo) {
+                // For video, add a small expand button so clicks on video still control playback
+                const expandBtn = document.createElement('div');
+                expandBtn.innerHTML = '⛶';
+                expandBtn.title = 'Expand';
+                expandBtn.style.cssText = 'position:absolute;top:10px;right:10px;width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;font-size:1rem;transition:0.2s;';
+                expandBtn.addEventListener('mouseenter', () => { expandBtn.style.background = 'rgba(255,255,255,0.15)'; });
+                expandBtn.addEventListener('mouseleave', () => { expandBtn.style.background = 'rgba(0,0,0,0.7)'; });
+                expandBtn.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(mediaUrl, true); });
+                mediaBox.appendChild(expandBtn);
+            } else {
+                mediaEl.addEventListener('click', () => openLightbox(mediaUrl, false));
+            }
         }
     } else {
         mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
@@ -980,5 +1041,7 @@ if (typeof window !== 'undefined') {
     (window as any).renderGlobalReview = renderGlobalReview;
     (window as any).closeListModal = closeListModal;
     (window as any).setRewardTier = setRewardTier;
+    (window as any).openLightbox = openLightbox;
+    (window as any).closeLightbox = closeLightbox;
 }
 
