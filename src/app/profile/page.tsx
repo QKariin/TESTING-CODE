@@ -382,7 +382,7 @@ export default function ProfilePage() {
 
                 // Fetch all data via the admin API route (same as dashboard) - bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
-                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
+                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email || user.id, full: true }) });
                 const rawData = await res.json();
 
                 // ── CRITICAL: always inject the auth email as member_id fallback ──

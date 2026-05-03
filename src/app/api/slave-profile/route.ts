@@ -9,7 +9,13 @@ async function getCaller(): Promise<{ email: string | null; uuid: string | null 
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        return { email: user?.email?.toLowerCase() || null, uuid: user?.id || null };
+        // For Twitter/Discord users without email, look up their member_id from profiles
+        let email = user?.email?.toLowerCase() || null;
+        if (!email && user?.id) {
+            const { data: p } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
+            if (p?.member_id) email = p.member_id.toLowerCase();
+        }
+        return { email, uuid: user?.id || null };
     } catch {
         return { email: null, uuid: null };
     }
@@ -86,7 +92,7 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
 
 export async function GET(request: NextRequest) {
     const { email: callerEmail, uuid: callerUuid } = await getCaller();
-    if (!callerEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!callerEmail && !callerUuid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email')?.toLowerCase();
@@ -94,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     if (!email) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
 
-    const isAdmin = ADMIN_EMAILS.includes(callerEmail);
+    const isAdmin = ADMIN_EMAILS.includes(callerEmail || '');
     const isSelf = callerEmail === email;
 
     if (!isAdmin && !isSelf) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -116,7 +122,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     const { email: callerEmail, uuid: callerUuid } = await getCaller();
-    if (!callerEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!callerEmail && !callerUuid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
     const { email: rawEmail, full, ...updates } = body;
@@ -124,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     if (!email) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
 
-    const isAdmin = ADMIN_EMAILS.includes(callerEmail);
+    const isAdmin = ADMIN_EMAILS.includes(callerEmail || '');
     // isSelf: match by email OR by UUID (when claimKneelReward passes the user's auth UUID)
     const isSelf = callerEmail === email || (!!callerUuid && callerUuid === email);
 
