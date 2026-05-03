@@ -1232,7 +1232,7 @@ function _exportCanvas(canvas: HTMLCanvasElement) {
 function _uploadCertProof() {
     const inp = document.createElement('input');
     inp.type = 'file';
-    inp.accept = 'image/*,video/*';
+    inp.accept = 'image/*';
     inp.onchange = async () => {
         const file = inp.files?.[0];
         if (!file) return;
@@ -1240,6 +1240,7 @@ function _uploadCertProof() {
         const userId = memberId || id;
         if (!userId) return;
         try {
+            // Upload to Supabase storage
             const sb = createClient();
             const ext = file.name.split('.').pop() || 'jpg';
             const path = `cert-proofs/${userId}-${Date.now()}.${ext}`;
@@ -1248,18 +1249,18 @@ function _uploadCertProof() {
             const { data: urlData } = sb.storage.from('uploads').getPublicUrl(path);
             const mediaUrl = urlData?.publicUrl || '';
 
-            // Send as private chat message to Queen for review
-            await fetch('/api/chat/send', {
+            // Submit via cert-proof API (handles cooldown + chat message)
+            const res = await fetch('/api/cert-proof', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    recipientEmail: 'ceo@qkarin.com',
-                    senderEmail: userId,
-                    message: `CERT_PROOF::${JSON.stringify({ mediaUrl, userName: (window as any).__currentProfileRaw?.name || '' })}`,
-                })
+                body: JSON.stringify({ action: 'submit', memberId: userId, mediaUrl }),
             });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || 'Submission failed.');
+                return;
+            }
 
-            // Close overlay and show confirmation
             document.getElementById('certOverlay')?.remove();
             alert('Proof uploaded! Queen will review and award your 300 coins.');
         } catch (e: any) {

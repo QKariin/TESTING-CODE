@@ -545,6 +545,32 @@ function renderToHtml(m: any) {
         } catch (e) { /* fall through */ }
     }
 
+    // ── Certificate Proof Card ──
+    if (content.startsWith('CERT_PROOF::')) {
+        try {
+            const d = JSON.parse(content.replace('CERT_PROOF::', ''));
+            const imgUrl = d.mediaUrl || '';
+            const userName = purifier.sanitize(d.userName || 'Unknown');
+            const proofMemberId = (d.memberId || m.sender_email || m.member_id || '').replace(/'/g, "\\'");
+            const cid = m.id || Date.now();
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:280px;width:65vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(74,222,128,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
+                        ${imgUrl ? `<img src="${imgUrl}" style="width:100%;max-height:200px;object-fit:cover;display:block;cursor:pointer;" onclick="window.open('${imgUrl}','_blank')" onerror="this.style.display='none'">` : ''}
+                        <div style="padding:10px 14px 14px;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">CERTIFICATE PROOF</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:10px;">${userName}</div>
+                            <div id="certAction_${cid}" style="display:flex;gap:8px;">
+                                <button onclick="event.stopPropagation();window._approveCertProof('${proofMemberId}','${cid}')" style="flex:1;padding:6px;border-radius:4px;border:1px solid rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);color:#4ade80;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;">APPROVE +300</button>
+                                <button onclick="event.stopPropagation();window._rejectCertProof('${proofMemberId}','${cid}')" style="flex:1;padding:6px;border-radius:4px;border:1px solid rgba(255,60,60,0.3);background:rgba(255,60,60,0.05);color:rgba(255,60,60,0.7);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;">REJECT</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
     // ── Task Feedback Card ── centered, clickable to open history modal
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {
@@ -1208,6 +1234,34 @@ export async function sendPaidMedia() {
 }
 
 // Global Bindings
+async function _approveCertProof(memberId: string, cardId: string) {
+    try {
+        const res = await fetch('/api/cert-proof', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'approve', memberId }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Failed'); return; }
+        const el = document.getElementById(`certAction_${cardId}`);
+        if (el) el.innerHTML = '<div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;text-align:center;">APPROVED +300 COINS</div>';
+    } catch (e) { alert('Error approving proof.'); }
+}
+
+async function _rejectCertProof(memberId: string, cardId: string) {
+    try {
+        const res = await fetch('/api/cert-proof', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reject', memberId }),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'Failed'); return; }
+        const el = document.getElementById(`certAction_${cardId}`);
+        if (el) el.innerHTML = '<div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(255,60,60,0.7);letter-spacing:2px;text-align:center;">REJECTED</div>';
+    } catch (e) { alert('Error rejecting proof.'); }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
@@ -1227,6 +1281,8 @@ if (typeof window !== 'undefined') {
     (window as any)._selectVaultItem = _selectVaultItem;
     (window as any).filterVault = filterVault;
     (window as any)._shareNewMemberOnX = _shareNewMemberOnX;
+    (window as any)._approveCertProof = _approveCertProof;
+    (window as any)._rejectCertProof = _rejectCertProof;
 }
 
 function _shareNewMemberOnX(name: string, rank: string, avatarUrl: string) {
