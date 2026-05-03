@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { mapUserProfile } from '@/lib/mapUserProfile';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,53 +22,42 @@ export async function GET(req: Request) {
     const [{ data: tasks, error }, { data: profiles, error: profErr }] = await Promise.all([
         supabaseAdmin
             .from('tasks')
-            .select(`member_id, ID, Name, Hierarchy, "Daily Score", "Weekly Score", "Monthly Score", "Score"`),
+            .select(`member_id, "ID", "Name", "Hierarchy", "Daily Score", "Weekly Score", "Monthly Score", "Score"`),
         supabaseAdmin
             .from('profiles')
-            .select('member_id, ID, name, hierarchy, avatar_url, profile_picture_url, parameters'),
+            .select('*'),
     ]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     if (profErr) console.error('[leaderboard] profiles query error:', profErr.message);
 
-    // profiles keyed by member_id (email) AND by id (UUID) for robust matching
+    // profiles keyed by member_id (email) AND by ID (UUID)
     const profileByEmail = new Map<string, any>();
     const profileByUuid = new Map<string, any>();
     (profiles || []).forEach((p: any) => {
         if (p.member_id) profileByEmail.set(p.member_id.toLowerCase(), p);
-        const uuid = p.ID || p.id;
-        if (uuid) profileByUuid.set(uuid.toLowerCase(), p);
+        if (p.ID) profileByUuid.set(p.ID.toLowerCase(), p);
     });
 
-    function getAvatar(prof: any): string {
-        if (!prof) return '';
-        const params = prof.parameters || {};
-        return prof.avatar_url || prof.profile_picture_url || params.avatar_url || params.photoUrl || '';
-    }
-
-    interface LeaderboardEntry {
-        name: string;
-        hierarchy: string;
-        avatar: string;
-        score: number;
-        member_number: string | null;
-    }
-
-    const entries: LeaderboardEntry[] = (tasks || [])
+    const entries = (tasks || [])
         .map((t: any) => {
             const key = (t.member_id || '').toLowerCase();
             const taskUuid = (t.ID || '').toLowerCase();
             const prof: any = profileByEmail.get(key) || profileByUuid.get(taskUuid) || profileByUuid.get(key) || {};
+
+            // Use the same mapUserProfile that the dashboard uses — guarantees same avatar logic
+            const mapped = mapUserProfile(prof, t);
+
             return {
-                name: prof.name || t.Name || t.member_id?.split('@')[0] || 'SUBJECT',
-                hierarchy: prof.hierarchy || t.Hierarchy || 'Hall Boy',
-                avatar: getAvatar(prof),
+                name: mapped.name || t.Name || 'SUBJECT',
+                hierarchy: mapped.hierarchy || 'Hall Boy',
+                avatar: mapped.avatar || '',
                 score: parseNum(t[colKey]),
-                member_number: prof.ID || prof.id || null,
+                member_number: prof.ID || null,
             };
         })
-        .filter((e: LeaderboardEntry) => e.score > 0)
-        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => b.score - a.score)
+        .filter((e: any) => e.score > 0)
+        .sort((a: any, b: any) => b.score - a.score)
         .slice(0, 10);
 
     return NextResponse.json({ entries, period });
