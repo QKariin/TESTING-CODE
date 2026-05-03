@@ -2372,10 +2372,16 @@ export async function initChatSystem() {
         email = 'pr.finsko@gmail.com';
     }
 
+    // For Twitter/Discord users without email, use member_id from profile state
+    if (!email) {
+        const stateEmail = getState().email || getState().raw?.member_id;
+        if (stateEmail) email = stateEmail.toLowerCase();
+    }
+
     console.log('[CHAT] initChatSystem starting');
 
-    if (!email) {
-        console.warn('[CHAT] initChatSystem: no email from auth, skipping');
+    if (!email && !userId) {
+        console.warn('[CHAT] initChatSystem: no email or userId from auth, skipping');
         return;
     }
 
@@ -2538,7 +2544,7 @@ export async function initChatSystem() {
                 if (!fresh) return;
                 // Case-insensitive guard
                 const rowEmail = (fresh.member_id || '').toLowerCase();
-                if (rowEmail !== email.toLowerCase()) return;
+                if (rowEmail !== (email || '').toLowerCase()) return;
 
                 if (fresh.wallet !== undefined || fresh.score !== undefined) {
                     setState({ wallet: fresh.wallet ?? getState().wallet, score: fresh.score ?? getState().score });
@@ -2598,7 +2604,7 @@ export async function initChatSystem() {
     }, 3000);
 
     // 7. Push notifications - always use email as external user ID (consistent with DB lookup)
-    initOneSignal(email);
+    if (email) initOneSignal(email);
 }
 
 async function _pollNewChatMessages(memberId: string) {
