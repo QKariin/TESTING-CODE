@@ -919,7 +919,7 @@ function getCertTheme(rank: string): CertTheme {
             tier: 1, accent: '#a07848', ar: 160, ag: 120, ab: 72,
             bgCss: 'linear-gradient(175deg,#0a0906 0%,#0e0c08 50%,#0a0906 100%)',
             borderCss: '1px solid rgba(160,120,72,0.25)',
-            glow: 0.02, stats: ['kneels', 'tasks'],
+            glow: 0.02, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Earning the right to be seen.',
             shadow: '0 25px 70px rgba(0,0,0,0.9)',
         };
@@ -927,7 +927,7 @@ function getCertTheme(rank: string): CertTheme {
             tier: 2, accent: '#a0a8b8', ar: 160, ag: 168, ab: 184,
             bgCss: 'linear-gradient(175deg,#0a0a0c 0%,#0d0d10 50%,#0a0a0c 100%)',
             borderCss: '1px solid rgba(160,168,184,0.25)',
-            glow: 0.03, stats: ['kneels', 'tasks', 'score'],
+            glow: 0.03, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Rising through devotion.',
             shadow: '0 25px 70px rgba(0,0,0,0.9),0 0 1px rgba(160,168,184,0.3)',
         };
