@@ -904,53 +904,38 @@ export function showCertificate() {
     card.id = 'certCard';
     card.style.cssText = 'width:355px;max-width:92vw;background:linear-gradient(175deg,#0a0806 0%,#0f0c08 30%,#0a0806 60%,#0d0b07 100%);border:1.5px solid rgba(197,160,89,0.35);border-radius:4px;padding:0;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.95),0 0 1px rgba(197,160,89,0.4);position:relative;overflow:hidden;margin-top:24px;';
 
-    const initial = name[0].toUpperCase();
-    const crownSvg = '<svg width="28" height="21" viewBox="0 0 26 20" fill="rgba(197,160,89,0.7)"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>';
-
     const statLine = (label: string, value: string) =>
-        `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid rgba(197,160,89,0.06);">
-            <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(197,160,89,0.45);letter-spacing:1px;font-weight:400;">${label}</span>
-            <span style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.85);font-weight:600;letter-spacing:1px;">${value}</span>
+        `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(197,160,89,0.06);">
+            <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(197,160,89,0.4);letter-spacing:1px;">${label}</span>
+            <span style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.85);font-weight:600;">${value}</span>
         </div>`;
 
     card.innerHTML = `
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(197,160,89,0.04) 0%,transparent 60%);pointer-events:none;"></div>
-        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent 10%,rgba(197,160,89,0.3) 50%,transparent 90%);"></div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(197,160,89,0.03) 0%,transparent 50%);pointer-events:none;"></div>
 
-        <!-- QKARIN.COM — THE BRAND -->
-        <div style="padding:28px 24px 0;">
-            <div style="font-family:'Cinzel',serif;font-size:1.6rem;color:#c5a059;font-weight:700;letter-spacing:6px;margin-bottom:2px;">QKARIN</div>
-            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.4);letter-spacing:8px;font-weight:400;">.COM</div>
-            <div style="width:80px;height:1px;background:rgba(197,160,89,0.2);margin:16px auto 0;"></div>
+        <!-- QKARIN.COM -->
+        <div style="padding:24px 24px 14px;">
+            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:#c5a059;font-weight:700;letter-spacing:5px;">QKARIN.COM</div>
         </div>
 
-        <!-- CERTIFICATE HEADER -->
+        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent);margin:0 auto;"></div>
+
+        <!-- NAME + POSITION -->
         <div style="padding:16px 24px 0;">
-            <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(197,160,89,0.5);letter-spacing:5px;font-weight:400;">CERTIFICATE OF SERVICE</div>
-        </div>
-
-        <!-- CROWN + INITIAL -->
-        <div style="padding:20px 0 6px;display:flex;flex-direction:column;align-items:center;">
-            <div style="margin-bottom:12px;">${crownSvg}</div>
-            <div style="width:64px;height:64px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.35);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.6rem;color:rgba(197,160,89,0.8);background:radial-gradient(circle,rgba(197,160,89,0.06) 0%,transparent 100%);letter-spacing:2px;">${initial}</div>
-        </div>
-
-        <!-- NAME + RANK -->
-        <div style="padding:10px 24px 0;">
-            <div style="font-family:'Cinzel',serif;font-size:1.3rem;color:rgba(255,255,255,0.92);font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;">${name}</div>
-            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.5);letter-spacing:4px;font-weight:400;">${rank.toUpperCase()}</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">${name}</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(197,160,89,0.55);letter-spacing:4px;">${rank.toUpperCase()}</div>
         </div>
 
         <!-- I SERVE QUEEN KARIN -->
-        <div style="padding:20px 24px 0;">
-            <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:0 auto 16px;"></div>
-            <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:4px;font-weight:400;margin-bottom:4px;">I SERVE</div>
-            <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;font-weight:700;letter-spacing:4px;">QUEEN KARIN</div>
-            <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:16px auto 0;"></div>
+        <div style="padding:14px 24px 12px;">
+            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:3px;margin-bottom:3px;">I SERVE</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.25rem;color:#c5a059;font-weight:700;letter-spacing:3px;">QUEEN KARIN</div>
         </div>
 
+        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.12),transparent);margin:0 auto;"></div>
+
         <!-- STATS -->
-        <div style="padding:16px 28px 6px;text-align:left;">
+        <div style="padding:10px 24px 4px;text-align:left;">
             ${statLine('Kneeling', kneels.toLocaleString())}
             ${statLine('Labor', tasks.toLocaleString())}
             ${statLine('Devotion', score.toLocaleString())}
@@ -959,10 +944,9 @@ export function showCertificate() {
             ${since ? statLine('Serving Since', since) : ''}
         </div>
 
-        <!-- FOOTER BRAND -->
-        <div style="padding:16px 24px 24px;">
-            <div style="width:60px;height:1px;background:rgba(197,160,89,0.12);margin:0 auto 14px;"></div>
-            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(197,160,89,0.3);letter-spacing:4px;">QKARIN.COM</div>
+        <!-- FOOTER -->
+        <div style="padding:12px 24px 20px;">
+            <div style="font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(197,160,89,0.25);letter-spacing:3px;">QKARIN.COM</div>
         </div>
     `;
 
