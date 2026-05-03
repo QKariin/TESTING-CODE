@@ -1462,6 +1462,20 @@ export function closeQueenMenu() {
     if (!el) return;
     el.classList.add('hidden');
     el.style.display = 'none';
+    // Collapse earn coins when hub closes
+    const content = document.getElementById('earnCoinsContent');
+    const arrow = document.getElementById('earnCoinsArrow');
+    if (content) content.style.display = 'none';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+}
+
+export function toggleEarnCoins() {
+    const content = document.getElementById('earnCoinsContent');
+    const arrow = document.getElementById('earnCoinsArrow');
+    if (!content) return;
+    const isOpen = content.style.display === 'flex';
+    content.style.display = isOpen ? 'none' : 'flex';
+    if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 export function toggleMobileStats() {

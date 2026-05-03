@@ -19,6 +19,7 @@ import {
     closeLobby,
     openQueenMenu,
     closeQueenMenu,
+    toggleEarnCoins,
     toggleMobileStats,
     toggleMobileChat,
     handleRoutineUpload,
@@ -198,6 +199,7 @@ export default function ProfilePage() {
             (window as any).closeLobby = closeLobby;
             (window as any).openQueenMenu = openQueenMenu;
             (window as any).closeQueenMenu = closeQueenMenu;
+            (window as any).toggleEarnCoins = toggleEarnCoins;
             (window as any).toggleMobileStats = toggleMobileStats;
             (window as any).toggleMobileChat = toggleMobileChat;
             (window as any).mobileRequestTask = () => { getRandomTask(); };
@@ -1555,10 +1557,10 @@ export default function ProfilePage() {
                                 <div className="hub-section-label">KNEELING HISTORY</div>
                                 <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px', width: '100%' }}></div>
                                 <div className="hub-kneel-bar-wrap">
-                                    <div className="mob-kneel-bar" style={{ height: '32px', cursor: 'default', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '4px', background: 'rgba(0,0,0,0.4)' }}>
-                                        <div id="kneelDailyFill" className="mob-bar-fill" style={{ background: 'linear-gradient(90deg,#c5a059,#f0d080)' }}></div>
-                                        <div className="mob-bar-content" style={{ width: '100%', justifyContent: 'center' }}>
-                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>0 / 8</span>
+                                    <div style={{ position: 'relative', height: '32px', borderRadius: '4px', border: '1px solid rgba(197,160,89,0.25)', background: 'linear-gradient(90deg, rgba(0,0,0,0.9), rgba(10,8,4,0.95))', overflow: 'hidden' }}>
+                                        <div id="kneelDailyFill" style={{ position: 'absolute', top: 0, left: 0, width: '0%', height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, #c5a059, #f0d080)', transition: 'width 0.5s ease' }}></div>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>0 / 8</span>
                                         </div>
                                     </div>
                                     <div className="hub-kneel-legend">
@@ -1585,10 +1587,14 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* EARN EXTRA COINS */}
+                            {/* EARN EXTRA COINS — collapsible */}
                             <div className="hub-section">
-                                <div className="hub-section-label">EARN EXTRA COINS</div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <button type="button" id="earnCoinsToggle" onClick={() => (window as any).toggleEarnCoins?.()}
+                                    style={{ width: '100%', padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 3, fontWeight: 700 }}>EARN EXTRA COINS</div>
+                                    <span id="earnCoinsArrow" style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', transition: 'transform 0.3s ease' }}>▼</span>
+                                </button>
+                                <div id="earnCoinsContent" style={{ display: 'none', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
                                     <button type="button" id="queenHubInstallRow" onClick={() => (window as any).handleInstallApp()}
                                         style={{ display: 'none', width: '100%', padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
                                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>INSTALL APP</div>
