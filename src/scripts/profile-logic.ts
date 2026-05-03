@@ -893,7 +893,7 @@ export function showCertificate() {
 
     const overlay = document.createElement('div');
     overlay.id = 'certOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
 
     const card = document.createElement('div');
     card.id = 'certCard';
