@@ -10,13 +10,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const { id: challengeId } = await params;
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.email) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-        const memberEmail = user.email.toLowerCase();
-
-        // Resolve profile
+        // Resolve profile by UUID first, then email
         const { data: prof } = await supabaseAdmin
-            .from('profiles').select('ID, member_id, wallet, timezone').ilike('member_id', memberEmail).maybeSingle();
+            .from('profiles').select('ID, member_id, wallet, timezone').eq('ID', user.id).maybeSingle();
         if (!prof) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
         const memberId = prof.member_id;
 

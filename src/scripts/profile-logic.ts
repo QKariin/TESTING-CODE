@@ -5140,7 +5140,8 @@ async function _doProfileUpload() {
             // Get user email here (after file selected - async is fine now)
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user?.email) {
+            const memberEmail = user?.email || getState().email || getState().raw?.member_id || user?.id;
+            if (!memberEmail) {
                 alert('Not logged in.');
                 if (elProfilePic) elProfilePic.style.opacity = '1';
                 if (elHudPic) elHudPic.style.opacity = '1';
@@ -5149,7 +5150,7 @@ async function _doProfileUpload() {
 
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('memberEmail', user.email);
+            fd.append('memberEmail', memberEmail);
 
             const res = await fetch('/api/upload-avatar', { method: 'POST', body: fd });
             const data = await res.json();
