@@ -990,6 +990,8 @@ export function showCertificate() {
     const t = getCertTheme(rank);
     const a = `${t.ar},${t.ag},${t.ab}`;
 
+    console.log('[CERT] rank =', rank, '→ tier', t.tier, '→ accent', t.accent);
+
     const overlay = document.createElement('div');
     overlay.id = 'certOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;';
@@ -1031,13 +1033,23 @@ export function showCertificate() {
         ? `<div style="position:absolute;inset:6px;border:1px solid rgba(${a},${t.tier >= 5 ? 0.15 : 0.08});border-radius:2px;pointer-events:none;"></div>`
         : '';
 
+    // Tier-specific decorative extras
+    const topOrnament = t.tier >= 5
+        ? `<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,transparent 5%,rgba(${a},0.4) 30%,rgba(${a},0.6) 50%,rgba(${a},0.4) 70%,transparent 95%);"></div>`
+        : '';
+    const bottomOrnament = t.tier >= 5
+        ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 10%,rgba(${a},0.3) 40%,rgba(${a},0.3) 60%,transparent 90%);"></div>`
+        : '';
+
     card.innerHTML = `
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(${a},${t.glow}) 0%,transparent 50%);pointer-events:none;"></div>
         ${innerBorder}
+        ${topOrnament}
+        ${bottomOrnament}
 
         <!-- QKARIN.COM -->
-        <div style="padding:24px 24px 6px;">
-            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:${t.accent};font-weight:700;letter-spacing:5px;">QKARIN.COM</div>
+        <div style="padding:${t.tier >= 5 ? '28' : '24'}px 24px 6px;">
+            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:${t.accent};font-weight:700;letter-spacing:5px;${t.tier >= 6 ? 'text-shadow:0 0 20px rgba(' + a + ',0.3);' : ''}">${t.tier >= 6 ? '\u265B ' : ''}QKARIN.COM${t.tier >= 6 ? ' \u265B' : ''}</div>
         </div>
 
         <!-- CERTIFICATE OF SERVICE -->
@@ -1045,16 +1057,16 @@ export function showCertificate() {
             <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(${a},0.45);letter-spacing:5px;">CERTIFICATE OF SERVICE</div>
         </div>
 
-        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},0.2),transparent);margin:0 auto;"></div>
+        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},${t.tier >= 3 ? 0.3 : 0.15}),transparent);margin:0 auto;"></div>
 
         <!-- NAME + POSITION -->
         <div style="padding:16px 24px 0;">
-            <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">${name}</div>
-            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(${a},0.55);letter-spacing:4px;">${rank.toUpperCase()}</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;${t.tier >= 5 ? 'text-shadow:0 0 15px rgba(' + a + ',0.15);' : ''}">${name}</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(${a},${t.tier >= 3 ? 0.65 : 0.45});letter-spacing:4px;">${rank.toUpperCase()}</div>
             ${t.stats.length > 0 ? `<div style="font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(${a},0.25);letter-spacing:2px;margin-top:4px;font-style:italic;">${t.tagline}</div>` : ''}
         </div>
 
-        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},0.3),transparent);margin:14px auto;"></div>
+        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},${t.tier >= 3 ? 0.35 : 0.15}),transparent);margin:14px auto;"></div>
 
         ${statsHtml}
 
