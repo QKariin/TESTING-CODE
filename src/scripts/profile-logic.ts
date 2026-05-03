@@ -1188,7 +1188,7 @@ function _drawCertificate(
         ctx.fillText(label, rightStart, y);
 
         ctx.textAlign = 'right';
-        ctx.font = '600 30px Cinzel, serif';
+        ctx.font = '600 26px Cinzel, serif';
         ctx.fillStyle = white;
         ctx.fillText(value, rightEnd, y);
 
