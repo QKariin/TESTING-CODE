@@ -991,8 +991,8 @@ async function _saveCertificate() {
     const since = sinceRaw ? new Date(sinceRaw).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
     const streak = Number(raw?.bestRoutinestreak || raw?.routinestreak || 0);
 
-    const W = 750;
-    const H = 1050;
+    const W = 1200;
+    const H = 630;
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
@@ -1002,8 +1002,8 @@ async function _saveCertificate() {
     ctx.fillStyle = '#0a0806';
     ctx.fillRect(0, 0, W, H);
 
-    // Subtle radial glow
-    const grad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.7);
+    // Subtle radial glow from left
+    const grad = ctx.createRadialGradient(0, H / 2, 0, 0, H / 2, W * 0.5);
     grad.addColorStop(0, 'rgba(197,160,89,0.04)');
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
@@ -1012,57 +1012,85 @@ async function _saveCertificate() {
     // Border
     ctx.strokeStyle = 'rgba(197,160,89,0.35)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(20, 20, W - 40, H - 40);
+    ctx.strokeRect(16, 16, W - 32, H - 32);
 
     // Inner border
     ctx.strokeStyle = 'rgba(197,160,89,0.1)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(30, 30, W - 60, H - 60);
+    ctx.strokeRect(24, 24, W - 48, H - 48);
 
     const gold = '#c5a059';
     const goldMuted = 'rgba(197,160,89,0.45)';
     const white = 'rgba(255,255,255,0.9)';
-    const cx = W / 2;
+
+    // ── LEFT SIDE: Branding + Name + Rank ──
+    const leftCx = 260;
 
     // QKARIN.COM
     ctx.textAlign = 'center';
-    ctx.font = '700 42px Cinzel, serif';
+    ctx.font = '700 38px Cinzel, serif';
     ctx.fillStyle = gold;
-    ctx.fillText('QKARIN.COM', cx, 100);
+    ctx.fillText('QKARIN.COM', leftCx, 140);
 
     // CERTIFICATE OF SERVICE
-    ctx.font = '400 15px Cinzel, serif';
+    ctx.font = '400 12px Cinzel, serif';
     ctx.fillStyle = goldMuted;
-    ctx.letterSpacing = '5px';
-    ctx.fillText('CERTIFICATE OF SERVICE', cx, 135);
+    ctx.fillText('CERTIFICATE OF SERVICE', leftCx, 170);
 
     // Gold divider
-    const divGrad1 = ctx.createLinearGradient(100, 0, W - 100, 0);
+    const divGrad1 = ctx.createLinearGradient(80, 0, 440, 0);
     divGrad1.addColorStop(0, 'transparent');
     divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
     divGrad1.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad1;
-    ctx.fillRect(100, 160, W - 200, 1);
+    ctx.fillRect(80, 195, 360, 1);
 
     // NAME
-    ctx.font = '700 34px Cinzel, serif';
+    ctx.font = '700 32px Cinzel, serif';
     ctx.fillStyle = white;
-    ctx.fillText(name, cx, 215);
+    ctx.fillText(name, leftCx, 250);
 
     // RANK
-    ctx.font = '400 20px Cinzel, serif';
+    ctx.font = '400 18px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.6)';
-    ctx.fillText(rank, cx, 250);
+    ctx.fillText(rank, leftCx, 285);
 
     // Gold divider under rank
-    const divGrad2 = ctx.createLinearGradient(150, 0, W - 150, 0);
+    const divGrad2 = ctx.createLinearGradient(120, 0, 400, 0);
     divGrad2.addColorStop(0, 'transparent');
     divGrad2.addColorStop(0.5, 'rgba(197,160,89,0.35)');
     divGrad2.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad2;
-    ctx.fillRect(150, 275, W - 300, 1);
+    ctx.fillRect(120, 305, 280, 1);
 
-    // Stats
+    // Serving Since — centered on left side, below rank
+    if (since) {
+        ctx.font = '400 13px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.4)';
+        ctx.fillText('Serving Since', leftCx, 345);
+        ctx.font = '600 17px Cinzel, serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillText(since, leftCx, 370);
+    }
+
+    // Footer on left
+    ctx.font = '400 11px Cinzel, serif';
+    ctx.fillStyle = 'rgba(197,160,89,0.2)';
+    ctx.fillText('QKARIN.COM', leftCx, H - 50);
+
+    // ── VERTICAL DIVIDER ──
+    const vx = 520;
+    const vGrad = ctx.createLinearGradient(0, 60, 0, H - 60);
+    vGrad.addColorStop(0, 'transparent');
+    vGrad.addColorStop(0.3, 'rgba(197,160,89,0.2)');
+    vGrad.addColorStop(0.7, 'rgba(197,160,89,0.2)');
+    vGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = vGrad;
+    ctx.fillRect(vx, 60, 1, H - 120);
+
+    // ── RIGHT SIDE: Stats ──
+    const rightStart = 570;
+    const rightEnd = W - 60;
     const stats: [string, string][] = [
         ['Kneeling', kneels.toLocaleString()],
         ['Tasks Completed', tasks.toLocaleString()],
@@ -1070,37 +1098,29 @@ async function _saveCertificate() {
         ['Sacrifice', sacrifice.toLocaleString()],
         ['Best Streak', streak.toString()],
     ];
-    if (since) stats.push(['Serving Since', since]);
 
-    const statStartY = 320;
-    const statGap = 65;
-    const padX = 80;
+    const statStartY = 115;
+    const statGap = 90;
 
     stats.forEach(([label, value], i) => {
         const y = statStartY + i * statGap;
 
         // Label
         ctx.textAlign = 'left';
-        ctx.font = '400 17px Cinzel, serif';
+        ctx.font = '400 15px Cinzel, serif';
         ctx.fillStyle = 'rgba(197,160,89,0.45)';
-        ctx.fillText(label, padX, y);
+        ctx.fillText(label, rightStart, y);
 
         // Value
         ctx.textAlign = 'right';
-        ctx.font = '600 22px Cinzel, serif';
+        ctx.font = '600 20px Cinzel, serif';
         ctx.fillStyle = white;
-        ctx.fillText(value, W - padX, y);
+        ctx.fillText(value, rightEnd, y);
 
         // Divider line
         ctx.fillStyle = 'rgba(197,160,89,0.06)';
-        ctx.fillRect(padX, y + 15, W - padX * 2, 1);
+        ctx.fillRect(rightStart, y + 14, rightEnd - rightStart, 1);
     });
-
-    // Footer
-    ctx.textAlign = 'center';
-    ctx.font = '400 13px Cinzel, serif';
-    ctx.fillStyle = 'rgba(197,160,89,0.25)';
-    ctx.fillText('QKARIN.COM', cx, H - 55);
 
     // Convert to blob and save/share
     canvas.toBlob(async (blob) => {
