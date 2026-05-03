@@ -789,6 +789,8 @@ export function openLobby() {
     const emailEl = document.getElementById('hubEmail');
     if (emailEl) emailEl.textContent = memberId || id || '';
     _updateNotifToggleUI();
+    _updateHubLocks();
+    _updateInstallRow();
 }
 
 export function closeLobby() {
@@ -796,6 +798,194 @@ export function closeLobby() {
     if (!el) return;
     el.classList.add('hidden');
     el.style.display = 'none';
+}
+
+const LOCKED_RANKS = ['Hall Boy', 'Footman'];
+
+function _updateHubLocks() {
+    const state = getState();
+    const rank = (state as any).rank || 'Hall Boy';
+    const isLocked = LOCKED_RANKS.includes(rank);
+    const lockItems = [
+        { row: 'hubRoutineRow', lock: 'hubRoutineLock', desc: 'hubRoutineDesc', lockedText: 'Unlock at Silverman rank' },
+        { row: 'hubKinksRow', lock: 'hubKinksLock', desc: 'hubKinksDesc', lockedText: 'Unlock at Silverman rank' },
+        { row: 'hubLimitsRow', lock: 'hubLimitsLock', desc: 'hubLimitsDesc', lockedText: 'Unlock at Silverman rank' },
+    ];
+    for (const item of lockItems) {
+        const row = document.getElementById(item.row) as HTMLButtonElement | null;
+        const lock = document.getElementById(item.lock);
+        const desc = document.getElementById(item.desc);
+        if (!row) continue;
+        if (isLocked) {
+            row.style.opacity = '0.45';
+            row.style.pointerEvents = 'none';
+            if (lock) lock.style.display = '';
+            if (desc) desc.textContent = item.lockedText;
+        } else {
+            row.style.opacity = '';
+            row.style.pointerEvents = '';
+            if (lock) lock.style.display = 'none';
+        }
+    }
+}
+
+function _updateInstallRow() {
+    const row = document.getElementById('hubInstallRow');
+    if (!row) return;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    const state = getState();
+    const raw = (window as any).__currentProfileRaw || state.raw || state;
+    const alreadyClaimed = raw?.parameters?.appInstallClaimed === true;
+    if (isStandalone || alreadyClaimed) {
+        row.style.display = 'none';
+    } else {
+        row.style.display = '';
+    }
+}
+
+export async function handleInstallApp() {
+    const deferredPrompt = (window as any)._deferredInstallPrompt;
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        if (result.outcome === 'accepted') {
+            await _claimInstallReward();
+        }
+        (window as any)._deferredInstallPrompt = null;
+    } else {
+        // Show manual instructions for iOS / browsers without beforeinstallprompt
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const msg = isIOS
+            ? 'Tap the Share button at the bottom of Safari, then tap "Add to Home Screen".'
+            : 'Open your browser menu and tap "Add to Home Screen" or "Install App".';
+        if ((window as any).openTextFieldModal) {
+            // Show a simple info overlay
+            alert(msg + '\n\nOnce installed, open the app from your home screen and your 1,000 coins will be credited automatically.');
+        } else {
+            alert(msg);
+        }
+    }
+}
+
+async function _claimInstallReward() {
+    const { memberId, id } = getState();
+    const userId = memberId || id;
+    if (!userId) return;
+    try {
+        await fetch('/api/claim-reward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: userId, type: 'app_install', coins: 1000 })
+        });
+        const row = document.getElementById('hubInstallRow');
+        if (row) row.style.display = 'none';
+    } catch (e) {
+        console.error('[HUB] Install reward claim failed:', e);
+    }
+}
+
+export function showCertificate() {
+    closeLobby();
+    const state = getState();
+    const raw = (window as any).__currentProfileRaw || state.raw || state;
+    const name = raw?.name || 'LOYAL SUBJECT';
+    const rank = (state as any).rank || 'Hall Boy';
+    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const overlay = document.createElement('div');
+    overlay.id = 'certOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+
+    const card = document.createElement('div');
+    card.id = 'certCard';
+    card.style.cssText = 'width:340px;max-width:90vw;background:linear-gradient(170deg,#0c0a04,#13100a,#0c0a04);border:2px solid rgba(197,160,89,0.5);border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 40px rgba(197,160,89,0.08);position:relative;overflow:hidden;';
+
+    const crownSvg = '<svg width="40" height="30" viewBox="0 0 26 20" fill="#c5a059"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>';
+    const initial = name[0].toUpperCase();
+
+    card.innerHTML = `
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(197,160,89,0.06) 0%,transparent 70%);pointer-events:none;"></div>
+        <div style="margin-bottom:16px;">${crownSvg}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.6);letter-spacing:4px;margin-bottom:16px;">CERTIFICATE OF SERVICE</div>
+        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 18px;"></div>
+        <div style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.5rem;color:#c5a059;background:radial-gradient(circle,rgba(197,160,89,0.1),transparent);margin:0 auto 14px;box-shadow:0 0 20px rgba(197,160,89,0.12);">${initial}</div>
+        <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:#fff;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">${name}</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:3px;margin-bottom:6px;">${rank.toUpperCase()}</div>
+        <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:0 auto 18px;"></div>
+        <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(197,160,89,0.85);letter-spacing:2px;line-height:1.6;margin-bottom:18px;">I SERVE<br><span style="font-size:1.1rem;color:#c5a059;font-weight:700;">QUEEN KARIN</span></div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);letter-spacing:1px;">${date}</div>
+        <div style="margin-top:12px;font-family:'Orbitron',sans-serif;font-size:0.3rem;color:rgba(197,160,89,0.3);letter-spacing:2px;">THRONE.QKARIN.COM</div>
+    `;
+
+    const btnWrap = document.createElement('div');
+    btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-top:20px;width:340px;max-width:90vw;';
+
+    const shareBtn = document.createElement('button');
+    shareBtn.style.cssText = 'width:100%;padding:14px;border-radius:10px;border:1px solid rgba(197,160,89,0.4);background:rgba(197,160,89,0.08);color:#c5a059;font-family:Orbitron,sans-serif;font-size:0.65rem;letter-spacing:3px;cursor:pointer;';
+    shareBtn.textContent = 'SAVE & SHARE';
+    shareBtn.onclick = () => _saveCertificate();
+
+    const uploadBtn = document.createElement('button');
+    uploadBtn.style.cssText = 'width:100%;padding:14px;border-radius:10px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.06);color:#4ade80;font-family:Orbitron,sans-serif;font-size:0.65rem;letter-spacing:3px;cursor:pointer;';
+    uploadBtn.textContent = 'UPLOAD PROOF — EARN 1,000 C';
+    uploadBtn.onclick = () => _uploadCertProof();
+
+    const closeBtn = document.createElement('button');
+    closeBtn.style.cssText = 'width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);font-family:Orbitron,sans-serif;font-size:0.55rem;letter-spacing:3px;cursor:pointer;';
+    closeBtn.textContent = 'CLOSE';
+    closeBtn.onclick = () => overlay.remove();
+
+    btnWrap.appendChild(shareBtn);
+    btnWrap.appendChild(uploadBtn);
+    btnWrap.appendChild(closeBtn);
+    overlay.appendChild(card);
+    overlay.appendChild(btnWrap);
+    document.body.appendChild(overlay);
+}
+
+function _saveCertificate() {
+    alert('Take a screenshot of the certificate and share it on your socials!');
+}
+
+function _uploadCertProof() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,video/*';
+    inp.onchange = async () => {
+        const file = inp.files?.[0];
+        if (!file) return;
+        const { memberId, id } = getState();
+        const userId = memberId || id;
+        if (!userId) return;
+        try {
+            const sb = createClient();
+            const ext = file.name.split('.').pop() || 'jpg';
+            const path = `cert-proofs/${userId}-${Date.now()}.${ext}`;
+            const { error: upErr } = await sb.storage.from('uploads').upload(path, file, { upsert: true });
+            if (upErr) throw upErr;
+            const { data: urlData } = sb.storage.from('uploads').getPublicUrl(path);
+            const mediaUrl = urlData?.publicUrl || '';
+
+            // Send as private chat message to Queen for review
+            await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipientEmail: 'ceo@qkarin.com',
+                    senderEmail: userId,
+                    message: `CERT_PROOF::${JSON.stringify({ mediaUrl, userName: (window as any).__currentProfileRaw?.name || '' })}`,
+                })
+            });
+
+            // Close overlay and show confirmation
+            document.getElementById('certOverlay')?.remove();
+            alert('Proof uploaded! Queen will review and award your 1,000 coins.');
+        } catch (e: any) {
+            console.error('[CERT] Upload failed:', e);
+            alert('Upload failed. Please try again.');
+        }
+    };
+    inp.click();
 }
 
 let taskInterval: any = null;
@@ -4452,6 +4642,13 @@ export function closeExchequer() {
 }
 
 export function showLobbyAction(type: string) {
+    // Block locked items for low ranks
+    if (['routine', 'kinks', 'limits'].includes(type)) {
+        const state = getState();
+        const rank = (state as any).rank || 'Hall Boy';
+        if (LOCKED_RANKS.includes(rank)) return;
+    }
+
     // Close the hub first so the modal renders on top cleanly
     closeLobby();
 

@@ -1499,7 +1499,7 @@
 
     .hub-action-label {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.6rem;
+        font-size: 0.74rem;
         font-weight: 700;
         color: #fff;
         letter-spacing: 2px;
@@ -1507,11 +1507,11 @@
     }
 
     .hub-action-desc {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.4rem;
-        color: rgba(255, 255, 255, 0.3);
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.4);
         letter-spacing: 1px;
-        margin-top: 4px;
+        margin-top: 3px;
     }
 
     .hub-action-cost {

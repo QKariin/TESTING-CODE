@@ -97,6 +97,8 @@ import {
     _closeMobCreatePost,
     _onMobCreatePostFile,
     _submitMobPost,
+    handleInstallApp,
+    showCertificate,
 } from '@/scripts/profile-logic';
 
 
@@ -227,6 +229,8 @@ export default function ProfilePage() {
             (window as any).confirmLobbyAction = confirmLobbyAction;
             (window as any).backToLobbyMenu = backToLobbyMenu;
             (window as any).selectRoutineItem = selectRoutineItem;
+            (window as any).handleInstallApp = handleInstallApp;
+            (window as any).showCertificate = showCertificate;
             (window as any).getRandomTask = getRandomTask;
             (window as any).skipTask = skipTask;
             (window as any).resetTaskUI = resetTaskUI;
@@ -1443,7 +1447,6 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Update your display name</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">100 ₡</span>
                                 </button>
                                 <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('photo')}>
                                     <div className="hub-action-left">
@@ -1453,47 +1456,72 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Replace profile picture</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">500 ₡</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('routine')}>
+                                <button id="hubRoutineRow" className="hub-action-row" onClick={() => (window as any).showLobbyAction('routine')}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">◈</div>
                                         <div>
                                             <div className="hub-action-label">SET ROUTINE</div>
-                                            <div className="hub-action-desc">Select mandatory protocol</div>
+                                            <div className="hub-action-desc" id="hubRoutineDesc">Select mandatory protocol</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">300 ₡</span>
+                                    <span id="hubRoutineLock" className="hub-action-cost" style={{ display: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', letterSpacing: 2 }}>LOCKED</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
+                                <button id="hubKinksRow" className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">⬡</div>
                                         <div>
                                             <div className="hub-action-label">KINKS</div>
-                                            <div className="hub-action-desc">Define your preferences</div>
+                                            <div className="hub-action-desc" id="hubKinksDesc">Define your preferences</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">100 ₡</span>
+                                    <span id="hubKinksLock" className="hub-action-cost" style={{ display: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', letterSpacing: 2 }}>LOCKED</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
+                                <button id="hubLimitsRow" className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">⊗</div>
                                         <div>
                                             <div className="hub-action-label">LIMITS</div>
-                                            <div className="hub-action-desc">Set your hard boundaries</div>
+                                            <div className="hub-action-desc" id="hubLimitsDesc">Set your hard boundaries</div>
                                         </div>
                                     </div>
-                                    <span className="hub-action-cost">200 ₡</span>
+                                    <span id="hubLimitsLock" className="hub-action-cost" style={{ display: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', letterSpacing: 2 }}>LOCKED</span>
                                 </button>
                                 <button className="hub-action-row" id="notifToggleRow" onClick={() => (window as any).togglePushNotifications()}>
                                     <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">🔔</div>
+                                        <div className="hub-action-icon-wrap">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#c5a059" stroke="none"><path d="M12 2C10.34 2 9 3.34 9 5v.27C6.64 6.36 5 8.5 5 11v5l-2 2v1h18v-1l-2-2v-5c0-2.5-1.64-4.64-4-5.73V5c0-1.66-1.34-3-3-3zm0 20c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/></svg>
+                                        </div>
                                         <div>
                                             <div className="hub-action-label">NOTIFICATIONS</div>
                                             <div id="notifToggleDesc" className="hub-action-desc">Enable push notifications</div>
                                         </div>
                                     </div>
-                                    <span id="notifToggleStatus" className="hub-action-cost" style={{ color: '#555', fontSize: '0.55rem' }}>OFF</span>
+                                    <span id="notifToggleStatus" className="hub-action-cost" style={{ color: '#555', fontSize: '0.6rem' }}>OFF</span>
+                                </button>
+                                <button className="hub-action-row" id="hubInstallRow" onClick={() => (window as any).handleInstallApp()} style={{ display: 'none' }}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        </div>
+                                        <div>
+                                            <div className="hub-action-label">INSTALL APP</div>
+                                            <div className="hub-action-desc">Add to home screen — earn 1,000 coins</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
+                                </button>
+                                <button className="hub-action-row" onClick={() => (window as any).showCertificate()}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v4l2 2"/><path d="M8 16h8"/></svg>
+                                        </div>
+                                        <div>
+                                            <div className="hub-action-label">SERVICE CERTIFICATE</div>
+                                            <div className="hub-action-desc">Share on socials — earn 1,000 coins</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
                                 </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
