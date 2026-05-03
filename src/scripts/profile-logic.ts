@@ -954,18 +954,6 @@ export function showCertificate() {
     shareBtn.textContent = 'SAVE & SHARE';
     shareBtn.onclick = () => _saveCertificate();
 
-    const xBtn = document.createElement('button');
-    xBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.6);color:#fff;font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:4px;cursor:pointer;font-weight:600;';
-    xBtn.textContent = 'SHARE ON X';
-    xBtn.onclick = () => {
-        _saveCertificate();
-        const st = getState();
-        const r = (window as any).__currentProfileRaw || st.raw || st;
-        const rank = (st as any).rank || r?.hierarchy || 'servant';
-        const text = `I proudly serve as ${rank} at the court of @qkarin_com 👑 #QKarin #ServingTheQueen`;
-        setTimeout(() => window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank'), 600);
-    };
-
     const uploadBtn = document.createElement('button');
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
     uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
@@ -977,7 +965,6 @@ export function showCertificate() {
     closeBtn.onclick = () => overlay.remove();
 
     btnWrap.appendChild(shareBtn);
-    btnWrap.appendChild(xBtn);
     btnWrap.appendChild(uploadBtn);
     btnWrap.appendChild(closeBtn);
     overlay.appendChild(card);
