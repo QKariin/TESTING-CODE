@@ -24,7 +24,46 @@ const mainDashboardExpandedTasks = new Set<string>();
 
 function calculateRoutineStreak(historyStr: string | any[]): number {
     if (!historyStr) return 0;
-    return 0;
+
+    let entries: any[] = [];
+    try {
+        if (typeof historyStr === 'string') entries = JSON.parse(historyStr);
+        else if (Array.isArray(historyStr)) entries = historyStr;
+    } catch { return 0; }
+
+    // Only count routine entries that are pending or approved (rejected breaks streak)
+    const routines = entries
+        .filter((t: any) => t.isRoutine && t.timestamp && t.status !== 'reject')
+        .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    if (routines.length === 0) return 0;
+
+    const getDutyDay = (d: any) => {
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return '';
+        if (date.getHours() < 6) date.setDate(date.getDate() - 1);
+        return date.toISOString().split('T')[0];
+    };
+
+    const todayCode = getDutyDay(new Date());
+    const lastCode = getDutyDay(routines[0].timestamp);
+
+    const d1 = new Date(todayCode).getTime();
+    const d2 = new Date(lastCode).getTime();
+    const diffDays = (d1 - d2) / (86400000);
+
+    if (diffDays > 1) return 0; // Last routine was more than 1 day ago
+
+    let streak = 1;
+    let currentCode = lastCode;
+    for (let i = 1; i < routines.length; i++) {
+        const nextCode = getDutyDay(routines[i].timestamp);
+        if (nextCode === currentCode) continue;
+        const gap = (new Date(currentCode).getTime() - new Date(nextCode).getTime()) / 86400000;
+        if (gap === 1) { streak++; currentCode = nextCode; }
+        else break;
+    }
+    return streak;
 }
 
 // Keep the internal streak calculator for fallback if needed, but we'll prioritize getHierarchyReport

@@ -520,9 +520,14 @@ export const DbService = {
                         }
                     }
 
+                    const bestStreak = Math.max(consistency, Number(params.routine_streak || 0));
                     await supabaseAdmin
                         .from('profiles')
-                        .update({ parameters: { ...params, consistency } })
+                        .update({
+                            routinestreak: consistency,
+                            bestRoutinestreak: bestStreak,
+                            parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
+                        })
                         .eq('ID', profileForHistory.ID);
                 }
             } catch (histErr) {
