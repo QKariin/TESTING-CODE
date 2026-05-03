@@ -55,7 +55,7 @@ export async function POST(req: Request) {
                         stripe_session_id: session.id,
                         status: 'pending',
                     }).eq('id', applicationId);
-                    console.log(`✅ Application fee paid for ${email} - app ${applicationId}`);
+                    console.log(`[WEBHOOK] Application fee paid for ${email} - app ${applicationId}`);
                 }
             }
 
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
                 const userId = metadata.userId;
                 const userEmail = metadata.email;
                 const userName = metadata.name || userEmail.split('@')[0];
-                console.log(`📜 Initializing Account for: ${userEmail} (${userName})`);
+                console.log(`[TRIBUTE] Initializing Account for: ${userEmail} (${userName})`);
 
                 // Create the profile from scratch
                 await supabaseAdmin
@@ -94,14 +94,49 @@ export async function POST(req: Request) {
                         taskdom_pending_state: null,
                     });
 
-                console.log(`✅ Account Created as Hall Boy.`);
+                console.log(`[TRIBUTE] Account Created as Hall Boy.`);
+
+                // ── Welcome Card in Global Chat ──
+                try {
+                    await supabaseAdmin.from('global_messages').insert({
+                        sender_email: 'system@qkarin.com',
+                        sender_name: 'System',
+                        sender_avatar: null,
+                        message: `WELCOME_CARD::${JSON.stringify({
+                            name: userName,
+                            rank: 'Hall Boy',
+                            coins: 1111,
+                        })}`,
+                    });
+                    console.log(`[TRIBUTE] Welcome card posted for ${userName}`);
+                } catch (e: any) {
+                    console.error('[TRIBUTE] Welcome card error:', e.message);
+                }
+
+                // ── Push Notification to Queen ──
+                try {
+                    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
+                    await fetch(`${baseUrl}/api/push`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            externalId: 'ceo@qkarin.com',
+                            title: 'New Tribute Received',
+                            message: `${userName} just entered the court as Hall Boy — 1,111 coins deposited.`,
+                        }),
+                    });
+                    console.log(`[TRIBUTE] Push notification sent to Queen`);
+                } catch (e: any) {
+                    console.error('[TRIBUTE] Push notification error:', e.message);
+                }
+
             } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);
                 // Support both new metadata keys (email/userId) and legacy Wix keys
                 const userEmail = metadata.email || metadata.wixUserEmail;
                 const userId = metadata.userId || metadata.wixUserId;
 
-                console.log(`💰 Processing Coins: ${coins} for ${userEmail || userId}`);
+                console.log(`[COINS] Processing: ${coins} for ${userEmail || userId}`);
 
                 // Find Profile - try email first (ilike for case-insensitivity), fallback to id
                 let profile: any = null;
@@ -153,9 +188,9 @@ export async function POST(req: Request) {
                         .from('profiles')
                         .update({ wallet: newBalance, parameters: profileParams })
                         .eq('ID', profile.ID);
-                    console.log(`✅ Wallet Updated: ${newBalance} (+${coins})`);
+                    console.log(`[COINS] Wallet Updated: ${newBalance} (+${coins})`);
                 } else {
-                    console.error(`❌ User not found for coin deposit: ${userEmail || userId}`);
+                    console.error(`[COINS] User not found for coin deposit: ${userEmail || userId}`);
                 }
             }
 
@@ -166,7 +201,7 @@ export async function POST(req: Request) {
             if (session.mode === 'subscription' || metadata.type === "SUBSCRIPTION_55" || metadata.type === "SUBSCRIPTION") {
                 const subEmail = session.customer_details?.email || metadata.email;
                 const tierId = metadata.tierId || 'basic'; // basic | royal | ownership
-                console.log(`💎 Processing Subscription [${tierId}] for: ${subEmail}`);
+                console.log(`[SUB] Processing Subscription [${tierId}] for: ${subEmail}`);
 
                 const { data: profile } = await supabaseAdmin
                     .from('profiles')
@@ -194,7 +229,7 @@ export async function POST(req: Request) {
                         .update({ parameters: params })
                         .eq('ID', profile.ID);
 
-                    console.log(`✅ Subscription [${tierId}] activated for existing user.`);
+                    console.log(`[SUB] Subscription [${tierId}] activated for existing user.`);
                 } else {
                     const subUserId = session.client_reference_id || null;
                     await supabaseAdmin.from('profiles').insert({
@@ -211,12 +246,12 @@ export async function POST(req: Request) {
                             roles: [`subscriber_${tierId}`]
                         }
                     });
-                    console.log(`✅ New Subscriber Profile created [${tierId}].`);
+                    console.log(`[SUB] New Subscriber Profile created [${tierId}].`);
                 }
             }
 
         } catch (err: any) {
-            console.error("❌ Webhook Handling Error:", err);
+            console.error("[WEBHOOK] Handling Error:", err);
             return new NextResponse(`Webhook Handler Error: ${err.message}`, { status: 500 });
         }
     }

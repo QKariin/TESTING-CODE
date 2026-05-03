@@ -355,10 +355,11 @@ async function _loadTalkPreview() {
                 <div style="flex:1;min-width:0;">
                     <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:1px;margin-bottom:2px;">${name}</div>
                     <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${
-                        (m.message||'').startsWith('PROMOTION_CARD::') ? '✦ RANK PROMOTION' :
-                        (m.message||'').startsWith('CHALLENGE_JOIN_CARD::') ? '⚔ JOINED CHALLENGE' :
-                        (m.message||'').startsWith('CHALLENGE_ELIM_CARD::') ? '✕ ELIMINATED' :
-                        (m.message||'').startsWith('CHALLENGE_INVITE_CARD::') ? '⚔ CHALLENGE INVITE' :
+                        (m.message||'').startsWith('PROMOTION_CARD::') ? 'RANK PROMOTION' :
+                        (m.message||'').startsWith('CHALLENGE_JOIN_CARD::') ? 'JOINED CHALLENGE' :
+                        (m.message||'').startsWith('CHALLENGE_ELIM_CARD::') ? 'ELIMINATED' :
+                        (m.message||'').startsWith('CHALLENGE_INVITE_CARD::') ? 'CHALLENGE INVITE' :
+                        (m.message||'').startsWith('WELCOME_CARD::') ? 'NEW TRIBUTE' :
                         m.message}</div>
                 </div>
             </div>`;
@@ -957,6 +958,34 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         </div>
                         <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
                     </div>
+                </div>
+            </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
+    // WELCOME CARD (new tribute)
+    if (content.startsWith('WELCOME_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('WELCOME_CARD::', ''));
+            const wIni = (d.name || 'S')[0].toUpperCase();
+            const SVG_GATE = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5"><path d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16"/><path d="M3 21h18"/><path d="M9 21V10h6v11"/><path d="M12 3v4"/></svg>`;
+            const SVG_COIN = `<svg width="12" height="12" viewBox="0 0 24 24" fill="#c5a059" stroke="none"><circle cx="12" cy="12" r="10" fill="rgba(197,160,89,0.2)" stroke="#c5a059" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#c5a059">C</text></svg>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+                <div style="width:60%;min-width:240px;max-width:480px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:120px;background:linear-gradient(135deg,rgba(197,160,89,0.06),rgba(197,160,89,0.02));overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                            <div style="width:60px;height:60px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#c5a059;background:rgba(197,160,89,0.06);">${wIni}</div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;display:flex;align-items:center;gap:5px;">${SVG_GATE}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">NEW TRIBUTE</span></div>
+                        </div>
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${d.name || ''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.7);letter-spacing:2px;margin-bottom:10px;">${(d.rank || 'HALL BOY').toUpperCase()}</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.2);border-radius:20px;padding:4px 14px;">${SVG_COIN}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:1px;">${(d.coins || 1111).toLocaleString()} COINS</span></div>
+                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:12px auto 0;"></div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
                 </div>
             </div>`;
         } catch (e) { /* fall through */ }

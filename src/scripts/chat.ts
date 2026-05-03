@@ -33,7 +33,7 @@ export async function renderChat(messages: any[]) {
     const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::')) return false;
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::')) return false;
         if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
         const up = txt.toUpperCase();
         return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||
@@ -184,6 +184,30 @@ export async function renderChat(messages: any[]) {
                 }
             }
 
+            // WELCOME CARD (new tribute)
+            else if (originalMsg.startsWith('WELCOME_CARD::')) {
+                try {
+                    const d = JSON.parse(originalMsg.replace('WELCOME_CARD::', ''));
+                    const wIni = (d.name || 'S')[0].toUpperCase();
+                    contentHtml = `
+                    <div style="width:min(60%,480px);min-width:240px;margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:120px;background:linear-gradient(135deg,rgba(197,160,89,0.06),rgba(197,160,89,0.02));overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                            <div style="width:56px;height:56px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.3rem;color:#c5a059;background:rgba(197,160,89,0.06);">${wIni}</div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;display:flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5"><path d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16"/><path d="M3 21h18"/><path d="M9 21V10h6v11"/><path d="M12 3v4"/></svg><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;text-transform:uppercase;">NEW TRIBUTE</span></div>
+                        </div>
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${DOMPurify.sanitize(d.name || '')}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.7);letter-spacing:2px;margin-bottom:10px;">${(d.rank || 'HALL BOY').toUpperCase()}</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.2);border-radius:20px;padding:4px 14px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="#c5a059" stroke="none"><circle cx="12" cy="12" r="10" fill="rgba(197,160,89,0.2)" stroke="#c5a059" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="#c5a059">C</text></svg><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:1px;">${(d.coins || 1111).toLocaleString()} COINS</span></div>
+                            <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:12px auto 0;"></div>
+                        </div>
+                    </div>`;
+                } catch (e) {
+                    contentHtml = `<div class="msg m-queen">New Tribute</div>`;
+                }
+            }
+
             // B. TASK FEEDBACK CARD
             else if (originalMsg.startsWith('TASK_FEEDBACK::')) {
                 try {
@@ -282,12 +306,12 @@ export async function renderChat(messages: any[]) {
             }
         }
 
-        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::'))) {
+        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::'))) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         const avatarUrl = "/queen-karin.png";
-        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
+        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
             contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">

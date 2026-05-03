@@ -211,6 +211,7 @@ export async function POST(req: Request) {
             if (typeof raw !== 'string') return 'New message';
             if (raw.startsWith('TASK_FEEDBACK::')) return 'Task reviewed';
             if (raw.startsWith('PROMOTION_CARD::')) return 'You have been promoted!';
+            if (raw.startsWith('WELCOME_CARD::')) return 'New tribute has entered the court';
             if (raw.startsWith('CHALLENGE_INVITE_CARD::')) return 'New challenge invitation';
             if (raw.startsWith('UPDATE_TRIBUTE_CARD::')) return 'Tribute update';
             return raw.slice(0, 100);

@@ -520,6 +520,32 @@ function renderToHtml(m: any) {
         } catch (e) { /* fall through */ }
     }
 
+    // ── Welcome Card (new tribute) ──
+    if (content.startsWith('WELCOME_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('WELCOME_CARD::', ''));
+            const wIni = (d.name || 'S')[0].toUpperCase();
+            const SVG_GATE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16"/><path d="M3 21h18"/><path d="M9 21V10h6v11"/><path d="M12 3v4"/></svg>`;
+            const SVG_COIN = `<svg width="11" height="11" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><circle cx="12" cy="12" r="10" fill="rgba(var(--gold-rgb),0.2)" stroke="var(--gold)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="12" font-weight="700" fill="var(--gold)">C</text></svg>`;
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="width:260px;max-width:72vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(var(--gold-rgb),0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="position:relative;width:100%;height:100px;background:linear-gradient(135deg,rgba(var(--gold-rgb),0.06),rgba(var(--gold-rgb),0.02));overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                            <div style="width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(var(--gold-rgb),0.5);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.3rem;color:var(--gold);background:rgba(var(--gold-rgb),0.06);">${wIni}</div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#0e0b06 100%);"></div>
+                            <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(var(--gold-rgb),0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;display:flex;align-items:center;gap:4px;">${SVG_GATE}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:3px;">NEW TRIBUTE</span></div>
+                        </div>
+                        <div style="padding:12px 16px 16px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${purifier.sanitize(d.name || '')}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(var(--gold-rgb),0.7);letter-spacing:2px;margin-bottom:8px;">${(d.rank || 'HALL BOY').toUpperCase()}</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(var(--gold-rgb),0.08);border:1px solid rgba(var(--gold-rgb),0.2);border-radius:20px;padding:3px 12px;">${SVG_COIN}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:1px;">${(d.coins || 1111).toLocaleString()} COINS</span></div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
     // ── Task Feedback Card ── centered, clickable to open history modal
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {
