@@ -4158,7 +4158,8 @@ function _switchMobGlTab(tab: string) {
 
 export function switchMobGlPeriod(period: string) {
     _mobGlActivePeriod = period;
-    _mobGlLoaded['rank'] = false;
+    // Clear ALL cached rank periods so switching always re-renders
+    Object.keys(_mobGlLoaded).forEach(k => { if (k.startsWith('rank')) delete _mobGlLoaded[k]; });
     document.querySelectorAll('.mob-gl-period-btn').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById(`mobGlPeriod_${period}`);
     if (btn) btn.classList.add('active');
