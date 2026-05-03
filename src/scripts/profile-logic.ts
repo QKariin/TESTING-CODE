@@ -910,8 +910,13 @@ export function showCertificate() {
         <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(197,160,89,0.03) 0%,transparent 50%);pointer-events:none;"></div>
 
         <!-- QKARIN.COM -->
-        <div style="padding:24px 24px 14px;">
+        <div style="padding:24px 24px 6px;">
             <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:#c5a059;font-weight:700;letter-spacing:5px;">QKARIN.COM</div>
+        </div>
+
+        <!-- CERTIFICATE OF SERVICE -->
+        <div style="padding:4px 24px 14px;">
+            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(197,160,89,0.45);letter-spacing:5px;">CERTIFICATE OF SERVICE</div>
         </div>
 
         <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent);margin:0 auto;"></div>
@@ -922,19 +927,13 @@ export function showCertificate() {
             <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(197,160,89,0.55);letter-spacing:4px;">${rank.toUpperCase()}</div>
         </div>
 
-        <!-- I SERVE QUEEN KARIN -->
-        <div style="padding:14px 24px 12px;">
-            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:3px;margin-bottom:3px;">I SERVE</div>
-            <div style="font-family:'Cinzel',serif;font-size:1.25rem;color:#c5a059;font-weight:700;letter-spacing:3px;">QUEEN KARIN</div>
-        </div>
-
-        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.12),transparent);margin:0 auto;"></div>
+        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:14px auto;"></div>
 
         <!-- STATS -->
-        <div style="padding:10px 24px 4px;text-align:left;">
+        <div style="padding:4px 24px 4px;text-align:left;">
             ${statLine('Kneeling', kneels.toLocaleString())}
-            ${statLine('Labor', tasks.toLocaleString())}
-            ${statLine('Devotion', score.toLocaleString())}
+            ${statLine('Tasks Completed', tasks.toLocaleString())}
+            ${statLine('Points Earned', score.toLocaleString())}
             ${statLine('Sacrifice', sacrifice.toLocaleString())}
             ${statLine('Best Streak', streak.toString())}
             ${since ? statLine('Serving Since', since) : ''}
@@ -956,7 +955,7 @@ export function showCertificate() {
 
     const uploadBtn = document.createElement('button');
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
-    uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 1,000 C';
+    uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
     uploadBtn.onclick = () => _uploadCertProof();
 
     const closeBtn = document.createElement('button');

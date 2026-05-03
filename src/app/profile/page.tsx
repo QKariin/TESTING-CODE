@@ -1599,7 +1599,7 @@ export default function ProfilePage() {
                                         style={{ width: '100%', padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
                                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>SERVICE CERTIFICATE</div>
                                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>Share on socials — upload proof</div>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#4ade80', letterSpacing: 1, marginTop: 6 }}>+1,000 COINS</div>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#4ade80', letterSpacing: 1, marginTop: 6 }}>+300 COINS</div>
                                     </button>
                                 </div>
                             </div>
