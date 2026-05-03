@@ -1002,9 +1002,9 @@ async function _saveCertificate() {
     ctx.fillStyle = '#0a0806';
     ctx.fillRect(0, 0, W, H);
 
-    // Subtle radial glow from left
-    const grad = ctx.createRadialGradient(0, H / 2, 0, 0, H / 2, W * 0.5);
-    grad.addColorStop(0, 'rgba(197,160,89,0.04)');
+    // Subtle radial glow top-center
+    const grad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.6);
+    grad.addColorStop(0, 'rgba(197,160,89,0.05)');
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
@@ -1020,22 +1020,31 @@ async function _saveCertificate() {
     ctx.strokeRect(24, 24, W - 48, H - 48);
 
     const gold = '#c5a059';
-    const goldMuted = 'rgba(197,160,89,0.45)';
     const white = 'rgba(255,255,255,0.9)';
+    const cx = W / 2;
 
-    // ── LEFT SIDE: Branding + Name + Rank ──
+    // ── TOP: CERTIFICATE OF SERVICE headline ──
+    ctx.textAlign = 'center';
+    ctx.font = '400 16px Cinzel, serif';
+    ctx.fillStyle = 'rgba(197,160,89,0.5)';
+    ctx.fillText('CERTIFICATE OF SERVICE', cx, 62);
+
+    // Gold divider under headline
+    const topDiv = ctx.createLinearGradient(200, 0, W - 200, 0);
+    topDiv.addColorStop(0, 'transparent');
+    topDiv.addColorStop(0.5, 'rgba(197,160,89,0.25)');
+    topDiv.addColorStop(1, 'transparent');
+    ctx.fillStyle = topDiv;
+    ctx.fillRect(200, 78, W - 400, 1);
+
+    // ── LEFT SIDE: Branding + Name + Rank + Serving Since ──
     const leftCx = 260;
 
     // QKARIN.COM
     ctx.textAlign = 'center';
     ctx.font = '700 44px Cinzel, serif';
     ctx.fillStyle = gold;
-    ctx.fillText('QKARIN.COM', leftCx, 140);
-
-    // CERTIFICATE OF SERVICE
-    ctx.font = '400 14px Cinzel, serif';
-    ctx.fillStyle = goldMuted;
-    ctx.fillText('CERTIFICATE OF SERVICE', leftCx, 172);
+    ctx.fillText('QKARIN.COM', leftCx, 155);
 
     // Gold divider
     const divGrad1 = ctx.createLinearGradient(80, 0, 440, 0);
@@ -1043,17 +1052,17 @@ async function _saveCertificate() {
     divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
     divGrad1.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad1;
-    ctx.fillRect(80, 198, 360, 1);
+    ctx.fillRect(80, 178, 360, 1);
 
     // NAME
     ctx.font = '700 36px Cinzel, serif';
     ctx.fillStyle = white;
-    ctx.fillText(name, leftCx, 255);
+    ctx.fillText(name, leftCx, 235);
 
     // RANK
     ctx.font = '400 22px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.6)';
-    ctx.fillText(rank, leftCx, 290);
+    ctx.fillText(rank, leftCx, 270);
 
     // Gold divider under rank
     const divGrad2 = ctx.createLinearGradient(120, 0, 400, 0);
@@ -1061,32 +1070,27 @@ async function _saveCertificate() {
     divGrad2.addColorStop(0.5, 'rgba(197,160,89,0.35)');
     divGrad2.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad2;
-    ctx.fillRect(120, 305, 280, 1);
+    ctx.fillRect(120, 290, 280, 1);
 
     // Serving Since — centered on left side, below rank
     if (since) {
         ctx.font = '400 15px Cinzel, serif';
         ctx.fillStyle = 'rgba(197,160,89,0.4)';
-        ctx.fillText('Serving Since', leftCx, 350);
+        ctx.fillText('Serving Since', leftCx, 330);
         ctx.font = '600 20px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText(since, leftCx, 378);
+        ctx.fillText(since, leftCx, 358);
     }
-
-    // Footer on left
-    ctx.font = '400 12px Cinzel, serif';
-    ctx.fillStyle = 'rgba(197,160,89,0.2)';
-    ctx.fillText('QKARIN.COM', leftCx, H - 48);
 
     // ── VERTICAL DIVIDER ──
     const vx = 520;
-    const vGrad = ctx.createLinearGradient(0, 60, 0, H - 60);
+    const vGrad = ctx.createLinearGradient(0, 90, 0, H - 80);
     vGrad.addColorStop(0, 'transparent');
-    vGrad.addColorStop(0.3, 'rgba(197,160,89,0.2)');
-    vGrad.addColorStop(0.7, 'rgba(197,160,89,0.2)');
+    vGrad.addColorStop(0.2, 'rgba(197,160,89,0.2)');
+    vGrad.addColorStop(0.8, 'rgba(197,160,89,0.2)');
     vGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = vGrad;
-    ctx.fillRect(vx, 60, 1, H - 120);
+    ctx.fillRect(vx, 90, 1, H - 170);
 
     // ── RIGHT SIDE: Stats ──
     const rightStart = 590;
@@ -1099,8 +1103,8 @@ async function _saveCertificate() {
         ['Best Streak', streak.toString()],
     ];
 
-    const statStartY = 120;
-    const statGap = 95;
+    const statStartY = 140;
+    const statGap = 85;
 
     stats.forEach(([label, value], i) => {
         const y = statStartY + i * statGap;
@@ -1122,7 +1126,29 @@ async function _saveCertificate() {
         ctx.fillRect(rightStart, y + 14, rightEnd - rightStart, 1);
     });
 
-    // Convert to blob and save/share
+    // ── BOTTOM: Signature image ──
+    // Load signature SVG and draw it, then export
+    const sigImg = new Image();
+    sigImg.crossOrigin = 'anonymous';
+    sigImg.onload = () => {
+        // Draw signature centered at bottom — scale to fit nicely
+        const sigW = 320;
+        const sigH = sigW * (sigImg.naturalHeight / sigImg.naturalWidth);
+        const sigX = cx - sigW / 2;
+        const sigY = H - sigH - 35;
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(sigImg, sigX, sigY, sigW, sigH);
+        ctx.globalAlpha = 1.0;
+        _exportCanvas(canvas);
+    };
+    sigImg.onerror = () => {
+        // Fallback: just export without signature
+        _exportCanvas(canvas);
+    };
+    sigImg.src = '/signature.svg';
+}
+
+function _exportCanvas(canvas: HTMLCanvasElement) {
     canvas.toBlob(async (blob) => {
         if (!blob) return;
         const file = new File([blob], 'qkarin-certificate.png', { type: 'image/png' });
