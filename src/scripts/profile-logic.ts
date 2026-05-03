@@ -955,9 +955,20 @@ export function showCertificate() {
     shareBtn.onclick = () => _saveCertificate();
 
     const uploadBtn = document.createElement('button');
+    uploadBtn.id = 'certUploadBtn';
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
-    uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
-    uploadBtn.onclick = () => _uploadCertProof();
+
+    // Check if proof is pending approval (cooldown = already submitted)
+    const params = (raw?.parameters || {});
+    if (params.last_cert_proof_at && !params.cert_proof_approved) {
+        uploadBtn.textContent = 'WAITING FOR APPROVAL...';
+        uploadBtn.disabled = true;
+        uploadBtn.style.opacity = '0.4';
+        uploadBtn.style.cursor = 'not-allowed';
+    } else {
+        uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
+        uploadBtn.onclick = () => _uploadCertProof();
+    }
 
     const closeBtn = document.createElement('button');
     closeBtn.style.cssText = 'width:100%;padding:12px;border-radius:4px;border:none;background:transparent;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:4px;cursor:pointer;';
@@ -1010,16 +1021,16 @@ async function _saveCertificate() {
     sigImg.onerror = () => onLoaded();
     sigImg.src = '/signature.svg';
 
-    // Avatar — fetch as blob to bypass CORS
-    if (avatarUrl) {
-        fetch(avatarUrl, { mode: 'cors' })
+    // Avatar — always fetch as blob (most reliable, avoids CORS flakiness)
+    if (avatarUrl && avatarUrl !== '/collar-placeholder.png') {
+        fetch(avatarUrl)
             .then(r => r.blob())
             .then(blob => {
-                const url = URL.createObjectURL(blob);
+                const blobUrl = URL.createObjectURL(blob);
                 const avImg = new Image();
-                avImg.onload = () => { images.avatar = avImg; URL.revokeObjectURL(url); onLoaded(); };
-                avImg.onerror = () => { URL.revokeObjectURL(url); onLoaded(); };
-                avImg.src = url;
+                avImg.onload = () => { images.avatar = avImg; URL.revokeObjectURL(blobUrl); onLoaded(); };
+                avImg.onerror = () => { URL.revokeObjectURL(blobUrl); onLoaded(); };
+                avImg.src = blobUrl;
             })
             .catch(() => onLoaded());
     } else {
@@ -1239,32 +1250,35 @@ function _uploadCertProof() {
         const { memberId, id } = getState();
         const userId = memberId || id;
         if (!userId) return;
-        try {
-            // Upload to Supabase storage
-            const sb = createClient();
-            const ext = file.name.split('.').pop() || 'jpg';
-            const path = `cert-proofs/${userId}-${Date.now()}.${ext}`;
-            const { error: upErr } = await sb.storage.from('uploads').upload(path, file, { upsert: true });
-            if (upErr) throw upErr;
-            const { data: urlData } = sb.storage.from('uploads').getPublicUrl(path);
-            const mediaUrl = urlData?.publicUrl || '';
 
-            // Submit via cert-proof API (handles cooldown + chat message)
-            const res = await fetch('/api/cert-proof', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'submit', memberId: userId, mediaUrl }),
-            });
+        const btn = document.getElementById('certUploadBtn') as HTMLButtonElement;
+        try {
+            if (btn) { btn.textContent = 'UPLOADING...'; btn.disabled = true; btn.style.opacity = '0.5'; }
+
+            // Send file directly to API (server handles storage upload)
+            const form = new FormData();
+            form.append('memberId', userId);
+            form.append('file', file);
+
+            const res = await fetch('/api/cert-proof', { method: 'POST', body: form });
             const data = await res.json();
             if (!res.ok) {
+                if (btn) { btn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C'; btn.disabled = false; btn.style.opacity = '1'; }
                 alert(data.error || 'Submission failed.');
                 return;
             }
 
-            document.getElementById('certOverlay')?.remove();
-            alert('Proof uploaded! Queen will review and award your 300 coins.');
+            // Lock the button
+            if (btn) {
+                btn.textContent = 'WAITING FOR APPROVAL...';
+                btn.disabled = true;
+                btn.style.opacity = '0.4';
+                btn.style.cursor = 'not-allowed';
+                btn.onclick = null;
+            }
         } catch (e: any) {
             console.error('[CERT] Upload failed:', e);
+            if (btn) { btn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C'; btn.disabled = false; btn.style.opacity = '1'; }
             alert('Upload failed. Please try again.');
         }
     };

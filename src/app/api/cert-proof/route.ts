@@ -12,16 +12,17 @@ export async function POST(req: Request) {
     const caller = await getCaller();
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = await req.json();
-    const { action } = body;
+    const contentType = req.headers.get('content-type') || '';
 
-    // ── USER: Submit proof ──
-    if (action === 'submit') {
-        const { memberId, mediaUrl } = body;
-        if (!memberId || !mediaUrl) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    // ── USER: Submit proof via FormData (file upload) ──
+    if (contentType.includes('multipart/form-data')) {
+        const form = await req.formData();
+        const memberId = form.get('memberId') as string;
+        const file = form.get('file') as File | null;
+        if (!memberId || !file) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
         if (!isOwnerOrCEO(caller, memberId)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-        // Check 72h cooldown
+        // Look up profile
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
         const { data: profile } = await adminClient
             .from('profiles')
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
+        // Check 72h cooldown
         const params = profile.parameters || {};
         const lastProof = params.last_cert_proof_at ? new Date(params.last_cert_proof_at).getTime() : 0;
         const cooldownMs = 72 * 60 * 60 * 1000;
@@ -38,6 +40,21 @@ export async function POST(req: Request) {
             const hoursLeft = Math.ceil((cooldownMs - (Date.now() - lastProof)) / 3600000);
             return NextResponse.json({ error: `You can submit again in ${hoursLeft}h` }, { status: 429 });
         }
+
+        // Upload file to storage via admin client (bypasses RLS)
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const path = `cert-proofs/${profile.member_id}-${Date.now()}.${ext}`;
+        const arrayBuffer = await file.arrayBuffer();
+        const { error: upErr } = await adminClient.storage
+            .from('media')
+            .upload(path, arrayBuffer, { contentType: file.type || 'image/jpeg', upsert: true });
+
+        if (upErr) {
+            console.error('[cert-proof] Storage upload failed:', upErr.message);
+            return NextResponse.json({ error: 'File upload failed' }, { status: 500 });
+        }
+
+        const { data: { publicUrl } } = adminClient.storage.from('media').getPublicUrl(path);
 
         // Update cooldown timestamp
         await adminClient
@@ -49,13 +66,17 @@ export async function POST(req: Request) {
         await adminClient.from('chats').insert({
             member_id: profile.member_id,
             sender_email: profile.member_id,
-            content: `CERT_PROOF::${JSON.stringify({ mediaUrl, userName: profile.name || '', memberId: profile.member_id })}`,
+            content: `CERT_PROOF::${JSON.stringify({ mediaUrl: publicUrl, userName: profile.name || '', memberId: profile.member_id })}`,
             type: 'system',
             metadata: { isCertProof: true },
         });
 
         return NextResponse.json({ success: true });
     }
+
+    // ── JSON actions (approve / reject) ──
+    const body = await req.json();
+    const { action } = body;
 
     // ── CEO: Approve proof ──
     if (action === 'approve') {
