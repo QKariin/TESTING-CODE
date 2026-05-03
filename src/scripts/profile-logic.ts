@@ -658,21 +658,13 @@ if (typeof window !== 'undefined') {
 
                 showGiftToast(title, amount, data.meritGained);
 
-                // 4. Send Chat message + immediately inject card into chat
+                // 4. Send Chat message — realtime subscription will render the card
                 const tributeObj = globalTributes.find(t => t.id === id);
                 const tributeImage = tributeObj?.display_url || tributeObj?.image || "";
-                const wishlistMsg = {
-                    sender_email: memberId,
-                    type: 'wishlist',
-                    content: `Contributed ${amount.toLocaleString()} to ${title}`,
-                    metadata: { title, price: amount, image: tributeImage, isQueen: false },
-                    created_at: new Date().toISOString()
-                };
-                appendChatCard(wishlistMsg);
                 fetch('/api/chat/send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
+                    body: JSON.stringify({ memberId: memberId, content: `Contributed ${amount.toLocaleString()} to ${title}`, type: 'wishlist', metadata: { title, price: amount, image: tributeImage, isQueen: false } })
                 }).catch(e => console.warn('[CHAT] Tribute message send failed:', e));
 
                 // Re-fetch tributes to instantly update the progress bar visually
@@ -729,24 +721,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
             // Re-render quick tribute section to update Last Tribute info
             loadTributes();
 
-            // Notify chat with rich card + immediately inject card into chat
-            const tributeObj = globalTributes.find(t => t.id === id);
-            const tributeImage = tributeObj?.display_url || tributeObj?.image || "";
-            const wishlistMsg = {
-                sender_email: memberId,
-                type: 'wishlist',
-                content: `Purchased "${title}"`,
-                metadata: { title, price: cost, image: tributeImage, isQueen: false },
-                created_at: new Date().toISOString()
-            };
-            appendChatCard(wishlistMsg);
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: memberId, content: wishlistMsg.content, type: 'wishlist', metadata: wishlistMsg.metadata })
-            }).catch(e => console.warn('[CHAT] Tribute message send failed:', e));
-
-            // Close modal if open
+            // Chat card is inserted by /api/tributes/purchase — realtime will render it
             document.getElementById('tributeHuntOverlay')?.classList.add('hidden');
         } else {
             console.error("Purchase rejected:", data.error);
