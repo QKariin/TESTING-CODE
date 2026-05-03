@@ -1547,7 +1547,6 @@ export default function ProfilePage() {
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '14px' }}>
                                     <button id="btnRoutineUpload" className="hub-confirm-btn" onClick={() => (window as any).__routineAction?.()}>LOADING...</button>
                                     <div id="routineTimeMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#555', letterSpacing: '1px' }}>WINDOW CLOSED</div>
-                                    <div id="routineDoneMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#00cc66', letterSpacing: '2px', textShadow: '0 0 10px rgba(0,204,102,0.5)' }}>✔ SUBMITTED</div>
                                 </div>
                             </div>
 
@@ -1586,32 +1585,23 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* INSTALL APP + CERTIFICATE */}
+                            {/* EARN EXTRA COINS */}
                             <div className="hub-section">
-                                <button type="button" className="hub-action-row" id="queenHubInstallRow" onClick={() => (window as any).handleInstallApp()} style={{ display: 'none' }}>
-                                    <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                        </div>
-                                        <div>
-                                            <div className="hub-action-label">INSTALL APP</div>
-                                            <div className="hub-action-desc">Add to home screen — earn 1,000 coins</div>
-                                        </div>
-                                    </div>
-                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
-                                </button>
-                                <button type="button" className="hub-action-row" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if ((window as any).showCertificate) (window as any).showCertificate(); }}>
-                                    <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v4l2 2"/><path d="M8 16h8"/></svg>
-                                        </div>
-                                        <div>
-                                            <div className="hub-action-label">SERVICE CERTIFICATE</div>
-                                            <div className="hub-action-desc">Share on socials — earn 1,000 coins</div>
-                                        </div>
-                                    </div>
-                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
-                                </button>
+                                <div className="hub-section-label">EARN EXTRA COINS</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <button type="button" id="queenHubInstallRow" onClick={() => (window as any).handleInstallApp()}
+                                        style={{ display: 'none', width: '100%', padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>INSTALL APP</div>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>Add to home screen</div>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#4ade80', letterSpacing: 1, marginTop: 6 }}>+1,000 COINS</div>
+                                    </button>
+                                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if ((window as any).showCertificate) (window as any).showCertificate(); }}
+                                        style={{ width: '100%', padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>SERVICE CERTIFICATE</div>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>Share on socials — upload proof</div>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#4ade80', letterSpacing: 1, marginTop: 6 }}>+1,000 COINS</div>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

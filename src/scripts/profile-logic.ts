@@ -3209,6 +3209,7 @@ function _closeAllMobOverlays(except?: string) {
     if (nav) nav.style.display = '';
     if (except !== 'altar') closeAltarDrawer();
     closeLobby();
+    closeQueenMenu();
 }
 
 function _isOverlayOpen(id: string) {
