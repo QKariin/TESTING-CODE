@@ -1499,30 +1499,6 @@ export default function ProfilePage() {
                                     </div>
                                     <span id="notifToggleStatus" className="hub-action-cost" style={{ color: '#555', fontSize: '0.6rem' }}>OFF</span>
                                 </button>
-                                <button className="hub-action-row" id="hubInstallRow" onClick={() => (window as any).handleInstallApp()} style={{ display: 'none' }}>
-                                    <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                        </div>
-                                        <div>
-                                            <div className="hub-action-label">INSTALL APP</div>
-                                            <div className="hub-action-desc">Add to home screen — earn 1,000 coins</div>
-                                        </div>
-                                    </div>
-                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
-                                </button>
-                                <button type="button" className="hub-action-row" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if ((window as any).showCertificate) (window as any).showCertificate(); }}>
-                                    <div className="hub-action-left">
-                                        <div className="hub-action-icon-wrap">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v4l2 2"/><path d="M8 16h8"/></svg>
-                                        </div>
-                                        <div>
-                                            <div className="hub-action-label">SERVICE CERTIFICATE</div>
-                                            <div className="hub-action-desc">Share on socials — earn 1,000 coins</div>
-                                        </div>
-                                    </div>
-                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
-                                </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
                                 </div>
@@ -1610,25 +1586,32 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* SYSTEM DIAGNOSTICS */}
+                            {/* INSTALL APP + CERTIFICATE */}
                             <div className="hub-section">
-                                <div className="hub-section-label">SYSTEM DIAGNOSTICS</div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span className="hub-diag-text">SUPABASE CONNECTED</span>
-                                </div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span className="hub-diag-text">REALTIME ACTIVE</span>
-                                </div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span id="diagSyncTime" className="hub-diag-text">LAST SYNC: -</span>
-                                </div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span id="diagUserEmail" className="hub-diag-text">SESSION: -</span>
-                                </div>
+                                <button type="button" className="hub-action-row" id="queenHubInstallRow" onClick={() => (window as any).handleInstallApp()} style={{ display: 'none' }}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        </div>
+                                        <div>
+                                            <div className="hub-action-label">INSTALL APP</div>
+                                            <div className="hub-action-desc">Add to home screen — earn 1,000 coins</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
+                                </button>
+                                <button type="button" className="hub-action-row" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if ((window as any).showCertificate) (window as any).showCertificate(); }}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v4l2 2"/><path d="M8 16h8"/></svg>
+                                        </div>
+                                        <div>
+                                            <div className="hub-action-label">SERVICE CERTIFICATE</div>
+                                            <div className="hub-action-desc">Share on socials — earn 1,000 coins</div>
+                                        </div>
+                                    </div>
+                                    <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
+                                </button>
                             </div>
                         </div>
                     </div>

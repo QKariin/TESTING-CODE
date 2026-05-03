@@ -830,17 +830,13 @@ function _updateHubLocks() {
 }
 
 function _updateInstallRow() {
-    const row = document.getElementById('hubInstallRow');
-    if (!row) return;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     const state = getState();
     const raw = (window as any).__currentProfileRaw || state.raw || state;
     const alreadyClaimed = raw?.parameters?.appInstallClaimed === true;
-    if (isStandalone || alreadyClaimed) {
-        row.style.display = 'none';
-    } else {
-        row.style.display = '';
-    }
+    const show = !isStandalone && !alreadyClaimed;
+    const row = document.getElementById('queenHubInstallRow');
+    if (row) row.style.display = show ? '' : 'none';
 }
 
 export async function handleInstallApp() {
@@ -1453,11 +1449,7 @@ export function openQueenMenu() {
     if (!el) return;
     el.classList.remove('hidden');
     el.style.display = 'flex';
-    const { memberId, id } = getState();
-    const diagUser = document.getElementById('diagUserEmail');
-    if (diagUser) diagUser.textContent = `SESSION: ${memberId || id || '-'}`;
-    const diagSync = document.getElementById('diagSyncTime');
-    if (diagSync) diagSync.textContent = `LAST SYNC: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    _updateInstallRow();
 }
 
 export function closeQueenMenu() {
