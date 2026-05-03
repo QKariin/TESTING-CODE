@@ -1511,7 +1511,7 @@ export default function ProfilePage() {
                                     </div>
                                     <span className="hub-action-cost" style={{ color: '#4ade80', fontSize: '0.5rem', letterSpacing: 1 }}>+1,000 C</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showCertificate()}>
+                                <button type="button" className="hub-action-row" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if ((window as any).showCertificate) (window as any).showCertificate(); }}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v4l2 2"/><path d="M8 16h8"/></svg>

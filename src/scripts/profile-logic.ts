@@ -885,7 +885,6 @@ async function _claimInstallReward() {
 }
 
 export function showCertificate() {
-    closeLobby();
     const state = getState();
     const raw = (window as any).__currentProfileRaw || state.raw || state;
     const name = raw?.name || 'LOYAL SUBJECT';
@@ -941,6 +940,7 @@ export function showCertificate() {
     overlay.appendChild(card);
     overlay.appendChild(btnWrap);
     document.body.appendChild(overlay);
+    closeLobby();
 }
 
 function _saveCertificate() {
