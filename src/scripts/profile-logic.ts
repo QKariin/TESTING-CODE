@@ -3100,6 +3100,61 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         }
     }
 
+    // CERTIFICATE PROOF SUBMITTED (user sees their own submission)
+    if (content.startsWith('CERT_PROOF::')) {
+        try {
+            const d = JSON.parse(content.replace('CERT_PROOF::', ''));
+            const imgUrl = d.mediaUrl || '';
+            return `
+                <div class="cb-row" style="justify-content:center;padding:8px 0;">
+                    <div style="width:min(80%,300px);border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0c0a04 0%,#110e06 60%,#0a0803 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 35px rgba(0,0,0,0.7),0 0 20px rgba(197,160,89,0.04);">
+                        ${imgUrl ? `<img src="${imgUrl}" style="width:100%;max-height:180px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
+                        <div style="padding:14px 18px 16px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:6px;">CERTIFICATE PROOF</div>
+                            <div style="width:30%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:0 auto 8px;"></div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(197,160,89,0.7);letter-spacing:1px;">Awaiting Approval</div>
+                        </div>
+                    </div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+                </div>`;
+        } catch (_) { /* fall through */ }
+    }
+
+    // CERTIFICATE APPROVED
+    if (content.startsWith('CERT_APPROVED::')) {
+        try {
+            const d = JSON.parse(content.replace('CERT_APPROVED::', ''));
+            const reward = d.reward || 300;
+            return `
+                <div class="cb-row" style="justify-content:center;padding:8px 0;">
+                    <div style="width:min(80%,300px);border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#060d04 0%,#0a1306 60%,#060d04 100%);border:1px solid rgba(74,222,128,0.35);box-shadow:0 10px 35px rgba(0,0,0,0.7),0 0 20px rgba(74,222,128,0.06);">
+                        <div style="padding:20px 18px;text-align:center;">
+                            <div style="font-size:1.6rem;margin-bottom:8px;">&#10003;</div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(74,222,128,0.6);letter-spacing:3px;margin-bottom:8px;">CERTIFICATE APPROVED</div>
+                            <div style="width:30%;height:1px;background:linear-gradient(to right,transparent,rgba(74,222,128,0.3),transparent);margin:0 auto 10px;"></div>
+                            <div style="font-family:'Cinzel',serif;font-size:1rem;color:#4ade80;font-weight:700;letter-spacing:2px;">+${reward} COINS</div>
+                        </div>
+                    </div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+                </div>`;
+        } catch (_) { /* fall through */ }
+    }
+
+    // CERTIFICATE REJECTED
+    if (content.startsWith('CERT_REJECTED::')) {
+        return `
+            <div class="cb-row" style="justify-content:center;padding:8px 0;">
+                <div style="width:min(80%,300px);border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0d0404 0%,#130606 60%,#0d0404 100%);border:1px solid rgba(255,60,60,0.25);box-shadow:0 10px 35px rgba(0,0,0,0.7);">
+                    <div style="padding:20px 18px;text-align:center;">
+                        <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(255,60,60,0.5);letter-spacing:3px;margin-bottom:8px;">CERTIFICATE REJECTED</div>
+                        <div style="width:30%;height:1px;background:linear-gradient(to right,transparent,rgba(255,60,60,0.2),transparent);margin:0 auto 10px;"></div>
+                        <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(255,255,255,0.5);letter-spacing:1px;">Please try again with a valid screenshot.</div>
+                    </div>
+                </div>
+                ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+            </div>`;
+    }
+
     // TASK FEEDBACK CARD (comment card)
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {

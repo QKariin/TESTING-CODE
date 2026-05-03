@@ -62,12 +62,12 @@ export async function POST(req: Request) {
             .update({ parameters: { ...params, last_cert_proof_at: new Date().toISOString() } })
             .eq('ID', profile.ID);
 
-        // Send as chat message to Queen
+        // Send as chat message to Queen (type: 'chat' so it shows in regular messages on both sides)
         await adminClient.from('chats').insert({
             member_id: profile.member_id,
             sender_email: profile.member_id,
             content: `CERT_PROOF::${JSON.stringify({ mediaUrl: publicUrl, userName: profile.name || '', memberId: profile.member_id })}`,
-            type: 'system',
+            type: 'chat',
             metadata: { isCertProof: true },
         });
 
@@ -102,13 +102,13 @@ export async function POST(req: Request) {
             })
             .eq('ID', profile.ID);
 
-        // Send confirmation message to user
+        // Send confirmation message to user (regular chat so they see it)
         await adminClient.from('chats').insert({
             member_id: profile.member_id,
             sender_email: 'ceo@qkarin.com',
-            content: `Certificate proof approved! +${REWARD} coins awarded.`,
-            type: 'system',
-            metadata: { isSystem: true },
+            content: `CERT_APPROVED::${JSON.stringify({ reward: REWARD, userName: profile.member_id })}`,
+            type: 'chat',
+            metadata: { isCertApproved: true },
         });
 
         return NextResponse.json({ success: true, newWallet: (profile.wallet || 0) + REWARD });
@@ -137,13 +137,13 @@ export async function POST(req: Request) {
             .update({ parameters: params })
             .eq('ID', profile.ID);
 
-        // Send rejection message
+        // Send rejection message (regular chat so they see it)
         await adminClient.from('chats').insert({
             member_id: profile.member_id,
             sender_email: 'ceo@qkarin.com',
-            content: 'Certificate proof rejected. Please try again with a valid screenshot.',
-            type: 'system',
-            metadata: { isSystem: true },
+            content: `CERT_REJECTED::{}`,
+            type: 'chat',
+            metadata: { isCertRejected: true },
         });
 
         return NextResponse.json({ success: true });

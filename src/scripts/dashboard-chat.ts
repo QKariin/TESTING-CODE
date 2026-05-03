@@ -555,20 +555,33 @@ function renderToHtml(m: any) {
             const cid = m.id || Date.now();
             return `
                 <div class="chat-gift-wrap">
-                    <div style="max-width:280px;width:65vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(74,222,128,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
-                        ${imgUrl ? `<img src="${imgUrl}" style="width:100%;max-height:200px;object-fit:cover;display:block;cursor:pointer;" onclick="window.open('${imgUrl}','_blank')" onerror="this.style.display='none'">` : ''}
-                        <div style="padding:10px 14px 14px;">
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">CERTIFICATE PROOF</div>
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:10px;">${userName}</div>
-                            <div id="certAction_${cid}" style="display:flex;gap:8px;">
-                                <button onclick="event.stopPropagation();window._approveCertProof('${proofMemberId}','${cid}')" style="flex:1;padding:6px;border-radius:4px;border:1px solid rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);color:#4ade80;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;">APPROVE +300</button>
-                                <button onclick="event.stopPropagation();window._rejectCertProof('${proofMemberId}','${cid}')" style="flex:1;padding:6px;border-radius:4px;border:1px solid rgba(255,60,60,0.3);background:rgba(255,60,60,0.05);color:rgba(255,60,60,0.7);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;">REJECT</button>
+                    <div style="max-width:300px;width:70vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0c0a04 0%,#13100a 50%,#0c0a04 100%);border:1px solid rgba(197,160,89,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 20px rgba(197,160,89,0.06);">
+                        ${imgUrl ? `<div style="position:relative;"><img src="${imgUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;cursor:pointer;" onclick="window.open('${imgUrl}','_blank')" onerror="this.style.display='none'"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#0c0a04 100%);pointer-events:none;"></div></div>` : ''}
+                        <div style="padding:14px 18px 18px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.48rem;color:rgba(197,160,89,0.5);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">Certificate Proof</div>
+                            <div style="width:30%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.35),transparent);margin:0 auto 10px;"></div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">${userName}</div>
+                            <div id="certAction_${cid}" style="display:flex;gap:10px;">
+                                <button onclick="event.stopPropagation();window._approveCertProof('${proofMemberId}','${cid}')" style="flex:1;padding:10px 8px;border-radius:8px;border:1px solid rgba(74,222,128,0.35);background:rgba(74,222,128,0.06);color:#4ade80;font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:2px;cursor:pointer;transition:all 0.2s;">APPROVE +300</button>
+                                <button onclick="event.stopPropagation();window._rejectCertProof('${proofMemberId}','${cid}')" style="flex:1;padding:10px 8px;border-radius:8px;border:1px solid rgba(255,60,60,0.2);background:rgba(255,60,60,0.04);color:rgba(255,60,60,0.6);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:2px;cursor:pointer;transition:all 0.2s;">REJECT</button>
                             </div>
                         </div>
                     </div>
-                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
                 </div>`;
         } catch (e) { /* fall through */ }
+    }
+
+    // ── Certificate Approved/Rejected (dashboard sees these too) ──
+    if (content.startsWith('CERT_APPROVED::')) {
+        try {
+            const d = JSON.parse(content.replace('CERT_APPROVED::', ''));
+            return `<div class="chat-gift-wrap"><div style="max-width:260px;width:60vw;border-radius:12px;background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.25);padding:14px 18px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.45rem;color:rgba(74,222,128,0.6);letter-spacing:3px;margin-bottom:4px;">CERTIFICATE APPROVED</div><div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#4ade80;font-weight:700;">+${d.reward || 300} COINS</div></div>${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) { /* fall through */ }
+    }
+
+    if (content.startsWith('CERT_REJECTED::')) {
+        return `<div class="chat-gift-wrap"><div style="max-width:260px;width:60vw;border-radius:12px;background:rgba(255,60,60,0.04);border:1px solid rgba(255,60,60,0.15);padding:14px 18px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.45rem;color:rgba(255,60,60,0.5);letter-spacing:3px;">CERTIFICATE REJECTED</div></div>${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
     }
 
     // ── Task Feedback Card ── centered, clickable to open history modal
