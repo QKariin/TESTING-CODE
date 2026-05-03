@@ -134,7 +134,8 @@ body {
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    z-index: 50;
+    position: relative;
+    z-index: 12000;
     height: 100% !important;
     min-height: 0;
     min-width: 320px;
