@@ -954,11 +954,6 @@ export function showCertificate() {
     shareBtn.textContent = 'SAVE & SHARE';
     shareBtn.onclick = () => _saveCertificate();
 
-    const xBtn = document.createElement('button');
-    xBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(29,155,240,0.3);background:rgba(29,155,240,0.05);color:rgba(29,155,240,0.9);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:600;';
-    xBtn.textContent = 'SHARE ON X';
-    xBtn.onclick = () => _shareOnX();
-
     const uploadBtn = document.createElement('button');
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
     uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
@@ -970,7 +965,6 @@ export function showCertificate() {
     closeBtn.onclick = () => overlay.remove();
 
     btnWrap.appendChild(shareBtn);
-    btnWrap.appendChild(xBtn);
     btnWrap.appendChild(uploadBtn);
     btnWrap.appendChild(closeBtn);
     overlay.appendChild(card);
@@ -1207,18 +1201,6 @@ function _drawCertificate(
     _exportCanvas(canvas);
 }
 
-function _shareOnX() {
-    // Save the image first so they can attach it
-    _saveCertificate();
-    // Open X composer with pre-filled text + tag
-    const state = getState();
-    const raw = (window as any).__currentProfileRaw || state.raw || state;
-    const rank = (state as any).rank || raw?.hierarchy || 'servant';
-    const text = `I proudly serve as ${rank} at the court of @qkarin_com 👑\n\n#QKarin #ServingTheQueen`;
-    const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    setTimeout(() => window.open(url, '_blank'), 500);
-}
-
 function _exportCanvas(canvas: HTMLCanvasElement) {
     canvas.toBlob(async (blob) => {
         if (!blob) return;
@@ -1227,7 +1209,10 @@ function _exportCanvas(canvas: HTMLCanvasElement) {
         // Mobile: use Share API to get "Save Image" option
         if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
             try {
-                await navigator.share({ files: [file], title: 'My Service Certificate' });
+                const state = getState();
+                const raw = (window as any).__currentProfileRaw || state.raw || state;
+                const rank = (state as any).rank || raw?.hierarchy || 'servant';
+                await navigator.share({ files: [file], title: 'My Service Certificate', text: `I proudly serve as ${rank} at the court of @qkarin_com 👑 #QKarin #ServingTheQueen` });
                 return;
             } catch (e) {
                 // User cancelled or share failed — fall through to download
