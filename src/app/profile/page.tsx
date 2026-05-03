@@ -1550,7 +1550,7 @@ export default function ProfilePage() {
                             {/* KNEELING HISTORY */}
                             <div className="hub-section">
                                 <div className="hub-section-label">KNEELING HISTORY</div>
-                                <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px' }}></div>
+                                <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px', width: '100%' }}></div>
                                 <div className="hub-kneel-bar-wrap">
                                     <div className="mob-kneel-bar" style={{ height: '32px', cursor: 'default', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '4px', background: 'rgba(0,0,0,0.4)' }}>
                                         <div id="kneelDailyFill" className="mob-bar-fill" style={{ background: 'linear-gradient(90deg,#c5a059,#f0d080)' }}></div>

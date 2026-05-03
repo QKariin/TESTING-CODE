@@ -212,7 +212,7 @@
         display: grid;
         grid-template-columns: repeat(12, 1fr);
         gap: 3px;
-        width: 70%;
+        width: 90%;
         margin-bottom: 10px;
     }
 
@@ -233,13 +233,13 @@
     }
 
     .kdot-dim {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.06);
     }
 
     .kdot-off {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     /* STATS CARD (OVERRIDING .halo-stats-pill) */
@@ -1744,12 +1744,13 @@
     }
 
     .hub-legend-dot.dim {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .hub-legend-dot.off {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .hub-stats-row {
