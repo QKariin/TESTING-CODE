@@ -1001,7 +1001,7 @@ async function _saveCertificate() {
 
     // Preload images, then draw everything
     const images: Record<string, HTMLImageElement> = {};
-    let pending = 2;
+    let pending = avatarUrl ? 2 : 1;
     function onLoaded() {
         pending--;
         if (pending > 0) return;
@@ -1015,13 +1015,18 @@ async function _saveCertificate() {
     sigImg.onerror = () => onLoaded();
     sigImg.src = '/signature.svg';
 
-    // Avatar
+    // Avatar — fetch as blob to bypass CORS
     if (avatarUrl) {
-        const avImg = new Image();
-        avImg.crossOrigin = 'anonymous';
-        avImg.onload = () => { images.avatar = avImg; onLoaded(); };
-        avImg.onerror = () => onLoaded();
-        avImg.src = avatarUrl;
+        fetch(avatarUrl, { mode: 'cors' })
+            .then(r => r.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const avImg = new Image();
+                avImg.onload = () => { images.avatar = avImg; URL.revokeObjectURL(url); onLoaded(); };
+                avImg.onerror = () => { URL.revokeObjectURL(url); onLoaded(); };
+                avImg.src = url;
+            })
+            .catch(() => onLoaded());
     } else {
         onLoaded();
     }
@@ -1077,36 +1082,37 @@ function _drawCertificate(
     ctx.fillStyle = topDivR;
     ctx.fillRect(cx + 160, 56, W - 220 - cx, 1);
 
-    // ── LEFT SIDE ──
-    const leftCx = 260;
+    // ── LEFT SIDE (centered in left half: 0 to vx) ──
+    const vx = 520;
+    const leftCx = vx / 2;
 
     // NAME
     ctx.textAlign = 'center';
     ctx.font = '700 36px Cinzel, serif';
     ctx.fillStyle = white;
-    ctx.fillText(d.name, leftCx, 130);
+    ctx.fillText(d.name, leftCx, 125);
 
     // RANK
     ctx.font = '400 22px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.6)';
     ctx.letterSpacing = '4px';
-    ctx.fillText(d.rank, leftCx, 168);
+    ctx.fillText(d.rank, leftCx, 163);
     ctx.letterSpacing = '0px';
 
     // Gold divider under rank
-    const divGrad1 = ctx.createLinearGradient(100, 0, 420, 0);
+    const divGrad1 = ctx.createLinearGradient(leftCx - 150, 0, leftCx + 150, 0);
     divGrad1.addColorStop(0, 'transparent');
     divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
     divGrad1.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad1;
-    ctx.fillRect(100, 190, 320, 1);
+    ctx.fillRect(leftCx - 150, 185, 300, 1);
 
     // Avatar — circular, between rank and serving since
-    let avatarBottom = 205;
+    let avatarBottom = 200;
     if (d.images.avatar) {
-        const avSize = 130;
+        const avSize = 140;
         const avX = leftCx - avSize / 2;
-        const avY = 210;
+        const avY = 205;
         avatarBottom = avY + avSize + 18;
 
         ctx.save();
@@ -1151,7 +1157,6 @@ function _drawCertificate(
     }
 
     // ── VERTICAL DIVIDER ──
-    const vx = 520;
     const vGrad = ctx.createLinearGradient(0, 85, 0, H - 50);
     vGrad.addColorStop(0, 'transparent');
     vGrad.addColorStop(0.15, 'rgba(197,160,89,0.2)');
@@ -1160,9 +1165,9 @@ function _drawCertificate(
     ctx.fillStyle = vGrad;
     ctx.fillRect(vx, 85, 1, H - 135);
 
-    // ── RIGHT SIDE: Stats ──
-    const rightStart = 580;
-    const rightEnd = W - 70;
+    // ── RIGHT SIDE: Stats (centered in right half: vx to W) ──
+    const rightStart = vx + 50;
+    const rightEnd = W - 55;
     const stats: [string, string][] = [
         ['Points Earned', d.score.toLocaleString()],
         ['Tasks Completed', d.tasks.toLocaleString()],
@@ -1178,12 +1183,12 @@ function _drawCertificate(
         const y = statStartY + i * statGap;
 
         ctx.textAlign = 'left';
-        ctx.font = '400 19px Cinzel, serif';
-        ctx.fillStyle = 'rgba(197,160,89,0.5)';
+        ctx.font = '400 22px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.55)';
         ctx.fillText(label, rightStart, y);
 
         ctx.textAlign = 'right';
-        ctx.font = '600 26px Cinzel, serif';
+        ctx.font = '600 30px Cinzel, serif';
         ctx.fillStyle = white;
         ctx.fillText(value, rightEnd, y);
 
