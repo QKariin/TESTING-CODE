@@ -114,6 +114,12 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     if (chatChannel) { _supabase.removeChannel(chatChannel); chatChannel = null; }
     if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
 
+    // Clear system log + ticker immediately so old user's logs don't linger
+    const logEl = document.getElementById('dashSystemLogContent');
+    if (logEl) logEl.innerHTML = '';
+    const tickerEl = document.getElementById('dashSystemTicker');
+    if (tickerEl) tickerEl.innerHTML = '';
+
     activeChatEmail = activeId;
 
     // ── Restore from cache or fetch fresh ──
