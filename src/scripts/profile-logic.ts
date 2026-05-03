@@ -1028,14 +1028,14 @@ async function _saveCertificate() {
 
     // QKARIN.COM
     ctx.textAlign = 'center';
-    ctx.font = '700 38px Cinzel, serif';
+    ctx.font = '700 44px Cinzel, serif';
     ctx.fillStyle = gold;
     ctx.fillText('QKARIN.COM', leftCx, 140);
 
     // CERTIFICATE OF SERVICE
-    ctx.font = '400 12px Cinzel, serif';
+    ctx.font = '400 14px Cinzel, serif';
     ctx.fillStyle = goldMuted;
-    ctx.fillText('CERTIFICATE OF SERVICE', leftCx, 170);
+    ctx.fillText('CERTIFICATE OF SERVICE', leftCx, 172);
 
     // Gold divider
     const divGrad1 = ctx.createLinearGradient(80, 0, 440, 0);
@@ -1043,17 +1043,17 @@ async function _saveCertificate() {
     divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
     divGrad1.addColorStop(1, 'transparent');
     ctx.fillStyle = divGrad1;
-    ctx.fillRect(80, 195, 360, 1);
+    ctx.fillRect(80, 198, 360, 1);
 
     // NAME
-    ctx.font = '700 32px Cinzel, serif';
+    ctx.font = '700 36px Cinzel, serif';
     ctx.fillStyle = white;
-    ctx.fillText(name, leftCx, 250);
+    ctx.fillText(name, leftCx, 255);
 
     // RANK
-    ctx.font = '400 18px Cinzel, serif';
+    ctx.font = '400 22px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.6)';
-    ctx.fillText(rank, leftCx, 285);
+    ctx.fillText(rank, leftCx, 290);
 
     // Gold divider under rank
     const divGrad2 = ctx.createLinearGradient(120, 0, 400, 0);
@@ -1065,18 +1065,18 @@ async function _saveCertificate() {
 
     // Serving Since — centered on left side, below rank
     if (since) {
-        ctx.font = '400 13px Cinzel, serif';
+        ctx.font = '400 15px Cinzel, serif';
         ctx.fillStyle = 'rgba(197,160,89,0.4)';
-        ctx.fillText('Serving Since', leftCx, 345);
-        ctx.font = '600 17px Cinzel, serif';
+        ctx.fillText('Serving Since', leftCx, 350);
+        ctx.font = '600 20px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText(since, leftCx, 370);
+        ctx.fillText(since, leftCx, 378);
     }
 
     // Footer on left
-    ctx.font = '400 11px Cinzel, serif';
+    ctx.font = '400 12px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.2)';
-    ctx.fillText('QKARIN.COM', leftCx, H - 50);
+    ctx.fillText('QKARIN.COM', leftCx, H - 48);
 
     // ── VERTICAL DIVIDER ──
     const vx = 520;
@@ -1089,8 +1089,8 @@ async function _saveCertificate() {
     ctx.fillRect(vx, 60, 1, H - 120);
 
     // ── RIGHT SIDE: Stats ──
-    const rightStart = 570;
-    const rightEnd = W - 60;
+    const rightStart = 590;
+    const rightEnd = W - 80;
     const stats: [string, string][] = [
         ['Kneeling', kneels.toLocaleString()],
         ['Tasks Completed', tasks.toLocaleString()],
@@ -1099,21 +1099,21 @@ async function _saveCertificate() {
         ['Best Streak', streak.toString()],
     ];
 
-    const statStartY = 115;
-    const statGap = 90;
+    const statStartY = 120;
+    const statGap = 95;
 
     stats.forEach(([label, value], i) => {
         const y = statStartY + i * statGap;
 
         // Label
         ctx.textAlign = 'left';
-        ctx.font = '400 15px Cinzel, serif';
-        ctx.fillStyle = 'rgba(197,160,89,0.45)';
+        ctx.font = '400 19px Cinzel, serif';
+        ctx.fillStyle = 'rgba(197,160,89,0.5)';
         ctx.fillText(label, rightStart, y);
 
         // Value
         ctx.textAlign = 'right';
-        ctx.font = '600 20px Cinzel, serif';
+        ctx.font = '600 26px Cinzel, serif';
         ctx.fillStyle = white;
         ctx.fillText(value, rightEnd, y);
 
