@@ -997,24 +997,57 @@ async function _saveCertificate() {
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d')!;
+    const avatarUrl = raw?.avatar_url || raw?.profile_picture_url || '';
 
+    // Preload images, then draw everything
+    const images: Record<string, HTMLImageElement> = {};
+    let pending = 2;
+    function onLoaded() {
+        pending--;
+        if (pending > 0) return;
+        _drawCertificate(ctx, canvas, W, H, { name, rank, since, kneels, tasks, score, sacrifice, streak, images });
+    }
+
+    // Signature
+    const sigImg = new Image();
+    sigImg.crossOrigin = 'anonymous';
+    sigImg.onload = () => { images.sig = sigImg; onLoaded(); };
+    sigImg.onerror = () => onLoaded();
+    sigImg.src = '/signature.svg';
+
+    // Avatar
+    if (avatarUrl) {
+        const avImg = new Image();
+        avImg.crossOrigin = 'anonymous';
+        avImg.onload = () => { images.avatar = avImg; onLoaded(); };
+        avImg.onerror = () => onLoaded();
+        avImg.src = avatarUrl;
+    } else {
+        onLoaded();
+    }
+}
+
+function _drawCertificate(
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    W: number, H: number,
+    d: { name: string; rank: string; since: string; kneels: number; tasks: number; score: number; sacrifice: number; streak: number; images: Record<string, HTMLImageElement> }
+) {
     // Background
     ctx.fillStyle = '#0a0806';
     ctx.fillRect(0, 0, W, H);
 
-    // Subtle radial glow top-center
+    // Subtle radial glow
     const grad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.6);
     grad.addColorStop(0, 'rgba(197,160,89,0.05)');
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
 
-    // Border
+    // Borders
     ctx.strokeStyle = 'rgba(197,160,89,0.35)';
     ctx.lineWidth = 2;
     ctx.strokeRect(16, 16, W - 32, H - 32);
-
-    // Inner border
     ctx.strokeStyle = 'rgba(197,160,89,0.1)';
     ctx.lineWidth = 1;
     ctx.strokeRect(24, 24, W - 48, H - 48);
@@ -1027,80 +1060,103 @@ async function _saveCertificate() {
     ctx.textAlign = 'center';
     ctx.font = '400 16px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.5)';
-    ctx.fillText('CERTIFICATE OF SERVICE', cx, 62);
+    ctx.fillText('CERTIFICATE OF SERVICE', cx, 58);
 
-    // Gold divider under headline
     const topDiv = ctx.createLinearGradient(200, 0, W - 200, 0);
     topDiv.addColorStop(0, 'transparent');
     topDiv.addColorStop(0.5, 'rgba(197,160,89,0.25)');
     topDiv.addColorStop(1, 'transparent');
     ctx.fillStyle = topDiv;
-    ctx.fillRect(200, 78, W - 400, 1);
+    ctx.fillRect(200, 72, W - 400, 1);
 
-    // ── LEFT SIDE: Branding + Name + Rank + Serving Since ──
+    // ── LEFT SIDE ──
     const leftCx = 260;
 
-    // QKARIN.COM
-    ctx.textAlign = 'center';
-    ctx.font = '700 44px Cinzel, serif';
-    ctx.fillStyle = gold;
-    ctx.fillText('QKARIN.COM', leftCx, 155);
-
-    // Gold divider
-    const divGrad1 = ctx.createLinearGradient(80, 0, 440, 0);
-    divGrad1.addColorStop(0, 'transparent');
-    divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
-    divGrad1.addColorStop(1, 'transparent');
-    ctx.fillStyle = divGrad1;
-    ctx.fillRect(80, 178, 360, 1);
-
     // NAME
+    ctx.textAlign = 'center';
     ctx.font = '700 36px Cinzel, serif';
     ctx.fillStyle = white;
-    ctx.fillText(name, leftCx, 235);
+    ctx.fillText(d.name, leftCx, 125);
 
     // RANK
     ctx.font = '400 22px Cinzel, serif';
     ctx.fillStyle = 'rgba(197,160,89,0.6)';
-    ctx.fillText(rank, leftCx, 270);
+    ctx.fillText(d.rank, leftCx, 160);
 
     // Gold divider under rank
-    const divGrad2 = ctx.createLinearGradient(120, 0, 400, 0);
-    divGrad2.addColorStop(0, 'transparent');
-    divGrad2.addColorStop(0.5, 'rgba(197,160,89,0.35)');
-    divGrad2.addColorStop(1, 'transparent');
-    ctx.fillStyle = divGrad2;
-    ctx.fillRect(120, 290, 280, 1);
+    const divGrad1 = ctx.createLinearGradient(120, 0, 400, 0);
+    divGrad1.addColorStop(0, 'transparent');
+    divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
+    divGrad1.addColorStop(1, 'transparent');
+    ctx.fillStyle = divGrad1;
+    ctx.fillRect(120, 178, 280, 1);
 
-    // Serving Since — centered on left side, below rank
-    if (since) {
-        ctx.font = '400 15px Cinzel, serif';
+    // Avatar — circular, between rank and serving since
+    let avatarBottom = 190;
+    if (d.images.avatar) {
+        const avSize = 120;
+        const avX = leftCx - avSize / 2;
+        const avY = 195;
+        avatarBottom = avY + avSize + 15;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(leftCx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(d.images.avatar, avX, avY, avSize, avSize);
+        ctx.restore();
+
+        // Gold circle border
+        ctx.beginPath();
+        ctx.arc(leftCx, avY + avSize / 2, avSize / 2 + 1, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(197,160,89,0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Serving Since
+    if (d.since) {
+        const sinceY = avatarBottom + 15;
+        ctx.textAlign = 'center';
+        ctx.font = '400 14px Cinzel, serif';
         ctx.fillStyle = 'rgba(197,160,89,0.4)';
-        ctx.fillText('Serving Since', leftCx, 330);
-        ctx.font = '600 20px Cinzel, serif';
+        ctx.fillText('Serving Since', leftCx, sinceY);
+        ctx.font = '600 18px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText(since, leftCx, 358);
+        ctx.fillText(d.since, leftCx, sinceY + 26);
+    }
+
+    // Signature at bottom of left side
+    if (d.images.sig) {
+        const sigW = 280;
+        const sigH = sigW * (d.images.sig.naturalHeight / d.images.sig.naturalWidth);
+        const sigX = leftCx - sigW / 2;
+        const sigY = H - sigH - 30;
+        ctx.globalAlpha = 0.45;
+        ctx.drawImage(d.images.sig, sigX, sigY, sigW, sigH);
+        ctx.globalAlpha = 1.0;
     }
 
     // ── VERTICAL DIVIDER ──
     const vx = 520;
-    const vGrad = ctx.createLinearGradient(0, 90, 0, H - 80);
+    const vGrad = ctx.createLinearGradient(0, 85, 0, H - 50);
     vGrad.addColorStop(0, 'transparent');
-    vGrad.addColorStop(0.2, 'rgba(197,160,89,0.2)');
-    vGrad.addColorStop(0.8, 'rgba(197,160,89,0.2)');
+    vGrad.addColorStop(0.15, 'rgba(197,160,89,0.2)');
+    vGrad.addColorStop(0.85, 'rgba(197,160,89,0.2)');
     vGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = vGrad;
-    ctx.fillRect(vx, 90, 1, H - 170);
+    ctx.fillRect(vx, 85, 1, H - 135);
 
     // ── RIGHT SIDE: Stats ──
     const rightStart = 590;
     const rightEnd = W - 80;
     const stats: [string, string][] = [
-        ['Kneeling', kneels.toLocaleString()],
-        ['Tasks Completed', tasks.toLocaleString()],
-        ['Points Earned', score.toLocaleString()],
-        ['Sacrifice', sacrifice.toLocaleString()],
-        ['Best Streak', streak.toString()],
+        ['Points Earned', d.score.toLocaleString()],
+        ['Tasks Completed', d.tasks.toLocaleString()],
+        ['Kneeling Hours', d.kneels.toLocaleString()],
+        ['Sacrifice', d.sacrifice.toLocaleString()],
+        ['Best Streak', d.streak.toString()],
     ];
 
     const statStartY = 140;
@@ -1109,43 +1165,21 @@ async function _saveCertificate() {
     stats.forEach(([label, value], i) => {
         const y = statStartY + i * statGap;
 
-        // Label
         ctx.textAlign = 'left';
         ctx.font = '400 19px Cinzel, serif';
         ctx.fillStyle = 'rgba(197,160,89,0.5)';
         ctx.fillText(label, rightStart, y);
 
-        // Value
         ctx.textAlign = 'right';
         ctx.font = '600 26px Cinzel, serif';
         ctx.fillStyle = white;
         ctx.fillText(value, rightEnd, y);
 
-        // Divider line
         ctx.fillStyle = 'rgba(197,160,89,0.06)';
         ctx.fillRect(rightStart, y + 14, rightEnd - rightStart, 1);
     });
 
-    // ── BOTTOM: Signature image ──
-    // Load signature SVG and draw it, then export
-    const sigImg = new Image();
-    sigImg.crossOrigin = 'anonymous';
-    sigImg.onload = () => {
-        // Draw signature centered at bottom — scale to fit nicely
-        const sigW = 320;
-        const sigH = sigW * (sigImg.naturalHeight / sigImg.naturalWidth);
-        const sigX = cx - sigW / 2;
-        const sigY = H - sigH - 35;
-        ctx.globalAlpha = 0.5;
-        ctx.drawImage(sigImg, sigX, sigY, sigW, sigH);
-        ctx.globalAlpha = 1.0;
-        _exportCanvas(canvas);
-    };
-    sigImg.onerror = () => {
-        // Fallback: just export without signature
-        _exportCanvas(canvas);
-    };
-    sigImg.src = '/signature.svg';
+    _exportCanvas(canvas);
 }
 
 function _exportCanvas(canvas: HTMLCanvasElement) {
