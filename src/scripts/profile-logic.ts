@@ -958,12 +958,20 @@ export function showCertificate() {
     uploadBtn.id = 'certUploadBtn';
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
 
-    // Check if proof is pending approval (cooldown = already submitted)
+    // Check if proof is on cooldown (7 days)
     const params = (raw?.parameters || {});
-    if (params.last_cert_proof_at && !params.cert_proof_approved) {
-        uploadBtn.textContent = 'WAITING FOR APPROVAL...';
+    const lastProofAt = params.last_cert_proof_at ? new Date(params.last_cert_proof_at).getTime() : 0;
+    const cooldownMs = 7 * 24 * 60 * 60 * 1000;
+    const proofTimePassed = lastProofAt ? Date.now() - lastProofAt : cooldownMs + 1;
+
+    if (lastProofAt && proofTimePassed < cooldownMs) {
+        const hoursLeft = Math.ceil((cooldownMs - proofTimePassed) / 3600000);
+        const daysLeft = Math.floor(hoursLeft / 24);
+        const hLeft = hoursLeft % 24;
+        const lockText = daysLeft > 0 ? `LOCKED: ${daysLeft}d ${hLeft}h` : `LOCKED: ${hLeft}h`;
+        uploadBtn.textContent = lockText;
         uploadBtn.disabled = true;
-        uploadBtn.style.opacity = '0.4';
+        uploadBtn.style.opacity = '0.35';
         uploadBtn.style.cursor = 'not-allowed';
     } else {
         uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
@@ -1277,11 +1285,11 @@ function _uploadCertProof() {
                 return;
             }
 
-            // Lock the button
+            // Lock the button with 7d countdown
             if (btn) {
-                btn.textContent = 'WAITING FOR APPROVAL...';
+                btn.textContent = 'LOCKED: 7d 0h';
                 btn.disabled = true;
-                btn.style.opacity = '0.4';
+                btn.style.opacity = '0.35';
                 btn.style.cursor = 'not-allowed';
                 btn.onclick = null;
             }
