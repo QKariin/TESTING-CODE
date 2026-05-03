@@ -5,6 +5,26 @@ import { uploadToSupabase, getVideoDuration, isVideo, extractAndUploadVideoThumb
 import { getOptimizedUrl } from './media';
 import { presenceKey } from './dashboard-presence';
 
+// ─── DAILY VERIFICATION CODE (same formula as dashboard) ───
+function getDailyCode(): string {
+    const d = new Date();
+    const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    return String((seed * 7 + 1337) % 9000 + 1000);
+}
+
+function showDailyCode() {
+    const code = getDailyCode();
+    const els = ['deskDailyCodeVal', 'mobDailyCodeVal'];
+    els.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = code; });
+    const containers = ['deskDailyCode', 'mobDailyCode'];
+    containers.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'block'; });
+}
+
+function hideDailyCode() {
+    const containers = ['deskDailyCode', 'mobDailyCode'];
+    containers.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+}
+
 let globalTributes: any[] = [];
 export async function handleLogout() {
     const supabase = createClient();
@@ -1371,6 +1391,7 @@ export function startTaskTimer(ms: number) {
 export function resetTaskUI() {
     if (taskInterval) clearInterval(taskInterval);
     taskInterval = null;
+    hideDailyCode();
 
     const mainArea = document.getElementById('mainButtonsArea');
     const activeArea = document.getElementById('activeTaskContent');
@@ -1549,6 +1570,7 @@ export async function getRandomTask(isSilentInit = false) {
         const taskMsg = data.task.TaskText || data.task.tasktext || 'Perform the assigned duty.';
         if (readyText) readyText.innerHTML = taskMsg;
         if (mobTaskText) mobTaskText.innerHTML = taskMsg;
+        showDailyCode();
 
         const activeTimerRow = document.getElementById('activeTimerRow');
         const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
@@ -1806,6 +1828,10 @@ export async function updateRoutineWidget() {
         const res = await fetch('/api/routine-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: userId, tz }) });
         if (!res.ok) return;
         const data = await res.json();
+
+        // Populate daily code in routine section
+        const routineCodeEl = document.getElementById('deskRoutineCodeVal');
+        if (routineCodeEl) routineCodeEl.textContent = getDailyCode();
 
         const display = document.getElementById('deskRoutineDisplay');
         const mobDisplay = document.getElementById('mobRoutineDisplay'); // mobile routine name display
@@ -2492,6 +2518,7 @@ export async function initChatSystem() {
                 if (qmActive) { qmActive.classList.remove('hidden'); qmActive.style.display = 'block'; }
                 if (readyText) readyText.innerHTML = taskText;
                 if (mobTaskText) mobTaskText.innerHTML = taskText;
+                showDailyCode();
                 if (activeTimerRow) activeTimerRow.style.display = 'flex';
                 if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'flex';
 

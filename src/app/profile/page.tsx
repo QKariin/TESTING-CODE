@@ -899,6 +899,10 @@ export default function ProfilePage() {
                     <div id="gridStat2" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
                         <div className="ribbon-label" style={{ textAlign: 'center' }}>DAILY ROUTINE</div>
                         <div id="deskRoutineDisplay" style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.4, minHeight: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>LOADING...</div>
+                        <div id="deskRoutineDailyCode" style={{ textAlign: 'center', margin: '4px 0' }}>
+                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>CODE: </span>
+                            <span id="deskRoutineCodeVal" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', fontWeight: 900, color: '#c5a059', letterSpacing: '4px' }}>----</span>
+                        </div>
                         <button
                             id="deskRoutineActionBtn"
                             style={{
@@ -1048,6 +1052,11 @@ export default function ProfilePage() {
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
+                                <div id="deskDailyCode" style={{ display: 'none', textAlign: 'center', margin: '8px 0' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: '4px' }}>DAILY NUMBER</div>
+                                    <div id="deskDailyCodeVal" style={{ fontFamily: 'Orbitron', fontSize: '1.6rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 14px rgba(197,160,89,0.3)' }}>----</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginTop: '4px' }}>INCLUDE IN YOUR PHOTO / VIDEO</div>
+                                </div>
                                 <div id="activeTimerRow" className="card-timer-row">
                                     <div id="timerH" className="card-t-box">00</div>
                                     <div className="t-sep">:</div>
@@ -1813,6 +1822,11 @@ export default function ProfilePage() {
                                         <span className="working-dot"></span>SERVING
                                     </div>
                                     <div id="mobTaskText" style={{ marginBottom: '10px', minHeight: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.3, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>LOADING ORDER...</div>
+                                    <div id="mobDailyCode" style={{ display: 'none', textAlign: 'center', marginBottom: '12px' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: '3px' }}>DAILY NUMBER</div>
+                                        <div id="mobDailyCodeVal" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 14px rgba(197,160,89,0.3)' }}>----</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginTop: '3px' }}>INCLUDE IN YOUR PHOTO / VIDEO</div>
+                                    </div>
                                     <div className="card-timer-row">
                                         <div id="qm_timerH" className="card-t-box">00</div>:
                                         <div id="qm_timerM" className="card-t-box">00</div>:
