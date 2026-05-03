@@ -900,6 +900,80 @@ async function _claimInstallReward() {
     }
 }
 
+// ── Certificate rank themes ──────────────────────────────────────────────────
+interface CertTheme {
+    tier: number;
+    accent: string;
+    ar: number; ag: number; ab: number;
+    bgCss: string;
+    borderCss: string;
+    glow: number;
+    stats: string[];
+    tagline: string;
+    shadow: string;
+}
+
+function getCertTheme(rank: string): CertTheme {
+    switch (rank.toLowerCase().trim()) {
+        case 'footman': return {
+            tier: 1, accent: '#a07848', ar: 160, ag: 120, ab: 72,
+            bgCss: 'linear-gradient(175deg,#0a0906 0%,#0e0c08 50%,#0a0906 100%)',
+            borderCss: '1px solid rgba(160,120,72,0.25)',
+            glow: 0.02, stats: ['kneels', 'tasks'],
+            tagline: 'Earning the right to be seen.',
+            shadow: '0 25px 70px rgba(0,0,0,0.9)',
+        };
+        case 'silverman': return {
+            tier: 2, accent: '#a0a8b8', ar: 160, ag: 168, ab: 184,
+            bgCss: 'linear-gradient(175deg,#0a0a0c 0%,#0d0d10 50%,#0a0a0c 100%)',
+            borderCss: '1px solid rgba(160,168,184,0.25)',
+            glow: 0.03, stats: ['kneels', 'tasks', 'score'],
+            tagline: 'Rising through devotion.',
+            shadow: '0 25px 70px rgba(0,0,0,0.9),0 0 1px rgba(160,168,184,0.3)',
+        };
+        case 'butler': return {
+            tier: 3, accent: '#c5a059', ar: 197, ag: 160, ab: 89,
+            bgCss: 'linear-gradient(175deg,#0a0806 0%,#0f0c08 30%,#0a0806 60%,#0d0b07 100%)',
+            borderCss: '1.5px solid rgba(197,160,89,0.35)',
+            glow: 0.04, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
+            tagline: 'Trusted with purpose.',
+            shadow: '0 30px 80px rgba(0,0,0,0.95),0 0 1px rgba(197,160,89,0.4)',
+        };
+        case 'chamberlain': return {
+            tier: 4, accent: '#d4af5a', ar: 212, ag: 175, ab: 90,
+            bgCss: 'linear-gradient(175deg,#0b0906 0%,#100d08 30%,#0b0906 60%,#0e0c07 100%)',
+            borderCss: '2px solid rgba(212,175,90,0.4)',
+            glow: 0.06, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
+            tagline: 'A voice in the court.',
+            shadow: '0 30px 80px rgba(0,0,0,0.95),0 0 2px rgba(212,175,90,0.4)',
+        };
+        case 'secretary': return {
+            tier: 5, accent: '#dbb960', ar: 219, ag: 185, ab: 96,
+            bgCss: 'linear-gradient(175deg,#0c0a06 0%,#110e08 30%,#0c0a06 60%,#0f0d07 100%)',
+            borderCss: '2px solid rgba(219,185,96,0.5)',
+            glow: 0.08, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
+            tagline: 'Authority earned through sacrifice.',
+            shadow: '0 30px 80px rgba(0,0,0,0.95),0 0 4px rgba(219,185,96,0.3)',
+        };
+        case "queen's champion": return {
+            tier: 6, accent: '#e8c84a', ar: 232, ag: 200, ab: 74,
+            bgCss: 'linear-gradient(175deg,#0d0b06 0%,#12100a 30%,#0d0b06 60%,#100e08 100%)',
+            borderCss: '2.5px solid rgba(232,200,74,0.55)',
+            glow: 0.12, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
+            tagline: 'Absolute devotion. Manifest will.',
+            shadow: '0 30px 80px rgba(0,0,0,0.95),0 0 8px rgba(232,200,74,0.25),0 0 30px rgba(232,200,74,0.08)',
+        };
+        default: return { // Hall Boy
+            tier: 0, accent: '#888', ar: 136, ag: 136, ab: 136,
+            bgCss: 'linear-gradient(175deg,#0a0a0a 0%,#0e0e0e 50%,#0a0a0a 100%)',
+            borderCss: '1px solid rgba(136,136,136,0.15)',
+            glow: 0, stats: [],
+            tagline: 'I have begun my service to Queen Karin.',
+            shadow: '0 20px 60px rgba(0,0,0,0.9)',
+        };
+    }
+}
+
 export function showCertificate() {
     const state = getState();
     const raw = (window as any).__currentProfileRaw || state.raw || state;
@@ -913,56 +987,80 @@ export function showCertificate() {
     const since = sinceRaw ? new Date(sinceRaw).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
     const streak = Number(raw?.bestRoutinestreak || raw?.routinestreak || 0);
 
+    const t = getCertTheme(rank);
+    const a = `${t.ar},${t.ag},${t.ab}`;
+
     const overlay = document.createElement('div');
     overlay.id = 'certOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;';
 
     const card = document.createElement('div');
     card.id = 'certCard';
-    card.style.cssText = 'width:355px;max-width:92vw;background:linear-gradient(175deg,#0a0806 0%,#0f0c08 30%,#0a0806 60%,#0d0b07 100%);border:1.5px solid rgba(197,160,89,0.35);border-radius:4px;padding:0;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.95),0 0 1px rgba(197,160,89,0.4);position:relative;overflow:hidden;margin-top:24px;';
+    card.style.cssText = `width:355px;max-width:92vw;background:${t.bgCss};border:${t.borderCss};border-radius:4px;padding:0;text-align:center;box-shadow:${t.shadow};position:relative;overflow:hidden;margin-top:24px;`;
 
     const statLine = (label: string, value: string) =>
-        `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(197,160,89,0.06);">
-            <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(197,160,89,0.4);letter-spacing:1px;">${label}</span>
+        `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(${a},0.06);">
+            <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(${a},0.4);letter-spacing:1px;">${label}</span>
             <span style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.85);font-weight:600;">${value}</span>
         </div>`;
 
+    const statMap: Record<string, [string, string]> = {
+        kneels: ['Kneeling', kneels.toLocaleString()],
+        tasks: ['Tasks Completed', tasks.toLocaleString()],
+        score: ['Points Earned', score.toLocaleString()],
+        sacrifice: ['Sacrifice', sacrifice.toLocaleString()],
+        streak: ['Best Streak', streak.toString()],
+    };
+
+    let statsHtml: string;
+    if (t.stats.length > 0) {
+        const lines = t.stats.map(k => statMap[k]).filter(Boolean).map(([l, v]) => statLine(l, v)).join('');
+        statsHtml = `<div style="padding:4px 24px 4px;text-align:left;">
+            ${lines}
+            ${since ? statLine('Serving Since', since) : ''}
+        </div>`;
+    } else {
+        statsHtml = `<div style="padding:24px 28px;">
+            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.45);font-style:italic;line-height:1.8;letter-spacing:0.5px;">${t.tagline}</div>
+            ${since ? `<div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(${a},0.08);font-family:'Cinzel',serif;font-size:0.6rem;color:rgba(${a},0.3);letter-spacing:3px;">SERVING SINCE</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(255,255,255,0.55);margin-top:4px;">${since}</div>` : ''}
+        </div>`;
+    }
+
+    const innerBorder = t.tier >= 4
+        ? `<div style="position:absolute;inset:6px;border:1px solid rgba(${a},${t.tier >= 5 ? 0.15 : 0.08});border-radius:2px;pointer-events:none;"></div>`
+        : '';
+
     card.innerHTML = `
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(197,160,89,0.03) 0%,transparent 50%);pointer-events:none;"></div>
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(${a},${t.glow}) 0%,transparent 50%);pointer-events:none;"></div>
+        ${innerBorder}
 
         <!-- QKARIN.COM -->
         <div style="padding:24px 24px 6px;">
-            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:#c5a059;font-weight:700;letter-spacing:5px;">QKARIN.COM</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:${t.accent};font-weight:700;letter-spacing:5px;">QKARIN.COM</div>
         </div>
 
         <!-- CERTIFICATE OF SERVICE -->
         <div style="padding:4px 24px 14px;">
-            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(197,160,89,0.45);letter-spacing:5px;">CERTIFICATE OF SERVICE</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(${a},0.45);letter-spacing:5px;">CERTIFICATE OF SERVICE</div>
         </div>
 
-        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent);margin:0 auto;"></div>
+        <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},0.2),transparent);margin:0 auto;"></div>
 
         <!-- NAME + POSITION -->
         <div style="padding:16px 24px 0;">
             <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:rgba(255,255,255,0.9);font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">${name}</div>
-            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(197,160,89,0.55);letter-spacing:4px;">${rank.toUpperCase()}</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(${a},0.55);letter-spacing:4px;">${rank.toUpperCase()}</div>
+            ${t.stats.length > 0 ? `<div style="font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(${a},0.25);letter-spacing:2px;margin-top:4px;font-style:italic;">${t.tagline}</div>` : ''}
         </div>
 
-        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:14px auto;"></div>
+        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},0.3),transparent);margin:14px auto;"></div>
 
-        <!-- STATS -->
-        <div style="padding:4px 24px 4px;text-align:left;">
-            ${statLine('Kneeling', kneels.toLocaleString())}
-            ${statLine('Tasks Completed', tasks.toLocaleString())}
-            ${statLine('Points Earned', score.toLocaleString())}
-            ${statLine('Sacrifice', sacrifice.toLocaleString())}
-            ${statLine('Best Streak', streak.toString())}
-            ${since ? statLine('Serving Since', since) : ''}
-        </div>
+        ${statsHtml}
 
         <!-- FOOTER -->
         <div style="padding:12px 24px 20px;">
-            <div style="font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(197,160,89,0.25);letter-spacing:3px;">QKARIN.COM</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(${a},0.25);letter-spacing:3px;">QKARIN.COM</div>
         </div>
     `;
 
@@ -1039,7 +1137,8 @@ async function _saveCertificate() {
     function onLoaded() {
         pending--;
         if (pending > 0) return;
-        _drawCertificate(ctx, canvas, W, H, { name, rank, since, kneels, tasks, score, sacrifice, streak, images });
+        const theme = getCertTheme(rank);
+        _drawCertificate(ctx, canvas, W, H, { name, rank, since, kneels, tasks, score, sacrifice, streak, images, theme });
     }
 
     // Signature
@@ -1073,172 +1172,238 @@ function _drawCertificate(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     W: number, H: number,
-    d: { name: string; rank: string; since: string; kneels: number; tasks: number; score: number; sacrifice: number; streak: number; images: Record<string, HTMLImageElement> }
+    d: { name: string; rank: string; since: string; kneels: number; tasks: number; score: number; sacrifice: number; streak: number; images: Record<string, HTMLImageElement>; theme: CertTheme }
 ) {
-    // Background
-    ctx.fillStyle = '#0a0806';
-    ctx.fillRect(0, 0, W, H);
-
-    // Subtle radial glow
-    const grad = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.6);
-    grad.addColorStop(0, 'rgba(197,160,89,0.05)');
-    grad.addColorStop(1, 'transparent');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Borders
-    ctx.strokeStyle = 'rgba(197,160,89,0.35)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(16, 16, W - 32, H - 32);
-    ctx.strokeStyle = 'rgba(197,160,89,0.1)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(24, 24, W - 48, H - 48);
-
-    const gold = '#c5a059';
+    const t = d.theme;
+    const aR = t.ar, aG = t.ag, aB = t.ab;
     const white = 'rgba(255,255,255,0.9)';
     const cx = W / 2;
 
-    // ── TOP: CERTIFICATE OF SERVICE headline ──
+    // Background
+    ctx.fillStyle = t.tier <= 1 ? '#0a0a0a' : '#0a0806';
+    ctx.fillRect(0, 0, W, H);
+
+    // Radial glow (scales with tier)
+    if (t.glow > 0) {
+        const grad = ctx.createRadialGradient(cx, 0, 0, cx, 0, W * 0.6);
+        grad.addColorStop(0, `rgba(${aR},${aG},${aB},${t.glow})`);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    // Outer border
+    const borderAlpha = [0.15, 0.2, 0.25, 0.35, 0.4, 0.5, 0.55][t.tier];
+    ctx.strokeStyle = `rgba(${aR},${aG},${aB},${borderAlpha})`;
+    ctx.lineWidth = t.tier >= 5 ? 3 : t.tier >= 3 ? 2 : 1;
+    ctx.strokeRect(16, 16, W - 32, H - 32);
+
+    // Inner border for Chamberlain+ (tier >= 4)
+    if (t.tier >= 4) {
+        ctx.strokeStyle = `rgba(${aR},${aG},${aB},${t.tier >= 5 ? 0.15 : 0.08})`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(24, 24, W - 48, H - 48);
+    }
+
+    // ── HEADER ──
     ctx.textAlign = 'center';
     ctx.font = '700 26px Cinzel, serif';
-    ctx.fillStyle = 'rgba(197,160,89,0.7)';
+    ctx.fillStyle = `rgba(${aR},${aG},${aB},0.7)`;
     ctx.letterSpacing = '10px';
     ctx.fillText('CERTIFICATE OF SERVICE', cx, 58);
     ctx.letterSpacing = '0px';
 
-    // "to Queen Karin" subtitle
     ctx.font = '400 14px Cinzel, serif';
-    ctx.fillStyle = 'rgba(197,160,89,0.4)';
+    ctx.fillStyle = `rgba(${aR},${aG},${aB},0.4)`;
     ctx.letterSpacing = '4px';
     ctx.fillText('to Queen Karin', cx, 80);
     ctx.letterSpacing = '0px';
 
-    // Decorative dividers below
+    // Top dividers
     const topDivL = ctx.createLinearGradient(60, 0, cx - 180, 0);
     topDivL.addColorStop(0, 'transparent');
-    topDivL.addColorStop(1, 'rgba(197,160,89,0.2)');
+    topDivL.addColorStop(1, `rgba(${aR},${aG},${aB},0.2)`);
     ctx.fillStyle = topDivL;
     ctx.fillRect(60, 96, cx - 240, 1);
-
     const topDivR = ctx.createLinearGradient(cx + 180, 0, W - 60, 0);
-    topDivR.addColorStop(0, 'rgba(197,160,89,0.2)');
+    topDivR.addColorStop(0, `rgba(${aR},${aG},${aB},0.2)`);
     topDivR.addColorStop(1, 'transparent');
     ctx.fillStyle = topDivR;
     ctx.fillRect(cx + 180, 96, W - 240 - cx, 1);
 
-    // ── LEFT SIDE (centered in left half: 0 to vx) ──
-    const vx = 520;
-    const leftCx = vx / 2;
-
-    // NAME
-    ctx.textAlign = 'center';
-    ctx.font = '700 36px Cinzel, serif';
-    ctx.fillStyle = white;
-    ctx.fillText(d.name, leftCx, 150);
-
-    // RANK
-    ctx.font = '400 22px Cinzel, serif';
-    ctx.fillStyle = 'rgba(197,160,89,0.6)';
-    ctx.letterSpacing = '4px';
-    ctx.fillText(d.rank, leftCx, 185);
-    ctx.letterSpacing = '0px';
-
-    // Gold divider under rank
-    const divGrad1 = ctx.createLinearGradient(leftCx - 150, 0, leftCx + 150, 0);
-    divGrad1.addColorStop(0, 'transparent');
-    divGrad1.addColorStop(0.5, 'rgba(197,160,89,0.3)');
-    divGrad1.addColorStop(1, 'transparent');
-    ctx.fillStyle = divGrad1;
-    ctx.fillRect(leftCx - 150, 205, 300, 1);
-
-    // Avatar — circular, between rank and serving since
-    let avatarBottom = 220;
-    if (d.images.avatar) {
-        const avSize = 140;
-        const avX = leftCx - avSize / 2;
-        const avY = 220;
-        avatarBottom = avY + avSize + 18;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(leftCx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(d.images.avatar, avX, avY, avSize, avSize);
-        ctx.restore();
-
-        // Gold circle border
-        ctx.beginPath();
-        ctx.arc(leftCx, avY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(197,160,89,0.35)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-
-    // Serving Since
-    if (d.since) {
-        const sinceY = avatarBottom + 18;
+    if (t.stats.length === 0) {
+        // ── HALL BOY: Centered welcome layout — no stats ──
         ctx.textAlign = 'center';
-        ctx.font = '400 14px Cinzel, serif';
-        ctx.fillStyle = 'rgba(197,160,89,0.4)';
-        ctx.letterSpacing = '3px';
-        ctx.fillText('Serving Since', leftCx, sinceY);
-        ctx.letterSpacing = '0px';
-        ctx.font = '600 18px Cinzel, serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText(d.since, leftCx, sinceY + 28);
-    }
-
-    // Signature at bottom of left side
-    if (d.images.sig) {
-        const sigW = 260;
-        const sigH = sigW * (d.images.sig.naturalHeight / d.images.sig.naturalWidth);
-        const sigX = leftCx - sigW / 2;
-        const sigY = H - sigH - 45;
-        ctx.globalAlpha = 0.5;
-        ctx.drawImage(d.images.sig, sigX, sigY, sigW, sigH);
-        ctx.globalAlpha = 1.0;
-    }
-
-    // ── VERTICAL DIVIDER ──
-    const vGrad = ctx.createLinearGradient(0, 85, 0, H - 50);
-    vGrad.addColorStop(0, 'transparent');
-    vGrad.addColorStop(0.15, 'rgba(197,160,89,0.2)');
-    vGrad.addColorStop(0.85, 'rgba(197,160,89,0.2)');
-    vGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = vGrad;
-    ctx.fillRect(vx, 85, 1, H - 135);
-
-    // ── RIGHT SIDE: Stats (centered in right half: vx to W) ──
-    const rightStart = vx + 50;
-    const rightEnd = W - 55;
-    const stats: [string, string][] = [
-        ['Points Earned', d.score.toLocaleString()],
-        ['Tasks Completed', d.tasks.toLocaleString()],
-        ['Kneeling Hours', d.kneels.toLocaleString()],
-        ['Sacrifice', d.sacrifice.toLocaleString()],
-        ['Best Streak', d.streak.toString()],
-    ];
-
-    const statStartY = 155;
-    const statGap = 92;
-
-    stats.forEach(([label, value], i) => {
-        const y = statStartY + i * statGap;
-
-        ctx.textAlign = 'left';
-        ctx.font = '400 22px Cinzel, serif';
-        ctx.fillStyle = 'rgba(197,160,89,0.55)';
-        ctx.fillText(label, rightStart, y);
-
-        ctx.textAlign = 'right';
-        ctx.font = '600 26px Cinzel, serif';
+        ctx.font = '700 42px Cinzel, serif';
         ctx.fillStyle = white;
-        ctx.fillText(value, rightEnd, y);
+        ctx.fillText(d.name, cx, 180);
 
-        ctx.fillStyle = 'rgba(197,160,89,0.06)';
-        ctx.fillRect(rightStart, y + 14, rightEnd - rightStart, 1);
-    });
+        ctx.font = '400 24px Cinzel, serif';
+        ctx.fillStyle = `rgba(${aR},${aG},${aB},0.5)`;
+        ctx.letterSpacing = '6px';
+        ctx.fillText(d.rank, cx, 220);
+        ctx.letterSpacing = '0px';
+
+        const divG = ctx.createLinearGradient(cx - 150, 0, cx + 150, 0);
+        divG.addColorStop(0, 'transparent');
+        divG.addColorStop(0.5, `rgba(${aR},${aG},${aB},0.2)`);
+        divG.addColorStop(1, 'transparent');
+        ctx.fillStyle = divG;
+        ctx.fillRect(cx - 150, 245, 300, 1);
+
+        // Avatar (centered)
+        let contentY = 270;
+        if (d.images.avatar) {
+            const avSize = 150;
+            const avX = cx - avSize / 2;
+            const avY = contentY;
+            contentY = avY + avSize + 24;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(d.images.avatar, avX, avY, avSize, avSize);
+            ctx.restore();
+            ctx.beginPath();
+            ctx.arc(cx, avY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${aR},${aG},${aB},0.2)`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // Tagline
+        ctx.textAlign = 'center';
+        ctx.font = 'italic 20px Cinzel, serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillText(t.tagline, cx, contentY + 10);
+
+        // Serving Since
+        if (d.since) {
+            ctx.font = '400 14px Cinzel, serif';
+            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.35)`;
+            ctx.letterSpacing = '3px';
+            ctx.fillText('Serving Since', cx, contentY + 50);
+            ctx.letterSpacing = '0px';
+            ctx.font = '600 18px Cinzel, serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.fillText(d.since, cx, contentY + 75);
+        }
+
+        // Signature
+        if (d.images.sig) {
+            const sigW = 220;
+            const sigH = sigW * (d.images.sig.naturalHeight / d.images.sig.naturalWidth);
+            ctx.globalAlpha = 0.4;
+            ctx.drawImage(d.images.sig, cx - sigW / 2, H - sigH - 40, sigW, sigH);
+            ctx.globalAlpha = 1.0;
+        }
+    } else {
+        // ── RANKED: Left-right layout with stats ──
+        const vx = 520;
+        const leftCx = vx / 2;
+
+        ctx.textAlign = 'center';
+        ctx.font = '700 36px Cinzel, serif';
+        ctx.fillStyle = white;
+        ctx.fillText(d.name, leftCx, 150);
+
+        ctx.font = '400 22px Cinzel, serif';
+        ctx.fillStyle = `rgba(${aR},${aG},${aB},0.6)`;
+        ctx.letterSpacing = '4px';
+        ctx.fillText(d.rank, leftCx, 185);
+        ctx.letterSpacing = '0px';
+
+        const divGrad1 = ctx.createLinearGradient(leftCx - 150, 0, leftCx + 150, 0);
+        divGrad1.addColorStop(0, 'transparent');
+        divGrad1.addColorStop(0.5, `rgba(${aR},${aG},${aB},0.3)`);
+        divGrad1.addColorStop(1, 'transparent');
+        ctx.fillStyle = divGrad1;
+        ctx.fillRect(leftCx - 150, 205, 300, 1);
+
+        // Avatar
+        let avatarBottom = 220;
+        if (d.images.avatar) {
+            const avSize = 140;
+            const avX = leftCx - avSize / 2;
+            const avY = 220;
+            avatarBottom = avY + avSize + 18;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(leftCx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(d.images.avatar, avX, avY, avSize, avSize);
+            ctx.restore();
+            ctx.beginPath();
+            ctx.arc(leftCx, avY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${aR},${aG},${aB},0.35)`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Serving Since
+        if (d.since) {
+            const sinceY = avatarBottom + 18;
+            ctx.textAlign = 'center';
+            ctx.font = '400 14px Cinzel, serif';
+            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.4)`;
+            ctx.letterSpacing = '3px';
+            ctx.fillText('Serving Since', leftCx, sinceY);
+            ctx.letterSpacing = '0px';
+            ctx.font = '600 18px Cinzel, serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillText(d.since, leftCx, sinceY + 28);
+        }
+
+        // Signature
+        if (d.images.sig) {
+            const sigW = 260;
+            const sigH = sigW * (d.images.sig.naturalHeight / d.images.sig.naturalWidth);
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(d.images.sig, leftCx - sigW / 2, H - sigH - 45, sigW, sigH);
+            ctx.globalAlpha = 1.0;
+        }
+
+        // ── VERTICAL DIVIDER ──
+        const vGrad = ctx.createLinearGradient(0, 85, 0, H - 50);
+        vGrad.addColorStop(0, 'transparent');
+        vGrad.addColorStop(0.15, `rgba(${aR},${aG},${aB},0.2)`);
+        vGrad.addColorStop(0.85, `rgba(${aR},${aG},${aB},0.2)`);
+        vGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = vGrad;
+        ctx.fillRect(vx, 85, 1, H - 135);
+
+        // ── RIGHT SIDE: Stats ──
+        const rightStart = vx + 50;
+        const rightEnd = W - 55;
+        const statMap: Record<string, [string, string]> = {
+            kneels: ['Kneeling Hours', d.kneels.toLocaleString()],
+            tasks: ['Tasks Completed', d.tasks.toLocaleString()],
+            score: ['Points Earned', d.score.toLocaleString()],
+            sacrifice: ['Sacrifice', d.sacrifice.toLocaleString()],
+            streak: ['Best Streak', d.streak.toString()],
+        };
+
+        const stats = t.stats.map(k => statMap[k]).filter(Boolean);
+        const totalH = H - 200;
+        const statGap = Math.min(92, totalH / stats.length);
+        const statStartY = 155 + (totalH - stats.length * statGap) / 2;
+
+        stats.forEach(([label, value], i) => {
+            const y = statStartY + i * statGap;
+            ctx.textAlign = 'left';
+            ctx.font = '400 22px Cinzel, serif';
+            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.55)`;
+            ctx.fillText(label, rightStart, y);
+            ctx.textAlign = 'right';
+            ctx.font = '600 26px Cinzel, serif';
+            ctx.fillStyle = white;
+            ctx.fillText(value, rightEnd, y);
+            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.06)`;
+            ctx.fillRect(rightStart, y + 14, rightEnd - rightStart, 1);
+        });
+    }
 
     _exportCanvas(canvas);
 }
