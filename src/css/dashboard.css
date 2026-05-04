@@ -5133,70 +5133,49 @@ h3,
 }
 
 /* ═══════════════════════════════════════════════
-   DETAIL PROFILE PANEL — Modern Visual Design
+   DETAIL PROFILE PANEL — Profile-Mobile Inspired
    ═══════════════════════════════════════════════ */
 
 .dp-panel {
     padding: 0;
     display: flex;
     flex-direction: column;
-    background: #08080c;
+    background: #050505;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(197,160,89,0.15) transparent;
+    scrollbar-width: none;
 }
+.dp-panel::-webkit-scrollbar { display: none; }
 
 /* ── Hero ── */
 .dp-hero {
     position: relative;
-    padding: 30px 22px 24px;
-    background: radial-gradient(ellipse at 50% 0%, rgba(197,160,89,0.06) 0%, transparent 70%);
+    padding: 24px 18px 20px;
+    background: transparent;
 }
 
-.dp-hero-center {
+.dp-hero-top {
     display: flex;
     align-items: center;
-    gap: 18px;
-    margin-bottom: 22px;
+    gap: 16px;
+    margin-bottom: 18px;
 }
 
-/* Avatar with SVG ring gauge */
-.dp-avatar-wrap { flex-shrink: 0; position: relative; }
-.dp-avatar-ring {
-    position: relative;
-    width: 90px;
-    height: 90px;
-}
-.dp-ring-svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    transform: rotate(-90deg);
-}
-.dp-ring-track {
-    fill: none;
-    stroke: rgba(255,255,255,0.04);
-    stroke-width: 3;
-}
-.dp-ring-fill {
-    fill: none;
-    stroke: rgba(197,160,89,0.6);
-    stroke-width: 3;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.8s ease;
-}
+/* Avatar — gold ring like mobile profile */
+.dp-avatar-wrap { flex-shrink: 0; }
 .dp-avatar-frame {
-    position: absolute;
-    top: 8px; left: 8px;
-    width: 74px;
-    height: 74px;
+    width: 78px;
+    height: 78px;
     border-radius: 50%;
+    padding: 2px;
+    background: transparent;
+    border: 2px solid rgba(197,160,89,0.5);
+    box-shadow: 0 0 20px rgba(197,160,89,0.15), inset 0 0 10px rgba(197,160,89,0.08);
     overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(197,160,89,0.15);
 }
 .dp-avatar-img {
     width: 100%;
     height: 100%;
+    border-radius: 50%;
     object-fit: cover;
     display: block;
 }
@@ -5226,75 +5205,93 @@ h3,
 .dp-rank-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
 .dp-rank {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.5rem;
-    color: rgba(197,160,89,0.65);
+    font-size: 0.52rem;
+    color: #c5a059;
     letter-spacing: 3px;
     font-weight: 700;
     text-transform: uppercase;
 }
 .dp-status-text {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.4rem;
+    font-size: 0.42rem;
     font-weight: 700;
     letter-spacing: 1px;
-    color: #555;
-    background: rgba(255,255,255,0.035);
-    padding: 2px 8px;
+    color: #666;
+    background: rgba(255,255,255,0.03);
+    padding: 2px 10px;
     border-radius: 4px;
 }
 
-/* ── Gauge Bars (replaces big number stats) ── */
-.dp-gauges {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 16px;
-}
-.dp-gauge { }
-.dp-gauge-header {
+/* ── Stats Pill — mirrors .halo-stats-pill from profile-mobile ── */
+.dp-stats-pill {
+    background: rgba(10,10,10,0.85);
+    border: 1px solid rgba(197,160,89,0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 5px;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    margin-bottom: 8px;
 }
-.dp-gauge-label {
+.dp-stats-pill-sm {
+    padding: 10px 16px;
+}
+.dp-stat-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+}
+.dp-stat-label {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.4rem;
-    color: rgba(255,255,255,0.3);
+    font-size: 0.42rem;
+    color: rgba(197,160,89,0.5);
     font-weight: 700;
     letter-spacing: 2px;
+    order: 2;
 }
-.dp-gauge-value {
+.dp-stat-value {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.65rem;
-    color: rgba(255,255,255,0.85);
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-size: 1.25rem;
+    color: #fff;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 1px;
+    order: 1;
 }
-.dp-gauge-track {
-    width: 100%;
-    height: 5px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 3px;
+.dp-stat-value-sm {
+    font-size: 0.85rem;
+}
+.dp-stat-bar {
+    width: 80%;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
     overflow: hidden;
-    position: relative;
+    order: 3;
 }
-.dp-gauge-fill {
+.dp-stat-fill {
     height: 100%;
-    border-radius: 3px;
+    border-radius: 2px;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
 }
 .dp-fill-gold {
-    background: linear-gradient(90deg, rgba(197,160,89,0.5), rgba(197,160,89,0.85));
-    box-shadow: 0 0 8px rgba(197,160,89,0.2);
+    background: #c5a059;
+    box-shadow: 0 0 6px rgba(197,160,89,0.3);
 }
-.dp-fill-silver {
-    background: linear-gradient(90deg, rgba(180,180,200,0.4), rgba(180,180,200,0.7));
-    box-shadow: 0 0 8px rgba(180,180,200,0.15);
+.dp-fill-green {
+    background: #00cc55;
+    box-shadow: 0 0 6px rgba(0,204,85,0.3);
 }
-.dp-fill-routine {
-    background: linear-gradient(90deg, rgba(100,200,130,0.4), rgba(100,200,130,0.75));
-    box-shadow: 0 0 8px rgba(100,200,130,0.15);
+.dp-stat-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,0.08);
+    flex-shrink: 0;
 }
 
 /* ── Sections ── */
@@ -5306,102 +5303,83 @@ h3,
 }
 
 .dp-section {
-    margin: 0 14px;
-    padding: 18px 14px;
+    margin: 0;
+    padding: 20px 18px;
     background: transparent;
     border: none;
-    border-top: 1px solid rgba(255,255,255,0.035);
     border-radius: 0;
 }
-.dp-section:first-child { border-top: none; }
 
-.dp-section-header {
+/* Section Label — mirrors .duty-label from profile-mobile (decorative lines) */
+.dp-section-label {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    position: relative;
 }
-.dp-section-title {
+.dp-section-label::before,
+.dp-section-label::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(to right, transparent, rgba(197,160,89,0.2));
+}
+.dp-section-label::after {
+    background: linear-gradient(to left, transparent, rgba(197,160,89,0.2));
+}
+.dp-label-text {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.48rem;
-    color: rgba(255,255,255,0.3) !important;
+    font-size: 0.46rem;
+    color: rgba(197,160,89,0.45);
     font-weight: 700;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
-/* Status pill (replaces badge) */
-.dp-status-pill,
+/* Status badge — like the ACTIVE pill in the first screenshot */
+.dp-status-badge,
 #chatterProfilePanel .at-status-text {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.38rem;
+    font-size: 0.42rem;
     font-weight: 700;
-    letter-spacing: 2px;
-    background: rgba(255,255,255,0.03);
-    padding: 3px 10px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.06);
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.5);
+    background: rgba(10,10,10,0.8);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 4px 14px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
-/* ── Directive Card with Step Indicator ── */
-.dp-directive-card {
-    background: rgba(255,255,255,0.02);
-    border-radius: 12px;
-    padding: 16px;
+/* ── Task Card — gold left border like #mobTaskText ── */
+.dp-task-card {
+    background: rgba(197,160,89,0.03);
+    border: 1px solid rgba(197,160,89,0.1);
+    border-left: 2px solid rgba(197,160,89,0.35);
+    border-radius: 4px;
+    padding: 16px 18px;
     margin-bottom: 10px;
-    border: 1px solid rgba(255,255,255,0.04);
 }
-.dp-directive-step {
-    display: flex;
-    gap: 14px;
+.dp-task-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.65;
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
 }
-.dp-step-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-    padding-top: 4px;
-    flex-shrink: 0;
-}
-.dp-step-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid rgba(197,160,89,0.25);
-    background: transparent;
-    flex-shrink: 0;
-}
-.dp-step-dot.dp-step-active {
-    background: rgba(197,160,89,0.8);
-    border-color: rgba(197,160,89,0.8);
-    box-shadow: 0 0 8px rgba(197,160,89,0.3);
-}
-.dp-step-dot.dp-step-pending {
-    border-color: rgba(255,255,255,0.08);
-}
-.dp-step-line {
-    width: 1.5px;
-    height: 14px;
-    background: rgba(255,255,255,0.06);
-    flex-shrink: 0;
-}
-.dp-directive-body { flex: 1; min-width: 0; }
-.dp-directive-text {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.72rem;
-    color: rgba(255,255,255,0.55);
-    line-height: 1.6;
-    margin-bottom: 12px;
-}
-.dp-directive-meta {
+.dp-task-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
-.dp-timer-pill {
+.dp-timer {
     font-family: 'Rajdhani', sans-serif;
     font-size: 1rem;
-    color: rgba(197,160,89,0.6);
+    color: rgba(197,160,89,0.65);
     letter-spacing: 3px;
     font-weight: 700;
 }
@@ -5410,14 +5388,14 @@ h3,
 .dp-cancel-btn {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.42rem;
-    padding: 4px 14px;
+    padding: 5px 16px;
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.25);
-    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.3);
+    border-radius: 4px;
     cursor: pointer;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     transition: all 0.2s;
 }
 .dp-cancel-btn:hover {
@@ -5433,26 +5411,26 @@ h3,
     margin-bottom: 10px;
 }
 
-/* Assign button */
+/* Assign button — dashed gold border */
 .dp-assign-btn {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.44rem;
-    padding: 11px 0;
-    background: rgba(197,160,89,0.04);
+    font-size: 0.46rem;
+    padding: 13px 0;
+    background: transparent;
     border: 1px dashed rgba(197,160,89,0.2);
-    color: rgba(197,160,89,0.5);
-    border-radius: 10px;
+    color: rgba(197,160,89,0.45);
+    border-radius: 6px;
     cursor: pointer;
     width: 100%;
     font-weight: 700;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     transition: all 0.25s;
     text-transform: uppercase;
 }
 .dp-assign-btn:hover {
-    background: rgba(197,160,89,0.08);
+    background: rgba(197,160,89,0.05);
     border-color: rgba(197,160,89,0.4);
-    color: rgba(197,160,89,0.8);
+    color: rgba(197,160,89,0.7);
 }
 
 /* ── Routine Layout ── */
@@ -5469,7 +5447,7 @@ h3,
 .dp-pending-section {
     margin-top: 14px;
     padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.035);
+    border-top: 1px solid rgba(255,255,255,0.06);
 }
 .dp-pending-label {
     font-family: 'Rajdhani', sans-serif;
@@ -5488,9 +5466,10 @@ h3,
 .dp-promo-target {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.42rem;
-    color: rgba(197,160,89,0.5);
+    color: rgba(197,160,89,0.55);
     font-weight: 700;
     letter-spacing: 2px;
+    white-space: nowrap;
 }
 .dp-promo-bars { }
 
@@ -5499,19 +5478,21 @@ h3,
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    margin: 0 14px;
-    padding: 14px 0;
-    border-top: 1px solid rgba(255,255,255,0.035);
+    margin: 0 18px;
+    padding: 6px 0 14px;
 }
 .dp-intel-card {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.04);
-    border-radius: 10px;
+    background: rgba(10,10,10,0.6);
+    border: 1px solid rgba(197,160,89,0.1);
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     overflow: hidden;
 }
-.dp-intel-card:hover { background: rgba(255,255,255,0.035); }
+.dp-intel-card:hover {
+    border-color: rgba(197,160,89,0.25);
+    background: rgba(197,160,89,0.03);
+}
 .dp-intel-trigger {
     padding: 12px 14px;
     display: flex;
@@ -5521,12 +5502,12 @@ h3,
 .dp-intel-label {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.42rem;
-    color: rgba(255,255,255,0.3);
+    color: rgba(197,160,89,0.4);
     font-weight: 700;
     letter-spacing: 2px;
 }
 .dp-intel-arrow {
-    color: rgba(255,255,255,0.12);
+    color: rgba(197,160,89,0.2);
     font-size: 0.38rem;
     transition: transform 0.3s;
     display: inline-block;

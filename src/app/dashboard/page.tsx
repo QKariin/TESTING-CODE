@@ -1762,18 +1762,12 @@ export default function DashboardPage() {
                                 {/* ── PROFILE PANEL (default visible) ── */}
                                 <div id="chatterProfilePanel" className="dp-panel">
 
-                                {/* ═══ HERO — centered avatar with radial glow ═══ */}
+                                {/* ═══ HERO — avatar + identity ═══ */}
                                 <div id="apMirrorHeader" className="dp-hero">
-                                    <div className="dp-hero-center">
+                                    <div className="dp-hero-top">
                                         <div className="dp-avatar-wrap">
-                                            <div className="dp-avatar-ring">
-                                                <svg className="dp-ring-svg" viewBox="0 0 120 120">
-                                                    <circle className="dp-ring-track" cx="60" cy="60" r="54" />
-                                                    <circle className="dp-ring-fill" cx="60" cy="60" r="54" strokeDasharray="339.29" strokeDashoffset="85" />
-                                                </svg>
-                                                <div className="dp-avatar-frame">
-                                                    <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                                </div>
+                                            <div className="dp-avatar-frame">
+                                                <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                             </div>
                                         </div>
                                         <div className="dp-identity">
@@ -1788,35 +1782,31 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
 
-                                    {/* Stats as mini gauge bars */}
-                                    <div className="dp-gauges">
-                                        <div className="dp-gauge">
-                                            <div className="dp-gauge-header">
-                                                <span className="dp-gauge-label">MERIT</span>
-                                                <span id="dMirrorPoints" className="dp-gauge-value">0</span>
-                                            </div>
-                                            <div className="dp-gauge-track"><div className="dp-gauge-fill dp-fill-gold" id="dpGaugeMerit" style={{ width: '0%' }}></div></div>
+                                    {/* Stats pill — like profile mobile */}
+                                    <div className="dp-stats-pill">
+                                        <div className="dp-stat-col">
+                                            <span className="dp-stat-label">MERIT</span>
+                                            <span id="dMirrorPoints" className="dp-stat-value">0</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-gold" id="dpGaugeMerit" style={{ width: '0%' }}></div></div>
                                         </div>
-                                        <div className="dp-gauge">
-                                            <div className="dp-gauge-header">
-                                                <span className="dp-gauge-label">CAPITAL</span>
-                                                <span id="dMirrorWallet" className="dp-gauge-value">0</span>
-                                            </div>
-                                            <div className="dp-gauge-track"><div className="dp-gauge-fill dp-fill-silver" id="dpGaugeCapital" style={{ width: '0%' }}></div></div>
+                                        <div className="dp-stat-divider"></div>
+                                        <div className="dp-stat-col">
+                                            <span className="dp-stat-label">CAPITAL</span>
+                                            <span id="dMirrorWallet" className="dp-stat-value">0</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-gold" id="dpGaugeCapital" style={{ width: '0%' }}></div></div>
                                         </div>
-                                        <div className="dp-gauge">
-                                            <div className="dp-gauge-header">
-                                                <span className="dp-gauge-label">LABOR</span>
-                                                <span id="dMirrorKneel" className="dp-gauge-value">0 h</span>
-                                            </div>
-                                            <div className="dp-gauge-track"><div className="dp-gauge-fill dp-fill-gold" id="dpGaugeLabor" style={{ width: '0%' }}></div></div>
+                                    </div>
+                                    <div className="dp-stats-pill dp-stats-pill-sm">
+                                        <div className="dp-stat-col">
+                                            <span className="dp-stat-label">LABOR</span>
+                                            <span id="dMirrorKneel" className="dp-stat-value dp-stat-value-sm">0 h</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-gold" id="dpGaugeLabor" style={{ width: '0%' }}></div></div>
                                         </div>
-                                        <div className="dp-gauge">
-                                            <div className="dp-gauge-header">
-                                                <span className="dp-gauge-label">ROUTINE</span>
-                                                <span id="dMirrorRoutine" className="dp-gauge-value">—</span>
-                                            </div>
-                                            <div className="dp-gauge-track"><div className="dp-gauge-fill dp-fill-routine" id="dpGaugeRoutine" style={{ width: '0%' }}></div></div>
+                                        <div className="dp-stat-divider"></div>
+                                        <div className="dp-stat-col">
+                                            <span className="dp-stat-label">ROUTINE</span>
+                                            <span id="dMirrorRoutine" className="dp-stat-value dp-stat-value-sm">—</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-green" id="dpGaugeRoutine" style={{ width: '0%' }}></div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1826,44 +1816,29 @@ export default function DashboardPage() {
 
                                 {/* ── DIRECTIVE ── */}
                                 <div className="dp-section">
-                                    <div className="dp-section-header">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span className="dp-section-title">DIRECTIVES</span>
-                                        </div>
-                                        <span id="dActiveStatus" className="dp-status-pill">IDLE</span>
+                                    <div className="dp-section-label">
+                                        <span id="statusDot" className="status-dot unproductive"></span>
+                                        <span className="dp-label-text">DIRECTIVES</span>
+                                        <span id="dActiveStatus" className="dp-status-badge">IDLE</span>
                                     </div>
-                                    {/* Active task with step indicator */}
                                     <div id="taskDrawer" className="task-drawer open">
-                                        <div id="activeTaskContent" className="dp-directive-card">
-                                            <div className="dp-directive-step">
-                                                <div className="dp-step-indicator">
-                                                    <div className="dp-step-dot dp-step-active"></div>
-                                                    <div className="dp-step-line"></div>
-                                                    <div className="dp-step-dot dp-step-pending"></div>
-                                                    <div className="dp-step-line"></div>
-                                                    <div className="dp-step-dot dp-step-pending"></div>
-                                                </div>
-                                                <div className="dp-directive-body">
-                                                    <div id="dActiveText" className="dp-directive-text">None</div>
-                                                    <div className="dp-directive-meta">
-                                                        <div id="dActiveTimer" className="dp-timer-pill">--:--</div>
-                                                        <button className="dp-cancel-btn" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>SKIP</button>
-                                                    </div>
-                                                </div>
+                                        <div id="activeTaskContent" className="dp-task-card">
+                                            <div id="dActiveText" className="dp-task-text">None</div>
+                                            <div className="dp-task-footer">
+                                                <div id="dActiveTimer" className="dp-timer">--:--</div>
+                                                <button className="dp-cancel-btn" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>SKIP</button>
                                             </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                     </div>
-                                    {/* Queue */}
                                     <div id="qListContainer" className="dp-queue-list"></div>
                                     <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
                                 </div>
 
                                 {/* ── ROUTINE + CALENDAR ── */}
                                 <div className="dp-section">
-                                    <div className="dp-section-header">
-                                        <span className="dp-section-title">ROUTINE</span>
+                                    <div className="dp-section-label">
+                                        <span className="dp-label-text">ROUTINE</span>
                                     </div>
                                     <div className="dp-routine-layout">
                                         <div className="dp-routine-info">
@@ -1889,8 +1864,8 @@ export default function DashboardPage() {
 
                                 {/* ── PROMOTION ── */}
                                 <div id="progress_section" className="dp-section">
-                                    <div className="dp-section-header">
-                                        <span className="dp-section-title">PROMOTION</span>
+                                    <div className="dp-section-label">
+                                        <span className="dp-label-text">PROMOTION</span>
                                         <span id="admin_NextRank" className="dp-promo-target">—</span>
                                     </div>
                                     <div id="admin_ProgressContainer" className="dp-promo-bars"></div>
