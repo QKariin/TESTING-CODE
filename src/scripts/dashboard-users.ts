@@ -27,6 +27,9 @@ const mainDashboardExpandedTasks = new Set<string>();
 // Async sub-functions check this before writing to DOM to prevent stale data.
 let _detailGen = 0;
 
+// Track last-rendered user ID so cached sections re-render on user switch
+let _lastDetailUserId: string | null = null;
+
 function calculateRoutineStreak(historyStr: string | any[]): number {
     if (!historyStr) return 0;
 
@@ -133,6 +136,19 @@ export async function updateDetail(u: any) {
     if (!u) return;
 
     const gen = ++_detailGen;
+    const uid = u.memberId || u.member_id || '';
+
+    // When switching users, invalidate per-object caches so shared DOM containers re-render
+    if (_lastDetailUserId !== uid) {
+        _lastDetailUserId = uid;
+        delete (u as any)._lastTelemetryJson;
+        delete (u as any)._lastReviewQueueJson;
+        delete (u as any)._lastQueueJson;
+        delete (u as any)._lastChatterPendingJson;
+        delete (u as any)._lastTrackedEndTime;
+        const pc = document.getElementById('admin_ProgressContainer');
+        if (pc) delete (pc as any)._lastProgressHtml;
+    }
 
     const report = getHierarchyReport(u);
     if (!report) return;
