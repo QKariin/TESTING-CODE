@@ -928,7 +928,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'silverman': return {
             tier: 2, accent: '#a0a8b8', ar: 160, ag: 168, ab: 184,
             bgCss: 'linear-gradient(175deg,#0a0a0c 0%,#0d0d10 50%,#0a0a0c 100%)',
-            bgImage: '/cert-bg-silverman.svg',
+            bgImage: '/cert-bg-silverman-v2.svg',
             borderCss: '1px solid rgba(160,168,184,0.25)',
             glow: 0.03, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Rising through devotion.',
