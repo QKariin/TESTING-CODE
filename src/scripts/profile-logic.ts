@@ -1278,9 +1278,10 @@ function _drawCertificate(
     ctx.fillRect(cx + 180, 108, W - 240 - cx, 1);
 
     if (t.stats.length === 0) {
-        // ── HALL BOY: Centered symmetric layout — no stats, no avatar ──
-        // Vertically center the content block between header (108) and bottom (H)
-        const blockH = d.since ? 180 : 120; // name + rank + divider + tagline + since
+        // ── HALL BOY: Centered symmetric layout — no stats ──
+        const hasAvatar = !!d.images.avatar;
+        const avSize = 120;
+        const blockH = 42 + 42 + 20 + (hasAvatar ? avSize + 24 : 0) + 35 + (d.since ? 60 : 0);
         const startY = 108 + ((H - 108) - blockH) / 2;
 
         ctx.textAlign = 'center';
@@ -1301,21 +1302,41 @@ function _drawCertificate(
         ctx.fillStyle = divG;
         ctx.fillRect(cx - 120, startY + 62, 240, 1);
 
+        let curY = startY + 82;
+
+        // Avatar (centered)
+        if (hasAvatar) {
+            const avX = cx - avSize / 2;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, curY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(d.images.avatar, avX, curY, avSize, avSize);
+            ctx.restore();
+            ctx.beginPath();
+            ctx.arc(cx, curY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${aR},${aG},${aB},0.2)`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            curY += avSize + 24;
+        }
+
         // Tagline
         ctx.font = 'italic 20px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.fillText(t.tagline, cx, startY + 95);
+        ctx.fillText(t.tagline, cx, curY);
 
         // Serving Since
         if (d.since) {
             ctx.font = '400 14px Cinzel, serif';
             ctx.fillStyle = `rgba(${aR},${aG},${aB},0.35)`;
             ctx.letterSpacing = '3px';
-            ctx.fillText('SERVING SINCE', cx, startY + 140);
+            ctx.fillText('SERVING SINCE', cx, curY + 40);
             ctx.letterSpacing = '0px';
             ctx.font = '600 18px Cinzel, serif';
             ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            ctx.fillText(d.since, cx, startY + 165);
+            ctx.fillText(d.since, cx, curY + 60);
         }
 
     } else {
