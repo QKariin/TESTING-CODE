@@ -1007,7 +1007,7 @@ export function showCertificate() {
 
     const statLine = (label: string, value: string) =>
         `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(${a},0.06);">
-            <span style="font-family:'Cinzel',serif;font-size:0.72rem;color:rgba(${a},0.4);letter-spacing:1px;">${label}</span>
+            <span style="font-family:'Cinzel',serif;font-size:0.82rem;color:rgba(${a},0.65);letter-spacing:1px;">${label}</span>
             <span style="font-family:'Cinzel',serif;font-size:0.88rem;color:rgba(255,255,255,0.85);font-weight:600;">${value}</span>
         </div>`;
 
@@ -1063,8 +1063,8 @@ export function showCertificate() {
         </div>
 
         <!-- CERTIFICATE OF SERVICE -->
-        <div style="padding:4px 24px 14px;">
-            <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(${a},0.45);letter-spacing:5px;">CERTIFICATE OF SERVICE</div>
+        <div style="padding:8px 24px 18px;">
+            <div style="font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(${a},0.55);letter-spacing:6px;">CERTIFICATE OF SERVICE</div>
         </div>
 
         <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},${t.tier >= 3 ? 0.3 : 0.15}),transparent);margin:0 auto;"></div>
@@ -1245,16 +1245,16 @@ function _drawCertificate(
 
     // ── HEADER ──
     ctx.textAlign = 'center';
-    ctx.font = '700 26px Cinzel, serif';
-    ctx.fillStyle = `rgba(${aR},${aG},${aB},0.7)`;
-    ctx.letterSpacing = '10px';
-    ctx.fillText('CERTIFICATE OF SERVICE', cx, 58);
+    ctx.font = '700 34px Cinzel, serif';
+    ctx.fillStyle = `rgba(${aR},${aG},${aB},0.8)`;
+    ctx.letterSpacing = '12px';
+    ctx.fillText('CERTIFICATE OF SERVICE', cx, 62);
     ctx.letterSpacing = '0px';
 
-    ctx.font = '400 14px Cinzel, serif';
-    ctx.fillStyle = `rgba(${aR},${aG},${aB},0.4)`;
-    ctx.letterSpacing = '4px';
-    ctx.fillText('to Queen Karin', cx, 80);
+    ctx.font = '400 16px Cinzel, serif';
+    ctx.fillStyle = `rgba(${aR},${aG},${aB},0.45)`;
+    ctx.letterSpacing = '5px';
+    ctx.fillText('to Queen Karin', cx, 90);
     ctx.letterSpacing = '0px';
 
     // Top dividers
@@ -1262,12 +1262,12 @@ function _drawCertificate(
     topDivL.addColorStop(0, 'transparent');
     topDivL.addColorStop(1, `rgba(${aR},${aG},${aB},0.2)`);
     ctx.fillStyle = topDivL;
-    ctx.fillRect(60, 96, cx - 240, 1);
+    ctx.fillRect(60, 108, cx - 240, 1);
     const topDivR = ctx.createLinearGradient(cx + 180, 0, W - 60, 0);
     topDivR.addColorStop(0, `rgba(${aR},${aG},${aB},0.2)`);
     topDivR.addColorStop(1, 'transparent');
     ctx.fillStyle = topDivR;
-    ctx.fillRect(cx + 180, 96, W - 240 - cx, 1);
+    ctx.fillRect(cx + 180, 108, W - 240 - cx, 1);
 
     if (t.stats.length === 0) {
         // ── HALL BOY: Centered welcome layout — no stats ──
@@ -1414,8 +1414,8 @@ function _drawCertificate(
         stats.forEach(([label, value], i) => {
             const y = statStartY + i * statGap;
             ctx.textAlign = 'left';
-            ctx.font = '400 22px Cinzel, serif';
-            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.55)`;
+            ctx.font = '500 28px Cinzel, serif';
+            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.75)`;
             ctx.fillText(label, rightStart, y);
             ctx.textAlign = 'right';
             ctx.font = '600 26px Cinzel, serif';
