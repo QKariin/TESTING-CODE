@@ -1155,11 +1155,11 @@ async function _saveCertificate() {
 
     // Preload images, then draw everything
     const images: Record<string, HTMLImageElement> = {};
-    let pending = avatarUrl ? 2 : 1;
+    const theme = getCertTheme(rank);
+    let pending = (avatarUrl ? 1 : 0) + 1 /* sig */ + (theme.bgImage ? 1 : 0);
     function onLoaded() {
         pending--;
         if (pending > 0) return;
-        const theme = getCertTheme(rank);
         _drawCertificate(ctx, canvas, W, H, { name, rank, since, kneels, tasks, score, sacrifice, streak, images, theme });
     }
 
@@ -1169,6 +1169,15 @@ async function _saveCertificate() {
     sigImg.onload = () => { images.sig = sigImg; onLoaded(); };
     sigImg.onerror = () => onLoaded();
     sigImg.src = '/signature.svg';
+
+    // Background image (rank-specific)
+    if (theme.bgImage) {
+        const bgImg = new Image();
+        bgImg.crossOrigin = 'anonymous';
+        bgImg.onload = () => { images.bg = bgImg; onLoaded(); };
+        bgImg.onerror = () => onLoaded();
+        bgImg.src = theme.bgImage;
+    }
 
     // Avatar — fetch as blob, try proxy if direct fails
     if (avatarUrl && avatarUrl !== '/collar-placeholder.png') {
@@ -1204,6 +1213,14 @@ function _drawCertificate(
     // Background
     ctx.fillStyle = t.tier <= 1 ? '#0a0a0a' : '#0a0806';
     ctx.fillRect(0, 0, W, H);
+
+    // Background image (rank-specific)
+    if (d.images.bg) {
+        ctx.drawImage(d.images.bg, 0, 0, W, H);
+        // Dark scrim for text readability
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, 0, W, H);
+    }
 
     // Radial glow (scales with tier)
     if (t.glow > 0) {
