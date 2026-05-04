@@ -2130,6 +2130,19 @@ export async function updateRoutineWidget() {
             inp.click();
         };
 
+        // ── Rank gate: Hall Boy cannot use routine ──
+        const _st = getState();
+        const _raw = (window as any).__currentProfileRaw || _st.raw || _st;
+        const rankForRoutine = ((_st as any).rank || _raw?.hierarchy || 'Hall Boy').toLowerCase().trim();
+        if (rankForRoutine === 'hall boy') {
+            if (display) display.textContent = 'Locked until Footman';
+            if (mobDisplay) mobDisplay.textContent = 'Locked until Footman';
+            if (btn) { btn.textContent = 'LOCKED'; btn.style.opacity = '0.35'; btn.style.cursor = 'not-allowed'; (window as any).__routineAction = () => {}; }
+            if (mobBtn) { mobBtn.textContent = 'LOCKED'; mobBtn.style.opacity = '0.35'; mobBtn.style.cursor = 'not-allowed'; mobBtn.onclick = null; }
+            if (timeMsg) timeMsg.classList.add('hidden');
+            return;
+        }
+
         if (!data.routine) {
             // ── State 1: No routine set ─────────────────────────────────────
             if (display) display.textContent = 'No routine set yet';
