@@ -5134,8 +5134,6 @@ h3,
 
 /* ═══════════════════════════════════════════════
    DETAIL PROFILE PANEL
-   Dark luxury. Nightclub, not SaaS.
-   Matte black, gold whispers, negative space.
    ═══════════════════════════════════════════════ */
 
 .dp-panel {
@@ -5148,26 +5146,25 @@ h3,
 }
 .dp-panel::-webkit-scrollbar { display: none; }
 
-/* ── Hero ── */
+/* ── Hero — radial gold glow atmosphere ── */
 .dp-hero {
-    padding: 28px 24px 8px;
+    padding: 26px 22px 18px;
+    background: radial-gradient(ellipse at 30% 30%, rgba(197,160,89,0.05) 0%, transparent 60%);
 }
-
 .dp-hero-top {
     display: flex;
     align-items: center;
-    gap: 18px;
-    margin-bottom: 28px;
+    gap: 16px;
 }
 
-/* Avatar — thin gold ring, soft glow, floating in dark */
+/* Avatar — gold ring with glow (matches .halo-circle-lg) */
 .dp-avatar-wrap { flex-shrink: 0; }
 .dp-avatar-frame {
-    width: 72px;
-    height: 72px;
+    width: 76px;
+    height: 76px;
     border-radius: 50%;
-    border: 1.5px solid rgba(197,160,89,0.4);
-    box-shadow: 0 0 24px rgba(197,160,89,0.08);
+    border: 1.5px solid rgba(197,160,89,0.5);
+    box-shadow: 0 0 30px rgba(197,160,89,0.12), inset 0 0 15px rgba(197,160,89,0.05);
     overflow: hidden;
 }
 .dp-avatar-img {
@@ -5191,6 +5188,7 @@ h3,
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 0 30px rgba(255,255,255,0.1);
 }
 .dp-rename-btn {
     cursor: pointer;
@@ -5213,125 +5211,140 @@ h3,
 }
 .dp-status-text {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.4rem;
-    font-weight: 600;
+    font-size: 0.42rem;
+    font-weight: 700;
     letter-spacing: 1px;
     color: #555;
-    padding: 0;
-    background: none;
-    border: none;
 }
 
-/* ── Stats — no containers, just numbers breathing in darkness ── */
-.dp-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px 0;
-    padding: 0 6px;
+/* ── Stats Glass Card — exact .halo-stats-pill treatment ── */
+.dp-stats-glass {
+    margin: 0 16px 6px;
+    background: rgba(10,10,10,0.85);
+    border: 1px solid rgba(197,160,89,0.18);
+    border-radius: 14px;
+    padding: 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
-.dp-stat {
+.dp-stat-item {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    padding: 0 12px;
-}
-.dp-stat-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.38rem;
-    color: rgba(255,255,255,0.2);
-    font-weight: 600;
-    letter-spacing: 3px;
-    margin-bottom: 2px;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
 }
 .dp-stat-num {
     font-family: 'Rajdhani', sans-serif;
     font-size: 1.15rem;
-    color: rgba(255,255,255,0.85);
-    font-weight: 700;
-    line-height: 1.2;
+    color: #fff;
+    font-weight: 800;
+    line-height: 1;
     letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.dp-stat-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.38rem;
+    color: rgba(197,160,89,0.5);
+    font-weight: 600;
+    letter-spacing: 2px;
 }
 .dp-stat-bar {
-    width: 100%;
+    width: 70%;
     height: 2px;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.05);
     border-radius: 1px;
     overflow: hidden;
-    margin-top: 5px;
+    margin-top: 4px;
 }
 .dp-stat-fill {
     height: 100%;
     border-radius: 1px;
-    background: rgba(197,160,89,0.5);
+    background: rgba(197,160,89,0.55);
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .dp-fill-routine {
     background: rgba(0,200,80,0.5);
 }
-
-/* thin line between hero and sections */
-.dp-hero::after {
-    content: '';
-    display: block;
-    height: 1px;
-    margin-top: 24px;
-    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.12) 30%, rgba(197,160,89,0.12) 70%, transparent);
+.dp-stat-sep {
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,0.06);
+    flex-shrink: 0;
 }
 
 /* ── Sections ── */
 .dp-sections {
-    padding: 0;
+    padding: 6px 0 0;
     display: flex;
     flex-direction: column;
 }
-
 .dp-section {
-    padding: 24px 24px;
+    padding: 22px 22px;
 }
 
-/* Section Head — left-aligned, minimal */
-.dp-section-head {
+/* Divider Label — centered text with gold gradient lines on each side
+   (mirrors .duty-label from profile-mobile) */
+.dp-divider-label {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    gap: 14px;
     margin-bottom: 18px;
 }
-.dp-head-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.dp-divider-label::before,
+.dp-divider-label::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    max-width: 80px;
+    background: linear-gradient(to right, transparent, rgba(197,160,89,0.25));
 }
-.dp-section-title {
+.dp-divider-label::after {
+    background: linear-gradient(to left, transparent, rgba(197,160,89,0.25));
+}
+.dp-divider-text {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.44rem;
-    color: rgba(255,255,255,0.2);
-    font-weight: 700;
+    color: rgba(197,160,89,0.45);
+    font-weight: 600;
     letter-spacing: 5px;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
-/* Status badge — barely there */
+/* Status badge */
 .dp-status-badge,
 #chatterProfilePanel .at-status-text {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.4rem;
     font-weight: 700;
     letter-spacing: 3px;
-    color: rgba(255,255,255,0.35);
-    background: none;
-    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
     padding: 5px 16px;
-    border-radius: 2px;
+    border-radius: 3px;
+    white-space: nowrap;
 }
 
-/* ── Task Card — gold accent whisper, not a box ── */
+/* ── Task Card — glass surface with gold accent ── */
 .dp-task-card {
-    background: rgba(197,160,89,0.02);
-    border: none;
-    border-left: 2px solid rgba(197,160,89,0.25);
-    border-radius: 0;
+    background: rgba(197,160,89,0.025);
+    border: 1px solid rgba(197,160,89,0.08);
+    border-left: 2px solid rgba(197,160,89,0.3);
+    border-radius: 3px;
     padding: 18px 20px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 .dp-task-text {
     font-family: 'Cinzel', serif;
@@ -5349,13 +5362,13 @@ h3,
 }
 .dp-timer {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: rgba(197,160,89,0.5);
     letter-spacing: 4px;
     font-weight: 700;
 }
 
-/* Cancel/Skip — ghost button */
+/* Cancel/Skip */
 .dp-cancel-btn {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.38rem;
@@ -5382,15 +5395,15 @@ h3,
     margin-bottom: 12px;
 }
 
-/* Assign button — barely visible until hover */
+/* Assign button */
 .dp-assign-btn {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.42rem;
     padding: 14px 0;
     background: none;
-    border: 1px dashed rgba(197,160,89,0.12);
-    color: rgba(197,160,89,0.3);
-    border-radius: 2px;
+    border: 1px dashed rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.35);
+    border-radius: 3px;
     cursor: pointer;
     width: 100%;
     font-weight: 700;
@@ -5404,9 +5417,9 @@ h3,
     background: rgba(197,160,89,0.03);
 }
 
-/* Section separators — thin gold gradient lines */
+/* Section separators */
 .dp-section + .dp-section {
-    border-top: 1px solid rgba(197,160,89,0.06);
+    border-top: 1px solid rgba(197,160,89,0.05);
 }
 
 /* ── Routine Layout ── */
@@ -5442,23 +5455,24 @@ h3,
 .dp-promo-target {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.4rem;
-    color: rgba(197,160,89,0.4);
+    color: rgba(197,160,89,0.5);
     font-weight: 700;
     letter-spacing: 3px;
 }
 .dp-promo-bars { }
 
-/* ── Split section (Intel + Kinks side by side) ── */
+/* ── Split section (Intel + Kinks) ── */
 .dp-section-split {
     display: flex;
     gap: 0;
-    padding: 0 24px 24px;
+    padding-left: 22px;
+    padding-right: 22px;
 }
 .dp-split-half {
     flex: 1;
     cursor: pointer;
     transition: background 0.2s;
-    padding: 14px 0;
+    padding: 0;
 }
 .dp-split-half:first-child {
     border-right: 1px solid rgba(255,255,255,0.04);
@@ -5472,7 +5486,14 @@ h3,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0;
+}
+.dp-section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.42rem;
+    color: rgba(197,160,89,0.35);
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 .dp-split-arrow {
     color: rgba(255,255,255,0.1);
@@ -5488,6 +5509,6 @@ h3,
 
 /* Footer */
 .dp-footer {
-    padding: 20px 24px;
+    padding: 20px 22px;
     border-top: 1px solid rgba(197,160,89,0.04);
 }

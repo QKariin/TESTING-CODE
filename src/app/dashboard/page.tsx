@@ -1781,29 +1781,32 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    {/* Stats — numbers floating, no boxes */}
-                                    <div className="dp-stats">
-                                        <div className="dp-stat">
-                                            <span className="dp-stat-label">MERIT</span>
-                                            <span id="dMirrorPoints" className="dp-stat-num">0</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeMerit"></div></div>
-                                        </div>
-                                        <div className="dp-stat">
-                                            <span className="dp-stat-label">CAPITAL</span>
-                                            <span id="dMirrorWallet" className="dp-stat-num">0</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeCapital"></div></div>
-                                        </div>
-                                        <div className="dp-stat">
-                                            <span className="dp-stat-label">LABOR</span>
-                                            <span id="dMirrorKneel" className="dp-stat-num">0 h</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeLabor"></div></div>
-                                        </div>
-                                        <div className="dp-stat">
-                                            <span className="dp-stat-label">ROUTINE</span>
-                                            <span id="dMirrorRoutine" className="dp-stat-num">—</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-routine" id="dpGaugeRoutine"></div></div>
-                                        </div>
+                                {/* Stats glass card — like halo-stats-pill */}
+                                <div className="dp-stats-glass">
+                                    <div className="dp-stat-item">
+                                        <span id="dMirrorPoints" className="dp-stat-num">0</span>
+                                        <span className="dp-stat-label">MERIT</span>
+                                        <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeMerit"></div></div>
+                                    </div>
+                                    <div className="dp-stat-sep"></div>
+                                    <div className="dp-stat-item">
+                                        <span id="dMirrorWallet" className="dp-stat-num">0</span>
+                                        <span className="dp-stat-label">CAPITAL</span>
+                                        <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeCapital"></div></div>
+                                    </div>
+                                    <div className="dp-stat-sep"></div>
+                                    <div className="dp-stat-item">
+                                        <span id="dMirrorKneel" className="dp-stat-num">0 h</span>
+                                        <span className="dp-stat-label">LABOR</span>
+                                        <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeLabor"></div></div>
+                                    </div>
+                                    <div className="dp-stat-sep"></div>
+                                    <div className="dp-stat-item">
+                                        <span id="dMirrorRoutine" className="dp-stat-num">—</span>
+                                        <span className="dp-stat-label">ROUTINE</span>
+                                        <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-routine" id="dpGaugeRoutine"></div></div>
                                     </div>
                                 </div>
 
@@ -1812,11 +1815,9 @@ export default function DashboardPage() {
 
                                 {/* ── DIRECTIVE ── */}
                                 <div className="dp-section">
-                                    <div className="dp-section-head">
-                                        <div className="dp-head-left">
-                                            <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span className="dp-section-title">DIRECTIVES</span>
-                                        </div>
+                                    <div className="dp-divider-label">
+                                        <span id="statusDot" className="status-dot unproductive"></span>
+                                        <span className="dp-divider-text">DIRECTIVES</span>
                                         <span id="dActiveStatus" className="dp-status-badge">IDLE</span>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
@@ -1835,8 +1836,8 @@ export default function DashboardPage() {
 
                                 {/* ── ROUTINE + CALENDAR ── */}
                                 <div className="dp-section">
-                                    <div className="dp-section-head">
-                                        <span className="dp-section-title">ROUTINE</span>
+                                    <div className="dp-divider-label">
+                                        <span className="dp-divider-text">ROUTINE</span>
                                     </div>
                                     <div className="dp-routine-layout">
                                         <div className="dp-routine-info">
@@ -1862,8 +1863,8 @@ export default function DashboardPage() {
 
                                 {/* ── PROMOTION ── */}
                                 <div id="progress_section" className="dp-section">
-                                    <div className="dp-section-head">
-                                        <span className="dp-section-title">PROMOTION</span>
+                                    <div className="dp-divider-label">
+                                        <span className="dp-divider-text">PROMOTION</span>
                                         <span id="admin_NextRank" className="dp-promo-target">—</span>
                                     </div>
                                     <div id="admin_ProgressContainer" className="dp-promo-bars"></div>
