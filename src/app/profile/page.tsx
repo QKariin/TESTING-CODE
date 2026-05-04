@@ -1427,10 +1427,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
                             {dutiesUploadedToday === true ? (
-                                <svg viewBox="0 0 24 24" className="hud-duty-icon">
-                                    <circle cx="12" cy="12" r="9" fill="rgba(0,180,70,0.18)" stroke="rgba(0,210,90,0.75)" strokeWidth="1.5"/>
-                                    <path d="M7.5 12.5l3 3 6-6.5" stroke="#00d45a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                </svg>
+                                <img src="/routine-done.svg" alt="Done" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             ) : (
                                 <img src="/routine-alert-v3.svg" alt="!" className="hud-duty-blink" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             )}
