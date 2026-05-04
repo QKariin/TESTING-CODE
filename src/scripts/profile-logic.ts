@@ -937,7 +937,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'butler': return {
             tier: 3, accent: '#c5a059', ar: 197, ag: 160, ab: 89,
             bgCss: 'linear-gradient(175deg,#0a0806 0%,#0f0c08 30%,#0a0806 60%,#0d0b07 100%)',
-            bgImage: '/cert-bg-butler.svg',
+            bgImage: '/cert-bg-butler-v2.svg',
             borderCss: '1.5px solid rgba(197,160,89,0.35)',
             glow: 0.04, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Trusted with purpose.',
