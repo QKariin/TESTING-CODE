@@ -1145,6 +1145,14 @@ async function _saveCertificate() {
     const name = (raw?.name || 'LOYAL SUBJECT').toUpperCase();
     let rank = ((state as any).rank || raw?.hierarchy || 'Hall Boy').toUpperCase();
 
+    // ── TEST MODE: pick rank to preview different certificate designs ──
+    const testRanks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
+    const picked = prompt("TESTING — Pick a rank to preview:\n\n" + testRanks.map((r, i) => `${i + 1}. ${r}`).join("\n") + "\n\nEnter number (or cancel for your real rank):");
+    if (picked) {
+        const idx = parseInt(picked) - 1;
+        if (idx >= 0 && idx < testRanks.length) rank = testRanks[idx].toUpperCase();
+    }
+
     const kneels = Number(raw?.kneelCount || 0);
     const tasks = Number(raw?.Taskdom_CompletedTasks || raw?.taskdom_completed_tasks || 0);
     const sacrifice = Number(raw?.total_coins_spent || 0);
