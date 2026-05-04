@@ -1822,8 +1822,7 @@ export default function DashboardPage() {
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
                                         <div id="activeTaskContent" className="dp-task-card">
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px', marginBottom: 8, fontWeight: 700 }}>CURRENT DIRECTIVE:</div>
-                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 12, fontStyle: 'italic' }}>None</div>
+                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 12 }}>None</div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <div id="dActiveTimer" className="dp-timer">--:--</div>
                                                 <button className="dp-cancel-btn" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>Cancel</button>
@@ -1838,13 +1837,13 @@ export default function DashboardPage() {
                                 {/* ── ROUTINE + CALENDAR side by side ── */}
                                 <div className="dp-section">
                                     <div className="dp-section-header">
-                                        <span className="dp-section-title" style={{ color: 'rgba(74,222,128,0.7)' }}>ROUTINE</span>
+                                        <span className="dp-section-title">ROUTINE</span>
                                     </div>
                                     <div className="dp-routine-grid">
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div id="chatter_RoutineContent" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.45)', fontSize: '0.65rem', lineHeight: 1.6 }}>No routine assigned</div>
-                                            <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(74,222,128,0.08)' }}>
-                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(232,93,117,0.6)', fontWeight: 700, letterSpacing: '3px', marginBottom: 8, textTransform: 'uppercase' }}>Pending Review</div>
+                                            <div id="chatter_RoutineContent" style={{ fontFamily: "'Rajdhani',sans-serif", color: 'rgba(255,255,255,0.4)', fontSize: '0.6rem' }}>No routine assigned</div>
+                                            <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700, letterSpacing: '3px', marginBottom: 8, textTransform: 'uppercase' }}>Pending Review</div>
                                                 <div id="chatter_PendingContent"></div>
                                             </div>
                                         </div>
@@ -1865,9 +1864,9 @@ export default function DashboardPage() {
                                 {/* ── PROMOTION ── */}
                                 <div id="progress_section" className="dp-section">
                                     <div className="dp-section-header">
-                                        <span className="dp-section-title" style={{ color: 'rgba(180,130,255,0.7)' }}>PROMOTION</span>
+                                        <span className="dp-section-title">PROMOTION</span>
                                     </div>
-                                    <div id="admin_NextRank" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.65rem', color: 'rgba(180,130,255,0.5)', marginBottom: 14, fontWeight: 600, letterSpacing: '0.5px' }}>—</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', marginBottom: 14, fontWeight: 700, letterSpacing: '1px' }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
