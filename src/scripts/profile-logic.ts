@@ -906,6 +906,7 @@ interface CertTheme {
     accent: string;
     ar: number; ag: number; ab: number;
     bgCss: string;
+    bgImage?: string;
     borderCss: string;
     glow: number;
     stats: string[];
@@ -917,9 +918,10 @@ function getCertTheme(rank: string): CertTheme {
     switch (rank.toLowerCase().trim()) {
         case 'footman': return {
             tier: 1, accent: '#a07848', ar: 160, ag: 120, ab: 72,
-            bgCss: 'linear-gradient(175deg,#0a0906 0%,#0e0c08 50%,#0a0906 100%)',
+            bgCss: '#0a0906',
+            bgImage: '/cert-bg-footman.svg',
             borderCss: '1px solid rgba(160,120,72,0.25)',
-            glow: 0.02, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
+            glow: 0, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Earning the right to be seen.',
             shadow: '0 25px 70px rgba(0,0,0,0.9)',
         };
@@ -998,7 +1000,10 @@ export function showCertificate() {
 
     const card = document.createElement('div');
     card.id = 'certCard';
-    card.style.cssText = `width:355px;max-width:92vw;background:${t.bgCss};border:${t.borderCss};border-radius:4px;padding:0;text-align:center;box-shadow:${t.shadow};position:relative;overflow:hidden;margin-top:24px;`;
+    const bgStyle = t.bgImage
+        ? `background:${t.bgCss};background-image:url('${t.bgImage}');background-size:cover;background-position:center;`
+        : `background:${t.bgCss};`;
+    card.style.cssText = `width:355px;max-width:92vw;${bgStyle}border:${t.borderCss};border-radius:4px;padding:0;text-align:center;box-shadow:${t.shadow};position:relative;overflow:hidden;margin-top:24px;`;
 
     const statLine = (label: string, value: string) =>
         `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(${a},0.06);">
@@ -1041,8 +1046,13 @@ export function showCertificate() {
         ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 10%,rgba(${a},0.3) 40%,rgba(${a},0.3) 60%,transparent 90%);"></div>`
         : '';
 
+    // Background image: dark scrim for readability. No image: radial glow.
+    const overlayHtml = t.bgImage
+        ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);pointer-events:none;"></div>`
+        : `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(${a},${t.glow}) 0%,transparent 50%);pointer-events:none;"></div>`;
+
     card.innerHTML = `
-        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(${a},${t.glow}) 0%,transparent 50%);pointer-events:none;"></div>
+        ${overlayHtml}
         ${innerBorder}
         ${topOrnament}
         ${bottomOrnament}
