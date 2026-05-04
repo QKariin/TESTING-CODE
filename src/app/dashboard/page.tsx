@@ -1641,8 +1641,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div id="viewUser" style={{ display: 'none' }}>
-                    {role === 'chatter' ? (
-                        /* ── CHATTER: efficient split — wide chat left, compact panel right ── */
+                        {/* ── UNIFIED LAYOUT — wide chat left, compact panel right ── */}
                         <div className="chatter-split" style={{ display: 'grid', gridTemplateColumns: '70% 30%', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             {/* LEFT: chat — edge to edge, no box */}
                             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
@@ -1682,6 +1681,21 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* SYSTEM TICKER */}
+                                <div id="dashSystemTicker" className="dash-system-ticker"
+                                    onClick={() => (window as any).toggleDashSystemLog()}>
+                                    SYSTEM ONLINE
+                                </div>
+
+                                {/* SYSTEM LOG OVERLAY */}
+                                <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
+                                    <div className="dash-syslog-header">
+                                        <span>SYSTEM LOGS</span>
+                                        <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
+                                    </div>
+                                    <div id="dashSystemLogContent" className="dash-syslog-body"></div>
                                 </div>
 
                                 <div className="c-body" id="adminChatBox" style={{ flex: 1, minHeight: 0 }}></div>
@@ -1813,6 +1827,9 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
+                                {/* ── REVIEW QUEUE ── */}
+                                <div id="userQueueSec" style={{ display: 'none', borderLeft: '3px solid rgba(232,93,117,0.25)', padding: '16px 18px', background: 'linear-gradient(90deg, rgba(232,93,117,0.015) 0%, transparent 40%)' }}></div>
+
                                 {/* ── ROUTINE CALENDAR ── */}
                                 <div id="routineCalendarSection" style={{ display: 'none', borderLeft: '3px solid rgba(74,222,128,0.15)', padding: '12px 18px', background: 'linear-gradient(90deg, rgba(74,222,128,0.008) 0%, transparent 40%)' }}>
                                     <div id="routineCalendarGrid"></div>
@@ -1853,242 +1870,52 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ── FOOTER ── */}
-                                <div style={{ padding: '10px 18px', opacity: 0.15 }}>
-                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1.5px' }}>REG </span>
-                                    <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1px' }}>—</span>
+                                <div style={{ padding: '10px 18px' }}>
+                                    <div style={{ opacity: 0.15, marginBottom: 10 }}>
+                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1.5px' }}>REG </span>
+                                        <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1px' }}>—</span>
+                                    </div>
+
+                                    {role === 'queen' && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                            <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: queenOnlyChat ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${queenOnlyChat ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 6, color: queenOnlyChat ? 'rgba(168,85,247,0.9)' : 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={async () => {
+                                                const id = (window as any).currId;
+                                                if (!id) return;
+                                                const newVal = !queenOnlyChat;
+                                                setQueenOnlyChat(newVal);
+                                                await fetch('/api/chat/restrict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id, restricted: newVal }) });
+                                                (window as any)._restrictChannel?.send({ type: 'broadcast', event: 'restrict', payload: { memberId: id, restricted: newVal } });
+                                                (window as any)._refreshDashboard?.();
+                                            }}>
+                                                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                                                {queenOnlyChat ? 'QUEEN ONLY' : 'RESTRICT'}
+                                            </button>
+
+                                            {(activeLocks.paywall || activeLocks.silenced) ? (
+                                                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: 'rgba(80,80,80,0.12)', border: '1px solid rgba(150,150,150,0.25)', borderRadius: 6, color: '#888', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={async () => {
+                                                    const id = (window as any).currId;
+                                                    if (!id) return;
+                                                    if (activeLocks.paywall) await fetch('/api/paywall/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
+                                                    if (activeLocks.silenced) await fetch('/api/silence/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
+                                                    setActiveLocks({ paywall: false, silenced: false });
+                                                }}>
+                                                    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
+                                                    UNLOCK
+                                                </button>
+                                            ) : (
+                                                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
+                                                    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                                    LOCK
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 </div>{/* close sections */}
                                 </div>{/* close chatterProfilePanel */}
                             </div>
                         </div>
-                    ) : (
-                        /* ── QUEEN: full split with dossier ── */
-                        <>
-                    <div className="mob-swipe-hint">← CHAT &nbsp;·&nbsp; DOSSIER →</div>
-                    <div className="split">
-                        {/* LEFT: COMMAND & FEED */}
-                        <div className="chat-panel">
-                            <div className="cp-head">ENCRYPTED FEED</div>
-
-                            {/* FULL OVERLAY COMMAND QUEUE - MOVED HERE TO COVER ENTIRE PANEL */}
-                            <div id="taskQueueContainer" className="task-queue-overlay hidden">
-                                <div className="q-head">
-                                    <span id="armoryTitle">COMMAND QUEUE</span>
-                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                        <input
-                                            type="text"
-                                            id="taskSearchInput"
-                                            placeholder="FILTER DIRECTIVES..."
-                                            onInput={() => (window as any).filterTaskGallery()}
-                                            style={{
-                                                background: 'rgba(0,0,0,0.5)',
-                                                border: '1px solid rgba(197,160,89,0.2)',
-                                                color: '#c5a059',
-                                                fontFamily: 'Orbitron',
-                                                fontSize: '0.6rem',
-                                                padding: '5px 10px',
-                                                borderRadius: '4px',
-                                                width: '150px'
-                                            }}
-                                        />
-                                        <button className="q-close" onClick={() => (window as any).closeTaskGallery()}>&times;</button>
-                                    </div>
-                                </div>
-
-                                <div className="task-gallery-split" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', height: 'calc(100% - 60px)', overflow: 'hidden', position: 'relative' }}>
-                                    {/* LEFT: COMMAND QUEUE (10 TASKS) */}
-                                    <div className="command-queue-section" style={{ borderRight: '1px solid rgba(197,160,89,0.1)', padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)' }}>
-                                        <div style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
-                                        <div id="armoryLiveQueue" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            {/* Scheduled tasks go here */}
-                                        </div>
-                                    </div>
-
-                                    {/* RIGHT: DIRECTIVE GRID */}
-                                    <div className="directives-section" style={{ padding: '20px', overflowY: 'auto' }}>
-                                        <div id="glassTaskGrid">
-                                            {/* Directive cards go here */}
-                                        </div>
-                                    </div>
-
-                                    {/* TASK DETAIL MODAL (GLASS CARD) */}
-                                    <div id="taskDetailModal" className="task-detail-overlay hidden">
-                                        <div className="task-detail-glass">
-                                            <button className="detail-close" onClick={() => (window as any).closeTaskDetail()}>&times;</button>
-                                            <div id="taskDetailContent"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="admin-dash-top" style={{ display: 'flex', flexDirection: 'column', height: 'auto', background: 'transparent' }}>
-                                <div className="ap-nav">
-                                    <button className="ap-tab active" id="tabBtnOps" onClick={() => (window as any).switchAdminTab('ops')}>OPS</button>
-                                    <button className="ap-tab" id="tabBtnIntel" onClick={() => (window as any).switchAdminTab('intel')}>INTEL</button>
-                                    <button className="ap-tab" id="tabBtnRecord" onClick={() => (window as any).switchAdminTab('record')}>RECORD</button>
-                                </div>
-
-                                <div className="ap-content" style={{ flex: 1, overflowY: 'auto', background: 'transparent' }}>
-                                    <div id="tabOps" className="ap-view active">
-                                        <div className="active-task-card gold-theme" onClick={() => (window as any).toggleTaskDrawer()}>
-                                            <div className="at-label-row">
-                                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <span id="statusDot" className="status-dot unproductive"></span>
-                                                    <div className="at-label">CURRENT STATUS</div>
-                                                </div>
-                                                <div id="dActiveStatus" className="at-status-text">UNPRODUCTIVE</div>
-                                            </div>
-
-                                            <div id="taskDrawer" className="task-drawer">
-                                                <div id="activeTaskContent">
-                                                    <div className="at-sub-label">ACTIVE DIRECTIVE</div>
-                                                    <div id="dActiveText" className="at-text">None</div>
-                                                    <div id="dActiveTimer" className="at-timer-large">--:--</div>
-                                                    <div className="at-actions" onClick={(e) => e.stopPropagation()}>
-                                                        <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>CANCEL TASK</button>
-                                                    </div>
-                                                </div>
-                                                <div id="idleActions" style={{ display: 'none', paddingTop: '10px' }} onClick={(e) => e.stopPropagation()}>
-                                                    <button className="at-btn at-send" style={{ background: 'var(--gold)', color: '#000' }} onClick={() => (window as any).openTaskGallery()}>ISSUE NEW COMMAND</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="tabIntel" className="ap-view hidden">
-                                        <div id="userQueueSec" style={{ display: 'none' }}></div>
-                                    </div>
-
-                                    <div id="tabRecord" className="ap-view hidden">
-                                        <div id="adminOrbitalCanvas" className="admin-orbital-canvas">
-                                            <div className="altar-label">THE SUPREME ALTAR</div>
-                                        </div>
-                                        {/* Bento Nodes... */}
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            {/* SYSTEM TICKER - click to open service log */}
-                            <div id="dashSystemTicker" className="dash-system-ticker"
-                                onClick={() => (window as any).toggleDashSystemLog()}>
-                                SYSTEM ONLINE
-                            </div>
-
-                            {/* SYSTEM LOG OVERLAY - covers chat area */}
-                            <div id="dashSystemLogContainer" className="dash-syslog-container hidden" style={{ display: 'none' }}>
-                                <div className="dash-syslog-header">
-                                    <span>SYSTEM LOGS</span>
-                                    <button className="dash-syslog-close" onClick={() => (window as any).toggleDashSystemLog()}>&times;</button>
-                                </div>
-                                <div id="dashSystemLogContent" className="dash-syslog-body"></div>
-                            </div>
-
-                            <div className="c-body" id="adminChatBox" style={{ flex: 1, borderTop: '1px solid rgba(197,160,89,0.2)' }}></div>
-
-                            <div className="c-foot">
-                                <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
-                                <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
-                                <button onClick={() => (window as any).openChatGifPicker?.()} style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>GIF</button>
-                                <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
-                            </div>
-                        </div>
-
-                        {/* RIGHT: THE DOSSIER */}
-                        <div className="action-panel">
-                            <div id="apMirrorHeader" className="ap-mirror-header">
-                                <div id="dMirrorHierarchy" className="hierarchy-top">CHEVALIER</div>
-                                <div className="avatar-container">
-                                    <img id="dProfilePic" src="" alt="Profile" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                </div>
-                                <div id="dMirrorName" className="identity-name" style={{ fontFamily: 'Orbitron', fontSize: '1.5rem', color: '#fff', marginBottom: '4px' }}>NAME</div>
-                                <div id="dMirrorStatus" style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#666', letterSpacing: '2px', textAlign: 'center', marginBottom: '10px' }}>—</div>
-
-                                <div className="stats-stack-row" style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '16px' }}>
-                                    <div className="stat-item">
-                                        <span className="stat-lbl">MERIT</span>
-                                        <span id="dMirrorPoints" className="stat-val">0</span>
-                                    </div>
-                                    <div className="stat-item">
-                                        <span className="stat-lbl">CAPITAL</span>
-                                        <span id="dMirrorWallet" className="stat-val">0</span>
-                                    </div>
-                                </div>
-                                <div id="admin_KneelSection" style={{ width: '100%', padding: '0 20px 20px' }}></div>
-                            </div>
-
-                            <div className="ap-vitals-mirror" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
-                                <div id="telemetry_section" style={{ marginBottom: '30px', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: '8px', overflow: 'hidden' }}>
-                                    <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'; } }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', cursor: 'pointer', userSelect: 'none' as any }}>
-                                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#888', letterSpacing: '2px' }}>ACTIVE TELEMETRY</span>
-                                        <span id="telemetry_arrow" style={{ color: '#555', fontSize: '1rem', transition: 'transform 0.2s', display: 'inline-block', transform: 'rotate(-90deg)' }}>▾</span>
-                                    </div>
-                                    <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '0 15px 15px' }}>
-                                        <div style={{ color: '#444', fontSize: '0.6rem', textAlign: 'center', gridColumn: 'span 2' }}>NO DATA RECEIVED</div>
-                                    </div>
-                                </div>
-
-                                <div id="progress_section" style={{ marginBottom: '30px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center' }}>PROMOTION PROGRESS</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.2rem', color: '#c5a059', textAlign: 'center', margin: '10px 0' }}>LOADING...</div>
-                                    <div id="admin_ProgressContainer"></div>
-                                </div>
-
-                                <div id="admin_KinksLimits" style={{ marginBottom: '30px' }}></div>
-
-                                <div className="queue-section" style={{ marginBottom: '30px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#888', letterSpacing: '2px', textAlign: 'center', marginBottom: '15px' }}>DIRECTIVE QUEUE</div>
-                                    <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {/* Task queue items will be rendered here */}
-                                    </div>
-                                </div>
-
-                                <div className="footer-stats" style={{ borderTop: '1px solid rgba(197,160,89,0.2)', paddingTop: '20px', marginTop: 'auto' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                        <span style={{ color: '#666', fontSize: '0.7rem' }}>REGISTERED SINCE:</span>
-                                        <strong id="dMirrorSlaveSince" style={{ color: '#fff', fontSize: '0.7rem' }}>--/--/--</strong>
-                                    </div>
-
-                                    {role === 'queen' && (
-                                        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', marginBottom: 8, background: queenOnlyChat ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${queenOnlyChat ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 8, color: queenOnlyChat ? 'rgba(168,85,247,0.9)' : 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={async () => {
-                                            const id = (window as any).currId;
-                                            if (!id) return;
-                                            const newVal = !queenOnlyChat;
-                                            setQueenOnlyChat(newVal);
-                                            await fetch('/api/chat/restrict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id, restricted: newVal }) });
-                                            // Broadcast to chatters so user vanishes/appears instantly
-                                            (window as any)._restrictChannel?.send({ type: 'broadcast', event: 'restrict', payload: { memberId: id, restricted: newVal } });
-                                            (window as any)._refreshDashboard?.();
-                                        }}>
-                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-                                            {queenOnlyChat ? 'QUEEN ONLY' : 'RESTRICT FROM CHATTERS'}
-                                        </button>
-                                    )}
-
-                                    {role === 'queen' && ((activeLocks.paywall || activeLocks.silenced) ? (
-                                        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: 'rgba(80,80,80,0.12)', border: '1px solid rgba(150,150,150,0.25)', borderRadius: 8, color: '#888', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={async () => {
-                                            const id = (window as any).currId;
-                                            if (!id) return;
-                                            if (activeLocks.paywall) await fetch('/api/paywall/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
-                                            if (activeLocks.silenced) await fetch('/api/silence/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
-                                            setActiveLocks({ paywall: false, silenced: false });
-                                        }}>
-                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
-                                            UNLOCK
-                                        </button>
-                                    ) : (
-                                        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.45rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
-                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                                            LOCK
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                        </>
-                    )}
                 </div>
 
 
