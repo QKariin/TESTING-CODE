@@ -21,6 +21,16 @@ function buildChatQuery(queryClient: any, chatCols: string, memberId: string, em
     return queryClient.from('chats').select(chatCols).ilike('member_id', memberId);
 }
 
+async function isActiveChatter(email: string, adminClient: any): Promise<boolean> {
+    const { data } = await adminClient
+        .from('chatters')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .eq('is_active', true)
+        .maybeSingle();
+    return !!data;
+}
+
 export async function GET(req: Request) {
     try {
         const caller = await getCaller();
@@ -34,7 +44,11 @@ export async function GET(req: Request) {
         }
 
         if (!isOwnerOrCEO(caller, memberId)) {
-            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            if (!supabaseUrl || !supabaseServiceKey || !(await isActiveChatter(caller.email, createAdminClient(supabaseUrl, supabaseServiceKey)))) {
+                return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+            }
         }
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -105,7 +119,11 @@ export async function POST(req: Request) {
         }
 
         if (!isOwnerOrCEO(caller, memberId)) {
-            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+            if (!supabaseUrl || !supabaseServiceKey || !(await isActiveChatter(caller.email, createAdminClient(supabaseUrl, supabaseServiceKey)))) {
+                return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+            }
         }
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
