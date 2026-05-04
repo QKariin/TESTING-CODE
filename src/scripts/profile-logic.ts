@@ -919,7 +919,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'footman': return {
             tier: 1, accent: '#a07848', ar: 160, ag: 120, ab: 72,
             bgCss: '#0a0906',
-            bgImage: '/cert-bg-footman-v10.svg',
+            bgImage: '/cert-bg-footman-v11.svg',
             borderCss: '1px solid rgba(160,120,72,0.25)',
             glow: 0, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Earning the right to be seen.',
