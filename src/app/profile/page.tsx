@@ -1432,7 +1432,7 @@ export default function ProfilePage() {
                                     <path d="M7.5 12.5l3 3 6-6.5" stroke="#00d45a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                                 </svg>
                             ) : (
-                                <span className="hud-duty-alert">!</span>
+                                <img src="/routine-alert.svg" alt="!" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             )}
                         </div>
                     </div>
