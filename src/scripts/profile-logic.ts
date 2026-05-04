@@ -937,7 +937,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'butler': return {
             tier: 3, accent: '#c5a059', ar: 197, ag: 160, ab: 89,
             bgCss: 'linear-gradient(175deg,#0a0806 0%,#0f0c08 30%,#0a0806 60%,#0d0b07 100%)',
-            bgImage: '/cert-bg-butler-v5.svg',
+            bgImage: '/cert-bg-butler-v6.svg',
             borderCss: '1.5px solid rgba(197,160,89,0.35)',
             glow: 0.04, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Trusted with purpose.',
@@ -946,7 +946,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'chamberlain': return {
             tier: 4, accent: '#d4af5a', ar: 212, ag: 175, ab: 90,
             bgCss: 'linear-gradient(175deg,#0b0906 0%,#100d08 30%,#0b0906 60%,#0e0c07 100%)',
-            bgImage: '/cert-bg-chamberlain-v2.svg',
+            bgImage: '/cert-bg-chamberlain-v3.svg',
             borderCss: '2px solid rgba(212,175,90,0.4)',
             glow: 0.06, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'A voice in the court.',
