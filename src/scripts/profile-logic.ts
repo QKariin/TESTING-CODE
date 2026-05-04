@@ -919,7 +919,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'footman': return {
             tier: 1, accent: '#a07848', ar: 160, ag: 120, ab: 72,
             bgCss: '#0a0906',
-            bgImage: '/cert-bg-footman-v8.svg',
+            bgImage: '/cert-bg-footman-v9.svg',
             borderCss: '1px solid rgba(160,120,72,0.25)',
             glow: 0, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Earning the right to be seen.',
@@ -1407,9 +1407,12 @@ function _drawCertificate(
         };
 
         const stats = t.stats.map(k => statMap[k]).filter(Boolean);
-        const totalH = H - 200;
-        const statGap = Math.min(92, totalH / stats.length);
-        const statStartY = 155 + (totalH - stats.length * statGap) / 2;
+        const topEdge = 130;
+        const bottomEdge = H - 45;
+        const availH = bottomEdge - topEdge;
+        const statGap = Math.min(88, availH / (stats.length + 1));
+        const blockH = (stats.length - 1) * statGap;
+        const statStartY = topEdge + (availH - blockH) / 2;
 
         stats.forEach(([label, value], i) => {
             const y = statStartY + i * statGap;
