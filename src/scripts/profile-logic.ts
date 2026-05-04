@@ -980,6 +980,7 @@ function getCertTheme(rank: string): CertTheme {
         default: return { // Hall Boy
             tier: 0, accent: '#888', ar: 136, ag: 136, ab: 136,
             bgCss: 'linear-gradient(175deg,#0a0a0a 0%,#0e0e0e 50%,#0a0a0a 100%)',
+            bgImage: '/cert-bg-hallboy.svg',
             borderCss: '1px solid rgba(136,136,136,0.15)',
             glow: 0, stats: [],
             tagline: 'I have begun my service to Queen Karin.',
@@ -1277,62 +1278,44 @@ function _drawCertificate(
     ctx.fillRect(cx + 180, 108, W - 240 - cx, 1);
 
     if (t.stats.length === 0) {
-        // ── HALL BOY: Centered welcome layout — no stats ──
+        // ── HALL BOY: Centered symmetric layout — no stats, no avatar ──
+        // Vertically center the content block between header (108) and bottom (H)
+        const blockH = d.since ? 180 : 120; // name + rank + divider + tagline + since
+        const startY = 108 + ((H - 108) - blockH) / 2;
+
         ctx.textAlign = 'center';
-        ctx.font = '700 42px Cinzel, serif';
+        ctx.font = '700 44px Cinzel, serif';
         ctx.fillStyle = white;
-        ctx.fillText(d.name, cx, 180);
+        ctx.fillText(d.name, cx, startY);
 
         ctx.font = '400 24px Cinzel, serif';
         ctx.fillStyle = `rgba(${aR},${aG},${aB},0.5)`;
         ctx.letterSpacing = '6px';
-        ctx.fillText(d.rank, cx, 220);
+        ctx.fillText(d.rank, cx, startY + 42);
         ctx.letterSpacing = '0px';
 
-        const divG = ctx.createLinearGradient(cx - 150, 0, cx + 150, 0);
+        const divG = ctx.createLinearGradient(cx - 120, 0, cx + 120, 0);
         divG.addColorStop(0, 'transparent');
         divG.addColorStop(0.5, `rgba(${aR},${aG},${aB},0.2)`);
         divG.addColorStop(1, 'transparent');
         ctx.fillStyle = divG;
-        ctx.fillRect(cx - 150, 245, 300, 1);
-
-        // Avatar (centered)
-        let contentY = 270;
-        if (d.images.avatar) {
-            const avSize = 150;
-            const avX = cx - avSize / 2;
-            const avY = contentY;
-            contentY = avY + avSize + 24;
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(cx, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(d.images.avatar, avX, avY, avSize, avSize);
-            ctx.restore();
-            ctx.beginPath();
-            ctx.arc(cx, avY + avSize / 2, avSize / 2 + 2, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(${aR},${aG},${aB},0.2)`;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-        }
+        ctx.fillRect(cx - 120, startY + 62, 240, 1);
 
         // Tagline
-        ctx.textAlign = 'center';
         ctx.font = 'italic 20px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.fillText(t.tagline, cx, contentY + 10);
+        ctx.fillText(t.tagline, cx, startY + 95);
 
         // Serving Since
         if (d.since) {
             ctx.font = '400 14px Cinzel, serif';
             ctx.fillStyle = `rgba(${aR},${aG},${aB},0.35)`;
             ctx.letterSpacing = '3px';
-            ctx.fillText('Serving Since', cx, contentY + 50);
+            ctx.fillText('SERVING SINCE', cx, startY + 140);
             ctx.letterSpacing = '0px';
             ctx.font = '600 18px Cinzel, serif';
             ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            ctx.fillText(d.since, cx, contentY + 75);
+            ctx.fillText(d.since, cx, startY + 165);
         }
 
     } else {
