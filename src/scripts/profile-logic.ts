@@ -1156,19 +1156,15 @@ async function _saveCertificate() {
     // Preload images, then draw everything
     const images: Record<string, HTMLImageElement> = {};
     const theme = getCertTheme(rank);
-    let pending = (avatarUrl ? 1 : 0) + 1 /* sig */ + (theme.bgImage ? 1 : 0);
+    let pending = (avatarUrl ? 1 : 0) + (theme.bgImage ? 1 : 0);
+    if (pending === 0) pending = 1; // at least one tick
+    let fired = false;
     function onLoaded() {
         pending--;
-        if (pending > 0) return;
+        if (pending > 0 || fired) return;
+        fired = true;
         _drawCertificate(ctx, canvas, W, H, { name, rank, since, kneels, tasks, score, sacrifice, streak, images, theme });
     }
-
-    // Signature
-    const sigImg = new Image();
-    sigImg.crossOrigin = 'anonymous';
-    sigImg.onload = () => { images.sig = sigImg; onLoaded(); };
-    sigImg.onerror = () => onLoaded();
-    sigImg.src = '/signature.svg';
 
     // Background image (rank-specific)
     if (theme.bgImage) {
@@ -1214,12 +1210,9 @@ function _drawCertificate(
     ctx.fillStyle = t.tier <= 1 ? '#0a0a0a' : '#0a0806';
     ctx.fillRect(0, 0, W, H);
 
-    // Background image (rank-specific)
+    // Background image (rank-specific) — drawn as-is, no darkening
     if (d.images.bg) {
         ctx.drawImage(d.images.bg, 0, 0, W, H);
-        // Dark scrim for text readability
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, 0, W, H);
     }
 
     // Radial glow (scales with tier)
@@ -1329,14 +1322,6 @@ function _drawCertificate(
             ctx.fillText(d.since, cx, contentY + 75);
         }
 
-        // Signature
-        if (d.images.sig) {
-            const sigW = 220;
-            const sigH = sigW * (d.images.sig.naturalHeight / d.images.sig.naturalWidth);
-            ctx.globalAlpha = 0.4;
-            ctx.drawImage(d.images.sig, cx - sigW / 2, H - sigH - 40, sigW, sigH);
-            ctx.globalAlpha = 1.0;
-        }
     } else {
         // ── RANKED: Left-right layout with stats ──
         const vx = 520;
@@ -1393,15 +1378,6 @@ function _drawCertificate(
             ctx.font = '600 18px Cinzel, serif';
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
             ctx.fillText(d.since, leftCx, sinceY + 28);
-        }
-
-        // Signature
-        if (d.images.sig) {
-            const sigW = 260;
-            const sigH = sigW * (d.images.sig.naturalHeight / d.images.sig.naturalWidth);
-            ctx.globalAlpha = 0.5;
-            ctx.drawImage(d.images.sig, leftCx - sigW / 2, H - sigH - 45, sigW, sigH);
-            ctx.globalAlpha = 1.0;
         }
 
         // ── VERTICAL DIVIDER ──
