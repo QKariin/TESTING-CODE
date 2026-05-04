@@ -5133,7 +5133,7 @@ h3,
 }
 
 /* ═══════════════════════════════════════════════
-   DETAIL PROFILE PANEL — Modern Glass Design
+   DETAIL PROFILE PANEL — Luxe Glass Design
    ═══════════════════════════════════════════════ */
 
 .dp-panel {
@@ -5141,250 +5141,293 @@ h3,
     display: flex;
     flex-direction: column;
     gap: 0;
-    background: #07070c;
+    background: linear-gradient(180deg, #0a0a12 0%, #07070c 100%);
 }
 
 /* ── Hero header ── */
 .dp-hero {
     position: relative;
-    padding: 28px 22px 22px;
-    background: linear-gradient(165deg, rgba(20,18,14,0.95) 0%, rgba(10,10,14,0.98) 50%, rgba(7,7,12,1) 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    border-bottom: 1px solid rgba(197,160,89,0.08);
+    padding: 24px 20px 20px;
+    background: linear-gradient(165deg, rgba(18,16,12,1) 0%, rgba(12,11,16,1) 60%, rgba(8,8,14,1) 100%);
+    border-bottom: 1px solid rgba(197,160,89,0.1);
+    overflow: hidden;
 }
 .dp-hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(197,160,89,0.06) 0%, transparent 70%);
+    top: -40px;
+    left: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(197,160,89,0.08) 0%, transparent 70%);
     pointer-events: none;
+}
+.dp-hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at top right, rgba(197,160,89,0.03) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* Hero top row: avatar left, identity right */
+.dp-hero-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
 /* ── Avatar ── */
 .dp-avatar-wrap {
-    position: relative;
     flex-shrink: 0;
 }
 .dp-avatar-frame {
-    width: 72px;
-    height: 72px;
-    border-radius: 16px;
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
     padding: 3px;
-    background: linear-gradient(135deg, rgba(197,160,89,0.5) 0%, rgba(197,160,89,0.1) 50%, rgba(197,160,89,0.4) 100%);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(197,160,89,0.08);
+    background: linear-gradient(145deg, rgba(197,160,89,0.7) 0%, rgba(197,160,89,0.15) 40%, rgba(197,160,89,0.5) 100%);
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.7),
+        0 0 30px rgba(197,160,89,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.1);
 }
 .dp-avatar-img {
     width: 100%;
     height: 100%;
-    border-radius: 13px;
+    border-radius: 15px;
     object-fit: cover;
     display: block;
 }
-.dp-status-badge {
-    position: absolute;
-    bottom: -4px;
-    right: -4px;
-    background: #07070c;
-    border-radius: 10px;
-    padding: 2px 8px;
-    border: 1px solid rgba(255,255,255,0.08);
-}
-.dp-status-text {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.4rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #555;
-}
 
-/* ── Identity ── */
+/* ── Identity (beside avatar) ── */
 .dp-identity {
-    text-align: center;
+    flex: 1;
+    min-width: 0;
 }
 .dp-name-row {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
 }
 .dp-name {
     font-family: 'Cinzel', serif;
-    font-size: 1.1rem;
-    color: #f0ebe3;
+    font-size: 1.35rem;
+    color: #fff;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 200px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
 }
 .dp-rename-btn {
     cursor: pointer;
-    opacity: 0.2;
-    font-size: 0.55rem;
+    opacity: 0.15;
+    font-size: 0.6rem;
     color: #c5a059;
     flex-shrink: 0;
     transition: opacity 0.2s;
 }
 .dp-rename-btn:hover { opacity: 0.7; }
+
+.dp-rank-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
 .dp-rank {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.5rem;
-    color: rgba(197,160,89,0.7);
-    letter-spacing: 4px;
+    font-size: 0.55rem;
+    color: rgba(197,160,89,0.8);
+    letter-spacing: 3px;
     font-weight: 700;
-    margin-top: 4px;
     text-transform: uppercase;
 }
-
-/* ── Stats grid ── */
-.dp-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    width: 100%;
-    margin-top: 4px;
+.dp-status-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.45rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #555;
+    background: rgba(255,255,255,0.04);
+    padding: 2px 8px;
+    border-radius: 4px;
 }
-.dp-stat-card {
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    padding: 10px 12px;
+
+/* ── Stats row — horizontal strip ── */
+.dp-stats-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px 6px;
+    backdrop-filter: blur(12px);
+}
+.dp-stat {
+    flex: 1;
     text-align: center;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.3s;
+    padding: 0 4px;
 }
-.dp-stat-card:hover {
-    border-color: rgba(255,255,255,0.1);
+.dp-stat-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.06);
+    flex-shrink: 0;
 }
-.dp-stat-gold { border-color: rgba(197,160,89,0.12); }
-.dp-stat-gold:hover { border-color: rgba(197,160,89,0.3); }
-.dp-stat-blue { border-color: rgba(100,180,255,0.08); }
-.dp-stat-blue:hover { border-color: rgba(100,180,255,0.25); }
-.dp-stat-green { border-color: rgba(74,222,128,0.08); }
-.dp-stat-green:hover { border-color: rgba(74,222,128,0.25); }
-
 .dp-stat-label {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.38rem;
-    color: rgba(255,255,255,0.25);
-    font-weight: 600;
-    letter-spacing: 2.5px;
-    margin-bottom: 6px;
-    text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.4rem;
+    color: rgba(255,255,255,0.35);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
 }
 .dp-stat-value {
     font-family: 'Cinzel', serif;
-    font-size: 0.95rem;
-    color: rgba(255,255,255,0.8);
+    font-size: 1.05rem;
+    color: rgba(255,255,255,0.85);
     font-weight: 700;
     line-height: 1;
 }
-.dp-stat-value-gold { color: #c5a059; }
-.dp-stat-value-blue { color: rgba(100,180,255,0.8); }
-.dp-stat-value-green { color: rgba(74,222,128,0.7); font-size: 0.65rem; }
+.dp-val-gold { color: #c5a059; }
+.dp-val-blue { color: rgba(120,190,255,0.9); }
+.dp-val-green { color: rgba(74,222,128,0.8); font-size: 0.7rem; }
 
 /* ── Sections container ── */
 .dp-sections {
-    padding: 4px 0 12px;
+    padding: 8px 0 12px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
 }
 
 /* ── Section card ── */
 .dp-section {
-    margin: 0 12px;
-    padding: 16px;
-    background: rgba(255,255,255,0.018);
-    border: 1px solid rgba(255,255,255,0.04);
-    border-radius: 14px;
-    margin-bottom: 6px;
+    margin: 0 10px;
+    padding: 18px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    transition: border-color 0.3s, background 0.3s;
+}
+.dp-section:hover {
+    border-color: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
 }
 .dp-section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-}
-.dp-section-title-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 14px;
 }
 .dp-section-title {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.48rem;
-    color: rgba(197,160,89,0.6);
-    font-weight: 700;
-    letter-spacing: 2.5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.55rem;
+    color: rgba(197,160,89,0.7);
+    font-weight: 800;
+    letter-spacing: 3px;
     text-transform: uppercase;
 }
 .dp-section-badge {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.42rem;
-    color: rgba(255,255,255,0.3);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.45rem;
+    color: rgba(255,255,255,0.35);
     font-weight: 700;
     letter-spacing: 1.5px;
-    background: rgba(255,255,255,0.03);
-    padding: 3px 10px;
+    background: rgba(255,255,255,0.04);
+    padding: 4px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
 }
 
 /* ── Task card inside directive ── */
 .dp-task-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(0,0,0,0.35);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(197,160,89,0.08);
 }
 .dp-timer {
     font-family: 'Cinzel', serif;
-    font-size: 1.15rem;
-    color: rgba(197,160,89,0.45);
-    letter-spacing: 3px;
+    font-size: 1.3rem;
+    color: rgba(197,160,89,0.5);
+    letter-spacing: 4px;
     font-weight: 400;
+}
+.dp-cancel-btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.5rem;
+    padding: 5px 16px;
+    background: rgba(180,50,50,0.06);
+    border: 1px solid rgba(180,50,50,0.15);
+    color: rgba(180,50,50,0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+.dp-cancel-btn:hover {
+    background: rgba(180,50,50,0.12);
+    border-color: rgba(180,50,50,0.3);
+    color: rgba(180,50,50,0.8);
 }
 
 /* ── Assign button ── */
 .dp-assign-btn {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.48rem;
-    padding: 10px 0;
-    background: rgba(197,160,89,0.04);
-    border: 1px dashed rgba(197,160,89,0.15);
-    color: rgba(197,160,89,0.4);
-    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.52rem;
+    padding: 12px 0;
+    background: linear-gradient(135deg, rgba(197,160,89,0.06) 0%, rgba(197,160,89,0.02) 100%);
+    border: 1px solid rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.5);
+    border-radius: 12px;
     cursor: pointer;
     width: 100%;
-    font-weight: 700;
-    letter-spacing: 2.5px;
+    font-weight: 800;
+    letter-spacing: 3px;
     transition: all 0.3s;
     text-transform: uppercase;
 }
 .dp-assign-btn:hover {
-    background: rgba(197,160,89,0.08);
-    border-color: rgba(197,160,89,0.3);
-    color: rgba(197,160,89,0.7);
+    background: linear-gradient(135deg, rgba(197,160,89,0.12) 0%, rgba(197,160,89,0.06) 100%);
+    border-color: rgba(197,160,89,0.4);
+    color: rgba(197,160,89,0.85);
+    box-shadow: 0 4px 20px rgba(197,160,89,0.08);
+}
+
+/* ── Routine grid (routine + calendar side by side) ── */
+.dp-routine-grid {
+    display: flex;
+    gap: 14px;
+}
+
+/* ── Footer ── */
+.dp-footer {
+    padding: 12px 20px;
 }
 
 /* ── Collapsible row (Intel / Kinks) ── */
 .dp-collapse-row {
     display: flex;
-    margin: 0 12px 6px;
-    border-radius: 14px;
+    margin: 0 10px;
+    border-radius: 16px;
     overflow: hidden;
-    background: rgba(255,255,255,0.018);
-    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
 }
 .dp-collapse-half {
     flex: 1;
@@ -5398,12 +5441,12 @@ h3,
     transition: background 0.2s;
 }
 .dp-collapse-trigger:hover {
-    background: rgba(255,255,255,0.02);
+    background: rgba(255,255,255,0.03);
 }
 .dp-collapse-label {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.42rem;
-    color: rgba(255,255,255,0.3);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.45rem;
+    color: rgba(255,255,255,0.35);
     font-weight: 700;
     letter-spacing: 2px;
 }

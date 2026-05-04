@@ -1762,93 +1762,100 @@ export default function DashboardPage() {
                                 {/* ── PROFILE PANEL (default visible) ── */}
                                 <div id="chatterProfilePanel" className="dp-panel">
 
-                                {/* ═══ SUBJECT HEADER — hero card with avatar + stats ═══ */}
+                                {/* ═══ HERO — avatar left, name+stats right (like screenshot) ═══ */}
                                 <div id="apMirrorHeader" className="dp-hero">
-                                    {/* Avatar with decorative frame */}
-                                    <div className="dp-avatar-wrap">
-                                        <div className="dp-avatar-frame">
-                                            <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                    <div className="dp-hero-top">
+                                        {/* Large avatar with gradient frame */}
+                                        <div className="dp-avatar-wrap">
+                                            <div className="dp-avatar-frame">
+                                                <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                            </div>
                                         </div>
-                                        <div className="dp-status-badge">
-                                            <div id="dMirrorStatus" className="dp-status-text">—</div>
+                                        {/* Name + rank + status */}
+                                        <div className="dp-identity">
+                                            <div className="dp-name-row">
+                                                <div id="dMirrorName" className="dp-name">—</div>
+                                                <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
+                                            </div>
+                                            <div className="dp-rank-row">
+                                                <div id="dMirrorHierarchy" className="dp-rank">—</div>
+                                                <div id="dMirrorStatus" className="dp-status-text">—</div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Name + Rank */}
-                                    <div className="dp-identity">
-                                        <div className="dp-name-row">
-                                            <div id="dMirrorName" className="dp-name">—</div>
-                                            <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
+                                    {/* Stats row — horizontal, big numbers */}
+                                    <div className="dp-stats-row">
+                                        <div className="dp-stat">
+                                            <div className="dp-stat-label">MERIT:</div>
+                                            <div id="dMirrorPoints" className="dp-stat-value dp-val-gold">0</div>
                                         </div>
-                                        <div id="dMirrorHierarchy" className="dp-rank">—</div>
-                                    </div>
-
-                                    {/* Stats grid — glass cards */}
-                                    <div className="dp-stats-grid">
-                                        <div className="dp-stat-card dp-stat-gold">
-                                            <div className="dp-stat-label">MERIT</div>
-                                            <div id="dMirrorPoints" className="dp-stat-value dp-stat-value-gold">0</div>
-                                        </div>
-                                        <div className="dp-stat-card">
-                                            <div className="dp-stat-label">CAPITAL</div>
+                                        <div className="dp-stat-divider"></div>
+                                        <div className="dp-stat">
+                                            <div className="dp-stat-label">CAPITAL:</div>
                                             <div id="dMirrorWallet" className="dp-stat-value">0</div>
                                         </div>
-                                        <div className="dp-stat-card dp-stat-blue">
-                                            <div className="dp-stat-label">LABOR</div>
-                                            <div id="dMirrorKneel" className="dp-stat-value dp-stat-value-blue">0 h</div>
+                                        <div className="dp-stat-divider"></div>
+                                        <div className="dp-stat">
+                                            <div className="dp-stat-label">LABOR:</div>
+                                            <div id="dMirrorKneel" className="dp-stat-value dp-val-blue">0 h</div>
                                         </div>
-                                        <div className="dp-stat-card dp-stat-green">
-                                            <div className="dp-stat-label">ROUTINE</div>
-                                            <div id="dMirrorRoutine" className="dp-stat-value dp-stat-value-green">—</div>
+                                        <div className="dp-stat-divider"></div>
+                                        <div className="dp-stat">
+                                            <div className="dp-stat-label">ROUTINE:</div>
+                                            <div id="dMirrorRoutine" className="dp-stat-value dp-val-green">—</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ═══ SECTIONS — modern glass cards ═══ */}
+                                {/* ═══ SECTIONS ═══ */}
                                 <div className="dp-sections">
 
                                 {/* ── DIRECTIVE ── */}
                                 <div className="dp-section">
                                     <div className="dp-section-header">
-                                        <div className="dp-section-title-row">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span className="dp-section-title">Directive</span>
+                                            <span className="dp-section-title">DIRECTIVES</span>
                                         </div>
                                         <span id="dActiveStatus" className="dp-section-badge">IDLE</span>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
                                         <div id="activeTaskContent" className="dp-task-card">
-                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.72rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, marginBottom: 8 }}>None</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px', marginBottom: 8, fontWeight: 700 }}>CURRENT DIRECTIVE:</div>
+                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 12, fontStyle: 'italic' }}>None</div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <div id="dActiveTimer" className="dp-timer">--:--</div>
-                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '4px 14px', background: 'rgba(180,50,50,0.08)', border: '1px solid rgba(180,50,50,0.2)', color: 'rgba(180,50,50,0.5)', borderRadius: 6, cursor: 'pointer', fontWeight: 600, letterSpacing: '1px', transition: 'all 0.2s' }}>Cancel</button>
+                                                <button className="dp-cancel-btn" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')}>Cancel</button>
                                             </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                     </div>
                                     <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}></div>
-                                    <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ Assign</button>
+                                    <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN</button>
                                 </div>
 
-                                {/* ── ROUTINE ── */}
+                                {/* ── ROUTINE + CALENDAR side by side ── */}
                                 <div className="dp-section">
                                     <div className="dp-section-header">
-                                        <span className="dp-section-title" style={{ color: 'rgba(74,222,128,0.6)' }}>Routine</span>
+                                        <span className="dp-section-title" style={{ color: 'rgba(74,222,128,0.7)' }}>ROUTINE</span>
                                     </div>
-                                    <div id="chatter_RoutineContent" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.35)', fontSize: '0.6rem' }}>No routine assigned</div>
-                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(74,222,128,0.08)' }}>
-                                        <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(232,93,117,0.5)', fontWeight: 700, letterSpacing: '3px', marginBottom: 8, textTransform: 'uppercase' }}>Pending Review</div>
-                                        <div id="chatter_PendingContent"></div>
+                                    <div className="dp-routine-grid">
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div id="chatter_RoutineContent" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.45)', fontSize: '0.65rem', lineHeight: 1.6 }}>No routine assigned</div>
+                                            <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(74,222,128,0.08)' }}>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(232,93,117,0.6)', fontWeight: 700, letterSpacing: '3px', marginBottom: 8, textTransform: 'uppercase' }}>Pending Review</div>
+                                                <div id="chatter_PendingContent"></div>
+                                            </div>
+                                        </div>
+                                        <div id="routineCalendarSection" style={{ display: 'none', minWidth: 0, flex: 1 }}>
+                                            <div id="routineCalendarGrid"></div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* ── REVIEW QUEUE ── */}
                                 <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
-
-                                {/* ── ROUTINE CALENDAR ── */}
-                                <div id="routineCalendarSection" className="dp-section" style={{ display: 'none' }}>
-                                    <div id="routineCalendarGrid"></div>
-                                </div>
 
                                 {/* ── KNEELING ── */}
                                 <div className="dp-section">
@@ -1858,15 +1865,14 @@ export default function DashboardPage() {
                                 {/* ── PROMOTION ── */}
                                 <div id="progress_section" className="dp-section">
                                     <div className="dp-section-header">
-                                        <span className="dp-section-title" style={{ color: 'rgba(180,130,255,0.6)' }}>Promotion</span>
+                                        <span className="dp-section-title" style={{ color: 'rgba(180,130,255,0.7)' }}>PROMOTION</span>
                                     </div>
-                                    <div id="admin_NextRank" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.6rem', color: 'rgba(180,130,255,0.4)', marginBottom: 12, fontWeight: 500, letterSpacing: '0.5px' }}>—</div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.65rem', color: 'rgba(180,130,255,0.5)', marginBottom: 14, fontWeight: 600, letterSpacing: '0.5px' }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
-                                {/* ── TELEMETRY + KINKS — collapsible row ── */}
+                                {/* ── TELEMETRY + KINKS ── */}
                                 <div className="dp-collapse-row">
-                                    {/* Telemetry half */}
                                     <div id="telemetry_section" className="dp-collapse-half" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
                                         <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)'; } }} className="dp-collapse-trigger">
                                             <span className="dp-collapse-label">INTEL</span>
@@ -1876,7 +1882,6 @@ export default function DashboardPage() {
                                             <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
                                         </div>
                                     </div>
-                                    {/* Kinks half */}
                                     <div className="dp-collapse-half">
                                         <div onClick={() => { const c = document.getElementById('admin_KinksLimits'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'block'; } }} className="dp-collapse-trigger">
                                             <span className="dp-collapse-label">KINKS</span>
@@ -1887,10 +1892,10 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ── FOOTER ── */}
-                                <div style={{ padding: '12px 20px' }}>
-                                    <div style={{ opacity: 0.2, marginBottom: 10 }}>
-                                        <span style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px' }}>REG </span>
-                                        <span id="dMirrorSlaveSince" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>—</span>
+                                <div className="dp-footer">
+                                    <div style={{ opacity: 0.25 }}>
+                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px' }}>REG </span>
+                                        <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>—</span>
                                     </div>
 
                                     {role === 'queen' && (
