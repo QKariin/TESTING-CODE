@@ -980,7 +980,7 @@ function getCertTheme(rank: string): CertTheme {
         default: return { // Hall Boy
             tier: 0, accent: '#888', ar: 136, ag: 136, ab: 136,
             bgCss: 'linear-gradient(175deg,#0a0a0a 0%,#0e0e0e 50%,#0a0a0a 100%)',
-            bgImage: '/cert-bg-hallboy.svg',
+            bgImage: '/cert-bg-hallboy-v2.svg',
             borderCss: '1px solid rgba(136,136,136,0.15)',
             glow: 0, stats: [],
             tagline: 'I have begun my service to Queen Karin.',
@@ -1289,8 +1289,8 @@ function _drawCertificate(
         // ── HALL BOY: Centered symmetric layout — no stats ──
         const hasAvatar = !!d.images.avatar;
         const avSize = 120;
-        const blockH = 42 + 42 + 20 + (hasAvatar ? avSize + 24 : 0) + 35 + (d.since ? 60 : 0);
-        const startY = 108 + ((H - 108) - blockH) / 2;
+        const blockH = 42 + 42 + 20 + (hasAvatar ? avSize + 24 : 0) + 35;
+        const startY = 120 + ((H - 140) - blockH) / 2;
 
         ctx.textAlign = 'center';
         ctx.font = '700 44px Cinzel, serif';
@@ -1330,22 +1330,10 @@ function _drawCertificate(
             curY += avSize + 24;
         }
 
-        // Tagline
+        // Tagline only — no date for Hall Boy
         ctx.font = 'italic 20px Cinzel, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.fillText(t.tagline, cx, curY);
-
-        // Serving Since
-        if (d.since) {
-            ctx.font = '400 14px Cinzel, serif';
-            ctx.fillStyle = `rgba(${aR},${aG},${aB},0.35)`;
-            ctx.letterSpacing = '3px';
-            ctx.fillText('SERVING SINCE', cx, curY + 40);
-            ctx.letterSpacing = '0px';
-            ctx.font = '600 18px Cinzel, serif';
-            ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            ctx.fillText(d.since, cx, curY + 60);
-        }
 
     } else {
         // ── RANKED: Left-right layout with stats ──
