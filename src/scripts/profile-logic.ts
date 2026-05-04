@@ -1000,10 +1000,7 @@ export function showCertificate() {
 
     const card = document.createElement('div');
     card.id = 'certCard';
-    const bgStyle = t.bgImage
-        ? `background:${t.bgCss};background-image:url('${t.bgImage}');background-size:cover;background-position:center;`
-        : `background:${t.bgCss};`;
-    card.style.cssText = `width:355px;max-width:92vw;${bgStyle}border:${t.borderCss};border-radius:4px;padding:0;text-align:center;box-shadow:${t.shadow};position:relative;overflow:hidden;margin-top:24px;`;
+    card.style.cssText = `width:355px;max-width:92vw;background:${t.bgCss};border:${t.borderCss};border-radius:4px;padding:0;text-align:center;box-shadow:${t.shadow};position:relative;overflow:hidden;margin-top:24px;`;
 
     const statLine = (label: string, value: string) =>
         `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(${a},0.06);">
@@ -1046,10 +1043,7 @@ export function showCertificate() {
         ? `<div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent 10%,rgba(${a},0.3) 40%,rgba(${a},0.3) 60%,transparent 90%);"></div>`
         : '';
 
-    // Background image: dark scrim for readability. No image: radial glow.
-    const overlayHtml = t.bgImage
-        ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);pointer-events:none;"></div>`
-        : `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(${a},${t.glow}) 0%,transparent 50%);pointer-events:none;"></div>`;
+    const overlayHtml = `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(${a},${t.glow}) 0%,transparent 50%);pointer-events:none;"></div>`;
 
     card.innerHTML = `
         ${overlayHtml}
@@ -1407,10 +1401,10 @@ function _drawCertificate(
         };
 
         const stats = t.stats.map(k => statMap[k]).filter(Boolean);
-        const topEdge = 130;
-        const bottomEdge = H - 45;
+        const topEdge = 110;
+        const bottomEdge = H - 30;
         const availH = bottomEdge - topEdge;
-        const statGap = Math.min(88, availH / (stats.length + 1));
+        const statGap = 80;
         const blockH = (stats.length - 1) * statGap;
         const statStartY = topEdge + (availH - blockH) / 2;
 
