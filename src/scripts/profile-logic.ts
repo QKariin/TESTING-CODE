@@ -1064,7 +1064,7 @@ export function showCertificate() {
 
         <!-- CERTIFICATE OF SERVICE -->
         <div style="padding:8px 24px 18px;">
-            <div style="font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(${a},0.55);letter-spacing:6px;">CERTIFICATE OF SERVICE</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.68rem;color:rgba(${a},0.55);letter-spacing:10px;">CERTIFICATE OF SERVICE</div>
         </div>
 
         <div style="width:85%;height:1px;background:linear-gradient(to right,transparent,rgba(${a},${t.tier >= 3 ? 0.3 : 0.15}),transparent);margin:0 auto;"></div>
@@ -1247,7 +1247,7 @@ function _drawCertificate(
     ctx.textAlign = 'center';
     ctx.font = '700 34px Cinzel, serif';
     ctx.fillStyle = `rgba(${aR},${aG},${aB},0.8)`;
-    ctx.letterSpacing = '12px';
+    ctx.letterSpacing = '18px';
     ctx.fillText('CERTIFICATE OF SERVICE', cx, 62);
     ctx.letterSpacing = '0px';
 
