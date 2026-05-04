@@ -2454,6 +2454,22 @@ export async function handleChatMediaUpload(input: HTMLInputElement) {
                 const wStr = data.newWallet.toLocaleString();
                 document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
             }
+
+            // Render sent media immediately so it doesn't depend on realtime
+            if (data.data) {
+                const sentId = data.data.id ? String(data.data.id) : null;
+                if (sentId && !_renderedMsgIds.has(sentId)) {
+                    _renderedMsgIds.add(sentId);
+                    _lastChatMsgId = sentId;
+                    if (data.data.created_at) _lastChatMsgTimestamp = data.data.created_at;
+                    const html = renderChatMessage(data.data);
+                    ['chatContent', 'mob_chatContent'].forEach(cid => {
+                        const el = document.getElementById(cid);
+                        if (el) el.insertAdjacentHTML('beforeend', html);
+                    });
+                    _scrollChatDelayed();
+                }
+            }
             return true; // success → close modal
         } catch (err) {
             statusEl.textContent = 'Upload failed. Try again.';
@@ -3618,6 +3634,23 @@ export async function sendChatMessage() {
             setState({ wallet: newWallet });
             const wStr = newWallet.toLocaleString();
             document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
+
+            // Render the sent message immediately so it doesn't depend on realtime
+            const sentRow = data.data;
+            if (sentRow) {
+                const sentId = sentRow.id ? String(sentRow.id) : null;
+                if (sentId && !_renderedMsgIds.has(sentId)) {
+                    _renderedMsgIds.add(sentId);
+                    _lastChatMsgId = sentId;
+                    if (sentRow.created_at) _lastChatMsgTimestamp = sentRow.created_at;
+                    const html = renderChatMessage(sentRow);
+                    ['chatContent', 'mob_chatContent'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.insertAdjacentHTML('beforeend', html);
+                    });
+                    _scrollChatDelayed();
+                }
+            }
         } else {
             alert(data.error || "Failed to send message.");
         }
@@ -3639,11 +3672,26 @@ async function _sendProfileGif(gifUrl: string) {
     if (!memberId) return;
 
     try {
-        await fetch('/api/chat/send', {
+        const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ memberId, content: gifUrl, type: 'gif', metadata: { gifUrl } }),
         });
+        const data = await res.json();
+        if (data.success && data.data) {
+            const sentId = data.data.id ? String(data.data.id) : null;
+            if (sentId && !_renderedMsgIds.has(sentId)) {
+                _renderedMsgIds.add(sentId);
+                _lastChatMsgId = sentId;
+                if (data.data.created_at) _lastChatMsgTimestamp = data.data.created_at;
+                const html = renderChatMessage(data.data);
+                ['chatContent', 'mob_chatContent'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.insertAdjacentHTML('beforeend', html);
+                });
+                _scrollChatDelayed();
+            }
+        }
     } catch {}
 }
 
