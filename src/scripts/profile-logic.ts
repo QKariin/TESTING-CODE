@@ -1153,30 +1153,38 @@ async function _saveCertificate() {
     const ctx = canvas.getContext('2d')!;
     const avatarUrl = raw?.avatar_url || raw?.profile_picture_url || '';
 
-    // Preload images, then draw everything
+    // Preload images, then draw
     const images: Record<string, HTMLImageElement> = {};
     const theme = getCertTheme(rank);
-    let pending = (avatarUrl ? 1 : 0) + (theme.bgImage ? 1 : 0);
-    if (pending === 0) pending = 1; // at least one tick
-    let fired = false;
-    function onLoaded() {
-        pending--;
-        if (pending > 0 || fired) return;
-        fired = true;
+    const hasAvatar = avatarUrl && avatarUrl !== '/collar-placeholder.png';
+    const hasBg = !!theme.bgImage;
+    let pending = (hasAvatar ? 1 : 0) + (hasBg ? 1 : 0);
+
+    function draw() {
         _drawCertificate(ctx, canvas, W, H, { name, rank, since, kneels, tasks, score, sacrifice, streak, images, theme });
     }
 
+    if (pending === 0) {
+        draw();
+        return;
+    }
+
+    function onLoaded() {
+        pending--;
+        if (pending <= 0) draw();
+    }
+
     // Background image (rank-specific)
-    if (theme.bgImage) {
+    if (hasBg) {
         const bgImg = new Image();
         bgImg.crossOrigin = 'anonymous';
         bgImg.onload = () => { images.bg = bgImg; onLoaded(); };
         bgImg.onerror = () => onLoaded();
-        bgImg.src = theme.bgImage;
+        bgImg.src = theme.bgImage!;
     }
 
-    // Avatar — fetch as blob, try proxy if direct fails
-    if (avatarUrl && avatarUrl !== '/collar-placeholder.png') {
+    // Avatar
+    if (hasAvatar) {
         const loadAvatarBlob = (url: string) => fetch(url)
             .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.blob(); })
             .then(blob => {
@@ -1190,8 +1198,6 @@ async function _saveCertificate() {
         loadAvatarBlob(avatarUrl)
             .catch(() => loadAvatarBlob(`/api/media?url=${encodeURIComponent(avatarUrl)}`))
             .catch(() => onLoaded());
-    } else {
-        onLoaded();
     }
 }
 
