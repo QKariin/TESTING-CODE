@@ -1762,7 +1762,7 @@ export default function DashboardPage() {
                                 {/* ── PROFILE PANEL (default visible) ── */}
                                 <div id="chatterProfilePanel" className="dp-panel">
 
-                                {/* ═══ HERO — avatar + identity ═══ */}
+                                {/* ═══ HERO ═══ */}
                                 <div id="apMirrorHeader" className="dp-hero">
                                     <div className="dp-hero-top">
                                         <div className="dp-avatar-wrap">
@@ -1782,31 +1782,27 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
 
-                                    {/* Stats pill — like profile mobile */}
-                                    <div className="dp-stats-pill">
-                                        <div className="dp-stat-col">
+                                    {/* Stats — numbers floating, no boxes */}
+                                    <div className="dp-stats">
+                                        <div className="dp-stat">
                                             <span className="dp-stat-label">MERIT</span>
-                                            <span id="dMirrorPoints" className="dp-stat-value">0</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-gold" id="dpGaugeMerit" style={{ width: '0%' }}></div></div>
+                                            <span id="dMirrorPoints" className="dp-stat-num">0</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeMerit"></div></div>
                                         </div>
-                                        <div className="dp-stat-divider"></div>
-                                        <div className="dp-stat-col">
+                                        <div className="dp-stat">
                                             <span className="dp-stat-label">CAPITAL</span>
-                                            <span id="dMirrorWallet" className="dp-stat-value">0</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-gold" id="dpGaugeCapital" style={{ width: '0%' }}></div></div>
+                                            <span id="dMirrorWallet" className="dp-stat-num">0</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeCapital"></div></div>
                                         </div>
-                                    </div>
-                                    <div className="dp-stats-pill dp-stats-pill-sm">
-                                        <div className="dp-stat-col">
+                                        <div className="dp-stat">
                                             <span className="dp-stat-label">LABOR</span>
-                                            <span id="dMirrorKneel" className="dp-stat-value dp-stat-value-sm">0 h</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-gold" id="dpGaugeLabor" style={{ width: '0%' }}></div></div>
+                                            <span id="dMirrorKneel" className="dp-stat-num">0 h</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeLabor"></div></div>
                                         </div>
-                                        <div className="dp-stat-divider"></div>
-                                        <div className="dp-stat-col">
+                                        <div className="dp-stat">
                                             <span className="dp-stat-label">ROUTINE</span>
-                                            <span id="dMirrorRoutine" className="dp-stat-value dp-stat-value-sm">—</span>
-                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-green" id="dpGaugeRoutine" style={{ width: '0%' }}></div></div>
+                                            <span id="dMirrorRoutine" className="dp-stat-num">—</span>
+                                            <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-routine" id="dpGaugeRoutine"></div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1816,9 +1812,11 @@ export default function DashboardPage() {
 
                                 {/* ── DIRECTIVE ── */}
                                 <div className="dp-section">
-                                    <div className="dp-section-label">
-                                        <span id="statusDot" className="status-dot unproductive"></span>
-                                        <span className="dp-label-text">DIRECTIVES</span>
+                                    <div className="dp-section-head">
+                                        <div className="dp-head-left">
+                                            <span id="statusDot" className="status-dot unproductive"></span>
+                                            <span className="dp-section-title">DIRECTIVES</span>
+                                        </div>
                                         <span id="dActiveStatus" className="dp-status-badge">IDLE</span>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
@@ -1837,8 +1835,8 @@ export default function DashboardPage() {
 
                                 {/* ── ROUTINE + CALENDAR ── */}
                                 <div className="dp-section">
-                                    <div className="dp-section-label">
-                                        <span className="dp-label-text">ROUTINE</span>
+                                    <div className="dp-section-head">
+                                        <span className="dp-section-title">ROUTINE</span>
                                     </div>
                                     <div className="dp-routine-layout">
                                         <div className="dp-routine-info">
@@ -1864,30 +1862,30 @@ export default function DashboardPage() {
 
                                 {/* ── PROMOTION ── */}
                                 <div id="progress_section" className="dp-section">
-                                    <div className="dp-section-label">
-                                        <span className="dp-label-text">PROMOTION</span>
+                                    <div className="dp-section-head">
+                                        <span className="dp-section-title">PROMOTION</span>
                                         <span id="admin_NextRank" className="dp-promo-target">—</span>
                                     </div>
                                     <div id="admin_ProgressContainer" className="dp-promo-bars"></div>
                                 </div>
 
                                 {/* ── TELEMETRY + KINKS ── */}
-                                <div className="dp-intel-row">
-                                    <div id="telemetry_section" className="dp-intel-card" onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)'; } }}>
-                                        <div className="dp-intel-trigger">
-                                            <span className="dp-intel-label">INTEL</span>
-                                            <span id="telemetry_arrow" className="dp-intel-arrow" style={{ transform: 'rotate(0deg)' }}>&#9662;</span>
+                                <div className="dp-section dp-section-split">
+                                    <div id="telemetry_section" className="dp-split-half" onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)'; } }}>
+                                        <div className="dp-split-trigger">
+                                            <span className="dp-section-title">INTEL</span>
+                                            <span id="telemetry_arrow" className="dp-split-arrow">&#9662;</span>
                                         </div>
-                                        <div id="admin_TelemetryContainer" className="dp-intel-content" style={{ display: 'none' }} onClick={(e) => e.stopPropagation()}>
-                                            <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
+                                        <div id="admin_TelemetryContainer" className="dp-split-content" style={{ display: 'none' }} onClick={(e) => e.stopPropagation()}>
+                                            <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.15)', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
                                         </div>
                                     </div>
-                                    <div className="dp-intel-card" onClick={() => { const c = document.getElementById('admin_KinksLimits'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'block'; } }}>
-                                        <div className="dp-intel-trigger">
-                                            <span className="dp-intel-label">KINKS</span>
-                                            <span className="dp-intel-arrow">&#9662;</span>
+                                    <div className="dp-split-half" onClick={() => { const c = document.getElementById('admin_KinksLimits'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'block'; } }}>
+                                        <div className="dp-split-trigger">
+                                            <span className="dp-section-title">KINKS</span>
+                                            <span className="dp-split-arrow">&#9662;</span>
                                         </div>
-                                        <div id="admin_KinksLimits" className="dp-intel-content" style={{ display: 'none' }} onClick={(e) => e.stopPropagation()}></div>
+                                        <div id="admin_KinksLimits" className="dp-split-content" style={{ display: 'none' }} onClick={(e) => e.stopPropagation()}></div>
                                     </div>
                                 </div>
 
