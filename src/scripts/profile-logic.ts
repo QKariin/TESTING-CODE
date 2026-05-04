@@ -1290,7 +1290,7 @@ function _drawCertificate(
         const hasAvatar = !!d.images.avatar;
         const avSize = 120;
         const blockH = 42 + 42 + 20 + (hasAvatar ? avSize + 24 : 0) + 35;
-        const startY = 120 + ((H - 140) - blockH) / 2;
+        const startY = 120 + ((H - 140) - blockH) * 0.3;
 
         ctx.textAlign = 'center';
         ctx.font = '700 44px Cinzel, serif';
