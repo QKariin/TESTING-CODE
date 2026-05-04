@@ -805,6 +805,7 @@ export function openLobby() {
     if (!el) return;
     el.classList.remove('hidden');
     el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
     const { memberId, id } = getState();
     const emailEl = document.getElementById('hubEmail');
     if (emailEl) emailEl.textContent = memberId || id || '';
@@ -818,18 +819,26 @@ export function closeLobby() {
     if (!el) return;
     el.classList.add('hidden');
     el.style.display = 'none';
+    if (!_anyHubOpen()) document.body.style.overflow = '';
 }
 
-const LOCKED_RANKS = ['Hall Boy', 'Footman'];
+function _anyHubOpen(): boolean {
+    return ['lobbyOverlay', 'queenOverlay'].some(id => {
+        const el = document.getElementById(id);
+        return el && !el.classList.contains('hidden') && el.style.display !== 'none';
+    });
+}
+
+const LOCKED_RANKS = ['Hall Boy'];
 
 function _updateHubLocks() {
     const state = getState();
     const rank = (state as any).rank || 'Hall Boy';
     const isLocked = LOCKED_RANKS.includes(rank);
     const lockItems = [
-        { row: 'hubRoutineRow', lock: 'hubRoutineLock', desc: 'hubRoutineDesc', lockedText: 'Unlock at Silverman rank' },
-        { row: 'hubKinksRow', lock: 'hubKinksLock', desc: 'hubKinksDesc', lockedText: 'Unlock at Silverman rank' },
-        { row: 'hubLimitsRow', lock: 'hubLimitsLock', desc: 'hubLimitsDesc', lockedText: 'Unlock at Silverman rank' },
+        { row: 'hubRoutineRow', lock: 'hubRoutineLock', desc: 'hubRoutineDesc', lockedText: 'Unlock at Footman rank' },
+        { row: 'hubKinksRow', lock: 'hubKinksLock', desc: 'hubKinksDesc', lockedText: 'Unlock at Footman rank' },
+        { row: 'hubLimitsRow', lock: 'hubLimitsLock', desc: 'hubLimitsDesc', lockedText: 'Unlock at Footman rank' },
     ];
     for (const item of lockItems) {
         const row = document.getElementById(item.row) as HTMLButtonElement | null;
@@ -1955,6 +1964,7 @@ export function openQueenMenu() {
     if (!el) return;
     el.classList.remove('hidden');
     el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
     _updateInstallRow();
 }
 
@@ -1963,6 +1973,7 @@ export function closeQueenMenu() {
     if (!el) return;
     el.classList.add('hidden');
     el.style.display = 'none';
+    if (!_anyHubOpen()) document.body.style.overflow = '';
 }
 
 export function closeEarnCoinsModal() {
