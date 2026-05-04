@@ -132,6 +132,11 @@ function subscribeToDashboardTaskUpdates() {
     if (_unreadPollInterval) clearInterval(_unreadPollInterval);
     _unreadPollInterval = setInterval(refreshUnreadStatus, 45000);
 
+    // Check for expired tasks every 60s and on init
+    runExpiredTaskCheck();
+    if (_expiredTaskInterval) clearInterval(_expiredTaskInterval);
+    _expiredTaskInterval = setInterval(runExpiredTaskCheck, 60000);
+
     // Subscribe to profiles for purchase notifications
     subscribeToPurchaseNotifications(supabase);
 
@@ -142,6 +147,14 @@ function subscribeToDashboardTaskUpdates() {
 // Polling interval references
 let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
 let _unreadPollInterval: ReturnType<typeof setInterval> | null = null;
+let _expiredTaskInterval: ReturnType<typeof setInterval> | null = null;
+
+async function runExpiredTaskCheck() {
+    try {
+        const { checkExpiredTasks } = await import('@/actions/velo-actions');
+        await checkExpiredTasks();
+    } catch (_) {}
+}
 
 /** Fetch unread message status for all users — fallback when realtime channels die */
 async function refreshUnreadStatus() {

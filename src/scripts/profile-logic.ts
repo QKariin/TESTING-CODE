@@ -1570,6 +1570,9 @@ export function startTaskTimer(ms: number) {
             if (qmIdle) qmIdle.classList.remove('hidden');
             if (qmActive) qmActive.classList.add('hidden');
             if (mobTaskText) mobTaskText.innerText = '-';
+
+            // Trigger server-side expiration penalty
+            import('@/actions/velo-actions').then(m => m.checkExpiredTasks()).catch(() => {});
         }
         updateUI(remaining);
     }, 1000);

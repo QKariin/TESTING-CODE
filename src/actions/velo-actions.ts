@@ -1250,85 +1250,89 @@ export async function updateProfileView(memberId: string) {
 // --- 17. TASK EXPIRATION JOB (update.Taskdom.js) ---
 export async function checkExpiredTasks() {
     try {
-        console.log("⏰ Checking for expired tasks...");
-
-        // 1. Find profiles where a task is currently PENDING
-        // In Supabase, this is inside 'parameters->taskdom_pending_state'
-        // We can't easily query JSON keys with 'isNotEmpty' in standard select without PostgREST filtering syntax
-        // Best approach for now: fetch all profiles with non-null parameters, then filter in code (for < 1000 users this is fine)
-        // Or use .not('parameters->taskdom_pending_state', 'is', null) if supported.
-        // Let's safe fetch top 1000 and filter.
-
-        const { data: profiles, error } = await getAdmin()
-            .from('profiles')
-            .select('*')
-            .not('parameters', 'is', null) // Ensure parameters exist
+        // Fetch tasks that have an active task (endTime lives inside taskdom_active_task JSON)
+        const { data: taskRows, error: tErr } = await getAdmin()
+            .from('tasks')
+            .select('"ID", member_id, taskdom_active_task, taskdom_pending_state, "Taskdom_History", "Wallet"')
+            .not('taskdom_active_task', 'is', null)
             .limit(1000);
 
-        if (error) throw error;
-        if (!profiles) return;
+        if (tErr) throw tErr;
+        if (!taskRows || taskRows.length === 0) return;
 
-        const now = new Date().getTime();
+        const now = Date.now();
+        let expiredCount = 0;
 
-        for (const profile of profiles) {
-            const params = profile.parameters || {};
-            const pending = params.taskdom_pending_state;
+        for (const taskRow of taskRows) {
+            // Parse the active task JSON to get endTime
+            let activeTask: any = null;
+            try {
+                activeTask = typeof taskRow.taskdom_active_task === 'string'
+                    ? JSON.parse(taskRow.taskdom_active_task)
+                    : taskRow.taskdom_active_task;
+            } catch (_) { continue; }
 
-            // Check if data exists and if Time has passed
-            if (pending && pending.endTime && pending.endTime < now) {
-                console.log(`Task Expired for: ${profile.member_id}`);
+            if (!activeTask?.endTime || activeTask.endTime >= now) continue;
 
-                // --- PUNISHMENT LOGIC ---
+            // Task has expired
+            const memberId = taskRow.member_id;
+            const taskText = activeTask.text || activeTask.TaskText || activeTask.tasktext || 'Unknown Task';
+            console.log(`⏰ Task expired for: ${memberId} — "${taskText}"`);
 
-                // Reset Streak
-                params.taskdom_current_streak = 0;
+            // Update task history
+            let history: any[] = [];
+            try {
+                const raw = taskRow.Taskdom_History;
+                history = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+            } catch (_) { history = []; }
 
-                // Deduct 300 coins from wallet (not points)
-                const expiredWallet = Math.max(0, Number(profile.wallet || 0) - 300);
+            history.unshift({
+                id: Date.now().toString(),
+                text: taskText,
+                status: 'reject',
+                resultLabel: 'TIME EXPIRED',
+                timestamp: new Date().toISOString(),
+                completed: false,
+            });
+            if (history.length > 50) history = history.slice(0, 50);
 
-                // Update History
-                let history: any[] = [];
-                if (Array.isArray(profile.routine_history)) history = profile.routine_history;
-                // Velo snippet used 'taskdom_history' on the item, which we mapped to routine_history
+            // Deduct 300 coins from tasks.Wallet
+            const taskWallet = Math.max(0, Number(taskRow.Wallet || 0) - 300);
 
-                history.unshift({
-                    text: pending.task.text || "Unknown Task",
-                    status: "reject",
-                    resultLabel: "TIME EXPIRED",
-                    timestamp: new Date().toISOString(),
-                    completed: false
-                });
-                if (history.length > 50) history = history.slice(0, 50);
+            // Clear active task + pending state, update history & wallet in tasks table
+            await getAdmin().from('tasks').update({
+                taskdom_active_task: null,
+                taskdom_pending_state: null,
+                Taskdom_History: JSON.stringify(history),
+                Wallet: taskWallet,
+            }).eq('ID', taskRow.ID);
 
-                // CLEAR ACTIVE TASK
-                params.taskdom_active_task = null;
-                params.taskdom_pending_state = null;
+            // Sync wallet deduction to profiles table
+            try {
+                const { data: profile } = await getAdmin().from('profiles')
+                    .select('ID, wallet, parameters')
+                    .ilike('member_id', memberId)
+                    .single();
+                if (profile) {
+                    const profileWallet = Math.max(0, Number(profile.wallet || 0) - 300);
+                    const params = profile.parameters || {};
+                    // Reset streak
+                    params.taskdom_current_streak = 0;
+                    await updateProfile(profile.ID, { wallet: profileWallet, parameters: params });
+                }
+            } catch (_) {}
 
-                // ACTIVITY LOG (Velo used 'ActivityLog' collection)
-                // We don't have this table. We can add to 'parameters.activity_log' or 'messages' (system)
-                // Let's add to parameters.activity_log to avoid polluting messaging
-                const activityLog = params.activity_log || [];
-                activityLog.unshift({
-                    title: `Task Expired (24h limit): ${pending.task.text}`,
-                    type: "fail",
-                    memberId: profile.member_id,
-                    memberName: profile.name || "Slave",
-                    created_at: new Date().toISOString()
-                });
-                if (activityLog.length > 50) params.activity_log = activityLog.slice(0, 50);
-                else params.activity_log = activityLog;
+            // Send system message so user sees the penalty
+            try {
+                await DbService.sendMessage(memberId,
+                    `TASK EXPIRED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> PENALTY. "${taskText}"`,
+                    'system');
+            } catch (_) {}
 
-                // SAVE UPDATES - deduct 300 coins, no point change
-                await updateProfile(profile.ID, {
-                    routine_history: history,
-                    parameters: params,
-                    wallet: expiredWallet
-                });
-            }
+            expiredCount++;
         }
 
-        console.log("✅ Expiration check complete.");
-
+        if (expiredCount > 0) console.log(`⏰ ${expiredCount} expired task(s) penalized.`);
     } catch (error) {
         console.error("Error in checkExpiredTasks:", error);
     }
