@@ -928,6 +928,7 @@ function getCertTheme(rank: string): CertTheme {
         case 'silverman': return {
             tier: 2, accent: '#a0a8b8', ar: 160, ag: 168, ab: 184,
             bgCss: 'linear-gradient(175deg,#0a0a0c 0%,#0d0d10 50%,#0a0a0c 100%)',
+            bgImage: '/cert-bg-silverman.svg',
             borderCss: '1px solid rgba(160,168,184,0.25)',
             glow: 0.03, stats: ['kneels', 'tasks', 'score', 'sacrifice', 'streak'],
             tagline: 'Rising through devotion.',
@@ -1130,7 +1131,15 @@ async function _saveCertificate() {
     const state = getState();
     const raw = (window as any).__currentProfileRaw || state.raw || state;
     const name = (raw?.name || 'LOYAL SUBJECT').toUpperCase();
-    const rank = ((state as any).rank || raw?.hierarchy || 'Hall Boy').toUpperCase();
+    let rank = ((state as any).rank || raw?.hierarchy || 'Hall Boy').toUpperCase();
+
+    // ── TEST MODE: pick rank to preview different certificate designs ──
+    const testRanks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
+    const picked = prompt("TESTING — Pick a rank to preview:\n\n" + testRanks.map((r, i) => `${i + 1}. ${r}`).join("\n") + "\n\nEnter number (or cancel for your real rank):");
+    if (picked) {
+        const idx = parseInt(picked) - 1;
+        if (idx >= 0 && idx < testRanks.length) rank = testRanks[idx].toUpperCase();
+    }
     const kneels = Number(raw?.kneelCount || 0);
     const tasks = Number(raw?.Taskdom_CompletedTasks || raw?.taskdom_completed_tasks || 0);
     const sacrifice = Number(raw?.total_coins_spent || 0);
