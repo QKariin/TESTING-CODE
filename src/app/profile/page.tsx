@@ -1596,27 +1596,13 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* EARN EXTRA COINS — collapsible */}
+                            {/* EARN EXTRA COINS — opens full-screen modal */}
                             <div className="hub-section">
                                 <button type="button" id="earnCoinsToggle" onClick={() => (window as any).toggleEarnCoins?.()}
                                     style={{ width: '100%', padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 3, fontWeight: 700 }}>EARN EXTRA COINS</div>
-                                    <span id="earnCoinsArrow" style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', transition: 'transform 0.3s ease' }}>▼</span>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)' }}>▶</span>
                                 </button>
-                                <div id="earnCoinsContent" style={{ display: 'none', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
-                                    <button type="button" id="queenHubInstallRow" onClick={() => (window as any).handleInstallApp()}
-                                        style={{ display: 'none', width: '100%', padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>INSTALL APP</div>
-                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>Add to home screen</div>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#4ade80', letterSpacing: 1, marginTop: 6 }}>+1,000 COINS</div>
-                                    </button>
-                                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); if ((window as any).showCertificate) (window as any).showCertificate(); }}
-                                        style={{ width: '100%', padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>SERVICE CERTIFICATE</div>
-                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>Share on socials — upload proof</div>
-                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#4ade80', letterSpacing: 1, marginTop: 6 }}>+300 COINS</div>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>

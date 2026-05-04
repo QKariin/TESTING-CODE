@@ -1963,20 +1963,79 @@ export function closeQueenMenu() {
     if (!el) return;
     el.classList.add('hidden');
     el.style.display = 'none';
-    // Collapse earn coins when hub closes
-    const content = document.getElementById('earnCoinsContent');
-    const arrow = document.getElementById('earnCoinsArrow');
-    if (content) content.style.display = 'none';
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
+}
+
+export function closeEarnCoinsModal() {
+    const modal = document.getElementById('earnCoinsModal');
+    if (!modal) return;
+    modal.style.opacity = '0';
+    setTimeout(() => modal.remove(), 300);
 }
 
 export function toggleEarnCoins() {
-    const content = document.getElementById('earnCoinsContent');
-    const arrow = document.getElementById('earnCoinsArrow');
-    if (!content) return;
-    const isOpen = content.style.display === 'flex';
-    content.style.display = isOpen ? 'none' : 'flex';
-    if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    // If already open, close it
+    if (document.getElementById('earnCoinsModal')) {
+        closeEarnCoinsModal();
+        return;
+    }
+
+    // Check install app visibility
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    const state = getState();
+    const raw = (window as any).__currentProfileRaw || state.raw || state;
+    const alreadyClaimed = raw?.parameters?.appInstallClaimed === true;
+    const showInstall = !isStandalone && !alreadyClaimed;
+
+    const modal = document.createElement('div');
+    modal.id = 'earnCoinsModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
+
+    modal.innerHTML = `
+        <div style="width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:20px;">
+            <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:6px;margin-bottom:4px;">EARN EXTRA COINS</div>
+            <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.4),transparent);margin-bottom:8px;"></div>
+
+            ${showInstall ? `
+            <button id="earnCoinsInstallBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span style="font-size:1.3rem;">📲</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:#fff;letter-spacing:2px;font-weight:700;">INSTALL APP</div>
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Add to home screen</div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+1,000 COINS</div>
+            </button>` : ''}
+
+            <button id="earnCoinsCertBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span style="font-size:1.3rem;">📜</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:#fff;letter-spacing:2px;font-weight:700;">SERVICE CERTIFICATE</div>
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Share on socials — upload proof</div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+300 COINS</div>
+            </button>
+
+            <button id="earnCoinsCloseBtn" style="margin-top:16px;padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => { modal.style.opacity = '1'; });
+
+    // Wire up buttons
+    modal.querySelector('#earnCoinsCloseBtn')?.addEventListener('click', closeEarnCoinsModal);
+    modal.querySelector('#earnCoinsInstallBtn')?.addEventListener('click', () => {
+        closeEarnCoinsModal();
+        (window as any).handleInstallApp?.();
+    });
+    modal.querySelector('#earnCoinsCertBtn')?.addEventListener('click', () => {
+        closeEarnCoinsModal();
+        (window as any).showCertificate?.();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeEarnCoinsModal();
+    });
 }
 
 export function toggleMobileStats() {
@@ -3777,6 +3836,7 @@ export function openMobRoutine() {
 
 // ─── MOB CHAT OVERLAY ────────────────────────────────────────────────────────
 function _closeAllMobOverlays(except?: string) {
+    closeEarnCoinsModal();
     ['mobChatOverlay', 'mobQueenWallOverlay', 'mobGlobalOverlay'].forEach(id => {
         if (id === except) return;
         const el = document.getElementById(id);
