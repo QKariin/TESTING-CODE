@@ -4762,10 +4762,10 @@ h3,
     background: #000;
     box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
     color: #fff;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.55;
-    letter-spacing: 0.2px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    letter-spacing: 0.1px;
     padding: 10px 14px;
     border-radius: 16px 16px 3px 16px;
     word-break: break-word;
@@ -4776,10 +4776,10 @@ h3,
 #adminChatBox .cb-slave {
     background: #1c1c1e;
     color: #fff;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.55;
-    letter-spacing: 0.2px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    letter-spacing: 0.1px;
     padding: 10px 14px;
     border-radius: 16px 16px 16px 3px;
     word-break: break-word;
