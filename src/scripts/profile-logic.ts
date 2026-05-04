@@ -2558,6 +2558,10 @@ let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+let _chatSafetyPollInterval: ReturnType<typeof setInterval> | null = null;
+let _chatHealthInterval: ReturnType<typeof setInterval> | null = null;
+let _lastRealtimeEvent = 0; // timestamp of last realtime event received
+let _chatMemberId: string | null = null; // the memberId used for chat queries
 
 function _showRoutineToast(approved: boolean) {
     if (typeof document === 'undefined') return;
@@ -2599,6 +2603,8 @@ function _showRoutineToast(approved: boolean) {
 /** Tear down all intervals + realtime channels. Safe to call multiple times. */
 export function cleanupChatSystem() {
     if (_chatPollInterval) { clearInterval(_chatPollInterval); _chatPollInterval = null; }
+    if (_chatSafetyPollInterval) { clearInterval(_chatSafetyPollInterval); _chatSafetyPollInterval = null; }
+    if (_chatHealthInterval) { clearInterval(_chatHealthInterval); _chatHealthInterval = null; }
     if (_silenceCheckInterval) { clearInterval(_silenceCheckInterval); _silenceCheckInterval = null; }
     if (_queenInterval) { clearInterval(_queenInterval); _queenInterval = null; }
     if (_queenReapplyInterval) { clearInterval(_queenReapplyInterval); _queenReapplyInterval = null; }
@@ -2608,6 +2614,7 @@ export function cleanupChatSystem() {
     if (_notifyChannel) { getChatSupabase().removeChannel(_notifyChannel); _notifyChannel = null; }
     if (_queenStatusChannel) { getChatSupabase().removeChannel(_queenStatusChannel); _queenStatusChannel = null; }
     if (_presenceCh) { _presenceCh.unsubscribe(); _presenceCh = null; }
+    document.removeEventListener('visibilitychange', _onVisibilityChange);
     chatSubscribed = false;
 }
 
@@ -2655,6 +2662,77 @@ function _isScrolledToBottom() {
     ].filter(Boolean) as HTMLElement[];
     // If ANY container is near bottom, treat as "at bottom"
     return containers.some(b => (b.scrollHeight - b.scrollTop - b.clientHeight) < 160);
+}
+
+/** Fired when tab visibility changes — recover chat on foreground */
+function _onVisibilityChange() {
+    if (document.visibilityState !== 'visible') return;
+    // Tab/app just came back — poll immediately for missed messages
+    _pollMissedMessages();
+    // Also check if the realtime channel is dead
+    if (_chatChannel) {
+        const state = _chatChannel.state;
+        if (state === 'errored' || state === 'closed') {
+            _recoverChat();
+        }
+    }
+}
+
+/** Poll for missed messages since last known timestamp */
+async function _pollMissedMessages() {
+    if (!_chatMemberId || !_lastChatMsgTimestamp) return;
+    try {
+        const res = await fetch('/api/chat/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: _chatMemberId, since: _lastChatMsgTimestamp }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success) return;
+        const newMsgs = (data.messages || []).filter((m: any) => {
+            const id = m.id ? String(m.id) : null;
+            return !id || !_renderedMsgIds.has(id);
+        });
+        if (newMsgs.length === 0) return;
+        const wasAtBottom = _isScrolledToBottom();
+        newMsgs.forEach((m: any) => {
+            const msgId = m.id ? String(m.id) : null;
+            if (msgId && _renderedMsgIds.has(msgId)) return;
+            if (msgId) _renderedMsgIds.add(msgId);
+            _lastChatMsgId = msgId;
+            if (m.created_at) _lastChatMsgTimestamp = m.created_at;
+
+            if (isSystemMessage(m)) {
+                updateSystemTicker(m);
+                appendSystemLog(m);
+                return;
+            }
+            const html = renderChatMessage(m);
+            ['chatContent', 'mob_chatContent'].forEach(cid => {
+                const el = document.getElementById(cid);
+                if (el) el.insertAdjacentHTML('beforeend', html);
+            });
+        });
+        _attachImgScrollHandlers();
+        if (wasAtBottom) _scrollChatDelayed();
+    } catch {}
+}
+
+/** Reconnect chat channel if it's dead, then poll for missed messages */
+function _recoverChat() {
+    if (!_chatChannel) return;
+    const state = _chatChannel.state;
+    if (state === 'errored' || state === 'closed') {
+        // Channel is dead — full reconnect
+        getChatSupabase().removeChannel(_chatChannel);
+        _chatChannel = null;
+        chatSubscribed = false;
+        initChatSystem();
+        return;
+    }
+    // Channel looks alive — just poll for anything we missed
+    _pollMissedMessages();
 }
 
 export async function initChatSystem() {
@@ -2706,7 +2784,8 @@ export async function initChatSystem() {
     });
 
     // chats.member_id stores UUID — query by UUID, fallback to email
-    await loadChatHistory(userId || email!);
+    _chatMemberId = userId || email!;
+    await loadChatHistory(_chatMemberId);
 
     // 2. Realtime subscription on shared client (same as dashboard line 107-120)
     if (_chatChannel) {
@@ -2721,6 +2800,7 @@ export async function initChatSystem() {
             table: 'chats',
             // NO row filter here - filter in JS instead to support UUID-based member_id
         }, (payload: any) => {
+            _lastRealtimeEvent = Date.now(); // track health
             const msg = payload.new;
             // chats.member_id stores UUID — compare against both UUID and email for backward compat
             const rowMemberId = (msg.member_id || '').toLowerCase();
@@ -2774,9 +2854,37 @@ export async function initChatSystem() {
             _attachImgScrollHandlers();
             if (wasAtBottom) _scrollChatDelayed();
         })
-        .subscribe();
+        .subscribe((status: string) => {
+            if (status === 'SUBSCRIBED') _lastRealtimeEvent = Date.now();
+        });
 
-    // Realtime handles all new chat messages - no polling needed
+    // ── Chat reliability: 3-layer recovery ──
+
+    // 1. Visibility recovery — poll immediately when tab/app returns to foreground
+    document.removeEventListener('visibilitychange', _onVisibilityChange);
+    document.addEventListener('visibilitychange', _onVisibilityChange);
+
+    // 2. Safety-net poll — catch anything realtime missed (every 30s)
+    if (_chatSafetyPollInterval) clearInterval(_chatSafetyPollInterval);
+    _chatSafetyPollInterval = setInterval(_pollMissedMessages, 30000);
+
+    // 3. Health monitor — if no realtime event in 45s, reconnect channel
+    _lastRealtimeEvent = Date.now();
+    if (_chatHealthInterval) clearInterval(_chatHealthInterval);
+    _chatHealthInterval = setInterval(() => {
+        if (!_chatChannel) return;
+        const silentMs = Date.now() - _lastRealtimeEvent;
+        if (silentMs > 45000) {
+            const state = _chatChannel.state;
+            if (state === 'errored' || state === 'closed') {
+                _recoverChat();
+            } else {
+                // Channel says it's alive but hasn't delivered anything — poll to check
+                _pollMissedMessages();
+                _lastRealtimeEvent = Date.now(); // reset timer so we don't spam reconnects
+            }
+        }
+    }, 15000);
 
     // 4. Supabase realtime for tasks + profile stats - stored so they can be removed
     // NOTE: No row filter on either channel - eq() is case-sensitive and misses rows
