@@ -992,6 +992,26 @@ function getCertTheme(rank: string): CertTheme {
 export function showCertificate() {
     const state = getState();
     const raw = (window as any).__currentProfileRaw || state.raw || state;
+    const avatarUrl = raw?.avatar_url || raw?.profile_picture_url || '';
+    if (!avatarUrl || avatarUrl === '/collar-placeholder.png') {
+        const m = document.createElement('div');
+        m.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:#020512;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;';
+        m.innerHTML = `
+            <div style="text-align:center;max-width:340px;">
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:6px;margin-bottom:16px;">CERTIFICATE</div>
+                <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#fff;letter-spacing:2px;line-height:1.6;margin-bottom:24px;">You need to add your profile picture first.</div>
+                <button id="_certNoPicBtn" style="padding:14px 40px;background:linear-gradient(135deg,#0a0806,#1a150d);border:1px solid rgba(197,160,89,0.4);border-radius:8px;color:#c5a059;font-family:Orbitron,sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:2px;cursor:pointer;">GOT IT</button>
+            </div>
+        `;
+        document.body.appendChild(m);
+        m.querySelector('#_certNoPicBtn')?.addEventListener('click', () => {
+            m.remove();
+            closeEarnCoinsModal();
+            closeQueenMenu();
+            closeLobby();
+        });
+        return;
+    }
     const name = raw?.name || 'LOYAL SUBJECT';
     const rank = (state as any).rank || raw?.hierarchy || 'Hall Boy';
     const kneels = Number(raw?.kneelCount || 0);
@@ -1144,14 +1164,6 @@ async function _saveCertificate() {
     const raw = (window as any).__currentProfileRaw || state.raw || state;
     const name = (raw?.name || 'LOYAL SUBJECT').toUpperCase();
     let rank = ((state as any).rank || raw?.hierarchy || 'Hall Boy').toUpperCase();
-
-    // ── TEST MODE: pick rank to preview different certificate designs ──
-    const testRanks = ["Hall Boy", "Footman", "Silverman", "Butler", "Chamberlain", "Secretary", "Queen's Champion"];
-    const picked = prompt("TESTING — Pick a rank to preview:\n\n" + testRanks.map((r, i) => `${i + 1}. ${r}`).join("\n") + "\n\nEnter number (or cancel for your real rank):");
-    if (picked) {
-        const idx = parseInt(picked) - 1;
-        if (idx >= 0 && idx < testRanks.length) rank = testRanks[idx].toUpperCase();
-    }
 
     const kneels = Number(raw?.kneelCount || 0);
     const tasks = Number(raw?.Taskdom_CompletedTasks || raw?.taskdom_completed_tasks || 0);
