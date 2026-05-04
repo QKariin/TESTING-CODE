@@ -1779,14 +1779,24 @@ export default function DashboardPage() {
                                     </div>
                                     {/* ── Stats strip — numbers with thin vertical separators ── */}
                                     <div style={{ display: 'flex', marginTop: 18, marginBottom: 0, paddingBottom: 16, borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.15rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>0</div>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.35)', fontWeight: 600, letterSpacing: '2.5px', marginTop: 5 }}>MERIT</div>
+                                        <div style={{ flex: 1, textAlign: 'center' }}>
+                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>0</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.35)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>MERIT</div>
                                         </div>
-                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', margin: '0 16px', alignSelf: 'stretch' }}></div>
-                                        <div style={{ flex: 1 }}>
-                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.15rem', color: '#e0dbd4', fontWeight: 700, lineHeight: 1 }}>0</div>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.18)', fontWeight: 600, letterSpacing: '2.5px', marginTop: 5 }}>CAPITAL</div>
+                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', alignSelf: 'stretch' }}></div>
+                                        <div style={{ flex: 1, textAlign: 'center' }}>
+                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#e0dbd4', fontWeight: 700, lineHeight: 1 }}>0</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.18)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>CAPITAL</div>
+                                        </div>
+                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', alignSelf: 'stretch' }}></div>
+                                        <div style={{ flex: 1, textAlign: 'center' }}>
+                                            <div id="dMirrorKneel" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: 'rgba(100,180,255,0.8)', fontWeight: 700, lineHeight: 1 }}>0 h</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(100,180,255,0.3)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>LABOR</div>
+                                        </div>
+                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', alignSelf: 'stretch' }}></div>
+                                        <div style={{ flex: 1, textAlign: 'center' }}>
+                                            <div id="dMirrorRoutine" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: '#666', fontWeight: 700, lineHeight: 1 }}>—</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(74,222,128,0.3)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>ROUTINE</div>
                                         </div>
                                     </div>
                                 </div>
