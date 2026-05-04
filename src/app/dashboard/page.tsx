@@ -1642,7 +1642,7 @@ export default function DashboardPage() {
 
                 <div id="viewUser" style={{ display: 'none' }}>
                         {/* ── UNIFIED LAYOUT — wide chat left, compact panel right ── */}
-                        <div className="chatter-split" style={{ display: 'grid', gridTemplateColumns: '70% 30%', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                        <div className="chatter-split" style={{ display: 'grid', gridTemplateColumns: '60% 40%', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                             {/* LEFT: chat — edge to edge, no box */}
                             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
