@@ -1999,7 +1999,7 @@ export function toggleEarnCoins() {
 
     const modal = document.createElement('div');
     modal.id = 'earnCoinsModal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:#020512;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
 
     modal.innerHTML = `
         <div style="width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:20px;">
@@ -2009,7 +2009,7 @@ export function toggleEarnCoins() {
             ${showInstall ? `
             <button id="earnCoinsInstallBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                    <span style="font-size:1.3rem;">📲</span>
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">+</span>
                     <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:#fff;letter-spacing:2px;font-weight:700;">INSTALL APP</div>
                 </div>
                 <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Add to home screen</div>
@@ -2018,7 +2018,7 @@ export function toggleEarnCoins() {
 
             <button id="earnCoinsCertBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                    <span style="font-size:1.3rem;">📜</span>
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">C</span>
                     <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:#fff;letter-spacing:2px;font-weight:700;">SERVICE CERTIFICATE</div>
                 </div>
                 <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Share on socials — upload proof</div>
