@@ -187,7 +187,7 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
             }
         }
     } else {
-        mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:'Orbitron';font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
+        mediaBox.innerHTML = `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#2a2a2a;font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:3px;">NO MEDIA</div>`;
     }
 
     // Header
@@ -195,15 +195,15 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     const memberDisplay = u ? u.name?.toUpperCase() : '';
     const avatarInitial = memberDisplay ? memberDisplay[0] : '?';
     const statusBadge = isHistory && status
-        ? `<span style="font-family:'Orbitron';font-size:0.4rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.4)' : 'rgba(200,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#e03030'};background:${status === 'approve' ? 'rgba(57,255,20,0.07)' : 'rgba(200,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
+        ? `<span style="font-family:Rajdhani,sans-serif;font-size:0.4rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.4)' : 'rgba(200,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#e03030'};background:${status === 'approve' ? 'rgba(57,255,20,0.07)' : 'rgba(200,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
         : '';
     if (headerEl) {
         headerEl.innerHTML = `
-            <div style="font-family:'Orbitron';font-size:0.33rem;color:rgba(180,140,60,0.4);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px;">Subject Review</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.33rem;color:rgba(180,140,60,0.4);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px;">Subject Review</div>
             <div style="display:flex;align-items:center;gap:14px;">
-                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(180,140,60,0.3);background:radial-gradient(circle at 40% 35%,rgba(180,140,60,0.12),rgba(0,0,0,0));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1rem;color:rgba(200,165,85,0.75);flex-shrink:0;box-shadow:0 0 14px rgba(180,140,60,0.08);">${avatarInitial}</div>
+                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(180,140,60,0.3);background:radial-gradient(circle at 40% 35%,rgba(180,140,60,0.12),rgba(0,0,0,0));display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(200,165,85,0.75);flex-shrink:0;box-shadow:0 0 14px rgba(180,140,60,0.08);">${avatarInitial}</div>
                 <div>
-                    <div style="font-family:'Orbitron',sans-serif;font-size:1.08rem;color:rgba(240,225,190,0.92);font-weight:700;letter-spacing:2px;line-height:1.2;">${memberDisplay}</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:1.08rem;color:rgba(240,225,190,0.92);font-weight:700;letter-spacing:2px;line-height:1.2;">${memberDisplay}</div>
                     ${statusBadge ? `<div style="margin-top:5px;">${statusBadge}</div>` : ''}
                 </div>
             </div>`;
@@ -216,8 +216,8 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
     textEl.innerHTML = clean(taskText || 'No description provided.')
         + `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px;padding:10px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.15);border-radius:8px;">
-            <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">DAILY CODE</span>
-            <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;color:#c5a059;letter-spacing:5px;">${_dailyCode}</span>
+            <span style="font-family:Rajdhani,sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">DAILY CODE</span>
+            <span style="font-family:Rajdhani,sans-serif;font-size:1.1rem;font-weight:900;color:#c5a059;letter-spacing:5px;">${_dailyCode}</span>
         </div>`;
 
     // Clear note from previous session
@@ -238,7 +238,7 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
 
         actionsEl.innerHTML = `
             <div style="width:100%;">
-                <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;">Merit Assessment</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;">Merit Assessment</div>
                 <div style="display:flex;gap:6px;margin-bottom:14px;">
                     <div id="tier_50" class="reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50')" style="flex:1;padding:14px 6px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s;">
                         <div class="rt-pts" style="font-size:1.35rem;font-weight:900;letter-spacing:-0.5px;">50</div>
@@ -255,11 +255,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
                 </div>
                 <div style="display:flex;gap:8px;margin-bottom:14px;align-items:flex-end;">
                     <div style="flex:0 0 80px;">
-                        <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Points</div>
-                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(8,5,2,0.8);border:1px solid rgba(180,140,60,0.18);color:rgba(210,175,90,0.9);font-family:'Orbitron';padding:10px 6px;border-radius:6px;font-size:0.88rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Points</div>
+                        <input type="number" id="rewardBonus" value="50" style="width:100%;background:rgba(8,5,2,0.8);border:1px solid rgba(180,140,60,0.18);color:rgba(210,175,90,0.9);font-family:Rajdhani,sans-serif;padding:10px 6px;border-radius:6px;font-size:0.88rem;font-weight:900;text-align:center;outline:none;box-sizing:border-box;">
                     </div>
                     <div style="flex:1;">
-                        <div style="font-family:'Orbitron';font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Note</div>
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.32rem;color:rgba(180,140,60,0.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Note</div>
                         <input type="text" id="reviewComment" placeholder="Optional note..." style="width:100%;background:rgba(8,5,2,0.7);border:1px solid rgba(255,255,255,0.06);color:rgba(220,205,175,0.65);font-family:'Rajdhani';padding:10px;border-radius:6px;font-size:0.88rem;outline:none;box-sizing:border-box;letter-spacing:0.5px;">
                     </div>
                 </div>
@@ -410,7 +410,7 @@ function openRewardProtocol() {
     // Copy task text for visibility during reward
     const taskTextSec = document.getElementById('reviewRewardTaskText');
     if (taskTextSec && currTask) {
-        taskTextSec.innerHTML = `<div style="color:var(--gold); font-family:Orbitron; font-size:0.6rem; margin-bottom:5px; letter-spacing:1px;">TASK DESCRIPTION</div>` + clean(currTask.text || 'No description provided.');
+        taskTextSec.innerHTML = `<div style="color:var(--gold); font-family:Rajdhani,sans-serif; font-size:0.6rem; margin-bottom:5px; letter-spacing:1px;">TASK DESCRIPTION</div>` + clean(currTask.text || 'No description provided.');
     }
 
     const grid = document.getElementById('stickerGrid');
@@ -584,7 +584,7 @@ export async function openTaskGallery() {
     } catch (err: any) {
         console.error("GALLERY_LOAD_ERROR:", err);
         const container = document.getElementById('glassTaskGrid');
-        if (container) container.innerHTML = `<div style="color:#ff4444; text-align:center; padding:40px; font-family:Orbitron;">ERROR: ${err.message}</div>`;
+        if (container) container.innerHTML = `<div style="color:#ff4444; text-align:center; padding:40px; font-family:Rajdhani,sans-serif;">ERROR: ${err.message}</div>`;
     }
 }
 
@@ -597,7 +597,7 @@ export function renderTaskGallery(tasksToRender?: any[]) {
     const u = users.find(x => x.memberId === currId);
     const breadcrumbHtml = `
         <div class="filter-breadcrumb" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; margin-bottom:15px; border-bottom:1px solid rgba(197,160,89,0.1);">
-            <div style="font-family:Orbitron; font-size:0.75rem; color:#888; letter-spacing:1px;">
+            <div style="font-family:Rajdhani,sans-serif; font-size:0.75rem; color:#888; letter-spacing:1px;">
                 VIEWING: <span style="color:var(--gold)">${currentCategory ? currentCategory.toUpperCase() : 'ALL DIRECTIVES'}</span>
             </div>
             ${currentCategory ? `<button class="reset-btn" onclick="window.setTaskCategory(null)">RESET TO ALL</button>` : ''}
@@ -609,7 +609,7 @@ export function renderTaskGallery(tasksToRender?: any[]) {
         : tasks;
 
     if (filtered.length === 0) {
-        gridContainer.innerHTML = breadcrumbHtml + '<div style="color:#444; text-align:center; padding:40px; font-family:Orbitron; letter-spacing:1px;">NO DIRECTIVES FOUND</div>';
+        gridContainer.innerHTML = breadcrumbHtml + '<div style="color:#444; text-align:center; padding:40px; font-family:Rajdhani,sans-serif; letter-spacing:1px;">NO DIRECTIVES FOUND</div>';
     } else {
         gridContainer.innerHTML = breadcrumbHtml + `
             <div style="display:flex; flex-direction:column; gap:12px;">
@@ -850,7 +850,7 @@ export function showEnforceOptions(taskText: string) {
     if (!container) return;
 
     container.innerHTML = `
-        <div style="font-family:Orbitron; font-size:0.8rem; color:#888; text-align:center; margin:20px 0; letter-spacing:2px;">SELECT QUEUE POSITION</div>
+        <div style="font-family:Rajdhani,sans-serif; font-size:0.8rem; color:#888; text-align:center; margin:20px 0; letter-spacing:2px;">SELECT QUEUE POSITION</div>
         <div class="q-pos-grid">
             ${Array.from({ length: 10 }).map((_, i) => `<button class="q-pos-btn" onclick="window.enforceTask('${taskText}', ${i}); window.closeTaskDetail();">${i + 1}</button>`).join('')}
         </div>
@@ -954,7 +954,7 @@ export async function renderGlobalReview(filterRoutine: boolean) {
     const color = filterRoutine ? "#00ff00" : "var(--gold)";
 
     header.innerHTML = `
-        <div style="font-family:'Orbitron'; font-size:1.5rem; color:${color}; letter-spacing:3px; font-weight:900;">
+        <div style="font-family:Rajdhani,sans-serif; font-size:1.5rem; color:${color}; letter-spacing:3px; font-weight:900;">
             ${title}
         </div>
         <div style="font-family:'Rajdhani'; color:#666; font-size:0.9rem; margin-top:5px;">${filtered.length} ITEMS PENDING</div>
@@ -1008,7 +1008,7 @@ export async function renderGlobalReview(filterRoutine: boolean) {
     }).join('');
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div style="width:100%; text-align:center; padding:100px; color:#444; font-family:'Orbitron'; font-size:1.2rem; background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed #222;">NO PENDING ${filterRoutine ? 'ROUTINES' : 'TASKS'}</div>`;
+        grid.innerHTML = `<div style="width:100%; text-align:center; padding:100px; color:#444; font-family:Rajdhani,sans-serif; font-size:1.2rem; background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed #222;">NO PENDING ${filterRoutine ? 'ROUTINES' : 'TASKS'}</div>`;
     }
 
     modal.classList.add('active');

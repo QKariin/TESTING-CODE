@@ -145,7 +145,7 @@ export async function initDashboardChat(memberIdOrEmail: string) {
         _renderedMsgIds.clear();
 
         const b = document.getElementById('adminChatBox');
-        if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+        if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Rajdhani,sans-serif; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
 
         await loadDashboardChatHistory(activeId, gen);
     }
@@ -323,16 +323,16 @@ function _showRetryUI(memberId: string, gen: number) {
     if (gen !== _chatGen) return;
     const b = document.getElementById('adminChatBox');
     if (!b) return;
-    b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Orbitron; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
+    b.innerHTML = '<div style="color:#e85d75; text-align:center; padding:20px; font-family:Rajdhani,sans-serif; font-size:0.6rem;">LINK FAILED — TAP TO RETRY</div>';
     b.addEventListener('click', () => {
         if (gen === _chatGen) {
-            b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+            b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Rajdhani,sans-serif; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
             loadDashboardChatHistory(memberId, gen, 0);
         }
     }, { once: true });
     setTimeout(() => {
         if (gen === _chatGen && b.textContent?.includes('LINK FAILED')) {
-            b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Orbitron; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+            b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Rajdhani,sans-serif; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
             loadDashboardChatHistory(memberId, gen, 0);
         }
     }, 5000);
@@ -466,15 +466,15 @@ function renderToHtml(m: any) {
                             ${photoBlock}
                             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div>
                             <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(var(--gold-rgb),0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:3px;">✦ RANK PROMOTION</span>
+                                <span style="font-family:Rajdhani,sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:3px;">✦ RANK PROMOTION</span>
                             </div>
                         </div>
                         <div style="padding:14px 18px 18px;text-align:center;">
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${purifier.sanitize(d.name||'')}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">${purifier.sanitize(d.name||'')}</div>
                             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(var(--gold-rgb),0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
+                                <span style="font-family:Rajdhani,sans-serif;font-size:0.48rem;color:rgba(var(--gold-rgb),0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span>
                                 <span style="color:rgba(var(--gold-rgb),0.7);font-size:0.9rem;">→</span>
-                                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:var(--gold);letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
+                                <span style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:var(--gold);letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span>
                             </div>
                             <div style="width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(var(--gold-rgb),0.35),transparent);margin:0 auto;"></div>
                         </div>
@@ -499,9 +499,9 @@ function renderToHtml(m: any) {
                         <div style="padding:4px 16px 18px;text-align:center;">
                             <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">${purifier.sanitize(d.name || '')}</div>
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(var(--gold-rgb),0.5),transparent);margin:0 auto 8px;"></div>
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(var(--gold-rgb),0.65);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE COURT</div>
-                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(var(--gold-rgb),0.06);border:1px solid rgba(var(--gold-rgb),0.25);border-radius:20px;padding:3px 12px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:2px;">${(d.rank || 'HALL BOY').toUpperCase()}</span></div>
-                            <button onclick="event.stopPropagation();window._shareNewMemberOnX('${purifier.sanitize(d.name || '').replace(/'/g, "\\'")}','${(d.rank || 'Hall Boy').replace(/'/g, "\\'")}','${(d.avatar || '').replace(/'/g, "\\'")}')" style="display:block;margin:10px auto 0;padding:5px 16px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.5);color:#fff;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;">SHARE ON X</button>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.38rem;color:rgba(var(--gold-rgb),0.65);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE COURT</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(var(--gold-rgb),0.06);border:1px solid rgba(var(--gold-rgb),0.25);border-radius:20px;padding:3px 12px;">${SVG_CROWN}<span style="font-family:Rajdhani,sans-serif;font-size:0.42rem;color:var(--gold);letter-spacing:2px;">${(d.rank || 'HALL BOY').toUpperCase()}</span></div>
+                            <button onclick="event.stopPropagation();window._shareNewMemberOnX('${purifier.sanitize(d.name || '').replace(/'/g, "\\'")}','${(d.rank || 'Hall Boy').replace(/'/g, "\\'")}','${(d.avatar || '').replace(/'/g, "\\'")}')" style="display:block;margin:10px auto 0;padding:5px 16px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.5);color:#fff;font-family:Rajdhani,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;">SHARE ON X</button>
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
@@ -566,8 +566,8 @@ function renderToHtml(m: any) {
                     <div style="max-width:240px;width:55vw;border-radius:12px;overflow:hidden;background:#0a080a;border:1px solid rgba(var(--gold-rgb),0.4);box-shadow:0 6px 24px rgba(0,0,0,0.6);">
                         ${mediaBlock}
                         <div style="padding:9px 12px 11px;">
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(var(--gold-rgb),0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
-                            ${fbNote ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${purifier.sanitize(fbNote)}</div>` : ''}
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.42rem;color:rgba(var(--gold-rgb),0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">✦ Task Feedback</div>
+                            ${fbNote ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.82);line-height:1.4;">${purifier.sanitize(fbNote)}</div>` : ''}
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
@@ -769,17 +769,17 @@ export async function handleAdminUpload(file: File) {
     overlay.innerHTML = `
         <div style="width:min(420px,100%);background:#0a0806;border:1px solid rgba(197,160,89,0.35);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
             <div style="padding:14px 18px;border-bottom:1px solid rgba(197,160,89,0.12);display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-family:Orbitron,sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.7);letter-spacing:3px;">${isVideo ? 'VIDEO' : 'PHOTO'} PREVIEW</span>
+                <span style="font-family:Rajdhani,sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.7);letter-spacing:3px;">${isVideo ? 'VIDEO' : 'PHOTO'} PREVIEW</span>
                 <button id="__adminMediaClose" style="background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 4px;">✕</button>
             </div>
             <div style="padding:16px;display:flex;justify-content:center;background:#050403;">
                 ${mediaEl}
             </div>
             <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
-                <div id="__adminMediaStatus" style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:#c55;text-align:center;min-height:16px;"></div>
+                <div id="__adminMediaStatus" style="font-family:Rajdhani,sans-serif;font-size:0.42rem;color:#c55;text-align:center;min-height:16px;"></div>
                 <div style="display:flex;gap:10px;">
-                    <button id="__adminMediaCancel" style="flex:1;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#666;font-family:Orbitron,sans-serif;font-size:0.48rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
-                    <button id="__adminMediaSend" style="flex:2;padding:12px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;border-radius:8px;color:#000;font-family:Orbitron,sans-serif;font-size:0.48rem;font-weight:700;letter-spacing:2px;cursor:pointer;">SEND</button>
+                    <button id="__adminMediaCancel" style="flex:1;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#666;font-family:Rajdhani,sans-serif;font-size:0.48rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
+                    <button id="__adminMediaSend" style="flex:2;padding:12px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;border-radius:8px;color:#000;font-family:Rajdhani,sans-serif;font-size:0.48rem;font-weight:700;letter-spacing:2px;cursor:pointer;">SEND</button>
                 </div>
             </div>
         </div>
@@ -905,14 +905,14 @@ export function openChatGifPicker() {
     overlay.innerHTML = `
         <div style="padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;gap:8px;align-items:center;">
             <input id="chatGifSearchInput" type="text" placeholder="Search GIFs..." autocomplete="off"
-                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:Rajdhani,sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
             <button onclick="window.closeChatGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;padding:4px 6px;line-height:1;">✕</button>
         </div>
         <div id="chatGifGrid" style="flex:1;overflow-y:auto;padding:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
-            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
+            <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
         </div>
         <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
-            <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+            <span style="font-family:Rajdhani,sans-serif;font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
         </div>
     `;
 
@@ -931,13 +931,13 @@ export function openChatGifPicker() {
 async function _searchChatGifs(q: string) {
     const grid = document.getElementById('chatGifGrid');
     if (!grid) return;
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>`;
 
     try {
         const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
         const { results } = await res.json();
         if (!results?.length) {
-            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.2);">NO RESULTS</div>`;
             return;
         }
         grid.innerHTML = results.map((r: any) => `
@@ -946,7 +946,7 @@ async function _searchChatGifs(q: string) {
             </div>
         `).join('');
     } catch {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.2);">FAILED TO LOAD</div>`;
     }
 }
 
@@ -988,7 +988,7 @@ export function toggleMediaGallery() {
 
 async function _loadVault() {
     const grid = document.getElementById('vaultGrid');
-    if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Orbitron;font-size:0.4rem;color:#333;letter-spacing:1px;">LOADING...</div>`;
+    if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Rajdhani,sans-serif;font-size:0.4rem;color:#333;letter-spacing:1px;">LOADING...</div>`;
 
     try {
         const res = await fetch('/api/media-vault');
@@ -996,7 +996,7 @@ async function _loadVault() {
         _vaultItems = data.items || [];
         _renderVault();
     } catch {
-        if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Orbitron;font-size:0.4rem;color:#dc3c3c;">FAILED TO LOAD</div>`;
+        if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;font-family:Rajdhani,sans-serif;font-size:0.4rem;color:#dc3c3c;">FAILED TO LOAD</div>`;
     }
 }
 
@@ -1026,7 +1026,7 @@ function _renderVault() {
             : _vaultItems.filter(v => v.category === _vaultFilter);
 
     if (filtered.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;font-family:Orbitron;font-size:0.4rem;color:#333;letter-spacing:1px;">NO MEDIA</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;font-family:Rajdhani,sans-serif;font-size:0.4rem;color:#333;letter-spacing:1px;">NO MEDIA</div>`;
         return;
     }
 
@@ -1039,7 +1039,7 @@ function _renderVault() {
         return `
             <div class="mg-thumb${selected ? ' vault-selected' : ''}" onclick="window._selectVaultItem('${item.id}')">
                 ${tag}
-                ${isVid ? '<div style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);border-radius:3px;padding:2px 5px;font-family:Orbitron;font-size:0.3rem;color:#c5a059;">VIDEO</div>' : ''}
+                ${isVid ? '<div style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);border-radius:3px;padding:2px 5px;font-family:Rajdhani,sans-serif;font-size:0.3rem;color:#c5a059;">VIDEO</div>' : ''}
                 ${selected ? '<div class="mg-selected">✓</div>' : ''}
             </div>`;
     }).join('');
@@ -1110,7 +1110,7 @@ async function _uploadToVault(file: File) {
     if (grid) {
         grid.insertAdjacentHTML('afterbegin', `
             <div class="mg-thumb" id="${placeholderId}" style="background:#111;display:flex;align-items:center;justify-content:center;">
-                <div style="font-family:Orbitron;font-size:0.3rem;color:#555;letter-spacing:1px;">UPLOADING...</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.3rem;color:#555;letter-spacing:1px;">UPLOADING...</div>
             </div>
         `);
     }
@@ -1119,7 +1119,7 @@ async function _uploadToVault(file: File) {
     const ph = document.getElementById(placeholderId);
 
     if (url.startsWith('failed')) {
-        if (ph) ph.innerHTML = `<div style="font-family:Orbitron;font-size:0.3rem;color:#dc3c3c;">FAILED</div>`;
+        if (ph) ph.innerHTML = `<div style="font-family:Rajdhani,sans-serif;font-size:0.3rem;color:#dc3c3c;">FAILED</div>`;
         setTimeout(() => ph?.remove(), 2000);
         return;
     }
@@ -1143,7 +1143,7 @@ async function _uploadToVault(file: File) {
             _renderVault();
         }
     } catch {
-        if (ph) ph.innerHTML = `<div style="font-family:Orbitron;font-size:0.3rem;color:#dc3c3c;">SAVE FAILED</div>`;
+        if (ph) ph.innerHTML = `<div style="font-family:Rajdhani,sans-serif;font-size:0.3rem;color:#dc3c3c;">SAVE FAILED</div>`;
     }
 }
 
@@ -1221,7 +1221,7 @@ async function _approveCertProof(memberId: string, cardId: string) {
         const data = await res.json();
         if (!res.ok) { alert(data.error || 'Failed'); return; }
         const el = document.getElementById(`certAction_${cardId}`);
-        if (el) el.innerHTML = '<div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;text-align:center;">APPROVED +300 COINS</div>';
+        if (el) el.innerHTML = '<div style="font-family:Rajdhani,sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:2px;text-align:center;">APPROVED +300 COINS</div>';
     } catch (e) { alert('Error approving proof.'); }
 }
 
@@ -1235,7 +1235,7 @@ async function _rejectCertProof(memberId: string, cardId: string) {
         const data = await res.json();
         if (!res.ok) { alert(data.error || 'Failed'); return; }
         const el = document.getElementById(`certAction_${cardId}`);
-        if (el) el.innerHTML = '<div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(255,60,60,0.7);letter-spacing:2px;text-align:center;">REJECTED</div>';
+        if (el) el.innerHTML = '<div style="font-family:Rajdhani,sans-serif;font-size:0.42rem;color:rgba(255,60,60,0.7);letter-spacing:2px;text-align:center;">REJECTED</div>';
     } catch (e) { alert('Error rejecting proof.'); }
 }
 

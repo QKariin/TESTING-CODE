@@ -139,8 +139,8 @@ function buildItemHtml(u: any, now: number): string {
             <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${lockBg};border:1px solid ${lockBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
                 <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.07;filter:blur(2px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
                 <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:${lockColor};position:relative;z-index:1;flex-shrink:0;"><path d="${LOCK_PATH}"/></svg>
-                <div style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:${lockColor};letter-spacing:3px;position:relative;z-index:1;">${lockLabel}</div>
-                <div style="font-family:Orbitron,sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${lockColor};letter-spacing:3px;position:relative;z-index:1;">${lockLabel}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
             </div>
         `;
     }

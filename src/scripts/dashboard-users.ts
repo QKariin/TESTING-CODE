@@ -233,7 +233,7 @@ export async function updateDetail(u: any) {
     // Rendering Progress Container
     const container = document.getElementById('admin_ProgressContainer');
     if (container) {
-        let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Orbitron'; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
+        let html = `<div style="font-size:0.55rem; color:#666; margin-bottom:10px; font-family:'Rajdhani',sans-serif; letter-spacing:1px;">PROMOTION REQUIREMENTS</div>`;
 
         report.requirements.forEach(r => {
             if (r.type === 'bar') {
@@ -246,7 +246,7 @@ export async function updateDetail(u: any) {
 
                 html += `
                     <div style="margin-bottom:12px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.6rem; font-family:'Orbitron'; margin-bottom:4px; color:${isDone ? "#fff" : "#888"}; letter-spacing:1px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.6rem; font-family:'Rajdhani',sans-serif; margin-bottom:4px; color:${isDone ? "#fff" : "#888"}; letter-spacing:1px;">
                             <span>${r.label}</span>
                             <span style="color:${color}">${current.toLocaleString()} / ${target.toLocaleString()}</span>
                         </div>
@@ -265,7 +265,7 @@ export async function updateDetail(u: any) {
 
                 html += `
                     <div style="margin-bottom:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Rajdhani',sans-serif;">
                             <span style="color:#888;">${r.label}</span>
                             ${svgIcon}
                         </div>
@@ -287,12 +287,12 @@ export async function updateDetail(u: any) {
         const proofStatus = todayEntry?.status;
         const proofOverlay = todayEntry && todayEntry.id
             ? (proofStatus === 'approve'
-                ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`
+                ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`
                 : proofStatus === 'reject'
-                ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`
+                ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`
                 : `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:6px;background:linear-gradient(transparent,rgba(0,0,0,0.7));">
-                    <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(0,150,0,0.6);color:#00ff00;border:1px solid rgba(0,200,0,0.5);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✓ APPROVE</button>
-                    <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(150,0,0,0.6);color:#ff4444;border:1px solid rgba(200,0,0,0.5);border-radius:4px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✗ REJECT</button>
+                    <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(0,150,0,0.6);color:#00ff00;border:1px solid rgba(0,200,0,0.5);border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✓ APPROVE</button>
+                    <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:7px 4px;background:rgba(150,0,0,0.6);color:#ff4444;border:1px solid rgba(200,0,0,0.5);border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(4px);">✗ REJECT</button>
                   </div>`)
             : '';
         const isRoutineVideo = todayEntry?.proofUrl?.match(/\.(mp4|mov|webm)/i);
@@ -316,7 +316,7 @@ export async function updateDetail(u: any) {
             : '';
         html += `
             <div style="margin-bottom:8px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Orbitron';">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Rajdhani',sans-serif;">
                     <span style="color:#888;">ROUTINE - ${routineRowName}</span>
                     ${routineSvg}
                 </div>
@@ -326,7 +326,7 @@ export async function updateDetail(u: any) {
         // Always show force-promote button when not at max
         if (!report.isMax) {
             html += `<div style="margin-top:16px;">
-                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,${_tAc(0.22)},${_tAc(0.1)});color:${_tHex()};border:1px solid ${_tAc(0.45)};border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
+                <button onclick="window.adminPromoteUser('${u.memberId}')" style="width:100%;padding:12px;background:linear-gradient(135deg,${_tAc(0.22)},${_tAc(0.1)});color:${_tHex()};border:1px solid ${_tAc(0.45)};border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:0.5rem;letter-spacing:3px;cursor:pointer;font-weight:700;">
                     ✦ PROMOTE TO ${report.nextRank.toUpperCase()}
                 </button>
             </div>`;
@@ -353,11 +353,11 @@ export async function updateDetail(u: any) {
             kinksLimitsEl.innerHTML = `
                 <div style="border:1px solid rgba(var(--gold-rgb),0.15); border-radius:4px; overflow:hidden;">
                     ${kinks ? `<div style="padding:10px; border-bottom:${limits ? '1px solid rgba(var(--gold-rgb),0.1)' : 'none'}">
-                        <div style="font-size:0.5rem; color:var(--gold); font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
+                        <div style="font-size:0.5rem; color:var(--gold); font-family:'Rajdhani',sans-serif; letter-spacing:1px; margin-bottom:5px;">KINKS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${kinks}</div>
                     </div>` : ''}
                     ${limits ? `<div style="padding:10px; background:${_tAc(0.03)};">
-                        <div style="font-size:0.5rem; color:${_tAc(0.7)}; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
+                        <div style="font-size:0.5rem; color:${_tAc(0.7)}; font-family:'Rajdhani',sans-serif; letter-spacing:1px; margin-bottom:5px;">LIMITS</div>
                         <div style="font-size:0.7rem; color:#aaa; line-height:1.6;">${limits}</div>
                     </div>` : ''}
                 </div>`;
@@ -438,10 +438,10 @@ function renderKneelSection(u: any) {
     el.innerHTML = `
         <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(var(--gold-rgb),0.12);border-radius:6px;padding:12px 14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <span style="font-family:'Orbitron';font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
-                <span style="font-family:'Orbitron';font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Orbitron';letter-spacing:1px;margin-bottom:5px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:5px;">
                 <span style="color:#555;">TODAY</span>
                 <span style="color:${isOverGoal ? 'var(--gold)' : '#666'}">${display}</span>
             </div>
@@ -497,7 +497,7 @@ function renderTelemetry(u: any) {
 
     container.innerHTML = rows.map(r => `
         <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:4px; border:1px solid rgba(var(--gold-rgb),0.1);">
-            <div style="color:#666; font-size:0.5rem; font-family:'Orbitron'; margin-bottom:2px;">${r.label}</div>
+            <div style="color:#666; font-size:0.5rem; font-family:'Rajdhani',sans-serif; margin-bottom:2px;">${r.label}</div>
             <div style="color:var(--gold); font-size:0.7rem; font-family:'Rajdhani'; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.val}</div>
         </div>
     `).join('');
@@ -708,8 +708,8 @@ export function updateTaskQueue(u: any) {
 
     listContainer.innerHTML = `
         <div class="mini-active" style="border:1px solid rgba(var(--gold-rgb),0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(var(--gold-rgb),0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
-            <div style="font-family:'Orbitron', sans-serif; font-size:1.5rem; color:var(--gold); margin-bottom:5px;">${personalTasks.length}</div>
-            <div style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#aaa; letter-spacing:2px;">SCHEDULED DIRECTIVES</div>
+            <div style="font-family:'Rajdhani', sans-serif; font-size:1.5rem; color:var(--gold); margin-bottom:5px;">${personalTasks.length}</div>
+            <div style="font-family:'Rajdhani', sans-serif; font-size:0.7rem; color:#aaa; letter-spacing:2px;">SCHEDULED DIRECTIVES</div>
             <div style="font-family:'Rajdhani', sans-serif; font-size:0.65rem; color:#666; margin-top:10px; text-transform:uppercase; letter-spacing:1px;">Tap to view full queue &rarr;</div>
         </div>
     `;
@@ -762,14 +762,14 @@ async function updateChatterRoutine(u: any, gen?: number) {
     let statusBadge = '';
     let actionOverlay = '';
     if (proofStatus === 'approve') {
-        statusBadge = `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;font-family:'Orbitron';font-size:0.42rem;color:#4ade80;letter-spacing:1px;">✓ APPROVED</div>`;
+        statusBadge = `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:1px;">✓ APPROVED</div>`;
     } else if (proofStatus === 'reject') {
-        statusBadge = `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;font-family:'Orbitron';font-size:0.42rem;color:#ff4444;letter-spacing:1px;">✗ REJECTED</div>`;
+        statusBadge = `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#ff4444;letter-spacing:1px;">✗ REJECTED</div>`;
     } else if (todayEntry.id) {
-        statusBadge = `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;font-family:'Orbitron';font-size:0.42rem;color:#e85d75;letter-spacing:1px;">PENDING</div>`;
+        statusBadge = `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);padding:4px 10px;border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#e85d75;letter-spacing:1px;">PENDING</div>`;
         actionOverlay = `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,0.85));">
-            <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:10px 4px;background:rgba(0,150,0,0.25);color:#4ade80;border:1px solid rgba(0,200,0,0.4);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;font-weight:700;backdrop-filter:blur(4px);">✓ APPROVE</button>
-            <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:10px 4px;background:rgba(150,0,0,0.25);color:#ff4444;border:1px solid rgba(200,0,0,0.4);border-radius:6px;font-family:'Orbitron';font-size:0.5rem;letter-spacing:1px;cursor:pointer;font-weight:700;backdrop-filter:blur(4px);">✗ REJECT</button>
+            <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:10px 4px;background:rgba(0,150,0,0.25);color:#4ade80;border:1px solid rgba(0,200,0,0.4);border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer;font-weight:700;backdrop-filter:blur(4px);">✓ APPROVE</button>
+            <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:10px 4px;background:rgba(150,0,0,0.25);color:#ff4444;border:1px solid rgba(200,0,0,0.4);border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer;font-weight:700;backdrop-filter:blur(4px);">✗ REJECT</button>
         </div>`;
     }
 
@@ -889,7 +889,7 @@ function renderRoutineCalendar(u: any) {
     const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     let cells = dayLabels.map(l =>
-        `<div style="font-family:Orbitron;font-size:0.3rem;color:#444;text-align:center;padding:2px 0;">${l}</div>`
+        `<div style="font-family:'Rajdhani',sans-serif;font-size:0.3rem;color:#444;text-align:center;padding:2px 0;">${l}</div>`
     ).join('');
 
     // Empty cells before first day
@@ -920,14 +920,14 @@ function renderRoutineCalendar(u: any) {
 
         const todayRing = isToday ? 'box-shadow:0 0 0 1px rgba(197,160,89,0.5);' : '';
 
-        cells += `<div style="text-align:center;padding:3px 0;font-family:Orbitron;font-size:0.35rem;color:${color};background:${bg};border:1px solid ${border};border-radius:3px;${todayRing}" title="${key}: ${status || (isFuture ? 'future' : 'missed')}">${d}</div>`;
+        cells += `<div style="text-align:center;padding:3px 0;font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:${color};background:${bg};border:1px solid ${border};border-radius:3px;${todayRing}" title="${key}: ${status || (isFuture ? 'future' : 'missed')}">${d}</div>`;
     }
 
     section.style.display = '';
     grid.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span style="font-family:Orbitron;font-size:0.38rem;color:#555;letter-spacing:2px;">${monthName} ${year}</span>
-            <span style="font-family:Orbitron;font-size:0.38rem;color:rgba(74,222,128,0.6);letter-spacing:1px;">${streak > 0 ? streak + 'D STREAK' : ''}</span>
+            <span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:#555;letter-spacing:2px;">${monthName} ${year}</span>
+            <span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:rgba(74,222,128,0.6);letter-spacing:1px;">${streak > 0 ? streak + 'D STREAK' : ''}</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">
             ${cells}
@@ -1013,7 +1013,7 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
         const { adminApproveTaskAction } = await import('@/actions/velo-actions');
         await adminApproveTaskAction(taskId, memberId, 50, null);
         const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
-        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`;
+        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`;
         _notifyMember(memberId, 'routine_approved');
     } catch (err) {
         console.error('approveRoutineFromPanel failed:', err);
@@ -1030,7 +1030,7 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
         const { adminRejectTaskAction } = await import('@/actions/velo-actions');
         await adminRejectTaskAction(taskId, memberId);
         const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
-        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Orbitron';color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`;
+        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`;
         _notifyMember(memberId, 'routine_rejected');
     } catch (err) {
         console.error('rejectRoutineFromPanel failed:', err);

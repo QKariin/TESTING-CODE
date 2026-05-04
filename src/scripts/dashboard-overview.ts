@@ -31,16 +31,16 @@ function _renderActivityFeed() {
     const el = document.getElementById('ov-activity-feed');
     if (!el) return;
     if (_activityFeed.length === 0) {
-        el.innerHTML = `<div style="padding:24px;text-align:center;font-family:Orbitron;font-size:0.45rem;color:rgba(255,255,255,0.15);letter-spacing:2px;">AWAITING ACTIVITY</div>`;
+        el.innerHTML = `<div style="padding:24px;text-align:center;font-family:'Rajdhani',sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.15);letter-spacing:2px;">AWAITING ACTIVITY</div>`;
         return;
     }
     el.innerHTML = _activityFeed.slice(0, 12).map(a => `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);">
             <div style="width:32px;height:32px;border-radius:50%;background:${themeAc(0.08)};border:1px solid ${themeAc(0.15)};display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;">${a.icon}</div>
             <div style="flex:1;min-width:0;">
-                <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.text}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.text}</div>
             </div>
-            <div style="font-family:Orbitron;font-size:0.4rem;color:rgba(255,255,255,0.25);letter-spacing:1px;flex-shrink:0;">${_timeAgo(a.time)}</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.25);letter-spacing:1px;flex-shrink:0;">${_timeAgo(a.time)}</div>
         </div>
     `).join('');
 }
@@ -89,8 +89,8 @@ function _buildRevenueChart(): string {
                     stroke="${isToday ? themeAc(0.8) : themeAc(0.15)}"
                     stroke-width="1"
                 />
-                ${d.value > 0 ? `<text x="${x + barW / 2}" y="${y - 5}" text-anchor="middle" font-family="Orbitron" font-size="7" fill="${themeAc(0.8)}">€${d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'k' : d.value}</text>` : ''}
-                <text x="${x + barW / 2}" y="${H - 4}" text-anchor="middle" font-family="Orbitron" font-size="8" fill="rgba(255,255,255,0.3)">${d.label}</text>
+                ${d.value > 0 ? `<text x="${x + barW / 2}" y="${y - 5}" text-anchor="middle" font-family="Rajdhani" font-size="7" fill="${themeAc(0.8)}">€${d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'k' : d.value}</text>` : ''}
+                <text x="${x + barW / 2}" y="${H - 4}" text-anchor="middle" font-family="Rajdhani" font-size="8" fill="rgba(255,255,255,0.3)">${d.label}</text>
             </g>
         `;
     }).join('');
@@ -148,24 +148,24 @@ function _buildSlaveDonut(): string {
                 stroke-dasharray="${onlineDash} ${circumference - onlineDash}"
                 stroke-dashoffset="0"
                 transform="rotate(-90 ${cx} ${cy})"/>
-            <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-family="Orbitron" font-size="14" font-weight="700" fill="#fff">${total}</text>
-            <text x="${cx}" y="${cy + 10}" text-anchor="middle" font-family="Orbitron" font-size="7" fill="rgba(255,255,255,0.35)">SLAVES</text>
+            <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-family="Rajdhani" font-size="14" font-weight="700" fill="#fff">${total}</text>
+            <text x="${cx}" y="${cy + 10}" text-anchor="middle" font-family="Rajdhani" font-size="7" fill="rgba(255,255,255,0.35)">SLAVES</text>
         </svg>
         <div style="display:flex;flex-direction:column;gap:8px;justify-content:center;">
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:${h};box-shadow:0 0 6px ${hGlow};"></div>
-                <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);">ONLINE NOW</span>
-                <span style="font-family:Orbitron;font-size:0.5rem;color:${h};margin-left:auto;">${online}</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.5);">ONLINE NOW</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:${h};margin-left:auto;">${online}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:${h2};box-shadow:0 0 6px ${h2Glow};"></div>
-                <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);">ACTIVE TODAY</span>
-                <span style="font-family:Orbitron;font-size:0.5rem;color:${h2};margin-left:auto;">${recent}</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.5);">ACTIVE TODAY</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:${h2};margin-left:auto;">${recent}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08);"></div>
-                <span style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);">DORMANT</span>
-                <span style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.25);margin-left:auto;">${inactive}</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.5);">DORMANT</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);margin-left:auto;">${inactive}</span>
             </div>
         </div>
     `;

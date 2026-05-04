@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
-
 /* Dashboard CSS - Complete Styles */
 html,
 body {
@@ -128,7 +126,7 @@ body {
     background: #111;
     border: 1px solid #333;
     color: white;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1rem;
     cursor: pointer;
     border-radius: 6px;
@@ -198,7 +196,7 @@ body {
     letter-spacing: 3px;
     color: #444;
     font-size: 0.65rem;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     text-transform: uppercase;
     flex-shrink: 0;
 }
@@ -355,7 +353,7 @@ body {
     padding: 2px 8px !important;
     cursor: pointer !important;
     border-radius: 3px !important;
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     white-space: nowrap !important;
 }
 
@@ -571,7 +569,7 @@ body {
     border: none;
     color: white;
     width: 60px;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-weight: bold;
     text-align: right;
     outline: none;
@@ -771,7 +769,7 @@ body {
 }
 
 .pd-prog-txt {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
     color: var(--yellow);
     text-align: center;
@@ -806,7 +804,7 @@ body {
     padding: 12px;
     background: #111;
     border-bottom: 1px solid #333;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     color: #888;
     font-size: 0.8rem;
     display: flex;
@@ -929,7 +927,7 @@ body {
 }
 
 .ops-card-label {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
     letter-spacing: 2px;
     color: #888;
@@ -954,7 +952,7 @@ body {
 }
 
 .ops-counter {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 2.5rem;
     font-weight: 900;
     line-height: 1;
@@ -1063,7 +1061,7 @@ body {
 
 .mon-timer {
     margin-top: auto;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     font-weight: bold;
     color: white;
@@ -1075,7 +1073,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
 }
 
@@ -1421,7 +1419,7 @@ body {
     border: 1px solid var(--yellow);
     border-radius: 6px;
     color: var(--yellow);
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     font-weight: 900;
     display: flex;
@@ -1446,7 +1444,7 @@ body {
     border: 1px solid var(--green);
     border-radius: 6px;
     color: var(--green);
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     font-weight: 900;
     display: flex;
@@ -1662,7 +1660,7 @@ body {
 }
 
 .pv-val {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     color: white;
@@ -1742,7 +1740,7 @@ body {
     border: none;
     padding: 12px;
     color: #555;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
     letter-spacing: 2px;
     cursor: pointer;
@@ -1827,7 +1825,7 @@ body {
 .stat-lbl {
     font-size: 0.42rem;
     color: #888;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     letter-spacing: 2px;
     text-transform: uppercase;
 }
@@ -1877,7 +1875,7 @@ body {
 }
 
 .ma-timer {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.85rem;
     color: var(--blue);
     font-weight: bold;
@@ -1899,7 +1897,7 @@ body {
     font-size: 0.6rem;
     cursor: pointer;
     border-radius: 3px;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     transition: 0.2s;
 }
 
@@ -2116,7 +2114,7 @@ body {
 }
 
 .pend-act {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.6rem;
     color: var(--gold);
     font-weight: 900;
@@ -2137,7 +2135,7 @@ body {
 }
 
 .pend-txt {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     color: #eee;
     white-space: nowrap;
@@ -2166,7 +2164,7 @@ body {
     font-size: 0.7rem;
     cursor: pointer;
     margin-top: 10px;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
 }
 
 .load-more-btn:hover {
@@ -2487,7 +2485,7 @@ body {
     color: var(--green);
     padding: 10px;
     border-radius: 4px;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     margin-bottom: 10px;
     outline: none;
@@ -2502,7 +2500,7 @@ body {
 }
 
 .at-status-text {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     color: #fff;
     letter-spacing: 2px;
@@ -2514,7 +2512,7 @@ body {
     font-size: 0.6rem;
     color: #666;
     margin-bottom: 2px;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
 }
 
 .at-timer-row {
@@ -2530,7 +2528,7 @@ body {
 .at-timer-label {
     font-size: 0.7rem;
     color: #888;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
 }
 
 .at-timer-large {
@@ -2547,7 +2545,7 @@ body {
     background: transparent;
     border: 1px solid #333;
     color: #888;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     cursor: pointer;
     transition: 0.3s;
@@ -2610,7 +2608,7 @@ body {
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: 4px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     text-transform: uppercase;
 }
 
@@ -3017,7 +3015,7 @@ h3,
 .vf-header,
 .v-breadcrumb,
 .vs-label {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
 }
 
 /* Kneeling Counter Card */
@@ -3055,7 +3053,7 @@ h3,
     font-size: 4rem;
     font-weight: 800;
     color: var(--blue-glow);
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
 }
 
@@ -3169,7 +3167,7 @@ h3,
     font-weight: 800;
     font-size: 1.1rem;
     color: white;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
 }
 
 .vb-val {
@@ -3293,7 +3291,7 @@ h3,
     font-size: 0.9rem;
     width: 60px;
     outline: none;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
 }
 
 .vgc-switch {
@@ -3369,7 +3367,7 @@ h3,
 }
 
 .altar-label {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.6rem;
     color: var(--gold);
     letter-spacing: 3px;
@@ -3414,7 +3412,7 @@ h3,
 }
 
 .aa-slot-label {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.5rem;
     color: rgba(255, 255, 255, 0.1);
     pointer-events: none;
@@ -3483,14 +3481,14 @@ h3,
 }
 
 .node-label {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.6rem;
     color: #888;
     letter-spacing: 1px;
 }
 
 .node-count {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.2rem;
     color: #fff;
     margin-top: 5px;
@@ -3551,7 +3549,7 @@ h3,
 }
 
 .ae-title {
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     color: var(--gold);
     letter-spacing: 2px;
     font-size: 0.9rem;
@@ -3661,7 +3659,7 @@ h3,
 }
 
 #viewUser .cp-head {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1rem;
     color: #c5a059;
     letter-spacing: 5px;
@@ -3699,14 +3697,14 @@ h3,
 }
 
 #viewUser .at-label {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     color: #c5a059;
     letter-spacing: 4px;
 }
 
 #viewUser .at-status-text {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 2rem;
     color: #fff;
     margin: 15px 0;
@@ -3730,7 +3728,7 @@ h3,
 }
 
 #viewUser .ap-tab {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.8rem !important;
     color: #888 !important;
     letter-spacing: 3px !important;
@@ -3758,7 +3756,7 @@ h3,
     overflow: hidden !important;
     background: #0a0a0f !important;
     z-index: 100 !important;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
 }
 
 #viewUser .split {
@@ -3809,7 +3807,7 @@ h3,
 }
 
 #viewUser .cp-head {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 1.1rem !important;
     color: #c5a059 !important;
     letter-spacing: 12px !important;
@@ -3831,7 +3829,7 @@ h3,
 }
 
 #viewUser .identity-name {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-weight: 700 !important;
     font-size: 1.6rem !important;
     letter-spacing: 3px !important;
@@ -3841,7 +3839,7 @@ h3,
 
 /* Status Refinement: Reduced Size and Improved Typography */
 #viewUser .at-status-text {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 1.2rem !important;
     color: #fff !important;
     margin: 12px 0 !important;
@@ -3851,7 +3849,7 @@ h3,
 }
 
 #viewUser .at-label {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.6rem !important;
     color: rgba(197, 160, 89, 0.6) !important;
     letter-spacing: 4px !important;
@@ -3893,7 +3891,7 @@ h3,
 }
 
 #viewUser .ap-tab {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.7rem !important;
     color: #555 !important;
     background: transparent !important;
@@ -3953,7 +3951,7 @@ h3,
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.75rem !important;
     color: #c5a059 !important;
     letter-spacing: 3px !important;
@@ -3998,7 +3996,7 @@ h3,
 }
 
 .ma-status {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Rajdhani', sans-serif !important;
     font-size: 0.5rem !important;
     font-weight: 900 !important;
     letter-spacing: 1px !important;
@@ -4058,7 +4056,7 @@ h3,
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.6rem;
     padding: 4px 12px;
     border-radius: 4px;
@@ -4107,7 +4105,7 @@ h3,
 }
 
 .tcm-title {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.85rem;
     color: #c5a059;
     letter-spacing: 2px;
@@ -4178,14 +4176,14 @@ h3,
 }
 
 .gdh-title {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.2rem;
     color: #fff;
     letter-spacing: 3px;
 }
 
 .gdh-diff {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
     color: #c5a059;
     background: rgba(197, 160, 89, 0.1);
@@ -4215,7 +4213,7 @@ h3,
 }
 
 .gdm-item {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.65rem;
     color: #666;
     letter-spacing: 1px;
@@ -4233,7 +4231,7 @@ h3,
 .btn-glass {
     flex: 1;
     padding: 12px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     letter-spacing: 2px;
     cursor: pointer;
@@ -4287,7 +4285,7 @@ h3,
 }
 
 .tcm-difficulty {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.55rem;
     color: #c5a059;
     border: 1px solid rgba(197, 160, 89, 0.4);
@@ -4327,7 +4325,7 @@ h3,
     color: #c5a059;
     padding: 2px 8px;
     border-radius: 4px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.55rem;
     letter-spacing: 1px;
     cursor: pointer;
@@ -4402,7 +4400,7 @@ h3,
 }
 
 .q-item-num {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.2);
     font-weight: 900;
@@ -4424,7 +4422,7 @@ h3,
 }
 
 .q-item-type {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.45rem;
     letter-spacing: 1px;
     color: #666;
@@ -4462,7 +4460,7 @@ h3,
     background: rgba(197, 160, 89, 0.05);
     border: 1px solid rgba(197, 160, 89, 0.2);
     color: var(--gold);
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.2rem;
     padding: 15px;
     border-radius: 8px;
@@ -4491,7 +4489,7 @@ h3,
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(197, 160, 89, 0.3);
     color: #fff;
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     letter-spacing: 2px;
     padding: 20px;
@@ -4581,7 +4579,7 @@ h3,
 }
 
 .at-status-text {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-weight: 800;
     font-size: 0.8rem;
     letter-spacing: 2px;
@@ -4594,7 +4592,7 @@ h3,
 }
 
 .at-text {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.05rem;
     color: #c5a059 !important;
     text-shadow: 0 0 12px rgba(197, 160, 89, 0.35);
@@ -4604,7 +4602,7 @@ h3,
 }
 
 .at-timer-large {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.8rem;
     color: #c5a059;
     letter-spacing: 4px;
@@ -4619,7 +4617,7 @@ h3,
     border-top: 1px solid rgba(197,160,89,0.12);
     border-bottom: 1px solid rgba(197,160,89,0.12);
     color: #c5a059;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.58rem;
     text-align: center;
     letter-spacing: 2px;
@@ -4667,7 +4665,7 @@ h3,
     padding: 12px 18px;
     background: rgba(197,160,89,0.04);
     border-bottom: 1px solid rgba(197,160,89,0.2);
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     color: #c5a059;
     letter-spacing: 2px;
@@ -4701,13 +4699,13 @@ h3,
     border-radius: 0 6px 6px 0;
 }
 .dash-syslog-text {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     color: #c5a059;
     font-size: 0.82rem;
     line-height: 1.5;
 }
 .dash-syslog-time {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     color: rgba(255,255,255,0.25);
     font-size: 0.55rem;
     margin-top: 5px;
@@ -4788,7 +4786,7 @@ h3,
 
 /* Timestamps */
 #adminChatBox .chat-ts {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.34rem;
     letter-spacing: 0.8px;
     margin-top: 4px;
@@ -4839,7 +4837,7 @@ h3,
     border: 1px solid rgba(197,160,89,0.6);
     border-radius: 20px;
     padding: 3px 8px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.55rem;
     color: #c5a059;
     font-weight: 700;
@@ -4849,14 +4847,14 @@ h3,
     padding: 8px 12px 12px;
 }
 #adminChatBox .chat-gift-label {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.38rem;
     color: rgba(197,160,89,0.5);
     letter-spacing: 2px;
     margin-bottom: 4px;
 }
 #adminChatBox .chat-gift-title {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     color: #fff;
     font-weight: 700;
@@ -4894,12 +4892,12 @@ h3,
 .exchequer-row-time {
     font-size: 0.65rem;
     color: rgba(255,255,255,0.3);
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.5px;
 }
 
 .exchequer-row-coins {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
     color: #c5a059;
@@ -5047,7 +5045,7 @@ h3,
     gap: 6px;
 }
 .paid-media-card .pm-unlock-btn {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.5rem;
     font-weight: 700;
     letter-spacing: 2px;
@@ -5070,13 +5068,13 @@ h3,
     justify-content: space-between;
 }
 .paid-media-card .pm-label {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.4rem;
     color: rgba(197,160,89,0.6);
     letter-spacing: 2px;
 }
 .paid-media-card .pm-status {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.38rem;
     letter-spacing: 1px;
 }
@@ -5132,4 +5130,286 @@ h3,
 .media-gallery-grid .mg-thumb.vault-selected {
     border-color: #c5a059;
     box-shadow: 0 0 0 2px rgba(197,160,89,0.3);
+}
+
+/* ═══════════════════════════════════════════════
+   DETAIL PROFILE PANEL — Modern Glass Design
+   ═══════════════════════════════════════════════ */
+
+.dp-panel {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #07070c;
+}
+
+/* ── Hero header ── */
+.dp-hero {
+    position: relative;
+    padding: 28px 22px 22px;
+    background: linear-gradient(165deg, rgba(20,18,14,0.95) 0%, rgba(10,10,14,0.98) 50%, rgba(7,7,12,1) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+}
+.dp-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(197,160,89,0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* ── Avatar ── */
+.dp-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.dp-avatar-frame {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    padding: 3px;
+    background: linear-gradient(135deg, rgba(197,160,89,0.5) 0%, rgba(197,160,89,0.1) 50%, rgba(197,160,89,0.4) 100%);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(197,160,89,0.08);
+}
+.dp-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 13px;
+    object-fit: cover;
+    display: block;
+}
+.dp-status-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: #07070c;
+    border-radius: 10px;
+    padding: 2px 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+.dp-status-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #555;
+}
+
+/* ── Identity ── */
+.dp-identity {
+    text-align: center;
+}
+.dp-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.dp-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: #f0ebe3;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+.dp-rename-btn {
+    cursor: pointer;
+    opacity: 0.2;
+    font-size: 0.55rem;
+    color: #c5a059;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+}
+.dp-rename-btn:hover { opacity: 0.7; }
+.dp-rank {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.5rem;
+    color: rgba(197,160,89,0.7);
+    letter-spacing: 4px;
+    font-weight: 700;
+    margin-top: 4px;
+    text-transform: uppercase;
+}
+
+/* ── Stats grid ── */
+.dp-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+}
+.dp-stat-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.3s;
+}
+.dp-stat-card:hover {
+    border-color: rgba(255,255,255,0.1);
+}
+.dp-stat-gold { border-color: rgba(197,160,89,0.12); }
+.dp-stat-gold:hover { border-color: rgba(197,160,89,0.3); }
+.dp-stat-blue { border-color: rgba(100,180,255,0.08); }
+.dp-stat-blue:hover { border-color: rgba(100,180,255,0.25); }
+.dp-stat-green { border-color: rgba(74,222,128,0.08); }
+.dp-stat-green:hover { border-color: rgba(74,222,128,0.25); }
+
+.dp-stat-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.38rem;
+    color: rgba(255,255,255,0.25);
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+.dp-stat-value {
+    font-family: 'Cinzel', serif;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8);
+    font-weight: 700;
+    line-height: 1;
+}
+.dp-stat-value-gold { color: #c5a059; }
+.dp-stat-value-blue { color: rgba(100,180,255,0.8); }
+.dp-stat-value-green { color: rgba(74,222,128,0.7); font-size: 0.65rem; }
+
+/* ── Sections container ── */
+.dp-sections {
+    padding: 4px 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ── Section card ── */
+.dp-section {
+    margin: 0 12px;
+    padding: 16px;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 14px;
+    margin-bottom: 6px;
+}
+.dp-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.dp-section-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.dp-section-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.48rem;
+    color: rgba(197,160,89,0.6);
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+}
+.dp-section-badge {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.42rem;
+    color: rgba(255,255,255,0.3);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    background: rgba(255,255,255,0.03);
+    padding: 3px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ── Task card inside directive ── */
+.dp-task-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.dp-timer {
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    color: rgba(197,160,89,0.45);
+    letter-spacing: 3px;
+    font-weight: 400;
+}
+
+/* ── Assign button ── */
+.dp-assign-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.48rem;
+    padding: 10px 0;
+    background: rgba(197,160,89,0.04);
+    border: 1px dashed rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.4);
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+.dp-assign-btn:hover {
+    background: rgba(197,160,89,0.08);
+    border-color: rgba(197,160,89,0.3);
+    color: rgba(197,160,89,0.7);
+}
+
+/* ── Collapsible row (Intel / Kinks) ── */
+.dp-collapse-row {
+    display: flex;
+    margin: 0 12px 6px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.018);
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.dp-collapse-half {
+    flex: 1;
+}
+.dp-collapse-trigger {
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+.dp-collapse-trigger:hover {
+    background: rgba(255,255,255,0.02);
+}
+.dp-collapse-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.42rem;
+    color: rgba(255,255,255,0.3);
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+.dp-collapse-arrow {
+    color: rgba(255,255,255,0.15);
+    font-size: 0.45rem;
+    transition: transform 0.3s;
+    display: inline-block;
 }

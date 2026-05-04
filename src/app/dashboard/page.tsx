@@ -52,7 +52,7 @@ function ReasonPicker({ presets, reason, setReason, useCustom, setUseCustom, cus
 }) {
     return (
         <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>REASON</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>REASON</div>
             {presets.map((p, i) => {
                 const active = !useCustom && reason === p;
                 return (
@@ -81,7 +81,7 @@ function buildGlMsgHtml(msg: any): string {
     const SVG_CROWN = `<svg width="13" height="10" viewBox="0 0 26 20" fill="#c5a059" style="flex-shrink:0;"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
-    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;"><div style="font-family:'Orbitron';font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">${(msg.reply_to.sender_name||'').replace(/</g,'&lt;')}</div><div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content||'').slice(0,60).replace(/</g,'&lt;')}</div></div>` : '';
+    const quoteHtml = msg.reply_to ? `<div style="border-left:2px solid rgba(197,160,89,0.5);padding:3px 8px;margin-bottom:5px;background:rgba(197,160,89,0.05);border-radius:0 4px 4px 0;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.3rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:2px;">${(msg.reply_to.sender_name||'').replace(/</g,'&lt;')}</div><div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content||'').slice(0,60).replace(/</g,'&lt;')}</div></div>` : '';
 
     // PROMOTION CARD
     if (content.startsWith('PROMOTION_CARD::')) {
@@ -89,8 +89,8 @@ function buildGlMsgHtml(msg: any): string {
             const d = JSON.parse(content.replace('PROMOTION_CARD::',''));
             const ini = (d.name||'S')[0].toUpperCase();
             const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
-            const photoFallback = `<div style="${d.photo?'display:none;':''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:56px;height:56px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:130px;background:#0a0703;overflow:hidden;">${photoBlock}${photoFallback}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Orbitron',sans-serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${d.name||''}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-family:'Orbitron',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span><span style="color:rgba(197,160,89,0.7);">→</span><span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+            const photoFallback = `<div style="${d.photo?'display:none;':''}position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02));"><div style="width:56px;height:56px;border-radius:50%;border:1px solid rgba(197,160,89,0.4);display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:130px;background:#0a0703;overflow:hidden;">${photoBlock}${photoFallback}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">RANK PROMOTION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">${d.name||''}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.48rem;color:rgba(197,160,89,0.4);letter-spacing:1px;text-decoration:line-through;">${(d.oldRank||'').toUpperCase()}</span><span style="color:rgba(197,160,89,0.7);">→</span><span style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;font-weight:700;">${(d.newRank||'').toUpperCase()}</span></div></div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -101,7 +101,7 @@ function buildGlMsgHtml(msg: any): string {
             const ini = (d.name||'S')[0].toUpperCase();
             const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
             const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#060e08 0%,#040d06 60%,#030a04 100%);border:1px solid rgba(74,222,128,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#030a04;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo?'display:none;':''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Orbitron';font-size:1.1rem;color:#4ade80;">${ini}</div></div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#060e08 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(3,10,4,0.9);border:1px solid rgba(74,222,128,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:3px;">⚔ JOINED CHALLENGE</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${d.name||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#060e08 0%,#040d06 60%,#030a04 100%);border:1px solid rgba(74,222,128,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#030a04;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(74,222,128,0.6);position:relative;">${photoBlock}<div style="${d.photo?'display:none;':''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(74,222,128,0.1);font-family:'Rajdhani',sans-serif;font-size:1.1rem;color:#4ade80;">${ini}</div></div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#060e08 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(3,10,4,0.9);border:1px solid rgba(74,222,128,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#4ade80;letter-spacing:3px;">⚔ JOINED CHALLENGE</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${d.name||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(74,222,128,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -112,7 +112,7 @@ function buildGlMsgHtml(msg: any): string {
             const ini = (d.name||'S')[0].toUpperCase();
             const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '';
             const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0606 0%,#0d0404 60%,#0a0303 100%);border:1px solid rgba(224,48,48,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#0a0303;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo?'display:none;':''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Orbitron';font-size:1.1rem;color:#e03030;">${ini}</div></div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0606 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(224,48,48,0.45);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#e03030;letter-spacing:3px;">✕ ELIMINATED</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${d.name||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(224,48,48,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">STILL IN: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0606 0%,#0d0404 60%,#0a0303 100%);border:1px solid rgba(224,48,48,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#0a0303;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="width:48px;height:48px;border-radius:50%;overflow:hidden;border:2px solid rgba(224,48,48,0.5);position:relative;">${photoBlock}<div style="${d.photo?'display:none;':''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,48,0.1);font-family:'Rajdhani',sans-serif;font-size:1.1rem;color:#e03030;">${ini}</div></div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0606 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(224,48,48,0.45);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#e03030;letter-spacing:3px;">✕ ELIMINATED</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${d.name||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(224,48,48,0.7);letter-spacing:1px;margin-bottom:8px;">${(d.challengeName||'').toUpperCase()}</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.18);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">STILL IN: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -121,7 +121,7 @@ function buildGlMsgHtml(msg: any): string {
         try {
             const d = JSON.parse(content.replace('CHALLENGE_INVITE_CARD::',''));
             const bgImg = d.challengeImage ? `background-image:url('${d.challengeImage}');background-size:cover;background-position:center;` : '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#0d0a04 60%,#0a0803 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#0a0803;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Orbitron',sans-serif;font-size:2rem;color:rgba(197,160,89,0.6);">⚔</div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,8,3,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">⚔ CHALLENGE INVITATION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${(d.challengeName||'').toUpperCase()}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:#777;margin-bottom:8px;">${d.durationDays||'?'}d · ${d.tasksPerDay||'?'}×/day · ${(d.joinCost||0).toLocaleString()} coins</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#0d0a04 60%,#0a0803 100%);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:120px;background:#0a0803;overflow:hidden;${bgImg}"><div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div><div style="position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Rajdhani',sans-serif;font-size:2rem;color:rgba(197,160,89,0.6);">⚔</div></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#0e0b06 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,8,3,0.9);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:3px;">⚔ CHALLENGE INVITATION</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">${(d.challengeName||'').toUpperCase()}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:#777;margin-bottom:8px;">${d.durationDays||'?'}d · ${d.tasksPerDay||'?'}×/day · ${(d.joinCost||0).toLocaleString()} coins</div><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:3px 12px;"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block;"></span><span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:#4ade80;letter-spacing:2px;">ACTIVE: ${d.activeCount||0}</span></div></div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -136,8 +136,8 @@ function buildGlMsgHtml(msg: any): string {
             const label = passed ? '✓ TASK PASSED' : '✕ TASK FAILED';
             const sub = `Day ${d.dayNumber||'?'} · Task ${d.windowNumber||'?'}${passed&&d.points?` · +${d.points}pts`:''}`;
             const ini = (d.senderName||'S')[0].toUpperCase();
-            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:${ac};">${ini}</div>`;
-            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:${acBg};border:1px solid ${acBorder};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;border:1.5px solid ${acBorder};overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Orbitron';font-size:0.42rem;color:${ac};letter-spacing:1px;margin-bottom:2px;">${label}</div><div style="font-family:'Orbitron';font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px;">${sub}</div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
+            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:${ac};">${ini}</div>`;
+            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:${acBg};border:1px solid ${acBorder};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;border:1.5px solid ${acBorder};overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${ac};letter-spacing:1px;margin-bottom:2px;">${label}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Rajdhani';font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px;">${sub}</div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -146,8 +146,8 @@ function buildGlMsgHtml(msg: any): string {
         try {
             const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::',''));
             const ini = (d.senderName||'S')[0].toUpperCase();
-            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:#a78bfa;">${ini}</div>`;
-            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">⚡ MERIT EARNED</div><div style="font-family:'Orbitron';font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Orbitron';font-size:0.8rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
+            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:#a78bfa;">${ini}</div>`;
+            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">⚡ MERIT EARNED</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -157,7 +157,7 @@ function buildGlMsgHtml(msg: any): string {
             const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::',''));
             const ini = (d.senderName||'S')[0].toUpperCase();
             const coverSrc = d.image || d.senderAvatar || '';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">${coverSrc?`<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:2rem;color:rgba(197,160,89,0.4);">${ini}</div>`}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div><div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div></div><div style="padding:10px 14px 12px;"><div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"><span style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div></div></div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">${coverSrc?`<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:2rem;color:rgba(197,160,89,0.4);">${ini}</div>`}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div><div style="position:absolute;bottom:8px;left:12px;font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div></div><div style="padding:10px 14px 12px;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.3);">${time}</span></div></div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -174,10 +174,10 @@ function buildGlMsgHtml(msg: any): string {
                 <div style="padding:4px 16px 20px;text-align:center;">
                     <div style="font-family:'Cinzel',serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">${d.name||''}</div>
                     <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent);margin:0 auto 8px;"></div>
-                    <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.65);letter-spacing:3px;margin-bottom:12px;">HAS ENTERED THE COURT</div>
-                    <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.25);border-radius:20px;padding:4px 14px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:2px;">${(d.rank||'HALL BOY').toUpperCase()}</span></div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.65);letter-spacing:3px;margin-bottom:12px;">HAS ENTERED THE COURT</div>
+                    <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.25);border-radius:20px;padding:4px 14px;">${SVG_CROWN}<span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#c5a059;letter-spacing:2px;">${(d.rank||'HALL BOY').toUpperCase()}</span></div>
                 </div>
-            </div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+            </div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -185,13 +185,13 @@ function buildGlMsgHtml(msg: any): string {
     if (content.startsWith('UPDATE_PHOTO_CARD::')) {
         try {
             const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::',''));
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'"><div style="padding:10px 14px 12px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:'Orbitron';font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.35);">${time}</span></div>${d.caption?`<div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>`:''}</div></div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:72%;min-width:220px;max-width:400px;"><div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.2);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);"><img src="${d.mediaUrl}" style="width:100%;max-height:220px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'"><div style="padding:10px 14px 12px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:#fff;font-weight:700;">${d.senderName||''}</span><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.35);">${time}</span></div>${d.caption?`<div style="font-family:'Rajdhani';font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:3px;">${d.caption}</div>`:''}</div></div></div></div>`;
         } catch { /* fall through */ }
     }
 
     // GIF
     if ((msg.media_type === 'gif' || (msg.message === '[GIF]' && msg.media_url)) && msg.media_url) {
-        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:65%;min-width:180px;max-width:320px;"><div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 30px rgba(0,0,0,0.8);"><div style="width:100%;overflow:hidden;background:#0a0703;"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:200px;object-fit:contain;" /></div><div style="padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(197,160,89,0.1);"><div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div></div></div><div style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:3px;letter-spacing:1px;">${time}</div></div></div>`;
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;"><div style="width:65%;min-width:180px;max-width:320px;"><div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 30px rgba(0,0,0,0.8);"><div style="width:100%;overflow:hidden;background:#0a0703;"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:200px;object-fit:contain;" /></div><div style="padding:8px 14px 12px;text-align:center;border-top:1px solid rgba(197,160,89,0.1);"><div style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div></div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:3px;letter-spacing:1px;">${time}</div></div></div>`;
     }
 
     // Skip SYSTEM messages
@@ -209,19 +209,19 @@ function buildGlMsgHtml(msg: any): string {
     if (isQueen && hasPhoto) {
         const qAvSrc = av || '/queen-karin.png';
         const captionText = content && content !== '[PHOTO]' ? content : '';
-        return `<div style="margin-bottom:12px;"><div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);"><div style="display:flex;align-items:center;gap:8px;padding:10px 14px;"><img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-karin.png'"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.45);">${time}</span></div><div style="width:100%;max-height:420px;overflow:hidden;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;object-fit:cover;max-height:420px;" /></div>${captionText?`<div style="padding:8px 14px 10px;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Orbitron';font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div></div>`:''}</div></div>`;
+        return `<div style="margin-bottom:12px;"><div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);"><div style="display:flex;align-items:center;gap:8px;padding:10px 14px;"><img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-karin.png'"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div></div><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.45);">${time}</span></div><div style="width:100%;max-height:420px;overflow:hidden;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;object-fit:cover;max-height:420px;" /></div>${captionText?`<div style="padding:8px 14px 10px;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Rajdhani',sans-serif;font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div></div>`:''}</div></div>`;
     }
 
     // Queen bubble (text or video)
     if (isQueen) {
         const qAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
-        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
+        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
     }
 
     // Regular user bubble
     const initial = (name[0]||'S').toUpperCase();
-    const userAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
-    return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
+    const userAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
+    return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">${userAv}<span style="font-family:'Rajdhani',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>${mediaHtml}</div></div>`;
 }
 
 function ChattersPanel() {
@@ -270,9 +270,9 @@ function ChattersPanel() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, background: 'rgba(197,160,89,0.7)', borderRadius: 2 }} />
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>CHATTERS</div>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px' }}>CHATTERS</div>
                 </div>
-                <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{chatters.filter(c => c.is_active).length} ACTIVE</div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{chatters.filter(c => c.is_active).length} ACTIVE</div>
             </div>
 
             {/* Add chatter form */}
@@ -282,15 +282,15 @@ function ChattersPanel() {
                 <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Name"
                     style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.8rem', padding: '8px 10px', borderRadius: 4, outline: 'none' }} />
                 <button onClick={addChatter} disabled={adding}
-                    style={{ flexShrink: 0, background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '8px 14px', borderRadius: 4, cursor: 'pointer', letterSpacing: '1px' }}>
+                    style={{ flexShrink: 0, background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', padding: '8px 14px', borderRadius: 4, cursor: 'pointer', letterSpacing: '1px' }}>
                     {adding ? '...' : '+ ADD'}
                 </button>
             </div>
 
             {/* Chatter list */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
-                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
-                {!loading && chatters.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO CHATTERS</div>}
+                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
+                {!loading && chatters.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO CHATTERS</div>}
                 {chatters.map(c => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: c.is_active ? 1 : 0.4 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.is_active ? '#00cc66' : '#555', flexShrink: 0 }} />
@@ -298,7 +298,7 @@ function ChattersPanel() {
                             <div style={{ fontFamily: 'Rajdhani', fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {c.display_name} <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.7rem' }}>({c.email})</span>
                             </div>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', marginTop: 2 }}>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', marginTop: 2 }}>
                                 {c.stats?.messages || 0} msgs · {c.stats?.tributes || 0} tributes · since {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                             </div>
                         </div>
@@ -376,22 +376,22 @@ function LeadsInlinePanel() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(255,80,80,0.12)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 3, height: 12, background: 'rgba(255,80,80,0.7)', borderRadius: 2 }} />
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '2px' }}>KNOCKING AT THE GATE</div>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '2px' }}>KNOCKING AT THE GATE</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {syncMsg && <span style={{ fontFamily: 'Orbitron', fontSize: '0.28rem', color: '#4ade80', letterSpacing: '1px' }}>{syncMsg}</span>}
-                    <button onClick={syncLeads} disabled={syncing} style={{ background: 'rgba(139,0,0,0.1)', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 3, color: '#8b0000', fontFamily: 'Orbitron', fontSize: '0.28rem', padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', opacity: syncing ? 0.5 : 1 }}>{syncing ? '...' : 'SYNC'}</button>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length}</div>
+                    {syncMsg && <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: '#4ade80', letterSpacing: '1px' }}>{syncMsg}</span>}
+                    <button onClick={syncLeads} disabled={syncing} style={{ background: 'rgba(139,0,0,0.1)', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 3, color: '#8b0000', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', opacity: syncing ? 0.5 : 1 }}>{syncing ? '...' : 'SYNC'}</button>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length}</div>
                 </div>
             </div>
             {/* Manual add */}
             <div style={{ display: 'flex', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
                 <input type="email" value={manualEmail} onChange={e => setManualEmail(e.target.value)} placeholder="Add email manually..." onKeyDown={e => { if (e.key === 'Enter') addManual(); }} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.8rem', padding: '5px 10px', outline: 'none' }} />
-                <button onClick={addManual} disabled={addingManual} style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 4, color: '#4ade80', fontFamily: 'Orbitron', fontSize: '0.4rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', opacity: addingManual ? 0.5 : 1 }}>+ ADD</button>
+                <button onClick={addManual} disabled={addingManual} style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 4, color: '#4ade80', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px', opacity: addingManual ? 0.5 : 1 }}>+ ADD</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '2px 0' }}>
-                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
-                {!loading && leads.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO LEADS YET</div>}
+                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
+                {!loading && leads.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO LEADS YET</div>}
                 {leads.map((l: any) => {
                     const last = new Date(l.last_seen).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                     const isAdding = adding === l.email;
@@ -399,9 +399,9 @@ function LeadsInlinePanel() {
                         <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily: 'Rajdhani', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.email}</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.28rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{last}{l.attempts > 1 ? ` · ${l.attempts}×` : ''}</div>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{last}{l.attempts > 1 ? ` · ${l.attempts}×` : ''}</div>
                             </div>
-                            <button onClick={() => addSub(l.email)} disabled={isAdding} style={{ flexShrink: 0, background: isAdding ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 4, color: '#4ade80', fontFamily: 'Orbitron', fontSize: '0.32rem', padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', opacity: isAdding ? 0.5 : 1 }}>
+                            <button onClick={() => addSub(l.email)} disabled={isAdding} style={{ flexShrink: 0, background: isAdding ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 4, color: '#4ade80', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', padding: '3px 8px', cursor: 'pointer', letterSpacing: '1px', opacity: isAdding ? 0.5 : 1 }}>
                                 {isAdding ? '...' : 'ADD'}
                             </button>
                         </div>
@@ -433,13 +433,13 @@ function LeadsPanel() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 10px', borderBottom: '1px solid rgba(255,80,80,0.12)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, background: 'rgba(255,80,80,0.7)', borderRadius: 2 }} />
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '3px' }}>KNOCKING AT THE GATE</div>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.65rem', color: 'rgba(255,100,100,0.85)', letterSpacing: '3px' }}>KNOCKING AT THE GATE</div>
                 </div>
-                <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length} LEADS</div>
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{leads.length} LEADS</div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0' }}>
-                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
-                {!loading && leads.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO LEADS YET</div>}
+                {loading && <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>}
+                {!loading && leads.length === 0 && <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px' }}>NO LEADS YET</div>}
                 {leads.map((l: any) => {
                     const first = new Date(l.first_seen).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                     const last = new Date(l.last_seen).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -448,10 +448,10 @@ function LeadsPanel() {
                             <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>{providerIcon(l.provider)}</span>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily: 'Rajdhani', fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.email}</div>
-                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginTop: 2 }}>first: {first} · last attempt: {last}</div>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginTop: 2 }}>first: {first} · last attempt: {last}</div>
                             </div>
                             {l.attempts > 1 && (
-                                <span style={{ flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,100,100,0.6)', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.15)', borderRadius: 10, padding: '2px 7px', letterSpacing: '0.5px' }}>{l.attempts}×</span>
+                                <span style={{ flexShrink: 0, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,100,100,0.6)', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.15)', borderRadius: 10, padding: '2px 7px', letterSpacing: '0.5px' }}>{l.attempts}×</span>
                             )}
                             <button
                                 onClick={() => navigator.clipboard?.writeText(l.email)}
@@ -560,7 +560,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                     placeholder="Send to global..."
                     style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }}
                 />
-                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
+                <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
                     SEND
                 </button>
             </div>
@@ -612,7 +612,7 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
             <div style={{ background: '#0a0a0a', border: `1px solid ${borderColor}`, borderRadius: 14, padding: '24px', maxWidth: 460, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.52rem', color: accentColor, letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.52rem', color: accentColor, letterSpacing: '3px', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                         LOCK USER
                     </div>
@@ -620,10 +620,10 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-                    <button onClick={() => switchTab('paywall')} style={{ flex: 1, padding: '10px', background: isPaywall ? 'rgba(197,160,89,0.12)' : 'transparent', border: `1px solid ${isPaywall ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: isPaywall ? '#c5a059' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                    <button onClick={() => switchTab('paywall')} style={{ flex: 1, padding: '10px', background: isPaywall ? 'rgba(197,160,89,0.12)' : 'transparent', border: `1px solid ${isPaywall ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: isPaywall ? '#c5a059' : '#555', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
                         PAYWALL
                     </button>
-                    <button onClick={() => switchTab('silence')} style={{ flex: 1, padding: '10px', background: !isPaywall ? 'rgba(200,40,40,0.1)' : 'transparent', border: `1px solid ${!isPaywall ? 'rgba(200,40,40,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: !isPaywall ? '#e03030' : '#555', fontFamily: 'Orbitron', fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
+                    <button onClick={() => switchTab('silence')} style={{ flex: 1, padding: '10px', background: !isPaywall ? 'rgba(200,40,40,0.1)' : 'transparent', border: `1px solid ${!isPaywall ? 'rgba(200,40,40,0.45)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, color: !isPaywall ? '#e03030' : '#555', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer' }}>
                         SILENCE
                     </button>
                 </div>
@@ -638,14 +638,14 @@ function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose:
 
                 {isPaywall && (
                     <div style={{ marginBottom: 20 }}>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT (€)</div>
-                        <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT (€)</div>
+                        <input type="number" min="1" step="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50" style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', padding: '10px 14px', outline: 'none', boxSizing: 'border-box' }} />
                     </div>
                 )}
 
-                {error && <div style={{ color: '#ff5555', fontFamily: 'Orbitron', fontSize: '0.38rem', marginBottom: 12 }}>{error}</div>}
+                {error && <div style={{ color: '#ff5555', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', marginBottom: 12 }}>{error}</div>}
 
-                <button onClick={activate} disabled={loading} style={{ width: '100%', padding: '13px', background: isPaywall ? 'linear-gradient(135deg,#c5a059,#8b6914)' : 'linear-gradient(135deg,#b02020,#7a1010)', border: 'none', borderRadius: 8, color: isPaywall ? '#000' : '#fff', fontFamily: 'Orbitron', fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+                <button onClick={activate} disabled={loading} style={{ width: '100%', padding: '13px', background: isPaywall ? 'linear-gradient(135deg,#c5a059,#8b6914)' : 'linear-gradient(135deg,#b02020,#7a1010)', border: 'none', borderRadius: 8, color: isPaywall ? '#000' : '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.48rem', fontWeight: 700, letterSpacing: '2px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
                     {loading ? 'LOCKING...' : (isPaywall ? 'ACTIVATE PAYWALL' : 'SILENCE USER')}
                 </button>
             </div>
@@ -1282,10 +1282,10 @@ export default function DashboardPage() {
             <div className="sidebar">
                 <div style={{ textAlign: 'center', padding: '5px', borderBottom: '1px solid #333' }}>
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
-                    <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: 'Orbitron', fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
+                    <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: "'Rajdhani', sans-serif", fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
                 </div>
                 <div onClick={() => (window as any).showHome()} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
-                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', flex: 1 }}>DASHBOARD</span>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', flex: 1 }}>DASHBOARD</span>
                     <span style={{ fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }}>⌂</span>
                 </div>
                 <div className="sb-head">SUB LIST</div>
@@ -1334,7 +1334,7 @@ export default function DashboardPage() {
                                 <div className="vs-label" style={{ color: showChallenges ? '#4ade80' : '#4ade8099' }}>CHALLENGES</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(74,222,128,0.12)', fontSize: '1.1rem' }}>⚔</div>
-                            {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
+                            {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
                         </div>
                         <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
@@ -1356,7 +1356,7 @@ export default function DashboardPage() {
                                         <span>Logged in as: <b>{userEmail || '...'}</b></span>
                                         <button
                                             onClick={handleLogout}
-                                            style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', fontSize: '0.6rem', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'Orbitron' }}
+                                            style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', fontSize: '0.6rem', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif" }}
                                         >LOGOUT</button>
                                     </div>
                                 </div>
@@ -1372,11 +1372,11 @@ export default function DashboardPage() {
                                 {/* EXCHEQUER — inline in global slot (dashboard only) */}
                                 <div className="glass-card span-1" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0, maxHeight: 320 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 10px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', color: '#c5a059', letterSpacing: '3px' }}>EXCHEQUER</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '1px' }}>COIN PURCHASES</div>
                                     </div>
                                     <div id="exchequerLogInline" style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
-                                        <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
+                                        <div style={{ padding: '20px', textAlign: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>LOADING...</div>
                                     </div>
                                 </div>
                             </>
@@ -1392,7 +1392,7 @@ export default function DashboardPage() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <div className="vg-title" style={{ color: challengeWidget ? (challengeWidget.isUpcoming ? '#c5a059' : '#4ade80') : '#c5a059' }}>CHALLENGES</div>
                                             {pendingVerificationCount > 0 && (
-                                                <span style={{ background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: 'Orbitron', fontSize: '0.36rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                                                <span style={{ background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', fontWeight: 700, letterSpacing: '0.5px' }}>
                                                     {pendingVerificationCount} TO VALIDATE
                                                 </span>
                                             )}
@@ -1406,14 +1406,14 @@ export default function DashboardPage() {
                                                     ? <img src={challengeWidget.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }} alt={challengeWidget.name} />
                                                     : <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.15 }}>★</div>
                                                 }
-                                                <div style={{ position: 'absolute', top: 8, left: 8, borderRadius: 6, padding: '3px 8px', fontFamily: 'Orbitron', fontSize: '0.32rem', fontWeight: 700, letterSpacing: '1px', background: challengeWidget.isUpcoming ? 'rgba(251,191,36,0.9)' : 'rgba(74,222,128,0.9)', color: '#000' }}>
+                                                <div style={{ position: 'absolute', top: 8, left: 8, borderRadius: 6, padding: '3px 8px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', fontWeight: 700, letterSpacing: '1px', background: challengeWidget.isUpcoming ? 'rgba(251,191,36,0.9)' : 'rgba(74,222,128,0.9)', color: '#000' }}>
                                                     {challengeWidget.isUpcoming ? 'SOON' : 'LIVE'}
                                                 </div>
                                             </div>
                                             <div style={{ flex: 1, padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'space-between', minWidth: 0 }}>
                                                 <div>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>{challengeWidget.name}</div>
-                                                    {challengeWidget.description && <div style={{ fontFamily: 'Orbitron', fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{challengeWidget.description}</div>}
+                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 4 }}>{challengeWidget.name}</div>
+                                                    {challengeWidget.description && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5, letterSpacing: '0.5px' }}>{challengeWidget.description}</div>}
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                                                     {[
@@ -1426,11 +1426,11 @@ export default function DashboardPage() {
                                                     ].map(({ label, val }) => (
                                                         <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                             <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.38)' }}>{label}</span>
-                                                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
+                                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.78rem', color: 'rgba(197,160,89,0.9)', fontWeight: 700 }}>{val}</span>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: 'Orbitron', fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(197,160,89,0.3)' }}>
+                                                <div style={{ padding: '7px 0', borderRadius: 8, background: 'linear-gradient(135deg,#c5a059 0%,#8b6914 100%)', color: '#000', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', boxShadow: '0 4px 15px rgba(197,160,89,0.3)' }}>
                                                     {challengeWidget.isUpcoming ? 'VIEW CHALLENGE' : 'MANAGE CHALLENGE'}
                                                 </div>
                                             </div>
@@ -1438,8 +1438,8 @@ export default function DashboardPage() {
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: '20px 16px' }}>
                                             <div style={{ fontSize: '2rem', opacity: 0.3 }}>★</div>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#333', letterSpacing: '2px', textAlign: 'center' }}>NO ACTIVE CHALLENGE</div>
-                                            <div style={{ padding: '8px 18px', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>CREATE ONE ↗</div>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: '#333', letterSpacing: '2px', textAlign: 'center' }}>NO ACTIVE CHALLENGE</div>
+                                            <div style={{ padding: '8px 18px', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>CREATE ONE ↗</div>
                                         </div>
                                     )}
                                 </div>
@@ -1447,15 +1447,15 @@ export default function DashboardPage() {
                                 {/* ENTER GLOBAL — original card (chat route) */}
                                 <div className="v-best-sub glass-card span-1" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
                                     <div className="vb-header">
-                                        <div className="vb-title" style={{ fontFamily: 'Orbitron', color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
+                                        <div className="vb-title" style={{ fontFamily: "'Rajdhani', sans-serif", color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
                                         <div className="vb-sub">Community Hub</div>
                                     </div>
                                     <div className="vb-content">
                                         <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: 'rgba(197,160,89,0.06)', boxShadow: '0 0 24px rgba(197,160,89,0.12)' }}>
                                             <span style={{ fontSize: '1.6rem', color: '#c5a059', opacity: 0.85 }}>◎</span>
                                         </div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
-                                        <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '2px' }}>LEADERBOARD · TALK · QUEEN</div>
+                                        <div style={{ marginTop: 10, padding: '5px 18px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', background: 'rgba(197,160,89,0.08)' }}>ENTER</div>
                                     </div>
                                 </div>
                             </>
@@ -1480,19 +1480,19 @@ export default function DashboardPage() {
                                     {/* CHATTERS - top priority */}
                                     <div onClick={() => setShowChattersModal(true)} style={{ aspectRatio: '1', background: 'rgba(100,200,255,0.06)', border: '1px solid rgba(100,200,255,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}>
                                         <div style={{ fontSize: '1.2rem' }}>💬</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(100,200,255,0.8)', letterSpacing: '2px' }}>CHATTERS</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: 'rgba(100,200,255,0.8)', letterSpacing: '2px' }}>CHATTERS</div>
                                     </div>
                                     <div onClick={() => (window as any).expandFeedSection('wishlist')} style={{ aspectRatio: '1', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}>
                                         <div style={{ fontSize: '1.2rem' }}>🎁</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px' }}>WISHLIST</div>
                                     </div>
                                     <div onClick={() => { setLockedUsers(users.filter((u: any) => u.silence === true || !!(u.parameters?.paywall?.active) || u.paywall === true)); setShowLocksModal(true); }} style={{ aspectRatio: '1', background: 'rgba(220,60,60,0.06)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}>
                                         <div style={{ fontSize: '1.2rem' }}>🔒</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: 'rgba(220,60,60,0.7)', letterSpacing: '2px' }}>LOCKS</div>
                                     </div>
                                     <div style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                                         <div style={{ fontSize: '1.2rem', opacity: 0.15 }}>⚡</div>
-                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '2px' }}>COMING SOON</div>
                                     </div>
                                 </div>
                             </div>
@@ -1509,21 +1509,21 @@ export default function DashboardPage() {
                     {/* Header bar with close */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(197,160,89,0.2)', flexShrink: 0, background: 'rgba(0,0,0,0.3)' }}>
                         <div>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: '#c5a059', letterSpacing: '4px' }}>QUEEN'S DISPATCH</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', color: '#c5a059', letterSpacing: '4px' }}>QUEEN'S DISPATCH</div>
                             <div style={{ fontFamily: 'Rajdhani', fontSize: '0.65rem', color: '#555', letterSpacing: '2px', marginTop: 2 }}>PUBLISH POSTS · VISIBLE TO ALL SUBJECTS</div>
                         </div>
-                        <button onClick={() => (window as any).showHome()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
+                        <button onClick={() => (window as any).showHome()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
                     </div>
                     <div style={{ flex: 1, overflowY: 'auto', padding: '25px 30px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
 
                     {/* COMPOSE */}
                     <div id="postComposeForm" style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: '8px', padding: '25px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px', marginBottom: '5px' }}>NEW POST</div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.65rem', color: '#c5a059', letterSpacing: '3px', marginBottom: '5px' }}>NEW POST</div>
                         <input
                             id="postTitleInput"
                             type="text"
                             placeholder="TITLE (optional)"
-                            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Orbitron', fontSize: '0.85rem', padding: '12px 16px', outline: 'none', letterSpacing: '2px', borderRadius: '4px' }}
+                            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', padding: '12px 16px', outline: 'none', letterSpacing: '2px', borderRadius: '4px' }}
                         />
                         <textarea
                             id="postBodyInput"
@@ -1533,7 +1533,7 @@ export default function DashboardPage() {
                         />
                         {/* Image upload */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <label htmlFor="postImageInput" style={{ background: '#111', border: '1px solid #333', color: '#888', fontFamily: 'Orbitron', fontSize: '0.6rem', padding: '8px 16px', cursor: 'pointer', letterSpacing: '2px', borderRadius: '4px' }}>+ IMAGE</label>
+                            <label htmlFor="postImageInput" style={{ background: '#111', border: '1px solid #333', color: '#888', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', padding: '8px 16px', cursor: 'pointer', letterSpacing: '2px', borderRadius: '4px' }}>+ IMAGE</label>
                             <input type="file" id="postImageInput" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 const preview = document.getElementById('postImagePreview') as HTMLImageElement;
@@ -1549,7 +1549,7 @@ export default function DashboardPage() {
                         {/* Min rank + price */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                                <label style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>MIN RANK</label>
+                                <label style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>MIN RANK</label>
                                 <select id="postMinRankInput" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.85rem', padding: '8px 12px', borderRadius: '4px', outline: 'none' }}>
                                     <option value="Hall Boy">Hall Boy</option>
                                     <option value="Footman">Footman</option>
@@ -1561,14 +1561,14 @@ export default function DashboardPage() {
                                 </select>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                                <label style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>PRICE (COINS)</label>
+                                <label style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>PRICE (COINS)</label>
                                 <input id="postPriceInput" type="number" min="0" defaultValue={0} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #333', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.85rem', padding: '8px 12px', borderRadius: '4px', outline: 'none', width: '120px' }} />
                             </div>
                         </div>
 
                         {/* Media type */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                            <label style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>MEDIA TYPE</label>
+                            <label style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#555', letterSpacing: '2px' }}>MEDIA TYPE</label>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 {['text', 'photo', 'video'].map(t => (
                                     <button key={t} id={`postMediaType_${t}`} onClick={() => {
@@ -1578,7 +1578,7 @@ export default function DashboardPage() {
                                         });
                                         const inp = document.getElementById('postMediaTypeValue') as HTMLInputElement;
                                         if (inp) inp.value = t;
-                                    }} style={{ background: t === 'text' ? 'rgba(197,160,89,0.2)' : '#111', border: `1px solid ${t === 'text' ? 'rgba(197,160,89,0.4)' : '#333'}`, color: t === 'text' ? '#c5a059' : '#666', fontFamily: 'Orbitron', fontSize: '0.5rem', padding: '6px 14px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', textTransform: 'uppercase' }}>{t}</button>
+                                    }} style={{ background: t === 'text' ? 'rgba(197,160,89,0.2)' : '#111', border: `1px solid ${t === 'text' ? 'rgba(197,160,89,0.4)' : '#333'}`, color: t === 'text' ? '#c5a059' : '#666', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', padding: '6px 14px', letterSpacing: '2px', cursor: 'pointer', borderRadius: '4px', textTransform: 'uppercase' }}>{t}</button>
                                 ))}
                             </div>
                             <input type="hidden" id="postMediaTypeValue" defaultValue="text" />
@@ -1587,19 +1587,19 @@ export default function DashboardPage() {
                         {/* Published toggle */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <input type="checkbox" id="postIsPublished" defaultChecked style={{ accentColor: '#c5a059', width: '16px', height: '16px', cursor: 'pointer' }} />
-                            <label htmlFor="postIsPublished" style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: '#888', letterSpacing: '2px', cursor: 'pointer' }}>PUBLISH IMMEDIATELY</label>
+                            <label htmlFor="postIsPublished" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#888', letterSpacing: '2px', cursor: 'pointer' }}>PUBLISH IMMEDIATELY</label>
                         </div>
 
                         <button
                             id="postSubmitBtn"
                             onClick={() => (window as any).submitQueenPost()}
-                            style={{ background: '#c5a059', color: '#000', border: 'none', fontFamily: 'Orbitron', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '4px', padding: '14px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.3s' }}
+                            style={{ background: '#c5a059', color: '#000', border: 'none', fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: '0.85rem', letterSpacing: '4px', padding: '14px', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.3s' }}
                         >PUBLISH</button>
                     </div>
 
                     {/* POSTS LIST */}
                     <div id="postsListContainer" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div style={{ color: '#444', fontFamily: 'Orbitron', fontSize: '0.8rem', padding: '20px', textAlign: 'center' }}>Click POSTS to load...</div>
+                        <div style={{ color: '#444', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.8rem', padding: '20px', textAlign: 'center' }}>Click POSTS to load...</div>
                     </div>
                     </div>{/* end scrollable content wrapper */}
                 </div>
@@ -1648,11 +1648,11 @@ export default function DashboardPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
                                     <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.4)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
                                     <div>
-                                        <span id="chatterHeaderName" style={{ fontFamily: 'Orbitron', fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>—</span>
+                                        <span id="chatterHeaderName" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>—</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span id="chatterHeaderRank" style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '2px' }}>—</span>
+                                            <span id="chatterHeaderRank" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '2px' }}>—</span>
                                             <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
-                                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '1px' }}>ENCRYPTED FEED</span>
+                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '1px' }}>ENCRYPTED FEED</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1662,13 +1662,13 @@ export default function DashboardPage() {
                                     <div className="q-head">
                                         <span id="armoryTitle">COMMAND QUEUE</span>
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                            <input type="text" id="taskSearchInput" placeholder="FILTER..." onInput={() => (window as any).filterTaskGallery()} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.6rem', padding: '5px 10px', borderRadius: '4px', width: '150px' }} />
+                                            <input type="text" id="taskSearchInput" placeholder="FILTER..." onInput={() => (window as any).filterTaskGallery()} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(197,160,89,0.2)', color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', padding: '5px 10px', borderRadius: '4px', width: '150px' }} />
                                             <button className="q-close" onClick={() => (window as any).closeTaskGallery()}>&times;</button>
                                         </div>
                                     </div>
                                     <div className="task-gallery-split" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', height: 'calc(100% - 60px)', overflow: 'hidden', position: 'relative' }}>
                                         <div className="command-queue-section" style={{ borderRight: '1px solid rgba(197,160,89,0.1)', padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)' }}>
-                                            <div style={{ fontFamily: 'Orbitron', color: '#c5a059', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", color: '#c5a059', fontSize: '0.6rem', letterSpacing: '2px', marginBottom: '15px', textTransform: 'uppercase', opacity: 0.7 }}>Command Queue</div>
                                             <div id="armoryLiveQueue" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}></div>
                                         </div>
                                         <div className="directives-section" style={{ padding: '20px', overflowY: 'auto' }}>
@@ -1703,7 +1703,7 @@ export default function DashboardPage() {
                                 <div className="c-foot">
                                     <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
                                     <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
-                                    <button onClick={() => (window as any).openChatGifPicker?.()} style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>GIF</button>
+                                    <button onClick={() => (window as any).openChatGifPicker?.()} style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>GIF</button>
                                     <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
                                 </div>
                             </div>
@@ -1713,8 +1713,8 @@ export default function DashboardPage() {
 
                                 {/* ── TAB BAR: Profile / Media ── */}
                                 <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-                                    <button id="panelTabProfile" onClick={() => (window as any).toggleMediaGallery?.()} style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: '2px solid #c5a059', color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>PROFILE</button>
-                                    <button id="panelTabMedia" onClick={() => (window as any).toggleMediaGallery?.()} style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: 'none', color: '#555', fontFamily: 'Orbitron', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>MEDIA</button>
+                                    <button id="panelTabProfile" onClick={() => (window as any).toggleMediaGallery?.()} style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: '2px solid #c5a059', color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>PROFILE</button>
+                                    <button id="panelTabMedia" onClick={() => (window as any).toggleMediaGallery?.()} style={{ flex: 1, padding: '10px', background: 'none', border: 'none', borderBottom: 'none', color: '#555', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>MEDIA</button>
                                 </div>
 
                                 {/* ── MEDIA GALLERY PANEL (hidden by default) ── */}
@@ -1731,7 +1731,7 @@ export default function DashboardPage() {
                                             onClick={() => (window as any).handleGalleryPick?.()}
                                             style={{ padding: '16px 14px' }}
                                         >
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#555', letterSpacing: '2px' }}>+ ADD TO VAULT</div>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: '#555', letterSpacing: '2px' }}>+ ADD TO VAULT</div>
                                             <div style={{ fontSize: '0.55rem', color: '#333', marginTop: 3 }}>drop or click to upload</div>
                                         </div>
                                     </div>
@@ -1739,7 +1739,7 @@ export default function DashboardPage() {
                                     {/* Category filter pills */}
                                     <div id="vaultCategoryBar" style={{ display: 'flex', gap: 4, padding: '10px 14px', overflowX: 'auto', flexShrink: 0 }}>
                                         {['all', 'feet', 'lifestyle', 'sexy', 'videos'].map(cat => (
-                                            <button key={cat} data-cat={cat} onClick={() => (window as any).filterVault?.(cat)} style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.2)', background: cat === 'all' ? 'rgba(197,160,89,0.15)' : 'transparent', color: cat === 'all' ? '#c5a059' : '#555', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer', whiteSpace: 'nowrap', textTransform: 'uppercase', flexShrink: 0 }}>{cat}</button>
+                                            <button key={cat} data-cat={cat} onClick={() => (window as any).filterVault?.(cat)} style={{ padding: '5px 12px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.2)', background: cat === 'all' ? 'rgba(197,160,89,0.15)' : 'transparent', color: cat === 'all' ? '#c5a059' : '#555', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer', whiteSpace: 'nowrap', textTransform: 'uppercase', flexShrink: 0 }}>{cat}</button>
                                         ))}
                                     </div>
 
@@ -1750,145 +1750,152 @@ export default function DashboardPage() {
                                     <div id="vaultSendBar" style={{ display: 'none', padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', background: '#060606', position: 'sticky', bottom: 0 }}>
                                         <div id="vaultSelectedPreview" style={{ marginBottom: 8 }}></div>
                                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>PRICE</div>
-                                            <input id="galleryPriceInput" type="number" min="1" step="1" placeholder="e.g. 500" style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: 'Orbitron', fontSize: '0.7rem', padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>PRICE</div>
+                                            <input id="galleryPriceInput" type="number" min="1" step="1" placeholder="e.g. 500" style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', padding: '8px 10px', outline: 'none', boxSizing: 'border-box' }} />
                                         </div>
-                                        <button id="gallerySendBtn" onClick={() => (window as any).sendPaidMedia?.()} style={{ width: '100%', padding: '10px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
+                                        <button id="gallerySendBtn" onClick={() => (window as any).sendPaidMedia?.()} style={{ width: '100%', padding: '10px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', fontWeight: 700, letterSpacing: '2px', cursor: 'pointer' }}>
                                             SEND PAID MEDIA
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* ── PROFILE PANEL (default visible) ── */}
-                                <div id="chatterProfilePanel" style={{ padding: 0, display: 'flex', flexDirection: 'column', gap: 0, background: '#060606' }}>
+                                <div id="chatterProfilePanel" className="dp-panel">
 
-                                {/* ═══ SUBJECT HEADER — left-aligned, compact ═══ */}
-                                <div id="apMirrorHeader" style={{ padding: '18px 18px 0', background: 'linear-gradient(180deg, rgba(15,12,8,0.95) 0%, rgba(6,6,6,1) 100%)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                <div id="dMirrorName" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.88rem', color: '#f0ebe3', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>—</div>
-                                                <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} style={{ cursor: 'pointer', opacity: 0.25, fontSize: '0.55rem', color: '#c5a059', flexShrink: 0, transition: 'opacity 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.7'; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.25'; }} title="Rename user">&#9998;</span>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                                                <div id="dMirrorHierarchy" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>—</div>
-                                                <div id="dMirrorStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', letterSpacing: '1px' }}>—</div>
-                                            </div>
+                                {/* ═══ SUBJECT HEADER — hero card with avatar + stats ═══ */}
+                                <div id="apMirrorHeader" className="dp-hero">
+                                    {/* Avatar with decorative frame */}
+                                    <div className="dp-avatar-wrap">
+                                        <div className="dp-avatar-frame">
+                                            <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                        </div>
+                                        <div className="dp-status-badge">
+                                            <div id="dMirrorStatus" className="dp-status-text">—</div>
                                         </div>
                                     </div>
-                                    {/* ── Stats strip — numbers with thin vertical separators ── */}
-                                    <div style={{ display: 'flex', marginTop: 18, marginBottom: 0, paddingBottom: 16, borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
-                                        <div style={{ flex: 1, textAlign: 'center' }}>
-                                            <div id="dMirrorPoints" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>0</div>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.35)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>MERIT</div>
+
+                                    {/* Name + Rank */}
+                                    <div className="dp-identity">
+                                        <div className="dp-name-row">
+                                            <div id="dMirrorName" className="dp-name">—</div>
+                                            <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
                                         </div>
-                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', alignSelf: 'stretch' }}></div>
-                                        <div style={{ flex: 1, textAlign: 'center' }}>
-                                            <div id="dMirrorWallet" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: '#e0dbd4', fontWeight: 700, lineHeight: 1 }}>0</div>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.18)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>CAPITAL</div>
+                                        <div id="dMirrorHierarchy" className="dp-rank">—</div>
+                                    </div>
+
+                                    {/* Stats grid — glass cards */}
+                                    <div className="dp-stats-grid">
+                                        <div className="dp-stat-card dp-stat-gold">
+                                            <div className="dp-stat-label">MERIT</div>
+                                            <div id="dMirrorPoints" className="dp-stat-value dp-stat-value-gold">0</div>
                                         </div>
-                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', alignSelf: 'stretch' }}></div>
-                                        <div style={{ flex: 1, textAlign: 'center' }}>
-                                            <div id="dMirrorKneel" style={{ fontFamily: "'Cinzel',serif", fontSize: '1rem', color: 'rgba(100,180,255,0.8)', fontWeight: 700, lineHeight: 1 }}>0 h</div>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(100,180,255,0.3)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>LABOR</div>
+                                        <div className="dp-stat-card">
+                                            <div className="dp-stat-label">CAPITAL</div>
+                                            <div id="dMirrorWallet" className="dp-stat-value">0</div>
                                         </div>
-                                        <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', alignSelf: 'stretch' }}></div>
-                                        <div style={{ flex: 1, textAlign: 'center' }}>
-                                            <div id="dMirrorRoutine" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: '#666', fontWeight: 700, lineHeight: 1 }}>—</div>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(74,222,128,0.3)', fontWeight: 600, letterSpacing: '2px', marginTop: 5 }}>ROUTINE</div>
+                                        <div className="dp-stat-card dp-stat-blue">
+                                            <div className="dp-stat-label">LABOR</div>
+                                            <div id="dMirrorKneel" className="dp-stat-value dp-stat-value-blue">0 h</div>
+                                        </div>
+                                        <div className="dp-stat-card dp-stat-green">
+                                            <div className="dp-stat-label">ROUTINE</div>
+                                            <div id="dMirrorRoutine" className="dp-stat-value dp-stat-value-green">—</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ═══ SECTIONS — each with colored left accent ═══ */}
-                                <div style={{ padding: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                                {/* ═══ SECTIONS — modern glass cards ═══ */}
+                                <div className="dp-sections">
 
-                                {/* ── DIRECTIVE — gold accent ── */}
-                                <div style={{ borderLeft: '3px solid rgba(197,160,89,0.35)', padding: '16px 18px', margin: '0', background: 'linear-gradient(90deg, rgba(197,160,89,0.03) 0%, transparent 40%)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                {/* ── DIRECTIVE ── */}
+                                <div className="dp-section">
+                                    <div className="dp-section-header">
+                                        <div className="dp-section-title-row">
                                             <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' }}>Directive</span>
+                                            <span className="dp-section-title">Directive</span>
                                         </div>
-                                        <span id="dActiveStatus" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#444', fontWeight: 700, letterSpacing: '1.5px' }}>IDLE</span>
+                                        <span id="dActiveStatus" className="dp-section-badge">IDLE</span>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer open">
-                                        <div id="activeTaskContent" style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 6, padding: '12px 14px', marginBottom: 8, border: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.72rem', color: '#888', lineHeight: 1.5, marginBottom: 8 }}>None</div>
+                                        <div id="activeTaskContent" className="dp-task-card">
+                                            <div id="dActiveText" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.72rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, marginBottom: 8 }}>None</div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <div id="dActiveTimer" style={{ fontFamily: "'Cinzel',serif", fontSize: '1.15rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', fontWeight: 400 }}>--:--</div>
-                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '4px 14px', background: 'transparent', border: '1px solid rgba(180,50,50,0.15)', color: 'rgba(180,50,50,0.4)', borderRadius: 4, cursor: 'pointer', fontWeight: 600, letterSpacing: '1px', transition: 'all 0.2s' }}>Cancel</button>
+                                                <div id="dActiveTimer" className="dp-timer">--:--</div>
+                                                <button className="at-btn at-fail" onClick={() => (window as any).adminTaskAction((window as any).currId, 'skip')} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '4px 14px', background: 'rgba(180,50,50,0.08)', border: '1px solid rgba(180,50,50,0.2)', color: 'rgba(180,50,50,0.5)', borderRadius: 6, cursor: 'pointer', fontWeight: 600, letterSpacing: '1px', transition: 'all 0.2s' }}>Cancel</button>
                                             </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                     </div>
                                     <div id="qListContainer" style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}></div>
-                                    <button onClick={() => (window as any).openTaskGallery()} style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', padding: '8px 0', background: 'transparent', border: '1px dashed rgba(197,160,89,0.15)', color: 'rgba(197,160,89,0.35)', borderRadius: 4, cursor: 'pointer', width: '100%', fontWeight: 700, letterSpacing: '2.5px', transition: 'all 0.3s', textTransform: 'uppercase' }}>+ Assign</button>
+                                    <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ Assign</button>
                                 </div>
 
-                                {/* ── ROUTINE — green accent ── */}
-                                <div style={{ borderLeft: '3px solid rgba(74,222,128,0.25)', padding: '16px 18px', background: 'linear-gradient(90deg, rgba(74,222,128,0.015) 0%, transparent 40%)' }}>
-                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', fontWeight: 700, letterSpacing: '3px', marginBottom: 10, textTransform: 'uppercase' }}>Routine</div>
-                                    <div id="chatter_RoutineContent" style={{ fontFamily: "'Rajdhani',sans-serif", color: '#444', fontSize: '0.6rem' }}>No routine assigned</div>
-                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(74,222,128,0.06)' }}>
+                                {/* ── ROUTINE ── */}
+                                <div className="dp-section">
+                                    <div className="dp-section-header">
+                                        <span className="dp-section-title" style={{ color: 'rgba(74,222,128,0.6)' }}>Routine</span>
+                                    </div>
+                                    <div id="chatter_RoutineContent" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.35)', fontSize: '0.6rem' }}>No routine assigned</div>
+                                    <div id="chatter_PendingSection" style={{ display: 'none', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(74,222,128,0.08)' }}>
                                         <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(232,93,117,0.5)', fontWeight: 700, letterSpacing: '3px', marginBottom: 8, textTransform: 'uppercase' }}>Pending Review</div>
                                         <div id="chatter_PendingContent"></div>
                                     </div>
                                 </div>
 
                                 {/* ── REVIEW QUEUE ── */}
-                                <div id="userQueueSec" style={{ display: 'none', borderLeft: '3px solid rgba(232,93,117,0.25)', padding: '16px 18px', background: 'linear-gradient(90deg, rgba(232,93,117,0.015) 0%, transparent 40%)' }}></div>
+                                <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
 
                                 {/* ── ROUTINE CALENDAR ── */}
-                                <div id="routineCalendarSection" style={{ display: 'none', borderLeft: '3px solid rgba(74,222,128,0.15)', padding: '12px 18px', background: 'linear-gradient(90deg, rgba(74,222,128,0.008) 0%, transparent 40%)' }}>
+                                <div id="routineCalendarSection" className="dp-section" style={{ display: 'none' }}>
                                     <div id="routineCalendarGrid"></div>
                                 </div>
 
-                                {/* ── KNEELING — blue accent ── */}
-                                <div style={{ borderLeft: '3px solid rgba(100,180,255,0.2)', padding: '14px 18px', background: 'linear-gradient(90deg, rgba(100,180,255,0.01) 0%, transparent 40%)' }}>
+                                {/* ── KNEELING ── */}
+                                <div className="dp-section">
                                     <div id="admin_KneelSection"></div>
                                 </div>
 
-                                {/* ── PROMOTION — violet accent ── */}
-                                <div id="progress_section" style={{ borderLeft: '3px solid rgba(180,130,255,0.2)', padding: '16px 18px', background: 'linear-gradient(90deg, rgba(180,130,255,0.01) 0%, transparent 40%)' }}>
-                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: '#555', fontWeight: 700, letterSpacing: '3px', marginBottom: 4, textTransform: 'uppercase' }}>Promotion</div>
-                                    <div id="admin_NextRank" style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: 'rgba(180,130,255,0.45)', marginBottom: 12, fontWeight: 400, letterSpacing: '1px' }}>—</div>
+                                {/* ── PROMOTION ── */}
+                                <div id="progress_section" className="dp-section">
+                                    <div className="dp-section-header">
+                                        <span className="dp-section-title" style={{ color: 'rgba(180,130,255,0.6)' }}>Promotion</span>
+                                    </div>
+                                    <div id="admin_NextRank" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.6rem', color: 'rgba(180,130,255,0.4)', marginBottom: 12, fontWeight: 500, letterSpacing: '0.5px' }}>—</div>
                                     <div id="admin_ProgressContainer"></div>
                                 </div>
 
-                                {/* ── TELEMETRY + KINKS — compact collapsible row ── */}
-                                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+                                {/* ── TELEMETRY + KINKS — collapsible row ── */}
+                                <div className="dp-collapse-row">
                                     {/* Telemetry half */}
-                                    <div id="telemetry_section" style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)'; } }} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: '#444', fontWeight: 700, letterSpacing: '2px' }}>INTEL</span>
-                                            <span id="telemetry_arrow" style={{ color: '#333', fontSize: '0.45rem', transition: 'transform 0.3s', display: 'inline-block', transform: 'rotate(-90deg)' }}>&#9662;</span>
+                                    <div id="telemetry_section" className="dp-collapse-half" style={{ borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)'; } }} className="dp-collapse-trigger">
+                                            <span className="dp-collapse-label">INTEL</span>
+                                            <span id="telemetry_arrow" className="dp-collapse-arrow" style={{ transform: 'rotate(0deg)' }}>&#9662;</span>
                                         </div>
                                         <div id="admin_TelemetryContainer" style={{ display: 'none', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '0 16px 14px' }}>
-                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", color: '#333', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
+                                            <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', textAlign: 'center', gridColumn: 'span 2' }}>No data</div>
                                         </div>
                                     </div>
                                     {/* Kinks half */}
-                                    <div style={{ flex: 1 }}>
-                                        <div onClick={() => { const c = document.getElementById('admin_KinksLimits'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'block'; } }} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: '#444', fontWeight: 700, letterSpacing: '2px' }}>KINKS</span>
-                                            <span style={{ color: '#333', fontSize: '0.45rem' }}>&#9662;</span>
+                                    <div className="dp-collapse-half">
+                                        <div onClick={() => { const c = document.getElementById('admin_KinksLimits'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'block'; } }} className="dp-collapse-trigger">
+                                            <span className="dp-collapse-label">KINKS</span>
+                                            <span className="dp-collapse-arrow">&#9662;</span>
                                         </div>
                                         <div id="admin_KinksLimits" style={{ display: 'none', padding: '0 16px 14px' }}></div>
                                     </div>
                                 </div>
 
                                 {/* ── FOOTER ── */}
-                                <div style={{ padding: '10px 18px' }}>
-                                    <div style={{ opacity: 0.15, marginBottom: 10 }}>
-                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1.5px' }}>REG </span>
-                                        <span id="dMirrorSlaveSince" style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: '#555', letterSpacing: '1px' }}>—</span>
+                                <div style={{ padding: '12px 20px' }}>
+                                    <div style={{ opacity: 0.2, marginBottom: 10 }}>
+                                        <span style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px' }}>REG </span>
+                                        <span id="dMirrorSlaveSince" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>—</span>
                                     </div>
 
                                     {role === 'queen' && (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                            <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: queenOnlyChat ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${queenOnlyChat ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 6, color: queenOnlyChat ? 'rgba(168,85,247,0.9)' : 'rgba(255,255,255,0.35)', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={async () => {
+                                            <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: queenOnlyChat ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${queenOnlyChat ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 6, color: queenOnlyChat ? 'rgba(168,85,247,0.9)' : 'rgba(255,255,255,0.35)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s' }} onClick={async () => {
                                                 const id = (window as any).currId;
                                                 if (!id) return;
                                                 const newVal = !queenOnlyChat;
@@ -1902,7 +1909,7 @@ export default function DashboardPage() {
                                             </button>
 
                                             {(activeLocks.paywall || activeLocks.silenced) ? (
-                                                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: 'rgba(80,80,80,0.12)', border: '1px solid rgba(150,150,150,0.25)', borderRadius: 6, color: '#888', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={async () => {
+                                                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: 'rgba(80,80,80,0.12)', border: '1px solid rgba(150,150,150,0.25)', borderRadius: 6, color: '#888', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={async () => {
                                                     const id = (window as any).currId;
                                                     if (!id) return;
                                                     if (activeLocks.paywall) await fetch('/api/paywall/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: id }) });
@@ -1913,7 +1920,7 @@ export default function DashboardPage() {
                                                     UNLOCK
                                                 </button>
                                             ) : (
-                                                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
+                                                <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '9px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }} onClick={() => { const id = (window as any).currId; if (id) setLockTarget(id); }}>
                                                     <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
                                                     LOCK
                                                 </button>
@@ -2065,8 +2072,8 @@ export default function DashboardPage() {
             {/* SECTION EXPANDED OVERLAY */}
             <div id="feedSectionOverlay" style={{ display: 'none', position: 'fixed', top: 0, right: 0, bottom: 0, left: 320, background: 'rgba(6,6,16,0.97)', zIndex: 1000, flexDirection: 'column', backdropFilter: 'blur(10px)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px', borderBottom: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }}>
-                    <div id="feedSectionOverlayTitle" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#c5a059', letterSpacing: '4px' }}>WISHLIST</div>
-                    <button onClick={() => (window as any).collapseFeedSection()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
+                    <div id="feedSectionOverlayTitle" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: '#c5a059', letterSpacing: '4px' }}>WISHLIST</div>
+                    <button onClick={() => (window as any).collapseFeedSection()} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
                 </div>
                 <div id="wishlistPanel" style={{ flex: 1, overflowY: 'auto' }}></div>
             </div>
@@ -2088,8 +2095,8 @@ export default function DashboardPage() {
             {showChattersModal && (
                 <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 320, zIndex: 99999, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px', borderBottom: '1px solid rgba(100,200,255,0.2)', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'rgba(100,200,255,0.8)', letterSpacing: '4px' }}>CHATTER MANAGEMENT</div>
-                        <button onClick={() => setShowChattersModal(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(100,200,255,0.8)', letterSpacing: '4px' }}>CHATTER MANAGEMENT</div>
+                        <button onClick={() => setShowChattersModal(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
                     </div>
                     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', maxWidth: 600, margin: '0 auto', width: '100%' }}>
                         <ChattersPanel />
@@ -2101,12 +2108,12 @@ export default function DashboardPage() {
             {showLocksModal && (
                 <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 320, zIndex: 99999, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px', borderBottom: '1px solid rgba(220,60,60,0.2)', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'rgba(220,60,60,0.8)', letterSpacing: '4px' }}>LOCKED USERS</div>
-                        <button onClick={() => setShowLocksModal(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: 'Orbitron', fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(220,60,60,0.8)', letterSpacing: '4px' }}>LOCKED USERS</div>
+                        <button onClick={() => setShowLocksModal(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', padding: '6px 14px', cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>✕ CLOSE</button>
                     </div>
                     <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
                         {lockedUsers.length === 0 ? (
-                            <div style={{ fontFamily: 'Orbitron', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 60, fontSize: '0.9rem' }}>No locked users</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: 60, fontSize: '0.9rem' }}>No locked users</div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 560, margin: '0 auto' }}>
                                 {lockedUsers.map((u: any) => {
@@ -2119,18 +2126,18 @@ export default function DashboardPage() {
                                             <img src={u.avatar || '/collar-placeholder.png'} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={(e: any) => { e.target.src = '/collar-placeholder.png'; }} />
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.95rem', color: '#fff' }}>{u.name || u.memberId}</span>
-                                                    {isSilenced && <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(220,60,60,0.8)', border: '1px solid rgba(220,60,60,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>SILENCED</span>}
-                                                    {isPaywalled && !isSilenced && <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(197,160,89,0.8)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>PAYWALLED</span>}
+                                                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: '#fff' }}>{u.name || u.memberId}</span>
+                                                    {isSilenced && <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(220,60,60,0.8)', border: '1px solid rgba(220,60,60,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>SILENCED</span>}
+                                                    {isPaywalled && !isSilenced && <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(197,160,89,0.8)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 4, padding: '2px 6px', letterSpacing: '1px' }}>PAYWALLED</span>}
                                                 </div>
-                                                <div style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
                                                     {isSilenced ? (u.parameters?.silence_reason || '-') : (u.parameters?.paywall?.reason || '-')}
                                                 </div>
                                                 {isPaywalled && !isSilenced && u.parameters?.paywall?.amount > 0 && (
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginTop: 4 }}>€{Number(u.parameters.paywall.amount).toFixed(2)}</div>
+                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', marginTop: 4 }}>€{Number(u.parameters.paywall.amount).toFixed(2)}</div>
                                                 )}
                                             </div>
-                                            <button onClick={() => { (window as any).selUser?.(u.memberId); setShowLocksModal(false); }} style={{ background: 'none', border: `1px solid ${border}`, color: accent, fontFamily: 'Orbitron', fontSize: '0.38rem', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', letterSpacing: '1px', flexShrink: 0 }}>VIEW</button>
+                                            <button onClick={() => { (window as any).selUser?.(u.memberId); setShowLocksModal(false); }} style={{ background: 'none', border: `1px solid ${border}`, color: accent, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', letterSpacing: '1px', flexShrink: 0 }}>VIEW</button>
                                         </div>
                                     );
                                 })}
