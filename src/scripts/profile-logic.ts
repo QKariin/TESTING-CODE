@@ -4127,6 +4127,22 @@ export function openMobChatOverlay() {
     // When input focused (typing): hide bottom nav, go fullscreen, handle keyboard
     // When input blurred: restore nav, exit fullscreen
     const input = document.getElementById('mob_chatMsgInput');
+    // Keyboard-aware resize helper
+    const _applyVPHeight = () => {
+        if (!el.classList.contains('mob-chat-fullscreen')) return;
+        const vp = window.visualViewport;
+        const h = vp ? vp.height : window.innerHeight;
+        const t = vp ? vp.offsetTop : 0;
+        el.style.height = h + 'px';
+        el.style.top = t + 'px';
+        requestAnimationFrame(() => {
+            const box = document.getElementById('mob_chatBox');
+            const bc = document.getElementById('mob_chatContent');
+            if (box) box.scrollTop = box.scrollHeight + 9999;
+            if (bc) bc.scrollTop = bc.scrollHeight + 9999;
+        });
+    };
+
     if (input && !(input as any).__mobChatFocusAttached) {
         (input as any).__mobChatFocusAttached = true;
         input.addEventListener('focus', () => {
@@ -4135,6 +4151,11 @@ export function openMobChatOverlay() {
             el.classList.add('mob-chat-fullscreen');
             const queenBtn = document.querySelector('.mob-nav-queen-btn') as HTMLElement | null;
             if (queenBtn) queenBtn.classList.add('mob-nav-queen-shrink');
+            // Aggressively resize during keyboard animation
+            _applyVPHeight();
+            setTimeout(_applyVPHeight, 100);
+            setTimeout(_applyVPHeight, 300);
+            setTimeout(_applyVPHeight, 600);
         });
         input.addEventListener('blur', () => {
             const nav = document.getElementById('mobBottomNav');
@@ -4150,18 +4171,8 @@ export function openMobChatOverlay() {
     // iOS keyboard: resize overlay to visual viewport when typing
     if (window.visualViewport && !(el as any).__vpAttached) {
         (el as any).__vpAttached = true;
-        const onVPResize = () => {
-            if (!el.classList.contains('mob-chat-fullscreen')) return;
-            const vp = window.visualViewport!;
-            el.style.height = vp.height + 'px';
-            el.style.top = vp.offsetTop + 'px';
-            requestAnimationFrame(() => {
-                const box = document.getElementById('mob_chatBox');
-                if (box) box.scrollTop = box.scrollHeight + 9999;
-            });
-        };
-        window.visualViewport.addEventListener('resize', onVPResize);
-        window.visualViewport.addEventListener('scroll', onVPResize);
+        window.visualViewport.addEventListener('resize', _applyVPHeight);
+        window.visualViewport.addEventListener('scroll', _applyVPHeight);
     }
 }
 

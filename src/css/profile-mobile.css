@@ -1868,7 +1868,7 @@
     .mob-overlay.mob-chat-fullscreen {
         bottom: 0;
         top: 0;
-        height: 100dvh;
+        /* No explicit height — let JS set it via visualViewport for keyboard handling */
         overflow: hidden;
         overscroll-behavior: contain;
     }
