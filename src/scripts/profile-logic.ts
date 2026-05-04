@@ -829,23 +829,23 @@ function _anyHubOpen(): boolean {
     });
 }
 
-const LOCKED_RANKS = ['Hall Boy'];
-
 function _updateHubLocks() {
     const state = getState();
     const rank = (state as any).rank || 'Hall Boy';
-    const isLocked = LOCKED_RANKS.includes(rank);
+    const rankLc = rank.toLowerCase().trim();
+    const isHallBoy = rankLc === 'hall boy';
+    const isHallBoyOrFootman = isHallBoy || rankLc === 'footman';
     const lockItems = [
-        { row: 'hubRoutineRow', lock: 'hubRoutineLock', desc: 'hubRoutineDesc', lockedText: 'Unlock at Footman rank' },
-        { row: 'hubKinksRow', lock: 'hubKinksLock', desc: 'hubKinksDesc', lockedText: 'Unlock at Footman rank' },
-        { row: 'hubLimitsRow', lock: 'hubLimitsLock', desc: 'hubLimitsDesc', lockedText: 'Unlock at Footman rank' },
+        { row: 'hubRoutineRow', lock: 'hubRoutineLock', desc: 'hubRoutineDesc', lockedText: 'Unlock at Footman rank', locked: isHallBoy },
+        { row: 'hubKinksRow', lock: 'hubKinksLock', desc: 'hubKinksDesc', lockedText: 'Unlock at Silverman rank', locked: isHallBoyOrFootman },
+        { row: 'hubLimitsRow', lock: 'hubLimitsLock', desc: 'hubLimitsDesc', lockedText: 'Unlock at Silverman rank', locked: isHallBoyOrFootman },
     ];
     for (const item of lockItems) {
         const row = document.getElementById(item.row) as HTMLButtonElement | null;
         const lock = document.getElementById(item.lock);
         const desc = document.getElementById(item.desc);
         if (!row) continue;
-        if (isLocked) {
+        if (item.locked) {
             row.style.opacity = '0.45';
             row.style.pointerEvents = 'none';
             if (lock) lock.style.display = '';
@@ -5334,11 +5334,10 @@ export function closeExchequer() {
 
 export function showLobbyAction(type: string) {
     // Block locked items for low ranks
-    if (['routine', 'kinks', 'limits'].includes(type)) {
-        const state = getState();
-        const rank = (state as any).rank || 'Hall Boy';
-        if (LOCKED_RANKS.includes(rank)) return;
-    }
+    const state0 = getState();
+    const rank0 = ((state0 as any).rank || 'Hall Boy').toLowerCase().trim();
+    if (type === 'routine' && rank0 === 'hall boy') return;
+    if ((type === 'kinks' || type === 'limits') && (rank0 === 'hall boy' || rank0 === 'footman')) return;
 
     // Close the hub first so the modal renders on top cleanly
     closeLobby();
