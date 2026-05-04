@@ -392,7 +392,7 @@
     }
 
     .hud-duty-blink {
-        animation: hud-duty-blink 2.4s ease-in-out infinite;
+        animation: hud-duty-blink 4s ease-in-out infinite;
     }
 
     .mob-stats-toggle-btn {
