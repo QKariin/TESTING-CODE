@@ -390,83 +390,77 @@ function renderKneelSection(u: any) {
     const el = document.getElementById('admin_KneelSection');
     if (!el) return;
 
-    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-    const lastWorshipMs = u.lastWorship ? new Date(u.lastWorship).getTime() : 0;
-    const now = Date.now();
-    const diffMs = now - lastWorshipMs;
-    const isLocked = lastWorshipMs > 0 && diffMs < COOLDOWN_MS;
-    const minLeft = isLocked ? Math.ceil((COOLDOWN_MS - diffMs) / 60000) : 0;
+    const memberId = u.memberId || u.id || u.ID || u.member_id;
+    if (!memberId) return;
 
-    const todayCount = parseInt(u['today kneeling'] || u.todayKneeling || '0', 10);
-    const GOAL = 8;
-    const MAX = 24;
-    const isOverGoal = todayCount >= GOAL;
-    const display = isOverGoal ? `${todayCount} / ${MAX}` : `${todayCount} / ${GOAL}`;
-    const pct = Math.min((todayCount / (isOverGoal ? MAX : GOAL)) * 100, 100);
-    const barColor = isOverGoal ? 'linear-gradient(90deg,var(--gold),#f0d080)' : 'var(--gold)';
+    // Call /api/kneel-status (same as profile mobile) for reliable kneelHours with tz + fallback
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    fetch(`/api/kneel-status?memberId=${encodeURIComponent(memberId)}&tz=${encodeURIComponent(tz)}`)
+        .then(r => r.json())
+        .then(data => {
+            const { isLocked, minLeft, todayKneeling, kneelHours } = data;
+            const todayCount = todayKneeling || 0;
+            const GOAL = 8;
+            const MAX = 24;
+            const isOverGoal = todayCount >= GOAL;
+            const display = isOverGoal ? `${todayCount} / ${MAX}` : `${todayCount} / ${GOAL}`;
+            const pct = Math.min((todayCount / (isOverGoal ? MAX : GOAL)) * 100, 100);
+            const barColor = isOverGoal ? 'linear-gradient(90deg,var(--gold),#f0d080)' : 'var(--gold)';
 
-    // Build hour dots from kneelHistory timestamps
-    const rawHistory = u.kneelHistory || u.kneel_history;
-    const histArr: string[] = Array.isArray(rawHistory) ? rawHistory : [];
-    const todayStr = new Date().toLocaleDateString('en-CA');
-    const kneelHours = new Set(
-        histArr
-            .filter(ts => { try { return new Date(ts).toLocaleDateString('en-CA') === todayStr; } catch { return false; } })
-            .map(ts => { try { return new Date(ts).getHours(); } catch { return -1; } })
-            .filter(h => h >= 0)
-    );
-    const currentHour = new Date().getHours();
-    // Build hour dots using same classes as /profile mobile (kdot, kdot-lit, kdot-dim, kdot-off)
-    let dotsHtml = '';
-    for (let h = 0; h < 24; h++) {
-        const has = kneelHours.has(h);
-        const past = h < currentHour;
-        let cls = 'kdot';
-        if (has) cls += ' kdot-lit';
-        else if (past) cls += ' kdot-dim';
-        else cls += ' kdot-off';
-        dotsHtml += `<div class="${cls}" title="${h}:00"></div>`;
-    }
+            const hoursSet = new Set<number>(kneelHours || []);
+            const currentHour = new Date().getHours();
+            let dotsHtml = '';
+            for (let h = 0; h < 24; h++) {
+                const has = hoursSet.has(h);
+                const past = h < currentHour;
+                let cls = 'kdot';
+                if (has) cls += ' kdot-lit';
+                else if (past) cls += ' kdot-dim';
+                else cls += ' kdot-off';
+                dotsHtml += `<div class="${cls}" title="${h}:00"></div>`;
+            }
 
-    // Update header kneeling section
-    const vuKneel = document.getElementById('vuKneelToday');
-    if (vuKneel) vuKneel.innerText = display;
-    const vuKneelStatus = document.getElementById('vuKneelStatus');
-    if (vuKneelStatus) {
-        vuKneelStatus.innerText = isLocked ? `${minLeft}m` : 'READY';
-        vuKneelStatus.style.color = isLocked ? 'rgba(197,160,89,0.4)' : _tHex();
-    }
-    const vuKneelFill = document.getElementById('vuKneelFill');
-    if (vuKneelFill) {
-        vuKneelFill.style.width = `${pct}%`;
-        vuKneelFill.style.background = isOverGoal ? 'linear-gradient(90deg,#d4b47c,#f0d080)' : '#d4b47c';
-        if (isOverGoal) vuKneelFill.style.boxShadow = '0 0 6px rgba(212,180,124,0.4)';
-    }
-    const vuKneelDots = document.getElementById('vuKneelDots');
-    if (vuKneelDots) vuKneelDots.innerHTML = dotsHtml;
+            // Update header kneeling section
+            const vuKneel = document.getElementById('vuKneelToday');
+            if (vuKneel) vuKneel.innerText = display;
+            const vuKneelStatus = document.getElementById('vuKneelStatus');
+            if (vuKneelStatus) {
+                vuKneelStatus.innerText = isLocked ? `${minLeft}m` : 'READY';
+                vuKneelStatus.style.color = isLocked ? 'rgba(197,160,89,0.4)' : _tHex();
+            }
+            const vuKneelFill = document.getElementById('vuKneelFill');
+            if (vuKneelFill) {
+                vuKneelFill.style.width = `${pct}%`;
+                vuKneelFill.style.background = isOverGoal ? 'linear-gradient(90deg,#d4b47c,#f0d080)' : '#d4b47c';
+                if (isOverGoal) vuKneelFill.style.boxShadow = '0 0 6px rgba(212,180,124,0.4)';
+            }
+            const vuKneelDots = document.getElementById('vuKneelDots');
+            if (vuKneelDots) vuKneelDots.innerHTML = dotsHtml;
 
-    const statusColor = isLocked ? 'rgba(197,160,89,0.5)' : _tHex();
-    const statusBg = isLocked ? 'rgba(197,160,89,0.05)' : _tAc(0.1);
-    const statusBorder = isLocked ? 'rgba(197,160,89,0.15)' : _tAc(0.35);
-    const statusText = isLocked ? `${minLeft}m` : 'AVAILABLE';
+            const statusColor = isLocked ? 'rgba(197,160,89,0.5)' : _tHex();
+            const statusBg = isLocked ? 'rgba(197,160,89,0.05)' : _tAc(0.1);
+            const statusBorder = isLocked ? 'rgba(197,160,89,0.15)' : _tAc(0.35);
+            const statusText = isLocked ? `${minLeft}m` : 'AVAILABLE';
 
-    el.innerHTML = `
-        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(var(--gold-rgb),0.12);border-radius:6px;padding:12px 14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <span style="font-family:'Rajdhani',sans-serif;font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
-                <span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:5px;">
-                <span style="color:#555;">TODAY</span>
-                <span style="color:${isOverGoal ? 'var(--gold)' : '#666'}">${display}</span>
-            </div>
-            <div style="width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:10px;">
-                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(var(--gold-rgb),0.4);' : ''}"></div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">
-                ${dotsHtml}
-            </div>
-        </div>`;
+            el.innerHTML = `
+                <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(var(--gold-rgb),0.12);border-radius:6px;padding:12px 14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span style="font-family:'Rajdhani',sans-serif;font-size:0.45rem;color:#555;letter-spacing:3px;">KNEELING</span>
+                        <span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${statusColor};letter-spacing:1px;background:${statusBg};border:1px solid ${statusBorder};padding:3px 8px;border-radius:3px;">${statusText}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.42rem;font-family:'Rajdhani',sans-serif;letter-spacing:1px;margin-bottom:5px;">
+                        <span style="color:#555;">TODAY</span>
+                        <span style="color:${isOverGoal ? 'var(--gold)' : '#666'}">${display}</span>
+                    </div>
+                    <div style="width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:10px;">
+                        <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;${isOverGoal ? 'box-shadow:0 0 6px rgba(var(--gold-rgb),0.4);' : ''}"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">
+                        ${dotsHtml}
+                    </div>
+                </div>`;
+        })
+        .catch(err => console.error('[kneelSection] fetch error:', err));
 }
 
 function renderTelemetry(u: any) {
