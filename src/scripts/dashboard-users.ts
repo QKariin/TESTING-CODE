@@ -416,15 +416,16 @@ function renderKneelSection(u: any) {
             .filter(h => h >= 0)
     );
     const currentHour = new Date().getHours();
+    // Build hour dots using same classes as /profile mobile (kdot, kdot-lit, kdot-dim, kdot-off)
     let dotsHtml = '';
     for (let h = 0; h < 24; h++) {
-        const lit = kneelHours.has(h);
-        const isFuture = h > currentHour;
-        const missed = !lit && h <= currentHour;
-        const bg = lit ? 'rgba(212,180,124,0.85)' : missed ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)';
-        const shadow = lit ? '0 0 4px rgba(212,180,124,0.4)' : 'none';
-        const border = lit ? '1px solid rgba(212,180,124,0.6)' : isFuture ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.02)';
-        dotsHtml += `<div title="${h}:00" style="height:5px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};"></div>`;
+        const has = kneelHours.has(h);
+        const past = h < currentHour;
+        let cls = 'kdot';
+        if (has) cls += ' kdot-lit';
+        else if (past) cls += ' kdot-dim';
+        else cls += ' kdot-off';
+        dotsHtml += `<div class="${cls}" title="${h}:00"></div>`;
     }
 
     // Update header kneeling section

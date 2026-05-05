@@ -5363,6 +5363,14 @@ h3,
         0 8px 32px rgba(0,0,0,0.5),
         inset 0 1px 0 rgba(255,255,255,0.03);
     flex-shrink: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+/* Kneeling card — wider */
+.vu-glass-card:last-of-type {
+    min-width: 260px;
 }
 
 /* Points / Capital glass card */
@@ -5418,7 +5426,29 @@ h3,
 .vu-kneel-dots {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 2px;
+    gap: 3px;
+}
+
+/* kdot classes — same as /profile mobile halo section */
+.vu-kneel-dots .kdot {
+    height: 6px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 1px;
+    transition: all 0.3s ease;
+}
+.vu-kneel-dots .kdot-lit {
+    background: #c5a059;
+    border-color: #f0d080;
+    box-shadow: 0 0 10px rgba(197,160,89,0.5);
+}
+.vu-kneel-dots .kdot-dim {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+}
+.vu-kneel-dots .kdot-off {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
 /* ═══════════════════════════════════════════════
