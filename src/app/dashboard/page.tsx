@@ -1802,12 +1802,6 @@ export default function DashboardPage() {
                                         <span className="dp-stat-label">LABOR</span>
                                         <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeLabor"></div></div>
                                     </div>
-                                    <div className="dp-stat-sep"></div>
-                                    <div className="dp-stat-item">
-                                        <span id="dMirrorRoutine" className="dp-stat-num">—</span>
-                                        <span className="dp-stat-label">ROUTINE</span>
-                                        <div className="dp-stat-bar"><div className="dp-stat-fill dp-fill-routine" id="dpGaugeRoutine"></div></div>
-                                    </div>
                                 </div>
 
                                 {/* ═══ SECTIONS ═══ */}
@@ -1829,14 +1823,14 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* ── DIRECTIVE ── */}
+                                {/* ── DIRECTIVE (collapsible) ── */}
                                 <div className="dp-section">
-                                    <div className="dp-divider-label">
+                                    <div className="dp-divider-label dp-directive-toggle" onClick={() => { const d = document.getElementById('taskDrawer'); if (d) d.classList.toggle('open'); }}>
                                         <span id="statusDot" className="status-dot unproductive"></span>
                                         <span className="dp-divider-text">DIRECTIVES</span>
                                         <span id="dActiveStatus" className="dp-status-badge">IDLE</span>
                                     </div>
-                                    <div id="taskDrawer" className="task-drawer open">
+                                    <div id="taskDrawer" className="task-drawer">
                                         <div id="activeTaskContent" className="dp-task-card">
                                             <div id="dActiveText" className="dp-task-text">None</div>
                                             <div className="dp-task-footer">
@@ -1845,11 +1839,11 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
+                                        <div id="qListContainer" className="dp-queue-list"></div>
+                                        <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
+                                        {/* Review queue */}
+                                        <div id="userQueueSec" style={{ display: 'none', marginTop: 16 }}></div>
                                     </div>
-                                    <div id="qListContainer" className="dp-queue-list"></div>
-                                    <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
-                                    {/* Review queue — right under directives */}
-                                    <div id="userQueueSec" style={{ display: 'none', marginTop: 16 }}></div>
                                 </div>
 
                                 {/* ── KNEELING ── */}
