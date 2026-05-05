@@ -772,8 +772,8 @@ async function updateChatterRoutine(u: any, gen?: number) {
         const isDone = u.routineDoneToday === true;
         container.innerHTML = `
             <div class="dp-routine-card dp-routine-awaiting">
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.12;">
-                    <img src="/routine-placeholder.svg" style="width:80%;height:80%;object-fit:contain;" />
+                <div style="position:absolute;inset:0;overflow:hidden;">
+                    <img src="/routine-placeholder.svg" style="width:100%;height:auto;object-fit:cover;object-position:top;" />
                 </div>
                 <div class="dp-routine-card-overlay">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
