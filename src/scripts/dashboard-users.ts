@@ -554,7 +554,7 @@ async function updateReviewQueue(u: any) {
                 <span style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);font-weight:700;letter-spacing:2px;">${count}</span>
             </div>
             <div class="cs-stage">
-                ${items.map((it, i: number) => {
+                ${items.map((it: any, i: number) => {
             const { t, isVideo } = it;
             const signedUrl = signedUrls[i];
             const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
