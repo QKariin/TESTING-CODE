@@ -556,7 +556,17 @@ function renderToHtml(m: any) {
             const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
             // Videos: use raw URL; images: use optimized URL
             const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
-            const fbThumb = data.thumbnailUrl || data.thumbnail_url || null;
+            // Look up thumbnail: first from payload, then from user's task/routine history
+            let fbThumb = data.thumbnailUrl || data.thumbnail_url || null;
+            if (!fbThumb && fbIsVideo && fbTaskId) {
+                const u = users.find((x: any) => x.memberId === fbMemberId);
+                if (u) {
+                    let hist: any[] = [];
+                    try { hist = typeof u.Taskdom_History === 'string' ? JSON.parse(u.Taskdom_History) : (u.Taskdom_History || []); } catch {}
+                    const entry = hist.find((e: any) => e.id === fbTaskId);
+                    if (entry?.thumbnail_url) fbThumb = entry.thumbnail_url;
+                }
+            }
             const fbThumbSrc = fbIsVideo && fbThumb ? fbThumb : null;
             const mediaBlock = fbSrc
                 ? (fbIsVideo
