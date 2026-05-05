@@ -8,10 +8,19 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        // Store redirect destination if provided (e.g. /keyholder funnel)
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+        if (redirect) localStorage.setItem('post_login_redirect', redirect);
+
         // If user already has a valid session (e.g. PWA relaunch), skip login
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user) window.location.href = '/profile';
+            if (user) {
+                const stored = localStorage.getItem('post_login_redirect');
+                if (stored) { localStorage.removeItem('post_login_redirect'); window.location.href = stored; return; }
+                window.location.href = '/profile';
+            }
         });
 
         const reset = () => setLoading(false);

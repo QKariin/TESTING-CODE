@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/profile`);
     }
 
-    // No profile — capture as lead and send to tribute
+    // No profile — capture as lead and send to tribute (or custom funnel)
     if (email) {
         const provider = user.app_metadata?.provider || 'unknown';
         const now = new Date().toISOString();
@@ -80,5 +80,9 @@ export async function GET(request: NextRequest) {
         });
     }
 
+    // Check for a custom redirect (e.g. /keyholder funnel) — stored in cookie by login page
+    // The client-side login page stores it in localStorage, but for the server callback
+    // we redirect to a lightweight client page that checks localStorage and redirects.
+    // For keyholder funnel, the /keyholder page itself handles auth check, so /tribute is fine as default.
     return NextResponse.redirect(`${origin}/tribute`);
 }

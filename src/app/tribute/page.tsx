@@ -23,6 +23,10 @@ export default function TributePage() {
     const PROMO_END = promoEnd;
 
     useEffect(() => {
+        // Check if user came from a funnel (e.g. /keyholder) and redirect there
+        const storedRedirect = localStorage.getItem('post_login_redirect');
+        if (storedRedirect) { localStorage.removeItem('post_login_redirect'); window.location.href = storedRedirect; return; }
+
         setMounted(true);
         const init = async () => {
             const supabase = createClient();
