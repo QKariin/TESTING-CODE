@@ -1642,43 +1642,61 @@ export default function DashboardPage() {
 
                 <div id="viewUser" style={{ display: 'none' }}>
 
-                        {/* ── UNIFIED HEADER — full width above chat+profile ── */}
-                        <div className="vu-header">
-                            <div className="vu-header-left">
-                                <div className="dp-avatar-wrap" style={{ width: 48, height: 48 }}>
-                                    <div className="dp-avatar-frame" style={{ width: 48, height: 48 }}>
-                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                    </div>
-                                </div>
-                                {/* Hidden duplicate for JS sync — chat header references */}
-                                <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ display: 'none' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
-                                <div className="vu-header-identity">
-                                    <div className="dp-name-row">
-                                        <div id="dMirrorName" className="dp-name" style={{ fontSize: '1.1rem' }}>—</div>
-                                        <span id="chatterHeaderName" style={{ display: 'none' }}>—</span>
-                                        <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
-                                    </div>
-                                    <div className="dp-rank-row">
-                                        <div id="dMirrorHierarchy" className="dp-rank">—</div>
-                                        <span id="chatterHeaderRank" style={{ display: 'none' }}>—</span>
-                                        <div id="dMirrorStatus" className="dp-status-text">—</div>
+                        {/* ── LUXURY HEADER CARD — full width ── */}
+                        <div className="vu-card">
+                            {/* Decorative gold stripes */}
+                            <div className="vu-stripe-wrap">
+                                <div className="vu-stripe vu-stripe-1"></div>
+                                <div className="vu-stripe vu-stripe-2"></div>
+                                <div className="vu-stripe vu-stripe-3"></div>
+                            </div>
+                            <div className="vu-glow"></div>
+
+                            {/* Avatar circle */}
+                            <div className="vu-avatar-container">
+                                <div className="vu-avatar-rim">
+                                    <div className="vu-avatar-inner">
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="vu-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                     </div>
                                 </div>
                             </div>
-                            <div className="vu-header-stats">
-                                <div className="vu-stat">
-                                    <span id="dMirrorPoints" className="vu-stat-num">0</span>
-                                    <span className="vu-stat-label">MERIT</span>
+                            {/* Hidden elements for JS sync */}
+                            <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ display: 'none' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
+                            <span id="chatterHeaderName" style={{ display: 'none' }}>—</span>
+                            <span id="chatterHeaderRank" style={{ display: 'none' }}>—</span>
+
+                            {/* Identity + stats */}
+                            <div className="vu-info">
+                                <div className="vu-identity">
+                                    <div className="vu-name-row">
+                                        <h2 id="dMirrorName" className="vu-name">—</h2>
+                                        <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
+                                    </div>
+                                    <div className="vu-tagline">
+                                        <span id="dMirrorHierarchy" className="vu-rank">—</span>
+                                        <span className="vu-rank-dot">·</span>
+                                        <span id="dMirrorStatus" className="vu-status">—</span>
+                                    </div>
                                 </div>
-                                <div className="vu-stat-sep"></div>
-                                <div className="vu-stat">
-                                    <span id="dMirrorWallet" className="vu-stat-num">0</span>
-                                    <span className="vu-stat-label">CAPITAL</span>
-                                </div>
-                                <div className="vu-stat-sep"></div>
-                                <div className="vu-stat">
-                                    <span id="dMirrorKneel" className="vu-stat-num">0 h</span>
-                                    <span className="vu-stat-label">LABOR</span>
+
+                                <div className="vu-stats-bar">
+                                    <div className="vu-stat">
+                                        <span className="vu-stat-icon">✦</span>
+                                        <span className="vu-stat-label">MERIT</span>
+                                        <span id="dMirrorPoints" className="vu-stat-num">0</span>
+                                    </div>
+                                    <div className="vu-stat-sep"></div>
+                                    <div className="vu-stat">
+                                        <span className="vu-stat-icon">◆</span>
+                                        <span className="vu-stat-label">CAPITAL</span>
+                                        <span id="dMirrorWallet" className="vu-stat-num">0</span>
+                                    </div>
+                                    <div className="vu-stat-sep"></div>
+                                    <div className="vu-stat">
+                                        <span className="vu-stat-icon">⧫</span>
+                                        <span className="vu-stat-label">LABOR</span>
+                                        <span id="dMirrorKneel" className="vu-stat-num">0 h</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
