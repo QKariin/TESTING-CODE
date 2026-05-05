@@ -109,9 +109,14 @@ export async function POST() {
         const consistency = calcConsistency(timestamps);
         const params = p.parameters || {};
 
+        const bestStreak = Math.max(consistency, Number(params.routine_streak || 0));
         await supabaseAdmin
             .from('profiles')
-            .update({ parameters: { ...params, consistency } })
+            .update({
+                routinestreak: consistency,
+                bestRoutinestreak: bestStreak,
+                parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
+            })
             .eq('ID', p.ID);
 
         results.push({ email, consistency, routineUploads: timestamps.length });
