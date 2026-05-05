@@ -215,9 +215,13 @@ export async function renderChat(messages: any[]) {
                     // Videos: use raw URL; images: use optimized URL
                     const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
 
+                    const fbThumb = data.thumbnailUrl || data.thumbnail_url || null;
                     const mediaBlock = fbSrc
                         ? (fbIsVideo
-                            ? `<video src="${fbSrc}" class="tf-media" preload="none" muted playsinline style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',true)"></video>`
+                            ? `<div style="position:relative;width:100%;max-height:200px;overflow:hidden;border-radius:10px 10px 0 0;cursor:pointer;background:#0a0a0a;" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',true)">
+                                ${fbThumb ? `<img src="${fbThumb}" style="width:100%;max-height:200px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '<div style="height:120px;"></div>'}
+                                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg></div>
+                               </div>`
                             : `<img src="${fbSrc}" style="width:100%;max-height:200px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="(window.openModById && '${fbTaskId}' && '${fbMemberId}') ? window.openModById('${fbTaskId}','${fbMemberId}',true) : window.openChatPreview('${encodeURIComponent(fbSrc || '')}',false)">`)
                         : '';
 

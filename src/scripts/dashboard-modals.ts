@@ -29,12 +29,12 @@ function stripHtml(html: string) {
 }
 
 // Sends a single task-feedback card into the member's chat (both parties see it)
-async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId?: string | null): Promise<void> {
+async function sendChatFeedback(memberId: string, mediaUrl: string | null, mediaType: string | null, note: string, taskId?: string | null, thumbnailUrl?: string | null): Promise<void> {
     const sender = getAdminEmailFallback();
     if (!sender || !memberId) return;
     try {
         // memberId is UUID — pass directly, chats.member_id stores UUID
-        const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId });
+        const payload = JSON.stringify({ mediaUrl, mediaType, note, taskId: taskId || null, memberId, thumbnailUrl: thumbnailUrl || null });
         const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -122,7 +122,7 @@ export function closeListModal() {
 export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false, thumbnailUrl: string | null = null) {
     // Detect video by URL (original behavior - works reliably for .mp4/.mov/.webm URLs)
     const isVideo = mediaTypeFunction(mediaUrl) === 'video';
-    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine });
+    setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine, thumbnailUrl });
 
     const modal = document.getElementById('reviewModal');
     const mediaBox = document.getElementById('mMediaBox');
@@ -369,7 +369,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
 
         // Send task media + note to member chat
         if (rejectNote) {
-            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote, taskData.id);
+            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote, taskData.id, taskData.thumbnailUrl);
         }
 
         import('./dashboard-main').then(m => m.renderMainDashboard());
@@ -533,7 +533,7 @@ export function confirmReward() {
 
     // Send task media + approval comment to member chat
     if (comment) {
-        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment, taskData.id);
+        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment, taskData.id, taskData.thumbnailUrl);
     }
 
     closeModal();
