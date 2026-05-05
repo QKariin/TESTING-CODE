@@ -546,7 +546,7 @@ async function updateReviewQueue(u: any) {
             const rawUrl = isVideo ? (t.thumbnail_url || t.proofUrl) : t.proofUrl;
             return { t, isVideo, rawUrl };
         });
-        const signedUrls = await Promise.all(items.map(it => it.rawUrl ? getSignedUrl(it.rawUrl) : Promise.resolve('')));
+        const signedUrls = await Promise.all(items.map((it: any) => it.rawUrl ? getSignedUrl(it.rawUrl) : Promise.resolve('')));
 
         qSec.innerHTML = `
             <div class="dp-divider-label" style="margin-bottom:16px;">
