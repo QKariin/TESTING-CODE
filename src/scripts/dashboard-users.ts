@@ -543,29 +543,34 @@ async function updateReviewQueue(u: any) {
         if ((u as any)._lastReviewQueueJson === queueJson) return;
         (u as any)._lastReviewQueueJson = queueJson;
 
-        qSec.style.display = 'flex';
+        const count = u.reviewQueue.length;
+        qSec.style.display = 'block';
         qSec.innerHTML = `
-            <div class="pend-list">
-                ${u.reviewQueue.map((t: any) => {
+            <div class="dp-divider-label" style="margin-bottom:16px;">
+                <span class="dp-divider-text">PENDING REVIEW</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);font-weight:700;letter-spacing:2px;">${count}</span>
+            </div>
+            <div class="cs-stage">
+                ${u.reviewQueue.map((t: any, i: number) => {
             const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
             const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-            // Placeholder only - proof loads on click, not on render (no eager storage requests)
-            const mediaTag = isVideo
-                ? `<div class="pend-thumb" style="background:#0a0a0a;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
-                     <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.5)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-                   </div>`
-                : `<div class="pend-thumb" style="background:#111;display:flex;align-items:center;justify-content:center;border:1px solid #1a1a1a;">
-                     <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(var(--gold-rgb),0.4)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                   </div>`;
+            const mediaIcon = isVideo
+                ? `<svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(197,160,89,0.4)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`
+                : `<svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(197,160,89,0.35)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`;
+
+            const mid = (count - 1) / 2;
+            const off = i - mid;
+            const absOff = Math.abs(off);
+            const zIdx = 10 - Math.round(absOff);
 
             return `
-                    <div class="pend-card" onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
-                        ${mediaTag}
-                        <div class="pend-info">
-                            <div class="pend-act" style="color:${isRoutine ? '#00ff00' : 'var(--gold)'}">${actType}</div>
-                            <div class="pend-date">${dateStr}</div>
+                    <div class="cs-card" style="--off:${off};--abs:${absOff};z-index:${zIdx}" onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
+                        <div class="cs-card-bg">${mediaIcon}</div>
+                        <div class="cs-card-overlay">
+                            <div class="cs-card-type" style="color:${isRoutine ? '#00ff00' : '#c5a059'}">${actType}</div>
+                            <div class="cs-card-date">${dateStr}</div>
                         </div>
                     </div>`;
         }).join('')}

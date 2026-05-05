@@ -2040,6 +2040,91 @@ body {
     fill: #444;
 }
 
+/* ── Card Stack — fanned pending review ── */
+.cs-stage {
+    position: relative;
+    width: 100%;
+    height: 210px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    perspective: 900px;
+    margin-bottom: 8px;
+}
+
+.cs-card {
+    position: absolute;
+    bottom: 0;
+    width: 190px;
+    height: 170px;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid rgba(197,160,89,0.2);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    background: #0a0a0c;
+    transform-origin: center bottom;
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.35s ease;
+    will-change: transform;
+
+    /* --off = signed offset from center, --abs = absolute offset (set by JS) */
+    transform: translateX(calc(var(--off) * 22px))
+               rotate(calc(var(--off) * 4deg))
+               translateY(calc(var(--abs) * -5px));
+}
+
+/* On stage hover: fan out wider */
+.cs-stage:hover .cs-card {
+    transform: translateX(calc(var(--off) * 75px))
+               rotate(calc(var(--off) * 5deg))
+               translateY(calc(var(--abs) * -8px));
+}
+
+/* Individual card hover: lift + glow + straighten */
+.cs-card:hover {
+    transform: translateX(calc(var(--off) * 75px))
+               rotate(0deg)
+               translateY(-18px)
+               scale(1.05) !important;
+    box-shadow: 0 12px 40px rgba(197,160,89,0.12), 0 0 0 1px rgba(197,160,89,0.35);
+    z-index: 50 !important;
+}
+
+.cs-card-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 40%, rgba(197,160,89,0.04) 0%, #0a0a0c 70%);
+}
+
+.cs-card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85) 40%);
+}
+
+.cs-card-type {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.42rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.cs-card-date {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.38rem;
+    color: rgba(255,255,255,0.3);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+}
+
 /* PENDING CARDS & HISTORY */
 .pend-list {
     display: flex;
