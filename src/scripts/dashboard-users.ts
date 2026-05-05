@@ -772,17 +772,17 @@ async function updateChatterRoutine(u: any, gen?: number) {
         const isDone = u.routineDoneToday === true;
         container.innerHTML = `
             <div class="dp-routine-card dp-routine-awaiting">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.12;">
+                    <img src="/routine-placeholder.svg" style="width:80%;height:80%;object-fit:contain;" />
+                </div>
                 <div class="dp-routine-card-overlay">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${routineName}</span>
                         <span style="font-family:'Rajdhani',sans-serif;font-size:0.36rem;color:${isDone ? '#4ade80' : 'rgba(197,160,89,0.35)'};font-weight:700;letter-spacing:2px;">${isDone ? 'DONE' : 'AWAITING'}</span>
                     </div>
                 </div>
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-                    <div style="text-align:center;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.12)" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.32rem;color:rgba(255,255,255,0.08);letter-spacing:3px;margin-top:8px;">${isDone ? 'COMPLETED' : 'NOT SUBMITTED'}</div>
-                    </div>
+                <div style="position:absolute;bottom:0;left:0;right:0;text-align:center;padding:12px;">
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.32rem;color:rgba(255,255,255,0.08);letter-spacing:3px;">${isDone ? 'COMPLETED' : 'NOT SUBMITTED'}</div>
                 </div>
             </div>`;
         return;
