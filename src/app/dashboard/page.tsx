@@ -1868,10 +1868,8 @@ export default function DashboardPage() {
                                 {/* ── PENDING REVIEW (always visible) ── */}
                                 <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
 
-                                {/* ── KNEELING ── */}
-                                <div className="dp-section">
-                                    <div id="admin_KneelSection"></div>
-                                </div>
+                                {/* kneeling is in the header now */}
+                                <div id="admin_KneelSection" style={{ display: 'none' }}></div>
 
                                 {/* ── PROMOTION ── */}
                                 <div id="progress_section" className="dp-section">
