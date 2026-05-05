@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // GET — return all video task entries missing thumbnail_url
 export async function GET() {
     const caller = await getCaller();
-    if (!caller || !isOwnerOrCEO(caller, caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!caller || !isOwnerOrCEO(caller, caller.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { data: tasks, error } = await supabaseAdmin
         .from('tasks')
@@ -37,7 +37,7 @@ export async function GET() {
 // POST — update a single task entry with a generated thumbnail_url
 export async function POST(req: Request) {
     const caller = await getCaller();
-    if (!caller || !isOwnerOrCEO(caller, caller)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!caller || !isOwnerOrCEO(caller, caller.id)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { taskRowId, entryId, thumbnailUrl } = await req.json();
     if (!taskRowId || !entryId || !thumbnailUrl) {
