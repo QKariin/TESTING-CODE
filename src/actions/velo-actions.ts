@@ -97,7 +97,7 @@ export async function getAdminDashboardData() {
             getAdmin().from('profiles').select('*').order('name'),
             getAdmin().from('daily_tasks').select('*'),
             getAdmin().from('system_rules').select('*'),
-            getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"'),
+            getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", kneel_history'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
         ]);
 
