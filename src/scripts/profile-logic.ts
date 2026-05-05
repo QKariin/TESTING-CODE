@@ -3246,8 +3246,8 @@ export async function loadChatHistory(memberId: string) {
             _scrollChatDelayed();
             _attachImgScrollHandlers();
 
-            // Check unlock status for any paid media messages
-            _checkPaidMediaUnlocks(messages);
+            // Check unlock status for any paid media messages (await to ensure DOM updates)
+            await _checkPaidMediaUnlocks(messages);
         }
     } catch (err) {
         console.error("Failed to load chat history:", err);
@@ -7535,30 +7535,28 @@ async function _unlockPaidMedia(paidMediaId: string, price: number) {
 
 /** Animate the blur-break reveal and make card clickable */
 function _revealPaidMedia(pmId: string, mediaUrl?: string, mediaType?: string) {
-    const wrap = document.getElementById(`pmWrap_${pmId}`);
-    const overlay = document.getElementById(`pmOverlay_${pmId}`);
-    const card = document.getElementById(`pmCard_${pmId}`);
-    const statusEl = document.getElementById(`pmStatus_${pmId}`);
-
-    // Remove blur directly on the image/video element
-    if (wrap) {
+    // Use querySelectorAll to handle duplicate IDs across chatContent + mob_chatContent
+    document.querySelectorAll(`[id="pmWrap_${pmId}"]`).forEach((wrap: Element) => {
         wrap.classList.remove('pm-locked');
         const img = wrap.querySelector('img') as HTMLElement;
         const vid = wrap.querySelector('video') as HTMLVideoElement;
         if (img) { img.style.filter = 'none'; img.style.transform = 'scale(1)'; }
         if (vid) { vid.style.filter = 'none'; vid.style.transform = 'scale(1)'; vid.controls = true; }
-    }
+    });
 
-    // Remove overlay
-    if (overlay) overlay.remove();
+    document.querySelectorAll(`[id="pmOverlay_${pmId}"]`).forEach(el => el.remove());
 
-    if (statusEl) { statusEl.textContent = 'UNLOCKED'; statusEl.className = 'pm-status unlocked'; }
+    document.querySelectorAll(`[id="pmStatus_${pmId}"]`).forEach((el: Element) => {
+        el.textContent = 'UNLOCKED';
+        el.className = 'pm-status unlocked';
+    });
 
-    // Make card clickable for fullscreen view
-    if (card && mediaUrl) {
-        card.style.cursor = 'pointer';
-        card.onclick = () => _openPaidMediaModal(mediaUrl, mediaType || 'photo');
-    }
+    document.querySelectorAll(`[id="pmCard_${pmId}"]`).forEach((card: Element) => {
+        if (mediaUrl) {
+            (card as HTMLElement).style.cursor = 'pointer';
+            (card as HTMLElement).onclick = () => _openPaidMediaModal(mediaUrl, mediaType || 'photo');
+        }
+    });
 }
 
 /** Fullscreen modal to view unlocked media */
@@ -7604,9 +7602,12 @@ async function _checkPaidMediaUnlocks(messages: any[]) {
             if (s.unlocked) {
                 _paidMediaUnlocked.add(id);
                 _revealPaidMedia(id, s.mediaUrl, s.mediaType);
+                console.log('[paid-media] revealed unlocked media:', id);
             }
         });
-    } catch {}
+    } catch (err) {
+        console.error('[paid-media] status check failed:', err);
+    }
 }
 
 // Expose to window for onclick handlers
