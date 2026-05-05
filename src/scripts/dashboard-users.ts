@@ -889,7 +889,7 @@ async function updateChatterPending(u: any, gen?: number) {
 }
 
 /** Routine calendar — shows each day of the current month with upload status */
-function renderRoutineCalendar(u: any) {
+async function renderRoutineCalendar(u: any) {
     const section = document.getElementById('routineCalendarSection');
     const grid = document.getElementById('routineCalendarGrid');
     const calToggle = document.getElementById('dpCalToggle');
@@ -898,13 +898,23 @@ function renderRoutineCalendar(u: any) {
     const routine = u.routine || '';
     if (!routine) { section.style.display = 'none'; if (calToggle) calToggle.style.display = 'none'; return; }
 
-    const history: any[] = u.routineHistory || u.routinehistory || [];
-    const routineEntries = history.filter((h: any) => h.isRoutine && h.timestamp);
+    // Fetch routine entries from the dedicated routines table
+    const email = (u.member_id || u.email || u.memberId || '').toLowerCase();
+    let routineEntries: any[] = [];
+    try {
+        const res = await fetch(`/api/routines-history?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+            const data = await res.json();
+            routineEntries = data.entries || [];
+        }
+    } catch { /* fall back to empty */ }
 
     // Build a map: date string → status
     const dayMap: Record<string, string> = {};
     routineEntries.forEach((h: any) => {
-        const d = new Date(h.timestamp);
+        const ts = h.submitted_at || h.timestamp;
+        if (!ts) return;
+        const d = new Date(ts);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         // If multiple entries for same day, priority: approve > pending > reject
         const prev = dayMap[key];
