@@ -539,20 +539,34 @@ async function updateReviewQueue(u: any) {
 
         const count = u.reviewQueue.length;
         qSec.style.display = 'block';
+
+        // Sign all thumbnail/proof URLs in parallel before rendering
+        const items = u.reviewQueue.map((t: any) => {
+            const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
+            const rawUrl = isVideo ? (t.thumbnail_url || t.proofUrl) : t.proofUrl;
+            return { t, isVideo, rawUrl };
+        });
+        const signedUrls = await Promise.all(items.map(it => it.rawUrl ? getSignedUrl(it.rawUrl) : Promise.resolve('')));
+
         qSec.innerHTML = `
             <div class="dp-divider-label" style="margin-bottom:16px;">
                 <span class="dp-divider-text">PENDING REVIEW</span>
                 <span style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);font-weight:700;letter-spacing:2px;">${count}</span>
             </div>
             <div class="cs-stage">
-                ${u.reviewQueue.map((t: any, i: number) => {
+                ${items.map((it, i: number) => {
+            const { t, isVideo } = it;
+            const signedUrl = signedUrls[i];
             const isRoutine = t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine';
             const actType = isRoutine ? 'DAILY ROUTINE' : 'TASK';
             const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-            const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-            const mediaIcon = isVideo
-                ? `<svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(197,160,89,0.4)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`
-                : `<svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(197,160,89,0.35)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`;
+
+            const hasPreview = !!signedUrl;
+            const bgContent = hasPreview
+                ? `<img src="${signedUrl}" style="width:100%;height:100%;object-fit:cover;" />${isVideo ? '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg></div>' : ''}`
+                : (isVideo
+                    ? `<svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(197,160,89,0.4)"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`
+                    : `<svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(197,160,89,0.35)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>`);
 
             const mid = (count - 1) / 2;
             const off = i - mid;
@@ -561,7 +575,7 @@ async function updateReviewQueue(u: any) {
 
             return `
                     <div class="cs-card" style="--off:${off};--abs:${absOff};z-index:${zIdx}" onclick="window.openModById('${t.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
-                        <div class="cs-card-bg">${mediaIcon}</div>
+                        <div class="cs-card-bg" style="${hasPreview ? 'display:flex;align-items:center;justify-content:center;overflow:hidden;' : ''}">${bgContent}</div>
                         <div class="cs-card-overlay">
                             <div class="cs-card-type" style="color:${isRoutine ? '#00ff00' : '#c5a059'}">${actType}</div>
                             <div class="cs-card-date">${dateStr}</div>
