@@ -426,6 +426,13 @@ function renderKneelSection(u: any) {
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
 
+    // Update header kneeling stat
+    const vuKneel = document.getElementById('vuKneelToday');
+    if (vuKneel) {
+        vuKneel.innerText = isLocked ? `${display} ⏳` : display;
+        vuKneel.style.color = isOverGoal ? '#e4cda0' : '#fff';
+    }
+
     const statusColor = isLocked ? 'rgba(197,160,89,0.5)' : _tHex();
     const statusBg = isLocked ? 'rgba(197,160,89,0.05)' : _tAc(0.1);
     const statusBorder = isLocked ? 'rgba(197,160,89,0.15)' : _tAc(0.35);

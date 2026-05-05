@@ -1697,6 +1697,12 @@ export default function DashboardPage() {
                                         <span className="vu-stat-label">LABOR</span>
                                         <span id="dMirrorKneel" className="vu-stat-num">0 h</span>
                                     </div>
+                                    <div className="vu-stat-sep"></div>
+                                    <div className="vu-stat">
+                                        <span className="vu-stat-icon">⬡</span>
+                                        <span className="vu-stat-label">KNEELING</span>
+                                        <span id="vuKneelToday" className="vu-stat-num">0 / 8</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
