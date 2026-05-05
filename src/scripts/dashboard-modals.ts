@@ -164,22 +164,16 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     // Media - contained in box, click opens lightbox
     if (mediaUrl) {
         if (isVideo) {
-            // Show thumbnail instead of loading video — saves bandwidth
-            const thumbSrc = thumbnailUrl || '';
-            if (thumbSrc) {
-                mediaBox.innerHTML = `<div style="position:relative;width:100%;height:100%;cursor:pointer;">
-                    <img src="${thumbSrc}" class="m-img" style="width:100%;height:100%;object-fit:cover;">
-                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);transition:background 0.2s;">
-                        <svg width="56" height="56" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg>
-                    </div>
-                </div>`;
-            } else {
-                mediaBox.innerHTML = `<div style="position:relative;width:100%;height:100%;cursor:pointer;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
-                    <svg width="56" height="56" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg>
-                </div>`;
-            }
-            // Click anywhere on the thumbnail to open lightbox with video
-            mediaBox.querySelector('div')?.addEventListener('click', () => openLightbox(mediaUrl, true));
+            // Modal is for reviewing — load the actual video with controls
+            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline preload="metadata" poster="${thumbnailUrl || ''}"></video>`;
+            const expandBtn = document.createElement('div');
+            expandBtn.innerHTML = '&#x26F6;';
+            expandBtn.title = 'Expand';
+            expandBtn.style.cssText = 'position:absolute;top:10px;right:10px;width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;font-size:1rem;transition:0.2s;';
+            expandBtn.addEventListener('mouseenter', () => { expandBtn.style.background = 'rgba(255,255,255,0.15)'; });
+            expandBtn.addEventListener('mouseleave', () => { expandBtn.style.background = 'rgba(0,0,0,0.7)'; });
+            expandBtn.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(mediaUrl, true); });
+            mediaBox.appendChild(expandBtn);
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" class="m-img">`;
             const mediaEl = mediaBox.querySelector('.m-img') as HTMLElement;
