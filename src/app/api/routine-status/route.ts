@@ -7,90 +7,49 @@ export const dynamic = "force-dynamic";
 
 const TTL = 15_000; // 15s cache
 
-// Resolve tasks row for any memberId (UUID or legacy email)
-async function getTaskRow(memberId: string) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-
-    if (isUuid) {
-        // Try by ID (UUID primary key)
-        const { data } = await supabaseAdmin
-            .from('tasks')
-            .select('Taskdom_History')
-            .eq('ID', memberId)
-            .maybeSingle();
-        if (data) return data;
-
-        // Fall back to email-keyed row
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('member_id')
-            .eq('ID', memberId)
-            .maybeSingle();
-        if (profile?.member_id) {
-            const { data: row } = await supabaseAdmin
-                .from('tasks')
-                .select('Taskdom_History')
-                .ilike('member_id', profile.member_id)
-                .maybeSingle();
-            if (row) return row;
-        }
-    } else {
-        // Legacy email lookup
-        const { data } = await supabaseAdmin
-            .from('tasks')
-            .select('Taskdom_History')
-            .ilike('member_id', memberId)
-            .maybeSingle();
-        if (data) return data;
-    }
-    return null;
-}
-
 async function getRoutineStatus(memberId: string, tz: string) {
-    // Get routine name from profiles — UUID uses id column, email uses member_id
+    // Get routine name from profiles
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
     const { data: profile } = isUuid
-        ? await supabaseAdmin.from('profiles').select('routine').eq('ID', memberId).maybeSingle()
-        : await supabaseAdmin.from('profiles').select('routine').ilike('member_id', memberId).maybeSingle();
+        ? await supabaseAdmin.from('profiles').select('routine, member_id').eq('ID', memberId).maybeSingle()
+        : await supabaseAdmin.from('profiles').select('routine, member_id').ilike('member_id', memberId).maybeSingle();
 
     const routine = profile?.routine || null;
+    const email = (profile?.member_id || memberId).toLowerCase();
 
-    // Get Taskdom_History with legacy fallback
-    const taskRow = await getTaskRow(memberId);
-
+    // Check today's routine from the dedicated routines table
     let uploadedToday = false;
     let todayStatus = 'none';
-    if (taskRow?.Taskdom_History) {
-        try {
-            const history = typeof taskRow.Taskdom_History === 'string'
-                ? JSON.parse(taskRow.Taskdom_History)
-                : taskRow.Taskdom_History;
 
-            const now = new Date();
-            const localHour = parseInt(
-                new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
-                10
-            );
-            const windowDate = new Date(now);
-            if (localHour < 6) windowDate.setDate(windowDate.getDate() - 1);
-            const todayStr = windowDate.toLocaleDateString('en-CA', { timeZone: tz });
+    const now = new Date();
+    const localHour = parseInt(
+        new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
+        10
+    );
+    const windowDate = new Date(now);
+    if (localHour < 6) windowDate.setDate(windowDate.getDate() - 1);
+    const todayStr = windowDate.toLocaleDateString('en-CA', { timeZone: tz });
 
-            const todaysRoutine = Array.isArray(history) && history.find((t: any) => {
-                if (!t.isRoutine || !t.timestamp) return false;
-                try {
-                    // Check both local-window date and simple local date to handle midnight uploads
-                    const localDate = new Date(t.timestamp).toLocaleDateString('en-CA', { timeZone: tz });
-                    return localDate === todayStr;
-                } catch { return false; }
-            });
+    const { data: todaysRoutines } = await supabaseAdmin
+        .from('routines')
+        .select('submitted_at, status')
+        .eq('member_id', email)
+        .gte('submitted_at', todayStr + 'T00:00:00Z')
+        .order('submitted_at', { ascending: false })
+        .limit(5);
 
-            if (todaysRoutine) {
-                uploadedToday = true;
-                const raw = (todaysRoutine.status || todaysRoutine.Status || 'pending').toLowerCase();
-                todayStatus = raw === 'approve' ? 'approved' : raw === 'reject' ? 'rejected' : raw;
-            }
-        } catch (err) {
-            console.error('Failed parsing Taskdom_History', err);
+    if (todaysRoutines && todaysRoutines.length > 0) {
+        // Check if any match today's window
+        for (const r of todaysRoutines) {
+            try {
+                const localDate = new Date(r.submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
+                if (localDate === todayStr) {
+                    uploadedToday = true;
+                    const raw = (r.status || 'pending').toLowerCase();
+                    todayStatus = raw === 'approve' ? 'approved' : raw === 'reject' ? 'rejected' : raw;
+                    break;
+                }
+            } catch { /* skip */ }
         }
     }
 

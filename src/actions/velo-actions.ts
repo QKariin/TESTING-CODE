@@ -93,12 +93,14 @@ export async function getAdminDashboardData() {
             { data: globalSettings },
             { data: tasksData },
             { data: authData },
+            { data: pendingRoutines },
         ] = await Promise.all([
             getAdmin().from('profiles').select('*').order('name'),
             getAdmin().from('daily_tasks').select('*'),
             getAdmin().from('system_rules').select('*'),
             getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", kneel_history'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
+            getAdmin().from('routines').select('*').eq('status', 'pending'),
         ]);
 
         if (pError) throw pError;
@@ -139,14 +141,30 @@ export async function getAdminDashboardData() {
         const _isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
         const reviewQueue: any[] = [];
+        // Tasks from Taskdom_History (non-routine only)
         for (const row of (tasksData || [])) {
             let history: any[] = [];
             try { history = typeof row['Taskdom_History'] === 'string' ? JSON.parse(row['Taskdom_History']) : (row['Taskdom_History'] || []); } catch { }
             const rawMid = row.member_id || '';
             const resolvedMid = _isUuid(rawMid) ? rawMid : (emailToProfileUuid[rawMid.toLowerCase()] || rawMid);
-            for (const entry of history.filter((e: any) => e.status === 'pending')) {
+            for (const entry of history.filter((e: any) => e.status === 'pending' && !e.isRoutine)) {
                 reviewQueue.push({ ...entry, member_id: resolvedMid });
             }
+        }
+        // Routines from dedicated routines table
+        for (const r of (pendingRoutines || [])) {
+            const resolvedMid = emailToProfileUuid[r.member_id] || r.member_id;
+            reviewQueue.push({
+                id: r.id,
+                text: 'Daily Routine',
+                proofUrl: r.proof_url,
+                proofType: r.proof_type,
+                thumbnail_url: r.thumbnail_url,
+                timestamp: r.submitted_at,
+                status: r.status,
+                isRoutine: true,
+                member_id: resolvedMid,
+            });
         }
 
         return {
@@ -635,44 +653,39 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
         const profile = await getProfile(memberId);
         if (!profile) return null;
 
-        let history: any[] = [];
-        if (Array.isArray(profile.routine_history)) {
-            history = profile.routine_history;
-        } else if (typeof profile.routine_history === 'string') {
-            try { history = JSON.parse(profile.routine_history); } catch (e) { history = []; }
-        }
+        // Check routines table for this submission
+        const { data: routineEntry } = await getAdmin()
+            .from('routines')
+            .select('*')
+            .eq('id', submissionId)
+            .maybeSingle();
 
-        const taskIndex = history.findIndex((t: any) =>
-            t.id === submissionId ||
-            (t.status === 'pending' && t.proofUrl)
-        );
+        if (routineEntry) {
+            // Update routine status
+            await getAdmin()
+                .from('routines')
+                .update({
+                    status: decision,
+                    reviewed_at: new Date().toISOString(),
+                    points_awarded: decision === 'approve' ? 50 : 0,
+                })
+                .eq('id', submissionId);
 
-        if (taskIndex > -1) {
-            history[taskIndex].status = decision;
-            history[taskIndex].completed = (decision === 'approve');
-
-            let updates: any = { routine_history: history };
-
-            // Counters
             let params = profile.parameters || {};
-
             if (decision === 'approve') {
                 params.taskdom_current_streak = (params.taskdom_current_streak || 0) + 1;
             } else if (decision === 'reject') {
                 params.taskdom_current_streak = 0;
             }
-            updates.parameters = params;
 
-            // Rank
-            const tempRecord = { ...profile, ...updates, ...params };
+            const tempRecord = { ...profile, parameters: params, ...params };
             const report = getHierarchyReport(tempRecord);
-            updates.hierarchy = report.currentRank;
 
-            await updateProfile(profile.ID, updates);
-            return { item: { ...profile, ...updates }, report };
+            await updateProfile(profile.ID, { parameters: params, hierarchy: report.currentRank });
+            return { item: { ...profile, parameters: params, hierarchy: report.currentRank }, report };
         }
-        return null;
 
+        return null;
     } catch (e) {
         console.error("Review Error:", e);
         return null;

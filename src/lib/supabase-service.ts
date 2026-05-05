@@ -331,7 +331,30 @@ export const DbService = {
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        // 1. Update Taskdom_History and legacy columns in tasks table
+        // Check routines table first
+        const { data: routineEntry } = await supabaseAdmin
+            .from('routines')
+            .select('id')
+            .eq('id', taskId)
+            .maybeSingle();
+
+        if (routineEntry) {
+            // ── ROUTINE: update in routines table ──
+            await supabaseAdmin
+                .from('routines')
+                .update({
+                    status: 'approve',
+                    reviewed_at: new Date().toISOString(),
+                    points_awarded: bonus,
+                })
+                .eq('id', taskId);
+
+            await this.awardPoints(profileId, bonus);
+            try { await this.sendMessage(profileId, `ROUTINE APPROVED - ${bonus} POINTS AWARDED`, 'system'); } catch (_) { }
+            return;
+        }
+
+        // ── TASK: update in Taskdom_History ──
         const row = await this._getTaskRow(profileId);
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
@@ -343,205 +366,210 @@ export const DbService = {
             if (comment) history[idx].adminComment = comment;
         }
 
-        // Increment completed task count by 1 - only for real tasks, not routines
-        const isRoutineEntry = idx > -1 ? !!history[idx].isRoutine : false;
         const currentCount = parseInt(row?.['Taskdom_CompletedTasks'] || '0', 10) || 0;
-        const newCount = isRoutineEntry ? currentCount : currentCount + 1;
 
         await supabaseAdmin
             .from('tasks')
             .update({
                 'Taskdom_History': JSON.stringify(history),
                 'Status': 'approve',
-                'Taskdom_CompletedTasks': String(newCount)
+                'Taskdom_CompletedTasks': String(currentCount + 1)
             })
             .eq('ID', row.ID);
 
-        // 2. Award points only - no wallet/coins for tasks
         await this.awardPoints(profileId, bonus);
-
-        // 3. Send system chat message
-        try {
-            await this.sendMessage(profileId, `TASK APPROVED - ${bonus} POINTS AWARDED`, 'system');
-        } catch (_) { }
+        try { await this.sendMessage(profileId, `TASK APPROVED - ${bonus} POINTS AWARDED`, 'system'); } catch (_) { }
     },
 
     async rejectTask(taskId: string, profileId: string) {
-        // 1. Update Taskdom_History and legacy Status/Wallet in tasks table
+        // Check routines table first
+        const { data: routineEntry } = await supabaseAdmin
+            .from('routines')
+            .select('id')
+            .eq('id', taskId)
+            .maybeSingle();
+
+        if (routineEntry) {
+            // ── ROUTINE: update in routines table, no penalty ──
+            await supabaseAdmin
+                .from('routines')
+                .update({ status: 'reject', reviewed_at: new Date().toISOString() })
+                .eq('id', taskId);
+            try { await this.sendMessage(profileId, `ROUTINE REJECTED - NO POINTS AWARDED`, 'system'); } catch (_) { }
+            return;
+        }
+
+        // ── TASK: update in Taskdom_History, apply 300 coin penalty ──
         const row = await this._getTaskRow(profileId);
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
-
-        const isRoutine = idx > -1 ? !!history[idx].isRoutine : false;
 
         if (idx > -1) {
             history[idx].status = 'reject';
             history[idx].completed = false;
         }
 
-        // Routines get no penalty - only tasks lose 300 coins
-        const taskUpdates: any = {
-            'Taskdom_History': JSON.stringify(history),
-            'Status': 'reject',
-        };
-        if (!isRoutine) {
-            taskUpdates['Wallet'] = Math.max(0, (row?.Wallet || 0) - 300);
-        }
-
         await supabaseAdmin
             .from('tasks')
-            .update(taskUpdates)
+            .update({
+                'Taskdom_History': JSON.stringify(history),
+                'Status': 'reject',
+                'Wallet': Math.max(0, (row?.Wallet || 0) - 300),
+            })
             .eq('ID', row.ID);
 
-        // 2. Sync wallet with profiles table (only for tasks)
-        if (!isRoutine) {
-            try {
-                const profile = await this.getProfile(profileId);
-                if (profile && profile.ID) {
-                    const pWallet = Math.max(0, (profile.wallet || 0) - 300);
-                    await this.updateProfile(profile.ID, { wallet: pWallet });
-                }
-            } catch (_) { }
-        }
-
-        // 3. Send system chat message
         try {
-            const msg = isRoutine
-                ? `ROUTINE REJECTED - NO POINTS AWARDED`
-                : `TASK REJECTED - 300 COINS PENALTY APPLIED`;
-            await this.sendMessage(profileId, msg, 'system');
+            const profile = await this.getProfile(profileId);
+            if (profile && profile.ID) {
+                const pWallet = Math.max(0, (profile.wallet || 0) - 300);
+                await this.updateProfile(profile.ID, { wallet: pWallet });
+            }
         } catch (_) { }
+
+        try { await this.sendMessage(profileId, `TASK REJECTED - 300 COINS PENALTY APPLIED`, 'system'); } catch (_) { }
     },
 
     async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false, thumbnailUrl: string | null = null) {
         const now = new Date().toISOString();
         const taskId = Date.now().toString();
-
-        // 1. Get current Taskdom_History from tasks table
-        const row = await this._getTaskRow(memberId);
-        const history: any[] = this._parseHistory(row);
-
-        // 2. Build new entry
-        const newEntry: any = {
-            id: taskId,
-            text: isRoutine ? "Daily Routine" : taskText,
-            proofUrl: proofUrl,
-            proofType: (proofType || '').startsWith('video') ? 'video' : 'image',
-            thumbnail_url: thumbnailUrl || undefined,
-            timestamp: now,
-            status: 'pending',
-            completed: false,
-            isRoutine: isRoutine,
-            category: isRoutine ? 'Routine' : undefined
-        };
-
-        // Prevent duplicates: remove any existing pending routine for today before adding
-        if (isRoutine) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const dupIdx = history.findIndex((t: any) =>
-                t.isRoutine === true && t.status === 'pending' &&
-                typeof t.timestamp === 'string' && t.timestamp.startsWith(todayStr)
-            );
-            if (dupIdx > -1) history.splice(dupIdx, 1);
-        }
-
-        history.unshift(newEntry);
-
         const profile = await this.getProfile(memberId);
-        const newHistory = JSON.stringify(history);
+        const email = (profile?.member_id || memberId).toLowerCase();
 
-        // 3. Safe write: update if row exists, insert if not
-        // Routine uploads must NOT touch taskdom_active_task or taskdom_pending_state
-        if (row) {
-            const taskUpdates: any = { Status: 'pending', 'Taskdom_History': newHistory };
-            if (!isRoutine) {
-                taskUpdates.taskdom_active_task = null;
-                taskUpdates.taskdom_pending_state = null;
-            }
-            const { error } = await supabaseAdmin
-                .from('tasks')
-                .update(taskUpdates)
-                .eq('ID', row.ID);
-            if (error) throw error;
-        } else {
-            const insertData: any = {
-                ID: profile?.ID || memberId,
-                member_id: profile?.member_id || '',
-                Name: profile?.name || 'Slave',
-                Status: 'pending',
-                'Taskdom_History': newHistory,
-            };
-            if (!isRoutine) {
-                insertData.taskdom_active_task = null;
-                insertData.taskdom_pending_state = null;
-            }
-            const { error } = await supabaseAdmin.from('tasks').insert(insertData);
-            if (error) throw error;
-        }
-
-        // 4. If routine, update consistency in profiles.parameters
         if (isRoutine) {
+            // ── ROUTINE: write to dedicated routines table ──
+            // Remove any existing pending routine for today before adding
+            const todayStr = new Date().toISOString().split('T')[0];
+            await supabaseAdmin
+                .from('routines')
+                .delete()
+                .eq('member_id', email)
+                .eq('status', 'pending')
+                .gte('submitted_at', todayStr + 'T00:00:00Z')
+                .lt('submitted_at', todayStr + 'T23:59:59Z');
+
+            const { error: routineErr } = await supabaseAdmin
+                .from('routines')
+                .insert({
+                    id: taskId,
+                    member_id: email,
+                    routine_name: profile?.routine || 'Daily Routine',
+                    proof_url: proofUrl,
+                    proof_type: (proofType || '').startsWith('video') ? 'video' : 'image',
+                    thumbnail_url: thumbnailUrl || null,
+                    status: 'pending',
+                    submitted_at: now,
+                });
+            if (routineErr) throw routineErr;
+
+            // Update consistency streak from routines table
             try {
-                const profileForHistory = profile || await this.getProfile(memberId);
-                if (profileForHistory?.ID) {
+                const { data: prevRoutines } = await supabaseAdmin
+                    .from('routines')
+                    .select('submitted_at, status')
+                    .eq('member_id', email)
+                    .neq('status', 'reject')
+                    .order('submitted_at', { ascending: false })
+                    .limit(60);
+
+                const toDay = (d: Date) => {
+                    const adjusted = new Date(d);
+                    if (adjusted.getUTCHours() < 6) adjusted.setUTCDate(adjusted.getUTCDate() - 1);
+                    return adjusted.toISOString().split('T')[0];
+                };
+
+                // Deduplicate by day
+                const days: string[] = [];
+                for (const r of (prevRoutines || [])) {
+                    const day = toDay(new Date(r.submitted_at));
+                    if (days.length === 0 || days[days.length - 1] !== day) days.push(day);
+                }
+
+                const todayDay = toDay(new Date(now));
+                const yesterdayDate = new Date();
+                yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
+                const yesterdayDay = toDay(yesterdayDate);
+
+                let consistency = 1;
+                if (days.length > 1) {
+                    if (days[0] === todayDay && days[1] === yesterdayDay) {
+                        // Count consecutive days
+                        consistency = 1;
+                        for (let i = 1; i < days.length; i++) {
+                            const prev = new Date(days[i - 1] + 'T12:00:00Z');
+                            const curr = new Date(days[i] + 'T12:00:00Z');
+                            const diff = Math.round((prev.getTime() - curr.getTime()) / (24 * 60 * 60 * 1000));
+                            if (diff === 1) consistency++;
+                            else break;
+                        }
+                    } else if (days[0] === todayDay) {
+                        // Submitted today but gap before — keep at 1
+                        consistency = 1;
+                    }
+                }
+
+                if (profile?.ID) {
                     const { data: prof } = await supabaseAdmin
                         .from('profiles')
                         .select('parameters')
-                        .eq('ID', profileForHistory.ID)
+                        .eq('ID', profile.ID)
                         .maybeSingle();
-
                     const params = prof?.parameters || {};
-
-                    // Find PREVIOUS routine upload (exclude the one just submitted)
-                    // Only rejected breaks streak
-                    const approvedRoutines = history
-                        .filter((h: any) => h.isRoutine === true && h.status !== 'reject' && h.timestamp && h.id !== taskId)
-                        .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-                    const toDay = (d: Date) => {
-                        const adjusted = new Date(d);
-                        if (adjusted.getUTCHours() < 6) adjusted.setUTCDate(adjusted.getUTCDate() - 1);
-                        return adjusted.toISOString().split('T')[0];
-                    };
-
-                    const today = new Date(now);
-                    const todayDay = toDay(today);
-                    let consistency = 1; // first submission ever = 1
-
-                    if (approvedRoutines.length > 0) {
-                        const prevEntry = new Date(approvedRoutines[0].timestamp);
-                        const prevDay = toDay(prevEntry);
-
-                        if (prevDay === todayDay) {
-                            // Already submitted today (duplicate) — keep current value
-                            consistency = Number(params.consistency) || 1;
-                        } else {
-                            const yesterday = new Date(today);
-                            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-                            if (prevDay === toDay(yesterday)) {
-                                // Previous submission was yesterday — increment streak
-                                consistency = (Number(params.consistency) || 0) + 1;
-                            }
-                            // else: gap > 1 day — reset to 1 (already default)
-                        }
-                    }
-
                     const bestStreak = Math.max(consistency, Number(params.routine_streak || 0));
                     await supabaseAdmin
                         .from('profiles')
                         .update({
-                            routinestreak: consistency,
-                            bestRoutinestreak: bestStreak,
                             parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
                         })
-                        .eq('ID', profileForHistory.ID);
+                        .eq('ID', profile.ID);
                 }
             } catch (histErr) {
                 console.warn('[submitTask] Could not update consistency:', histErr);
             }
+        } else {
+            // ── TASK: write to Taskdom_History as before ──
+            const row = await this._getTaskRow(memberId);
+            const history: any[] = this._parseHistory(row);
+
+            const newEntry: any = {
+                id: taskId,
+                text: taskText,
+                proofUrl: proofUrl,
+                proofType: (proofType || '').startsWith('video') ? 'video' : 'image',
+                thumbnail_url: thumbnailUrl || undefined,
+                timestamp: now,
+                status: 'pending',
+                completed: false,
+            };
+
+            history.unshift(newEntry);
+            const newHistory = JSON.stringify(history);
+
+            if (row) {
+                const { error } = await supabaseAdmin
+                    .from('tasks')
+                    .update({
+                        Status: 'pending',
+                        'Taskdom_History': newHistory,
+                        taskdom_active_task: null,
+                        taskdom_pending_state: null,
+                    })
+                    .eq('ID', row.ID);
+                if (error) throw error;
+            } else {
+                const { error } = await supabaseAdmin.from('tasks').insert({
+                    ID: profile?.ID || memberId,
+                    member_id: profile?.member_id || '',
+                    Name: profile?.name || 'Slave',
+                    Status: 'pending',
+                    'Taskdom_History': newHistory,
+                    taskdom_active_task: null,
+                    taskdom_pending_state: null,
+                });
+                if (error) throw error;
+            }
         }
 
-        // 5. Send system chat message
+        // Send system chat message
         try {
             await this.sendMessage(memberId, isRoutine ? `ROUTINE UPLOADED - AWAITING APPROVAL` : `TASK SUBMITTED - AWAITING REVIEW`, 'system');
         } catch (_) { }

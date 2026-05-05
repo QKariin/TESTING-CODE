@@ -21,6 +21,15 @@ import { getOptimizedUrl } from './media';
 import { processCoinTransaction, secureUpdateTaskAction } from '@/actions/velo-actions';
 import { createClient } from '@/utils/supabase/client';
 
+// Debounced thumbnail backfill — prevents running on every realtime event
+let _backfillTimer: ReturnType<typeof setTimeout> | null = null;
+function debouncedBackfill() {
+    if (_backfillTimer) clearTimeout(_backfillTimer);
+    _backfillTimer = setTimeout(() => {
+        backfillThumbnails().catch(() => {});
+    }, 8000);
+}
+
 export function initDashboard() {
     // Audio Wake-Up Strategy
     document.addEventListener('click', () => {
@@ -79,6 +88,9 @@ export function initDashboard() {
     });
 
     console.log('Dashboard initialized. ID:', dayCode);
+
+    // Auto-backfill missing thumbnails in background (silent, no UI)
+    debouncedBackfill();
 }
 
 async function refreshQueueFromServer() {
@@ -96,6 +108,8 @@ async function refreshQueueFromServer() {
                 });
             });
             renderMainDashboard();
+            // Auto-generate thumbnails for any new video submissions missing them
+            debouncedBackfill();
         }
     } catch (err) {
         console.warn('[DASHBOARD] Queue refresh failed:', err);
@@ -904,7 +918,7 @@ export async function backfillThumbnails() {
             const updateRes = await fetch('/api/backfill-thumbnails', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ taskRowId: item.taskRowId, entryId: item.entryId, thumbnailUrl: thumbUrl })
+                body: JSON.stringify({ taskRowId: item.taskRowId, entryId: item.entryId, thumbnailUrl: thumbUrl, source: item.source || 'tasks' })
             });
             const updateData = await updateRes.json();
             if (updateData.success) { success++; console.log(`[backfill] ${item.entryId} done.`); }

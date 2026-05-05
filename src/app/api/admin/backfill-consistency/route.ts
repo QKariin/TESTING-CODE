@@ -28,7 +28,7 @@ function calcConsistency(timestamps: string[]): number {
         }
     }
 
-    // Check if the most recent day is today or yesterday — if not, streak is broken
+    // Check if the most recent day is today or yesterday
     const now = new Date();
     const todayDay = toDay(now);
     const yesterdayDate = new Date(now);
@@ -62,37 +62,7 @@ export async function POST() {
         { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Read from tasks.Taskdom_History — that's where routine entries actually live
-    const { data: tasks, error: taskErr } = await supabaseAdmin
-        .from('tasks')
-        .select('ID, member_id, Taskdom_History');
-
-    if (taskErr) return NextResponse.json({ error: taskErr.message }, { status: 500 });
-
-    // Build a map: email → routine timestamps (approved ones)
-    const routineMap: Record<string, { userId: string; timestamps: string[] }> = {};
-
-    for (const t of (tasks || [])) {
-        let history: any[] = [];
-        if (Array.isArray(t.Taskdom_History)) history = t.Taskdom_History;
-        else if (typeof t.Taskdom_History === 'string') {
-            try { history = JSON.parse(t.Taskdom_History); } catch { history = []; }
-        }
-
-        const routineTimestamps = history
-            .filter((h: any) => h.isRoutine === true && h.status !== 'reject')
-            .map((h: any) => h.timestamp)
-            .filter(Boolean);
-
-        if (t.member_id) {
-            routineMap[t.member_id.toLowerCase()] = {
-                userId: t.ID,
-                timestamps: routineTimestamps,
-            };
-        }
-    }
-
-    // Now update each profile's parameters.consistency
+    // Get all profiles
     const { data: profiles, error: profErr } = await supabaseAdmin
         .from('profiles')
         .select('ID, member_id, parameters');
@@ -104,8 +74,16 @@ export async function POST() {
 
     for (const p of (profiles || [])) {
         const email = (p.member_id || '').toLowerCase();
-        const entry = routineMap[email];
-        const timestamps = entry?.timestamps || [];
+
+        // Read routine history from the dedicated routines table
+        const { data: routines } = await supabaseAdmin
+            .from('routines')
+            .select('submitted_at')
+            .eq('member_id', email)
+            .neq('status', 'reject')
+            .order('submitted_at', { ascending: false });
+
+        const timestamps = (routines || []).map((r: any) => r.submitted_at);
         const consistency = calcConsistency(timestamps);
         const params = p.parameters || {};
 
@@ -113,8 +91,6 @@ export async function POST() {
         await supabaseAdmin
             .from('profiles')
             .update({
-                routinestreak: consistency,
-                bestRoutinestreak: bestStreak,
                 parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
             })
             .eq('ID', p.ID);
