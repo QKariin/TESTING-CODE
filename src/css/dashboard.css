@@ -5222,15 +5222,41 @@ h3,
    ═══════════════════════════════════════════════ */
 .vu-card {
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 28px;
     background: #0c0c0c;
     border-bottom: 1px solid rgba(197,160,89,0.08);
-    padding: 24px 32px 24px 0;
+    padding: 20px 0;
     flex-shrink: 0;
     overflow: hidden;
-    min-height: 180px;
+}
+/* 3-column grid */
+.vu-grid {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    min-height: 140px;
+}
+.vu-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    height: 100%;
+}
+.vu-col-identity {
+    justify-content: flex-start;
+    gap: 20px;
+    padding-left: 32px;
+}
+.vu-col-stats,
+.vu-col-kneel {
+    justify-content: center;
+}
+.vu-col-stats .vu-glass-card,
+.vu-col-kneel .vu-glass-card {
+    width: 100%;
+    min-width: 0;
 }
 
 /* Gold glow overlay */
@@ -5273,9 +5299,8 @@ h3,
 /* Multi-layered circle avatar */
 .vu-avatar-container {
     position: relative;
-    margin-left: 50px;
-    width: 130px;
-    height: 130px;
+    width: 120px;
+    height: 120px;
     flex-shrink: 0;
     z-index: 5;
 }
@@ -5308,8 +5333,8 @@ h3,
 /* Identity block */
 .vu-identity {
     z-index: 5;
-    flex-shrink: 0;
-    min-width: 160px;
+    flex-shrink: 1;
+    min-width: 0;
 }
 .vu-name-row {
     display: flex;
@@ -5370,7 +5395,7 @@ h3,
 }
 /* Kneeling card — wider */
 .vu-glass-card:last-of-type {
-    min-width: 260px;
+    min-width: 0;
 }
 
 /* Points / Capital glass card */
