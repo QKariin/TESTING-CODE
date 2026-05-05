@@ -118,25 +118,41 @@ async function refreshQueueFromServer() {
 
 // Module-level refs - prevent duplicate subscriptions and allow cleanup
 let _tasksWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
+let _routinesWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let _purchaseWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 
 function subscribeToDashboardTaskUpdates() {
     // Guard against duplicate subscriptions
-    if (_tasksWatchChannel) return;
-
-    // Realtime - fires instantly if Supabase realtime is enabled on tasks table
     const supabase = createClient();
-    _tasksWatchChannel = supabase
-        .channel('dashboard_tasks_watch')
-        .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'tasks',
-        }, () => {
-            console.log('[DASHBOARD REALTIME] Tasks changed - refreshing...');
-            refreshQueueFromServer();
-        });
-    _tasksWatchChannel.subscribe();
+
+    if (!_tasksWatchChannel) {
+        _tasksWatchChannel = supabase
+            .channel('dashboard_tasks_watch')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'tasks',
+            }, () => {
+                console.log('[DASHBOARD REALTIME] Tasks changed - refreshing...');
+                refreshQueueFromServer();
+            });
+        _tasksWatchChannel.subscribe();
+    }
+
+    // Realtime on routines table — fires when routine is submitted/reviewed
+    if (!_routinesWatchChannel) {
+        _routinesWatchChannel = supabase
+            .channel('dashboard_routines_watch')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'routines',
+            }, () => {
+                console.log('[DASHBOARD REALTIME] Routines changed - refreshing...');
+                refreshQueueFromServer();
+            });
+        _routinesWatchChannel.subscribe();
+    }
 
     // Polling fallback - catches anything the realtime subscription misses
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
@@ -209,6 +225,17 @@ export function reconnectDashboardMain() {
         if (state === 'errored' || state === 'closed') {
             console.log('[DASHBOARD-MAIN] tasks channel dead, will reconnect');
             _tasksWatchChannel = null;
+            needsResub = true;
+        }
+    } else {
+        needsResub = true;
+    }
+
+    if (_routinesWatchChannel) {
+        const state = (_routinesWatchChannel as any).state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[DASHBOARD-MAIN] routines channel dead, will reconnect');
+            _routinesWatchChannel = null;
             needsResub = true;
         }
     } else {
