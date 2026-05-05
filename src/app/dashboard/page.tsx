@@ -1945,6 +1945,11 @@ export default function DashboardPage() {
                                     )}
                                 </div>
 
+                                {/* ── ADMIN TOOLS ── */}
+                                <div className="dp-section" style={{ borderTop: '1px solid rgba(197,160,89,0.06)', paddingTop: 16 }}>
+                                    <button onClick={() => (window as any).backfillThumbnails?.()} style={{ width: '100%', padding: '10px', background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: 'rgba(197,160,89,0.6)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer' }}>GENERATE MISSING THUMBNAILS</button>
+                                </div>
+
                                 </div>{/* close sections */}
                                 </div>{/* close chatterProfilePanel */}
                             </div>
