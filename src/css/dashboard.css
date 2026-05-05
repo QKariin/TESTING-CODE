@@ -5399,32 +5399,7 @@ h3,
     flex-shrink: 0;
 }
 
-/* ── Kneeling glass card ── */
-.vu-glass-kneel {
-    min-width: 220px;
-}
-.vu-kneel-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-}
-.vu-kneel-status {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.34rem;
-    color: rgba(197,160,89,0.45);
-    letter-spacing: 2px;
-    font-weight: 700;
-}
-.vu-kneel-num {
-    font-family: 'Cinzel', serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 1px;
-    display: block;
-    margin-bottom: 8px;
-}
+/* ── Kneeling bar + dots (inside glass card) ── */
 .vu-kneel-bar {
     width: 100%;
     height: 3px;
@@ -5435,7 +5410,7 @@ h3,
 }
 .vu-kneel-fill {
     height: 100%;
-    background: #d4b47c;
+    background: rgba(212,180,124,0.7);
     border-radius: 2px;
     width: 0%;
     transition: width 0.5s;

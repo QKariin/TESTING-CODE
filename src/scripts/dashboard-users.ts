@@ -419,11 +419,12 @@ function renderKneelSection(u: any) {
     let dotsHtml = '';
     for (let h = 0; h < 24; h++) {
         const lit = kneelHours.has(h);
-        const dim = !lit && h < currentHour;
-        const bg = lit ? 'var(--gold)' : dim ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
-        const shadow = lit ? '0 0 6px rgba(var(--gold-rgb),0.6)' : 'none';
-        const border = lit ? '1px solid #f0d080' : dim ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.06)';
-        dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
+        const isFuture = h > currentHour;
+        const missed = !lit && h <= currentHour;
+        const bg = lit ? 'rgba(212,180,124,0.85)' : missed ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)';
+        const shadow = lit ? '0 0 4px rgba(212,180,124,0.4)' : 'none';
+        const border = lit ? '1px solid rgba(212,180,124,0.6)' : isFuture ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.02)';
+        dotsHtml += `<div title="${h}:00" style="height:5px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};"></div>`;
     }
 
     // Update header kneeling section

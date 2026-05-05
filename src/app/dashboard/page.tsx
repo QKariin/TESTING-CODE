@@ -1679,28 +1679,26 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Glass card — points & capital */}
+                            {/* Glass card — points & coins */}
                             <div className="vu-glass-card">
                                 <div className="vu-glass-row">
                                     <div className="vu-glass-item">
-                                        <span className="vu-glass-label">MERIT</span>
+                                        <span className="vu-glass-label">POINTS</span>
                                         <span id="dMirrorPoints" className="vu-glass-val">0</span>
                                     </div>
                                     <div className="vu-glass-sep"></div>
                                     <div className="vu-glass-item">
-                                        <span className="vu-glass-label">CAPITAL</span>
+                                        <span className="vu-glass-label">COINS</span>
                                         <span id="dMirrorWallet" className="vu-glass-val">0</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Glass card — kneeling */}
-                            <div className="vu-glass-card vu-glass-kneel">
-                                <div className="vu-kneel-top">
-                                    <span className="vu-glass-label">KNEELING</span>
-                                    <span id="vuKneelStatus" className="vu-kneel-status">—</span>
-                                </div>
-                                <span id="vuKneelToday" className="vu-kneel-num">0 / 8</span>
+                            {/* Glass card — kneeling (same size, just bar + dots) */}
+                            <div className="vu-glass-card">
+                                <span className="vu-glass-label" style={{ marginBottom: 8 }}>KNEELING</span>
+                                <span id="vuKneelToday" style={{ display: 'none' }}>0 / 8</span>
+                                <span id="vuKneelStatus" style={{ display: 'none' }}>—</span>
                                 <div className="vu-kneel-bar">
                                     <div id="vuKneelFill" className="vu-kneel-fill"></div>
                                 </div>
