@@ -1825,10 +1825,12 @@ export default function DashboardPage() {
 
                                 {/* ── DIRECTIVE (collapsible) ── */}
                                 <div className="dp-section">
-                                    <div className="dp-divider-label dp-directive-toggle" onClick={() => { const d = document.getElementById('taskDrawer'); if (d) d.classList.toggle('open'); }}>
-                                        <span id="statusDot" className="status-dot unproductive"></span>
-                                        <span className="dp-divider-text">DIRECTIVES</span>
-                                        <span id="dActiveStatus" className="dp-status-badge">IDLE</span>
+                                    <div className="dp-directive-header" onClick={() => { const d = document.getElementById('taskDrawer'); if (d) d.classList.toggle('open'); }}>
+                                        <div className="dp-divider-label">
+                                            <span id="statusDot" className="status-dot unproductive"></span>
+                                            <span className="dp-divider-text">DIRECTIVES</span>
+                                        </div>
+                                        <div id="dActiveStatus" className="dp-directive-status">IDLE</div>
                                     </div>
                                     <div id="taskDrawer" className="task-drawer">
                                         <div id="activeTaskContent" className="dp-task-card">
@@ -1841,10 +1843,11 @@ export default function DashboardPage() {
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                         <div id="qListContainer" className="dp-queue-list"></div>
                                         <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
-                                        {/* Review queue */}
-                                        <div id="userQueueSec" style={{ display: 'none', marginTop: 16 }}></div>
                                     </div>
                                 </div>
+
+                                {/* ── PENDING REVIEW (always visible) ── */}
+                                <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
 
                                 {/* ── KNEELING ── */}
                                 <div className="dp-section">

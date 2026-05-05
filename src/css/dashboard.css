@@ -5422,15 +5422,32 @@ h3,
     white-space: nowrap;
 }
 
-/* ── Directive Toggle (collapsible header) ── */
-.dp-directive-toggle {
+/* ── Directive Header (collapsible) ── */
+.dp-directive-header {
     cursor: pointer;
     transition: background 0.2s;
-    padding: 6px 0;
-    border-radius: 4px;
+    text-align: center;
 }
-.dp-directive-toggle:hover {
+.dp-directive-header:hover {
     background: rgba(197,160,89,0.02);
+}
+.dp-directive-status {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.36rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.15);
+    margin-top: 8px;
+    text-align: center;
+    transition: color 0.2s;
+}
+.dp-directive-active {
+    color: var(--gold);
+}
+
+/* ── Routine badge (gold sticker for approved) ── */
+.dp-routine-badge-gold {
+    box-shadow: 0 0 12px rgba(197,160,89,0.15);
 }
 
 /* ── Task Card — glass surface with gold accent ── */

@@ -436,10 +436,10 @@ function renderKneelSection(u: any) {
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
 
-    const statusColor = isLocked ? '#c05050' : _tHex();
-    const statusBg = isLocked ? 'rgba(180,60,60,0.1)' : _tAc(0.1);
-    const statusBorder = isLocked ? 'rgba(180,60,60,0.3)' : _tAc(0.35);
-    const statusText = isLocked ? `LOCKED  ${minLeft}m` : 'AVAILABLE';
+    const statusColor = isLocked ? 'rgba(197,160,89,0.5)' : _tHex();
+    const statusBg = isLocked ? 'rgba(197,160,89,0.05)' : _tAc(0.1);
+    const statusBorder = isLocked ? 'rgba(197,160,89,0.15)' : _tAc(0.35);
+    const statusText = isLocked ? `${minLeft}m` : 'AVAILABLE';
 
     el.innerHTML = `
         <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(var(--gold-rgb),0.12);border-radius:6px;padding:12px 14px;">
@@ -603,9 +603,9 @@ function updateActiveTask(u: any) {
     }
 
     if (activeStatus) {
-        activeStatus.innerText = hasActive ? (isPending ? "PENDING" : "ACTIVE") : "UNPRODUCTIVE";
-        activeStatus.className = `at-status-text ${hasActive ? 'active' : ''}`;
-        activeStatus.style.color = hasActive ? (isPending ? "var(--pink)" : "var(--gold)") : "#666";
+        activeStatus.innerText = hasActive ? (isPending ? "PENDING REVIEW" : "ACTIVE") : "UNPRODUCTIVE";
+        activeStatus.className = `dp-directive-status ${hasActive ? 'dp-directive-active' : ''}`;
+        activeStatus.style.color = hasActive ? (isPending ? "var(--pink)" : "var(--gold)") : "rgba(255,255,255,0.15)";
     }
 
     // Sync chatter compact panel
@@ -797,8 +797,8 @@ async function updateChatterRoutine(u: any, gen?: number) {
     const thumbSrc = isVideo ? (signedThumb || '') : signedUrl;
     const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>` : '';
 
-    const statusLabel = proofStatus === 'approve' ? 'APPROVED' : proofStatus === 'reject' ? 'REJECTED' : 'PENDING';
-    const statusColor = proofStatus === 'approve' ? '#4ade80' : proofStatus === 'reject' ? '#ff4444' : '#e85d75';
+    const statusLabel = proofStatus === 'approve' ? '✦ APPROVED' : proofStatus === 'reject' ? 'REJECTED' : 'PENDING';
+    const statusColor = proofStatus === 'approve' ? '#c5a059' : proofStatus === 'reject' ? '#ff4444' : '#e85d75';
 
     const actionButtons = (!proofStatus || (proofStatus !== 'approve' && proofStatus !== 'reject')) && todayEntry.id
         ? `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.9) 40%);">
@@ -816,7 +816,7 @@ async function updateChatterRoutine(u: any, gen?: number) {
             <div class="dp-routine-card-overlay">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <span style="font-family:'Cinzel',serif;font-size:0.46rem;color:rgba(255,255,255,0.6);letter-spacing:2px;">${routineName}</span>
-                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:${statusColor};font-weight:700;letter-spacing:2px;">${statusLabel}</span>
+                    <span class="dp-routine-badge ${proofStatus === 'approve' ? 'dp-routine-badge-gold' : ''}" style="font-family:'Rajdhani',sans-serif;font-size:0.36rem;color:${statusColor};font-weight:700;letter-spacing:2px;padding:3px 10px;border-radius:3px;background:${proofStatus === 'approve' ? 'rgba(197,160,89,0.15)' : 'rgba(0,0,0,0.5)'};border:1px solid ${proofStatus === 'approve' ? 'rgba(197,160,89,0.35)' : 'transparent'};">${statusLabel}</span>
                 </div>
             </div>
             ${actionButtons}
