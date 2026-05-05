@@ -426,12 +426,22 @@ function renderKneelSection(u: any) {
         dotsHtml += `<div title="${h}:00" style="height:6px;background:${bg};border:${border};border-radius:1px;box-shadow:${shadow};transition:all 0.3s;"></div>`;
     }
 
-    // Update header kneeling stat
+    // Update header kneeling section
     const vuKneel = document.getElementById('vuKneelToday');
-    if (vuKneel) {
-        vuKneel.innerText = isLocked ? `${display} ⏳` : display;
-        vuKneel.style.color = isOverGoal ? '#e4cda0' : '#fff';
+    if (vuKneel) vuKneel.innerText = display;
+    const vuKneelStatus = document.getElementById('vuKneelStatus');
+    if (vuKneelStatus) {
+        vuKneelStatus.innerText = isLocked ? `${minLeft}m` : 'READY';
+        vuKneelStatus.style.color = isLocked ? 'rgba(197,160,89,0.4)' : _tHex();
     }
+    const vuKneelFill = document.getElementById('vuKneelFill');
+    if (vuKneelFill) {
+        vuKneelFill.style.width = `${pct}%`;
+        vuKneelFill.style.background = isOverGoal ? 'linear-gradient(90deg,#d4b47c,#f0d080)' : '#d4b47c';
+        if (isOverGoal) vuKneelFill.style.boxShadow = '0 0 6px rgba(212,180,124,0.4)';
+    }
+    const vuKneelDots = document.getElementById('vuKneelDots');
+    if (vuKneelDots) vuKneelDots.innerHTML = dotsHtml;
 
     const statusColor = isLocked ? 'rgba(197,160,89,0.5)' : _tHex();
     const statusBg = isLocked ? 'rgba(197,160,89,0.05)' : _tAc(0.1);

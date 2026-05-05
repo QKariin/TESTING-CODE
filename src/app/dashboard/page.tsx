@@ -1651,22 +1651,21 @@ export default function DashboardPage() {
                                 <div className="vu-stripe vu-stripe-3"></div>
                             </div>
                             <div className="vu-glow"></div>
-
-                            {/* Avatar circle */}
-                            <div className="vu-avatar-container">
-                                <div className="vu-avatar-rim">
-                                    <div className="vu-avatar-inner">
-                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="vu-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                    </div>
-                                </div>
-                            </div>
                             {/* Hidden elements for JS sync */}
                             <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ display: 'none' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
                             <span id="chatterHeaderName" style={{ display: 'none' }}>—</span>
                             <span id="chatterHeaderRank" style={{ display: 'none' }}>—</span>
+                            <span id="dMirrorKneel" style={{ display: 'none' }}>0 h</span>
 
-                            {/* Identity + stats */}
-                            <div className="vu-info">
+                            {/* LEFT — avatar + identity + merit/capital */}
+                            <div className="vu-left">
+                                <div className="vu-avatar-container">
+                                    <div className="vu-avatar-rim">
+                                        <div className="vu-avatar-inner">
+                                            <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="vu-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="vu-identity">
                                     <div className="vu-name-row">
                                         <h2 id="dMirrorName" className="vu-name">—</h2>
@@ -1677,33 +1676,33 @@ export default function DashboardPage() {
                                         <span className="vu-rank-dot">·</span>
                                         <span id="dMirrorStatus" className="vu-status">—</span>
                                     </div>
+                                    <div className="vu-currency">
+                                        <div className="vu-coin">
+                                            <span className="vu-coin-icon">✦</span>
+                                            <span id="dMirrorPoints" className="vu-coin-val">0</span>
+                                        </div>
+                                        <div className="vu-coin-sep"></div>
+                                        <div className="vu-coin">
+                                            <span className="vu-coin-icon">◆</span>
+                                            <span id="dMirrorWallet" className="vu-coin-val">0</span>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div className="vu-stats-bar">
-                                    <div className="vu-stat">
-                                        <span className="vu-stat-icon">✦</span>
-                                        <span className="vu-stat-label">MERIT</span>
-                                        <span id="dMirrorPoints" className="vu-stat-num">0</span>
-                                    </div>
-                                    <div className="vu-stat-sep"></div>
-                                    <div className="vu-stat">
-                                        <span className="vu-stat-icon">◆</span>
-                                        <span className="vu-stat-label">CAPITAL</span>
-                                        <span id="dMirrorWallet" className="vu-stat-num">0</span>
-                                    </div>
-                                    <div className="vu-stat-sep"></div>
-                                    <div className="vu-stat">
-                                        <span className="vu-stat-icon">⧫</span>
-                                        <span className="vu-stat-label">LABOR</span>
-                                        <span id="dMirrorKneel" className="vu-stat-num">0 h</span>
-                                    </div>
-                                    <div className="vu-stat-sep"></div>
-                                    <div className="vu-stat">
-                                        <span className="vu-stat-icon">⬡</span>
-                                        <span className="vu-stat-label">KNEELING</span>
-                                        <span id="vuKneelToday" className="vu-stat-num">0 / 8</span>
-                                    </div>
+                            {/* RIGHT — kneeling section with bar + hour dots */}
+                            <div className="vu-kneel-section" id="vuKneelSection">
+                                <div className="vu-kneel-head">
+                                    <span className="vu-kneel-label">KNEELING</span>
+                                    <span id="vuKneelStatus" className="vu-kneel-status">—</span>
                                 </div>
+                                <div className="vu-kneel-count">
+                                    <span id="vuKneelToday" className="vu-kneel-num">0 / 8</span>
+                                </div>
+                                <div className="vu-kneel-bar">
+                                    <div id="vuKneelFill" className="vu-kneel-fill"></div>
+                                </div>
+                                <div id="vuKneelDots" className="vu-kneel-dots"></div>
                             </div>
                         </div>
 
