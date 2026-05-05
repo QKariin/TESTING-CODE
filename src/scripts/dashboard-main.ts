@@ -97,6 +97,29 @@ async function refreshQueueFromServer() {
     try {
         const res = await fetch('/api/dashboard-data');
         const data = await res.json();
+        if (!data.success) return;
+
+        // Full user data refresh — merge new data while preserving local state (avatar, lastMessageTime)
+        if (data.users) {
+            const freshById: Record<string, any> = {};
+            for (const u of data.users) freshById[(u.memberId || u.id || '').toLowerCase()] = u;
+
+            for (let i = 0; i < users.length; i++) {
+                const uid = (users[i].memberId || '').toLowerCase();
+                const fresh = freshById[uid];
+                if (fresh) {
+                    // Preserve local-only fields
+                    const avatar = users[i].avatar;
+                    const lastMessageTime = users[i].lastMessageTime;
+                    const lastSeen = users[i].lastSeen;
+                    Object.assign(users[i], fresh);
+                    if (avatar) users[i].avatar = avatar;
+                    if (lastMessageTime) users[i].lastMessageTime = lastMessageTime;
+                    if (lastSeen && !fresh.lastSeen) users[i].lastSeen = lastSeen;
+                }
+            }
+        }
+
         if (data.globalQueue) {
             setGlobalQueue(data.globalQueue);
             users.forEach((u: any) => {
@@ -107,10 +130,19 @@ async function refreshQueueFromServer() {
                     return tId === uEmail || tId === uUuid;
                 });
             });
-            renderMainDashboard();
-            // Auto-generate thumbnails for any new video submissions missing them
-            debouncedBackfill();
         }
+
+        renderMainDashboard();
+
+        // Update detail panel if a user is selected
+        if (currId) {
+            const currUser = users.find((x: any) => x.memberId === currId);
+            if (currUser) {
+                import('./dashboard-users').then(m => m.updateDetail(currUser));
+            }
+        }
+
+        debouncedBackfill();
     } catch (err) {
         console.warn('[DASHBOARD] Queue refresh failed:', err);
     }
@@ -119,7 +151,15 @@ async function refreshQueueFromServer() {
 // Module-level refs - prevent duplicate subscriptions and allow cleanup
 let _tasksWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let _routinesWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
+let _profilesWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
 let _purchaseWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
+
+// Debounced refresh — prevents hammering the server when multiple changes fire at once
+let _refreshTimer: ReturnType<typeof setTimeout> | null = null;
+function debouncedRefresh() {
+    if (_refreshTimer) clearTimeout(_refreshTimer);
+    _refreshTimer = setTimeout(() => refreshQueueFromServer(), 1500);
+}
 
 function subscribeToDashboardTaskUpdates() {
     // Guard against duplicate subscriptions
@@ -134,7 +174,7 @@ function subscribeToDashboardTaskUpdates() {
                 table: 'tasks',
             }, () => {
                 console.log('[DASHBOARD REALTIME] Tasks changed - refreshing...');
-                refreshQueueFromServer();
+                debouncedRefresh();
             });
         _tasksWatchChannel.subscribe();
     }
@@ -149,14 +189,29 @@ function subscribeToDashboardTaskUpdates() {
                 table: 'routines',
             }, () => {
                 console.log('[DASHBOARD REALTIME] Routines changed - refreshing...');
-                refreshQueueFromServer();
+                debouncedRefresh();
             });
         _routinesWatchChannel.subscribe();
     }
 
+    // Realtime on profiles — fires when points, coins, wallet, score change
+    if (!_profilesWatchChannel) {
+        _profilesWatchChannel = supabase
+            .channel('dashboard_profiles_watch')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'profiles',
+            }, () => {
+                console.log('[DASHBOARD REALTIME] Profile changed - refreshing...');
+                debouncedRefresh();
+            });
+        _profilesWatchChannel.subscribe();
+    }
+
     // Polling fallback - catches anything the realtime subscription misses
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
-    _dashboardPollInterval = setInterval(refreshQueueFromServer, 60000);
+    _dashboardPollInterval = setInterval(refreshQueueFromServer, 30000);
 
     // Periodic unread poll — catches missed messages even when all realtime channels are dead
     if (_unreadPollInterval) clearInterval(_unreadPollInterval);
@@ -240,6 +295,15 @@ export function reconnectDashboardMain() {
         }
     } else {
         needsResub = true;
+    }
+
+    if (_profilesWatchChannel) {
+        const state = (_profilesWatchChannel as any).state;
+        if (state === 'errored' || state === 'closed') {
+            console.log('[DASHBOARD-MAIN] profiles channel dead, will reconnect');
+            _profilesWatchChannel = null;
+            needsResub = true;
+        }
     }
 
     if (_purchaseWatchChannel) {
