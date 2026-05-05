@@ -119,7 +119,7 @@ export function closeListModal() {
     if (modal) modal.classList.remove('active');
 }
 
-export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false) {
+export function openModal(taskId: string | null, memberId: string | null, mediaUrl: string | null, mediaType: string | null, taskText: string | null, isHistory: boolean = false, status: string | null = null, isRoutine: boolean = false, thumbnailUrl: string | null = null) {
     // Detect video by URL (original behavior - works reliably for .mp4/.mov/.webm URLs)
     const isVideo = mediaTypeFunction(mediaUrl) === 'video';
     setCurrTask({ id: taskId, memberId: memberId, mediaUrl: mediaUrl, mediaType: mediaType, text: taskText, isRoutine });
@@ -164,25 +164,27 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     // Media - contained in box, click opens lightbox
     if (mediaUrl) {
         if (isVideo) {
-            mediaBox.innerHTML = `<video src="${mediaUrl}" class="m-img" controls playsinline></video>`;
+            // Show thumbnail instead of loading video — saves bandwidth
+            const thumbSrc = thumbnailUrl || '';
+            if (thumbSrc) {
+                mediaBox.innerHTML = `<div style="position:relative;width:100%;height:100%;cursor:pointer;">
+                    <img src="${thumbSrc}" class="m-img" style="width:100%;height:100%;object-fit:cover;">
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);transition:background 0.2s;">
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>`;
+            } else {
+                mediaBox.innerHTML = `<div style="position:relative;width:100%;height:100%;cursor:pointer;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
+                    <svg width="56" height="56" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg>
+                </div>`;
+            }
+            // Click anywhere on the thumbnail to open lightbox with video
+            mediaBox.querySelector('div')?.addEventListener('click', () => openLightbox(mediaUrl, true));
         } else {
             mediaBox.innerHTML = `<img src="${getOptimizedUrl(mediaUrl, 1200)}" class="m-img">`;
-        }
-        // Attach lightbox click handler
-        const mediaEl = mediaBox.querySelector('.m-img') as HTMLElement;
-        if (mediaEl) {
-            mediaEl.style.cursor = 'zoom-in';
-            if (isVideo) {
-                // For video, add a small expand button so clicks on video still control playback
-                const expandBtn = document.createElement('div');
-                expandBtn.innerHTML = '⛶';
-                expandBtn.title = 'Expand';
-                expandBtn.style.cssText = 'position:absolute;top:10px;right:10px;width:32px;height:32px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;font-size:1rem;transition:0.2s;';
-                expandBtn.addEventListener('mouseenter', () => { expandBtn.style.background = 'rgba(255,255,255,0.15)'; });
-                expandBtn.addEventListener('mouseleave', () => { expandBtn.style.background = 'rgba(0,0,0,0.7)'; });
-                expandBtn.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(mediaUrl, true); });
-                mediaBox.appendChild(expandBtn);
-            } else {
+            const mediaEl = mediaBox.querySelector('.m-img') as HTMLElement;
+            if (mediaEl) {
+                mediaEl.style.cursor = 'zoom-in';
                 mediaEl.addEventListener('click', () => openLightbox(mediaUrl, false));
             }
         }
@@ -294,7 +296,8 @@ export async function openModById(taskId: string, memberId: string, isHistory: b
     if (t) {
         const rawUrl = t.proofUrl || '';
         const finalUrl = fullSigned || (rawUrl ? await getSignedUrl(rawUrl) || rawUrl : '');
-        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'));
+        const thumbUrl = t.thumbnail_url ? await getSignedUrl(t.thumbnail_url) : null;
+        openModal(taskId, memberId, finalUrl, t.proofType, t.text, isHistory, t.status, !!(t.isRoutine || t.category === 'Routine' || t.text === 'Daily Routine'), thumbUrl);
     }
 }
 

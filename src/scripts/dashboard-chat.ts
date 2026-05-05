@@ -556,9 +556,14 @@ function renderToHtml(m: any) {
             const fbIsVideo = (fbType && (fbType === 'video' || fbType.startsWith('video/'))) || (fbMedia && /\.(mp4|mov|webm)/i.test(fbMedia));
             // Videos: use raw URL; images: use optimized URL
             const fbSrc = fbMedia ? (fbIsVideo ? fbMedia : getOptimizedUrl(fbMedia, 600)) : null;
+            const fbThumb = data.thumbnailUrl || data.thumbnail_url || null;
+            const fbThumbSrc = fbIsVideo && fbThumb ? fbThumb : null;
             const mediaBlock = fbSrc
                 ? (fbIsVideo
-                    ? `<video src="${fbSrc}" preload="none" muted playsinline style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0"></video>`
+                    ? `<div style="position:relative;width:100%;max-height:180px;overflow:hidden;border-radius:10px 10px 0 0;cursor:pointer;background:#0a0a0a;" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">
+                        ${fbThumbSrc ? `<img src="${fbThumbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '<div style="height:120px;"></div>'}
+                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"><path d="M8 5v14l11-7z"/></svg></div>
+                       </div>`
                     : `<img src="${fbSrc}" style="width:100%;max-height:180px;object-fit:cover;display:block;border-radius:10px 10px 0 0;cursor:pointer;" onerror="this.style.display='none'" onclick="event.stopPropagation();window.openModById&&'${fbTaskId}'&&'${fbMemberId}'?window.openModById('${fbTaskId}','${fbMemberId}',true):void 0">`)
                 : '';
             const cardHtml = `
