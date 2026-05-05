@@ -1832,6 +1832,8 @@ export default function DashboardPage() {
                                     </div>
                                     <div id="qListContainer" className="dp-queue-list"></div>
                                     <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
+                                    {/* Review queue — right under directives */}
+                                    <div id="userQueueSec" style={{ display: 'none', marginTop: 16 }}></div>
                                 </div>
 
                                 {/* ── ROUTINE + CALENDAR ── */}
@@ -1842,19 +1844,12 @@ export default function DashboardPage() {
                                     <div className="dp-routine-layout">
                                         <div className="dp-routine-info">
                                             <div id="chatter_RoutineContent" className="dp-routine-content">No routine assigned</div>
-                                            <div id="chatter_PendingSection" className="dp-pending-section" style={{ display: 'none' }}>
-                                                <div className="dp-pending-label">PENDING REVIEW</div>
-                                                <div id="chatter_PendingContent" className="dp-pending-grid"></div>
-                                            </div>
                                         </div>
                                         <div id="routineCalendarSection" className="dp-calendar-wrap" style={{ display: 'none' }}>
                                             <div id="routineCalendarGrid" className="dp-calendar-grid"></div>
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* ── REVIEW QUEUE ── */}
-                                <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
 
                                 {/* ── KNEELING ── */}
                                 <div className="dp-section">
