@@ -543,7 +543,7 @@ async function updateReviewQueue(u: any) {
         // Sign all thumbnail/proof URLs in parallel before rendering
         const items = u.reviewQueue.map((t: any) => {
             const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-            const rawUrl = isVideo ? (t.thumbnail_url || t.proofUrl) : t.proofUrl;
+            const rawUrl = isVideo ? (t.thumbnail_url || null) : t.proofUrl;
             return { t, isVideo, rawUrl };
         });
         const signedUrls = await Promise.all(items.map((it: any) => it.rawUrl ? getSignedUrl(it.rawUrl) : Promise.resolve('')));
@@ -866,8 +866,8 @@ async function updateChatterPending(u: any, gen?: number) {
         if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        const url = t.proofUrl ? await getSignedUrl(t.proofUrl) : '';
         const thumb = (isVideo && t.thumbnail_url) ? await getSignedUrl(t.thumbnail_url) : null;
+        const url = !isVideo && t.proofUrl ? await getSignedUrl(t.proofUrl) : '';
         if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
         const imgSrc = isVideo ? (thumb || '') : url;
         const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>` : '';
