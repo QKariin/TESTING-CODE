@@ -550,7 +550,7 @@ async function updateReviewQueue(u: any) {
 
         qSec.innerHTML = `
             <div class="dp-divider-label" style="margin-bottom:16px;">
-                <span class="dp-divider-text">PENDING REVIEW</span>
+                <span class="dp-divider-text" style="font-family:'Cinzel',serif">PENDING REVIEW</span>
                 <span style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);font-weight:700;letter-spacing:2px;">${count}</span>
             </div>
             <div class="cs-stage">
@@ -735,10 +735,9 @@ export function updateTaskQueue(u: any) {
     let personalTasks = u.task_queue || u.taskQueue || u.queue || [];
 
     listContainer.innerHTML = `
-        <div class="mini-active" style="border:1px solid rgba(var(--gold-rgb),0.3); background:rgba(0,0,0,0.5); border-radius:8px; cursor:pointer; text-align:center; padding:15px; transition:all 0.2s;" onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" onmouseover="this.style.background='rgba(var(--gold-rgb),0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.5)'">
-            <div style="font-family:'Rajdhani', sans-serif; font-size:1.5rem; color:var(--gold); margin-bottom:5px;">${personalTasks.length}</div>
-            <div style="font-family:'Rajdhani', sans-serif; font-size:0.7rem; color:#aaa; letter-spacing:2px;">SCHEDULED DIRECTIVES</div>
-            <div style="font-family:'Rajdhani', sans-serif; font-size:0.65rem; color:#666; margin-top:10px; text-transform:uppercase; letter-spacing:1px;">Tap to view full queue &rarr;</div>
+        <div style="text-align:center; padding:10px 0;">
+            <div style="font-family:'Rajdhani', sans-serif; font-size:0.5rem; color:#888; letter-spacing:2px; margin-bottom:14px;"><span style="color:var(--gold);font-size:0.6rem;font-weight:700;">${personalTasks.length}</span> SCHEDULED</div>
+            <button onclick="const q = document.getElementById('taskQueueContainer'); if(q && !q.classList.contains('hidden')) { if(window.closeTaskGallery) window.closeTaskGallery(); } else { if(window.openTaskGallery) window.openTaskGallery(); }" style="padding:10px 28px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.25);border-radius:6px;color:#c5a059;font-family:'Rajdhani',sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(197,160,89,0.15)'" onmouseout="this.style.background='rgba(197,160,89,0.08)'">ASSIGN DIRECTIVE</button>
         </div>
     `;
 }

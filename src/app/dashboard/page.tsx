@@ -1829,7 +1829,7 @@ export default function DashboardPage() {
                                 {/* ── ROUTINE (above directives) ── */}
                                 <div className="dp-section">
                                     <div className="dp-divider-label">
-                                        <span className="dp-divider-text">ROUTINE</span>
+                                        <span className="dp-divider-text" style={{ fontFamily: "'Cinzel', serif" }}>ROUTINE</span>
                                         <button className="dp-cal-toggle" id="dpCalToggle" onClick={() => { const el = document.getElementById('routineCalendarDrop'); if (el) { const open = el.style.display !== 'none'; el.style.display = open ? 'none' : 'block'; } }}>
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
                                         </button>
@@ -1846,8 +1846,8 @@ export default function DashboardPage() {
                                 <div className="dp-section">
                                     <div className="dp-directive-header" onClick={() => { const d = document.getElementById('taskDrawer'); if (d) d.classList.toggle('open'); }}>
                                         <div className="dp-divider-label">
+                                            <span className="dp-divider-text" style={{ fontFamily: "'Cinzel', serif" }}>DIRECTIVES</span>
                                             <span id="statusDot" className="status-dot unproductive"></span>
-                                            <span className="dp-divider-text">DIRECTIVES</span>
                                         </div>
                                         <div id="dActiveStatus" className="dp-directive-status">IDLE</div>
                                     </div>
@@ -1861,7 +1861,6 @@ export default function DashboardPage() {
                                         </div>
                                         <div id="idleActions" style={{ display: 'none' }}></div>
                                         <div id="qListContainer" className="dp-queue-list"></div>
-                                        <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
                                     </div>
                                 </div>
 
