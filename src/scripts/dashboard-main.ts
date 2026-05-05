@@ -875,6 +875,52 @@ export async function deleteQueenPost(id: string) {
     }
 }
 
+// ─── BACKFILL MISSING THUMBNAILS FOR ALL VIDEO TASKS ─────────────────────────
+
+export async function backfillThumbnails() {
+    console.log('[backfill] Fetching video tasks missing thumbnails...');
+    const res = await fetch('/api/backfill-thumbnails');
+    const data = await res.json();
+    if (!data.items?.length) { console.log('[backfill] No missing thumbnails found.'); return; }
+
+    console.log(`[backfill] Found ${data.count} videos without thumbnails. Processing...`);
+    const { regenerateThumbnailFromUrl } = await import('./mediaSupabase');
+    const { getSignedUrl } = await import('./media');
+
+    let success = 0;
+    let failed = 0;
+
+    for (let i = 0; i < data.items.length; i++) {
+        const item = data.items[i];
+        console.log(`[backfill] ${i + 1}/${data.count} — generating thumbnail for ${item.entryId}...`);
+
+        try {
+            const signedUrl = await getSignedUrl(item.proofUrl);
+            if (!signedUrl) { console.warn(`[backfill] Could not sign URL: ${item.proofUrl}`); failed++; continue; }
+
+            const thumbUrl = await regenerateThumbnailFromUrl(signedUrl);
+            if (!thumbUrl) { console.warn(`[backfill] Thumbnail generation failed for ${item.entryId}`); failed++; continue; }
+
+            const updateRes = await fetch('/api/backfill-thumbnails', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskRowId: item.taskRowId, entryId: item.entryId, thumbnailUrl: thumbUrl })
+            });
+            const updateData = await updateRes.json();
+            if (updateData.success) { success++; console.log(`[backfill] ${item.entryId} done.`); }
+            else { failed++; console.warn(`[backfill] Update failed:`, updateData.error); }
+        } catch (e) {
+            failed++;
+            console.error(`[backfill] Error on ${item.entryId}:`, e);
+        }
+
+        // Small delay between items to avoid hammering the browser
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    console.log(`[backfill] Complete! ${success} generated, ${failed} failed.`);
+}
+
 // ─── REGENERATE VIDEO THUMBNAIL ──────────────────────────────────────────────
 
 export async function regenThumbnail(postId: string, videoUrl: string) {
@@ -1009,6 +1055,7 @@ if (typeof window !== 'undefined') {
     (window as any).deleteQueenPost = deleteQueenPost;
     (window as any).updateQueenPost = updateQueenPost;
     (window as any).regenThumbnail = regenThumbnail;
+    (window as any).backfillThumbnails = backfillThumbnails;
     (window as any).loadQueenPostsDashboard = loadQueenPostsDashboard;
     (window as any).reviewTask = reviewTask;
     (window as any).approveFromGallery = reviewTask; // alias for backward compat
