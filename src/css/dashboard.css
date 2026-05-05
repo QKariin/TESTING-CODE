@@ -5224,17 +5224,13 @@ h3,
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background: #0f0f0f;
-    border-bottom: 1px solid #1a1a1a;
-    padding: 0 36px 0 0;
+    gap: 28px;
+    background: #0c0c0c;
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+    padding: 24px 32px 24px 0;
     flex-shrink: 0;
     overflow: hidden;
-    min-height: 190px;
-    transition: border-color 0.4s ease;
-}
-.vu-card:hover {
-    border-color: rgba(212,180,124,0.25);
+    min-height: 180px;
 }
 
 /* Gold glow overlay */
@@ -5274,21 +5270,14 @@ h3,
     top: 44px; left: -10px;
 }
 
-/* Left group: avatar + identity */
-.vu-left {
-    display: flex;
-    align-items: center;
-    z-index: 5;
-    flex-shrink: 0;
-}
-
 /* Multi-layered circle avatar */
 .vu-avatar-container {
     position: relative;
-    margin-left: 55px;
-    width: 140px;
-    height: 140px;
+    margin-left: 50px;
+    width: 130px;
+    height: 130px;
     flex-shrink: 0;
+    z-index: 5;
 }
 .vu-avatar-rim {
     position: absolute;
@@ -5316,9 +5305,11 @@ h3,
     object-fit: cover;
 }
 
-/* Identity section */
+/* Identity block */
 .vu-identity {
-    margin-left: 32px;
+    z-index: 5;
+    flex-shrink: 0;
+    min-width: 160px;
 }
 .vu-name-row {
     display: flex;
@@ -5328,7 +5319,7 @@ h3,
 .vu-name {
     font-family: 'Cinzel', serif;
     color: #e4cda0;
-    font-size: 2rem;
+    font-size: 1.8rem;
     margin: 0;
     font-weight: 700;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -5338,10 +5329,7 @@ h3,
     display: flex;
     align-items: center;
     gap: 8px;
-    border-bottom: 1px solid rgba(212,180,124,0.2);
-    padding-bottom: 6px;
-    width: fit-content;
-    margin-top: 4px;
+    margin-top: 5px;
 }
 .vu-rank {
     font-family: 'Rajdhani', sans-serif;
@@ -5357,86 +5345,90 @@ h3,
 }
 .vu-status {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.4rem;
+    font-size: 0.42rem;
     letter-spacing: 2px;
     color: #666;
 }
 
-/* Compact currency row (merit + capital) */
-.vu-currency {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin-top: 14px;
-}
-.vu-coin {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 16px;
-}
-.vu-coin:first-child { padding-left: 0; }
-.vu-coin-icon {
-    font-size: 0.45rem;
-    color: #d4b47c;
-}
-.vu-coin-val {
-    font-family: 'Cinzel', serif;
-    color: rgba(255,255,255,0.7);
-    font-size: 1.05rem;
-    font-weight: 700;
-}
-.vu-coin-sep {
-    width: 1px;
-    height: 18px;
-    background: rgba(212,180,124,0.15);
+/* ── Glass card — shared style (like notification banner) ── */
+.vu-glass-card {
+    z-index: 5;
+    background: rgba(15,15,20,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(197,160,89,0.12);
+    border-radius: 12px;
+    padding: 16px 22px;
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.03);
     flex-shrink: 0;
 }
 
-/* ── Kneeling section (right side of header) ── */
-.vu-kneel-section {
-    z-index: 5;
-    min-width: 240px;
-    max-width: 300px;
-    padding: 14px 20px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.04);
-    border-radius: 6px;
+/* Points / Capital glass card */
+.vu-glass-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
 }
-.vu-kneel-head {
+.vu-glass-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    min-width: 80px;
+}
+.vu-glass-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.32rem;
+    color: rgba(197,160,89,0.4);
+    letter-spacing: 2.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.vu-glass-val {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+}
+.vu-glass-sep {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, transparent, rgba(197,160,89,0.15), transparent);
+    flex-shrink: 0;
+}
+
+/* ── Kneeling glass card ── */
+.vu-glass-kneel {
+    min-width: 220px;
+}
+.vu-kneel-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-}
-.vu-kneel-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.38rem;
-    color: rgba(255,255,255,0.25);
-    letter-spacing: 3px;
-    font-weight: 700;
+    margin-bottom: 6px;
 }
 .vu-kneel-status {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.36rem;
-    color: rgba(197,160,89,0.4);
-    letter-spacing: 1px;
+    font-size: 0.34rem;
+    color: rgba(197,160,89,0.45);
+    letter-spacing: 2px;
     font-weight: 700;
-}
-.vu-kneel-count {
-    margin-bottom: 6px;
 }
 .vu-kneel-num {
     font-family: 'Cinzel', serif;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: #fff;
     letter-spacing: 1px;
+    display: block;
+    margin-bottom: 8px;
 }
 .vu-kneel-bar {
     width: 100%;
-    height: 4px;
-    background: rgba(255,255,255,0.05);
+    height: 3px;
+    background: rgba(255,255,255,0.04);
     border-radius: 2px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -5451,7 +5443,7 @@ h3,
 .vu-kneel-dots {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 3px;
+    gap: 2px;
 }
 
 /* ═══════════════════════════════════════════════

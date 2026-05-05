@@ -1642,7 +1642,7 @@ export default function DashboardPage() {
 
                 <div id="viewUser" style={{ display: 'none' }}>
 
-                        {/* ── LUXURY HEADER CARD — full width ── */}
+                        {/* ── LUXURY HEADER ── */}
                         <div className="vu-card">
                             {/* Decorative gold stripes */}
                             <div className="vu-stripe-wrap">
@@ -1657,48 +1657,50 @@ export default function DashboardPage() {
                             <span id="chatterHeaderRank" style={{ display: 'none' }}>—</span>
                             <span id="dMirrorKneel" style={{ display: 'none' }}>0 h</span>
 
-                            {/* LEFT — avatar + identity + merit/capital */}
-                            <div className="vu-left">
-                                <div className="vu-avatar-container">
-                                    <div className="vu-avatar-rim">
-                                        <div className="vu-avatar-inner">
-                                            <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="vu-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="vu-identity">
-                                    <div className="vu-name-row">
-                                        <h2 id="dMirrorName" className="vu-name">—</h2>
-                                        <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
-                                    </div>
-                                    <div className="vu-tagline">
-                                        <span id="dMirrorHierarchy" className="vu-rank">—</span>
-                                        <span className="vu-rank-dot">·</span>
-                                        <span id="dMirrorStatus" className="vu-status">—</span>
-                                    </div>
-                                    <div className="vu-currency">
-                                        <div className="vu-coin">
-                                            <span className="vu-coin-icon">✦</span>
-                                            <span id="dMirrorPoints" className="vu-coin-val">0</span>
-                                        </div>
-                                        <div className="vu-coin-sep"></div>
-                                        <div className="vu-coin">
-                                            <span className="vu-coin-icon">◆</span>
-                                            <span id="dMirrorWallet" className="vu-coin-val">0</span>
-                                        </div>
+                            {/* Avatar */}
+                            <div className="vu-avatar-container">
+                                <div className="vu-avatar-rim">
+                                    <div className="vu-avatar-inner">
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="vu-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* RIGHT — kneeling section with bar + hour dots */}
-                            <div className="vu-kneel-section" id="vuKneelSection">
-                                <div className="vu-kneel-head">
-                                    <span className="vu-kneel-label">KNEELING</span>
+                            {/* Identity */}
+                            <div className="vu-identity">
+                                <div className="vu-name-row">
+                                    <h2 id="dMirrorName" className="vu-name">—</h2>
+                                    <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
+                                </div>
+                                <div className="vu-tagline">
+                                    <span id="dMirrorHierarchy" className="vu-rank">—</span>
+                                    <span className="vu-rank-dot">·</span>
+                                    <span id="dMirrorStatus" className="vu-status">—</span>
+                                </div>
+                            </div>
+
+                            {/* Glass card — points & capital */}
+                            <div className="vu-glass-card">
+                                <div className="vu-glass-row">
+                                    <div className="vu-glass-item">
+                                        <span className="vu-glass-label">MERIT</span>
+                                        <span id="dMirrorPoints" className="vu-glass-val">0</span>
+                                    </div>
+                                    <div className="vu-glass-sep"></div>
+                                    <div className="vu-glass-item">
+                                        <span className="vu-glass-label">CAPITAL</span>
+                                        <span id="dMirrorWallet" className="vu-glass-val">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Glass card — kneeling */}
+                            <div className="vu-glass-card vu-glass-kneel">
+                                <div className="vu-kneel-top">
+                                    <span className="vu-glass-label">KNEELING</span>
                                     <span id="vuKneelStatus" className="vu-kneel-status">—</span>
                                 </div>
-                                <div className="vu-kneel-count">
-                                    <span id="vuKneelToday" className="vu-kneel-num">0 / 8</span>
-                                </div>
+                                <span id="vuKneelToday" className="vu-kneel-num">0 / 8</span>
                                 <div className="vu-kneel-bar">
                                     <div id="vuKneelFill" className="vu-kneel-fill"></div>
                                 </div>
