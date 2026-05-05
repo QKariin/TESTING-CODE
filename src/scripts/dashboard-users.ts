@@ -796,23 +796,29 @@ async function updateChatterRoutine(u: any, gen?: number) {
     const thumbSrc = isVideo ? (signedThumb || '') : signedUrl;
     const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>` : '';
 
+    const statusLabel = proofStatus === 'approve' ? 'APPROVED' : proofStatus === 'reject' ? 'REJECTED' : 'PENDING';
+    const statusColor = proofStatus === 'approve' ? '#4ade80' : proofStatus === 'reject' ? '#ff4444' : '#e85d75';
+
+    const actionButtons = (!proofStatus || (proofStatus !== 'approve' && proofStatus !== 'reject')) && todayEntry.id
+        ? `<div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:10px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.9) 40%);">
+            <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:9px 4px;background:rgba(0,150,0,0.2);color:#4ade80;border:1px solid rgba(0,200,0,0.3);border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;font-weight:700;">APPROVE</button>
+            <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="flex:1;padding:9px 4px;background:rgba(150,0,0,0.2);color:#ff4444;border:1px solid rgba(200,0,0,0.3);border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;font-weight:700;">REJECT</button>
+           </div>`
+        : '';
+
     container.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;">
-            <div style="position:relative;width:44px;height:44px;border-radius:5px;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);cursor:pointer;background:#0a0a0a;" onclick="window.open('${signedUrl}','_blank')">
-                <img src="${thumbSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        <div class="dp-routine-card" onclick="window.open('${signedUrl}','_blank')">
+            <div class="dp-routine-card-media">
+                ${thumbSrc ? `<img src="${thumbSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
                 ${playIcon}
             </div>
-            <div style="flex:1;min-width:0;">
-                <div style="font-size:0.6rem;color:#999;font-weight:500;">${routineName}</div>
-                ${proofStatus === 'approve'
-                    ? `<div style="font-size:0.5rem;color:#4ade80;margin-top:2px;">Approved</div>`
-                    : proofStatus === 'reject'
-                    ? `<div style="font-size:0.5rem;color:#ff4444;margin-top:2px;">Rejected</div>`
-                    : `<div style="display:flex;gap:4px;margin-top:4px;">
-                        <button onclick="event.stopPropagation();window.approveRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="padding:4px 12px;background:rgba(74,222,128,0.08);color:#4ade80;border:1px solid rgba(74,222,128,0.2);border-radius:4px;font-size:0.5rem;cursor:pointer;">Approve</button>
-                        <button onclick="event.stopPropagation();window.rejectRoutineFromPanel('${todayEntry.id}','${u.memberId}',this)" style="padding:4px 12px;background:rgba(255,68,68,0.08);color:#ff4444;border:1px solid rgba(255,68,68,0.2);border-radius:4px;font-size:0.5rem;cursor:pointer;">Reject</button>
-                      </div>`}
+            <div class="dp-routine-card-overlay">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.44rem;color:rgba(255,255,255,0.7);font-weight:700;letter-spacing:3px;">${routineName}</span>
+                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:${statusColor};font-weight:700;letter-spacing:2px;">${statusLabel}</span>
+                </div>
             </div>
+            ${actionButtons}
         </div>`;
 }
 
@@ -869,10 +875,11 @@ async function updateChatterPending(u: any, gen?: number) {
 function renderRoutineCalendar(u: any) {
     const section = document.getElementById('routineCalendarSection');
     const grid = document.getElementById('routineCalendarGrid');
+    const calToggle = document.getElementById('dpCalToggle');
     if (!section || !grid) return;
 
     const routine = u.routine || '';
-    if (!routine) { section.style.display = 'none'; return; }
+    if (!routine) { section.style.display = 'none'; if (calToggle) calToggle.style.display = 'none'; return; }
 
     const history: any[] = u.routineHistory || u.routinehistory || [];
     const routineEntries = history.filter((h: any) => h.isRoutine && h.timestamp);
@@ -943,7 +950,8 @@ function renderRoutineCalendar(u: any) {
         cells += `<div style="text-align:center;padding:3px 0;font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:${color};background:${bg};border:1px solid ${border};border-radius:3px;${todayRing}" title="${key}: ${status || (isFuture ? 'future' : 'missed')}">${d}</div>`;
     }
 
-    section.style.display = '';
+    section.style.display = 'block';
+    if (calToggle) calToggle.style.display = '';
     grid.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <span style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:#555;letter-spacing:2px;">${monthName} ${year}</span>

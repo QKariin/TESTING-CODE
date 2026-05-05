@@ -5593,6 +5593,70 @@ h3,
 }
 
 /* Footer */
+/* ── Routine Card (proof photo like card-stack cards) ── */
+.dp-routine-card {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid rgba(197,160,89,0.15);
+    background: #0a0a0c;
+    margin-top: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.dp-routine-card:hover {
+    border-color: rgba(197,160,89,0.3);
+    box-shadow: 0 8px 30px rgba(197,160,89,0.08);
+}
+.dp-routine-card-media {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.dp-routine-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.dp-routine-card:hover .dp-routine-card-media img {
+    opacity: 0.85;
+}
+.dp-routine-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 14px;
+    background: linear-gradient(rgba(0,0,0,0.7), transparent);
+}
+
+/* ── Calendar Toggle Button ── */
+.dp-cal-toggle {
+    background: none;
+    border: 1px solid rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.35);
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    line-height: 1;
+}
+.dp-cal-toggle:hover {
+    border-color: rgba(197,160,89,0.35);
+    color: rgba(197,160,89,0.6);
+    background: rgba(197,160,89,0.04);
+}
+
+/* Footer */
 .dp-footer {
     padding: 20px 22px;
     border-top: 1px solid rgba(197,160,89,0.04);

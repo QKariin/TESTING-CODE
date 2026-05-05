@@ -1813,6 +1813,22 @@ export default function DashboardPage() {
                                 {/* ═══ SECTIONS ═══ */}
                                 <div className="dp-sections">
 
+                                {/* ── ROUTINE (above directives) ── */}
+                                <div className="dp-section">
+                                    <div className="dp-divider-label">
+                                        <span className="dp-divider-text">ROUTINE</span>
+                                        <button className="dp-cal-toggle" id="dpCalToggle" onClick={() => { const el = document.getElementById('routineCalendarDrop'); if (el) { const open = el.style.display !== 'none'; el.style.display = open ? 'none' : 'block'; } }}>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                                        </button>
+                                    </div>
+                                    <div id="chatter_RoutineContent" className="dp-routine-content">No routine assigned</div>
+                                    <div id="routineCalendarSection" style={{ display: 'none' }}>
+                                        <div id="routineCalendarDrop" style={{ display: 'none', marginTop: 14 }}>
+                                            <div id="routineCalendarGrid"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* ── DIRECTIVE ── */}
                                 <div className="dp-section">
                                     <div className="dp-divider-label">
@@ -1834,21 +1850,6 @@ export default function DashboardPage() {
                                     <button onClick={() => (window as any).openTaskGallery()} className="dp-assign-btn">+ ASSIGN DIRECTIVE</button>
                                     {/* Review queue — right under directives */}
                                     <div id="userQueueSec" style={{ display: 'none', marginTop: 16 }}></div>
-                                </div>
-
-                                {/* ── ROUTINE + CALENDAR ── */}
-                                <div className="dp-section">
-                                    <div className="dp-divider-label">
-                                        <span className="dp-divider-text">ROUTINE</span>
-                                    </div>
-                                    <div className="dp-routine-layout">
-                                        <div className="dp-routine-info">
-                                            <div id="chatter_RoutineContent" className="dp-routine-content">No routine assigned</div>
-                                        </div>
-                                        <div id="routineCalendarSection" className="dp-calendar-wrap" style={{ display: 'none' }}>
-                                            <div id="routineCalendarGrid" className="dp-calendar-grid"></div>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* ── KNEELING ── */}
