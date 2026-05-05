@@ -5930,7 +5930,6 @@ h3,
 .dp-routine-awaiting {
     background: rgba(10,10,12,0.9);
     border: 1px solid rgba(197,160,89,0.08);
-    height: 140px;
 }
 .dp-routine-awaiting:hover {
     border-color: rgba(197,160,89,0.15);
