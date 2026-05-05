@@ -825,7 +825,7 @@ async function updateChatterRoutine(u: any, gen?: number) {
         : '';
 
     container.innerHTML = `
-        <div class="dp-routine-card" onclick="window.open('${signedUrl}','_blank')">
+        <div class="dp-routine-card" onclick="window.openModById('${todayEntry.id}', '${u.memberId}', false, null, '${isVideo ? 'video' : 'image'}')">
             <div class="dp-routine-card-media">
                 ${thumbSrc ? `<img src="${thumbSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
                 ${playIcon}
