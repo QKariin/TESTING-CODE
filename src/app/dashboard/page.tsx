@@ -1641,21 +1641,52 @@ export default function DashboardPage() {
                 </div>
 
                 <div id="viewUser" style={{ display: 'none' }}>
-                        {/* ── UNIFIED LAYOUT — wide chat left, compact panel right ── */}
-                        <div className="chatter-split" style={{ display: 'grid', gridTemplateColumns: '60% 40%', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                            {/* LEFT: chat — edge to edge, no box */}
-                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
-                                    <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.4)' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
-                                    <div>
-                                        <span id="chatterHeaderName" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: '#fff', fontWeight: 700 }}>—</span>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span id="chatterHeaderRank" style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '2px' }}>—</span>
-                                            <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
-                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '1px' }}>ENCRYPTED FEED</span>
-                                        </div>
+
+                        {/* ── UNIFIED HEADER — full width above chat+profile ── */}
+                        <div className="vu-header">
+                            <div className="vu-header-left">
+                                <div className="dp-avatar-wrap" style={{ width: 48, height: 48 }}>
+                                    <div className="dp-avatar-frame" style={{ width: 48, height: 48 }}>
+                                        <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                                     </div>
                                 </div>
+                                {/* Hidden duplicate for JS sync — chat header references */}
+                                <img id="chatterHeaderAvatar" src="/collar-placeholder.png" alt="" style={{ display: 'none' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png'; }} />
+                                <div className="vu-header-identity">
+                                    <div className="dp-name-row">
+                                        <div id="dMirrorName" className="dp-name" style={{ fontSize: '1.1rem' }}>—</div>
+                                        <span id="chatterHeaderName" style={{ display: 'none' }}>—</span>
+                                        <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
+                                    </div>
+                                    <div className="dp-rank-row">
+                                        <div id="dMirrorHierarchy" className="dp-rank">—</div>
+                                        <span id="chatterHeaderRank" style={{ display: 'none' }}>—</span>
+                                        <div id="dMirrorStatus" className="dp-status-text">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="vu-header-stats">
+                                <div className="vu-stat">
+                                    <span id="dMirrorPoints" className="vu-stat-num">0</span>
+                                    <span className="vu-stat-label">MERIT</span>
+                                </div>
+                                <div className="vu-stat-sep"></div>
+                                <div className="vu-stat">
+                                    <span id="dMirrorWallet" className="vu-stat-num">0</span>
+                                    <span className="vu-stat-label">CAPITAL</span>
+                                </div>
+                                <div className="vu-stat-sep"></div>
+                                <div className="vu-stat">
+                                    <span id="dMirrorKneel" className="vu-stat-num">0 h</span>
+                                    <span className="vu-stat-label">LABOR</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── SPLIT LAYOUT — chat left, panel right ── */}
+                        <div className="chatter-split" style={{ display: 'grid', gridTemplateColumns: '60% 40%', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                            {/* LEFT: chat */}
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
 
                                 {/* Task queue overlay — covers chat panel when open */}
                                 <div id="taskQueueContainer" className="task-queue-overlay hidden">
@@ -1761,48 +1792,7 @@ export default function DashboardPage() {
 
                                 {/* ── PROFILE PANEL (default visible) ── */}
                                 <div id="chatterProfilePanel" className="dp-panel">
-
-                                {/* ═══ HERO ═══ */}
-                                <div id="apMirrorHeader" className="dp-hero">
-                                    <div className="dp-hero-top">
-                                        <div className="dp-avatar-wrap">
-                                            <div className="dp-avatar-frame">
-                                                <img id="dProfilePic" src="/collar-placeholder.png" alt="" className="dp-avatar-img" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
-                                            </div>
-                                        </div>
-                                        <div className="dp-identity">
-                                            <div className="dp-name-row">
-                                                <div id="dMirrorName" className="dp-name">—</div>
-                                                <span onClick={() => (window as any).adminRenameUser?.((window as any).currId)} className="dp-rename-btn" title="Rename user">&#9998;</span>
-                                            </div>
-                                            <div className="dp-rank-row">
-                                                <div id="dMirrorHierarchy" className="dp-rank">—</div>
-                                                <div id="dMirrorStatus" className="dp-status-text">—</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Stats glass card — like halo-stats-pill */}
-                                <div className="dp-stats-glass">
-                                    <div className="dp-stat-item">
-                                        <span id="dMirrorPoints" className="dp-stat-num">0</span>
-                                        <span className="dp-stat-label">MERIT</span>
-                                        <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeMerit"></div></div>
-                                    </div>
-                                    <div className="dp-stat-sep"></div>
-                                    <div className="dp-stat-item">
-                                        <span id="dMirrorWallet" className="dp-stat-num">0</span>
-                                        <span className="dp-stat-label">CAPITAL</span>
-                                        <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeCapital"></div></div>
-                                    </div>
-                                    <div className="dp-stat-sep"></div>
-                                    <div className="dp-stat-item">
-                                        <span id="dMirrorKneel" className="dp-stat-num">0 h</span>
-                                        <span className="dp-stat-label">LABOR</span>
-                                        <div className="dp-stat-bar"><div className="dp-stat-fill" id="dpGaugeLabor"></div></div>
-                                    </div>
-                                </div>
+                                <div id="apMirrorHeader" style={{ display: 'none' }}></div>
 
                                 {/* ═══ SECTIONS ═══ */}
                                 <div className="dp-sections">

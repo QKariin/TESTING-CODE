@@ -5218,6 +5218,66 @@ h3,
 }
 
 /* ═══════════════════════════════════════════════
+   UNIFIED HEADER (full-width above chat+profile)
+   ═══════════════════════════════════════════════ */
+.vu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: radial-gradient(ellipse at 20% 40%, rgba(197,160,89,0.04) 0%, transparent 60%);
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+    flex-shrink: 0;
+}
+.vu-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.vu-header-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.vu-header-stats {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(197,160,89,0.1);
+    border-radius: 8px;
+    padding: 10px 6px;
+}
+.vu-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    min-width: 70px;
+}
+.vu-stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+.vu-stat-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.36rem;
+    color: rgba(197,160,89,0.5);
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 2px;
+}
+.vu-stat-sep {
+    width: 1px;
+    height: 28px;
+    background: rgba(197,160,89,0.1);
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
    DETAIL PROFILE PANEL
    ═══════════════════════════════════════════════ */
 

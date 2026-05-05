@@ -216,16 +216,6 @@ export async function updateDetail(u: any) {
     const kneelHrs = (totalKneel * 0.25).toFixed(1);
     setText('dMirrorKneel', `${kneelHrs} h`);
 
-    // Fill gauge bars with percentage based on promotion requirements
-    const meritReq = report.requirements.find((r: any) => r.label === 'MERIT' && r.type === 'bar');
-    const capitalReq = report.requirements.find((r: any) => r.label === 'CAPITAL' && r.type === 'bar');
-    const laborReq = report.requirements.find((r: any) => r.label === 'LABOR' && r.type === 'bar');
-    const gMerit = document.getElementById('dpGaugeMerit');
-    const gCapital = document.getElementById('dpGaugeCapital');
-    const gLabor = document.getElementById('dpGaugeLabor');
-    if (gMerit) gMerit.style.width = meritReq ? `${Math.min(((meritReq.current || 0) / (meritReq.target || 1)) * 100, 100)}%` : `${Math.min((u.points || 0) / 100, 100)}%`;
-    if (gCapital) gCapital.style.width = capitalReq ? `${Math.min(((capitalReq.current || 0) / (capitalReq.target || 1)) * 100, 100)}%` : `${Math.min((u.wallet || 0) / 100, 100)}%`;
-    if (gLabor) gLabor.style.width = laborReq ? `${Math.min(((laborReq.current || 0) / (laborReq.target || 1)) * 100, 100)}%` : `${Math.min(((totalKneel * 0.25) / 24) * 100, 100)}%`;
 
     setText('admin_CurrentRank', report.currentRank);
     const elAdminCurBen = document.getElementById('admin_CurrentBenefits');
