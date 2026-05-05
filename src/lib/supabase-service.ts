@@ -492,9 +492,10 @@ export const DbService = {
 
                     const params = prof?.parameters || {};
 
-                    // Find last routine upload (pending or approved — only rejected breaks streak)
+                    // Find PREVIOUS routine upload (exclude the one just submitted)
+                    // Only rejected breaks streak
                     const approvedRoutines = history
-                        .filter((h: any) => h.isRoutine === true && h.status !== 'reject' && h.timestamp)
+                        .filter((h: any) => h.isRoutine === true && h.status !== 'reject' && h.timestamp && h.id !== taskId)
                         .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
                     const toDay = (d: Date) => {
@@ -503,20 +504,25 @@ export const DbService = {
                         return adjusted.toISOString().split('T')[0];
                     };
 
-                    let consistency = 1;
+                    const today = new Date(now);
+                    const todayDay = toDay(today);
+                    let consistency = 1; // first submission ever = 1
+
                     if (approvedRoutines.length > 0) {
-                        const lastApproved = new Date(approvedRoutines[0].timestamp);
-                        const today = new Date(now);
-                        const lastDay = toDay(lastApproved);
-                        const todayDay = toDay(today);
-                        if (lastDay === todayDay) {
+                        const prevEntry = new Date(approvedRoutines[0].timestamp);
+                        const prevDay = toDay(prevEntry);
+
+                        if (prevDay === todayDay) {
+                            // Already submitted today (duplicate) — keep current value
                             consistency = Number(params.consistency) || 1;
                         } else {
                             const yesterday = new Date(today);
                             yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-                            if (lastDay === toDay(yesterday)) {
+                            if (prevDay === toDay(yesterday)) {
+                                // Previous submission was yesterday — increment streak
                                 consistency = (Number(params.consistency) || 0) + 1;
                             }
+                            // else: gap > 1 day — reset to 1 (already default)
                         }
                     }
 

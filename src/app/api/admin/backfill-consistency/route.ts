@@ -80,7 +80,7 @@ export async function POST() {
         }
 
         const routineTimestamps = history
-            .filter((h: any) => h.isRoutine === true && (h.status === 'approve' || h.status === 'approved'))
+            .filter((h: any) => h.isRoutine === true && h.status !== 'reject')
             .map((h: any) => h.timestamp)
             .filter(Boolean);
 
@@ -106,8 +106,7 @@ export async function POST() {
         const email = (p.member_id || '').toLowerCase();
         const entry = routineMap[email];
         const timestamps = entry?.timestamps || [];
-        // One-time bonus: set consistency to total approved uploads so existing users start with a nice number
-        const consistency = timestamps.length;
+        const consistency = calcConsistency(timestamps);
         const params = p.parameters || {};
 
         await supabaseAdmin
