@@ -660,6 +660,8 @@
 }
 
 /* On mobile, modals cover full screen since sidebar is hidden */
-.modal {
-    left: 0 !important;
+@media (max-width: 768px) {
+    .modal {
+        left: 0 !important;
+    }
 }
