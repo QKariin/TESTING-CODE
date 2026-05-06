@@ -48,10 +48,12 @@ export async function POST(req: Request) {
     // Send ROUTINE_CHANGE card to chat
     const payload = JSON.stringify({ oldRoutine, newRoutine: trimmed });
     await supabaseAdmin.from('messages').insert({
-        sender_email: caller.email,
-        conversation_id: profile.ID,
-        content: 'ROUTINE_CHANGE::' + payload,
-        type: 'text',
+        member_id: memberId,
+        sender: 'admin',
+        message: 'ROUTINE_CHANGE::' + payload,
+        media_url: null,
+        read: true,
+        created_at: new Date().toISOString(),
     });
 
     return NextResponse.json({ success: true, oldRoutine, newRoutine: trimmed });
