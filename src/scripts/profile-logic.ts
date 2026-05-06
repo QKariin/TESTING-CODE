@@ -3617,6 +3617,28 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             </div>`;
     }
 
+    // ROUTINE CHANGE CARD
+    if (content.startsWith('ROUTINE_CHANGE::')) {
+        try {
+            const d = JSON.parse(content.replace('ROUTINE_CHANGE::', ''));
+            const cardHtml = `
+            <div style="width:min(85%,340px);min-width:200px;margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0c0806 0%,#0e0a04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 35px rgba(0,0,0,0.7),0 0 20px rgba(197,160,89,0.04);">
+                <div style="padding:18px 20px;text-align:center;">
+                    <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:12px;">ROUTINE UPDATED</div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+                        <span style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.3);text-decoration:line-through;">${(d.oldRoutine || 'None').toUpperCase()}</span>
+                        <span style="color:rgba(197,160,89,0.6);font-size:0.85rem;">\u2192</span>
+                        <span style="font-family:'Cinzel',serif;font-size:0.9rem;color:#c5a059;font-weight:700;letter-spacing:1px;">${(d.newRoutine || 'None').toUpperCase()}</span>
+                    </div>
+                    <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.25),transparent);margin:0 auto;"></div>
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Routine Updated</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
+        }
+    }
+
     // TASK FEEDBACK CARD (comment card)
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {
@@ -4766,6 +4788,29 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through to plain text */ }
     }
 
+    // ROUTINE CHANGE CARD - desktop global chat
+    if (content.startsWith('ROUTINE_CHANGE::')) {
+        try {
+            const d = JSON.parse(content.replace('ROUTINE_CHANGE::', ''));
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0c0806 0%,#0e0a04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 35px rgba(0,0,0,0.7);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:12px;">ROUTINE UPDATED</div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+                                <span style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.3);text-decoration:line-through;">${(d.oldRoutine || 'None').toUpperCase()}</span>
+                                <span style="color:rgba(197,160,89,0.6);font-size:0.85rem;">\u2192</span>
+                                <span style="font-family:'Cinzel',serif;font-size:0.9rem;color:#c5a059;font-weight:700;letter-spacing:1px;">${(d.newRoutine || 'None').toUpperCase()}</span>
+                            </div>
+                            <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.25),transparent);margin:0 auto;"></div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
     // WELCOME CARD (new member) - desktop global chat
     if (content.startsWith('WELCOME_CARD::')) {
         try {
@@ -5077,6 +5122,29 @@ function _buildMobGlBubble(msg: any): string {
                         </div>
                         <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
                     </div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // ROUTINE CHANGE CARD - mobile
+    if (content.startsWith('ROUTINE_CHANGE::')) {
+        try {
+            const d = JSON.parse(content.replace('ROUTINE_CHANGE::', ''));
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:340px;min-width:200px;">
+                    <div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0c0806 0%,#0e0a04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 35px rgba(0,0,0,0.7);">
+                        <div style="padding:16px 18px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:10px;">ROUTINE UPDATED</div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+                                <span style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:rgba(255,255,255,0.3);text-decoration:line-through;">${(d.oldRoutine || 'None').toUpperCase()}</span>
+                                <span style="color:rgba(197,160,89,0.6);font-size:0.8rem;">\u2192</span>
+                                <span style="font-family:'Cinzel',serif;font-size:0.85rem;color:#c5a059;font-weight:700;letter-spacing:1px;">${(d.newRoutine || 'None').toUpperCase()}</span>
+                            </div>
+                            <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.25),transparent);margin:0 auto;"></div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
                 </div>
             </div>`;
         } catch { /* fall through */ }

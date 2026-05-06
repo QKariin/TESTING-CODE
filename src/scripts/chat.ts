@@ -33,7 +33,7 @@ export async function renderChat(messages: any[]) {
     const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::')) return false;
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::')) return false;
         if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
         const up = txt.toUpperCase();
         return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||
@@ -206,6 +206,27 @@ export async function renderChat(messages: any[]) {
                 }
             }
 
+            // ROUTINE CHANGE CARD
+            else if (originalMsg.startsWith('ROUTINE_CHANGE::')) {
+                try {
+                    const d = JSON.parse(originalMsg.replace('ROUTINE_CHANGE::', ''));
+                    contentHtml = `
+                    <div style="width:min(60%,420px);min-width:220px;margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0c0806 0%,#0e0a04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 10px 35px rgba(0,0,0,0.7),0 0 20px rgba(197,160,89,0.04);">
+                        <div style="padding:20px 22px;text-align:center;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:12px;">ROUTINE UPDATED</div>
+                            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                                <span style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-decoration:line-through;">${DOMPurify.sanitize((d.oldRoutine || 'None').toUpperCase())}</span>
+                                <span style="color:rgba(197,160,89,0.6);font-size:0.9rem;">\u2192</span>
+                                <span style="font-family:'Cinzel',serif;font-size:0.95rem;color:#c5a059;font-weight:700;letter-spacing:1px;">${DOMPurify.sanitize((d.newRoutine || 'None').toUpperCase())}</span>
+                            </div>
+                            <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.25),transparent);margin:0 auto;"></div>
+                        </div>
+                    </div>`;
+                } catch (e) {
+                    contentHtml = `<div class="msg m-queen">Routine Updated</div>`;
+                }
+            }
+
             // B. TASK FEEDBACK CARD
             else if (originalMsg.startsWith('TASK_FEEDBACK::')) {
                 try {
@@ -308,12 +329,12 @@ export async function renderChat(messages: any[]) {
             }
         }
 
-        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::'))) {
+        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::') || originalMsg.startsWith('ROUTINE_CHANGE::'))) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         const avatarUrl = "/queen-karin.png";
-        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
+        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('ROUTINE_CHANGE::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
             contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">

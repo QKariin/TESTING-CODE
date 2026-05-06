@@ -548,6 +548,27 @@ function renderToHtml(m: any) {
         return `<div class="chat-gift-wrap"><div style="max-width:260px;width:60vw;border-radius:12px;background:rgba(255,60,60,0.04);border:1px solid rgba(255,60,60,0.15);padding:14px 18px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.45rem;color:rgba(255,60,60,0.5);letter-spacing:3px;">CERTIFICATE REJECTED</div></div>${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
     }
 
+    // ── Routine Change Card ──
+    if (content.startsWith('ROUTINE_CHANGE::')) {
+        try {
+            const d = JSON.parse(content.replace('ROUTINE_CHANGE::', ''));
+            return `<div class="chat-gift-wrap">
+                <div style="max-width:360px;width:70%;border-radius:12px;overflow:hidden;background:linear-gradient(170deg,#0c0806 0%,#0e0a04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 8px 30px rgba(0,0,0,0.6);">
+                    <div style="padding:18px 20px;text-align:center;">
+                        <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:12px;">ROUTINE UPDATED</div>
+                        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                            <span style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.3);text-decoration:line-through;">${(d.oldRoutine || 'None').toUpperCase()}</span>
+                            <span style="color:rgba(197,160,89,0.6);font-size:0.85rem;">\u2192</span>
+                            <span style="font-family:'Cinzel',serif;font-size:0.9rem;color:#c5a059;font-weight:700;letter-spacing:1px;">${(d.newRoutine || 'None').toUpperCase()}</span>
+                        </div>
+                        <div style="width:60%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.25),transparent);margin:0 auto;"></div>
+                    </div>
+                </div>
+                ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+            </div>`;
+        } catch { return ''; }
+    }
+
     // ── Task Feedback Card ── centered, clickable to open history modal
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {

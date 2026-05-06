@@ -319,7 +319,10 @@ export async function updateDetail(u: any) {
             <div style="margin-bottom:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; font-family:'Rajdhani',sans-serif;">
                     <span style="color:#888;">ROUTINE - ${routineRowName}</span>
-                    ${routineSvg}
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="event.stopPropagation();window.changeRoutine('${u.memberId}','${(u.routine || '').replace(/'/g, "\\'")}')" style="background:none;border:none;cursor:pointer;padding:2px;color:rgba(197,160,89,0.4);font-size:0.7rem;" title="Change routine">&#9998;</button>
+                        ${routineSvg}
+                    </div>
                 </div>
                 ${proofHtml}
             </div>`;
@@ -1094,6 +1097,28 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
     }
 }
 
+async function changeRoutine(memberId: string, currentRoutine: string) {
+    const newRoutine = prompt('Enter new routine for this member:', currentRoutine);
+    if (newRoutine === null || newRoutine.trim() === currentRoutine) return;
+    try {
+        const res = await fetch('/api/admin/change-routine', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId, newRoutine: newRoutine.trim() }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Refresh dashboard data
+            const { renderMainDashboard } = await import('./dashboard-main');
+            renderMainDashboard();
+        } else {
+            alert('Failed: ' + (data.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Failed to change routine');
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
@@ -1102,4 +1127,5 @@ if (typeof window !== 'undefined') {
     (window as any).adminRenameUser = adminRenameUser;
     (window as any).approveRoutineFromPanel = approveRoutineFromPanel;
     (window as any).rejectRoutineFromPanel = rejectRoutineFromPanel;
+    (window as any).changeRoutine = changeRoutine;
 }
