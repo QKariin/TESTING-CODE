@@ -138,6 +138,10 @@ export async function updateDetail(u: any) {
     const gen = ++_detailGen;
     const uid = u.memberId || u.member_id || '';
 
+    // Expose for routine change button in the chatter panel
+    (window as any)._currChatterId = uid;
+    (window as any)._currRoutineName = u.routine || '';
+
     // When switching users, invalidate per-object caches so shared DOM containers re-render
     if (_lastDetailUserId !== uid) {
         _lastDetailUserId = uid;
