@@ -1,4 +1,6 @@
 const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
+const APP_LINK = 'https://throne.qkarin.com';
 
 interface DiscordField {
     name: string;
@@ -8,18 +10,26 @@ interface DiscordField {
 
 interface DiscordEmbed {
     title: string;
+    url?: string;
     description?: string;
     color: number;
     fields?: DiscordField[];
     footer?: { text: string };
-    thumbnail?: { url: string };
+    image?: { url: string };
     timestamp?: string;
+}
+
+function cardUrl(type: string, title: string, line1: string, line2?: string) {
+    const p = new URLSearchParams({ type, title, line1 });
+    if (line2) p.set('line2', line2);
+    return `${BASE}/api/og/discord-card?${p.toString()}`;
 }
 
 export async function sendDiscordEmbed(embed: DiscordEmbed) {
     if (!WEBHOOK_URL) return;
     try {
         embed.timestamp = embed.timestamp || new Date().toISOString();
+        embed.url = embed.url || APP_LINK;
         if (!embed.footer) embed.footer = { text: 'throne.qkarin.com' };
         await fetch(WEBHOOK_URL, {
             method: 'POST',
@@ -37,11 +47,12 @@ export async function sendDiscordEmbed(embed: DiscordEmbed) {
 export function discordDirectTribute(senderName: string, amount: number) {
     return sendDiscordEmbed({
         title: 'DIRECT TRIBUTE',
-        description: `**${senderName}** knelt and offered **${amount.toLocaleString()} coins** to the Queen`,
-        color: 16766720, // gold #FFD700
+        description: `**${senderName}** knelt and offered **${amount.toLocaleString()} coins** to the Queen\n\n[Pay your tribute](${APP_LINK})`,
+        color: 16766720,
         fields: [
             { name: 'Merit Earned', value: `${Math.floor(amount / 2).toLocaleString()}`, inline: true },
         ],
+        image: { url: cardUrl('tribute', 'DIRECT TRIBUTE', `${senderName} offered ${amount.toLocaleString()} coins`, `Merit earned: ${Math.floor(amount / 2).toLocaleString()}`) },
     });
 }
 
@@ -54,16 +65,28 @@ export function discordRiskyTribute(
 
     let description: string;
     let color: number;
+    let type: string;
+    let imgLine1: string;
+    let imgLine2: string;
 
     if (isJackpot) {
-        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** and hit **JACKPOT** — won **${bonusAmount.toLocaleString()}** back!`;
-        color = 52326; // green #00CC66
+        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** and hit **JACKPOT**!\n\n[Try your luck](${APP_LINK})`;
+        color = 52326;
+        type = 'risky_win';
+        imgLine1 = `${senderName} HIT THE JACKPOT!`;
+        imgLine2 = `Staked ${stake.toLocaleString()} — Won ${bonusAmount.toLocaleString()} back`;
     } else if (isNoLoss) {
-        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — drew **${cardName}**, lost nothing`;
-        color = 16766720; // gold
+        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — drew **${cardName}**, lost nothing\n\n[Try your luck](${APP_LINK})`;
+        color = 16766720;
+        type = 'risky_win';
+        imgLine1 = `${senderName} drew ${cardName}`;
+        imgLine2 = `Staked ${stake.toLocaleString()} — Lost nothing`;
     } else {
-        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — drew **${cardName}**, Queen took **${lossAmount.toLocaleString()}**`;
-        color = 13369344; // red #CC0000
+        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — Queen took **${lossAmount.toLocaleString()}**\n\n[Try your luck](${APP_LINK})`;
+        color = 13369344;
+        type = 'risky_loss';
+        imgLine1 = `${senderName} drew ${cardName}`;
+        imgLine2 = `Staked ${stake.toLocaleString()} — Queen took ${lossAmount.toLocaleString()}`;
     }
 
     return sendDiscordEmbed({
@@ -75,37 +98,41 @@ export function discordRiskyTribute(
             { name: isJackpot ? 'Won' : 'Lost', value: (isJackpot ? bonusAmount : lossAmount).toLocaleString(), inline: true },
             { name: 'Card', value: cardName, inline: true },
         ],
+        image: { url: cardUrl(type, isJackpot ? 'JACKPOT!' : 'RISKY TRIBUTE', imgLine1, imgLine2) },
     });
 }
 
 export function discordNewMember(name: string) {
     return sendDiscordEmbed({
         title: 'NEW ARRIVAL',
-        description: `A new soul has entered the realm\nWelcome, **${name}**`,
-        color: 4853326, // purple #4A0E4E
+        description: `A new soul has entered the realm\nWelcome, **${name}**\n\n[Enter the Throne](${APP_LINK})`,
+        color: 4853326,
         fields: [
             { name: 'Rank', value: 'Hall Boy', inline: true },
             { name: 'Starting Coins', value: '1,111', inline: true },
         ],
+        image: { url: cardUrl('arrival', 'NEW ARRIVAL', `Welcome, ${name}`, 'Hall Boy — 1,111 coins') },
     });
 }
 
 export function discordPromotion(name: string, oldRank: string, newRank: string) {
     return sendDiscordEmbed({
         title: 'PROMOTION',
-        description: `**${name}** has been elevated\n**${oldRank}** \u2192 **${newRank}**`,
-        color: 16766720, // gold
+        description: `**${name}** has been elevated\n**${oldRank}** \u2192 **${newRank}**\n\n[See the hierarchy](${APP_LINK})`,
+        color: 16766720,
+        image: { url: cardUrl('promotion', 'PROMOTION', `${name} has been elevated`, `${oldRank} \u2192 ${newRank}`) },
     });
 }
 
 export function discordChallengeJoin(name: string, challengeName: string, activeCount: number) {
     return sendDiscordEmbed({
         title: 'CHALLENGE JOINED',
-        description: `**${name}** entered **${challengeName}**`,
-        color: 16115400, // warm white-gold #F5E6C8
+        description: `**${name}** entered **${challengeName}**\n\n[Join the challenge](${APP_LINK})`,
+        color: 16115400,
         fields: [
             { name: 'Active Participants', value: `${activeCount}`, inline: true },
         ],
+        image: { url: cardUrl('challenge', 'CHALLENGE JOINED', `${name} entered ${challengeName}`) },
     });
 }
 
@@ -114,20 +141,22 @@ export function discordChallengeVerified(name: string, taskNum: string, points: 
     const placementStr = medals[placement] || `${placement}th`;
     return sendDiscordEmbed({
         title: 'CHALLENGE TASK VERIFIED',
-        description: `**${name}** completed task **${taskNum}**`,
-        color: 52326, // green
+        description: `**${name}** completed task **${taskNum}**\n\n[Join the challenge](${APP_LINK})`,
+        color: 52326,
         fields: [
             { name: 'Points', value: `+${points}`, inline: true },
             { name: 'Placement', value: placementStr, inline: true },
         ],
+        image: { url: cardUrl('task_ok', 'TASK VERIFIED', `${name} completed task ${taskNum}`, `+${points} points — ${placementStr} place`) },
     });
 }
 
 export function discordRoutineSubmitted(name: string) {
     return sendDiscordEmbed({
         title: 'DAILY ROUTINE',
-        description: `**${name}** submitted their daily routine`,
-        color: 4853326, // purple #4A0E4E
+        description: `**${name}** submitted their daily routine\n\n[Start your devotion](${APP_LINK})`,
+        color: 4853326,
+        image: { url: cardUrl('routine', 'DAILY ROUTINE', `${name} submitted their daily routine`) },
     });
 }
 
@@ -135,30 +164,33 @@ export function discordTaskReviewed(name: string, action: 'approve' | 'reject', 
     if (action === 'approve') {
         return sendDiscordEmbed({
             title: 'TASK APPROVED',
-            description: `**${name}**'s task has been approved`,
-            color: 52326, // green
+            description: `**${name}**'s task has been approved\n\n[Enter the Throne](${APP_LINK})`,
+            color: 52326,
             fields: [
                 { name: 'Points Earned', value: `+${(points || 0).toLocaleString()}`, inline: true },
             ],
+            image: { url: cardUrl('task_ok', 'TASK APPROVED', `${name}'s task has been approved`, `+${(points || 0).toLocaleString()} points earned`) },
         });
     }
     return sendDiscordEmbed({
         title: 'TASK REJECTED',
-        description: `**${name}**'s task has been rejected`,
-        color: 13369344, // red
+        description: `**${name}**'s task has been rejected\n\n[Enter the Throne](${APP_LINK})`,
+        color: 13369344,
         fields: [
             { name: 'Penalty', value: '-300 coins', inline: true },
         ],
+        image: { url: cardUrl('task_fail', 'TASK REJECTED', `${name}'s task has been rejected`, '-300 coins penalty') },
     });
 }
 
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',
-        description: `**${senderName}** purchased **${itemTitle}** for the Queen`,
-        color: 16766720, // gold
+        description: `**${senderName}** purchased **${itemTitle}** for the Queen\n\n[See the wishlist](${APP_LINK})`,
+        color: 16766720,
         fields: [
             { name: 'Cost', value: `${cost.toLocaleString()} coins`, inline: true },
         ],
+        image: { url: cardUrl('wishlist', 'WISHLIST TRIBUTE', `${senderName} purchased ${itemTitle}`, `${cost.toLocaleString()} coins`) },
     });
 }
