@@ -45,13 +45,13 @@ function _showMenu() {
             <button onclick="window.closeStandaloneTribute()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#10005;</button>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-            <button onclick="window._tributeShowSend()" style="width:280px;height:140px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;">
+            <button onclick="window._tributeShowSend()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                 <img src="/tribute-send.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
             </button>
-            <button onclick="window._tributeShowRisky()" style="width:280px;height:140px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;">
+            <button onclick="window._tributeShowRisky()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                 <img src="/tribute-risky.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
             </button>
-            <button onclick="window._tributeShowWishlist()" style="width:280px;height:140px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;">
+            <button onclick="window._tributeShowWishlist()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                 <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
             </button>
         </div>`;
