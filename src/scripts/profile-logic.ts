@@ -1138,6 +1138,7 @@ export function showCertificate() {
     btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-top:16px;width:355px;max-width:92vw;padding-bottom:40px;';
 
     const shareBtn = document.createElement('button');
+    shareBtn.id = 'certShareBtn';
     shareBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.25);background:rgba(197,160,89,0.04);color:rgba(197,160,89,0.8);font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:4px;cursor:pointer;font-weight:600;';
     shareBtn.textContent = 'SAVE & SHARE';
     shareBtn.onclick = () => _saveCertificate();
@@ -1181,6 +1182,9 @@ export function showCertificate() {
 }
 
 async function _saveCertificate() {
+    const btn = document.getElementById('certShareBtn') as HTMLButtonElement | null;
+    if (btn) { btn.textContent = 'GENERATING...'; btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed'; }
+
     const state = getState();
     const raw = (window as any).__currentProfileRaw || state.raw || state;
     const name = (raw?.name || 'LOYAL SUBJECT').toUpperCase();
@@ -1474,7 +1478,11 @@ function _drawCertificate(
 
 function _exportCanvas(canvas: HTMLCanvasElement) {
     canvas.toBlob(async (blob) => {
-        if (!blob) return;
+        const btn = document.getElementById('certShareBtn') as HTMLButtonElement | null;
+        if (!blob) {
+            if (btn) { btn.textContent = 'SAVE & SHARE'; btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+            return;
+        }
         const file = new File([blob], 'qkarin-certificate.png', { type: 'image/png' });
 
         const state = getState();
@@ -1504,6 +1512,10 @@ function _exportCanvas(canvas: HTMLCanvasElement) {
             a.click();
             URL.revokeObjectURL(url);
         }
+
+        // Restore button
+        if (btn) { btn.textContent = 'SAVED ✓'; btn.style.opacity = '0.6'; }
+        setTimeout(() => { if (btn) { btn.textContent = 'SAVE & SHARE'; btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; } }, 3000);
 
         // Upload cert to Supabase storage and send to Discord (once per 30s)
         if (!(window as any).__certDiscordSent) {
