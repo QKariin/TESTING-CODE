@@ -82,11 +82,11 @@ function _updateWallet(newWallet: number) {
 
 // ─── OPEN / CLOSE ─────────────────────────────────────────────────────────
 
-export function openStandaloneTribute() {
+export function openStandaloneTribute(screen?: string) {
     const o = document.getElementById('mobTributeStandalone');
     if (!o) return;
     o.style.display = 'flex';
-    _showMenu();
+    if (screen === 'risky') { _showRisky(); } else { _showMenu(); }
 }
 
 export function closeStandaloneTribute() {
