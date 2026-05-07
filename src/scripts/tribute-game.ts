@@ -44,23 +44,17 @@ function _showMenu() {
         <div style="display:flex;justify-content:flex-end;">
             <button onclick="window.closeStandaloneTribute()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#10005;</button>
         </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
-            <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:16px;">CHOOSE YOUR OFFERING</div>
-            ${_menuBtn('_tributeShowSend', 'SEND', 'Fixed coin amounts', 'rgba(197,160,89,0.12)', 'rgba(197,160,89,0.35)', '#c5a059')}
-            ${_menuBtn('_tributeShowRisky', 'RISKY SEND', 'Gamble your coins', 'rgba(197,160,89,0.06)', 'rgba(197,160,89,0.25)', '#c5a059')}
-            ${_menuBtn('_tributeShowWishlist', 'WISHLIST', 'Buy Queen a gift', 'rgba(167,139,250,0.08)', 'rgba(167,139,250,0.25)', '#a78bfa')}
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+            <button onclick="window._tributeShowSend()" style="width:280px;height:140px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;">
+                <img src="/tribute-send.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+            </button>
+            <button onclick="window._tributeShowRisky()" style="width:280px;height:140px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;">
+                <img src="/tribute-risky.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+            </button>
+            <button onclick="window._tributeShowWishlist()" style="width:280px;height:140px;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;">
+                <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+            </button>
         </div>`;
-}
-
-function _menuBtn(fn: string, title: string, sub: string, bg: string, border: string, color: string) {
-    return `<button onclick="window.${fn}()" style="width:260px;padding:18px 20px;background:linear-gradient(135deg,${bg},transparent);border:1px solid ${border};border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent;">
-        <div style="width:36px;height:36px;border-radius:50%;border:1px solid ${border};display:flex;align-items:center;justify-content:center;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};"></div>
-        </div>
-        <div><div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:${color};letter-spacing:2px;font-weight:700;text-align:left;">${title}</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.3);text-align:left;">${sub}</div></div>
-    </button>`;
 }
 
 // ─── DIRECT SEND ───────────────────────────────────────────────────────────
