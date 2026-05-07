@@ -1477,26 +1477,45 @@ function _exportCanvas(canvas: HTMLCanvasElement) {
         if (!blob) return;
         const file = new File([blob], 'qkarin-certificate.png', { type: 'image/png' });
 
+        const state = getState();
+        const raw = (window as any).__currentProfileRaw || state.raw || state;
+        const rank = (state as any).rank || raw?.hierarchy || 'servant';
+        const name = (raw?.name || 'LOYAL SUBJECT').toUpperCase();
+
         // Mobile: use Share API to get "Save Image" option
         if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
             try {
-                const state = getState();
-                const raw = (window as any).__currentProfileRaw || state.raw || state;
-                const rank = (state as any).rank || raw?.hierarchy || 'servant';
                 await navigator.share({ files: [file], title: 'My Service Certificate', text: `I proudly serve as ${rank} at the court of @qkarin_com 👑 #QKarin #ServingTheQueen` });
-                return;
             } catch (e) {
                 // User cancelled or share failed — fall through to download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'qkarin-certificate.png';
+                a.click();
+                URL.revokeObjectURL(url);
             }
+        } else {
+            // Desktop / fallback: download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'qkarin-certificate.png';
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
-        // Desktop / fallback: download
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'qkarin-certificate.png';
-        a.click();
-        URL.revokeObjectURL(url);
+        // Upload cert to Supabase storage and send to Discord
+        try {
+            const certUrl = await uploadToSupabase('media', 'certificates', file);
+            if (certUrl && !certUrl.startsWith('failed')) {
+                fetch('/api/discord/cert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, rank: rank.toUpperCase(), imageUrl: certUrl }),
+                }).catch(() => {});
+            }
+        } catch (_) {}
     }, 'image/png');
 }
 
