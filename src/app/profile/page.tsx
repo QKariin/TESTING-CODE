@@ -2204,8 +2204,8 @@ export default function ProfilePage() {
             </>
         )}
 
-        {/* PWA Install Banner — always shown on mobile browser */}
-        {isMobile && !isStandalone && (
+        {/* PWA Install Banner — only on landing profile, hidden when any overlay is open */}
+        {isMobile && !isStandalone && !anyOverlayOpen && (
             <div style={{
                 position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000001,
                 background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(5,8,18,0.98))',
