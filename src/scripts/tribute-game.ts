@@ -13,6 +13,42 @@ function _wallet(): number { return getState()?.wallet || 0; }
 
 const _boostBtn = `<button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="padding:9px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span></button>`;
 
+const _lossQuotes = [
+    "Thank you for the donation, darling. I'll spend it better than you ever could.",
+    "You really thought luck was on your side? How adorable.",
+    "That's what happens when you gamble against a Queen.",
+    "Your coins look so much better in my treasury.",
+    "Did that hurt? Good. Now go earn more for me.",
+    "I didn't even have to lift a finger. You ruined yourself.",
+    "Another foolish bet. I love watching you lose.",
+    "You should know by now - the house always wins. And I am the house.",
+    "Honestly? I expected nothing less from you.",
+    "Your loss is my gain. As it should be.",
+    "Maybe next time you'll think twice. Or maybe you won't. I hope you won't.",
+    "Aww, don't cry. You can always earn more... and lose it all over again.",
+    "This is why I'm the Queen and you're the one gambling.",
+    "I'll put your coins to much better use. Trust me on that.",
+    "The audacity to gamble and then lose. Pathetic. I love it.",
+];
+
+const _mercyQuotes = [
+    "Consider yourself lucky. I was feeling generous today.",
+    "You escaped this time. Don't get used to it.",
+    "Mercy is a rare gift from me. Remember that.",
+    "I'll let you keep your coins... for now.",
+    "Not today, little one. But next time? No promises.",
+];
+
+const _winQuotes = [
+    "Fine. Take your coins. You won't be this lucky twice.",
+    "Enjoy it while it lasts. I always get what's mine.",
+    "A small victory for you. A minor inconvenience for me.",
+    "Don't let it go to your head. You're still mine.",
+    "Lucky you. Now come back and try again.",
+];
+
+function _randomQuote(arr: string[]) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 function _updateWallet(newWallet: number) {
     setState({ wallet: newWallet });
     const s = getState();
@@ -337,23 +373,27 @@ function _showRiskyResult(data: any) {
 
     const isWin = data.cardName === 'DOUBLE' && data.bonusAmount > 0;
     const isMercy = data.cardName === 'MERCY' || (data.cardName === 'DOUBLE' && data.bonusAmount === 0 && data.lossAmount === 0);
+    const isLoss = !isWin && !isMercy;
+
+    const quote = isLoss ? _randomQuote(_lossQuotes) : isMercy ? _randomQuote(_mercyQuotes) : _randomQuote(_winQuotes);
 
     let titleColor = '#e03050';
     let bg = 'rgba(220,50,80,0.04)';
     let borderColor = 'rgba(220,50,80,0.25)';
     let glowColor = 'rgba(220,50,80,0.08)';
-    if (isWin) { titleColor = '#c5a059'; bg = 'rgba(197,160,89,0.06)'; borderColor = 'rgba(197,160,89,0.35)'; glowColor = 'rgba(197,160,89,0.12)'; }
-    else if (isMercy) { titleColor = '#4ade80'; bg = 'rgba(74,222,128,0.04)'; borderColor = 'rgba(74,222,128,0.25)'; glowColor = 'rgba(74,222,128,0.08)'; }
+    let queenBorder = 'rgba(220,50,80,0.2)';
+    if (isWin) { titleColor = '#c5a059'; bg = 'rgba(197,160,89,0.06)'; borderColor = 'rgba(197,160,89,0.35)'; glowColor = 'rgba(197,160,89,0.12)'; queenBorder = 'rgba(197,160,89,0.3)'; }
+    else if (isMercy) { titleColor = '#4ade80'; bg = 'rgba(74,222,128,0.04)'; borderColor = 'rgba(74,222,128,0.25)'; glowColor = 'rgba(74,222,128,0.08)'; queenBorder = 'rgba(74,222,128,0.25)'; }
 
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
             <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
                 <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
             </div>
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
                 <div style="font-size:3.5rem;">${data.cardIcon}</div>
-                <div style="font-family:'Cinzel',serif;font-size:1.3rem;color:${titleColor};letter-spacing:5px;font-weight:700;">${data.cardName}</div>
-                <div style="width:240px;padding:22px;border-radius:16px;background:${bg};border:1px solid ${borderColor};text-align:center;margin:8px 0;box-shadow:0 0 30px ${glowColor};">
+                <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:${titleColor};letter-spacing:5px;font-weight:700;">${data.cardName}</div>
+                <div style="width:260px;padding:22px;border-radius:16px;background:${bg};border:1px solid ${borderColor};text-align:center;margin:6px 0;box-shadow:0 0 30px ${glowColor};">
                     ${isWin ? `
                         <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:6px;">YOU WON</div>
                         <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#c5a059;font-weight:700;">+${data.bonusAmount.toLocaleString()}</div>
@@ -368,10 +408,17 @@ function _showRiskyResult(data: any) {
                         <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(220,50,80,0.5);letter-spacing:1px;">COINS</div>
                     `}
                 </div>
-                ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
-                <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);margin-top:4px;">Balance: ${data.newWallet.toLocaleString()} coins</div>
-                <button onclick="window.closeStandaloneTribute()" style="margin-top:12px;padding:14px 44px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
-                <div style="margin-top:8px;">${_boostBtn}</div>
+                <div style="width:280px;padding:16px 20px;border-radius:14px;border:1px solid ${queenBorder};background:rgba(0,0,0,0.3);display:flex;gap:12px;align-items:flex-start;">
+                    <img src="/queen-nav.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.5);flex-shrink:0;">
+                    <div>
+                        <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;margin-bottom:4px;">QUEEN KARIN</div>
+                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.4;font-style:italic;">"${quote}"</div>
+                    </div>
+                </div>
+                ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.25);">Balance: ${data.newWallet.toLocaleString()} coins</div>
+                <button onclick="window.closeStandaloneTribute()" style="margin-top:8px;padding:14px 44px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
+                <div style="margin-top:4px;">${_boostBtn}</div>
             </div>
         </div>`;
 }
