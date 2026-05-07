@@ -230,7 +230,33 @@ function _showRisky() {
                 </div>
                 <div id="riskyStakeDisplay" style="text-align:center;margin-bottom:24px;min-height:50px;"></div>
                 <div id="riskyConfirmWrap" style="display:none;text-align:center;">
-                    <button id="riskyConfirmBtn" onclick="window._tributeRiskyConfirm()" style="padding:18px 56px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06));border:1px solid rgba(197,160,89,0.5);border-radius:12px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;letter-spacing:3px;font-weight:700;box-shadow:0 0 20px rgba(197,160,89,0.1);">GAMBLE</button>
+                    <style>
+                        @keyframes gambleShake {
+                            0%, 100% { transform: translateX(0); }
+                            10% { transform: translateX(-3px) rotate(-1deg); }
+                            20% { transform: translateX(3px) rotate(1deg); }
+                            30% { transform: translateX(-3px) rotate(-0.5deg); }
+                            40% { transform: translateX(3px) rotate(0.5deg); }
+                            50% { transform: translateX(-2px); }
+                            60% { transform: translateX(2px); }
+                            70% { transform: translateX(0); }
+                        }
+                        @keyframes gambleGlow {
+                            0%, 100% { box-shadow: 0 0 20px rgba(197,160,89,0.15), 0 0 40px rgba(197,160,89,0.05); }
+                            50% { box-shadow: 0 0 30px rgba(197,160,89,0.3), 0 0 60px rgba(197,160,89,0.1), inset 0 0 20px rgba(197,160,89,0.05); }
+                        }
+                    </style>
+                    <button id="riskyConfirmBtn" onclick="window._tributeRiskyConfirm()" style="padding:20px 60px;background:linear-gradient(160deg,#0a0a0a 0%,rgba(197,160,89,0.12) 40%,#0a0a0a 60%,rgba(197,160,89,0.08) 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.9rem;color:#c5a059;letter-spacing:4px;font-weight:700;animation:gambleShake 2.5s ease-in-out infinite, gambleGlow 2s ease-in-out infinite;position:relative;overflow:hidden;text-shadow:0 0 12px rgba(197,160,89,0.4);">
+                        <span style="position:relative;z-index:1;">GAMBLE</span>
+                        <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.06),transparent);animation:gambleShine 3s ease-in-out infinite;"></div>
+                    </button>
+                    <style>
+                        @keyframes gambleShine {
+                            0% { transform: translateX(-100%); }
+                            50% { transform: translateX(100%); }
+                            100% { transform: translateX(100%); }
+                        }
+                    </style>
                 </div>
             </div>
             ${_backFooter()}
@@ -423,9 +449,13 @@ function _showRiskyResult(data: any) {
 function _showWishlist() {
     closeStandaloneTribute();
     setTimeout(() => {
-        // Force open (not toggle) the wishlist overlay
-        if ((window as any).openTributeHunt) (window as any).openTributeHunt();
-    }, 200);
+        // mob_TributeOverlay lives inside the chat overlay, so open chat first
+        if ((window as any).openMobChatOverlay) (window as any).openMobChatOverlay();
+        // Then force open the wishlist overlay inside it
+        setTimeout(() => {
+            if ((window as any).openTributeHunt) (window as any).openTributeHunt();
+        }, 100);
+    }, 100);
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
