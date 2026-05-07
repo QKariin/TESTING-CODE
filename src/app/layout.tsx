@@ -15,10 +15,24 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Queen Karin",
-  description: "Queen Karin",
+  description: "Femdom Revolution with Queen Karin",
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Queen Karin',
+    description: 'Femdom Revolution with Queen Karin',
+    url: 'https://throne.qkarin.com',
+    siteName: 'Throne',
+    images: [{ url: 'https://throne.qkarin.com/og-cover.png', width: 1200, height: 630 }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Queen Karin',
+    description: 'Femdom Revolution with Queen Karin',
+    images: ['https://throne.qkarin.com/og-cover.png'],
   },
 };
 
