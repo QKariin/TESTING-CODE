@@ -153,6 +153,31 @@ export default function ProfilePage() {
         return () => window.removeEventListener('resize', check);
     }, []);
 
+    // Close overlays when returning from bfcache (e.g. back from Stripe)
+    useEffect(() => {
+        const handler = (e: PageTransitionEvent) => {
+            if (e.persisted) {
+                // Page was restored from bfcache — close any open overlays
+                setMobOverlayOpen(false);
+                setChallengePanelOpen(false);
+                document.querySelectorAll('.mob-overlay').forEach(el => {
+                    (el as HTMLElement).classList.remove('mob-overlay-open');
+                    (el as HTMLElement).style.display = 'none';
+                });
+                // Also close inline risky overlay
+                const irOv = document.getElementById('inlineRiskyOverlay');
+                if (irOv) irOv.style.display = 'none';
+                // Reset body scroll lock
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.width = '';
+                document.body.style.top = '';
+            }
+        };
+        window.addEventListener('pageshow', handler);
+        return () => window.removeEventListener('pageshow', handler);
+    }, []);
+
     // Lock body scroll when any mobile overlay/modal is open
     const anyOverlayOpen = mobOverlayOpen || challengePanelOpen;
     useEffect(() => {
