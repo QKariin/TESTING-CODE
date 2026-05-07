@@ -83,13 +83,13 @@ export async function GET(req: Request) {
         const { data: routines } = await supabaseAdmin
             .from('routines')
             .select('id, proof_url, proof_type, thumbnail_url')
-            .is('thumbnail_url', null)
+            .or('thumbnail_url.is.null,thumbnail_url.eq.')
             .not('proof_url', 'is', null)
             .limit(limit);
 
         for (const r of routines || []) {
-            if (!r.proof_url || !isImageUrl(r.proof_url)) { skipped++; continue; }
-            if (r.proof_type === 'video') { skipped++; continue; }
+            if (!r.proof_url || !isImageUrl(r.proof_url)) { skipped++; results.push({ type: 'routine_skip', id: r.id, url: r.proof_url, proof_type: r.proof_type, reason: 'not_image_url' }); continue; }
+            if (r.proof_type === 'video') { skipped++; results.push({ type: 'routine_skip', id: r.id, reason: 'video' }); continue; }
             processed++;
 
             if (dry) {
