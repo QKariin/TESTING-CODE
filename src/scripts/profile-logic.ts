@@ -7174,7 +7174,7 @@ function _renderAltarHero(hero: any | null, resolveUrl: (u: string) => string) {
         imgMain.style.objectFit = 'cover';
         imgMain.style.cursor = 'pointer';
     } else {
-        imgMain.src = url;
+        imgMain.src = thumbUrl || url;
         imgMain.style.display = 'block';
     }
 
@@ -7253,7 +7253,7 @@ function _makeAltarCard(t: any, list: any[], idx: number, dimmed = false): HTMLE
     const thumbUrl = _resolveThumbUrl(t, resolveUrl);
     const media = isVid
         ? `<img src="${thumbUrl || '/queen-karin.png'}" class="altar-card-media" loading="lazy" ${_imgFallback} />`
-        : `<img src="${url}" class="altar-card-media" loading="lazy" ${_imgFallback} />`;
+        : `<img src="${thumbUrl || url}" class="altar-card-media" loading="lazy" ${_imgFallback} />`;
     const card = document.createElement('div');
     card.className = 'altar-photo-card';
     if (dimmed) card.style.filter = 'grayscale(0.65)';
@@ -7308,7 +7308,7 @@ function _renderMobileAltar(top3: any[], allApproved: any[], routines: any[], fa
             img.dataset.loaded = 'true';
             img.style.display = '';
             img.onerror = () => _slotFallback(img);
-            img.src = url;
+            img.src = thumbUrl || url;
             img.style.pointerEvents = 'none';
         }
     });
@@ -7337,7 +7337,7 @@ function _renderRoutineGrid(containerId: string, routines: any[], resolveUrl: (u
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const media = isVid
             ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" ${_imgFallback} />`
-            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" ${_imgFallback} />`;
+            : `<img src="${thumbUrl || url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" ${_imgFallback} />`;
         return `
             <div style="position:relative;overflow:hidden;border-radius:4px;cursor:pointer;" onclick="void(0)">
                 ${media}
@@ -7360,7 +7360,7 @@ function _renderFailedGrid(containerId: string, failed: any[], resolveUrl: (u: s
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         return isVid
             ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" ${_imgFallback} />`
-            : `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" ${_imgFallback} />`;
+            : `<img src="${thumbUrl || url}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;filter:grayscale(0.6);" loading="lazy" ${_imgFallback} />`;
     }).join('');
 }
 
@@ -7380,7 +7380,7 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         const mediaP = url
             ? (isVidP
                 ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy" ${_imgFallback}>`
-                : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy" ${_imgFallback}>`)
+                : `<img src="${thumbUrl || url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;filter:brightness(0.45);" loading="lazy" ${_imgFallback}>`)
             : `<div style="aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#0a0a0a;font-size:2rem;">⏳</div>`;
         card.innerHTML = `
             <div style="position:relative;">
@@ -7409,7 +7409,7 @@ function _renderMosaicGrid(tasks: any[], pending: any[], resolveUrl: (u: string)
         const thumbUrl = _resolveThumbUrl(t, resolveUrl);
         const mediaHTML = isVid
             ? `<img src="${thumbUrl || '/queen-karin.png'}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" ${_imgFallback} />`
-            : `<img src="${url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" ${_imgFallback} />`;
+            : `<img src="${thumbUrl || url}" style="width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;display:block;" loading="lazy" ${_imgFallback} />`;
         const meritBadge = t.meritAwarded ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#c5a059;font-family:Orbitron;font-size:0.38rem;padding:3px 7px;border-radius:3px;letter-spacing:1px;">+${t.meritAwarded}</div>` : '';
 
         card.innerHTML = `
