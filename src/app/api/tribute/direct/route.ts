@@ -80,6 +80,17 @@ export async function POST(request: Request) {
                 });
             } catch (_) {}
 
+            // Post to private chat
+            try {
+                await supabase.from('chats').insert({
+                    member_id: realEmail,
+                    sender_email: realEmail,
+                    content: `DIRECT_TRIBUTE_CARD::${JSON.stringify({ senderName, amount })}`,
+                    type: 'tribute',
+                    metadata: { senderName, amount },
+                });
+            } catch (_) {}
+
             return NextResponse.json({ success: true, newWallet, meritGained: merit });
         }
 
@@ -139,11 +150,30 @@ export async function POST(request: Request) {
             // Post to global chat
             try {
                 const isWin = cardName === 'DOUBLE' && bonusAmount > 0;
+                const riskyPayload = {
+                    senderName,
+                    stakeAmount: stake,
+                    cardName,
+                    icon: cardIcon,
+                    lostAmount: lossAmount,
+                    wonAmount: bonusAmount,
+                    isWin,
+                };
                 await supabase.from('global_messages').insert({
                     sender_email: realEmail,
                     sender_name: senderName,
                     sender_avatar: null,
-                    message: `RISKY_TRIBUTE_CARD::${JSON.stringify({
+                    message: `RISKY_TRIBUTE_CARD::${JSON.stringify(riskyPayload)}`,
+                });
+            } catch (_) {}
+
+            // Post to private chat
+            try {
+                const isWin = cardName === 'DOUBLE' && bonusAmount > 0;
+                await supabase.from('chats').insert({
+                    member_id: realEmail,
+                    sender_email: realEmail,
+                    content: `RISKY_TRIBUTE_CARD::${JSON.stringify({
                         senderName,
                         stakeAmount: stake,
                         cardName,
@@ -152,6 +182,8 @@ export async function POST(request: Request) {
                         wonAmount: bonusAmount,
                         isWin,
                     })}`,
+                    type: 'tribute',
+                    metadata: { senderName, stakeAmount: stake, cardName, lostAmount: lossAmount, wonAmount: bonusAmount, isWin },
                 });
             } catch (_) {}
 

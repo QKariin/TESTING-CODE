@@ -3595,6 +3595,42 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         }
     }
 
+    // DIRECT TRIBUTE CARD (coin send - private chat)
+    if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
+            const cardHtml = `
+            <div style="width:min(75%,260px);margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#0d0a04,#0a0703);border:1px solid rgba(197,160,89,0.5);box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;">
+                <div style="font-size:1.8rem;margin-bottom:8px;">\u2728</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.6);letter-spacing:3px;margin-bottom:10px;">TRIBUTE SENT</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:1.2rem;color:#c5a059;font-weight:700;margin-bottom:4px;">${(d.amount||0).toLocaleString()}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">COINS</div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) { /* fall through */ }
+    }
+
+    // RISKY TRIBUTE CARD (gamble result - private chat)
+    if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
+            const rIsWin = d.isWin;
+            const rBorderColor = rIsWin ? 'rgba(197,160,89,0.5)' : d.lostAmount === 0 ? 'rgba(74,222,128,0.4)' : 'rgba(220,50,80,0.4)';
+            const rBg = rIsWin ? '#0e0b06' : d.lostAmount === 0 ? '#060e08' : '#0e0606';
+            const rResultText = rIsWin ? `WON +${(d.wonAmount||0).toLocaleString()}` : d.lostAmount === 0 ? 'MERCY - LOST NOTHING' : `LOST ${(d.lostAmount||0).toLocaleString()}`;
+            const rResultColor = rIsWin ? '#c5a059' : d.lostAmount === 0 ? '#4ade80' : '#e03050';
+            const cardHtml = `
+            <div style="width:min(75%,260px);margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${rBg},#0a0a14);border:1px solid ${rBorderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;">
+                <div style="font-size:1.8rem;margin-bottom:6px;">${d.icon||'\uD83C\uDFB0'}</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:4px;">RISKY SEND</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:${rResultColor};letter-spacing:2px;font-weight:700;margin-bottom:6px;">${d.cardName||''}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:4px;">Staked ${(d.stakeAmount||0).toLocaleString()} coins</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:${rResultColor};font-weight:700;">${rResultText}</div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) { /* fall through */ }
+    }
+
     // CERTIFICATE PROOF SUBMITTED (user sees their own submission)
     if (content.startsWith('CERT_PROOF::')) {
         try {
