@@ -5087,6 +5087,7 @@ function _buildMobGlBubble(msg: any): string {
 
     // ── QUEEN bubble (text or video) ──
     if (isQueen) {
+        const qContent = (content === '[GIF]' && msg.media_url) ? '' : content;
         return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
                 <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
@@ -5096,7 +5097,7 @@ function _buildMobGlBubble(msg: any): string {
                 </div>
                 <div style="display:flex;align-items:center;gap:4px;">${_likeBtn}${replyBtn}</div>
             </div>
-            ${quoteHtml}<span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${content}</span>
+            ${quoteHtml}${qContent ? `<span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${qContent}</span>` : ''}
             ${mediaHtml}
         </div>`;
     }

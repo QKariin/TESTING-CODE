@@ -997,7 +997,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         } catch (e) { /* fall through */ }
     }
 
-    const isGif = false;
+    const isGif = (content === '[GIF]' && msg.media_url);
     const _vidErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);this.load();}"`;
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';

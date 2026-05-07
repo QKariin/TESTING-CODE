@@ -240,7 +240,8 @@ function buildGlMsgHtml(msg: any): string {
     // Queen bubble (text or video)
     if (isQueen) {
         const qAv = av ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">` : `<img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
-        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}<div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>${mediaHtml}</div></div>`;
+        const qContent = (content === '[GIF]' && msg.media_url) ? '' : content;
+        return `<div style="margin-bottom:8px;"><div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">${qAv}<div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div><span style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.55);"> · ${time}</span></div>${quoteHtml}${qContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${qContent}</div>` : ''}${mediaHtml}</div></div>`;
     }
 
     // Regular user bubble
@@ -494,9 +495,33 @@ function LeadsPanel() {
 function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     const [text, setText] = useState('');
     const [sending, setSending] = useState(false);
+    const [gifOpen, setGifOpen] = useState(false);
+    const [gifs, setGifs] = useState<{ url: string; preview: string }[]>([]);
+    const [gifQuery, setGifQuery] = useState('');
+    const gifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const feedRef = useRef<HTMLDivElement>(null);
     const renderedIdsRef = useRef(new Set<string>());
     const initialDoneRef = useRef(false);
+
+    const searchGifs = useCallback(async (q: string) => {
+        try {
+            const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q || 'funny')}`);
+            const { results } = await res.json();
+            setGifs(results || []);
+        } catch { setGifs([]); }
+    }, []);
+
+    const sendGif = useCallback(async (gifUrl: string) => {
+        if (!userEmail) return;
+        setGifOpen(false);
+        try {
+            await fetch('/api/global/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: '[GIF]', senderEmail: userEmail, media_url: gifUrl, media_type: 'gif' }),
+            });
+        } catch {}
+    }, [userEmail]);
 
     function appendToFeed(msgs: any[], scrollToBottom: boolean) {
         const feed = feedRef.current;
@@ -577,6 +602,26 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                 ref={feedRef}
                 style={{ flex: 1, overflowY: 'auto', padding: '4px 16px 4px', minHeight: 0 }}
             />
+            {gifOpen && (
+                <div style={{ maxHeight: 220, overflowY: 'auto', borderTop: '1px solid rgba(197,160,89,0.15)', background: '#0d0b08', padding: 8, flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                        <input
+                            type="text" placeholder="Search GIFs..." autoComplete="off"
+                            value={gifQuery} onChange={e => { setGifQuery(e.target.value); if (gifTimeoutRef.current) clearTimeout(gifTimeoutRef.current); gifTimeoutRef.current = setTimeout(() => searchGifs(e.target.value || 'funny'), 400); }}
+                            style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', padding: '6px 10px', borderRadius: 4, outline: 'none' }}
+                        />
+                        <button onClick={() => setGifOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '1rem', cursor: 'pointer' }}>✕</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }}>
+                        {gifs.map((g, i) => (
+                            <div key={i} onClick={() => sendGif(g.url)} style={{ cursor: 'pointer', borderRadius: 4, overflow: 'hidden', aspectRatio: '1', background: 'rgba(255,255,255,0.04)' }}>
+                                <img src={g.preview} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            </div>
+                        ))}
+                        {gifs.length === 0 && <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 16, fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)' }}>LOADING...</div>}
+                    </div>
+                </div>
+            )}
             <div style={{ padding: '10px 16px 14px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, flexShrink: 0 }}>
                 <input
                     value={text}
@@ -585,6 +630,7 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
                     placeholder="Send to global..."
                     style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }}
                 />
+                <button onClick={() => { if (!gifOpen) { setGifOpen(true); searchGifs('funny'); } else { setGifOpen(false); } }} style={{ padding: '6px 8px', background: gifOpen ? 'rgba(197,160,89,0.15)' : 'rgba(255,255,255,0.06)', border: `1px solid ${gifOpen ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.1)'}`, color: gifOpen ? '#c5a059' : 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>GIF</button>
                 <button onClick={send} disabled={sending || !text.trim()} style={{ background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 6, color: '#000', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px' }}>
                     SEND
                 </button>
