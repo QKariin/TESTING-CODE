@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import sharp from 'sharp';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -43,7 +42,14 @@ async function fetchAndResize(url: string): Promise<Buffer | null> {
         const res = await fetch(resolved, { signal: AbortSignal.timeout(15000) });
         if (!res.ok) return null;
         const buf = Buffer.from(await res.arrayBuffer());
-        return await sharp(buf).resize(400, 400, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 60 }).toBuffer();
+
+        // Dynamic import sharp — avoids build-time issues on Vercel
+        let sharpMod: any;
+        try { sharpMod = (await import('sharp')).default; } catch {
+            // sharp unavailable — return original image as-is (still stores a thumbnail entry)
+            return buf;
+        }
+        return await sharpMod(buf).resize(400, 400, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 60 }).toBuffer();
     } catch {
         return null;
     }
