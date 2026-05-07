@@ -1783,6 +1783,19 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
+                            <button onClick={() => (window as any).toggleTributeHunt?.()} style={{
+                                marginTop: 14, width: 220, height: 44, background: 'none',
+                                border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                            }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                    <path d="M12 8v12"></path>
+                                    <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                                </svg>
+                                <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
+                            </button>
                         </div>
 
 
