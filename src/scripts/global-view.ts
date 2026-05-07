@@ -1220,23 +1220,14 @@ export function openGifPicker() {
     const existing = document.getElementById('gifPickerOverlay');
     if (existing) existing.remove();
 
-    // Find talk panel footer to insert inline (matching dashboard mobile layout)
-    const talkPanel = document.getElementById('mobGlPanel_talk');
-    let talkFooter: Element | null = null;
-    let parentContainer: Element | null = null;
-
-    if (talkPanel) {
-        talkFooter = talkPanel.querySelector('.mob-gl-talk-footer');
-        parentContainer = talkPanel;
-    }
+    // Find a container to insert the GIF picker inline
+    // 1. Mobile global talk panel
+    const mobTalkPanel = document.getElementById('mobGlPanel_talk');
+    // 2. Desktop global talk feed (GlobalContent)
+    const deskTalkFeed = document.getElementById('globalTalkFeed');
 
     const panel = document.createElement('div');
     panel.id = 'gifPickerOverlay';
-    panel.style.cssText = `
-        max-height:45vh;overflow-y:auto;
-        border-top:1px solid rgba(197,160,89,0.15);
-        background:#0d0b08;padding:8px;flex-shrink:0;
-    `;
 
     panel.innerHTML = `
         <div style="display:flex;gap:8px;margin-bottom:8px;">
@@ -1244,7 +1235,7 @@ export function openGifPicker() {
                 style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.95rem;padding:7px 11px;border-radius:6px;outline:none;" />
             <button onclick="window.closeGifPicker()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.1rem;cursor:pointer;">✕</button>
         </div>
-        <div id="gifGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+        <div id="gifGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-height:35vh;overflow-y:auto;">
             <div style="grid-column:1/-1;text-align:center;padding:20px;font-family:'Orbitron';font-size:0.5rem;color:rgba(255,255,255,0.2);">LOADING...</div>
         </div>
         <div style="padding:5px 0;text-align:right;">
@@ -1252,18 +1243,23 @@ export function openGifPicker() {
         </div>
     `;
 
-    // Insert inline above footer (like dashboard mobile), or fallback to body overlay
-    if (talkFooter && parentContainer) {
-        parentContainer.insertBefore(panel, talkFooter);
+    if (mobTalkPanel) {
+        // Mobile: insert above footer
+        const talkFooter = mobTalkPanel.querySelector('.mob-gl-talk-footer');
+        panel.style.cssText = 'border-top:1px solid rgba(197,160,89,0.15);background:#0d0b08;padding:8px;flex-shrink:0;';
+        if (talkFooter) mobTalkPanel.insertBefore(panel, talkFooter);
+        else mobTalkPanel.appendChild(panel);
+    } else if (deskTalkFeed) {
+        // Desktop GlobalContent: insert after the talk feed (before the footer bar)
+        const feedParent = deskTalkFeed.parentElement;
+        const footer = deskTalkFeed.nextElementSibling;
+        panel.style.cssText = 'border-top:1px solid rgba(197,160,89,0.15);background:#0d0b08;padding:8px;flex-shrink:0;';
+        if (feedParent && footer) feedParent.insertBefore(panel, footer);
+        else if (feedParent) feedParent.appendChild(panel);
+        else document.body.appendChild(panel);
     } else {
-        // Fallback: fixed overlay for desktop or if container not found
-        panel.style.cssText = `
-            position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-            width:min(420px, 96vw);max-height:55vh;
-            background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;
-            display:flex;flex-direction:column;overflow:hidden;z-index:1000002;
-            box-shadow:0 8px 40px rgba(0,0,0,0.7);
-        `;
+        // Fallback: fixed overlay
+        panel.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:min(420px, 96vw);max-height:55vh;background:#0d0b08;border:1px solid rgba(197,160,89,0.25);border-radius:12px;padding:8px;overflow-y:auto;z-index:2147483640;box-shadow:0 8px 40px rgba(0,0,0,0.7);';
         document.body.appendChild(panel);
     }
 
