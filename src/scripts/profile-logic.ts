@@ -1507,15 +1507,20 @@ function _exportCanvas(canvas: HTMLCanvasElement) {
 
         // Upload cert to Supabase storage and send to Discord
         try {
+            console.log('[CERT→Discord] Uploading certificate PNG...');
             const certUrl = await uploadToSupabase('media', 'certificates', file);
+            console.log('[CERT→Discord] Upload result:', certUrl);
             if (certUrl && !certUrl.startsWith('failed')) {
-                fetch('/api/discord/cert', {
+                const res = await fetch('/api/discord/cert', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, rank: rank.toUpperCase(), imageUrl: certUrl }),
-                }).catch(() => {});
+                });
+                console.log('[CERT→Discord] API response:', res.status);
             }
-        } catch (_) {}
+        } catch (e) {
+            console.error('[CERT→Discord] Error:', e);
+        }
     }, 'image/png');
 }
 
