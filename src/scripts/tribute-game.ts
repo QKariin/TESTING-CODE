@@ -380,7 +380,9 @@ function _showRiskyResult(data: any) {
 
 function _showWishlist() {
     closeStandaloneTribute();
-    if ((window as any).toggleTributeHunt) (window as any).toggleTributeHunt();
+    setTimeout(() => {
+        if ((window as any).toggleTributeHunt) (window as any).toggleTributeHunt();
+    }, 50);
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
