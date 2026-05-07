@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { discordDirectTribute, discordRiskyTribute } from '@/lib/discord';
 
 // 9 card types for the risky game
 const RISKY_CARDS = [
@@ -104,6 +105,9 @@ export async function POST(request: Request) {
                     }),
                 });
             } catch (_) {}
+
+            // Discord notification
+            discordDirectTribute(senderName, amount).catch(() => {});
 
             return NextResponse.json({ success: true, newWallet, meritGained: merit });
         }
@@ -223,6 +227,9 @@ export async function POST(request: Request) {
                     }),
                 });
             } catch (_) {}
+
+            // Discord notification
+            discordRiskyTribute(senderName, stake, cardName, lossAmount, bonusAmount).catch(() => {});
 
             return NextResponse.json({
                 success: true,

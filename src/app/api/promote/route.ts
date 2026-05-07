@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { discordPromotion } from '@/lib/discord';
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,9 @@ export async function POST(req: Request) {
                 sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: cardMsg,
             });
         } catch (_) {}
+
+        // Discord notification
+        discordPromotion(memberName, currentRank, nextRank).catch(() => {});
 
         return NextResponse.json({ success: true, promoted: true, newRank: nextRank });
 

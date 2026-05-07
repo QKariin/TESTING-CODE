@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
+import { discordNewMember, discordCoinPurchase } from '@/lib/discord';
 
 // Initialize Supabase Admin (Service Role) dynamically inside the route handler
 
@@ -130,6 +131,9 @@ export async function POST(req: Request) {
                     console.error('[TRIBUTE] Push notification error:', e.message);
                 }
 
+                // Discord notification
+                discordNewMember(userName).catch(() => {});
+
             } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);
                 // Support both new metadata keys (email/userId) and legacy Wix keys
@@ -189,6 +193,9 @@ export async function POST(req: Request) {
                         .update({ wallet: newBalance, parameters: profileParams })
                         .eq('ID', profile.ID);
                     console.log(`[COINS] Wallet Updated: ${newBalance} (+${coins})`);
+
+                    // Discord notification
+                    discordCoinPurchase(profile.name || userEmail || 'Unknown', coins).catch(() => {});
                 } else {
                     console.error(`[COINS] User not found for coin deposit: ${userEmail || userId}`);
                 }

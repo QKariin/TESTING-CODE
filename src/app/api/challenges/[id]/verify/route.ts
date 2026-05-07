@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { discordChallengeVerified } from '@/lib/discord';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -110,6 +111,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                     });
                 } catch (_) {}
             }
+
+            // Discord notification
+            discordChallengeVerified(
+                (prof as any)?.name || completion.member_id.split('@')[0],
+                `${taskNum}/${totalTasks}`, totalPoints, fasterCount + 1,
+            ).catch(() => {});
 
             return NextResponse.json({ success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1 });
         } else {

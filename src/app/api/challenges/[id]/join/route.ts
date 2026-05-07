@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateEvergreenWindows, TimeSlot } from '@/lib/evergreen-windows';
+import { discordChallengeJoin } from '@/lib/discord';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -128,6 +129,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 }, { onConflict: 'member_id,badge_id,challenge_id' });
             }
 
+            // Discord notification
+            discordChallengeJoin(profile.name || memberEmail.split('@')[0], challenge.name, 0).catch(() => {});
+
             return NextResponse.json({
                 success: true,
                 already_joined: false,
@@ -202,6 +206,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 earned_at: new Date().toISOString(), is_active: true,
             }, { onConflict: 'member_id,badge_id,challenge_id' });
         }
+
+        // Discord notification
+        discordChallengeJoin(profile.name || memberEmail.split('@')[0], challenge.name, 0).catch(() => {});
 
         return NextResponse.json({ success: true, already_joined: false, late_join_fee: lateJoinFee });
     } catch (err: any) {
