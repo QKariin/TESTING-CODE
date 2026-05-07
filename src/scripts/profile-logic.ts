@@ -4496,7 +4496,7 @@ function _buildMobPostDetailHtml(startIndex: number): string {
             <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;">
                 <img src="/queen-nav.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);" />
                 <div style="flex:1;">
-                    <div style="font-family:Orbitron;font-size:0.45rem;color:#c5a059;letter-spacing:2px;">QUEEN KARIN</div>
+                    <div style="font-family:'Cinzel',serif;font-size:0.45rem;color:#c5a059;letter-spacing:2px;">QUEEN KARIN</div>
                     <div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.35);">${d}</div>
                 </div>
             </div>
@@ -4990,14 +4990,13 @@ function _buildMobGlBubble(msg: any): string {
 
     // ── QUEEN photo post card (Instagram-style) ──
     if (isQueen && hasPhoto) {
-        const qAvSrc = av || '/queen-nav.png';
         const captionText = content && content !== '[PHOTO]' ? content : '';
         return `<div style="margin-bottom:10px;overflow:hidden;">
             <div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);">
                 <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;">
-                    <img src="${qAvSrc}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-nav.png'">
+                    <img src="/queen-nav.png" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);">
                     <div style="flex:1;min-width:0;">
-                        <div style="display:flex;align-items:center;gap:3px;">${SVG_CROWN_MOB}<span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                        <div style="display:flex;align-items:center;gap:3px;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.5rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
                     </div>
                     <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(197,160,89,0.45);">${time}</span>
                 </div>
@@ -5009,7 +5008,7 @@ function _buildMobGlBubble(msg: any): string {
                         ${_likeBtn}
                         ${replyBtn}
                     </div>
-                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Orbitron';font-size:0.48rem;color:#c5a059;font-weight:700;margin-right:5px;">QUEEN KARIN</span>${captionText}</div>` : ''}
+                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Cinzel',serif;font-size:0.48rem;color:#c5a059;font-weight:700;margin-right:5px;">QUEEN KARIN</span>${captionText}</div>` : ''}
                 </div>
             </div>
         </div>`;
@@ -5017,19 +5016,16 @@ function _buildMobGlBubble(msg: any): string {
 
     // ── QUEEN bubble (text or video) ──
     if (isQueen) {
-        const qAvHtml = av
-            ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
-            : `<img src="/queen-nav.png" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
         return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
                 <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-                    ${qAvHtml}
-                    <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Orbitron',sans-serif;font-size:0.75rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div>
+                    <img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">
+                    <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.72rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div>
                     <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:4px;">${_likeBtn}${replyBtn}</div>
             </div>
-            ${quoteHtml}<span style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</span>
+            ${quoteHtml}<span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${content}</span>
             ${mediaHtml}
         </div>`;
     }
