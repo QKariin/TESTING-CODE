@@ -65,8 +65,20 @@ export async function POST(request: Request) {
         // Insert wishlist-type record so the Updates feed picks it up
         let tributeImage: string | null = null;
         try {
-            const { data: tributeRow } = await supabase.from('wishlist').select('image, display_url').eq('id', tributeId).maybeSingle();
-            tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
+            // Table is uppercase 'Wishlist', image column is 'Image'
+            let tributeRow: any = null;
+            const { data: r1 } = await supabase.from('Wishlist').select('Image, image_url').eq('id', tributeId).maybeSingle();
+            tributeRow = r1;
+            if (!tributeRow) {
+                const { data: r2 } = await supabase.from('wishlist').select('Image, image_url').eq('id', tributeId).maybeSingle();
+                tributeRow = r2;
+            }
+            let rawImg = tributeRow?.Image || tributeRow?.image_url || '';
+            if (rawImg.startsWith('wix:image://v1/')) {
+                const wixId = rawImg.split('/')[3].split('~')[0];
+                rawImg = `https://static.wixstatic.com/media/${wixId}`;
+            }
+            tributeImage = rawImg || null;
             await supabase.from('chats').insert({
                 member_id: realEmail,
                 sender_email: realEmail,
