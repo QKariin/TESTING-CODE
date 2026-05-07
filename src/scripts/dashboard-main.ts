@@ -56,6 +56,13 @@ export function initDashboard() {
     subscribeToDashboardTaskUpdates();
     loadExchequerLog();
 
+    // One-time consistency backfill (runs once per browser)
+    if (!localStorage.getItem('consistency_backfill_v2')) {
+        fetch('/api/admin/backfill-consistency', { method: 'POST' })
+            .then(() => localStorage.setItem('consistency_backfill_v2', '1'))
+            .catch(() => {});
+    }
+
     // When a member comes online/offline: update only the cards that actually changed
     const _prevOnline: Record<string, boolean> = {};
     onPresenceChange(async () => {
