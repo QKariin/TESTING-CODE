@@ -421,26 +421,9 @@ function _showRiskyResult(data: any) {
 function _showWishlist() {
     closeStandaloneTribute();
     setTimeout(() => {
-        // Open wishlist overlay directly instead of relying on toggle
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            const overlay = document.getElementById('mob_TributeOverlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.classList.remove('hidden');
-                const grid = document.getElementById('mob_huntStoreGrid');
-                if (grid && (window as any)._renderTributeGridMobile) {
-                    (window as any)._renderTributeGridMobile(grid);
-                }
-            }
-        } else {
-            const overlay = document.getElementById('tributeHuntOverlay');
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.classList.remove('hidden');
-            }
-        }
-    }, 150);
+        // Call the exact same function as the chat tribute button
+        if ((window as any).toggleTributeHunt) (window as any).toggleTributeHunt();
+    }, 200);
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
