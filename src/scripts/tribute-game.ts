@@ -13,6 +13,22 @@ function _wallet(): number { return getState()?.wallet || 0; }
 
 const _boostBtn = `<button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="padding:9px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span></button>`;
 
+const _closeBtn = `<button onclick="window.closeStandaloneTribute()" style="padding:9px 24px;background:none;border:1px solid rgba(255,255,255,0.08);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">CLOSE</span></button>`;
+
+function _header(subtitle: string) {
+    return `<div style="text-align:center;flex-shrink:0;padding-top:16px;">
+        <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.25);letter-spacing:3px;margin-top:6px;">${subtitle}</div>
+    </div>`;
+}
+
+function _footer() {
+    return `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:20px;">
+        ${_boostBtn}
+        ${_closeBtn}
+    </div>`;
+}
+
 const _lossQuotes = [
     "Thank you for the donation, darling. I'll spend it better than you ever could.",
     "You really thought luck was on your side? How adorable.",
@@ -79,12 +95,8 @@ function _showMenu() {
     const el = _el(); if (!el) return;
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-                <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
-                <button onclick="window.closeStandaloneTribute()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#10005;</button>
-            </div>
+            ${_header('CHOOSE YOUR OFFERING')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
-                <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;">CHOOSE YOUR OFFERING</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                     <i class="fas fa-coins" style="color:#c5a059;font-size:0.8rem;"></i>
                     <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;">${_wallet().toLocaleString()}</span>
@@ -98,8 +110,8 @@ function _showMenu() {
                 <button onclick="window._tributeShowWishlist()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                     <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
                 </button>
-                ${_boostBtn}
             </div>
+            ${_footer()}
         </div>`;
 }
 
@@ -111,10 +123,7 @@ function _showSend() {
     const amounts = [500, 1000, 2000, 5000, 10000];
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-                <span style="font-family:'Cinzel',serif;font-size:1rem;color:#c5a059;letter-spacing:4px;">SEND TRIBUTE</span>
-            </div>
+            ${_header('QUICK SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
                 <div style="text-align:center;margin-bottom:8px;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-bottom:6px;">YOUR BALANCE</div>
@@ -133,8 +142,8 @@ function _showSend() {
                         }).join('')}
                     </div>
                 </div>
-                <div style="margin-top:24px;">${_boostBtn}</div>
             </div>
+            ${_footer()}
         </div>`;
 }
 
@@ -163,9 +172,7 @@ function _showSendResult(ok: boolean, amount: number, merit: number, newBal: num
     const el = _el(); if (!el) return;
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-            </div>
+            ${_header('QUICK SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
                 <div style="font-size:3rem;">${ok ? '\u2728' : '\u274C'}</div>
                 <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:${ok ? '#c5a059' : '#e03050'};letter-spacing:4px;">${ok ? 'TRIBUTE SENT' : 'FAILED'}</div>
@@ -174,11 +181,8 @@ function _showSendResult(ok: boolean, amount: number, merit: number, newBal: num
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(167,139,250,0.8);">+${merit.toLocaleString()} MERIT EARNED</div>
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:8px;">New balance: ${newBal.toLocaleString()}</div>
                 ` : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Insufficient funds or error</div>`}
-                <div style="display:flex;gap:12px;margin-top:16px;">
-                    <button onclick="window.closeStandaloneTribute()" style="padding:14px 36px;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
-                </div>
-                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
+            ${_footer()}
         </div>`;
 }
 
@@ -192,16 +196,11 @@ function _showRisky() {
 
     if (w < 10) {
         el.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-            </div>
+            ${_header('RISKY SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.6);letter-spacing:3px;">NOT ENOUGH COINS</div>
-                <div style="display:flex;gap:12px;">
-                    <button onclick="window._tributeShowMenu()" style="padding:12px 30px;border:1px solid rgba(197,160,89,0.3);border-radius:8px;background:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:2px;">BACK</button>
-                </div>
-                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
+            ${_footer()}
         </div>`;
         return;
     }
@@ -209,10 +208,7 @@ function _showRisky() {
     const pcts = [10, 25, 50, 75, 100];
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-                <span style="font-family:'Cinzel',serif;font-size:1rem;color:#c5a059;letter-spacing:4px;">RISKY SEND</span>
-            </div>
+            ${_header('RISKY SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
                 <div style="text-align:center;margin-bottom:20px;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-bottom:4px;">YOUR BALANCE</div>
@@ -230,8 +226,8 @@ function _showRisky() {
                 <div id="riskyConfirmWrap" style="display:none;text-align:center;">
                     <button id="riskyConfirmBtn" onclick="window._tributeRiskyConfirm()" style="padding:18px 56px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06));border:1px solid rgba(197,160,89,0.5);border-radius:12px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;letter-spacing:3px;font-weight:700;box-shadow:0 0 20px rgba(197,160,89,0.1);">GAMBLE</button>
                 </div>
-                <div style="margin-top:16px;">${_boostBtn}</div>
             </div>
+            ${_footer()}
         </div>`;
 }
 
@@ -264,12 +260,10 @@ function _riskyConfirm() {
     const el = _el(); if (!el) return;
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowRisky()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-            </div>
+            ${_header('RISKY SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <div style="text-align:center;margin-bottom:28px;">
-                    <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:#c5a059;letter-spacing:6px;margin-bottom:10px;">PICK YOUR FATE</div>
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:#c5a059;letter-spacing:5px;margin-bottom:8px;">PICK YOUR FATE</div>
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:rgba(197,160,89,0.5);">Stake: <span style="color:#c5a059;font-weight:700;">${_riskyStake.toLocaleString()}</span> coins</div>
                 </div>
                 <div id="riskyCardGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:340px;padding:0 10px;box-sizing:border-box;">
@@ -280,7 +274,7 @@ function _riskyConfirm() {
                         </button>
                     `).join('')}
                 </div>
-                <div style="text-align:center;margin-top:28px;">
+                <div style="text-align:center;margin-top:20px;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(197,160,89,0.35);letter-spacing:3px;">TAP A CARD TO REVEAL YOUR FATE</div>
                 </div>
             </div>
@@ -357,16 +351,13 @@ function _showRiskyResult(data: any) {
 
     if (!data) {
         el.innerHTML = `<div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-            </div>
+            ${_header('RISKY SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
                 <div style="font-size:2rem;">\u274C</div>
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:#e03050;letter-spacing:3px;">FAILED</div>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Something went wrong</div>
-                <button onclick="window.closeStandaloneTribute()" style="margin-top:16px;padding:12px 36px;border:1px solid rgba(197,160,89,0.3);border-radius:10px;background:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
-                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
+            ${_footer()}
         </div>`;
         return;
     }
@@ -387,9 +378,7 @@ function _showRiskyResult(data: any) {
 
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-                <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
-            </div>
+            ${_header('RISKY SEND')}
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
                 <div style="font-size:3.5rem;">${data.cardIcon}</div>
                 <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:${titleColor};letter-spacing:5px;font-weight:700;">${data.cardName}</div>
@@ -417,9 +406,8 @@ function _showRiskyResult(data: any) {
                 </div>
                 ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.25);">Balance: ${data.newWallet.toLocaleString()} coins</div>
-                <button onclick="window.closeStandaloneTribute()" style="margin-top:8px;padding:14px 44px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
-                <div style="margin-top:4px;">${_boostBtn}</div>
             </div>
+            ${_footer()}
         </div>`;
 }
 
