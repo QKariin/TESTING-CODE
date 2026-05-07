@@ -17,6 +17,11 @@ async function getRoutineStatus(memberId: string, tz: string) {
     const routine = profile?.routine || null;
     const email = (profile?.member_id || memberId).toLowerCase();
 
+    // Save timezone to profile (fire & forget)
+    if (profile && tz && tz !== 'UTC') {
+        supabaseAdmin.from('profiles').update({ timezone: tz }).ilike('member_id', email).then(() => {}).catch(() => {});
+    }
+
     // Check today's routine from the dedicated routines table
     let uploadedToday = false;
     let todayStatus = 'none';
@@ -26,6 +31,12 @@ async function getRoutineStatus(memberId: string, tz: string) {
         new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
         10
     );
+    const localMinute = parseInt(
+        new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(now),
+        10
+    );
+    const windowOpen = localHour >= 6 && localHour < 10;
+    const beforeWindow = localHour < 6;
     const windowDate = new Date(now);
     if (localHour < 6) windowDate.setDate(windowDate.getDate() - 1);
     const todayStr = windowDate.toLocaleDateString('en-CA', { timeZone: tz });
@@ -53,7 +64,7 @@ async function getRoutineStatus(memberId: string, tz: string) {
         }
     }
 
-    return { routine, uploadedToday, todayStatus };
+    return { routine, uploadedToday, todayStatus, windowOpen, beforeWindow, localHour, localMinute };
 }
 
 export async function GET(req: Request) {

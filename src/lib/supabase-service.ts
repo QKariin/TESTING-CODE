@@ -334,7 +334,7 @@ export const DbService = {
         // Check routines table first
         const { data: routineEntry } = await supabaseAdmin
             .from('routines')
-            .select('id')
+            .select('id, member_id')
             .eq('id', taskId)
             .maybeSingle();
 
@@ -351,6 +351,7 @@ export const DbService = {
 
             await this.awardPoints(profileId, bonus);
             try { await this.sendMessage(profileId, `ROUTINE APPROVED - ${bonus} POINTS AWARDED`, 'system'); } catch (_) { }
+            try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
 
@@ -385,7 +386,7 @@ export const DbService = {
         // Check routines table first
         const { data: routineEntry } = await supabaseAdmin
             .from('routines')
-            .select('id')
+            .select('id, member_id')
             .eq('id', taskId)
             .maybeSingle();
 
@@ -396,6 +397,7 @@ export const DbService = {
                 .update({ status: 'reject', reviewed_at: new Date().toISOString() })
                 .eq('id', taskId);
             try { await this.sendMessage(profileId, `ROUTINE REJECTED - NO POINTS AWARDED`, 'system'); } catch (_) { }
+            try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
 
@@ -429,7 +431,72 @@ export const DbService = {
         try { await this.sendMessage(profileId, `TASK REJECTED - 300 COINS PENALTY APPLIED`, 'system'); } catch (_) { }
     },
 
-    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false, thumbnailUrl: string | null = null) {
+    async recalcConsistency(email: string, tz?: string) {
+        const normalEmail = email.toLowerCase();
+
+        const { data: prof } = await supabaseAdmin
+            .from('profiles')
+            .select('ID, parameters, timezone')
+            .ilike('member_id', normalEmail)
+            .maybeSingle();
+        if (!prof) return;
+
+        const userTz = tz || prof.timezone || 'UTC';
+
+        const { data: routines } = await supabaseAdmin
+            .from('routines')
+            .select('submitted_at, status')
+            .eq('member_id', normalEmail)
+            .neq('status', 'reject')
+            .order('submitted_at', { ascending: false })
+            .limit(90);
+
+        // Convert timestamp to routine day (6 AM boundary in user's tz)
+        const toDay = (d: Date) => {
+            const shifted = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+            return shifted.toLocaleDateString('en-CA', { timeZone: userTz });
+        };
+
+        if (!routines || routines.length === 0) {
+            const params = prof.parameters || {};
+            await supabaseAdmin.from('profiles').update({
+                parameters: { ...params, consistency: 0, taskdom_current_streak: 0 },
+            }).eq('ID', prof.ID);
+            return;
+        }
+
+        // Deduplicate by day
+        const days: string[] = [];
+        for (const r of routines) {
+            const day = toDay(new Date(r.submitted_at));
+            if (days.length === 0 || days[days.length - 1] !== day) days.push(day);
+        }
+
+        const todayDay = toDay(new Date());
+        const td = new Date(todayDay + 'T12:00:00Z');
+        td.setUTCDate(td.getUTCDate() - 1);
+        const yesterdayDay = td.toISOString().split('T')[0];
+
+        let consistency = 0;
+        if (days[0] === todayDay || days[0] === yesterdayDay) {
+            consistency = 1;
+            for (let i = 1; i < days.length; i++) {
+                const prev = new Date(days[i - 1] + 'T12:00:00Z');
+                const curr = new Date(days[i] + 'T12:00:00Z');
+                const diff = Math.round((prev.getTime() - curr.getTime()) / (24 * 60 * 60 * 1000));
+                if (diff === 1) consistency++;
+                else break;
+            }
+        }
+
+        const params = prof.parameters || {};
+        const bestStreak = Math.max(consistency, Number(params.routine_streak || 0));
+        await supabaseAdmin.from('profiles').update({
+            parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
+        }).eq('ID', prof.ID);
+    },
+
+    async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false, thumbnailUrl: string | null = null, tz: string = 'UTC') {
         const now = new Date().toISOString();
         const taskId = Date.now().toString();
         const profile = await this.getProfile(memberId);
@@ -461,70 +528,8 @@ export const DbService = {
                 });
             if (routineErr) throw routineErr;
 
-            // Update consistency streak from routines table
-            try {
-                const { data: prevRoutines } = await supabaseAdmin
-                    .from('routines')
-                    .select('submitted_at, status')
-                    .eq('member_id', email)
-                    .neq('status', 'reject')
-                    .order('submitted_at', { ascending: false })
-                    .limit(60);
-
-                const toDay = (d: Date) => {
-                    const adjusted = new Date(d);
-                    if (adjusted.getUTCHours() < 6) adjusted.setUTCDate(adjusted.getUTCDate() - 1);
-                    return adjusted.toISOString().split('T')[0];
-                };
-
-                // Deduplicate by day
-                const days: string[] = [];
-                for (const r of (prevRoutines || [])) {
-                    const day = toDay(new Date(r.submitted_at));
-                    if (days.length === 0 || days[days.length - 1] !== day) days.push(day);
-                }
-
-                const todayDay = toDay(new Date(now));
-                const yesterdayDate = new Date();
-                yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
-                const yesterdayDay = toDay(yesterdayDate);
-
-                let consistency = 1;
-                if (days.length > 1) {
-                    if (days[0] === todayDay && days[1] === yesterdayDay) {
-                        // Count consecutive days
-                        consistency = 1;
-                        for (let i = 1; i < days.length; i++) {
-                            const prev = new Date(days[i - 1] + 'T12:00:00Z');
-                            const curr = new Date(days[i] + 'T12:00:00Z');
-                            const diff = Math.round((prev.getTime() - curr.getTime()) / (24 * 60 * 60 * 1000));
-                            if (diff === 1) consistency++;
-                            else break;
-                        }
-                    } else if (days[0] === todayDay) {
-                        // Submitted today but gap before — keep at 1
-                        consistency = 1;
-                    }
-                }
-
-                if (profile?.ID) {
-                    const { data: prof } = await supabaseAdmin
-                        .from('profiles')
-                        .select('parameters')
-                        .eq('ID', profile.ID)
-                        .maybeSingle();
-                    const params = prof?.parameters || {};
-                    const bestStreak = Math.max(consistency, Number(params.routine_streak || 0));
-                    await supabaseAdmin
-                        .from('profiles')
-                        .update({
-                            parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
-                        })
-                        .eq('ID', profile.ID);
-                }
-            } catch (histErr) {
-                console.warn('[submitTask] Could not update consistency:', histErr);
-            }
+            // Recalculate consistency streak
+            try { await this.recalcConsistency(email, tz); } catch (e) { console.warn('[submitTask] consistency error:', e); }
         } else {
             // ── TASK: write to Taskdom_History as before ──
             const row = await this._getTaskRow(memberId);

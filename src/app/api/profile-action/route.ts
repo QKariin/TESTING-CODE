@@ -37,7 +37,18 @@ export async function POST(req: Request) {
                 break;
 
             case 'SUBMIT_TASK':
-                result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl);
+                // Enforce routine window (6-10 AM local time)
+                if (payload.isRoutine) {
+                    const routineTz = payload.tz || 'UTC';
+                    const localHour = parseInt(
+                        new Intl.DateTimeFormat('en', { timeZone: routineTz, hour: '2-digit', hour12: false }).format(new Date()),
+                        10
+                    );
+                    if (localHour < 6 || localHour >= 10) {
+                        return NextResponse.json({ error: 'Routine upload window is 6:00 - 10:00 AM', success: false }, { status: 400 });
+                    }
+                }
+                result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl, payload.tz || 'UTC');
                 // Bust routine cache so next poll gets fresh uploadedToday status
                 if (payload.isRoutine) cacheDelete(`routine:`);
 

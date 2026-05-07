@@ -2189,8 +2189,8 @@ export async function updateRoutineWidget() {
             if (mobBtn) { mobBtn.textContent = 'ROUTINE DONE - NEXT: 6AM'; mobBtn.style.opacity = '0.6'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
             if (mobDone) mobDone.classList.remove('hidden');
             if (mobTime) mobTime.classList.add('hidden');
-        } else {
-            // ── State 2: Routine set, not uploaded today ────────────────────
+        } else if (data.windowOpen) {
+            // ── State 2a: Routine set, window open (6-10 AM), can upload ──
             if (display) display.textContent = data.routine;
             if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
@@ -2200,10 +2200,42 @@ export async function updateRoutineWidget() {
                 btn.style.cursor = 'pointer';
                 (window as any).__routineAction = triggerRoutineFilePick;
             }
-            // iOS-safe: use dynamic input instead of clicking hidden input
             if (mobBtn) { mobBtn.textContent = 'UPLOAD ROUTINE'; mobBtn.style.opacity = '1'; mobBtn.style.cursor = 'pointer'; mobBtn.onclick = triggerRoutineFilePick; }
             if (mobDone) mobDone.classList.add('hidden');
+            if (timeMsg) {
+                const minsLeft = (10 - (data.localHour || 6)) * 60 - (data.localMinute || 0);
+                timeMsg.textContent = `WINDOW CLOSES IN ${minsLeft}MIN`;
+                timeMsg.style.color = 'rgba(197,160,89,0.5)';
+                timeMsg.classList.remove('hidden');
+            }
+        } else if (data.beforeWindow) {
+            // ── State 2b: Before 6 AM — window not yet open ───────────────
+            if (display) display.textContent = data.routine;
+            if (mobDisplay) mobDisplay.textContent = data.routine;
+            if (btn) {
+                btn.textContent = 'OPENS AT 6:00 AM';
+                btn.style.background = 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)';
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'default';
+                (window as any).__routineAction = () => {};
+            }
+            if (mobBtn) { mobBtn.textContent = 'OPENS AT 6:00 AM'; mobBtn.style.opacity = '0.5'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
+            if (mobDone) mobDone.classList.add('hidden');
             if (timeMsg) timeMsg.classList.add('hidden');
+        } else {
+            // ── State 2c: After 10 AM, missed today ──────────────────────
+            if (display) display.textContent = data.routine;
+            if (mobDisplay) mobDisplay.textContent = data.routine;
+            if (btn) {
+                btn.textContent = 'MISSED - NEXT: 6:00 AM';
+                btn.style.background = 'linear-gradient(135deg, #2a1010 0%, #1a0808 100%)';
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'default';
+                (window as any).__routineAction = () => {};
+            }
+            if (mobBtn) { mobBtn.textContent = 'MISSED - NEXT: 6AM'; mobBtn.style.opacity = '0.5'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
+            if (mobDone) mobDone.classList.add('hidden');
+            if (timeMsg) { timeMsg.textContent = 'ROUTINE WINDOW CLOSED'; timeMsg.style.color = 'rgba(255,68,68,0.5)'; timeMsg.classList.remove('hidden'); }
         }
 
         console.log(`[ROUTINE] routine=${!!data.routine}, uploadedToday=${data.uploadedToday}`);
@@ -2367,7 +2399,8 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false): Promi
                     thumbnailUrl,
                     proofType: file.type,
                     taskText: taskText,
-                    isRoutine: isRoutine
+                    isRoutine: isRoutine,
+                    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 }
             })
         });

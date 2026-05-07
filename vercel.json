@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/reset-scores",
       "schedule": "59 22 * * *"
+    },
+    {
+      "path": "/api/cron/auto-approve-routines",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

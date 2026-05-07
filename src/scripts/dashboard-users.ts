@@ -938,13 +938,18 @@ async function renderRoutineCalendar(u: any) {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const monthName = now.toLocaleString('en', { month: 'short' }).toUpperCase();
 
-    // Count current streak (consecutive days with upload, not rejected)
+    // Count current streak (consecutive days with upload, not rejected) — crosses month boundaries
     let streak = 0;
-    for (let d = today; d >= 1; d--) {
-        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const streakCursor = new Date(year, month, today);
+    for (let i = 0; i < 365; i++) {
+        const cY = streakCursor.getFullYear();
+        const cM = String(streakCursor.getMonth() + 1).padStart(2, '0');
+        const cD = String(streakCursor.getDate()).padStart(2, '0');
+        const key = `${cY}-${cM}-${cD}`;
         const status = dayMap[key];
-        if (d === today && !status) continue; // today not uploaded yet is ok
+        if (i === 0 && !status) { streakCursor.setDate(streakCursor.getDate() - 1); continue; } // today not uploaded yet is ok
         if (status && status !== 'reject') { streak++; } else { break; }
+        streakCursor.setDate(streakCursor.getDate() - 1);
     }
 
     const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
