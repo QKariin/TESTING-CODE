@@ -568,6 +568,188 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
     );
 }
 
+function DashMobGlobal({ onClose, userEmail }: { onClose: () => void; userEmail: string | null }) {
+    const [tab, setTab] = useState<'talk' | 'rank' | 'updates'>('talk');
+    const [text, setText] = useState('');
+    const [sending, setSending] = useState(false);
+    const feedRef = useRef<HTMLDivElement>(null);
+    const renderedIdsRef = useRef(new Set<string>());
+    const initialDoneRef = useRef(false);
+    const [rankPeriod, setRankPeriod] = useState('today');
+    const [rankHtml, setRankHtml] = useState('');
+    const [updatesHtml, setUpdatesHtml] = useState('');
+
+    // ── TALK ──
+    function appendMsgs(msgs: any[], scroll: boolean) {
+        const feed = feedRef.current;
+        if (!feed) return;
+        const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+        for (const msg of msgs) {
+            const key = String(msg.id ?? msg.created_at);
+            if (renderedIdsRef.current.has(key)) continue;
+            renderedIdsRef.current.add(key);
+            const html = buildGlMsgHtml(msg);
+            if (!html) continue;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = html;
+            const child = wrap.firstElementChild;
+            if (child) feed.appendChild(child);
+        }
+        if (scroll || wasNear) setTimeout(() => { if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight; }, 30);
+    }
+
+    useEffect(() => {
+        // Load talk
+        (async () => {
+            try {
+                const res = await fetch('/api/global/messages', { cache: 'no-store' });
+                const data = await res.json();
+                const msgs = (data.messages || []).slice(-80);
+                if (!initialDoneRef.current) { initialDoneRef.current = true; appendMsgs(msgs, true); }
+                else { const fresh = msgs.filter((m: any) => !renderedIdsRef.current.has(String(m.id ?? m.created_at))); if (fresh.length) appendMsgs(fresh, false); }
+            } catch {}
+        })();
+        // Realtime
+        const sb = createClient();
+        const ch = sb.channel('dash-mob-global-rt').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, (p: any) => {
+            if (p.new) appendMsgs([p.new], false);
+        }).subscribe();
+        return () => { sb.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    async function send() {
+        if (!text.trim() || !userEmail || sending) return;
+        setSending(true);
+        try {
+            await fetch('/api/global/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderEmail: userEmail, message: text.trim() }) });
+            setText('');
+        } catch {}
+        setSending(false);
+    }
+
+    // ── RANK ──
+    useEffect(() => {
+        if (tab !== 'rank') return;
+        setRankHtml('<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>');
+        (async () => {
+            try {
+                const res = await fetch(`/api/global/leaderboard?period=${rankPeriod}`, { cache: 'no-store' });
+                const data = await res.json();
+                const entries: any[] = data.leaderboard || data.entries || [];
+                if (!entries.length) { setRankHtml('<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem;letter-spacing:3px">NO DATA YET</div>'); return; }
+                const MEDALS = ['\u{1F947}', '\u{1F948}', '\u{1F949}'];
+                const MC = ['#c5a059', '#C0C0C0', '#CD7F32'];
+                const DA = '/collar-placeholder.png';
+                let html = entries.map((e: any, i: number) => {
+                    const av = e.avatar || DA;
+                    const medal = i < 3 ? `<span style="font-size:1.1rem;flex-shrink:0">${MEDALS[i]}</span>` : `<span style="font-family:Orbitron;font-size:0.42rem;color:#555;width:24px;text-align:center;flex-shrink:0">${i+1}</span>`;
+                    const nameColor = i < 3 ? MC[i] : 'rgba(255,255,255,0.7)';
+                    const scoreColor = i < 3 ? MC[i] : 'rgba(255,255,255,0.4)';
+                    const bg = i < 3 ? `rgba(${i===0?'197,160,89':i===1?'192,192,192':'205,127,50'},0.06)` : 'transparent';
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${bg};border-bottom:1px solid rgba(255,255,255,0.04);">
+                        ${medal}
+                        <img src="${av}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid ${i<3?MC[i]:'rgba(197,160,89,0.2)'};" onerror="this.src='${DA}'" />
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-family:Rajdhani;font-size:0.85rem;color:${nameColor};font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name||e.member_id||'SLAVE'}</div>
+                            ${e.hierarchy?`<div style="font-family:Rajdhani;font-size:0.38rem;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:1px;">${e.hierarchy}</div>`:''}
+                        </div>
+                        <span style="font-family:Orbitron;font-size:${i<3?'0.75rem':'0.6rem'};color:${scoreColor};font-weight:700;flex-shrink:0;">${(e.score??0).toLocaleString()}</span>
+                    </div>`;
+                }).join('');
+                setRankHtml(html);
+            } catch { setRankHtml('<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem">FAILED</div>'); }
+        })();
+    }, [tab, rankPeriod]);
+
+    // ── UPDATES ──
+    useEffect(() => {
+        if (tab !== 'updates') return;
+        setUpdatesHtml('<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>');
+        (async () => {
+            try {
+                const res = await fetch('/api/global/updates', { cache: 'no-store' });
+                const data = await res.json();
+                const updates: any[] = (data.updates || []).slice(0, 20);
+                if (!updates.length) { setUpdatesHtml('<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem;letter-spacing:3px">NO UPDATES</div>'); return; }
+                let html = updates.map((u: any) => {
+                    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    if (u.kind === 'tribute') {
+                        const coverSrc = u.image || '';
+                        const priceVal = u.price ? Number(u.price).toLocaleString() : '';
+                        return `<div style="margin-bottom:14px;display:flex;justify-content:center;"><div style="width:220px;border-radius:12px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.5);"><div style="width:100%;height:120px;background-image:url('${coverSrc}');background-size:cover;background-position:center;position:relative;">${priceVal?`<div style="position:absolute;top:7px;right:8px;background:rgba(10,7,3,0.85);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 10px;font-family:Orbitron;font-size:0.38rem;color:#c5a059;display:flex;align-items:center;gap:5px;letter-spacing:1px;"><i class="fas fa-coins"></i> ${priceVal}</div>`:''}</div><div style="padding:10px 14px 14px;"><div style="font-family:Orbitron;font-size:0.45rem;color:rgba(197,160,89,0.7);letter-spacing:2px;margin-bottom:4px;">&#10022; Gift Sent</div><div style="font-family:Cinzel,serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:1px;">${u.title||''}</div><div style="font-family:Orbitron;font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:6px;">${u.sender_name||''}</div></div></div></div>`;
+                    }
+                    if (u.kind === 'points') {
+                        const ini = (u.sender_name||'S')[0].toUpperCase();
+                        return `<div style="margin-bottom:14px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.25);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;"><div style="width:38px;height:38px;border-radius:50%;background:rgba(167,139,250,0.1);border:1.5px solid rgba(167,139,250,0.35);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:0.6rem;color:#a78bfa;flex-shrink:0;">${ini}</div><div style="flex:1;min-width:0;"><div style="font-family:Orbitron;font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">\u26A1 MERIT EARNED</div><div style="font-family:Orbitron;font-size:0.8rem;color:#fff;font-weight:700;">${u.sender_name||''}</div><div style="font-family:Orbitron;font-size:0.8rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${u.points||0} MERIT</div></div><div style="font-family:Orbitron;font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div>`;
+                    }
+                    if (u.media_url) {
+                        return `<div style="margin-bottom:14px;background:#0a0a14;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;"><img src="${u.media_url}" style="width:100%;max-height:200px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none'"><div style="padding:8px 12px;"><div style="font-family:Rajdhani;font-size:0.75rem;color:#fff;font-weight:700;">${u.sender_name||''}</div>${u.caption?`<div style="font-family:Rajdhani;font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:2px;">${u.caption}</div>`:''}<div style="font-family:Orbitron;font-size:0.35rem;color:rgba(255,255,255,0.25);margin-top:4px;">${time}</div></div></div>`;
+                    }
+                    return '';
+                }).join('');
+                setUpdatesHtml(html);
+            } catch { setUpdatesHtml('<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem">FAILED</div>'); }
+        })();
+    }, [tab]);
+
+    const tabStyle = (t: string) => ({
+        flex: 1, padding: '10px 0' as const, background: 'none' as const, border: 'none' as const,
+        borderBottom: tab === t ? '2px solid #c5a059' : '2px solid transparent',
+        fontFamily: "'Orbitron', monospace", fontSize: '0.42rem', color: tab === t ? '#c5a059' : 'rgba(255,255,255,0.3)',
+        letterSpacing: '2px', cursor: 'pointer' as const,
+    });
+
+    return (
+        <div style={{ position: 'fixed', top: 50, left: 0, right: 0, bottom: 60, zIndex: 1500, background: '#040404', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(197,160,89,0.15)', flexShrink: 0 }}>
+                <span style={{ fontFamily: "'Orbitron', monospace", fontSize: '0.7rem', color: '#c5a059', letterSpacing: '3px' }}>{'\u25CE'} GLOBAL</span>
+                <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '1.3rem', cursor: 'pointer', padding: '0 4px' }}>{'\u2715'}</button>
+            </div>
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(197,160,89,0.1)', flexShrink: 0 }}>
+                <button onClick={() => setTab('talk')} style={tabStyle('talk')}>TALK</button>
+                <button onClick={() => setTab('rank')} style={tabStyle('rank')}>RANK</button>
+                <button onClick={() => setTab('updates')} style={tabStyle('updates')}>NEWS</button>
+            </div>
+
+            {tab === 'talk' && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+                    <div ref={feedRef} style={{ flex: 1, overflowY: 'auto', padding: '8px 12px', WebkitOverflowScrolling: 'touch' as any }} />
+                    <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+                        <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()}
+                            placeholder="speak..." style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', padding: '8px 12px', outline: 'none' }} />
+                        <button onClick={send} disabled={sending || !text.trim()} style={{
+                            background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: '#000',
+                            fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', fontWeight: 700, padding: '8px 16px', cursor: 'pointer',
+                            opacity: sending || !text.trim() ? 0.5 : 1, letterSpacing: '1px',
+                        }}>SEND</button>
+                    </div>
+                </div>
+            )}
+
+            {tab === 'rank' && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+                    <div style={{ display: 'flex', gap: 6, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+                        {(['today', 'weekly', 'monthly', 'alltime'] as const).map(p => (
+                            <button key={p} onClick={() => setRankPeriod(p)} style={{
+                                flex: 1, padding: '6px 0', background: rankPeriod === p ? 'rgba(197,160,89,0.15)' : 'transparent',
+                                border: `1px solid ${rankPeriod === p ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                                color: rankPeriod === p ? '#c5a059' : 'rgba(255,255,255,0.3)',
+                                fontFamily: "'Orbitron', monospace", fontSize: '0.38rem', cursor: 'pointer', borderRadius: 4, letterSpacing: '1px',
+                            }}>{p === 'alltime' ? 'ALL' : p === 'today' ? 'TODAY' : p === 'weekly' ? 'WEEK' : 'MONTH'}</button>
+                        ))}
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any }} dangerouslySetInnerHTML={{ __html: rankHtml }} />
+                </div>
+            )}
+
+            {tab === 'updates' && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', WebkitOverflowScrolling: 'touch' as any }} dangerouslySetInnerHTML={{ __html: updatesHtml }} />
+            )}
+        </div>
+    );
+}
+
 function LockModal({ memberId, onClose, onLocked }: { memberId: string; onClose: () => void; onLocked: (type: 'paywall' | 'silence') => void }) {
     const [tab, setTab] = useState<'paywall' | 'silence'>('paywall');
     const [reason, setReason] = useState(PAYWALL_PRESETS[0]);
@@ -898,8 +1080,10 @@ export default function DashboardPage() {
             (window as any).mobNav = (tab: string) => {
                 const sidebar = document.querySelector('.sidebar');
                 document.querySelectorAll('.mob-nav-btn').forEach((b: any) => b.classList.remove('active'));
-                const btnMap: Record<string, string> = { home: 'mobNavHome', subs: 'mobNavSubs', posts: 'mobNavPosts', queen: 'mobNavQueen' };
+                const btnMap: Record<string, string> = { home: 'mobNavHome', subs: 'mobNavSubs', posts: 'mobNavPosts', queen: 'mobNavQueen', global: 'mobNavGlobal' };
                 document.getElementById(btnMap[tab])?.classList.add('active');
+                // Close global overlay when switching to another tab
+                if (tab !== 'global') setShowGlobal(false);
                 if (tab === 'subs') {
                     sidebar?.classList.add('mob-open');
                     ['viewHome', 'viewPosts', 'viewProfile', 'viewUser'].forEach(id => {
@@ -1303,7 +1487,7 @@ export default function DashboardPage() {
                 )}
 
                 {/* GLOBAL INLINE PANEL - overlays content area when open */}
-                {showGlobal && (
+                {showGlobal && !isMobile && (
                     <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
                 )}
 
@@ -1961,6 +2145,11 @@ export default function DashboardPage() {
 
             </div>
 
+            {/* MOBILE GLOBAL OVERLAY */}
+            {showGlobal && isMobile && (
+                <DashMobGlobal onClose={() => setShowGlobal(false)} userEmail={userEmail} />
+            )}
+
             {/* MOBILE BOTTOM NAV */}
             <nav className="mob-bottom-nav">
                 <button className="mob-nav-btn active" id="mobNavHome" onClick={() => (window as any).mobNav?.('home')}>
@@ -1976,8 +2165,12 @@ export default function DashboardPage() {
                     <span className="mob-nav-label">POSTS</span>
                 </button>
                 <button className="mob-nav-btn" id="mobNavQueen" onClick={() => (window as any).mobNav?.('queen')}>
-                    <span className="mob-nav-icon">♛</span>
+                    <span className="mob-nav-icon">{'\u266B'}</span>
                     <span className="mob-nav-label">QUEEN</span>
+                </button>
+                <button className="mob-nav-btn" id="mobNavGlobal" onClick={() => { setShowGlobal(prev => !prev); setShowChallenges(false); }}>
+                    <span className="mob-nav-icon">{'\u25CE'}</span>
+                    <span className="mob-nav-label">GLOBAL</span>
                 </button>
             </nav>
 
