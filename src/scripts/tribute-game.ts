@@ -423,8 +423,8 @@ function _showRiskyResult(data: any) {
 function _showWishlist() {
     closeStandaloneTribute();
     setTimeout(() => {
-        // Call the exact same function as the chat tribute button
-        if ((window as any).toggleTributeHunt) (window as any).toggleTributeHunt();
+        // Force open (not toggle) the wishlist overlay
+        if ((window as any).openTributeHunt) (window as any).openTributeHunt();
     }, 200);
 }
 

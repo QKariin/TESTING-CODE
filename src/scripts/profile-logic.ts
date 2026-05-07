@@ -761,6 +761,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
 if (typeof window !== 'undefined') {
     (window as any).buyTribute = buyTribute;
     (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
+    (window as any).openTributeHunt = () => openTributeHunt();
     (window as any)._renderTributeGridMobile = (grid: HTMLElement) => renderGridMobile(grid);
     (window as any).updateCrowdfundSlider = (id: string, value: string) => {
         const v = Number(value);
@@ -797,6 +798,25 @@ export function toggleTributeHunt() {
             } else {
                 overlayDesk.style.display = 'none';
             }
+        }
+    }
+}
+
+export function openTributeHunt() {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+        const overlayMob = document.getElementById('mob_TributeOverlay');
+        if (overlayMob) {
+            overlayMob.style.display = 'flex';
+            overlayMob.classList.remove('hidden');
+            const gridMob = document.getElementById('mob_huntStoreGrid');
+            if (gridMob) renderGridMobile(gridMob);
+        }
+    } else {
+        const overlayDesk = document.getElementById('tributeHuntOverlay');
+        if (overlayDesk) {
+            overlayDesk.style.display = 'flex';
+            overlayDesk.classList.remove('hidden');
         }
     }
 }
