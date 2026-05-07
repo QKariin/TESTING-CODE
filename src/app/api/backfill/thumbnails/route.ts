@@ -10,12 +10,37 @@ const IMAGE_EXTS = /\.(jpg|jpeg|png|webp|avif|bmp|heic)(\?|$)/i;
 const VIDEO_EXTS = /\.(mp4|mov|webm|avi|mkv)(\?|$)/i;
 
 function isImageUrl(url: string): boolean {
+    // Also match /api/media/url?...path=....png style URLs
+    if (url.startsWith('/api/media/url')) {
+        return IMAGE_EXTS.test(decodeURIComponent(url));
+    }
     return IMAGE_EXTS.test(url) && !VIDEO_EXTS.test(url);
+}
+
+/** Resolve relative /api/media/url paths to actual Supabase signed URLs */
+async function resolveUrl(url: string): Promise<string> {
+    if (!url.startsWith('/api/media/url')) return url;
+
+    const parsed = new URL(url, 'https://throne.qkarin.com');
+    const bucket = parsed.searchParams.get('bucket') || 'media';
+    const path = parsed.searchParams.get('path');
+
+    if (!path) return url;
+
+    // Generate a signed URL directly via Supabase admin
+    const { data, error } = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, 600);
+    if (error || !data?.signedUrl) {
+        // Try public URL as fallback
+        const { data: { publicUrl } } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
+        return publicUrl;
+    }
+    return data.signedUrl;
 }
 
 async function fetchAndResize(url: string): Promise<Buffer | null> {
     try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+        const resolved = await resolveUrl(url);
+        const res = await fetch(resolved, { signal: AbortSignal.timeout(15000) });
         if (!res.ok) return null;
         const buf = Buffer.from(await res.arrayBuffer());
         return await sharp(buf).resize(400, 400, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 60 }).toBuffer();
