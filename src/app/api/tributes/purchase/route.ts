@@ -13,8 +13,8 @@ export async function POST(request: Request) {
 
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const profileQuery = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar').ilike('member_id', memberEmail).single();
+            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name').eq('ID', memberEmail).single()
+            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name').ilike('member_id', memberEmail).single();
         const { data: profile, error: profileErr } = await profileQuery;
 
         if (profileErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
             await supabase.from('global_messages').insert({
                 sender_email: realEmail,
                 sender_name: senderName,
-                sender_avatar: (profile as any).avatar || null,
+                sender_avatar: null,
                 message: `UPDATE_TRIBUTE_CARD::${JSON.stringify({
                     title: tributeTitle,
                     price: tributeCost,
