@@ -19,9 +19,10 @@ interface DiscordEmbed {
     timestamp?: string;
 }
 
-function cardUrl(type: string, title: string, line1: string, line2?: string) {
+function cardUrl(type: string, title: string, line1: string, line2?: string, icon?: string) {
     const p = new URLSearchParams({ type, title, line1 });
     if (line2) p.set('line2', line2);
+    if (icon) p.set('icon', icon);
     return `${BASE}/api/og/discord-card?${p.toString()}`;
 }
 
@@ -58,7 +59,7 @@ export function discordDirectTribute(senderName: string, amount: number) {
 
 export function discordRiskyTribute(
     senderName: string, stake: number, cardName: string,
-    lossAmount: number, bonusAmount: number,
+    lossAmount: number, bonusAmount: number, cardIcon?: string,
 ) {
     const isJackpot = cardName === 'JACKPOT' && bonusAmount > 0;
     const isNoLoss = lossAmount === 0 && !isJackpot;
@@ -98,7 +99,7 @@ export function discordRiskyTribute(
             { name: isJackpot ? 'Won' : 'Lost', value: (isJackpot ? bonusAmount : lossAmount).toLocaleString(), inline: true },
             { name: 'Card', value: cardName, inline: true },
         ],
-        image: { url: cardUrl(type, isJackpot ? 'JACKPOT!' : 'RISKY TRIBUTE', imgLine1, imgLine2) },
+        image: { url: cardUrl(type, isJackpot ? 'JACKPOT!' : 'RISKY TRIBUTE', imgLine1, imgLine2, cardIcon) },
     });
 }
 

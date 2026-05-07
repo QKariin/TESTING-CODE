@@ -229,7 +229,7 @@ export async function POST(request: Request) {
             } catch (_) {}
 
             // Discord notification
-            discordRiskyTribute(senderName, stake, cardName, lossAmount, bonusAmount).catch(() => {});
+            discordRiskyTribute(senderName, stake, cardName, lossAmount, bonusAmount, cardIcon).catch(() => {});
 
             return NextResponse.json({
                 success: true,

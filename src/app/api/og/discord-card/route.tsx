@@ -36,9 +36,24 @@ export async function GET(req: NextRequest) {
     const line1 = sp.get('line1') || '';
     const line2 = sp.get('line2') || '';
     const cta = sp.get('cta') || 'throne.qkarin.com';
+    const cardIcon = sp.get('icon') || '';
 
     const c = COLORS[type] || COLORS.tribute;
-    const icon = ICONS[type] || '';
+    const emoji = ICONS[type] || '';
+
+    // If a card icon SVG is provided, resolve full URL and fetch as data URI
+    let iconDataUri = '';
+    if (cardIcon) {
+        try {
+            const base = req.nextUrl.origin;
+            const iconUrl = cardIcon.startsWith('http') ? cardIcon : `${base}${cardIcon}`;
+            const res = await fetch(iconUrl);
+            if (res.ok) {
+                const svgText = await res.text();
+                iconDataUri = `data:image/svg+xml;base64,${btoa(svgText)}`;
+            }
+        } catch (_) {}
+    }
 
     return new ImageResponse(
         (
@@ -64,6 +79,21 @@ export async function GET(req: NextRequest) {
                     background: `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`,
                 }} />
 
+                {/* Card icon — large, positioned right side */}
+                {iconDataUri && (
+                    <div style={{
+                        display: 'flex',
+                        position: 'absolute',
+                        right: '40px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        opacity: 0.85,
+                    }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={iconDataUri} width={160} height={160} alt="" />
+                    </div>
+                )}
+
                 {/* Top border line */}
                 <div style={{
                     display: 'flex',
@@ -79,6 +109,7 @@ export async function GET(req: NextRequest) {
                     flex: 1,
                     padding: '40px 50px',
                     justifyContent: 'center',
+                    maxWidth: iconDataUri ? '580px' : '100%',
                 }}>
                     {/* Title row */}
                     <div style={{
@@ -87,7 +118,7 @@ export async function GET(req: NextRequest) {
                         gap: '16px',
                         marginBottom: '8px',
                     }}>
-                        <span style={{ fontSize: '36px' }}>{icon}</span>
+                        {!iconDataUri && <span style={{ fontSize: '36px' }}>{emoji}</span>}
                         <span style={{
                             fontSize: '28px',
                             color: c.accent,
