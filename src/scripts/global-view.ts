@@ -386,24 +386,16 @@ async function _loadUpdatesPreview() {
 
 function _buildUpdateCardPreview(u: any): string {
     if (u.kind === 'tribute') {
-        const initial = (u.sender_name || 'S')[0].toUpperCase();
-        const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const coverSrc = u.image || u.sender_avatar || '';
-        return `<div style="margin:6px 8px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-            <div style="width:100%;height:110px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
-                ${coverSrc
-                    ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                    : ''}
-                <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:2.5rem;color:rgba(197,160,89,0.4);">${initial}</div>
-                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.85) 100%);"></div>
-                <div style="position:absolute;bottom:8px;left:12px;font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.7);letter-spacing:2px;">✦ GIFT SENT</div>
+        const coverSrc = u.image || '';
+        const priceVal = u.price ? Number(u.price).toLocaleString() : '';
+        return `<div style="margin:6px 8px;border-radius:12px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.5);">
+            <div style="width:100%;height:120px;background-image:url('${coverSrc}');background-size:cover;background-position:center;position:relative;">
+                ${priceVal ? `<div style="position:absolute;top:7px;right:8px;background:rgba(10,7,3,0.85);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 10px;font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#c5a059;display:flex;align-items:center;gap:5px;letter-spacing:1px;"><i class="fas fa-coins"></i> ${priceVal}</div>` : ''}
             </div>
-            <div style="padding:10px 12px 10px;">
-                <div style="font-family:'Orbitron';font-size:0.72rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>
-                    <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.2);">${time}</span>
-                </div>
+            <div style="padding:10px 14px 14px;">
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.7);letter-spacing:2px;margin-bottom:4px;">✦ Gift Sent</div>
+                <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:1px;">${u.title}</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:6px;">${u.sender_name}</div>
             </div>
         </div>`;
     }
@@ -882,23 +874,18 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     if (content.startsWith('UPDATE_TRIBUTE_CARD::')) {
         try {
             const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
-            const tInitial = (d.senderName || 'S')[0].toUpperCase();
-            const coverSrc = d.image || d.senderAvatar || '';
+            const coverSrc = d.image || '';
+            const priceVal = d.price ? Number(d.price).toLocaleString() : '';
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
-                <div style="width:60%;min-width:240px;max-width:480px;">
-                    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;width:100%;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-                        <div style="width:100%;height:130px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
-                            ${coverSrc ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">` : ''}
-                            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:2.5rem;color:rgba(197,160,89,0.4);">${tInitial}</div>
-                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
-                            <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
+                <div style="width:220px;">
+                    <div style="border-radius:12px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.5);">
+                        <div style="width:100%;height:120px;background-image:url('${coverSrc}');background-size:cover;background-position:center;position:relative;">
+                            ${priceVal ? `<div style="position:absolute;top:7px;right:8px;background:rgba(10,7,3,0.85);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 10px;font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#c5a059;display:flex;align-items:center;gap:5px;letter-spacing:1px;"><i class="fas fa-coins"></i> ${priceVal}</div>` : ''}
                         </div>
-                        <div style="padding:10px 14px 12px;">
-                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${d.title||''}</div>
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-                                <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.55);">${d.senderName||''}</span>
-                                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);">${time}</span>
-                            </div>
+                        <div style="padding:10px 14px 14px;">
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.7);letter-spacing:2px;margin-bottom:4px;">✦ Gift Sent</div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:1px;">${d.title||''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:6px;">${d.senderName||''}</div>
                         </div>
                     </div>
                 </div>
@@ -1334,25 +1321,17 @@ function _buildUpdateCard(u: any): string {
 }
 
 function _buildTributeCard(u: any): string {
-    const time = new Date(u.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const coverSrc = u.sender_avatar || '';
-    const initial = (u.sender_name || 'S')[0].toUpperCase();
+    const coverSrc = u.image || '';
+    const priceVal = u.price ? Number(u.price).toLocaleString() : '';
     return `
-    <div style="background:#0a0a14;border:1px solid rgba(197,160,89,0.35);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
-        <div style="width:100%;height:140px;overflow:hidden;position:relative;background:#0d0d1a;display:flex;align-items:center;justify-content:center;">
-            ${coverSrc
-                ? `<img src="${coverSrc}" style="width:100%;height:100%;object-fit:cover;object-position:center;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                : ''}
-            <div style="display:${coverSrc ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:3rem;color:rgba(197,160,89,0.4);">${initial}</div>
-            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(10,10,20,0.88) 100%);"></div>
-            <div style="position:absolute;bottom:10px;left:14px;font-family:'Orbitron';font-size:0.4rem;color:rgba(197,160,89,0.75);letter-spacing:2px;">✦ GIFT SENT</div>
+    <div style="border-radius:12px;overflow:hidden;background:#0a0a14;border:1px solid rgba(197,160,89,0.4);box-shadow:0 6px 24px rgba(0,0,0,0.5);">
+        <div style="width:100%;height:120px;background-image:url('${coverSrc}');background-size:cover;background-position:center;position:relative;">
+            ${priceVal ? `<div style="position:absolute;top:7px;right:8px;background:rgba(10,7,3,0.85);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 10px;font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#c5a059;display:flex;align-items:center;gap:5px;letter-spacing:1px;"><i class="fas fa-coins"></i> ${priceVal}</div>` : ''}
         </div>
-        <div style="padding:12px 14px 14px;">
-            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.3;">${u.title}</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-                <span style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${u.sender_name}</span>
-                <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);">${time}</span>
-            </div>
+        <div style="padding:10px 14px 14px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.7);letter-spacing:2px;margin-bottom:4px;">✦ Gift Sent</div>
+            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:1px;">${u.title}</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.35);margin-top:6px;">${u.sender_name}</div>
         </div>
     </div>`;
 }
