@@ -45,7 +45,7 @@ function renderOperationsGrid() {
     let html = '<div class="ops-monitor-grid">';
 
     // 1. ROUTINE CARD (SILVER) — full width, first
-    const routineBg = latestRoutine?.proofUrl ? `<img src="${getOptimizedUrl(latestRoutine.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
+    const routineBg = (latestRoutine?.thumbnail_url || latestRoutine?.proofUrl) ? `<img src="${getOptimizedUrl(latestRoutine.thumbnail_url || latestRoutine.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
     html += `
         <div class="ops-card routine" onclick="window.showQueueFiltered(true)">
             ${routineBg}
@@ -58,7 +58,7 @@ function renderOperationsGrid() {
     `;
 
     // 2. TASK CARD (GOLD) — full width, second
-    const taskBg = latestTask?.proofUrl ? `<img src="${getOptimizedUrl(latestTask.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
+    const taskBg = (latestTask?.thumbnail_url || latestTask?.proofUrl) ? `<img src="${getOptimizedUrl(latestTask.thumbnail_url || latestTask.proofUrl, 600)}" class="ops-card-bg" onerror="this.style.display='none'">` : '';
     html += `
         <div class="ops-card task" onclick="window.showQueueFiltered(false)">
             ${taskBg}

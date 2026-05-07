@@ -962,7 +962,7 @@ export async function renderGlobalReview(filterRoutine: boolean) {
     const urlMap = new Map<string, string>(); // raw → signed
     filtered.forEach((t: any) => {
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-        const src = isVideo ? (t.thumbnail_url || '') : (t.proofUrl || '');
+        const src = t.thumbnail_url || (isVideo ? '' : (t.proofUrl || ''));
         if (src && !urlMap.has(src)) { rawUrls.push(src); urlMap.set(src, src); }
     });
     if (rawUrls.length) {
@@ -976,7 +976,7 @@ export async function renderGlobalReview(filterRoutine: boolean) {
     grid.innerHTML = filtered.map((t: any) => {
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-        const rawSrc = isVideo ? (t.thumbnail_url || '') : (t.proofUrl || '');
+        const rawSrc = t.thumbnail_url || (isVideo ? '' : (t.proofUrl || ''));
         const resolvedSrc = urlMap.get(rawSrc) || rawSrc;
         const optUrl = isVideo ? resolvedSrc : getOptimizedUrl(resolvedSrc, 600);
 

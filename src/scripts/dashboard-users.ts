@@ -301,7 +301,8 @@ export async function updateDetail(u: any) {
                   </div>`)
             : '';
         const isRoutineVideo = todayEntry?.proofUrl?.match(/\.(mp4|mov|webm)/i);
-        const routineThumb = isRoutineVideo ? (todayEntry.thumbnail_url || null) : null;
+        const routineThumb = todayEntry?.thumbnail_url || (isRoutineVideo ? null : null);
+        const routineDisplayUrl = routineThumb || todayEntry?.proofUrl;
         const proofHtml = todayEntry
             ? `<div style="position:relative;margin-top:6px;border-radius:4px;overflow:hidden;">
                 ${isRoutineVideo
@@ -315,7 +316,7 @@ export async function updateDetail(u: any) {
                         : `<div style="background:#0a0a0a;height:80px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid #333;cursor:pointer;" onclick="window.open('${todayEntry.proofUrl}','_blank')">
                              <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(197,160,89,0.7)"><path d="M8 5v14l11-7z"/></svg>
                            </div>`)
-                    : `<img src="${todayEntry.proofUrl}" style="width:100%;display:block;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`}
+                    : `<img src="${routineThumb || todayEntry.proofUrl}" style="width:100%;display:block;border-radius:4px;border:1px solid #333;cursor:pointer;max-height:260px;object-fit:cover;" onclick="window.open('${todayEntry.proofUrl}','_blank')" onerror="this.style.display='none'">`}
                 ${proofOverlay}
               </div>`
             : '';
@@ -550,7 +551,7 @@ async function updateReviewQueue(u: any) {
         // Sign all thumbnail/proof URLs in parallel before rendering
         const items = u.reviewQueue.map((t: any) => {
             const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
-            const rawUrl = isVideo ? (t.thumbnail_url || null) : t.proofUrl;
+            const rawUrl = t.thumbnail_url || (isVideo ? null : t.proofUrl);
             return { t, isVideo, rawUrl };
         });
         const signedUrls = await Promise.all(items.map((it: any) => it.rawUrl ? getSignedUrl(it.rawUrl) : Promise.resolve('')));
@@ -890,8 +891,8 @@ async function updateChatterPending(u: any, gen?: number) {
         if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
         const isVideo = (t.proofType && (t.proofType === 'video' || t.proofType.startsWith('video/'))) || mediaTypeFunction(t.proofUrl) === 'video';
         const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        const thumb = (isVideo && t.thumbnail_url) ? await getSignedUrl(t.thumbnail_url) : null;
-        const url = !isVideo && t.proofUrl ? await getSignedUrl(t.proofUrl) : '';
+        const thumb = t.thumbnail_url ? await getSignedUrl(t.thumbnail_url) : null;
+        const url = (!thumb && !isVideo && t.proofUrl) ? await getSignedUrl(t.proofUrl) : '';
         if (gen !== undefined && gen !== _detailGen) return; // stale — user switched
         const imgSrc = isVideo ? (thumb || '') : url;
         const playIcon = isVideo ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M8 5v14l11-7z"/></svg></div>` : '';

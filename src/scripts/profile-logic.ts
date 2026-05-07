@@ -1,7 +1,7 @@
 import { getState, setState } from './profile-state';
 import { createClient } from '@/utils/supabase/client';
 import { getHierarchyReport } from '../lib/hierarchyRules';
-import { uploadToSupabase, getVideoDuration, isVideo, extractAndUploadVideoThumbnail } from './mediaSupabase';
+import { uploadToSupabase, getVideoDuration, isVideo, extractAndUploadVideoThumbnail, generateImageThumbnail } from './mediaSupabase';
 import { getOptimizedUrl } from './media';
 import { presenceKey } from './dashboard-presence';
 
@@ -2440,6 +2440,10 @@ async function submitTaskEvidence(file: File, isRoutine: boolean = false): Promi
             console.log("Generating task video thumbnail...");
             thumbnailUrl = await extractAndUploadVideoThumbnail(file);
             console.log("Task thumbnail result:", thumbnailUrl);
+        } else {
+            console.log("Generating image thumbnail...");
+            thumbnailUrl = await generateImageThumbnail(file);
+            console.log("Image thumbnail result:", thumbnailUrl);
         }
 
         // 2. Submit link to Postgres records
@@ -7004,7 +7008,7 @@ export async function loadAltarTop3(memberId: string) {
             const el = document.getElementById(slotIds[i]);
             if (!el) return;
             const isVid = t.proofType === 'video' || /\.(mp4|mov|webm)/i.test(t.proofUrl || '');
-            const url = isVid ? (t.thumbnailUrl || '/queen-karin.png') : t.proofUrl;
+            const url = t.thumbnailUrl || (isVid ? '/queen-karin.png' : t.proofUrl);
 
             if (el.tagName === 'IMG') {
                 const img = el as HTMLImageElement;
@@ -7029,7 +7033,7 @@ export async function loadAltarTop3(memberId: string) {
         if (heroImg && top3[0] && !heroImg.dataset.loaded) {
             const t = top3[0];
             const isVid = t.proofType === 'video' || /\.(mp4|mov|webm)/i.test(t.proofUrl || '');
-            heroImg.src = isVid ? (t.thumbnailUrl || '/queen-karin.png') : t.proofUrl;
+            heroImg.src = t.thumbnailUrl || (isVid ? '/queen-karin.png' : t.proofUrl);
             heroImg.onerror = () => fallback(heroImg);
             if (heroTitle) heroTitle.textContent = t.text || '';
         }

@@ -251,6 +251,21 @@ export async function extractAndUploadVideoThumbnail(videoFile: File): Promise<s
     });
 }
 
+/**
+ * Generate a small JPEG thumbnail from an image file (for list/preview views).
+ * Uploads to media/task-thumbs/ and returns the public URL, or null on failure.
+ */
+export async function generateImageThumbnail(file: File): Promise<string | null> {
+    if (!isImage(file) || file.type === 'image/gif') return null;
+    try {
+        const { file: thumbFile } = await compressImage(file, 400, 0.6);
+        const url = await uploadFileDirectly('media', 'task-thumbs', thumbFile);
+        return url.startsWith('failed') ? null : url;
+    } catch {
+        return null;
+    }
+}
+
 async function uploadFileDirectly(bucketName: string, folderPath: string, file: File): Promise<string> {
     const sizeMB = file.size / 1024 / 1024;
     console.log(`[SupabaseStorage] Signed upload: ${file.name} (${sizeMB.toFixed(1)}MB)`);
