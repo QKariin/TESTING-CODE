@@ -13,8 +13,8 @@ export async function POST(request: Request) {
 
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const profileQuery = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID').ilike('member_id', memberEmail).single();
+            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar').eq('ID', memberEmail).single()
+            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar').ilike('member_id', memberEmail).single();
         const { data: profile, error: profileErr } = await profileQuery;
 
         if (profileErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
@@ -63,15 +63,32 @@ export async function POST(request: Request) {
         } catch (_) {}
 
         // Insert wishlist-type record so the Updates feed picks it up
+        let tributeImage: string | null = null;
         try {
             const { data: tributeRow } = await supabase.from('wishlist').select('image, display_url').eq('id', tributeId).maybeSingle();
-            const tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
+            tributeImage = (tributeRow as any)?.display_url || (tributeRow as any)?.image || null;
             await supabase.from('chats').insert({
                 member_id: realEmail,
                 sender_email: realEmail,
                 content: `Purchased "${tributeTitle}"`,
                 type: 'wishlist',
                 metadata: { title: tributeTitle, price: tributeCost, image: tributeImage },
+            });
+        } catch (_) {}
+
+        // Post gift card to global chat so everyone sees it
+        try {
+            const senderName = (profile as any).name || realEmail.split('@')[0];
+            await supabase.from('global_messages').insert({
+                sender_email: realEmail,
+                sender_name: senderName,
+                sender_avatar: (profile as any).avatar || null,
+                message: `UPDATE_TRIBUTE_CARD::${JSON.stringify({
+                    title: tributeTitle,
+                    price: tributeCost,
+                    image: tributeImage,
+                    senderName,
+                })}`,
             });
         } catch (_) {}
 
