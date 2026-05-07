@@ -1805,17 +1805,20 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             <button onClick={() => (window as any).openStandaloneTribute?.()} style={{
-                                marginTop: 28, width: 220, height: 44, background: 'none',
-                                border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8,
+                                marginTop: 40, width: 220, height: 44,
+                                background: 'rgba(197,160,89,0.06)',
+                                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(197,160,89,0.35)', borderRadius: 10,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                 cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
                             }}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="3" y="8" width="18" height="12" rx="1"></rect>
                                     <path d="M12 8v12"></path>
                                     <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
                                 </svg>
-                                <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
+                                <span style={{ fontFamily: "'Cinzel', serif", fontSize: '0.7rem', color: '#c5a059', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
                             </button>
                         </div>
 
