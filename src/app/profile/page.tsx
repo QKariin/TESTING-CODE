@@ -1679,7 +1679,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div id="mobExchequer" className="mob-reward-overlay hidden" style={{ zIndex: 2147483640, display: 'none' }}>
-                        <div className="mob-reward-card lobby-card" style={{ border: '1px solid #c5a059' }}>
+                        <div className="mob-reward-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                             <div className="lobby-header">
                                 <div className="lobby-title">EXCHEQUER</div>
                             </div>
@@ -2092,15 +2092,15 @@ export default function ProfilePage() {
 
             {/* ── MOBILE BOTTOM NAV - at root level, no stacking context conflicts ── */}
             <nav id="mobBottomNav" className="mob-bottom-nav">
-                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).mobNavTo('profile'); }}>
+                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).mobNavTo('profile'); }}>
                     <span className="mob-nav-icon">◆</span>
                     <span className="mob-nav-label">PROFILE</span>
                 </button>
-                <button id="mobNavRecord" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).openAltarDrawer(); }}>
+                <button id="mobNavRecord" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openAltarDrawer(); }}>
                     <span className="mob-nav-icon">▦</span>
                     <span className="mob-nav-label">RECORD</span>
                 </button>
-                <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay(); }}>
+                <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChatOverlay(); }}>
                     <div className="mob-nav-queen-ring">
                         <img id="navQueenPic" src="/queen-nav.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
@@ -2111,11 +2111,11 @@ export default function ProfilePage() {
                         </svg>
                     </div>
                 </button>
-                <button id="mobNavQueen" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).openMobQueenWall(); }}>
+                <button id="mobNavQueen" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobQueenWall(); }}>
                     <span className="mob-nav-icon">♛</span>
                     <span className="mob-nav-label">QUEEN</span>
                 </button>
-                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).openMobGlobal(); }}>
+                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobGlobal(); }}>
                     <span className="mob-nav-icon">◎</span>
                     <span className="mob-nav-label">GLOBAL</span>
                 </button>
