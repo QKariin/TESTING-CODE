@@ -1389,7 +1389,7 @@ export default function ProfilePage() {
                                     { amount: '30,000', price: '€250', coins: 30000, badge: null, promo: false },
                                     { amount: '12,000', price: '€100', coins: 12000, badge: null, promo: false },
                                     { amount: '5,500', price: '€50', coins: 5500, badge: null, promo: false },
-                                    { amount: '1,111', price: '€29', coins: 1111, badge: '72H PROMO', promo: true },
+                                    { amount: '2,000', price: '€20', coins: 2000, badge: null, promo: false },
                                 ] as { amount: string, price: string, coins: number, badge: string | null, promo: boolean }[]).map(pkg => (
                                     <div key={pkg.coins} onClick={() => (window as any).buyRealCoins(pkg.coins)}
                                         style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.25s ease', width: 320, flexShrink: 0 }}
@@ -1682,10 +1682,9 @@ export default function ProfilePage() {
                                 <div className="lobby-title">EXCHEQUER</div>
                             </div>
                             <div className="coin-grid">
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(1111)} style={{ border: '1px solid rgba(220,50,80,0.5)', background: 'linear-gradient(135deg,rgba(220,50,80,0.08),rgba(0,0,0,0.3))', gridColumn: '1 / -1' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: '#e03050', letterSpacing: '2px', marginBottom: 2 }}>72H PROMO</div>
-                                    <div className="coin-amount" style={{ color: '#fff' }}>1,111</div>
-                                    <div className="coin-price" style={{ color: '#e03050' }}>€29.00</div>
+                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(2000)}>
+                                    <div className="coin-amount">2,000</div>
+                                    <div className="coin-price">€20.00</div>
                                 </div>
                                 <div className="coin-tile" onClick={() => (window as any).buyRealCoins(1000)}>
                                     <div className="coin-amount">1,000</div>
