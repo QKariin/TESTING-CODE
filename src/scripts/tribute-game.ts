@@ -46,7 +46,11 @@ function _showMenu() {
         </div>
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
             <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:8px;">CHOOSE YOUR OFFERING</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;">CHOOSE YOUR OFFERING</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <i class="fas fa-coins" style="color:#c5a059;font-size:0.8rem;"></i>
+                <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;">${_wallet().toLocaleString()}</span>
+            </div>
             <button onclick="window._tributeShowSend()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                 <img src="/tribute-send.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
             </button>
@@ -55,6 +59,9 @@ function _showMenu() {
             </button>
             <button onclick="window._tributeShowWishlist()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                 <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+            </button>
+            <button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="margin-top:4px;padding:10px 28px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span>
             </button>
         </div>`;
 }
