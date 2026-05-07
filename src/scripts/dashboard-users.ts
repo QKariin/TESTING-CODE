@@ -760,14 +760,32 @@ async function updateChatterRoutine(u: any, gen?: number) {
         return;
     }
 
-    // Find today's routine entry from history OR reviewQueue
-    const todayStr = new Date().toDateString();
-    const history: any[] = u.routineHistory || u.routinehistory || [];
-    let todayEntry = history.slice().reverse().find((h: any) =>
-        h.isRoutine && h.proofUrl && new Date(h.timestamp).toDateString() === todayStr
-    );
+    // Fetch today's routine from the dedicated routines table
+    const email = (u.member_id || u.email || u.memberId || '').toLowerCase();
+    let todayEntry: any = null;
+    try {
+        const res = await fetch(`/api/routines-history?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+            const data = await res.json();
+            const todayStr = new Date().toDateString();
+            const entries = data.entries || [];
+            todayEntry = entries.find((r: any) => new Date(r.submitted_at).toDateString() === todayStr);
+            if (todayEntry) {
+                // Normalize field names to match expected shape
+                todayEntry = {
+                    id: todayEntry.id,
+                    proofUrl: todayEntry.proof_url,
+                    proofType: todayEntry.proof_type,
+                    thumbnail_url: todayEntry.thumbnail_url,
+                    timestamp: todayEntry.submitted_at,
+                    status: todayEntry.status,
+                    isRoutine: true,
+                };
+            }
+        }
+    } catch { /* fall back to empty */ }
 
-    // Fallback: check reviewQueue for pending routine
+    // Fallback: check reviewQueue for pending routine (covers edge case where API fails)
     if (!todayEntry) {
         const queue = u.reviewQueue || [];
         todayEntry = queue.find((t: any) =>
