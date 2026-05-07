@@ -3640,9 +3640,10 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             const rBg = rIsWin ? '#0e0b06' : d.lostAmount === 0 ? '#060e08' : '#0e0606';
             const rResultText = rIsWin ? `WON +${(d.wonAmount||0).toLocaleString()}` : d.lostAmount === 0 ? 'MERCY - LOST NOTHING' : `LOST ${(d.lostAmount||0).toLocaleString()}`;
             const rResultColor = rIsWin ? '#c5a059' : d.lostAmount === 0 ? '#4ade80' : '#e03050';
+            const rIconHtml = d.icon && d.icon.startsWith('/') ? `<img src="${d.icon}" style="width:80px;height:auto;margin:0 auto 6px;">` : `<div style="font-size:1.8rem;margin-bottom:6px;">${d.icon||'\uD83C\uDFB0'}</div>`;
             const cardHtml = `
             <div style="width:min(75%,260px);margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${rBg},#0a0a14);border:1px solid ${rBorderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;">
-                <div style="font-size:1.8rem;margin-bottom:6px;">${d.icon||'\uD83C\uDFB0'}</div>
+                ${rIconHtml}
                 <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:4px;">RISKY SEND</div>
                 <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:${rResultColor};letter-spacing:2px;font-weight:700;margin-bottom:6px;">${d.cardName||''}</div>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:4px;">Staked ${(d.stakeAmount||0).toLocaleString()} coins</div>
@@ -4292,6 +4293,9 @@ export function openMobChatOverlay() {
 export function closeMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
+    // Close tribute overlay if open inside chat
+    const tributeOv = document.getElementById('mob_TributeOverlay');
+    if (tributeOv) { tributeOv.style.display = 'none'; tributeOv.classList.add('hidden'); }
     // Dismiss keyboard first
     const input = document.getElementById('mob_chatMsgInput') as HTMLInputElement | null;
     if (input) input.blur();
@@ -5104,7 +5108,8 @@ function _buildMobGlBubble(msg: any): string {
             const bg = isWin ? '#0e0b06' : d.lostAmount === 0 ? '#060e08' : '#0e0606';
             const resultText = isWin ? `WON +${(d.wonAmount||0).toLocaleString()}` : d.lostAmount === 0 ? 'MERCY - LOST NOTHING' : `LOST ${(d.lostAmount||0).toLocaleString()}`;
             const resultColor = isWin ? '#c5a059' : d.lostAmount === 0 ? '#4ade80' : '#e03050';
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:220px;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${bg},#0a0a14);border:1px solid ${borderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;"><div style="font-size:1.8rem;margin-bottom:6px;">${d.icon||'\uD83C\uDFB0'}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:4px;">RISKY SEND</div><div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:${resultColor};letter-spacing:2px;font-weight:700;margin-bottom:6px;">${d.cardName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:4px;">Staked ${(d.stakeAmount||0).toLocaleString()} coins</div><div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:${resultColor};font-weight:700;">${resultText}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.3);margin-top:10px;">${d.senderName||''}</div></div></div>`;
+            const rIconHtml = d.icon && d.icon.startsWith('/') ? `<img src="${d.icon}" style="width:80px;height:auto;margin:0 auto 6px;">` : `<div style="font-size:1.8rem;margin-bottom:6px;">${d.icon||'🎰'}</div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:220px;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${bg},#0a0a14);border:1px solid ${borderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;">${rIconHtml}<div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:4px;">RISKY SEND</div><div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:${resultColor};letter-spacing:2px;font-weight:700;margin-bottom:6px;">${d.cardName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:4px;">Staked ${(d.stakeAmount||0).toLocaleString()} coins</div><div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:${resultColor};font-weight:700;">${resultText}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.3);margin-top:10px;">${d.senderName||''}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
