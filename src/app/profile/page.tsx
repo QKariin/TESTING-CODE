@@ -101,6 +101,8 @@ import {
     _submitMobPost,
     handleInstallApp,
     showCertificate,
+    openInlineRisky,
+    closeInlineRisky,
 } from '@/scripts/profile-logic';
 
 
@@ -270,6 +272,8 @@ export default function ProfilePage() {
             (window as any).closeQkLightbox = closeQkLightbox;
             (window as any).setMobGlReply = setMobGlReply;
             (window as any).cancelMobGlReply = cancelMobGlReply;
+            (window as any).openInlineRisky = openInlineRisky;
+            (window as any).closeInlineRisky = closeInlineRisky;
             // Global chat lightbox + like
             if (!(window as any)._openGlobalLightbox) {
                 (window as any)._openGlobalLightbox = (url: string) => {
@@ -2087,6 +2091,11 @@ export default function ProfilePage() {
                 {/* UPDATES panel */}
                 <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                     <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
+                </div>
+
+                {/* Inline risky send overlay (inside global chat) */}
+                <div id="inlineRiskyOverlay" style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 9999, display: 'none', flexDirection: 'column' }}>
+                    <div id="inlineRiskyContent" style={{ flex: 1, overflow: 'hidden' }}></div>
                 </div>
             </div>
 

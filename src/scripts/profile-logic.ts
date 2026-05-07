@@ -3654,7 +3654,7 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                         </div>
                     </div>
                 </div>
-                <div style="margin-top:8px;text-align:center;"><button onclick="var o=document.getElementById('mobTributeStandalone');if(o){o.style.display='flex';}if(window._tributeShowRisky){window._tributeShowRisky();}" style="background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:'Orbitron',sans-serif;font-size:0.4rem;letter-spacing:2px;padding:6px 20px;border-radius:20px;cursor:pointer;">TRY YOUR LUCK</button></div>
+                <div style="margin-top:8px;text-align:center;"><button onclick="if(window.openInlineRisky){window.openInlineRisky();}" style="background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:'Orbitron',sans-serif;font-size:0.4rem;letter-spacing:2px;padding:6px 20px;border-radius:20px;cursor:pointer;">TRY YOUR LUCK</button></div>
             </div>`;
             return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
         } catch (_) { /* fall through */ }
@@ -4698,6 +4698,9 @@ export function openMobGlobal() {
 export function closeMobGlobal() {
     const el = document.getElementById('mobGlobalOverlay');
     if (!el) return;
+    // Close inline risky if open
+    const irOv = document.getElementById('inlineRiskyOverlay');
+    if (irOv) irOv.style.display = 'none';
     el.classList.remove('mob-overlay-open');
     setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     _setNavActive('profile');
@@ -5116,7 +5119,7 @@ function _buildMobGlBubble(msg: any): string {
             const resultText = isWin ? `WON +${(d.wonAmount||0).toLocaleString()}` : d.lostAmount === 0 ? 'NO LOSS' : `LOST ${(d.lostAmount||0).toLocaleString()}`;
             const resultColor = isWin ? '#c5a059' : d.lostAmount === 0 ? '#4ade80' : '#e03050';
             const rIconHtml = d.icon && d.icon.startsWith('/') ? `<img src="${d.icon}" style="width:70px;height:auto;">` : `<div style="font-size:2.2rem;">${d.icon||'🎰'}</div>`;
-            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:min(90%,320px);"><div style="border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${bg},#0a0a14);border:1px solid ${borderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);padding:14px 16px;"><div style="display:flex;align-items:center;gap:14px;"><div style="flex-shrink:0;width:70px;display:flex;align-items:center;justify-content:center;">${rIconHtml}</div><div style="flex:1;min-width:0;"><div style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(255,255,255,0.85);font-weight:700;margin-bottom:4px;">${d.senderName||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-bottom:3px;">RISKY SEND</div><div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:${resultColor};letter-spacing:1px;font-weight:700;margin-bottom:3px;">${d.cardName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.45);">Staked ${(d.stakeAmount||0).toLocaleString()} · <span style="color:${resultColor};font-weight:700;">${resultText}</span></div></div></div></div><div style="margin-top:8px;text-align:center;"><button onclick="var o=document.getElementById('mobTributeStandalone');if(o){o.style.display='flex';}if(window._tributeShowRisky){window._tributeShowRisky();}" style="background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:'Orbitron',sans-serif;font-size:0.4rem;letter-spacing:2px;padding:6px 20px;border-radius:20px;cursor:pointer;">TRY YOUR LUCK</button></div></div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:min(90%,320px);"><div style="border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${bg},#0a0a14);border:1px solid ${borderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);padding:14px 16px;"><div style="display:flex;align-items:center;gap:14px;"><div style="flex-shrink:0;width:70px;display:flex;align-items:center;justify-content:center;">${rIconHtml}</div><div style="flex:1;min-width:0;"><div style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(255,255,255,0.85);font-weight:700;margin-bottom:4px;">${d.senderName||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-bottom:3px;">RISKY SEND</div><div style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:${resultColor};letter-spacing:1px;font-weight:700;margin-bottom:3px;">${d.cardName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.45);">Staked ${(d.stakeAmount||0).toLocaleString()} · <span style="color:${resultColor};font-weight:700;">${resultText}</span></div></div></div></div><div style="margin-top:8px;text-align:center;"><button onclick="if(window.openInlineRisky){window.openInlineRisky();}" style="background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:'Orbitron',sans-serif;font-size:0.4rem;letter-spacing:2px;padding:6px 20px;border-radius:20px;cursor:pointer;">TRY YOUR LUCK</button></div></div></div>`;
         } catch { /* fall through */ }
     }
 
@@ -7905,4 +7908,301 @@ export function backToGalleryAlbums() {
     const el = document.getElementById('mobGalleryContent');
     if (!el) return;
     _renderGalleryAlbums(el);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INLINE RISKY SEND (inside global chat)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _irPercent = 0;
+let _irStake = 0;
+let _irBusy = false;
+
+function _irEl(): HTMLElement | null { return document.getElementById('inlineRiskyContent'); }
+function _irEmail(): string { const s = getState(); return s?.email || s?.memberId || ''; }
+function _irWallet(): number { return getState()?.wallet || 0; }
+
+function _irUpdateWallet(nw: number) {
+    setState({ wallet: nw });
+    const s = getState();
+    if (s?.raw) s.raw.wallet = nw;
+    ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(id => {
+        const e = document.getElementById(id);
+        if (e) e.textContent = nw.toLocaleString();
+    });
+}
+
+export function openInlineRisky() {
+    const ov = document.getElementById('inlineRiskyOverlay');
+    if (!ov) return;
+    ov.style.display = 'flex';
+    _irShowStake();
+}
+
+export function closeInlineRisky() {
+    const ov = document.getElementById('inlineRiskyOverlay');
+    if (ov) ov.style.display = 'none';
+}
+
+function _irHeader(sub: string) {
+    return `<div style="text-align:center;padding-top:24px;margin-bottom:8px;">
+        <div style="font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;letter-spacing:6px;font-weight:700;">TRIBUTE</div>
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.5),transparent);margin:8px auto;"></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;">${sub}</div>
+    </div>`;
+}
+
+function _irShowStake() {
+    const el = _irEl(); if (!el) return;
+    const w = _irWallet();
+    _irPercent = 0;
+    _irStake = 0;
+
+    if (w < 10) {
+        el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+            ${_irHeader('RISKY SEND')}
+            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
+                <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.6);letter-spacing:3px;">NOT ENOUGH COINS</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:30px;padding-bottom:40px;">
+                <button onclick="window.closeInlineRisky()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">CLOSE</span></button>
+            </div>
+        </div>`;
+        return;
+    }
+
+    const pcts = [10, 25, 50, 75, 100];
+    el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+        ${_irHeader('RISKY SEND')}
+        <div style="display:flex;flex-direction:column;align-items:center;margin-top:20px;">
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-bottom:4px;">YOUR BALANCE</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:1.6rem;color:#c5a059;font-weight:700;">${w.toLocaleString()}</div>
+            </div>
+            <div style="text-align:center;margin-bottom:20px;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">How much do you dare to risk?</div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;">
+                ${pcts.map(p => `<button id="irPct_${p}" onclick="window._irPickPercent(${p})" style="width:58px;padding:14px 0;border:1px solid rgba(197,160,89,0.2);border-radius:10px;background:rgba(197,160,89,0.04);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;">
+                    <span style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;font-weight:700;">${p}%</span>
+                </button>`).join('')}
+            </div>
+            <div id="irStakeDisplay" style="text-align:center;margin-bottom:24px;min-height:50px;"></div>
+            <div id="irConfirmWrap" style="display:none;text-align:center;">
+                <style>
+                    @keyframes irShake { 0%,100%{transform:translateX(0)} 10%{transform:translateX(-3px) rotate(-1deg)} 20%{transform:translateX(3px) rotate(1deg)} 30%{transform:translateX(-3px) rotate(-0.5deg)} 40%{transform:translateX(3px) rotate(0.5deg)} 50%{transform:translateX(-2px)} 60%{transform:translateX(2px)} 70%{transform:translateX(0)} }
+                    @keyframes irGlow { 0%,100%{box-shadow:0 0 20px rgba(197,160,89,0.15),0 0 40px rgba(197,160,89,0.05)} 50%{box-shadow:0 0 30px rgba(197,160,89,0.3),0 0 60px rgba(197,160,89,0.1),inset 0 0 20px rgba(197,160,89,0.05)} }
+                    @keyframes irShine { 0%{transform:translateX(-100%)} 50%{transform:translateX(100%)} 100%{transform:translateX(100%)} }
+                </style>
+                <button onclick="window._irConfirm()" style="padding:20px 60px;background:linear-gradient(160deg,#0a0a0a 0%,rgba(197,160,89,0.12) 40%,#0a0a0a 60%,rgba(197,160,89,0.08) 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.9rem;color:#c5a059;letter-spacing:4px;font-weight:700;animation:irShake 2.5s ease-in-out infinite,irGlow 2s ease-in-out infinite;position:relative;overflow:hidden;text-shadow:0 0 12px rgba(197,160,89,0.4);">
+                    <span style="position:relative;z-index:1;">GAMBLE</span>
+                    <div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.06),transparent);animation:irShine 3s ease-in-out infinite;"></div>
+                </button>
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:20px;padding-bottom:40px;">
+            <button onclick="window.closeInlineRisky()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">CLOSE</span></button>
+        </div>
+    </div>`;
+}
+
+function _irPickPercent(pct: number) {
+    const w = _irWallet();
+    _irPercent = pct;
+    _irStake = Math.floor(w * pct / 100);
+
+    [10, 25, 50, 75, 100].forEach(p => {
+        const b = document.getElementById(`irPct_${p}`);
+        if (b) {
+            b.style.border = p === pct ? '1.5px solid #c5a059' : '1px solid rgba(197,160,89,0.2)';
+            b.style.background = p === pct ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.04)';
+            b.style.boxShadow = p === pct ? '0 0 12px rgba(197,160,89,0.15)' : 'none';
+        }
+    });
+
+    const display = document.getElementById('irStakeDisplay');
+    if (display) display.innerHTML = `
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:4px;">YOU RISK</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#c5a059;font-weight:700;">${_irStake.toLocaleString()} <span style="font-size:0.65rem;color:rgba(197,160,89,0.5);">COINS</span></div>`;
+
+    const wrap = document.getElementById('irConfirmWrap');
+    if (wrap) wrap.style.display = 'block';
+}
+
+function _irConfirm() {
+    const el = _irEl(); if (!el) return;
+    el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+        ${_irHeader('RISKY SEND')}
+        <div style="display:flex;flex-direction:column;align-items:center;margin-top:16px;">
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-family:'Cinzel',serif;font-size:1.2rem;color:#c5a059;letter-spacing:5px;margin-bottom:8px;">PICK YOUR FATE</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:rgba(197,160,89,0.5);">Stake: <span style="color:#c5a059;font-weight:700;">${_irStake.toLocaleString()}</span> coins</div>
+            </div>
+            <div id="irCardGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:340px;padding:0 10px;box-sizing:border-box;">
+                ${Array.from({ length: 9 }, (_, i) => `
+                    <button id="irCard_${i}" onclick="window._irPick(${i})" style="width:100%;aspect-ratio:0.72;background:linear-gradient(160deg,rgba(197,160,89,0.1),rgba(12,10,4,0.95),rgba(197,160,89,0.03));border:1px solid rgba(197,160,89,0.3);border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:rgba(197,160,89,0.4);transition:all 0.25s;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.4);">
+                        <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 25%,rgba(197,160,89,0.08),transparent 65%);"></div>
+                        <span style="position:relative;font-family:'Cinzel',serif;text-shadow:0 0 10px rgba(197,160,89,0.2);">?</span>
+                    </button>
+                `).join('')}
+            </div>
+            <div style="text-align:center;margin-top:16px;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(197,160,89,0.35);letter-spacing:3px;">TAP A CARD TO REVEAL YOUR FATE</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+async function _irPick(cardIndex: number) {
+    if (_irBusy) return;
+    _irBusy = true;
+
+    for (let i = 0; i < 9; i++) {
+        const c = document.getElementById(`irCard_${i}`);
+        if (c) c.style.pointerEvents = 'none';
+    }
+
+    const chosen = document.getElementById(`irCard_${cardIndex}`);
+    if (chosen) {
+        chosen.style.border = '1.5px solid #c5a059';
+        chosen.style.boxShadow = '0 0 24px rgba(197,160,89,0.3)';
+    }
+
+    try {
+        const res = await fetch('/api/tribute/direct', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberEmail: _irEmail(), type: 'risky', stakePercent: _irPercent, cardIndex }),
+        });
+        const data = await res.json();
+        if (!data.success) { _irShowResult(null); return; }
+
+        _irUpdateWallet(data.newWallet);
+
+        const order = Array.from({ length: 9 }, (_, i) => i).filter(i => i !== cardIndex);
+        order.push(cardIndex);
+
+        for (let step = 0; step < order.length; step++) {
+            await new Promise(r => setTimeout(r, 250));
+            const idx = order[step];
+            const card = document.getElementById(`irCard_${idx}`);
+            const info = data.allCards[idx];
+            if (!card || !info) continue;
+
+            const isChosen = idx === cardIndex;
+            const nameColor = info.name === 'JACKPOT' ? '#c5a059' : info.name === 'MY LUCKY BITCH' ? '#4ade80' : info.lossPct <= 0.25 ? '#facc15' : info.lossPct <= 0.5 ? '#fb923c' : '#e03050';
+
+            card.style.transition = 'all 0.4s ease';
+            card.style.transform = 'rotateY(90deg)';
+
+            await new Promise(r => setTimeout(r, 200));
+
+            card.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;">
+                <img src="${info.icon}" style="width:100%;height:auto;max-height:70%;object-fit:contain;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:0.3rem;color:${nameColor};letter-spacing:1px;font-weight:700;white-space:nowrap;">${info.name}</span>
+            </div>`;
+            card.style.background = isChosen ? `linear-gradient(160deg,${nameColor}20,rgba(12,10,4,0.95))` : 'rgba(12,10,4,0.85)';
+            card.style.border = isChosen ? `2px solid ${nameColor}` : '1px solid rgba(255,255,255,0.06)';
+            card.style.boxShadow = isChosen ? `0 0 28px ${nameColor}40` : 'none';
+            card.style.transform = 'rotateY(0deg)';
+        }
+
+        await new Promise(r => setTimeout(r, 1200));
+        _irShowResult(data);
+    } catch {
+        _irShowResult(null);
+    } finally { _irBusy = false; }
+}
+
+const _irLossQuotes = [
+    "Your coins look better in my collection.",
+    "Did you really think you'd win? How cute.",
+    "The house always wins. I am the house.",
+    "Better luck next time... or not.",
+    "Your sacrifice pleases me.",
+];
+const _irMercyQuotes = [
+    "Consider yourself lucky. I was feeling generous.",
+    "I'll let you keep your coins... this time.",
+    "Don't mistake my mercy for weakness.",
+];
+const _irWinQuotes = [
+    "Fine. Take your coins. You won't be this lucky twice.",
+    "Enjoy it while it lasts. I always get what's mine.",
+    "Lucky you. Now come back and try again.",
+];
+
+function _irShowResult(data: any) {
+    const el = _irEl(); if (!el) return;
+
+    if (!data) {
+        el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+            ${_irHeader('RISKY SEND')}
+            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
+                <div style="font-size:2rem;">❌</div>
+                <div style="font-family:'Cinzel',serif;font-size:1rem;color:#e03050;letter-spacing:3px;">FAILED</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Something went wrong</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:30px;padding-bottom:40px;">
+                <button onclick="window.closeInlineRisky()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">CLOSE</span></button>
+            </div>
+        </div>`;
+        return;
+    }
+
+    const isWin = data.cardName === 'JACKPOT' && data.bonusAmount > 0;
+    const isMercy = data.cardName === 'MY LUCKY BITCH' || (data.cardName === 'JACKPOT' && data.bonusAmount === 0 && data.lossAmount === 0);
+    const isLoss = !isWin && !isMercy;
+    const quotes = isLoss ? _irLossQuotes : isMercy ? _irMercyQuotes : _irWinQuotes;
+    const quote = quotes[Math.floor(Math.random() * quotes.length)];
+
+    let titleColor = '#e03050', bg = 'rgba(220,50,80,0.04)', borderColor = 'rgba(220,50,80,0.25)', glowColor = 'rgba(220,50,80,0.08)', queenBorder = 'rgba(220,50,80,0.2)';
+    if (isWin) { titleColor = '#c5a059'; bg = 'rgba(197,160,89,0.06)'; borderColor = 'rgba(197,160,89,0.35)'; glowColor = 'rgba(197,160,89,0.12)'; queenBorder = 'rgba(197,160,89,0.3)'; }
+    else if (isMercy) { titleColor = '#4ade80'; bg = 'rgba(74,222,128,0.04)'; borderColor = 'rgba(74,222,128,0.25)'; glowColor = 'rgba(74,222,128,0.08)'; queenBorder = 'rgba(74,222,128,0.25)'; }
+
+    el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+        ${_irHeader('RISKY SEND')}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:20px;">
+            <img src="${data.cardIcon}" style="width:120px;height:auto;">
+            <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:${titleColor};letter-spacing:5px;font-weight:700;">${data.cardName}</div>
+            <div style="width:260px;padding:22px;border-radius:16px;background:${bg};border:1px solid ${borderColor};text-align:center;margin:6px 0;box-shadow:0 0 30px ${glowColor};">
+                ${isWin ? `
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:6px;">YOU WON</div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#c5a059;font-weight:700;">+${data.bonusAmount.toLocaleString()}</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.5);letter-spacing:1px;">COINS</div>
+                ` : isMercy ? `
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:6px;">YOU LOST</div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#4ade80;font-weight:700;">NOTHING</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(74,222,128,0.5);letter-spacing:1px;">QUEEN SHOWS MERCY</div>
+                ` : `
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:6px;">YOU LOST</div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#e03050;font-weight:700;">-${data.lossAmount.toLocaleString()}</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(220,50,80,0.5);letter-spacing:1px;">COINS</div>
+                `}
+            </div>
+            <div style="width:280px;padding:16px 20px;border-radius:14px;border:1px solid ${queenBorder};background:rgba(0,0,0,0.3);display:flex;gap:12px;align-items:flex-start;">
+                <img src="/queen-nav.png" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.5);flex-shrink:0;">
+                <div>
+                    <div style="font-family:'Cinzel',serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;margin-bottom:4px;">QUEEN KARIN</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.4;font-style:italic;">"${quote}"</div>
+                </div>
+            </div>
+            ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.25);">Balance: ${data.newWallet.toLocaleString()} coins</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:20px;padding-bottom:40px;">
+            <button onclick="window._irShowStake()" style="padding:12px 36px;background:linear-gradient(160deg,#0a0a0a,rgba(197,160,89,0.12),#0a0a0a);border:1.5px solid rgba(197,160,89,0.5);border-radius:20px;cursor:pointer;"><span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:3px;font-weight:700;">PLAY AGAIN</span></button>
+            <button onclick="window.closeInlineRisky()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">CLOSE</span></button>
+        </div>
+    </div>`;
+}
+
+// Bind inline risky functions to window
+if (typeof window !== 'undefined') {
+    (window as any)._irPickPercent = _irPickPercent;
+    (window as any)._irConfirm = _irConfirm;
+    (window as any)._irPick = _irPick;
+    (window as any)._irShowStake = _irShowStake;
+    (window as any).openInlineRisky = openInlineRisky;
+    (window as any).closeInlineRisky = closeInlineRisky;
 }
