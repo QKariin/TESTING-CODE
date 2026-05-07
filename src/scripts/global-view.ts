@@ -444,7 +444,7 @@ async function _loadQueenPreview() {
         el.innerHTML = `
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:12px;text-align:center;gap:8px;">
                 <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.5);box-shadow:0 0 16px rgba(197,160,89,0.2);">
-                    <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;">
+                    <img src="/queen-nav.png" style="width:100%;height:100%;object-fit:cover;">
                 </div>
                 <div>
                     <div style="font-family:'Orbitron';font-size:0.8rem;color:#c5a059;font-weight:700;letter-spacing:2px;">Queen Karin</div>
@@ -1018,14 +1018,14 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
 
     // ── QUEEN bubble — photo post card (Instagram-style) ──
     if (isQueen && hasPhoto) {
-        const qAvSrc = av || '/queen-karin.png';
+        const qAvSrc = av || '/queen-nav.png';
         const captionText = content && content !== '[PHOTO]' ? content : '';
         return `<div class="gl-msg-row" style="margin-bottom:12px;">
             <div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);">
                 <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;">
-                    <img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-karin.png'">
+                    <img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-nav.png'">
                     <div style="flex:1;min-width:0;">
-                        <div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                        <div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
                     </div>
                     <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.45);">${time}</span>
                 </div>
@@ -1037,7 +1037,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                         ${likeBtn}
                         ${replyBtn}
                     </div>
-                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Orbitron';font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div>` : ''}
+                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Cinzel',serif;font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div>` : ''}
                 </div>
             </div>
         </div>`;
@@ -1047,13 +1047,13 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     if (isQueen) {
         const qAv = av
             ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
-            : `<img src="/queen-karin.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
+            : `<img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
         return `<div class="gl-msg-row" style="margin-bottom:8px;">
             <div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
                     <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
                         ${qAv}
-                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
                         <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
@@ -1149,7 +1149,7 @@ export async function sendGlobalMessage() {
     const QUEEN_EMAILS_LOCAL = ['ceo@qkarin.com'];
     const isQueenLocal = QUEEN_EMAILS_LOCAL.includes(senderEmail.toLowerCase());
     const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
-    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-nav.png' : null);
     _appendMessage({
         sender_name: senderName,
         sender_avatar: senderAvatar,
@@ -1189,7 +1189,7 @@ async function _sendGif(gifUrl: string) {
     const QUEEN_EMAILS_LOCAL = ['ceo@qkarin.com'];
     const isQueenLocal = QUEEN_EMAILS_LOCAL.includes(senderEmail.toLowerCase());
     const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
-    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+    const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-nav.png' : null);
 
     // Optimistic render
     _appendMessage({
@@ -1504,7 +1504,7 @@ async function _loadQueenFull() {
             <div style="display:flex;flex-direction:column;align-items:center;padding:40px 20px;gap:20px;max-width:480px;margin:0 auto;text-align:center;">
                 <div style="position:relative;">
                     <div style="width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid #c5a059;box-shadow:0 0 30px rgba(197,160,89,0.35);">
-                        <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="/queen-nav.png" style="width:100%;height:100%;object-fit:cover;">
                     </div>
                     <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:#c5a059;display:flex;align-items:center;justify-content:center;font-size:0.65rem;">👑</div>
                 </div>
@@ -1629,7 +1629,7 @@ export async function handleGlobalChatPhotoUpload(input: HTMLInputElement) {
         const QUEEN_EMAILS = ['ceo@qkarin.com'];
         const isQueenLocal = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
         const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
-        const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-karin.png' : null);
+        const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-nav.png' : null);
 
         // Optimistic render
         _appendMessage({

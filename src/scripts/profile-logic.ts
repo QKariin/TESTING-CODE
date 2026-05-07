@@ -7932,9 +7932,20 @@ function _irUpdateWallet(nw: number) {
     });
 }
 
+function _ensureIrOverlay(): HTMLElement {
+    let ov = document.getElementById('inlineRiskyOverlay');
+    if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'inlineRiskyOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(2,5,18,0.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);z-index:2147483641;display:none;flex-direction:column;';
+        ov.innerHTML = '<div id="inlineRiskyContent" style="flex:1;overflow:hidden;"></div>';
+        document.body.appendChild(ov);
+    }
+    return ov;
+}
+
 export function openInlineRisky() {
-    const ov = document.getElementById('inlineRiskyOverlay');
-    if (!ov) return;
+    const ov = _ensureIrOverlay();
     ov.style.display = 'flex';
     _irShowStake();
 }
