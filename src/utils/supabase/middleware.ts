@@ -125,8 +125,8 @@ export async function updateSession(request: NextRequest) {
                 return NextResponse.redirect(new URL('/profile', request.url));
             }
 
-            // 2. If CEO lands on Profile or Tribute -> go to Dashboard (optional, but keep it clean)
-            if (isCEO && (isTributePage || pathname === '/')) {
+            // 2. If CEO lands on Profile, Tribute or Root -> go to Dashboard
+            if (isCEO && (isTributePage || pathname === '/' || pathname === '/profile')) {
                 return NextResponse.redirect(new URL('/dashboard', request.url));
             }
 
