@@ -428,7 +428,7 @@ function _showRiskyResult(data: any) {
 function _showWishlist() {
     closeStandaloneTribute();
     setTimeout(() => {
-        if ((window as any).toggleTributeHunt) (window as any).toggleTributeHunt();
+        if ((window as any).toggleTributeHuntGlobal) (window as any).toggleTributeHuntGlobal();
     }, 50);
 }
 
