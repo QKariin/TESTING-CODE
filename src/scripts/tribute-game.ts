@@ -45,6 +45,8 @@ function _showMenu() {
             <button onclick="window.closeStandaloneTribute()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#10005;</button>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+            <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:8px;">CHOOSE YOUR OFFERING</div>
             <button onclick="window._tributeShowSend()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                 <img src="/tribute-send.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
             </button>
