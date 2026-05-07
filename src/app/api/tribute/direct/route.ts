@@ -91,6 +91,20 @@ export async function POST(request: Request) {
                 });
             } catch (_) {}
 
+            // Push notification to queen
+            try {
+                const pushUrl = new URL('/api/push', request.url);
+                await fetch(pushUrl.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        externalId: 'ceo@qkarin.com',
+                        title: '💰 Direct Tribute',
+                        message: `${senderName} sent you ${amount.toLocaleString()} coins`,
+                    }),
+                });
+            } catch (_) {}
+
             return NextResponse.json({ success: true, newWallet, meritGained: merit });
         }
 
@@ -184,6 +198,29 @@ export async function POST(request: Request) {
                     })}`,
                     type: 'tribute',
                     metadata: { senderName, stakeAmount: stake, cardName, lostAmount: lossAmount, wonAmount: bonusAmount, isWin },
+                });
+            } catch (_) {}
+
+            // Push notification to queen
+            try {
+                const isWinNotif = cardName === 'JACKPOT' && bonusAmount > 0;
+                let pushMsg: string;
+                if (isWinNotif) {
+                    pushMsg = `${senderName} gambled ${stake.toLocaleString()} coins and hit JACKPOT — won ${bonusAmount.toLocaleString()} back`;
+                } else if (lossAmount === 0) {
+                    pushMsg = `${senderName} gambled ${stake.toLocaleString()} coins — drew ${cardName}, lost nothing`;
+                } else {
+                    pushMsg = `${senderName} gambled ${stake.toLocaleString()} coins — drew ${cardName}, you took ${lossAmount.toLocaleString()}`;
+                }
+                const pushUrl = new URL('/api/push', request.url);
+                await fetch(pushUrl.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        externalId: 'ceo@qkarin.com',
+                        title: '🎰 Risky Tribute',
+                        message: pushMsg,
+                    }),
                 });
             } catch (_) {}
 
