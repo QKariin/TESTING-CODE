@@ -11,11 +11,12 @@ function _el(): HTMLElement | null { return document.getElementById('mobTributeC
 function _email(): string { const s = getState(); return s?.email || s?.memberId || ''; }
 function _wallet(): number { return getState()?.wallet || 0; }
 
+const _boostBtn = `<button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="padding:9px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span></button>`;
+
 function _updateWallet(newWallet: number) {
     setState({ wallet: newWallet });
     const s = getState();
     if (s?.raw) s.raw.wallet = newWallet;
-    // Update all wallet display elements
     ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = newWallet.toLocaleString();
@@ -41,28 +42,28 @@ export function closeStandaloneTribute() {
 function _showMenu() {
     const el = _el(); if (!el) return;
     el.innerHTML = `
-        <div style="display:flex;justify-content:flex-end;">
-            <button onclick="window.closeStandaloneTribute()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#10005;</button>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-            <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;">CHOOSE YOUR OFFERING</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <i class="fas fa-coins" style="color:#c5a059;font-size:0.8rem;"></i>
-                <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;">${_wallet().toLocaleString()}</span>
+        <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
+                <button onclick="window.closeStandaloneTribute()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#10005;</button>
             </div>
-            <button onclick="window._tributeShowSend()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                <img src="/tribute-send.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
-            </button>
-            <button onclick="window._tributeShowRisky()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                <img src="/tribute-risky.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
-            </button>
-            <button onclick="window._tributeShowWishlist()" style="width:300px;height:150px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:16px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
-            </button>
-            <button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="margin-top:4px;padding:10px 28px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;">
-                <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span>
-            </button>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:2px;">CHOOSE YOUR OFFERING</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <i class="fas fa-coins" style="color:#c5a059;font-size:0.8rem;"></i>
+                    <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;">${_wallet().toLocaleString()}</span>
+                </div>
+                <button onclick="window._tributeShowSend()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                    <img src="/tribute-send.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+                </button>
+                <button onclick="window._tributeShowRisky()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                    <img src="/tribute-risky.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+                </button>
+                <button onclick="window._tributeShowWishlist()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                    <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
+                </button>
+                ${_boostBtn}
+            </div>
         </div>`;
 }
 
@@ -74,7 +75,7 @@ function _showSend() {
     const amounts = [500, 1000, 2000, 5000, 10000];
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
                 <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
                 <span style="font-family:'Cinzel',serif;font-size:1rem;color:#c5a059;letter-spacing:4px;">SEND TRIBUTE</span>
             </div>
@@ -96,6 +97,7 @@ function _showSend() {
                         }).join('')}
                     </div>
                 </div>
+                <div style="margin-top:24px;">${_boostBtn}</div>
             </div>
         </div>`;
 }
@@ -136,7 +138,10 @@ function _showSendResult(ok: boolean, amount: number, merit: number, newBal: num
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(167,139,250,0.8);">+${merit.toLocaleString()} MERIT EARNED</div>
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:8px;">New balance: ${newBal.toLocaleString()}</div>
                 ` : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Insufficient funds or error</div>`}
-                <button onclick="window.closeStandaloneTribute()" style="margin-top:20px;padding:14px 40px;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
+                <div style="display:flex;gap:12px;margin-top:16px;">
+                    <button onclick="window.closeStandaloneTribute()" style="padding:14px 36px;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
+                </div>
+                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
         </div>`;
 }
@@ -156,7 +161,10 @@ function _showRisky() {
             </div>
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.6);letter-spacing:3px;">NOT ENOUGH COINS</div>
-                <button onclick="window._tributeShowMenu()" style="padding:12px 30px;border:1px solid rgba(197,160,89,0.3);border-radius:8px;background:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:2px;">BACK</button>
+                <div style="display:flex;gap:12px;">
+                    <button onclick="window._tributeShowMenu()" style="padding:12px 30px;border:1px solid rgba(197,160,89,0.3);border-radius:8px;background:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:2px;">BACK</button>
+                </div>
+                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
         </div>`;
         return;
@@ -165,7 +173,7 @@ function _showRisky() {
     const pcts = [10, 25, 50, 75, 100];
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
                 <button onclick="window._tributeShowMenu()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
                 <span style="font-family:'Cinzel',serif;font-size:1rem;color:#c5a059;letter-spacing:4px;">RISKY SEND</span>
             </div>
@@ -186,6 +194,7 @@ function _showRisky() {
                 <div id="riskyConfirmWrap" style="display:none;text-align:center;">
                     <button id="riskyConfirmBtn" onclick="window._tributeRiskyConfirm()" style="padding:18px 56px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06));border:1px solid rgba(197,160,89,0.5);border-radius:12px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;letter-spacing:3px;font-weight:700;box-shadow:0 0 20px rgba(197,160,89,0.1);">GAMBLE</button>
                 </div>
+                <div style="margin-top:16px;">${_boostBtn}</div>
             </div>
         </div>`;
 }
@@ -195,7 +204,6 @@ function _pickPercent(pct: number) {
     _riskyPercent = pct;
     _riskyStake = Math.floor(w * pct / 100);
 
-    // Highlight selected
     [10, 25, 50, 75, 100].forEach(p => {
         const b = document.getElementById(`riskyPct_${p}`);
         if (b) {
@@ -220,7 +228,7 @@ function _riskyConfirm() {
     const el = _el(); if (!el) return;
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
                 <button onclick="window._tributeShowRisky()" style="color:rgba(197,160,89,0.5);background:transparent;border:1px solid rgba(197,160,89,0.15);border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">&#8592;</button>
             </div>
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -247,13 +255,11 @@ async function _riskyPick(cardIndex: number) {
     if (_busy) return;
     _busy = true;
 
-    // Disable all cards immediately
     for (let i = 0; i < 9; i++) {
         const c = document.getElementById(`riskyCard_${i}`);
         if (c) { c.style.pointerEvents = 'none'; }
     }
 
-    // Highlight chosen card
     const chosen = document.getElementById(`riskyCard_${cardIndex}`);
     if (chosen) {
         chosen.style.border = '1.5px solid #c5a059';
@@ -274,7 +280,6 @@ async function _riskyPick(cardIndex: number) {
 
         _updateWallet(data.newWallet);
 
-        // Animate reveal: flip all cards except chosen first, then chosen last
         const order = Array.from({ length: 9 }, (_, i) => i).filter(i => i !== cardIndex);
         order.push(cardIndex);
 
@@ -304,7 +309,6 @@ async function _riskyPick(cardIndex: number) {
             card.style.transform = 'rotateY(0deg)';
         }
 
-        // Wait then show result
         await _delay(1200);
         _showRiskyResult(data);
     } catch {
@@ -325,6 +329,7 @@ function _showRiskyResult(data: any) {
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:#e03050;letter-spacing:3px;">FAILED</div>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Something went wrong</div>
                 <button onclick="window.closeStandaloneTribute()" style="margin-top:16px;padding:12px 36px;border:1px solid rgba(197,160,89,0.3);border-radius:10px;background:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.65rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
+                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
         </div>`;
         return;
@@ -365,7 +370,8 @@ function _showRiskyResult(data: any) {
                 </div>
                 ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);margin-top:4px;">Balance: ${data.newWallet.toLocaleString()} coins</div>
-                <button onclick="window.closeStandaloneTribute()" style="margin-top:16px;padding:14px 44px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
+                <button onclick="window.closeStandaloneTribute()" style="margin-top:12px;padding:14px 44px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.7rem;color:#c5a059;letter-spacing:2px;">CLOSE</button>
+                <div style="margin-top:8px;">${_boostBtn}</div>
             </div>
         </div>`;
 }
@@ -374,7 +380,6 @@ function _showRiskyResult(data: any) {
 
 function _showWishlist() {
     closeStandaloneTribute();
-    // Open the existing tribute overlay from profile-logic
     if ((window as any).toggleTributeHunt) (window as any).toggleTributeHunt();
 }
 
