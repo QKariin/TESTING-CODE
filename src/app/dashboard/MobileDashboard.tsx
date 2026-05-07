@@ -535,7 +535,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
                         { key: 'global' as Tab, icon: '◎', label: 'GLOBAL', badge: undefined as number | undefined, bc: '#c5a059' },
                     ]).map(({ key, icon, label, badge, bc }) => (
-                        <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => key === 'global' ? (window as any).openMobGlobal?.() : setTab(key)}>
+                        <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => { (window as any).closeMobGlobal?.(); if (key === 'global') (window as any).openMobGlobal?.(); else setTab(key); }}>
                             <div style={{ position: 'relative' }}>
                                 <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
                                 {badge !== undefined && (
