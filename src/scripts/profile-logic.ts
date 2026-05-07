@@ -761,6 +761,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
 if (typeof window !== 'undefined') {
     (window as any).buyTribute = buyTribute;
     (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
+    (window as any)._renderTributeGridMobile = (grid: HTMLElement) => renderGridMobile(grid);
     (window as any).updateCrowdfundSlider = (id: string, value: string) => {
         const v = Number(value);
         const display = document.getElementById(`crowdfund_display_${id}`);
