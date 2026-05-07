@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
-import { initProfileState, setState } from '@/scripts/profile-state';
+import { initProfileState, getState, setState } from '@/scripts/profile-state';
 import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
@@ -101,9 +101,8 @@ import {
     _submitMobPost,
     handleInstallApp,
     showCertificate,
-    openInlineRisky,
-    closeInlineRisky,
 } from '@/scripts/profile-logic';
+import { bindInlineRisky } from '@/scripts/inline-risky';
 
 
 export default function ProfilePage() {
@@ -272,8 +271,19 @@ export default function ProfilePage() {
             (window as any).closeQkLightbox = closeQkLightbox;
             (window as any).setMobGlReply = setMobGlReply;
             (window as any).cancelMobGlReply = cancelMobGlReply;
-            (window as any).openInlineRisky = openInlineRisky;
-            (window as any).closeInlineRisky = closeInlineRisky;
+            // Bind inline risky send (standalone module)
+            bindInlineRisky(
+                () => { const s = getState(); return s?.email || s?.memberId || ''; },
+                () => getState()?.wallet || 0,
+                (nw: number) => {
+                    setState({ wallet: nw });
+                    const s = getState(); if (s?.raw) s.raw.wallet = nw;
+                    ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach((id: string) => {
+                        const e = document.getElementById(id);
+                        if (e) e.textContent = nw.toLocaleString();
+                    });
+                },
+            );
             // Global chat lightbox + like
             if (!(window as any)._openGlobalLightbox) {
                 (window as any)._openGlobalLightbox = (url: string) => {
@@ -2093,10 +2103,6 @@ export default function ProfilePage() {
                     <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
                 </div>
 
-                {/* Inline risky send overlay (inside global chat) */}
-                <div id="inlineRiskyOverlay" style={{ position: 'absolute', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 9999, display: 'none', flexDirection: 'column' }}>
-                    <div id="inlineRiskyContent" style={{ flex: 1, overflow: 'hidden' }}></div>
-                </div>
             </div>
 
             {/* ── MOBILE BOTTOM NAV - at root level, no stacking context conflicts ── */}
