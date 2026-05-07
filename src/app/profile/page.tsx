@@ -1715,6 +1715,15 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
+                    {/* STANDALONE TRIBUTE OVERLAY — opened from TRIBUTE button on home */}
+                    <div id="mobTributeStandalone" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 2147483640, display: 'none', flexDirection: 'column', padding: '20px' }}>
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(197,160,89,0.12)', paddingBottom: '14px', paddingTop: 'env(safe-area-inset-top)' }}>
+                            <span style={{ fontFamily: "'Cinzel', serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
+                            <button onClick={() => (window as any).closeStandaloneTribute?.()} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+                        </div>
+                        <div id="mobTributeStandaloneGrid" style={{ width: '100%', overflowY: 'auto', flex: 1, paddingBottom: '30px' }}></div>
+                    </div>
+
                     <div id="mobHomeScroll" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 0, boxSizing: 'border-box' }}>
 
                         {/* 1. HALO HERO SECTION */}
@@ -1783,8 +1792,8 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => (window as any).toggleTributeHunt?.()} style={{
-                                marginTop: 14, width: 220, height: 44, background: 'none',
+                            <button onClick={() => (window as any).openStandaloneTribute?.()} style={{
+                                marginTop: 28, width: 220, height: 44, background: 'none',
                                 border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                 cursor: 'pointer', WebkitTapHighlightColor: 'transparent',

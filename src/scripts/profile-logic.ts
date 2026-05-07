@@ -757,10 +757,25 @@ export async function buyTribute(id: string, title: string, cost: number) {
     }
 }
 
+// ─── Standalone tribute overlay (opened from TRIBUTE button on home screen) ──
+export function openStandaloneTribute() {
+    const el = document.getElementById('mobTributeStandalone');
+    if (!el) return;
+    el.style.display = 'flex';
+    const grid = document.getElementById('mobTributeStandaloneGrid');
+    if (grid) renderGridMobile(grid);
+}
+export function closeStandaloneTribute() {
+    const el = document.getElementById('mobTributeStandalone');
+    if (el) el.style.display = 'none';
+}
+
 // Ensure functions are available globally for inline onclick handlers
 if (typeof window !== 'undefined') {
     (window as any).buyTribute = buyTribute;
     (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
+    (window as any).openStandaloneTribute = openStandaloneTribute;
+    (window as any).closeStandaloneTribute = closeStandaloneTribute;
     (window as any).updateCrowdfundSlider = (id: string, value: string) => {
         const v = Number(value);
         const display = document.getElementById(`crowdfund_display_${id}`);
