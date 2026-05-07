@@ -628,6 +628,56 @@ function renderToHtml(m: any) {
             </div>`;
     }
 
+    // ── Direct Tribute Card ──
+    if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
+            const amt = (d.amount || 0).toLocaleString();
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(var(--gold-rgb),0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:rgba(var(--gold-rgb),0.5);letter-spacing:3px;margin-bottom:10px;">DIRECT TRIBUTE</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(var(--gold-rgb),0.4),transparent);margin:0 auto 12px;"></div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#c5a059;font-weight:700;letter-spacing:1px;margin-bottom:6px;">${amt} <i class="fas fa-coins" style="font-size:0.7rem;"></i></div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">from ${purifier.sanitize(d.senderName || '')}</div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // ── Risky Tribute Card ──
+    if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
+            const isWin = d.isWin && d.wonAmount > 0;
+            const borderColor = isWin ? 'rgba(74,222,128,0.5)' : (d.lostAmount > 0 ? 'rgba(255,60,60,0.4)' : 'rgba(var(--gold-rgb),0.4)');
+            const accentColor = isWin ? '#4ade80' : (d.lostAmount > 0 ? '#e85d75' : '#c5a059');
+            const label = isWin ? 'JACKPOT' : d.cardName || 'RISKY TRIBUTE';
+            const resultText = isWin
+                ? `Won ${(d.wonAmount || 0).toLocaleString()} coins back`
+                : d.lostAmount > 0
+                    ? `Queen took ${(d.lostAmount || 0).toLocaleString()} coins`
+                    : 'Lost nothing';
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid ${borderColor};box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:${accentColor};letter-spacing:3px;margin-bottom:10px;">${label}</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,${borderColor},transparent);margin:0 auto 12px;"></div>
+                            ${d.icon ? `<img src="${d.icon}" style="width:48px;height:48px;margin-bottom:10px;opacity:0.8;" onerror="this.style.display='none'" />` : ''}
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:4px;">Staked ${(d.stakeAmount || 0).toLocaleString()}</div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:${accentColor};font-weight:700;letter-spacing:1px;">${resultText}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.35);letter-spacing:2px;margin-top:8px;">from ${purifier.sanitize(d.senderName || '')}</div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
+    }
+
     // ── Build bubble content ──
     // Dashboard perspective: admin (isMe) → RIGHT, slave → LEFT
     const bubbleClass = isMe ? 'cb-queen' : 'cb-slave';
