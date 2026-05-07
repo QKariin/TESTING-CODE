@@ -440,7 +440,11 @@ function _showRiskyResult(data: any) {
                 ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.25);">Balance: ${data.newWallet.toLocaleString()} coins</div>
             </div>
-            ${_backFooter()}
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:20px;padding-bottom:80px;">
+                <button onclick="window._tributeShowRisky()" style="padding:12px 36px;background:linear-gradient(160deg,#0a0a0a,rgba(197,160,89,0.12),#0a0a0a);border:1.5px solid rgba(197,160,89,0.5);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#c5a059;letter-spacing:3px;font-weight:700;">PLAY AGAIN</span></button>
+                <button onclick="window._tributeShowMenu()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">BACK</span></button>
+                ${_boostBtn}
+            </div>
         </div>`;
 }
 
