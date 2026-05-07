@@ -11,6 +11,7 @@ import { toggleSystemLog } from '@/scripts/chat';
 import { GlobalContent } from '@/app/dashboard/GlobalContent';
 // import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
+import { bindTributeGame } from '@/scripts/tribute-game';
 import {
     claimKneelReward,
     switchTab,
@@ -195,6 +196,7 @@ export default function ProfilePage() {
             (window as any).claimKneelReward = claimKneelReward;
             (window as any).switchTab = switchTab;
             (window as any).toggleTributeHunt = toggleTributeHunt;
+            bindTributeGame();
             (window as any).openLobby = openLobby;
             (window as any).closeLobby = closeLobby;
             (window as any).openQueenMenu = openQueenMenu;
@@ -1715,13 +1717,9 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* STANDALONE TRIBUTE OVERLAY — opened from TRIBUTE button on home */}
-                    <div id="mobTributeStandalone" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 2147483640, display: 'none', flexDirection: 'column', padding: '20px' }}>
-                        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(197,160,89,0.12)', paddingBottom: '14px', paddingTop: 'env(safe-area-inset-top)' }}>
-                            <span style={{ fontFamily: "'Cinzel', serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
-                            <button onClick={() => (window as any).closeStandaloneTribute?.()} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
-                        </div>
-                        <div id="mobTributeStandaloneGrid" style={{ width: '100%', overflowY: 'auto', flex: 1, paddingBottom: '30px' }}></div>
+                    {/* STANDALONE TRIBUTE OVERLAY — menu + send + risky game + wishlist */}
+                    <div id="mobTributeStandalone" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 2147483640, display: 'none', flexDirection: 'column' }}>
+                        <div id="mobTributeContent" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '20px', paddingTop: 'calc(env(safe-area-inset-top) + 20px)', boxSizing: 'border-box' }}></div>
                     </div>
 
                     <div id="mobHomeScroll" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 0, boxSizing: 'border-box' }}>

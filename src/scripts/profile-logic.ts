@@ -757,25 +757,10 @@ export async function buyTribute(id: string, title: string, cost: number) {
     }
 }
 
-// ─── Standalone tribute overlay (opened from TRIBUTE button on home screen) ──
-export function openStandaloneTribute() {
-    const el = document.getElementById('mobTributeStandalone');
-    if (!el) return;
-    el.style.display = 'flex';
-    const grid = document.getElementById('mobTributeStandaloneGrid');
-    if (grid) renderGridMobile(grid);
-}
-export function closeStandaloneTribute() {
-    const el = document.getElementById('mobTributeStandalone');
-    if (el) el.style.display = 'none';
-}
-
 // Ensure functions are available globally for inline onclick handlers
 if (typeof window !== 'undefined') {
     (window as any).buyTribute = buyTribute;
     (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
-    (window as any).openStandaloneTribute = openStandaloneTribute;
-    (window as any).closeStandaloneTribute = closeStandaloneTribute;
     (window as any).updateCrowdfundSlider = (id: string, value: string) => {
         const v = Number(value);
         const display = document.getElementById(`crowdfund_display_${id}`);
@@ -5043,6 +5028,27 @@ function _buildMobGlBubble(msg: any): string {
             ${quoteHtml}<span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${content}</span>
             ${mediaHtml}
         </div>`;
+    }
+
+    // DIRECT TRIBUTE CARD (coin send)
+    if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:220px;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#0d0a04,#0a0703);border:1px solid rgba(197,160,89,0.5);box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;"><div style="font-size:1.8rem;margin-bottom:8px;">\u2728</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.6);letter-spacing:3px;margin-bottom:10px;">TRIBUTE SENT</div><div style="font-family:'Orbitron',sans-serif;font-size:1.2rem;color:#c5a059;font-weight:700;margin-bottom:4px;">${(d.amount||0).toLocaleString()}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;margin-bottom:12px;">COINS</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.35);">${d.senderName||''}</div></div></div>`;
+        } catch { /* fall through */ }
+    }
+
+    // RISKY TRIBUTE CARD (gamble result)
+    if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
+            const isWin = d.isWin;
+            const borderColor = isWin ? 'rgba(197,160,89,0.5)' : d.lostAmount === 0 ? 'rgba(74,222,128,0.4)' : 'rgba(220,50,80,0.4)';
+            const bg = isWin ? '#0e0b06' : d.lostAmount === 0 ? '#060e08' : '#0e0606';
+            const resultText = isWin ? `WON +${(d.wonAmount||0).toLocaleString()}` : d.lostAmount === 0 ? 'MERCY - LOST NOTHING' : `LOST ${(d.lostAmount||0).toLocaleString()}`;
+            const resultColor = isWin ? '#c5a059' : d.lostAmount === 0 ? '#4ade80' : '#e03050';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:220px;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,${bg},#0a0a14);border:1px solid ${borderColor};box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center;padding:20px 16px;"><div style="font-size:1.8rem;margin-bottom:6px;">${d.icon||'\uD83C\uDFB0'}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-bottom:4px;">RISKY SEND</div><div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:${resultColor};letter-spacing:2px;font-weight:700;margin-bottom:6px;">${d.cardName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);margin-bottom:4px;">Staked ${(d.stakeAmount||0).toLocaleString()} coins</div><div style="font-family:'Orbitron',sans-serif;font-size:0.7rem;color:${resultColor};font-weight:700;">${resultText}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.3);margin-top:10px;">${d.senderName||''}</div></div></div>`;
+        } catch { /* fall through */ }
     }
 
     // UPDATE PHOTO CARD
