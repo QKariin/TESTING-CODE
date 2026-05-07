@@ -13,19 +13,24 @@ function _wallet(): number { return getState()?.wallet || 0; }
 
 const _boostBtn = `<button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="padding:9px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span></button>`;
 
-const _closeBtn = `<button onclick="window.closeStandaloneTribute()" style="padding:9px 24px;background:none;border:1px solid rgba(255,255,255,0.08);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">CLOSE</span></button>`;
-
 function _header(subtitle: string) {
-    return `<div style="text-align:center;flex-shrink:0;padding-top:16px;">
+    return `<div style="text-align:center;flex-shrink:0;padding-top:10px;margin-bottom:4px;">
         <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:#c5a059;letter-spacing:6px;">TRIBUTE</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.25);letter-spacing:3px;margin-top:6px;">${subtitle}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.25);letter-spacing:3px;margin-top:4px;">${subtitle}</div>
     </div>`;
 }
 
-function _footer() {
-    return `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:20px;">
+function _menuFooter() {
+    return `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:16px;margin-top:12px;">
         ${_boostBtn}
-        ${_closeBtn}
+        <button onclick="window.closeStandaloneTribute()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">CLOSE</span></button>
+    </div>`;
+}
+
+function _backFooter() {
+    return `<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:16px;margin-top:12px;">
+        ${_boostBtn}
+        <button onclick="window._tributeShowMenu()" style="padding:9px 28px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:2px;">BACK</span></button>
     </div>`;
 }
 
@@ -96,8 +101,8 @@ function _showMenu() {
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
             ${_header('CHOOSE YOUR OFFERING')}
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding-bottom:40px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                     <i class="fas fa-coins" style="color:#c5a059;font-size:0.8rem;"></i>
                     <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;">${_wallet().toLocaleString()}</span>
                 </div>
@@ -111,7 +116,7 @@ function _showMenu() {
                     <img src="/tribute-wishlist.svg" style="width:100%;height:100%;object-fit:contain;display:block;">
                 </button>
             </div>
-            ${_footer()}
+            ${_menuFooter()}
         </div>`;
 }
 
@@ -120,30 +125,30 @@ function _showMenu() {
 function _showSend() {
     const el = _el(); if (!el) return;
     const w = _wallet();
-    const amounts = [500, 1000, 2000, 5000, 10000];
+    const amounts = [500, 1000, 2000, 5000, 10000, 20000];
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
             ${_header('QUICK SEND')}
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:30px;">
                 <div style="text-align:center;margin-bottom:8px;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-bottom:6px;">YOUR BALANCE</div>
                     <div style="font-family:'Orbitron',sans-serif;font-size:1.6rem;color:#c5a059;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">
                         <i class="fas fa-coins" style="font-size:1rem;"></i> ${w.toLocaleString()}
                     </div>
                 </div>
-                <div style="width:100%;max-width:300px;margin-top:32px;">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div style="width:100%;max-width:300px;margin-top:24px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         ${amounts.map(a => {
                             const off = w < a;
-                            return `<button onclick="window._tributeDirectSend(${a})" ${off ? 'disabled' : ''} style="padding:24px 0;background:${off ? 'rgba(255,255,255,0.02)' : 'linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02))'};border:1px solid ${off ? 'rgba(255,255,255,0.06)' : 'rgba(197,160,89,0.3)'};border-radius:12px;cursor:${off ? 'not-allowed' : 'pointer'};opacity:${off ? '0.25' : '1'};display:flex;flex-direction:column;align-items:center;gap:6px;">
-                                <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;">${a.toLocaleString()}</span>
+                            return `<button onclick="window._tributeDirectSend(${a})" ${off ? 'disabled' : ''} style="padding:20px 0;background:${off ? 'rgba(255,255,255,0.02)' : 'linear-gradient(135deg,rgba(197,160,89,0.08),rgba(197,160,89,0.02))'};border:1px solid ${off ? 'rgba(255,255,255,0.06)' : 'rgba(197,160,89,0.3)'};border-radius:12px;cursor:${off ? 'not-allowed' : 'pointer'};opacity:${off ? '0.25' : '1'};display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:1rem;color:#fff;font-weight:700;">${a.toLocaleString()}</span>
                                 <span style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">COINS</span>
                             </button>`;
                         }).join('')}
                     </div>
                 </div>
             </div>
-            ${_footer()}
+            ${_backFooter()}
         </div>`;
 }
 
@@ -173,7 +178,7 @@ function _showSendResult(ok: boolean, amount: number, merit: number, newBal: num
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
             ${_header('QUICK SEND')}
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding-bottom:30px;">
                 <div style="font-size:3rem;">${ok ? '\u2728' : '\u274C'}</div>
                 <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:${ok ? '#c5a059' : '#e03050'};letter-spacing:4px;">${ok ? 'TRIBUTE SENT' : 'FAILED'}</div>
                 ${ok ? `
@@ -182,7 +187,7 @@ function _showSendResult(ok: boolean, amount: number, merit: number, newBal: num
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:8px;">New balance: ${newBal.toLocaleString()}</div>
                 ` : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Insufficient funds or error</div>`}
             </div>
-            ${_footer()}
+            ${_backFooter()}
         </div>`;
 }
 
@@ -200,7 +205,7 @@ function _showRisky() {
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.6);letter-spacing:3px;">NOT ENOUGH COINS</div>
             </div>
-            ${_footer()}
+            ${_backFooter()}
         </div>`;
         return;
     }
@@ -209,15 +214,15 @@ function _showRisky() {
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;height:100%;min-height:100%;">
             ${_header('RISKY SEND')}
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <div style="text-align:center;margin-bottom:20px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:30px;">
+                <div style="text-align:center;margin-bottom:16px;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-bottom:4px;">YOUR BALANCE</div>
                     <div style="font-family:'Orbitron',sans-serif;font-size:1.6rem;color:#c5a059;font-weight:700;">${w.toLocaleString()}</div>
                 </div>
-                <div style="text-align:center;margin-bottom:24px;">
+                <div style="text-align:center;margin-bottom:20px;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">How much do you dare to risk?</div>
                 </div>
-                <div style="display:flex;gap:10px;justify-content:center;margin-bottom:28px;">
+                <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;">
                     ${pcts.map(p => `<button id="riskyPct_${p}" onclick="window._tributePickPercent(${p})" style="width:58px;padding:14px 0;border:1px solid rgba(197,160,89,0.2);border-radius:10px;background:rgba(197,160,89,0.04);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;">
                         <span style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;font-weight:700;">${p}%</span>
                     </button>`).join('')}
@@ -227,7 +232,7 @@ function _showRisky() {
                     <button id="riskyConfirmBtn" onclick="window._tributeRiskyConfirm()" style="padding:18px 56px;background:linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06));border:1px solid rgba(197,160,89,0.5);border-radius:12px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;letter-spacing:3px;font-weight:700;box-shadow:0 0 20px rgba(197,160,89,0.1);">GAMBLE</button>
                 </div>
             </div>
-            ${_footer()}
+            ${_backFooter()}
         </div>`;
 }
 
@@ -357,7 +362,7 @@ function _showRiskyResult(data: any) {
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:#e03050;letter-spacing:3px;">FAILED</div>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">Something went wrong</div>
             </div>
-            ${_footer()}
+            ${_backFooter()}
         </div>`;
         return;
     }
@@ -407,7 +412,7 @@ function _showRiskyResult(data: any) {
                 ${data.meritGained > 0 ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(167,139,250,0.7);">+${data.meritGained.toLocaleString()} MERIT EARNED</div>` : ''}
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.25);">Balance: ${data.newWallet.toLocaleString()} coins</div>
             </div>
-            ${_footer()}
+            ${_backFooter()}
         </div>`;
 }
 

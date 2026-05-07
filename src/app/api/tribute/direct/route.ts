@@ -24,7 +24,7 @@ function shuffle<T>(arr: T[]): T[] {
     return a;
 }
 
-const VALID_AMOUNTS = [500, 1000, 2000, 5000, 10000];
+const VALID_AMOUNTS = [500, 1000, 2000, 5000, 10000, 20000];
 const VALID_PERCENTS = [10, 25, 50, 75, 100];
 
 export async function POST(request: Request) {
