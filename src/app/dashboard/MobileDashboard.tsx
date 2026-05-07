@@ -7,11 +7,8 @@ import {
     adminApproveTaskAction, adminRejectTaskAction, adminAssignTaskAction,
     processCoinTransaction, updateScoreAction, setHierarchyAction, insertMessage,
 } from '@/actions/velo-actions';
-import { initProfileState } from '@/scripts/profile-state';
-import {
-    openMobGlobal, closeMobGlobal, switchMobGlTab, switchMobGlPeriod,
-    sendMobGlMessage, handleMobGlKey, setMobGlReply, cancelMobGlReply,
-} from '@/scripts/profile-logic';
+import { bindDashMobGlobal } from '@/scripts/dash-mobile-global';
+import { setAdminEmail } from '@/scripts/dashboard-state';
 import '@/css/profile-mobile.css';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen' | 'global';
@@ -212,6 +209,12 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+
+    // Bind global overlay functions (same as profile mobile global)
+    useEffect(() => {
+        setAdminEmail(userEmail);
+        bindDashMobGlobal();
+    }, [userEmail]);
 
     // Realtime: reload sidebar list when a new chat arrives or a profile changes
     useEffect(() => {
@@ -446,10 +449,79 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 ) : tab === 'challenges' ? (
                     <ChallengesView />
                 ) : tab === 'global' ? (
-                    <MobGlobalView userEmail={userEmail} />
+                    null
                 ) : (
                     <QueenView userEmail={userEmail} onLogout={handleLogout} users={users} stats={stats} />
                 )}
+            </div>
+
+            {/* ── GLOBAL OVERLAY — exact copy from /profile ── */}
+            <div id="mobGlobalOverlay" className="mob-overlay" style={{ display: 'none', flexDirection: 'column' }}>
+                <div className="mob-overlay-header">
+                    <span className="mob-overlay-title">{'\u25CE'} GLOBAL</span>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobGlobal()}>&#10005;</button>
+                </div>
+
+                {/* Tab bar */}
+                <div className="mob-gl-tabs">
+                    <button id="mobGlTab_rank" className="mob-gl-tab active" onClick={() => (window as any).switchMobGlTab('rank')}>RANK</button>
+                    <button id="mobGlTab_talk" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('talk')}>TALK</button>
+                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>CHALLENGES</button>
+                    <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>NEWS</button>
+                </div>
+
+                {/* RANK panel */}
+                <div id="mobGlPanel_rank" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                    <div className="mob-gl-period-bar">
+                        <button id="mobGlPeriod_today" className="mob-gl-period-btn active" onClick={() => (window as any).switchMobGlPeriod('today')}>TODAY</button>
+                        <button id="mobGlPeriod_weekly" className="mob-gl-period-btn" onClick={() => (window as any).switchMobGlPeriod('weekly')}>WEEK</button>
+                        <button id="mobGlPeriod_monthly" className="mob-gl-period-btn" onClick={() => (window as any).switchMobGlPeriod('monthly')}>MONTH</button>
+                        <button id="mobGlPeriod_alltime" className="mob-gl-period-btn" onClick={() => (window as any).switchMobGlPeriod('alltime')}>ALL</button>
+                    </div>
+                    <div id="mobGlRankList" className="mob-gl-scroll"></div>
+                </div>
+
+                {/* TALK panel */}
+                <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1 }}></div>
+                    <div className="mob-gl-talk-footer">
+                        <div className="chat-input-wrapper" style={{ flex: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                            <button className="chat-btn-plus" onClick={() => (window as any).handleGlobalMediaPlus?.()} style={{ position: 'absolute', left: 8, zIndex: 2, background: 'none', border: 'none', color: 'rgba(197,160,89,0.6)', fontSize: '1.3rem', cursor: 'pointer', padding: '0 4px' }}>+</button>
+                            <input
+                                type="text"
+                                id="mobGlTalkInput"
+                                className="mob-gl-talk-input"
+                                placeholder="speak..."
+                                style={{ paddingLeft: 36 }}
+                                onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
+                            />
+                        </div>
+                        <button onClick={() => (window as any).openMobGlGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
+                        <button onClick={() => (window as any).toggleTributeHunt?.()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#c5a059' }}>
+                                <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                <path d="M12 8v12"></path>
+                                <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                            </svg>
+                        </button>
+                        <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* CHALLENGES panel */}
+                <div id="mobGlPanel_challenges" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlChallengesFeed" className="mob-gl-scroll"></div>
+                </div>
+
+                {/* UPDATES panel */}
+                <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
+                    <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
+                </div>
             </div>
 
             {/* BOTTOM NAV */}
@@ -463,7 +535,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
                         { key: 'global' as Tab, icon: '◎', label: 'GLOBAL', badge: undefined as number | undefined, bc: '#c5a059' },
                     ]).map(({ key, icon, label, badge, bc }) => (
-                        <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => setTab(key)}>
+                        <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => key === 'global' ? (window as any).openMobGlobal?.() : setTab(key)}>
                             <div style={{ position: 'relative' }}>
                                 <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
                                 {badge !== undefined && (
@@ -2986,76 +3058,7 @@ function isSystemMessage(msg: any): boolean {
     return sender === 'system' || content.includes('COINS RECEIVED') || content.includes('TASK APPROVED') || content.includes('POINTS RECEIVED') || content.includes('TASK REJECTED') || content.includes('TASK VERIFIED');
 }
 
-// ─── MOBILE GLOBAL VIEW ──────────────────────────────────────────────────────
-// Exact same layout + data as /profile mobile Global overlay.
-// Display is controlled entirely by switchMobGlTab (DOM) — no React state for panels.
-function MobGlobalView({ userEmail }: { userEmail: string }) {
-    const initialized = useRef(false);
-
-    useEffect(() => {
-        if (initialized.current) return;
-        initialized.current = true;
-        initProfileState({ member_id: userEmail || 'queen@qkarin.com', email: userEmail, name: 'QUEEN' });
-        (window as any).switchMobGlTab = switchMobGlTab;
-        (window as any).switchMobGlPeriod = switchMobGlPeriod;
-        (window as any).sendMobGlMessage = sendMobGlMessage;
-        (window as any).handleMobGlKey = handleMobGlKey;
-        (window as any).setMobGlReply = setMobGlReply;
-        (window as any).cancelMobGlReply = cancelMobGlReply;
-        (window as any).closeMobGlobal = () => {};
-        // Load talk tab on mount — same as profile
-        switchMobGlTab('talk');
-    }, [userEmail]);
-
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: 'rgba(2,5,18,0.99)' }}>
-            {/* Header */}
-            <div className="mob-overlay-header">
-                <span className="mob-overlay-title">◎ GLOBAL</span>
-            </div>
-
-            {/* Tab bar */}
-            <div className="mob-gl-tabs">
-                <button id="mobGlTab_rank" className="mob-gl-tab" onClick={() => switchMobGlTab('rank')}>RANK</button>
-                <button id="mobGlTab_talk" className="mob-gl-tab active" onClick={() => switchMobGlTab('talk')}>TALK</button>
-                <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => switchMobGlTab('challenges')}>CHALLENGES</button>
-                <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => switchMobGlTab('updates')}>NEWS</button>
-            </div>
-
-            {/* RANK panel */}
-            <div id="mobGlPanel_rank" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
-                <div className="mob-gl-period-bar">
-                    <button id="mobGlPeriod_today" className="mob-gl-period-btn active" onClick={() => switchMobGlPeriod('today')}>TODAY</button>
-                    <button id="mobGlPeriod_weekly" className="mob-gl-period-btn" onClick={() => switchMobGlPeriod('weekly')}>WEEK</button>
-                    <button id="mobGlPeriod_monthly" className="mob-gl-period-btn" onClick={() => switchMobGlPeriod('monthly')}>MONTH</button>
-                    <button id="mobGlPeriod_alltime" className="mob-gl-period-btn" onClick={() => switchMobGlPeriod('alltime')}>ALL</button>
-                </div>
-                <div id="mobGlRankList" className="mob-gl-scroll"></div>
-            </div>
-
-            {/* TALK panel */}
-            <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, minHeight: 0, display: 'flex' }}>
-                <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1, minHeight: 0 }}></div>
-                <div className="mob-gl-talk-footer">
-                    <input type="text" id="mobGlTalkInput" className="mob-gl-talk-input" placeholder="speak..."
-                        onKeyDown={(e) => handleMobGlKey(e.nativeEvent)} />
-                    <button onClick={() => (window as any).openGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 6, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
-                    <button className="mob-gl-talk-send" onClick={() => sendMobGlMessage()}>▶</button>
-                </div>
-            </div>
-
-            {/* CHALLENGES panel */}
-            <div id="mobGlPanel_challenges" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
-                <div id="mobGlChallengesFeed" className="mob-gl-scroll"></div>
-            </div>
-
-            {/* UPDATES panel */}
-            <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
-                <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
-            </div>
-        </div>
-    );
-}
+// MobGlobalView removed — now uses full-screen overlay (same as /profile)
 
 // ─── SHARED STYLES ────────────────────────────────────────────────────────────
 const S: Record<string, React.CSSProperties> = {
