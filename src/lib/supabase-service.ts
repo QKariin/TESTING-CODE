@@ -436,12 +436,19 @@ export const DbService = {
 
         const { data: prof } = await supabaseAdmin
             .from('profiles')
-            .select('ID, parameters, timezone')
+            .select('ID, parameters')
             .ilike('member_id', normalEmail)
             .maybeSingle();
         if (!prof) return;
 
-        const userTz = tz || prof.timezone || 'UTC';
+        // Try to read timezone separately (column may not exist on all setups)
+        let storedTz: string | null = null;
+        try {
+            const { data: tzRow } = await supabaseAdmin.from('profiles').select('timezone').eq('ID', prof.ID).maybeSingle();
+            storedTz = tzRow?.timezone || null;
+        } catch { /* column might not exist */ }
+
+        const userTz = tz || storedTz || 'UTC';
 
         const { data: routines } = await supabaseAdmin
             .from('routines')
