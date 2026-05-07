@@ -4,15 +4,15 @@ import { DbService } from '@/lib/supabase-service';
 
 // 9 card types for the risky game
 const RISKY_CARDS = [
-    { name: 'DOUBLE', icon: '\uD83D\uDC51', lossPct: 0, isDouble: true },
-    { name: 'MERCY',  icon: '\uD83D\uDEE1\uFE0F', lossPct: 0 },
-    { name: 'GRAZE',  icon: '\u26A1', lossPct: 0.25 },
-    { name: 'GRAZE',  icon: '\u26A1', lossPct: 0.25 },
-    { name: 'BURN',   icon: '\uD83D\uDD25', lossPct: 0.5 },
-    { name: 'BURN',   icon: '\uD83D\uDD25', lossPct: 0.5 },
-    { name: 'PURGE',  icon: '\uD83D\uDC80', lossPct: 0.75 },
-    { name: 'PURGE',  icon: '\uD83D\uDC80', lossPct: 0.75 },
-    { name: 'SACRIFICE', icon: '\uD83D\uDC80', lossPct: 1.0 },
+    { name: 'JACKPOT',          icon: '/card-jackpot.svg',       lossPct: 0, isDouble: true },
+    { name: 'MY LUCKY BITCH',   icon: '/card-myluckybitch.svg',  lossPct: 0 },
+    { name: 'LOW CARD',         icon: '/card-lowcard.svg',       lossPct: 0.25 },
+    { name: 'CLOSE CALL',       icon: '/card-badhand.svg',       lossPct: 0.25 },
+    { name: 'WILD CARD',        icon: '/card-wildcard.svg',      lossPct: 0.5 },
+    { name: 'HIGH STAKES',      icon: '/card-highstakes.svg',    lossPct: 0.5 },
+    { name: 'SHARK BITE',       icon: '/card-sharkbite.svg',     lossPct: 0.75 },
+    { name: 'DEAD MAN\'S HAND', icon: '/card-deadmanshand.svg',  lossPct: 0.75 },
+    { name: 'QUEEN TAKES ALL',  icon: '/card-queentakesall.svg', lossPct: 1.0 },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -120,13 +120,13 @@ export async function POST(request: Request) {
             let cardIcon = resultCard.icon;
 
             if (resultCard.isDouble && stake < 2000) {
-                // DOUBLE: they win bonus coins equal to stake
+                // JACKPOT: they win bonus coins equal to stake
                 bonusAmount = stake;
                 lossAmount = 0;
             } else if (resultCard.isDouble && stake >= 2000) {
-                // High-stakes DOUBLE becomes MERCY
-                cardName = 'MERCY';
-                cardIcon = '\uD83D\uDEE1\uFE0F';
+                // High-stakes JACKPOT becomes MY LUCKY BITCH
+                cardName = 'MY LUCKY BITCH';
+                cardIcon = '/card-myluckybitch.svg';
                 lossAmount = 0;
             } else {
                 lossAmount = Math.floor(stake * resultCard.lossPct);
@@ -140,16 +140,16 @@ export async function POST(request: Request) {
 
             // Build all 9 cards for client animation
             const allCards = shuffled.map((c, i) => {
-                // For the user's chosen card, apply DOUBLE→MERCY override
+                // For the user's chosen card, apply JACKPOT→MY LUCKY BITCH override
                 if (i === cardIndex && c.isDouble && stake >= 2000) {
-                    return { name: 'MERCY', icon: '\uD83D\uDEE1\uFE0F', lossPct: 0 };
+                    return { name: 'MY LUCKY BITCH', icon: '/card-myluckybitch.svg', lossPct: 0 };
                 }
                 return { name: c.name, icon: c.icon, lossPct: c.lossPct };
             });
 
             // Post to global chat
             try {
-                const isWin = cardName === 'DOUBLE' && bonusAmount > 0;
+                const isWin = cardName === 'JACKPOT' && bonusAmount > 0;
                 const riskyPayload = {
                     senderName,
                     stakeAmount: stake,
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
 
             // Post to private chat
             try {
-                const isWin = cardName === 'DOUBLE' && bonusAmount > 0;
+                const isWin = cardName === 'JACKPOT' && bonusAmount > 0;
                 await supabase.from('chats').insert({
                     member_id: realEmail,
                     sender_email: realEmail,

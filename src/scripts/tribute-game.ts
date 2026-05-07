@@ -353,7 +353,7 @@ async function _riskyPick(cardIndex: number) {
             if (!card || !info) continue;
 
             const isChosen = idx === cardIndex;
-            const nameColor = info.name === 'DOUBLE' ? '#c5a059' : info.name === 'MERCY' ? '#4ade80' : info.lossPct <= 0.25 ? '#facc15' : info.lossPct <= 0.5 ? '#fb923c' : '#e03050';
+            const nameColor = info.name === 'JACKPOT' ? '#c5a059' : info.name === 'MY LUCKY BITCH' ? '#4ade80' : info.lossPct <= 0.25 ? '#facc15' : info.lossPct <= 0.5 ? '#fb923c' : '#e03050';
 
             card.style.transition = 'all 0.4s ease';
             card.style.transform = 'rotateY(90deg)';
@@ -361,9 +361,9 @@ async function _riskyPick(cardIndex: number) {
             await _delay(200);
 
             card.innerHTML = `
-                <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
-                    <span style="font-size:1.3rem;">${info.icon}</span>
-                    <span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:${nameColor};letter-spacing:1px;font-weight:700;">${info.name}</span>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;">
+                    <img src="${info.icon}" style="width:100%;height:auto;max-height:70%;object-fit:contain;">
+                    <span style="font-family:'Orbitron',sans-serif;font-size:0.3rem;color:${nameColor};letter-spacing:1px;font-weight:700;white-space:nowrap;">${info.name}</span>
                 </div>`;
             card.style.background = isChosen ? `linear-gradient(160deg,${nameColor}20,rgba(12,10,4,0.95))` : 'rgba(12,10,4,0.85)';
             card.style.border = isChosen ? `2px solid ${nameColor}` : '1px solid rgba(255,255,255,0.06)';
@@ -395,8 +395,8 @@ function _showRiskyResult(data: any) {
         return;
     }
 
-    const isWin = data.cardName === 'DOUBLE' && data.bonusAmount > 0;
-    const isMercy = data.cardName === 'MERCY' || (data.cardName === 'DOUBLE' && data.bonusAmount === 0 && data.lossAmount === 0);
+    const isWin = data.cardName === 'JACKPOT' && data.bonusAmount > 0;
+    const isMercy = data.cardName === 'MY LUCKY BITCH' || (data.cardName === 'JACKPOT' && data.bonusAmount === 0 && data.lossAmount === 0);
     const isLoss = !isWin && !isMercy;
 
     const quote = isLoss ? _randomQuote(_lossQuotes) : isMercy ? _randomQuote(_mercyQuotes) : _randomQuote(_winQuotes);
@@ -413,7 +413,7 @@ function _showRiskyResult(data: any) {
         <div style="overflow-y:auto;height:100%;padding:0 20px;">
             ${_header('RISKY SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:20px;">
-                <div style="font-size:3.5rem;">${data.cardIcon}</div>
+                <img src="${data.cardIcon}" style="width:120px;height:auto;">
                 <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:${titleColor};letter-spacing:5px;font-weight:700;">${data.cardName}</div>
                 <div style="width:260px;padding:22px;border-radius:16px;background:${bg};border:1px solid ${borderColor};text-align:center;margin:6px 0;box-shadow:0 0 30px ${glowColor};">
                     ${isWin ? `
