@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { cacheDelete } from '@/lib/api-cache';
+import { discordRoutineSubmitted } from '@/lib/discord';
 
 export const dynamic = "force-dynamic";
 
@@ -52,14 +53,15 @@ export async function POST(req: Request) {
                 // Bust routine cache so next poll gets fresh uploadedToday status
                 if (payload.isRoutine) cacheDelete(`routine:`);
 
-                // Push notification to admin
+                // Push notification to admin + Discord
                 try {
+                    const profile = await DbService.getProfile(memberId);
+                    const name = profile?.name || 'A subject';
+                    const label = payload.isRoutine ? 'Daily Routine' : 'Task';
+
                     const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
                     const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
                     if (ONESIGNAL_KEY) {
-                        const profile = await DbService.getProfile(memberId);
-                        const name = profile?.name || 'A subject';
-                        const label = payload.isRoutine ? 'Daily Routine' : 'Task';
                         fetch('https://api.onesignal.com/notifications', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${ONESIGNAL_KEY}` },
@@ -74,6 +76,8 @@ export async function POST(req: Request) {
                             }),
                         }).catch(() => {});
                     }
+
+                    if (payload.isRoutine) discordRoutineSubmitted(name).catch(() => {});
                 } catch (_) {}
                 break;
 

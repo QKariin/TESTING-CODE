@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { discordTaskReviewed } from '@/lib/discord';
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +21,15 @@ export async function POST(req: Request) {
         if (action === 'approve') {
             const points = typeof bonus === 'number' ? bonus : 500;
             await DbService.approveTask(submissionId, memberId, points, null, null);
+            const profile = await DbService.getProfile(memberId);
+            discordTaskReviewed(profile?.name || 'A subject', 'approve', points).catch(() => {});
             return NextResponse.json({ success: true, action: 'approve', pointsAwarded: points });
         }
 
         if (action === 'reject') {
             await DbService.rejectTask(submissionId, memberId);
+            const profile = await DbService.getProfile(memberId);
+            discordTaskReviewed(profile?.name || 'A subject', 'reject').catch(() => {});
             return NextResponse.json({ success: true, action: 'reject', penaltyApplied: 300 });
         }
 

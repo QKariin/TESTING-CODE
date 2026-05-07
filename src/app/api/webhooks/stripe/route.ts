@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
-import { discordNewMember, discordCoinPurchase } from '@/lib/discord';
+import { discordNewMember } from '@/lib/discord';
 
 // Initialize Supabase Admin (Service Role) dynamically inside the route handler
 
@@ -193,9 +193,6 @@ export async function POST(req: Request) {
                         .update({ wallet: newBalance, parameters: profileParams })
                         .eq('ID', profile.ID);
                     console.log(`[COINS] Wallet Updated: ${newBalance} (+${coins})`);
-
-                    // Discord notification
-                    discordCoinPurchase(profile.name || userEmail || 'Unknown', coins).catch(() => {});
                 } else {
                     console.error(`[COINS] User not found for coin deposit: ${userEmail || userId}`);
                 }

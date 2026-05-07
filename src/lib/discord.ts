@@ -123,10 +123,42 @@ export function discordChallengeVerified(name: string, taskNum: string, points: 
     });
 }
 
-export function discordCoinPurchase(name: string, coins: number) {
+export function discordRoutineSubmitted(name: string) {
     return sendDiscordEmbed({
-        title: 'COIN PURCHASE',
-        description: `**${name}** purchased **${coins.toLocaleString()} coins**`,
+        title: 'DAILY ROUTINE',
+        description: `**${name}** submitted their daily routine`,
+        color: 4853326, // purple #4A0E4E
+    });
+}
+
+export function discordTaskReviewed(name: string, action: 'approve' | 'reject', points?: number) {
+    if (action === 'approve') {
+        return sendDiscordEmbed({
+            title: 'TASK APPROVED',
+            description: `**${name}**'s task has been approved`,
+            color: 52326, // green
+            fields: [
+                { name: 'Points Earned', value: `+${(points || 0).toLocaleString()}`, inline: true },
+            ],
+        });
+    }
+    return sendDiscordEmbed({
+        title: 'TASK REJECTED',
+        description: `**${name}**'s task has been rejected`,
+        color: 13369344, // red
+        fields: [
+            { name: 'Penalty', value: '-300 coins', inline: true },
+        ],
+    });
+}
+
+export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number) {
+    return sendDiscordEmbed({
+        title: 'WISHLIST TRIBUTE',
+        description: `**${senderName}** purchased **${itemTitle}** for the Queen`,
         color: 16766720, // gold
+        fields: [
+            { name: 'Cost', value: `${cost.toLocaleString()} coins`, inline: true },
+        ],
     });
 }
