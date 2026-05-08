@@ -343,12 +343,20 @@ export default function LoginPage() {
 
                 {error && <div className="error-msg">{error}</div>}
 
-                <div className="footer-text">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
 
                 <p style={{ fontFamily: 'Italianno, cursive', fontSize: 'clamp(1.4rem, 5vw, 1.9rem)', color: 'rgba(197,160,89,0.4)', margin: '24px 0 0', lineHeight: 1.3, textAlign: 'center' }}>
                     ...you don&#39;t &ldquo;join&rdquo; me &mdash; you surrender!
                 </p>
+
+                {/* ─── FOOTER ─── */}
+                <div style={{ textAlign: 'center', marginTop: 60, borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 20 }}>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 500, color: 'rgba(255,255,255,0.06)', letterSpacing: 3, textTransform: 'uppercase' }}>
+                        Property of Queen Karin &nbsp;&middot;&nbsp; Est. 2024
+                    </div>
+                </div>
+
+                <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>{/* close brand/content wrapper */}
 
             {/* Fake mobile bottom nav */}
