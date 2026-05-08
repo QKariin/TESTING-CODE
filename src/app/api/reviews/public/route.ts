@@ -5,7 +5,6 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        // Fetch approved reviews
         const { data: reviews, error } = await supabaseAdmin
             .from('reviews')
             .select('id, member_id, text, rating, created_at')
@@ -17,69 +16,60 @@ export async function GET() {
             return NextResponse.json({ success: true, reviews: [] });
         }
 
-        // Collect unique member emails
-        const emails = [...new Set(reviews.map((r: any) => r.member_id.toLowerCase()))];
+        // Enrich each review with profile data directly
+        const publicReviews = [];
+        for (const r of reviews) {
+            const email = (r.member_id || '').toLowerCase().trim();
+            const shortKey = email.split('@')[0]?.split('.')[0] || '';
 
-        // Fetch profile data for all reviewers
-        const { data: profiles } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, member_id, name, avatar_url, score, created_at')
-            .in('member_id', emails);
-
-        // Fetch task counts
-        const { data: tasks } = await supabaseAdmin
-            .from('tasks')
-            .select('member_id, Taskdom_History')
-            .in('member_id', emails);
-
-        // Build lookup maps
-        const profileMap = new Map<string, any>();
-        for (const p of (profiles || [])) {
-            profileMap.set(p.member_id?.toLowerCase(), p);
-        }
-
-        const taskCountMap = new Map<string, number>();
-        for (const t of (tasks || [])) {
-            const history = t.Taskdom_History;
-            let count = 0;
-            if (Array.isArray(history)) {
-                count = history.filter((h: any) => h.status === 'approved').length;
+            // Lookup profile
+            let profile: any = null;
+            if (shortKey) {
+                const { data: pData } = await supabaseAdmin
+                    .from('profiles')
+                    .select('name, avatar_url, score, hierarchy, joined_date')
+                    .ilike('member_id', `%${shortKey}%`)
+                    .limit(1);
+                if (pData && pData.length > 0) profile = pData[0];
             }
-            taskCountMap.set(t.member_id?.toLowerCase(), count);
-        }
 
-        // Build public response — NO email, only review UUID
-        const publicReviews = reviews.map((r: any) => {
-            const email = r.member_id.toLowerCase();
-            const profile = profileMap.get(email);
-            const taskCount = taskCountMap.get(email) || 0;
+            // Get completed tasks from tasks table
+            let taskCount = 0;
+            if (shortKey) {
+                const { data: tData } = await supabaseAdmin
+                    .from('tasks')
+                    .select('Taskdom_CompletedTasks')
+                    .ilike('member_id', `%${shortKey}%`)
+                    .limit(1);
+                if (tData && tData[0]) taskCount = Number(tData[0].Taskdom_CompletedTasks || 0);
+            }
 
-            // Calculate serving duration
-            const memberSince = profile?.created_at ? new Date(profile.created_at) : null;
+            // Calculate serving duration from joined_date
             let servingText = '';
-            if (memberSince) {
-                const diffMs = Date.now() - memberSince.getTime();
-                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                if (days < 30) servingText = `${days} days`;
+            const joinedDate = profile?.joined_date;
+            if (joinedDate) {
+                const days = Math.floor((Date.now() - new Date(joinedDate).getTime()) / 86400000);
+                if (days < 1) servingText = 'today';
+                else if (days < 30) servingText = `${days} days`;
                 else if (days < 365) servingText = `${Math.floor(days / 30)} months`;
                 else servingText = `${Math.floor(days / 365)}y ${Math.floor((days % 365) / 30)}m`;
             }
 
-            return {
-                id: r.id,               // review UUID — safe to expose
+            publicReviews.push({
+                id: r.id,
                 text: r.text,
                 rating: r.rating,
                 reviewedAt: r.created_at,
                 reviewer: {
                     name: profile?.name || 'Loyal Subject',
                     avatar: profile?.avatar_url || null,
+                    hierarchy: profile?.hierarchy || 'Hall Boy',
                     merit: profile?.score || 0,
                     tasksCompleted: taskCount,
-                    servingSince: profile?.created_at || null,
                     servingText,
                 },
-            };
-        });
+            });
+        }
 
         return NextResponse.json({ success: true, reviews: publicReviews });
 

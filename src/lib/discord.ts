@@ -184,6 +184,19 @@ export function discordTaskReviewed(name: string, action: 'approve' | 'reject', 
     });
 }
 
+export function discordReviewSubmitted(name: string, rating: number) {
+    const starsStr = '\u2605'.repeat(rating) + '\u2606'.repeat(5 - rating);
+    return sendDiscordEmbed({
+        title: 'NEW REVIEW',
+        description: `**${name}** left a **${rating}-star** review\n${starsStr}\n\n[View in dashboard](${APP_LINK}/dashboard)`,
+        color: 16766720,
+        fields: [
+            { name: 'Rating', value: `${rating}/5`, inline: true },
+        ],
+        image: { url: cardUrl('review', 'NEW REVIEW', `${name} left a ${rating}-star review`, starsStr) },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { discordReviewSubmitted } from '@/lib/discord';
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,36 @@ export async function POST(req: Request) {
                 parameters: { ...params, reviewSubmitted: true },
             })
             .eq('ID', profile.ID);
+
+        // Discord notification
+        const { data: nameProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('name')
+            .eq('ID', profile.ID)
+            .single();
+        const memberName = nameProfile?.name || email;
+        discordReviewSubmitted(memberName, Math.round(rating)).catch(() => {});
+
+        // Push notification to CEO
+        try {
+            const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+            const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+            const ceoEmail = 'ceo@qkarin.com';
+            if (apiKey) {
+                await fetch('https://api.onesignal.com/notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+                    body: JSON.stringify({
+                        app_id: appId,
+                        target_channel: 'push',
+                        include_aliases: { external_id: [ceoEmail] },
+                        headings: { en: 'New Review Submitted' },
+                        contents: { en: `${memberName} left a ${Math.round(rating)}-star review.` },
+                        url: 'https://throne.qkarin.com/dashboard',
+                    }),
+                });
+            }
+        } catch (_) {}
 
         return NextResponse.json({ success: true, coinsAwarded: 500, newWallet });
 
