@@ -28,16 +28,22 @@ export async function POST(req: Request) {
             // Push notification to the member
             try {
                 const email = (profile?.member_id || memberId).toLowerCase();
-                const pushUrl = new URL('/api/push', req.url);
-                fetch(pushUrl.toString(), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        externalId: email,
-                        title: '✓ Task Approved',
-                        message: `Your task was approved! +${points} merit earned.`,
-                    }),
-                }).catch(() => {});
+                const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+                const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+                if (apiKey && email) {
+                    await fetch('https://api.onesignal.com/notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+                        body: JSON.stringify({
+                            app_id: appId,
+                            target_channel: 'push',
+                            include_aliases: { external_id: [email] },
+                            headings: { en: '✓ Task Approved' },
+                            contents: { en: `Your task was approved! +${points} merit earned.` },
+                            url: 'https://throne.qkarin.com/profile',
+                        }),
+                    });
+                }
             } catch (_) {}
 
             return NextResponse.json({ success: true, action: 'approve', pointsAwarded: points });
@@ -52,16 +58,22 @@ export async function POST(req: Request) {
             // Push notification to the member
             try {
                 const email = (profile?.member_id || memberId).toLowerCase();
-                const pushUrl = new URL('/api/push', req.url);
-                fetch(pushUrl.toString(), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        externalId: email,
-                        title: '✗ Task Rejected',
-                        message: 'Your task was rejected. -300 coins penalty.',
-                    }),
-                }).catch(() => {});
+                const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+                const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+                if (apiKey && email) {
+                    await fetch('https://api.onesignal.com/notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+                        body: JSON.stringify({
+                            app_id: appId,
+                            target_channel: 'push',
+                            include_aliases: { external_id: [email] },
+                            headings: { en: '✗ Task Rejected' },
+                            contents: { en: 'Your task was rejected. -300 coins penalty.' },
+                            url: 'https://throne.qkarin.com/profile',
+                        }),
+                    });
+                }
             } catch (_) {}
 
             return NextResponse.json({ success: true, action: 'reject', penaltyApplied: 300 });
