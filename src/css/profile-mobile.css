@@ -83,6 +83,19 @@
         display: none;
     }
 
+    #mobTributeContent,
+    #mobTributeContent div,
+    #inlineRiskyContent,
+    #inlineRiskyContent div {
+        scrollbar-width: none;
+    }
+    #mobTributeContent::-webkit-scrollbar,
+    #mobTributeContent div::-webkit-scrollbar,
+    #inlineRiskyContent::-webkit-scrollbar,
+    #inlineRiskyContent div::-webkit-scrollbar {
+        display: none;
+    }
+
     #viewMobileHome {
         position: fixed;
         top: 0;

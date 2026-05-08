@@ -99,7 +99,7 @@ export function closeStandaloneTribute() {
 function _showMenu() {
     const el = _el(); if (!el) return;
     el.innerHTML = `
-        <div style="overflow-y:auto;height:100%;padding:0 20px;">
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('CHOOSE YOUR OFFERING')}
             <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:20px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -127,7 +127,7 @@ function _showSend() {
     const w = _wallet();
     const amounts = [500, 1000, 2000, 5000, 10000, 20000];
     el.innerHTML = `
-        <div style="overflow-y:auto;height:100%;padding:0 20px;">
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('QUICK SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;margin-top:20px;">
                 <div style="text-align:center;margin-bottom:16px;">
@@ -176,7 +176,7 @@ async function _directSend(amount: number) {
 function _showSendResult(ok: boolean, amount: number, merit: number, newBal: number) {
     const el = _el(); if (!el) return;
     el.innerHTML = `
-        <div style="overflow-y:auto;height:100%;padding:0 20px;">
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('QUICK SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
                 <div style="font-size:3rem;">${ok ? '\u2728' : '\u274C'}</div>
@@ -201,7 +201,7 @@ function _showRisky() {
 
     if (w < 10) {
         el.innerHTML = `
-            <div style="overflow-y:auto;height:100%;padding:0 20px;">
+            <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
                 ${_header('RISKY SEND')}
                 <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
                     <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.6);letter-spacing:3px;">NOT ENOUGH COINS</div>
@@ -213,7 +213,7 @@ function _showRisky() {
 
     const pcts = [10, 25, 50, 75, 100];
     el.innerHTML = `
-        <div style="overflow-y:auto;height:100%;padding:0 20px;">
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('RISKY SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;margin-top:20px;">
                 <div style="text-align:center;margin-bottom:16px;">
@@ -291,7 +291,7 @@ function _pickPercent(pct: number) {
 function _riskyConfirm() {
     const el = _el(); if (!el) return;
     el.innerHTML = `
-        <div style="overflow-y:auto;height:100%;padding:0 20px;">
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('RISKY SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;margin-top:16px;">
                 <div style="text-align:center;margin-bottom:16px;">
@@ -383,7 +383,7 @@ function _showRiskyResult(data: any) {
 
     if (!data) {
         el.innerHTML = `
-            <div style="overflow-y:auto;height:100%;padding:0 20px;">
+            <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
                 ${_header('RISKY SEND')}
                 <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
                     <div style="font-size:2rem;">\u274C</div>
@@ -410,7 +410,7 @@ function _showRiskyResult(data: any) {
     else if (isMercy) { titleColor = '#4ade80'; bg = 'rgba(74,222,128,0.04)'; borderColor = 'rgba(74,222,128,0.25)'; glowColor = 'rgba(74,222,128,0.08)'; queenBorder = 'rgba(74,222,128,0.25)'; }
 
     el.innerHTML = `
-        <div style="overflow-y:auto;height:100%;padding:0 20px;">
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('RISKY SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:20px;">
                 <img src="${data.cardIcon}" style="width:120px;height:auto;">

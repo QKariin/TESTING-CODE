@@ -52,7 +52,7 @@ function _irShowStake() {
     _irStake = 0;
 
     if (w < 10) {
-        el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+        el.innerHTML = `<div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('RISKY SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
                 <div style="font-family:'Cinzel',serif;font-size:1rem;color:rgba(197,160,89,0.6);letter-spacing:3px;">NOT ENOUGH COINS</div>
@@ -65,7 +65,7 @@ function _irShowStake() {
     }
 
     const pcts = [10, 25, 50, 75, 100];
-    el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+    el.innerHTML = `<div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
         ${_header('RISKY SEND')}
         <div style="display:flex;flex-direction:column;align-items:center;margin-top:20px;">
             <div style="text-align:center;margin-bottom:16px;">
@@ -124,7 +124,7 @@ function _irPickPercent(pct: number) {
 
 function _irConfirm() {
     const el = _irEl(); if (!el) return;
-    el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+    el.innerHTML = `<div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
         ${_header('RISKY SEND')}
         <div style="display:flex;flex-direction:column;align-items:center;margin-top:16px;">
             <div style="text-align:center;margin-bottom:16px;">
@@ -215,7 +215,7 @@ function _irShowResult(data: any) {
     const el = _irEl(); if (!el) return;
 
     if (!data) {
-        el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+        el.innerHTML = `<div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
             ${_header('RISKY SEND')}
             <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:40px;">
                 <div style="font-size:2rem;">X</div>
@@ -239,7 +239,7 @@ function _irShowResult(data: any) {
     if (isWin) { titleColor = '#c5a059'; bg = 'rgba(197,160,89,0.06)'; borderColor = 'rgba(197,160,89,0.35)'; glowColor = 'rgba(197,160,89,0.12)'; queenBorder = 'rgba(197,160,89,0.3)'; }
     else if (isMercy) { titleColor = '#4ade80'; bg = 'rgba(74,222,128,0.04)'; borderColor = 'rgba(74,222,128,0.25)'; glowColor = 'rgba(74,222,128,0.08)'; queenBorder = 'rgba(74,222,128,0.25)'; }
 
-    el.innerHTML = `<div style="overflow-y:auto;height:100%;padding:0 20px;">
+    el.innerHTML = `<div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 20px;">
         ${_header('RISKY SEND')}
         <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:20px;">
             <img src="${data.cardIcon}" style="width:120px;height:auto;">
