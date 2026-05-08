@@ -50,7 +50,7 @@ export default function LoginPage() {
             }
             if (content.startsWith('UPDATE_MERIT_CARD::')) {
                 const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} merit`, kind: 'merit', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} points`, kind: 'merit', created_at: created };
             }
             if (content.startsWith('CHALLENGE_TASK_CARD::')) {
                 const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));

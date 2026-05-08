@@ -93,7 +93,7 @@ export default function TributePage() {
             }
             if (content.startsWith('UPDATE_MERIT_CARD::')) {
                 const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} merit`, kind: 'merit', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} points`, kind: 'merit', created_at: created };
             }
             if (content.startsWith('UPDATE_COINS_CARD::')) {
                 const d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
@@ -527,7 +527,7 @@ export default function TributePage() {
             {toasts.map((t: any) => {
                 const displayText = t.text || (
                     t.kind === 'tribute' ? `sent ${t.title || 'a tribute'}` :
-                    t.kind === 'points' ? `earned +${t.points} merit` :
+                    t.kind === 'points' ? `earned +${t.points} points` :
                     t.kind === 'photo' ? 'shared a photo' :
                     t.content || ''
                 );
