@@ -248,7 +248,7 @@ export default function LoginPage() {
                     <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(0.75rem, 2.8vw, 0.9rem)', color: 'rgba(255,255,255,0.4)', lineHeight: 1.9, fontWeight: 400, margin: '0 0 20px', letterSpacing: 1 }}>
                         Welcome to the only FemDom app run entirely by a single Domme dedicated to complete control.
                     </p>
-                    <div style={{ overflow: 'hidden', margin: '24px -32px 28px', maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
+                    <div style={{ overflow: 'hidden', margin: '36px -32px 40px', maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
                         <div className="login-marquee" style={{ display: 'flex', alignItems: 'center', gap: 0, whiteSpace: 'nowrap', fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.75)', fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase' }}>
                             {[0,1].map(i => (
                                 <span key={i} className="login-marquee-track" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, paddingRight: 0 }}>
