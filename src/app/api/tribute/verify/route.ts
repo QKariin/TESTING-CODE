@@ -46,9 +46,10 @@ export async function POST(req: Request) {
             || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : null)
             || user.id;
 
-        const displayName = user.user_metadata?.full_name
+        const rawName = user.user_metadata?.full_name
             || user.user_metadata?.user_name
             || (user.email ? user.email.split('@')[0] : 'Subject');
+        const displayName = rawName.split(' ')[0];
 
         // Create profile
         const { error } = await supabaseAdmin

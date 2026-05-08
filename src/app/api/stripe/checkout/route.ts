@@ -22,9 +22,10 @@ export async function POST(req: Request) {
             || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
 
         // Display name for the created profile
-        const displayName = user.user_metadata?.full_name
+        const rawName = user.user_metadata?.full_name
             || user.user_metadata?.user_name
             || (user.email ? user.email.split('@')[0] : identifier);
+        const displayName = rawName.split(' ')[0];
 
         // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
