@@ -67,8 +67,12 @@ export async function POST(request: Request) {
 
             const newWallet = wallet - amount;
             const merit = Math.floor(amount / 2);
+            const params = profile.parameters || {};
 
-            await supabase.from('profiles').update({ wallet: newWallet }).eq('ID', profileId);
+            await supabase.from('profiles').update({
+                wallet: newWallet,
+                parameters: { ...params, wishlist_spent: (Number(params.wishlist_spent) || 0) + amount },
+            }).eq('ID', profileId);
             await DbService.awardPoints(profileId, merit);
 
             // Post to global chat
@@ -152,8 +156,12 @@ export async function POST(request: Request) {
 
             const newWallet = wallet - lossAmount + bonusAmount;
             const merit = Math.floor(lossAmount / 2);
+            const params = profile.parameters || {};
 
-            await supabase.from('profiles').update({ wallet: newWallet }).eq('ID', profileId);
+            await supabase.from('profiles').update({
+                wallet: newWallet,
+                parameters: { ...params, wishlist_spent: (Number(params.wishlist_spent) || 0) + lossAmount },
+            }).eq('ID', profileId);
             if (merit > 0) await DbService.awardPoints(profileId, merit);
 
             // Build all 9 cards for client animation
