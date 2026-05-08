@@ -2093,6 +2093,15 @@ export function toggleEarnCoins() {
                 <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+300 COINS</div>
             </button>
 
+            <button id="earnCoinsReviewBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">R</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:#fff;letter-spacing:2px;font-weight:700;">WRITE A REVIEW</div>
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Share your experience serving the Queen</div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+500 COINS</div>
+            </button>
+
             <button id="earnCoinsCloseBtn" style="margin-top:16px;padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>
         </div>
     `;
@@ -2110,10 +2119,140 @@ export function toggleEarnCoins() {
         closeEarnCoinsModal();
         (window as any).showCertificate?.();
     });
+    modal.querySelector('#earnCoinsReviewBtn')?.addEventListener('click', () => {
+        closeEarnCoinsModal();
+        _openReviewForm();
+    });
 
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeEarnCoinsModal();
+    });
+}
+
+function _openReviewForm() {
+    if (document.getElementById('reviewFormModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'reviewFormModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10000002;background:#020512;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
+
+    modal.innerHTML = `
+        <div style="width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+            <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:6px;">WRITE A REVIEW</div>
+            <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.4),transparent);"></div>
+
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);text-align:center;">Share your experience. Your name and stats will be shown publicly, but your identity stays private.</div>
+
+            <div id="reviewStars" style="display:flex;gap:8px;margin:4px 0;">
+                ${[1,2,3,4,5].map(i => `<span data-star="${i}" style="font-size:1.8rem;cursor:pointer;color:rgba(255,255,255,0.15);transition:color 0.2s;">&#9733;</span>`).join('')}
+            </div>
+            <div id="reviewRatingLabel" style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.4);letter-spacing:2px;height:14px;"></div>
+
+            <textarea id="reviewTextInput" maxlength="500" rows="5" placeholder="How has serving Queen Karin changed your life..."
+                style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(197,160,89,0.18);border-radius:10px;padding:14px;color:#fff;font-family:Rajdhani,sans-serif;font-size:0.95rem;resize:none;outline:none;"></textarea>
+            <div style="align-self:flex-end;font-family:Orbitron,sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.2);"><span id="reviewCharCount">0</span>/500</div>
+
+            <button id="reviewSubmitBtn" style="width:100%;padding:14px 0;background:linear-gradient(135deg,#c5a059,#8b6914);color:#000;border:none;border-radius:8px;font-family:Orbitron,sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:3px;cursor:pointer;opacity:0.4;pointer-events:none;">SUBMIT REVIEW</button>
+
+            <button id="reviewCloseBtn" style="padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => { modal.style.opacity = '1'; });
+
+    let selectedRating = 0;
+    const ratingLabels = ['', 'POOR', 'OKAY', 'GOOD', 'GREAT', 'EXCEPTIONAL'];
+    const stars = modal.querySelectorAll('#reviewStars span');
+    const ratingLabel = modal.querySelector('#reviewRatingLabel') as HTMLElement;
+    const textarea = modal.querySelector('#reviewTextInput') as HTMLTextAreaElement;
+    const charCount = modal.querySelector('#reviewCharCount') as HTMLElement;
+    const submitBtn = modal.querySelector('#reviewSubmitBtn') as HTMLButtonElement;
+
+    function updateStars(rating: number) {
+        stars.forEach((s, i) => {
+            (s as HTMLElement).style.color = i < rating ? '#c5a059' : 'rgba(255,255,255,0.15)';
+        });
+        if (ratingLabel) ratingLabel.textContent = ratingLabels[rating] || '';
+    }
+
+    function checkReady() {
+        const ready = selectedRating > 0 && textarea.value.trim().length >= 10;
+        submitBtn.style.opacity = ready ? '1' : '0.4';
+        submitBtn.style.pointerEvents = ready ? 'auto' : 'none';
+    }
+
+    stars.forEach(s => {
+        s.addEventListener('click', () => {
+            selectedRating = parseInt((s as HTMLElement).dataset.star || '0');
+            updateStars(selectedRating);
+            checkReady();
+        });
+    });
+
+    textarea.addEventListener('input', () => {
+        charCount.textContent = String(textarea.value.length);
+        checkReady();
+    });
+
+    const closeReview = () => {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    modal.querySelector('#reviewCloseBtn')?.addEventListener('click', closeReview);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeReview(); });
+
+    submitBtn.addEventListener('click', async () => {
+        if (submitBtn.style.pointerEvents === 'none') return;
+        submitBtn.textContent = 'SUBMITTING...';
+        submitBtn.style.pointerEvents = 'none';
+
+        const { memberId, id } = getState();
+        try {
+            const res = await fetch('/api/reviews/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: memberId || id, text: textarea.value.trim(), rating: selectedRating }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setState({ wallet: data.newWallet });
+                const s = getState(); if (s?.raw) s.raw.wallet = data.newWallet;
+                ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(elId => {
+                    const el = document.getElementById(elId);
+                    if (el) el.textContent = data.newWallet.toLocaleString();
+                });
+
+                modal.querySelector('div')!.innerHTML = `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;">
+                        <div style="font-size:2.5rem;">&#10003;</div>
+                        <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#c5a059;letter-spacing:4px;">THANK YOU</div>
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);">Your review has been submitted for approval.</div>
+                        <div style="font-family:Orbitron,sans-serif;font-size:0.7rem;color:#4ade80;letter-spacing:2px;">+500 COINS EARNED</div>
+                        <button onclick="this.closest('#reviewFormModal').style.opacity='0';setTimeout(()=>document.getElementById('reviewFormModal')?.remove(),300);"
+                            style="margin-top:12px;padding:12px 40px;background:none;border:1px solid rgba(197,160,89,0.3);border-radius:8px;color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>
+                    </div>
+                `;
+            } else {
+                submitBtn.textContent = data.error || 'FAILED';
+                submitBtn.style.color = '#e03050';
+                submitBtn.style.background = 'none';
+                submitBtn.style.border = '1px solid rgba(220,50,80,0.3)';
+                setTimeout(() => {
+                    submitBtn.textContent = 'SUBMIT REVIEW';
+                    submitBtn.style.color = '#000';
+                    submitBtn.style.background = 'linear-gradient(135deg,#c5a059,#8b6914)';
+                    submitBtn.style.border = 'none';
+                    submitBtn.style.pointerEvents = 'auto';
+                }, 3000);
+            }
+        } catch {
+            submitBtn.textContent = 'ERROR';
+            setTimeout(() => { submitBtn.textContent = 'SUBMIT REVIEW'; submitBtn.style.pointerEvents = 'auto'; }, 3000);
+        }
     });
 }
 
