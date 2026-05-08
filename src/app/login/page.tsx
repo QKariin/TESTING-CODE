@@ -74,8 +74,11 @@ export default function LoginPage() {
 
     return (
         <div className="login-container">
-            <div className="login-bg" />
-            <div className="login-overlay" />
+            {/* Layered backgrounds — same as /tribute */}
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.35, filter: 'saturate(0.2) brightness(0.7)' }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.7) 30%, rgba(2,2,2,0.92) 55%, #020202 75%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '40vh', background: 'radial-gradient(ellipse at center top, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
 
             <div className="login-card">
                 <div className="login-crown">✦</div>
@@ -140,6 +143,31 @@ export default function LoginPage() {
 
                 <div className="footer-text">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
+
+            {/* Fake mobile bottom nav */}
+            <nav className="login-fake-nav">
+                <div className="login-nav-item">
+                    <span style={{ fontSize: '1rem', opacity: 0.3 }}>◆</span>
+                    <span>PROFILE</span>
+                </div>
+                <div className="login-nav-item">
+                    <span style={{ fontSize: '1rem', opacity: 0.3 }}>▦</span>
+                    <span>RECORD</span>
+                </div>
+                <div className="login-nav-queen-btn">
+                    <div className="login-nav-queen-ring">
+                        <img src="/queen-nav.png" alt="Queen" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    </div>
+                </div>
+                <div className="login-nav-item">
+                    <span style={{ fontSize: '0.85rem', opacity: 0.3 }}>♛</span>
+                    <span>QUEEN</span>
+                </div>
+                <div className="login-nav-item">
+                    <span style={{ fontSize: '0.85rem', opacity: 0.3 }}>◎</span>
+                    <span>GLOBAL</span>
+                </div>
+            </nav>
         </div>
     );
 }
