@@ -111,13 +111,22 @@ export default function TributePage() {
                 const supabase = createClient();
                 const { data } = await supabase
                     .from('global_messages')
-                    .select('message, sender_name, sender_avatar, created_at')
+                    .select('message, sender_name, sender_avatar, sender_email, created_at')
                     .order('created_at', { ascending: false })
                     .limit(10);
                 if (data) {
                     for (const msg of data) {
                         const parsed = parseGlobalCard(msg);
-                        if (parsed) { showToast(parsed); break; }
+                        if (parsed) {
+                            // If no avatar, look it up from profiles
+                            if (!parsed.sender_avatar && msg.sender_email && msg.sender_email !== 'system') {
+                                try {
+                                    const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', msg.sender_email).limit(1);
+                                    if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url;
+                                } catch {}
+                            }
+                            showToast(parsed); break;
+                        }
                     }
                 }
             } catch {}
@@ -126,11 +135,19 @@ export default function TributePage() {
         // Realtime: global_messages for risky game, tributes, promotions, etc.
         const supabase = createClient();
         const channel = supabase.channel('tribute-activity')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, (payload: any) => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, async (payload: any) => {
                 const row = payload.new;
                 if (!row) return;
                 const parsed = parseGlobalCard(row);
-                if (parsed) showToast(parsed);
+                if (parsed) {
+                    if (!parsed.sender_avatar && row.sender_email && row.sender_email !== 'system') {
+                        try {
+                            const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', row.sender_email).limit(1);
+                            if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url;
+                        } catch {}
+                    }
+                    showToast(parsed);
+                }
             })
             .subscribe();
 
