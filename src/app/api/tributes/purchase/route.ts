@@ -105,8 +105,20 @@ export async function POST(request: Request) {
             });
         } catch (_) {}
 
-        // Discord notification
+        // Merit earned notification
         const senderNameFinal = (profile as any).name || realEmail.split('@')[0];
+        if (meritGain > 0) {
+            try {
+                await supabase.from('global_messages').insert({
+                    sender_email: realEmail,
+                    sender_name: senderNameFinal,
+                    sender_avatar: null,
+                    message: `UPDATE_MERIT_CARD::${JSON.stringify({ senderName: senderNameFinal, points: meritGain })}`,
+                });
+            } catch (_) {}
+        }
+
+        // Discord notification
         discordWishlistPurchase(senderNameFinal, tributeTitle, tributeCost).catch(() => {});
 
         return NextResponse.json({ success: true, newWallet, newScore, meritGained: meritGain, message: `Tribute "${tributeTitle}" purchased successfully.` });
