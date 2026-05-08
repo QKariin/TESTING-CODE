@@ -49,7 +49,7 @@ export async function GET() {
         }
 
         // Build public response — NO email, only review UUID
-        const publicReviews = reviews.map(r => {
+        const publicReviews = reviews.map((r: any) => {
             const email = r.member_id.toLowerCase();
             const profile = profileMap.get(email);
             const taskCount = taskCountMap.get(email) || 0;
