@@ -31,7 +31,6 @@ export default function TributePage() {
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
-    const [showDontMiss, setShowDontMiss] = useState<'hidden'|'showing'|'shattering'>('hidden');
 
     /* countdown to next Sunday midnight (local time) */
     useEffect(() => {
@@ -58,10 +57,7 @@ export default function TributePage() {
         };
         tick();
         const iv = setInterval(tick, 1000);
-        const dontMissTimer = setTimeout(() => setShowDontMiss('showing'), 7000);
-        const dontMissShatter = setTimeout(() => setShowDontMiss('shattering'), 10000);
-        const dontMissHide = setTimeout(() => setShowDontMiss('hidden'), 11200);
-        return () => { clearInterval(iv); clearTimeout(dontMissTimer); clearTimeout(dontMissShatter); clearTimeout(dontMissHide); };
+        return () => clearInterval(iv);
     }, []);
 
     useEffect(() => {
@@ -103,40 +99,41 @@ export default function TributePage() {
         const content = msg.message || msg.content || '';
         const created = msg.created_at;
         const avatar = msg.sender_avatar || null;
+        const msgHierarchy = msg.hierarchy || null;
         try {
             if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
                 const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
                 const isWin = d.isWin;
                 const resultText = isWin ? `won +${(d.wonAmount||0).toLocaleString()} coins` : d.lostAmount === 0 ? 'lost nothing' : `lost ${(d.lostAmount||0).toLocaleString()} coins`;
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `just gambled ${(d.stakeAmount||0).toLocaleString()} coins and ${resultText}`, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, isWin, stakeAmount: d.stakeAmount || 0, wonAmount: d.wonAmount || 0, lostAmount: d.lostAmount || 0, created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `just gambled ${(d.stakeAmount||0).toLocaleString()} coins and ${resultText}`, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, isWin, stakeAmount: d.stakeAmount || 0, wonAmount: d.wonAmount || 0, lostAmount: d.lostAmount || 0, created_at: created };
             }
             if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
                 const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `sent a tribute of ${(d.amount||0).toLocaleString()} coins`, kind: 'tribute', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `sent a tribute of ${(d.amount||0).toLocaleString()} coins`, kind: 'tribute', created_at: created };
             }
             if (content.startsWith('PROMOTION_CARD::')) {
                 const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-                return { sender_name: d.name || 'SUBJECT', sender_avatar: avatar, text: `was promoted to ${d.newRank || 'a new rank'}`, kind: 'promotion', created_at: created };
+                return { sender_name: d.name || 'SUBJECT', sender_avatar: avatar, hierarchy: msgHierarchy, text: `was promoted to ${d.newRank || 'a new rank'}`, kind: 'promotion', created_at: created };
             }
             if (content.startsWith('CHALLENGE_TASK_CARD::')) {
                 const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `completed a challenge task${d.passed !== false ? '' : ' (failed)'}`, kind: 'challenge', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `completed a challenge task${d.passed !== false ? '' : ' (failed)'}`, kind: 'challenge', created_at: created };
             }
             if (content.startsWith('WELCOME_CARD::')) {
                 const d = JSON.parse(content.replace('WELCOME_CARD::', ''));
-                return { sender_name: d.name || 'New Subject', sender_avatar: avatar, text: 'entered the household', kind: 'welcome', created_at: created };
+                return { sender_name: d.name || 'New Subject', sender_avatar: avatar, hierarchy: msgHierarchy, text: 'entered the household', kind: 'welcome', created_at: created };
             }
             if (content.startsWith('UPDATE_MERIT_CARD::')) {
                 const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} points`, kind: 'merit', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `earned ${d.points || 0} points`, kind: 'merit', created_at: created };
             }
             if (content.startsWith('UPDATE_COINS_CARD::')) {
                 const d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `claimed +${d.points || 0} coins from kneeling`, kind: 'coins', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `claimed ${d.points || 0} coins from kneeling`, kind: 'coins', created_at: created };
             }
             if (content.startsWith('CHALLENGE_JOIN_CARD::')) {
                 const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
-                return { sender_name: d.senderName || d.name || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `joined ${d.challengeName || 'a challenge'}`, kind: 'challenge', created_at: created };
+                return { sender_name: d.senderName || d.name || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `joined ${d.challengeName || 'a challenge'}`, kind: 'challenge', created_at: created };
             }
         } catch {}
         return null;
@@ -157,11 +154,14 @@ export default function TributePage() {
                     for (const msg of data) {
                         const parsed = parseGlobalCard(msg);
                         if (parsed) {
-                            // If no avatar, look it up from profiles
-                            if (!parsed.sender_avatar && msg.sender_email && msg.sender_email !== 'system') {
+                            // Look up avatar + hierarchy from profiles
+                            if (msg.sender_email && msg.sender_email !== 'system') {
                                 try {
-                                    const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', msg.sender_email).limit(1);
-                                    if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url;
+                                    const { data: p } = await supabase.from('profiles').select('avatar_url, hierarchy').ilike('member_id', msg.sender_email).limit(1);
+                                    if (p && p[0]) {
+                                        if (!parsed.sender_avatar && p[0].avatar_url) parsed.sender_avatar = p[0].avatar_url;
+                                        if (p[0].hierarchy) parsed.hierarchy = p[0].hierarchy;
+                                    }
                                 } catch {}
                             }
                             showToast(parsed); break;
@@ -179,10 +179,13 @@ export default function TributePage() {
                 if (!row) return;
                 const parsed = parseGlobalCard(row);
                 if (parsed) {
-                    if (!parsed.sender_avatar && row.sender_email && row.sender_email !== 'system') {
+                    if (row.sender_email && row.sender_email !== 'system') {
                         try {
-                            const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', row.sender_email).limit(1);
-                            if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url;
+                            const { data: p } = await supabase.from('profiles').select('avatar_url, hierarchy').ilike('member_id', row.sender_email).limit(1);
+                            if (p && p[0]) {
+                                if (!parsed.sender_avatar && p[0].avatar_url) parsed.sender_avatar = p[0].avatar_url;
+                                if (p[0].hierarchy) parsed.hierarchy = p[0].hierarchy;
+                            }
                         } catch {}
                     }
                     showToast(parsed);
@@ -275,15 +278,28 @@ export default function TributePage() {
             {/* Promo countdown banner — fixed top */}
             <div style={{
                 position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000001,
-                background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(5,8,18,0.98))',
+                background: '#0a1628',
                 borderBottom: '1px solid rgba(197,160,89,0.35)',
-                padding: '8px 14px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                padding: '6px 14px 10px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
                 boxShadow: '0 2px 24px rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(16px)',
+                overflow: 'hidden',
             }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#fff', letterSpacing: '14px', fontWeight: 700, textTransform: 'uppercase' }}>Special Access</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {/* Animated gradient background */}
+                <div style={{
+                    position: 'absolute', inset: 0, zIndex: 0,
+                    backgroundImage: 'linear-gradient(135deg, #0a1628, #1a00aa, #6b00a8, #aa0077, #1a00aa, #0a1628)',
+                    backgroundSize: '400% 400%',
+                    animation: 'bannerFlow 14s ease-in-out infinite alternate',
+                    opacity: 0.4,
+                }} />
+                <div style={{
+                    fontFamily: "'Rosella Solid', serif", fontSize: 'clamp(1rem, 5vw, 1.6rem)', fontWeight: 400,
+                    color: 'rgba(255,255,255,0.4)', letterSpacing: 'clamp(4px, 1.5vw, 8px)', textTransform: 'uppercase',
+                    whiteSpace: 'nowrap', position: 'relative', zIndex: 1, textAlign: 'center', width: '100%',
+                    WebkitTextStroke: '1px rgba(60,60,60,0.7)',
+                }}>SPECIAL ACCESS</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {[countdown.h + countdown.d * 24, countdown.m, countdown.s].map((val, i, arr) => (
                             <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -302,59 +318,20 @@ export default function TributePage() {
                     </div>
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.3, whiteSpace: 'nowrap' }}>ends sunday midnight</div>
                 </div>
-                {/* "DON'T MISS" full overlay */}
-                {showDontMiss === 'showing' && (
-                    <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(135deg, #0a0a0a, #2a0a0a, #1a0505)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        animation: 'dontMissSlide 0.4s ease-out',
-                        pointerEvents: 'none',
-                    }}>
-                        <span style={{
-                            fontFamily: 'Cinzel, serif', fontSize: '1.1rem', fontWeight: 700,
-                            color: '#6b1a1a', letterSpacing: '10px', textTransform: 'uppercase',
-                        }}>
-                            Don&apos;t Miss It
-                        </span>
-                    </div>
-                )}
-                {showDontMiss === 'shattering' && (
-                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
-                        {Array.from({ length: 12 }).map((_, i) => {
-                            const col = i % 4;
-                            const row = Math.floor(i / 4);
-                            const drift = (col - 1.5) * 15;
-                            const delay = row * 0.04 + col * 0.02;
-                            const rot = (Math.random() - 0.5) * 30;
-                            return (
-                                <div key={i} style={{
-                                    position: 'absolute',
-                                    left: `${col * 25}%`, top: `${row * 33.33}%`,
-                                    width: '25%', height: '33.33%',
-                                    background: 'linear-gradient(135deg, #0a0a0a, #2a0a0a, #1a0505)',
-                                    animation: `shatterDrop 1.4s ${delay}s cubic-bezier(.22,.68,.36,1) forwards`,
-                                    transformOrigin: 'center top',
-                                    // @ts-ignore
-                                    '--drift': `${drift}px`,
-                                    '--rot': `${rot}deg`,
-                                }} />
-                            );
-                        })}
-                    </div>
-                )}
             </div>
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
-                @keyframes dontMissSlide {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(0); }
+                @font-face {
+                    font-family: 'Rosella Solid';
+                    src: url('/fonts/rosella-solid.woff2') format('woff2'), url('/fonts/rosella-solid.woff') format('woff');
+                    font-weight: normal;
+                    font-style: normal;
+                    font-display: swap;
                 }
-                @keyframes shatterDrop {
-                    0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
-                    8% { opacity: 1; transform: translate(0, 2px) rotate(0deg); }
-                    100% { opacity: 0; transform: translate(var(--drift), 800px) rotate(var(--rot)); }
+                @keyframes bannerFlow {
+                    0% { background-position: 0% 0%; }
+                    100% { background-position: 100% 100%; }
                 }
 
                 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -644,7 +621,7 @@ export default function TributePage() {
             {toasts.map((t: any) => {
                 const displayText = t.text || (
                     t.kind === 'tribute' ? `sent ${t.title || 'a tribute'}` :
-                    t.kind === 'points' ? `earned +${t.points} points` :
+                    t.kind === 'points' ? `earned ${t.points} points` :
                     t.kind === 'photo' ? 'shared a photo' :
                     t.content || ''
                 );
@@ -688,7 +665,10 @@ export default function TributePage() {
                                     ) : (
                                         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
                                     )}
-                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#c5a059', fontWeight: 600, letterSpacing: 1 }}>{t.sender_name}</span>
+                                    <div>
+                                        <div style={{ fontFamily: "'Rosella Solid', serif", fontSize: '1rem', color: '#c5a059', letterSpacing: 1 }}>{t.sender_name}</div>
+                                        {t.hierarchy && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 1 }}>{t.hierarchy}</div>}
+                                    </div>
                                 </div>
                                 {/* Gambled text */}
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, fontWeight: 500 }}>
@@ -707,20 +687,23 @@ export default function TributePage() {
                     ) : (
                         /* ── STANDARD TOAST (tribute, promotion, etc.) ── */
                         <>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>Recent Activity</span>
+                            {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                             {avatar ? (
-                                <img src={avatar} style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={avatar} style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             ) : (
-                                <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
+                                <div style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span>Recent Activity</span>
-                                    {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
+                                <div style={{ fontFamily: "'Rosella Solid', serif", fontSize: '1.15rem', color: '#c5a059', letterSpacing: 1, lineHeight: 1.2 }}>
+                                    {t.sender_name}
                                 </div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', fontWeight: 500, lineHeight: 1.4 }}>
-                                    <span style={{ color: '#c5a059' }}>{t.sender_name}</span>
-                                    {' '}{displayText}
+                                {t.hierarchy && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 2 }}>{t.hierarchy}</div>}
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500, lineHeight: 1.4, marginTop: 4 }}>
+                                    {displayText}
                                 </div>
                             </div>
                         </div>

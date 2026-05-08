@@ -21,11 +21,23 @@ export async function GET() {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    // Enrich with hierarchy from profiles
+    const emails = [...new Set((data || []).map((r: any) => r.sender_email).filter((e: any) => e && e !== 'system'))];
+    let hierarchyMap: Record<string, string> = {};
+    if (emails.length) {
+        const { data: profiles } = await supabaseAdmin.from('profiles').select('member_id, hierarchy').in('member_id', emails);
+        if (profiles) {
+            for (const p of profiles) {
+                if (p.member_id && p.hierarchy) hierarchyMap[p.member_id.toLowerCase()] = p.hierarchy;
+            }
+        }
+    }
+
     const QUEEN_EMAILS = ['ceo@qkarin.com'];
-    // Keep sender_email so client can detect own messages; is_queen added for convenience
     const safe = (data || []).map((row: any) => ({
         ...row,
         is_queen: QUEEN_EMAILS.includes((row.sender_email || '').toLowerCase()),
+        hierarchy: hierarchyMap[(row.sender_email || '').toLowerCase()] || null,
     }));
     return NextResponse.json({ messages: safe });
 }
