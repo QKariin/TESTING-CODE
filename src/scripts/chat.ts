@@ -33,7 +33,7 @@ export async function renderChat(messages: any[]) {
     const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::')) return false;
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::')) return false;
         if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
         const up = txt.toUpperCase();
         return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||
@@ -151,7 +151,40 @@ export async function renderChat(messages: any[]) {
                 </div>`;
             }
 
-            // A. PROMOTION CARD
+            // A. TASK REVIEW CARD
+            else if (originalMsg.startsWith('TASK_REVIEW_CARD::')) {
+                try {
+                    const d = JSON.parse(originalMsg.replace('TASK_REVIEW_CARD::', ''));
+                    const approved = d.status === 'approve';
+                    const borderColor = approved ? 'rgba(74,222,128,0.5)' : 'rgba(255,60,60,0.4)';
+                    const accentColor = approved ? '#4ade80' : '#e85d75';
+                    const icon = approved ? '✓' : '✗';
+                    const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
+                    const statusText = approved ? 'APPROVED' : 'REJECTED';
+                    const pointsLine = approved && d.points
+                        ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">+${(d.points || 0).toLocaleString()} MERIT</div>`
+                        : d.penalty
+                            ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">-${d.penalty} COINS</div>`
+                            : '';
+                    const commentLine = d.comment
+                        ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;">"${DOMPurify.sanitize(d.comment)}"</div>`
+                        : '';
+                    contentHtml = `
+                    <div style="width:min(55%,260px);margin:0 auto;">
+                        <div style="border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid ${borderColor};box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                            <div style="padding:18px 20px;text-align:center;">
+                                <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:${accentColor};letter-spacing:3px;margin-bottom:10px;">${label} ${statusText}</div>
+                                <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,${borderColor},transparent);margin:0 auto 12px;"></div>
+                                <div style="font-size:1.6rem;margin-bottom:8px;">${icon}</div>
+                                ${pointsLine}
+                                ${commentLine}
+                            </div>
+                        </div>
+                    </div>`;
+                } catch { contentHtml = `<div class="msg m-queen">✦ Task Reviewed</div>`; }
+            }
+
+            // B. PROMOTION CARD
             else if (originalMsg.startsWith('PROMOTION_CARD::')) {
                 try {
                     const d = JSON.parse(originalMsg.replace('PROMOTION_CARD::', ''));
@@ -329,12 +362,12 @@ export async function renderChat(messages: any[]) {
             }
         }
 
-        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::') || originalMsg.startsWith('ROUTINE_CHANGE::'))) {
+        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::') || originalMsg.startsWith('ROUTINE_CHANGE::') || originalMsg.startsWith('TASK_REVIEW_CARD::'))) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 
         const avatarUrl = "/queen-karin.png";
-        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('ROUTINE_CHANGE::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
+        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('ROUTINE_CHANGE::') && !originalMsg.startsWith('TASK_REVIEW_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
             contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">

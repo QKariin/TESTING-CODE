@@ -3776,6 +3776,42 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         }
     }
 
+    // TASK REVIEW CARD (approve/reject notification)
+    if (content.startsWith('TASK_REVIEW_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
+            const approved = d.status === 'approve';
+            const borderColor = approved ? 'rgba(74,222,128,0.5)' : 'rgba(255,60,60,0.4)';
+            const accentColor = approved ? '#4ade80' : '#e85d75';
+            const icon = approved ? '✓' : '✗';
+            const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
+            const statusText = approved ? 'APPROVED' : 'REJECTED';
+            const pointsLine = approved && d.points
+                ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">+${(d.points || 0).toLocaleString()} MERIT</div>`
+                : d.penalty
+                    ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">-${d.penalty} COINS</div>`
+                    : '';
+            const commentLine = d.comment
+                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;">"${d.comment}"</div>`
+                : '';
+            return `
+                <div class="cb-row" style="justify-content:center;padding:8px 0;">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid ${borderColor};box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:${accentColor};letter-spacing:3px;margin-bottom:10px;">${label} ${statusText}</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,${borderColor},transparent);margin:0 auto 12px;"></div>
+                            <div style="font-size:1.6rem;margin-bottom:8px;">${icon}</div>
+                            ${pointsLine}
+                            ${commentLine}
+                        </div>
+                    </div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+                </div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen"><div class="cb-wrap-queen"><div class="cb-queen">Task Reviewed</div></div></div>`;
+        }
+    }
+
     // TASK FEEDBACK CARD (comment card)
     if (content.startsWith('TASK_FEEDBACK::')) {
         try {

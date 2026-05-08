@@ -40,8 +40,10 @@ const CACHE_MAX_ENTRIES = 30; // keep last 30 conversations in memory
 
 function isSystemMessage(msg: any): boolean {
     if (!msg) return false;
+    const raw = msg.content || msg.message || '';
+    if (raw.startsWith('TASK_REVIEW_CARD::')) return false;
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
-    const content = (msg.content || msg.message || '').toUpperCase();
+    const content = raw.toUpperCase();
     return sender === 'system' ||
         content.includes('COINS RECEIVED') ||
         content.includes('TASK APPROVED') ||
@@ -626,6 +628,40 @@ function renderToHtml(m: any) {
                 </div>
                 <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
             </div>`;
+    }
+
+    // ── Task Review Card ──
+    if (content.startsWith('TASK_REVIEW_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
+            const approved = d.status === 'approve';
+            const borderColor = approved ? 'rgba(74,222,128,0.5)' : 'rgba(255,60,60,0.4)';
+            const accentColor = approved ? '#4ade80' : '#e85d75';
+            const icon = approved ? '✓' : '✗';
+            const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
+            const statusText = approved ? 'APPROVED' : 'REJECTED';
+            const pointsLine = approved && d.points
+                ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">+${(d.points || 0).toLocaleString()} MERIT</div>`
+                : d.penalty
+                    ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">-${d.penalty} COINS</div>`
+                    : '';
+            const commentLine = d.comment
+                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;">"${purifier.sanitize(d.comment)}"</div>`
+                : '';
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid ${borderColor};box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:${accentColor};letter-spacing:3px;margin-bottom:10px;">${label} ${statusText}</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,${borderColor},transparent);margin:0 auto 12px;"></div>
+                            <div style="font-size:1.6rem;margin-bottom:8px;">${icon}</div>
+                            ${pointsLine}
+                            ${commentLine}
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
     }
 
     // ── Direct Tribute Card ──

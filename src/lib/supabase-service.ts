@@ -350,7 +350,7 @@ export const DbService = {
                 .eq('id', taskId);
 
             await this.awardPoints(profileId, bonus);
-            try { await this.sendMessage(profileId, `ROUTINE APPROVED - ${bonus} POINTS AWARDED`, 'system'); } catch (_) { }
+            try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'approve', points: bonus, type: 'routine' })}`, 'system'); } catch (_) { }
             try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
@@ -379,7 +379,7 @@ export const DbService = {
             .eq('ID', row.ID);
 
         await this.awardPoints(profileId, bonus);
-        try { await this.sendMessage(profileId, `TASK APPROVED - ${bonus} POINTS AWARDED`, 'system'); } catch (_) { }
+        try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'approve', points: bonus, type: 'task', comment: comment || null })}`, 'system'); } catch (_) { }
     },
 
     async rejectTask(taskId: string, profileId: string) {
@@ -396,7 +396,7 @@ export const DbService = {
                 .from('routines')
                 .update({ status: 'reject', reviewed_at: new Date().toISOString() })
                 .eq('id', taskId);
-            try { await this.sendMessage(profileId, `ROUTINE REJECTED - NO POINTS AWARDED`, 'system'); } catch (_) { }
+            try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'reject', points: 0, type: 'routine' })}`, 'system'); } catch (_) { }
             try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
@@ -428,7 +428,7 @@ export const DbService = {
             }
         } catch (_) { }
 
-        try { await this.sendMessage(profileId, `TASK REJECTED - 300 COINS PENALTY APPLIED`, 'system'); } catch (_) { }
+        try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'reject', points: 0, penalty: 300, type: 'task' })}`, 'system'); } catch (_) { }
     },
 
     async recalcConsistency(email: string, tz?: string) {
