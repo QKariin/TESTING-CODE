@@ -2333,10 +2333,15 @@
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
+        scrollbar-width: none;
         padding: 12px;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
         overscroll-behavior: contain;
+    }
+
+    .mob-gl-scroll::-webkit-scrollbar {
+        display: none;
     }
 
     .mob-gl-period-bar {
