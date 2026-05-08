@@ -183,7 +183,7 @@ export default function LoginPage() {
                 const when = t.created_at ? timeAgo(t.created_at) : '';
                 const isRisky = t.kind === 'risky' && t.cardIcon;
                 return (
-                <div key={t._id} style={{
+                <div key={t._id} className="login-toast" style={{
                     position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom) + 16px)',
                     right: 12, left: 12, zIndex: 99999,
                     background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',

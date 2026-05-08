@@ -333,7 +333,32 @@
 
 @media (min-width: 769px) {
     .login-fake-nav { display: none; }
-    .login-container { padding-bottom: 40px; }
+    .login-container {
+        padding-bottom: 40px;
+        justify-content: center;
+        min-height: 100vh;
+    }
+    .login-card {
+        max-width: 420px;
+        padding: 36px 40px;
+        border-radius: 2px;
+    }
+    .oauth-btn {
+        padding: 16px 24px;
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+    }
+    .login-subtitle {
+        font-size: 0.65rem;
+        letter-spacing: 4px;
+        margin-bottom: 40px;
+    }
+    .login-toast {
+        left: auto !important;
+        right: 32px !important;
+        max-width: 420px !important;
+        bottom: 32px !important;
+    }
 }
 
 /* ── Marquee ── */
