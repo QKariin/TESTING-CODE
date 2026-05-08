@@ -40,8 +40,8 @@ export async function POST(request: Request) {
         // Fetch profile
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const q = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').ilike('member_id', memberEmail).single();
+            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url, hierarchy').eq('ID', memberEmail).single()
+            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url, hierarchy').ilike('member_id', memberEmail).single();
         const { data: profile, error: profileErr } = await q;
 
         if (profileErr || !profile) {
@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         const realEmail = profile.member_id || memberEmail;
         const senderName = (profile as any).name || realEmail.split('@')[0];
         const senderAvatar = (profile as any).avatar_url || null;
+        const senderHierarchy = (profile as any).hierarchy || null;
         const profileId = profile.ID;
 
         // ═══════════════════════════════════════════════════════════
@@ -239,7 +240,7 @@ export async function POST(request: Request) {
             } catch (_) {}
 
             // Discord notification
-            discordRiskyTribute(senderName, stake, cardName, lossAmount, bonusAmount, cardIcon).catch(() => {});
+            discordRiskyTribute(senderName, stake, cardName, lossAmount, bonusAmount, cardIcon, senderHierarchy).catch(() => {});
 
             return NextResponse.json({
                 success: true,

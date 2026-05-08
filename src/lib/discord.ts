@@ -59,36 +59,38 @@ export function discordDirectTribute(senderName: string, amount: number) {
 
 export function discordRiskyTribute(
     senderName: string, stake: number, cardName: string,
-    lossAmount: number, bonusAmount: number, cardIcon?: string,
+    lossAmount: number, bonusAmount: number, cardIcon?: string, hierarchy?: string,
 ) {
     const isJackpot = cardName === 'JACKPOT' && bonusAmount > 0;
     const isNoLoss = lossAmount === 0 && !isJackpot;
 
     let description: string;
     let color: number;
-    let type: string;
-    let imgLine1: string;
-    let imgLine2: string;
 
     if (isJackpot) {
         description = `**${senderName}** gambled **${stake.toLocaleString()} coins** and hit **JACKPOT**!\n\n[Try your luck](${APP_LINK})`;
         color = 52326;
-        type = 'risky_win';
-        imgLine1 = `${senderName} HIT THE JACKPOT!`;
-        imgLine2 = `Staked ${stake.toLocaleString()} — Won ${bonusAmount.toLocaleString()} back`;
     } else if (isNoLoss) {
         description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — drew **${cardName}**, lost nothing\n\n[Try your luck](${APP_LINK})`;
         color = 16766720;
-        type = 'risky_win';
-        imgLine1 = `${senderName} drew ${cardName}`;
-        imgLine2 = `Staked ${stake.toLocaleString()} — Lost nothing`;
     } else {
         description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — Queen took **${lossAmount.toLocaleString()}**\n\n[Try your luck](${APP_LINK})`;
         color = 13369344;
-        type = 'risky_loss';
-        imgLine1 = `${senderName} drew ${cardName}`;
-        imgLine2 = `Staked ${stake.toLocaleString()} — Queen took ${lossAmount.toLocaleString()}`;
     }
+
+    // Build risky card OG image URL
+    const p = new URLSearchParams({
+        name: senderName,
+        stake: stake.toString(),
+        lost: lossAmount.toString(),
+        won: bonusAmount.toString(),
+        cardName,
+    });
+    if (hierarchy) p.set('hierarchy', hierarchy);
+    if (cardIcon) p.set('cardIcon', cardIcon);
+    if (isJackpot) p.set('isWin', '1');
+    if (isNoLoss) p.set('noLoss', '1');
+    const imageUrl = `${BASE}/api/og/risky-card?${p.toString()}`;
 
     return sendDiscordEmbed({
         title: isJackpot ? 'JACKPOT!' : 'RISKY TRIBUTE',
@@ -99,7 +101,7 @@ export function discordRiskyTribute(
             { name: isJackpot ? 'Won' : 'Lost', value: (isJackpot ? bonusAmount : lossAmount).toLocaleString(), inline: true },
             { name: 'Card', value: cardName, inline: true },
         ],
-        image: { url: cardUrl(type, isJackpot ? 'JACKPOT!' : 'RISKY TRIBUTE', imgLine1, imgLine2, cardIcon) },
+        image: { url: imageUrl },
     });
 }
 
