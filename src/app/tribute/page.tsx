@@ -5,7 +5,9 @@ import { createClient } from '@/utils/supabase/client';
 
 /* ── time ago helper ── */
 function timeAgo(dateStr: string) {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    // Supabase returns timestamps without 'Z' — force UTC interpretation
+    const utcStr = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z';
+    const diff = Date.now() - new Date(utcStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'just now';
     if (mins < 60) return `${mins}m ago`;
