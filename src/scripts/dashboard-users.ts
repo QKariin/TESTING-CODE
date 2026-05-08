@@ -341,6 +341,13 @@ export async function updateDetail(u: any) {
             </div>`;
         }
 
+        // Extras button
+        html += `<div style="margin-top:10px;">
+            <button onclick="window._showExtrasOverlay('${uid}')" style="width:100%;padding:10px;background:${_tAc(0.06)};color:${_tAc(0.6)};border:1px solid ${_tAc(0.2)};border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:0.5rem;letter-spacing:3px;cursor:pointer;">
+                EXTRAS
+            </button>
+        </div>`;
+
         if ((container as any)._lastProgressHtml !== html) {
             (container as any)._lastProgressHtml = html;
             container.innerHTML = html;
@@ -1147,6 +1154,124 @@ async function changeRoutine(memberId: string, currentRoutine: string) {
     }
 }
 
+async function _showExtrasOverlay(memberId: string) {
+    const existing = document.getElementById('extrasOverlay');
+    if (existing) existing.remove();
+
+    const u = users.find(x => x.memberId === memberId);
+    const params = u?.parameters || {};
+
+    // Certificate info
+    const certDate = params.last_cert_proof_at ? new Date(params.last_cert_proof_at).toLocaleDateString() : null;
+    const certApproved = params.cert_proof_approved === true;
+
+    // App install
+    const appInstalled = params.appInstallClaimed === true;
+
+    // Fetch review from DB
+    let reviewText = '';
+    let reviewRating = 0;
+    let reviewStatus = '';
+    try {
+        const res = await fetch(`/api/reviews/member?memberId=${encodeURIComponent(memberId)}`);
+        const data = await res.json();
+        if (data.success && data.review) {
+            reviewText = data.review.text || '';
+            reviewRating = data.review.rating || 0;
+            reviewStatus = data.review.status || '';
+        }
+    } catch { /* no review */ }
+
+    const stars = reviewRating > 0 ? Array.from({ length: 5 }, (_, i) =>
+        `<span style="color:${i < reviewRating ? '#c5a059' : 'rgba(255,255,255,0.15)'};font-size:1rem;">&#9733;</span>`
+    ).join('') : '';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'extrasOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000001;background:rgba(2,5,18,0.97);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
+
+    overlay.innerHTML = `
+        <div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px;">
+            <div style="text-align:center;">
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:6px;">EXTRAS</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:4px;">${u?.name || 'SLAVE'}</div>
+            </div>
+            <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto;"></div>
+
+            <!-- CERTIFICATE -->
+            <div style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">C</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:#fff;letter-spacing:2px;font-weight:700;">SERVICE CERTIFICATE</div>
+                </div>
+                ${certDate
+                    ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.5);">Shared on <span style="color:#c5a059;">${certDate}</span></div>
+                       <div style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:${certApproved ? '#4ade80' : 'rgba(255,255,255,0.3)'};letter-spacing:2px;margin-top:4px;">${certApproved ? 'APPROVED' : 'PENDING APPROVAL'}</div>`
+                    : `<div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.25);">Not shared yet</div>`}
+            </div>
+
+            <!-- APP -->
+            <div style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">+</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:#fff;letter-spacing:2px;font-weight:700;">APP INSTALL</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:${appInstalled ? '#4ade80' : 'rgba(255,255,255,0.1)'};${appInstalled ? 'box-shadow:0 0 8px rgba(74,222,128,0.5);' : ''}"></div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:${appInstalled ? '#4ade80' : 'rgba(255,255,255,0.25)'};">${appInstalled ? 'Installed' : 'Not installed'}</div>
+                </div>
+            </div>
+
+            <!-- REVIEW -->
+            <div style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">R</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:#fff;letter-spacing:2px;font-weight:700;">REVIEW</div>
+                </div>
+                ${reviewText
+                    ? `<div style="margin-bottom:6px;">${stars}</div>
+                       <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.55);line-height:1.6;font-style:italic;">"${reviewText}"</div>
+                       <div style="font-family:Orbitron,sans-serif;font-size:0.4rem;color:${reviewStatus === 'approved' ? '#4ade80' : reviewStatus === 'rejected' ? '#e03050' : 'rgba(255,255,255,0.3)'};letter-spacing:2px;margin-top:8px;">${reviewStatus.toUpperCase()}</div>
+                       ${reviewStatus === 'pending' ? `
+                       <div style="display:flex;gap:8px;margin-top:10px;">
+                           <button onclick="window._approveReview('${memberId}')" style="flex:1;padding:8px;background:rgba(0,150,0,0.15);color:#4ade80;border:1px solid rgba(0,200,0,0.3);border-radius:6px;font-family:Rajdhani,sans-serif;font-size:0.5rem;letter-spacing:2px;cursor:pointer;font-weight:700;">APPROVE</button>
+                           <button onclick="window._rejectReview('${memberId}')" style="flex:1;padding:8px;background:rgba(150,0,0,0.15);color:#e03050;border:1px solid rgba(200,0,0,0.3);border-radius:6px;font-family:Rajdhani,sans-serif;font-size:0.5rem;letter-spacing:2px;cursor:pointer;font-weight:700;">REJECT</button>
+                       </div>` : ''}`
+                    : `<div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.25);">No review submitted</div>`}
+            </div>
+
+            <button onclick="document.getElementById('extrasOverlay')?.remove();" style="margin-top:8px;padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;align-self:center;">CLOSE</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+async function _approveReview(memberId: string) {
+    try {
+        await fetch('/api/reviews/moderate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId, action: 'approve' }),
+        });
+        // Refresh the overlay
+        _showExtrasOverlay(memberId);
+    } catch { /* */ }
+}
+
+async function _rejectReview(memberId: string) {
+    try {
+        await fetch('/api/reviews/moderate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId, action: 'reject' }),
+        });
+        _showExtrasOverlay(memberId);
+    } catch { /* */ }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
@@ -1156,4 +1281,7 @@ if (typeof window !== 'undefined') {
     (window as any).approveRoutineFromPanel = approveRoutineFromPanel;
     (window as any).rejectRoutineFromPanel = rejectRoutineFromPanel;
     (window as any).changeRoutine = changeRoutine;
+    (window as any)._showExtrasOverlay = _showExtrasOverlay;
+    (window as any)._approveReview = _approveReview;
+    (window as any)._rejectReview = _rejectReview;
 }
