@@ -30,6 +30,35 @@ export default function TributePage() {
     const [toasts, setToasts] = useState<any[]>([]);
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+
+    /* countdown to next Sunday midnight (local time) */
+    useEffect(() => {
+        const getNext = () => {
+            const now = new Date();
+            const day = now.getDay(); // 0=Sun
+            const daysUntilSun = day === 0 ? 0 : 7 - day;
+            const target = new Date(now);
+            target.setDate(now.getDate() + daysUntilSun);
+            target.setHours(23, 59, 59, 999);
+            // If it's Sunday and past 23:59, target next Sunday
+            if (target.getTime() <= now.getTime()) {
+                target.setDate(target.getDate() + 7);
+            }
+            return target.getTime();
+        };
+        const tick = () => {
+            const diff = Math.max(0, getNext() - Date.now());
+            const s = Math.floor(diff / 1000) % 60;
+            const m = Math.floor(diff / 60000) % 60;
+            const h = Math.floor(diff / 3600000) % 24;
+            const d = Math.floor(diff / 86400000);
+            setCountdown({ d, h, m, s });
+        };
+        tick();
+        const iv = setInterval(tick, 1000);
+        return () => clearInterval(iv);
+    }, []);
 
     useEffect(() => {
         const storedRedirect = localStorage.getItem('post_login_redirect');
@@ -239,6 +268,39 @@ export default function TributePage() {
 
     return (
         <div style={{ background: '#020202', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative' }}>
+            {/* Promo countdown banner — fixed top */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000001,
+                background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(5,8,18,0.98))',
+                borderBottom: '1px solid rgba(197,160,89,0.35)',
+                padding: '8px 14px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                boxShadow: '0 2px 24px rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(16px)',
+            }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#fff', letterSpacing: '14px', fontWeight: 700, textTransform: 'uppercase' }}>Special Access</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {[
+                            countdown.h + countdown.d * 24,
+                            countdown.m,
+                            countdown.s,
+                        ].map((val, i) => (
+                            <div key={i} style={{
+                                background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)',
+                                borderRadius: 6, width: 52, height: 38,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                                    {String(val).padStart(2, '0')}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.3, whiteSpace: 'nowrap' }}>ends sunday midnight</div>
+                </div>
+            </div>
+
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
 
@@ -803,11 +865,25 @@ export default function TributePage() {
                     {/* Price */}
                     <div style={{ marginBottom: 28 }}>
                         <div style={{
-                            fontFamily: 'Cinzel, serif', fontSize: 'clamp(2.8rem, 10vw, 4rem)',
-                            color: '#fff', fontWeight: 700, lineHeight: 1,
-                            textShadow: '0 4px 30px rgba(197,160,89,0.1)',
+                            fontFamily: 'Cinzel, serif', color: '#fff', fontWeight: 700, lineHeight: 1,
+                            position: 'relative', display: 'inline-block',
                         }}>
-                            &euro;29
+                            <span style={{
+                                position: 'absolute', right: '100%', bottom: '0.15em', marginRight: '10px',
+                                fontSize: 'clamp(1.1rem, 3.5vw, 1.5rem)',
+                                color: 'rgba(255,255,255,0.3)',
+                                textDecoration: 'line-through',
+                                textDecorationColor: 'rgba(197,160,89,0.5)',
+                                fontWeight: 400, whiteSpace: 'nowrap',
+                            }}>
+                                <span style={{ fontSize: '0.7em' }}>&euro;</span>55
+                            </span>
+                            <span style={{
+                                fontSize: 'clamp(2.8rem, 10vw, 4rem)',
+                                textShadow: '0 4px 30px rgba(197,160,89,0.1)',
+                            }}>
+                                <span style={{ fontSize: '0.55em', fontWeight: 400 }}>&euro;</span>29
+                            </span>
                         </div>
                         <div style={{
                             fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500,
