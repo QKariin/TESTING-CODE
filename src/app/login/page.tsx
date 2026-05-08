@@ -48,6 +48,18 @@ export default function LoginPage() {
                 const d = JSON.parse(content.replace('WELCOME_CARD::', ''));
                 return { sender_name: d.name || 'New Subject', sender_avatar: avatar, text: 'entered the household', kind: 'welcome', created_at: created };
             }
+            if (content.startsWith('UPDATE_MERIT_CARD::')) {
+                const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} merit`, kind: 'merit', created_at: created };
+            }
+            if (content.startsWith('CHALLENGE_TASK_CARD::')) {
+                const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `completed a challenge task`, kind: 'challenge', created_at: created };
+            }
+            if (content.startsWith('UPDATE_PHOTO_CARD::')) {
+                const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: 'shared a photo', kind: 'photo', created_at: created };
+            }
         } catch {}
         return null;
     };
@@ -70,23 +82,27 @@ export default function LoginPage() {
             }
         });
 
-        // Fetch latest activity toast
+        // Fetch latest activity toast via public API (bypasses RLS)
         const timer = setTimeout(async () => {
             try {
-                const { data } = await supabase.from('global_messages').select('message, sender_name, sender_avatar, sender_email, created_at').order('created_at', { ascending: false }).limit(10);
-                if (data) {
-                    for (const msg of data) {
-                        const parsed = parseGlobalCard(msg);
-                        if (parsed) {
-                            if (!parsed.sender_avatar && msg.sender_email && msg.sender_email !== 'system') {
-                                try { const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', msg.sender_email).limit(1); if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url; } catch {}
-                            }
-                            showToast(parsed); break;
+                const res = await fetch('/api/global/messages');
+                const json = await res.json();
+                const messages = json.messages || [];
+                // messages are oldest→newest, reverse to get newest first
+                const reversed = [...messages].reverse();
+                for (const msg of reversed) {
+                    const parsed = parseGlobalCard(msg);
+                    if (parsed) {
+                        if (!parsed.sender_avatar && msg.sender_email && msg.sender_email !== 'system') {
+                            try { const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', msg.sender_email).limit(1); if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url; } catch {}
                         }
+                        showToast(parsed); break;
                     }
                 }
-            } catch {}
-        }, 5000);
+            } catch (err) {
+                console.log('[Login] Toast fetch error:', err);
+            }
+        }, 3000);
 
         // Realtime
         const channel = supabase.channel('login-activity')
