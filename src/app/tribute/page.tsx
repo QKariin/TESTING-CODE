@@ -565,16 +565,7 @@ export default function TributePage() {
                    ════════════════════════════════════════════ */}
                 <div className="trib-hero" style={{ paddingTop: 40, textAlign: 'center' }}>
 
-                    {/* ── VIDEO (on desktop: left side) ── */}
-                    <div className="trib-hero-video" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '0 auto' }}>
-                        <video
-                            src="/tribute-intro.mov"
-                            autoPlay muted loop playsInline
-                            style={{ width: '100%', display: 'block' }}
-                        />
-                    </div>
-
-                    {/* ── TEXT (on desktop: right side, centered) ── */}
+                    {/* ── TEXT (mobile: first, desktop: right side) ── */}
                     <div className="trib-hero-text" style={{ animation: mounted ? 'fadeUp 1s ease-out 0.5s both' : 'none' }}>
                         <p style={{
                             fontFamily: 'Cinzel, serif', fontSize: '0.95rem',
@@ -604,6 +595,15 @@ export default function TributePage() {
                                 animation: 'breathe 2.5s ease-in-out infinite',
                             }} />
                         </div>
+                    </div>
+
+                    {/* ── VIDEO (mobile: after text, desktop: left via order:-1) ── */}
+                    <div className="trib-hero-video" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '24px auto 0' }}>
+                        <video
+                            src="/tribute-intro.mov"
+                            autoPlay muted loop playsInline
+                            style={{ width: '100%', display: 'block' }}
+                        />
                     </div>
                 </div>
 
@@ -988,7 +988,7 @@ export default function TributePage() {
                 </div>
 
             {/* extra padding so content doesn't hide behind bottom nav */}
-                <div className="trib-bottom-pad" style={{ height: 80 }} />
+                <div className="trib-bottom-pad" style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>
 
             {/* ─── FAKE BOTTOM NAV (same as /profile, mobile only) ─── */}
