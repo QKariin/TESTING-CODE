@@ -72,7 +72,7 @@ export default function TributePage() {
             if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
                 const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
                 const result = d.isWin ? `won +${(d.wonAmount||0).toLocaleString()} coins` : d.lostAmount === 0 ? 'got mercy, lost nothing' : `lost ${(d.lostAmount||0).toLocaleString()} coins`;
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `gambled ${(d.stakeAmount||0).toLocaleString()} coins and ${result}`, kind: 'risky', created_at: created };
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `drew ${d.cardName || 'a card'}, staked ${(d.stakeAmount||0).toLocaleString()} and ${result}`, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, created_at: created };
             }
             if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
                 const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
@@ -531,16 +531,20 @@ export default function TributePage() {
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span>
-                                    <svg width="10" height="8" viewBox="0 0 26 20" fill="#c5a059" style={{ verticalAlign: 'middle', marginRight: 4 }}><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>
-                                    Happening Now
-                                </span>
+                                <span>Happening Now</span>
                                 {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
                             </div>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', fontWeight: 500, lineHeight: 1.4 }}>
                                 <span style={{ color: '#c5a059' }}>{t.sender_name}</span>
                                 {' '}{displayText}
                             </div>
+                            {/* Card icon for risky game */}
+                            {t.cardIcon && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                                    <img src={t.cardIcon} style={{ width: 32, height: 'auto', opacity: 0.85 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                    {t.cardName && <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 2 }}>{t.cardName}</span>}
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
