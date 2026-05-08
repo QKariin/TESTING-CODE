@@ -48,6 +48,20 @@ export async function POST(req: Request) {
         const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(profileId, logMsg, 'system'); } catch (_) { }
 
+        // Post to global chat so it shows in notifications
+        try {
+            const { data: nameRow } = await supabaseAdmin.from('profiles').select('name, avatar_url').eq('ID', profile.ID).single();
+            const senderName = nameRow?.name || (profile.member_id || '').split('@')[0];
+            const senderAvatar = nameRow?.avatar_url || null;
+            const cardType = choice === 'coins' ? 'UPDATE_COINS_CARD' : 'UPDATE_MERIT_CARD';
+            const points = choice === 'coins' ? COIN_REWARD : POINT_REWARD;
+            await supabaseAdmin.from('global_messages').insert({
+                sender_email: profile.member_id || '',
+                sender_name: senderName,
+                sender_avatar: senderAvatar,
+                message: `${cardType}::${JSON.stringify({ senderName, senderAvatar, points })}`,
+            });
+        } catch (_) {}
 
         return NextResponse.json({ success: true, ...updateData });
 

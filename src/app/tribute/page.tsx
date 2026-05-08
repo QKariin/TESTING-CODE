@@ -99,6 +99,14 @@ export default function TributePage() {
                 const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
                 return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} merit`, kind: 'merit', created_at: created };
             }
+            if (content.startsWith('UPDATE_COINS_CARD::')) {
+                const d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `claimed +${d.points || 0} coins from kneeling`, kind: 'coins', created_at: created };
+            }
+            if (content.startsWith('CHALLENGE_JOIN_CARD::')) {
+                const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
+                return { sender_name: d.senderName || d.name || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `joined ${d.challengeName || 'a challenge'}`, kind: 'challenge', created_at: created };
+            }
         } catch {}
         return null;
     };
