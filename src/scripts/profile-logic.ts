@@ -2064,6 +2064,7 @@ export function toggleEarnCoins() {
     const raw = (window as any).__currentProfileRaw || state.raw || state;
     const alreadyClaimed = raw?.parameters?.appInstallClaimed === true;
     const showInstall = !isStandalone && !alreadyClaimed;
+    const reviewSubmitted = raw?.parameters?.reviewSubmitted === true;
 
     const modal = document.createElement('div');
     modal.id = 'earnCoinsModal';
@@ -2100,6 +2101,14 @@ export function toggleEarnCoins() {
                 <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+300 COINS</div>
             </button>
 
+            ${reviewSubmitted ? `
+            <div style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.1);border-radius:12px;opacity:0.5;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.4);">R</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);letter-spacing:2px;font-weight:700;">WRITE A REVIEW</div>
+                </div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(74,222,128,0.5);letter-spacing:2px;">FEEDBACK SUBMITTED · +500 COINS EARNED</div>
+            </div>` : `
             <button id="earnCoinsReviewBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
                     <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">R</span>
@@ -2107,7 +2116,7 @@ export function toggleEarnCoins() {
                 </div>
                 <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Share your experience serving the Queen</div>
                 <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+500 COINS</div>
-            </button>
+            </button>`}
 
             <button id="earnCoinsCloseBtn" style="margin-top:16px;padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>
         </div>
@@ -2227,7 +2236,15 @@ function _openReviewForm() {
 
             if (data.success) {
                 setState({ wallet: data.newWallet });
-                const s = getState(); if (s?.raw) s.raw.wallet = data.newWallet;
+                const s = getState(); if (s?.raw) {
+                    s.raw.wallet = data.newWallet;
+                    if (!s.raw.parameters) s.raw.parameters = {};
+                    s.raw.parameters.reviewSubmitted = true;
+                }
+                if ((window as any).__currentProfileRaw) {
+                    if (!(window as any).__currentProfileRaw.parameters) (window as any).__currentProfileRaw.parameters = {};
+                    (window as any).__currentProfileRaw.parameters.reviewSubmitted = true;
+                }
                 ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(elId => {
                     const el = document.getElementById(elId);
                     if (el) el.textContent = data.newWallet.toLocaleString();

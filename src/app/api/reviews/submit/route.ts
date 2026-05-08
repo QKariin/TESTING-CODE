@@ -55,11 +55,15 @@ export async function POST(req: Request) {
 
         if (insertError) throw insertError;
 
-        // Award 500 coins
+        // Award 500 coins + mark reviewSubmitted in parameters
         const newWallet = (profile.wallet || 0) + 500;
+        const params = profile.parameters || {};
         await supabaseAdmin
             .from('profiles')
-            .update({ wallet: newWallet })
+            .update({
+                wallet: newWallet,
+                parameters: { ...params, reviewSubmitted: true },
+            })
             .eq('ID', profile.ID);
 
         return NextResponse.json({ success: true, coinsAwarded: 500, newWallet });
