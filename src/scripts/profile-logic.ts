@@ -2165,7 +2165,7 @@ function _openReviewForm() {
             </div>
             <div id="reviewRatingLabel" style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.4);letter-spacing:2px;height:14px;"></div>
 
-            <textarea id="reviewTextInput" maxlength="500" rows="5" placeholder="How has serving Queen Karin changed your life..."
+            <textarea id="reviewTextInput" maxlength="500" rows="5" placeholder="Write at least 100 characters about your experience..."
                 style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(197,160,89,0.18);border-radius:10px;padding:14px;color:#fff;font-family:Rajdhani,sans-serif;font-size:0.95rem;resize:none;outline:none;"></textarea>
             <div style="align-self:flex-end;font-family:Orbitron,sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.2);"><span id="reviewCharCount">0</span>/500</div>
 
@@ -2194,7 +2194,7 @@ function _openReviewForm() {
     }
 
     function checkReady() {
-        const ready = selectedRating > 0 && textarea.value.trim().length >= 10;
+        const ready = selectedRating > 0 && textarea.value.trim().length >= 100;
         submitBtn.style.opacity = ready ? '1' : '0.4';
         submitBtn.style.pointerEvents = ready ? 'auto' : 'none';
     }
@@ -2254,7 +2254,7 @@ function _openReviewForm() {
                     <div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;">
                         <div style="font-size:2.5rem;">&#10003;</div>
                         <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#c5a059;letter-spacing:4px;">THANK YOU</div>
-                        <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);">Your review has been submitted for approval.</div>
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);">Your review is now live.</div>
                         <div style="font-family:Orbitron,sans-serif;font-size:0.7rem;color:#4ade80;letter-spacing:2px;">+500 COINS EARNED</div>
                         <button onclick="this.closest('#reviewFormModal').style.opacity='0';setTimeout(()=>document.getElementById('reviewFormModal')?.remove(),300);"
                             style="margin-top:12px;padding:12px 40px;background:none;border:1px solid rgba(197,160,89,0.3);border-radius:8px;color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>

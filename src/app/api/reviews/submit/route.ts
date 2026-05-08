@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         const profileId = memberId || caller.email;
 
         if (!profileId) return NextResponse.json({ error: 'No memberId' }, { status: 400 });
-        if (!text || text.trim().length < 10) return NextResponse.json({ error: 'Review must be at least 10 characters' }, { status: 400 });
+        if (!text || text.trim().length < 100) return NextResponse.json({ error: 'Review must be at least 100 characters' }, { status: 400 });
         if (!rating || rating < 1 || rating > 5) return NextResponse.json({ error: 'Rating must be 1-5' }, { status: 400 });
 
         if (!isOwnerOrCEO(caller, profileId)) {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
                 member_id: email,
                 text: text.trim(),
                 rating: Math.round(rating),
-                status: 'pending',
+                status: 'approved',
             });
 
         if (insertError) throw insertError;
