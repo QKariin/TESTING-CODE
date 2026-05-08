@@ -357,6 +357,13 @@
         max-width: 100% !important;
         padding: 0 60px !important;
     }
+    .login-marquee {
+        letter-spacing: 10px !important;
+        font-size: 1.3rem !important;
+    }
+    .login-marquee svg {
+        margin: 0 32px !important;
+    }
     .login-card {
         max-width: 480px;
         margin: 0 auto;
@@ -371,7 +378,7 @@
 
 /* ── Marquee ── */
 .login-marquee {
-    animation: loginMarquee 20s linear infinite;
+    animation: loginMarquee 35s linear infinite;
 }
 .login-marquee-track {
     flex-shrink: 0;
