@@ -56,10 +56,6 @@ export default function LoginPage() {
                 const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
                 return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `completed a challenge task`, kind: 'challenge', created_at: created };
             }
-            if (content.startsWith('UPDATE_PHOTO_CARD::')) {
-                const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: 'shared a photo', kind: 'photo', created_at: created };
-            }
             if (content.startsWith('UPDATE_COINS_CARD::')) {
                 const d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
                 return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `claimed +${d.points || 0} coins from kneeling`, kind: 'coins', created_at: created };

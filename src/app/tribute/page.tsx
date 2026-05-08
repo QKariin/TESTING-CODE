@@ -83,10 +83,6 @@ export default function TributePage() {
                 const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
                 return { sender_name: d.name || 'SUBJECT', sender_avatar: avatar, text: `was promoted to ${d.newRank || 'a new rank'}`, kind: 'promotion', created_at: created };
             }
-            if (content.startsWith('UPDATE_PHOTO_CARD::')) {
-                const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: 'shared a photo', kind: 'photo', created_at: created };
-            }
             if (content.startsWith('CHALLENGE_TASK_CARD::')) {
                 const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
                 return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `completed a challenge task${d.passed !== false ? '' : ' (failed)'}`, kind: 'challenge', created_at: created };
