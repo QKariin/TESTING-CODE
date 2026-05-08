@@ -566,7 +566,7 @@
     left: 0;
     bottom: 0;
     width: 0%;
-    background: linear-gradient(90deg, #8b0000, #ff003c);
+    background: linear-gradient(90deg, #c5a059, #f0d080);
     z-index: 1;
     transition: width 0.1s linear;
 }
