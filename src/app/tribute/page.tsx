@@ -31,6 +31,7 @@ export default function TributePage() {
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+    const [showDontMiss, setShowDontMiss] = useState<'hidden'|'showing'|'shattering'>('hidden');
 
     /* countdown to next Sunday midnight (local time) */
     useEffect(() => {
@@ -57,7 +58,10 @@ export default function TributePage() {
         };
         tick();
         const iv = setInterval(tick, 1000);
-        return () => clearInterval(iv);
+        const dontMissTimer = setTimeout(() => setShowDontMiss('showing'), 7000);
+        const dontMissShatter = setTimeout(() => setShowDontMiss('shattering'), 10000);
+        const dontMissHide = setTimeout(() => setShowDontMiss('hidden'), 11200);
+        return () => { clearInterval(iv); clearTimeout(dontMissTimer); clearTimeout(dontMissShatter); clearTimeout(dontMissHide); };
     }, []);
 
     useEffect(() => {
@@ -298,31 +302,59 @@ export default function TributePage() {
                     </div>
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.3, whiteSpace: 'nowrap' }}>ends sunday midnight</div>
                 </div>
-                {/* Diagonal "DON'T MISS" ribbon */}
-                <div style={{
-                    position: 'absolute', top: 0, left: -20, width: 120, height: '100%',
-                    overflow: 'hidden', pointerEvents: 'none',
-                }}>
+                {/* "DON'T MISS" full overlay */}
+                {showDontMiss === 'showing' && (
                     <div style={{
-                        position: 'absolute', top: '50%', left: -10,
-                        transform: 'translateY(-50%) rotate(35deg)',
-                        background: 'linear-gradient(90deg, #8b1a1a, #c0392b, #8b1a1a)',
-                        padding: '2px 30px',
-                        fontFamily: 'Cinzel, serif', fontSize: '0.4rem', fontWeight: 700,
-                        color: '#000', letterSpacing: '2px', whiteSpace: 'nowrap',
-                        animation: 'dontMissPulse 2s ease-in-out infinite',
-                        boxShadow: '0 0 12px rgba(192,57,43,0.5)',
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(135deg, #0a0a0a, #2a0a0a, #1a0505)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        animation: 'dontMissSlide 0.4s ease-out',
+                        pointerEvents: 'none',
                     }}>
-                        DON&apos;T MISS
+                        <span style={{
+                            fontFamily: 'Cinzel, serif', fontSize: '1.1rem', fontWeight: 700,
+                            color: '#6b1a1a', letterSpacing: '10px', textTransform: 'uppercase',
+                        }}>
+                            Don&apos;t Miss It
+                        </span>
                     </div>
-                </div>
+                )}
+                {showDontMiss === 'shattering' && (
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
+                        {Array.from({ length: 12 }).map((_, i) => {
+                            const col = i % 4;
+                            const row = Math.floor(i / 4);
+                            const drift = (col - 1.5) * 15;
+                            const delay = row * 0.04 + col * 0.02;
+                            const rot = (Math.random() - 0.5) * 30;
+                            return (
+                                <div key={i} style={{
+                                    position: 'absolute',
+                                    left: `${col * 25}%`, top: `${row * 33.33}%`,
+                                    width: '25%', height: '33.33%',
+                                    background: 'linear-gradient(135deg, #0a0a0a, #2a0a0a, #1a0505)',
+                                    animation: `shatterDrop 1.4s ${delay}s cubic-bezier(.22,.68,.36,1) forwards`,
+                                    transformOrigin: 'center top',
+                                    // @ts-ignore
+                                    '--drift': `${drift}px`,
+                                    '--rot': `${rot}deg`,
+                                }} />
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
-                @keyframes dontMissPulse {
-                    0%, 100% { opacity: 0.7; }
-                    50% { opacity: 1; }
+                @keyframes dontMissSlide {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(0); }
+                }
+                @keyframes shatterDrop {
+                    0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+                    8% { opacity: 1; transform: translate(0, 2px) rotate(0deg); }
+                    100% { opacity: 0; transform: translate(var(--drift), 800px) rotate(var(--rot)); }
                 }
 
                 @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -788,7 +820,7 @@ export default function TributePage() {
                     </div>
 
                     {/* ── VIDEO (mobile: after text, desktop: left via order:-1) ── */}
-                    <div className="trib-hero-video" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '24px auto 0' }}>
+                    <div className="trib-hero-video" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '24px auto 0', background: '#000' }}>
                         <video
                             src="/tribute-intro.mov"
                             autoPlay muted loop playsInline
