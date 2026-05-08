@@ -280,21 +280,20 @@ export default function TributePage() {
             }}>
                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#fff', letterSpacing: '14px', fontWeight: 700, textTransform: 'uppercase' }}>Special Access</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        {[
-                            countdown.h + countdown.d * 24,
-                            countdown.m,
-                            countdown.s,
-                        ].map((val, i) => (
-                            <div key={i} style={{
-                                background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)',
-                                borderRadius: 6, width: 52, height: 38,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                                    {String(val).padStart(2, '0')}
-                                </span>
-                            </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {[countdown.h + countdown.d * 24, countdown.m, countdown.s].map((val, i, arr) => (
+                            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{
+                                    background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)',
+                                    borderRadius: 6, width: 52, height: 38,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                                        {String(val).padStart(2, '0')}
+                                    </span>
+                                </div>
+                                {i < arr.length - 1 && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700 }}>:</span>}
+                            </span>
                         ))}
                     </div>
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.3, whiteSpace: 'nowrap' }}>ends sunday midnight</div>

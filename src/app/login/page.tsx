@@ -20,6 +20,32 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [toasts, setToasts] = useState<any[]>([]);
+    const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+
+    useEffect(() => {
+        const getNext = () => {
+            const now = new Date();
+            const day = now.getDay();
+            const daysUntilSun = day === 0 ? 0 : 7 - day;
+            const target = new Date(now);
+            target.setDate(now.getDate() + daysUntilSun);
+            target.setHours(23, 59, 59, 999);
+            if (target.getTime() <= now.getTime()) target.setDate(target.getDate() + 7);
+            return target.getTime();
+        };
+        const tick = () => {
+            const diff = Math.max(0, getNext() - Date.now());
+            setCountdown({
+                d: Math.floor(diff / 86400000),
+                h: Math.floor(diff / 3600000) % 24,
+                m: Math.floor(diff / 60000) % 60,
+                s: Math.floor(diff / 1000) % 60,
+            });
+        };
+        tick();
+        const iv = setInterval(tick, 1000);
+        return () => clearInterval(iv);
+    }, []);
 
     const showToast = (item: any) => {
         const id = Date.now() + Math.random();
@@ -176,6 +202,38 @@ export default function LoginPage() {
 
     return (
         <div className="login-container">
+            {/* Promo countdown banner — fixed top */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000001,
+                background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(5,8,18,0.98))',
+                borderBottom: '1px solid rgba(197,160,89,0.35)',
+                padding: '8px 14px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                boxShadow: '0 2px 24px rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(16px)',
+            }}>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: '#fff', letterSpacing: '14px', fontWeight: 700, textTransform: 'uppercase' }}>Special Access</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {[countdown.h + countdown.d * 24, countdown.m, countdown.s].map((val, i, arr) => (
+                            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{
+                                    background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)',
+                                    borderRadius: 6, width: 52, height: 38,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                                        {String(val).padStart(2, '0')}
+                                    </span>
+                                </div>
+                                {i < arr.length - 1 && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700 }}>:</span>}
+                            </span>
+                        ))}
+                    </div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.3, whiteSpace: 'nowrap' }}>ends sunday midnight</div>
+                </div>
+            </div>
+
             {/* Layered backgrounds — same as /tribute */}
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.35, filter: 'saturate(0.2) brightness(0.7)' }} />
             <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.7) 30%, rgba(2,2,2,0.92) 55%, #020202 75%)', zIndex: 0 }} />
