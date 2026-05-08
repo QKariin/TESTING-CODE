@@ -672,16 +672,16 @@ export default function TributePage() {
                                     </div>
                                 </div>
                                 {/* Gambled line */}
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500, marginTop: 4 }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', fontWeight: 400, marginTop: 6, letterSpacing: 0.5 }}>
                                     just gambled {(t.stakeAmount||0).toLocaleString()} coins
                                 </div>
                                 {/* Result line */}
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', fontWeight: 600 }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', fontWeight: 600, marginTop: 2, letterSpacing: 0.5 }}>
                                     {t.isWin
                                         ? <span style={{ color: '#4ade80' }}>total won: {(t.wonAmount||0).toLocaleString()}</span>
                                         : t.lostAmount === 0
                                             ? <span style={{ color: '#c5a059' }}>lost nothing</span>
-                                            : <span style={{ color: '#ef4444' }}>total lost: {(t.lostAmount||0).toLocaleString()}</span>
+                                            : <span style={{ color: '#ff0000' }}>total lost: {(t.lostAmount||0).toLocaleString()}</span>
                                     }
                                 </div>
                                 <button
