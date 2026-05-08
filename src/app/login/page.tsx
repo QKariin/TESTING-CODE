@@ -251,9 +251,6 @@ export default function LoginPage() {
                     <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(1rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.75)', fontWeight: 600, margin: '0 0 20px', letterSpacing: 1 }}>
                         Tasks &nbsp;&middot;&nbsp; Sessions &nbsp;&middot;&nbsp; League &nbsp;&middot;&nbsp; Tributes
                     </p>
-                    <p style={{ fontFamily: 'Italianno, cursive', fontSize: 'clamp(1.4rem, 5vw, 1.9rem)', color: 'rgba(197,160,89,0.5)', margin: '0 0 32px', lineHeight: 1.3 }}>
-                        ...you don&#39;t &ldquo;join&rdquo; me &mdash; you surrender!
-                    </p>
                 </div>
 
             {/* ── LOGIN CARD ── */}
@@ -318,6 +315,10 @@ export default function LoginPage() {
 
                 <div className="footer-text">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
+
+                <p style={{ fontFamily: 'Italianno, cursive', fontSize: 'clamp(1.4rem, 5vw, 1.9rem)', color: 'rgba(197,160,89,0.4)', margin: '24px 0 0', lineHeight: 1.3, textAlign: 'center' }}>
+                    ...you don&#39;t &ldquo;join&rdquo; me &mdash; you surrender!
+                </p>
             </div>{/* close brand/content wrapper */}
 
             {/* Fake mobile bottom nav */}
