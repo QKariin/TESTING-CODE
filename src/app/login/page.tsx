@@ -248,11 +248,22 @@ export default function LoginPage() {
                     <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(0.75rem, 2.8vw, 0.9rem)', color: 'rgba(255,255,255,0.4)', lineHeight: 1.9, fontWeight: 400, margin: '0 0 20px', letterSpacing: 1 }}>
                         Welcome to the only FemDom app run entirely by a single Domme dedicated to complete control.
                     </p>
-                    <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(1rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.75)', fontWeight: 600, margin: '0 0 16px', letterSpacing: 1 }}>
-                        Tasks &nbsp;&middot;&nbsp; Sessions &nbsp;&middot;&nbsp; League &nbsp;&middot;&nbsp; Tributes
-                    </p>
-                    <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(0.78rem, 2.8vw, 0.88rem)', color: 'rgba(255,255,255,0.25)', lineHeight: 1.7, fontWeight: 400, margin: '0 0 28px', borderLeft: '2px solid rgba(197,160,89,0.25)', paddingLeft: 16 }}>
-                        What started as a one-person project became a global phenomenon. A living hierarchy where every task, tribute, and act of devotion is tracked, ranked, and rewarded.
+                    <div style={{ overflow: 'hidden', margin: '0 -32px 16px', maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
+                        <div className="login-marquee" style={{ display: 'flex', alignItems: 'center', gap: 0, whiteSpace: 'nowrap', fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(1rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.75)', fontWeight: 600, letterSpacing: 1 }}>
+                            {[0,1].map(i => (
+                                <span key={i} className="login-marquee-track" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, paddingRight: 0 }}>
+                                    {['Tasks', 'Sessions', 'League', 'Tributes', 'Tasks', 'Sessions', 'League', 'Tributes'].map((w, j) => (
+                                        <span key={j} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                            <span>{w}</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style={{ margin: '0 14px', flexShrink: 0 }}><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                        </span>
+                                    ))}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(0.78rem, 2.8vw, 0.88rem)', color: 'rgba(255,255,255,0.25)', lineHeight: 1.7, fontWeight: 400, margin: '0 0 28px' }}>
+                        What started as a one-person project became a phenomenon. A living hierarchy where every task, tribute, and act of devotion is tracked, ranked, and rewarded.
                     </p>
                 </div>
 
