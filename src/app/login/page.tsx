@@ -219,7 +219,7 @@ export default function LoginPage() {
                             <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <div style={{
                                     background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)',
-                                    borderRadius: 6, width: 52, height: 38,
+                                    borderRadius: 6, width: 52, height: 30,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 }}>
                                     <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
@@ -232,7 +232,32 @@ export default function LoginPage() {
                     </div>
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.3, whiteSpace: 'nowrap' }}>ends sunday midnight</div>
                 </div>
+                {/* Diagonal "DON'T MISS" ribbon */}
+                <div style={{
+                    position: 'absolute', top: 0, right: -20, width: 120, height: '100%',
+                    overflow: 'hidden', pointerEvents: 'none',
+                }}>
+                    <div style={{
+                        position: 'absolute', top: '50%', right: -10,
+                        transform: 'translateY(-50%) rotate(-35deg)',
+                        background: 'linear-gradient(90deg, #8b1a1a, #c0392b, #8b1a1a)',
+                        padding: '2px 30px',
+                        fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', fontWeight: 700,
+                        color: '#fff', letterSpacing: '3px', whiteSpace: 'nowrap',
+                        animation: 'dontMissPulse 2s ease-in-out infinite',
+                        boxShadow: '0 0 12px rgba(192,57,43,0.5)',
+                    }}>
+                        DON&apos;T MISS
+                    </div>
+                </div>
             </div>
+
+            <style>{`
+                @keyframes dontMissPulse {
+                    0%, 100% { opacity: 0.7; }
+                    50% { opacity: 1; }
+                }
+            `}</style>
 
             {/* Layered backgrounds — same as /tribute */}
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.35, filter: 'saturate(0.2) brightness(0.7)' }} />
