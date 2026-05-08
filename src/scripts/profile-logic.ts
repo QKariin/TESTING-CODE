@@ -2142,7 +2142,7 @@ function _openReviewForm() {
 
     const modal = document.createElement('div');
     modal.id = 'reviewFormModal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:10000002;background:#020512;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10000002;background:#020512;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;';
 
     modal.innerHTML = `
         <div style="width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;">
