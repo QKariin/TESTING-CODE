@@ -3794,12 +3794,20 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             const commentLine = d.comment
                 ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;">"${d.comment}"</div>`
                 : '';
+            const thumbBlock = d.thumbnail
+                ? `<img src="${d.thumbnail}" style="width:52px;height:52px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.08);margin-bottom:10px;" onerror="this.style.display='none'" />`
+                : '';
+            const taskTextLine = d.taskText
+                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.48rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${d.taskText}</div>`
+                : '';
             return `
                 <div class="cb-row" style="justify-content:center;padding:8px 0;">
                     <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid ${borderColor};box-shadow:0 12px 40px rgba(0,0,0,0.8);">
                         <div style="padding:18px 20px;text-align:center;">
                             <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:${accentColor};letter-spacing:3px;margin-bottom:10px;">${label} ${statusText}</div>
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,${borderColor},transparent);margin:0 auto 12px;"></div>
+                            ${thumbBlock}
+                            ${taskTextLine}
                             <div style="font-size:1.6rem;margin-bottom:8px;">${icon}</div>
                             ${pointsLine}
                             ${commentLine}

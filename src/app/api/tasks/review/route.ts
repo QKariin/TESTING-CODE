@@ -22,14 +22,48 @@ export async function POST(req: Request) {
             const points = typeof bonus === 'number' ? bonus : 500;
             await DbService.approveTask(submissionId, memberId, points, null, null);
             const profile = await DbService.getProfile(memberId);
-            discordTaskReviewed(profile?.name || 'A subject', 'approve', points).catch(() => {});
+            const name = profile?.name || 'A subject';
+            discordTaskReviewed(name, 'approve', points).catch(() => {});
+
+            // Push notification to the member
+            try {
+                const email = (profile?.member_id || memberId).toLowerCase();
+                const pushUrl = new URL('/api/push', req.url);
+                fetch(pushUrl.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        externalId: email,
+                        title: '✓ Task Approved',
+                        message: `Your task was approved! +${points} merit earned.`,
+                    }),
+                }).catch(() => {});
+            } catch (_) {}
+
             return NextResponse.json({ success: true, action: 'approve', pointsAwarded: points });
         }
 
         if (action === 'reject') {
             await DbService.rejectTask(submissionId, memberId);
             const profile = await DbService.getProfile(memberId);
-            discordTaskReviewed(profile?.name || 'A subject', 'reject').catch(() => {});
+            const name = profile?.name || 'A subject';
+            discordTaskReviewed(name, 'reject').catch(() => {});
+
+            // Push notification to the member
+            try {
+                const email = (profile?.member_id || memberId).toLowerCase();
+                const pushUrl = new URL('/api/push', req.url);
+                fetch(pushUrl.toString(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        externalId: email,
+                        title: '✗ Task Rejected',
+                        message: 'Your task was rejected. -300 coins penalty.',
+                    }),
+                }).catch(() => {});
+            } catch (_) {}
+
             return NextResponse.json({ success: true, action: 'reject', penaltyApplied: 300 });
         }
 

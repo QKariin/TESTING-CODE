@@ -334,7 +334,7 @@ export const DbService = {
         // Check routines table first
         const { data: routineEntry } = await supabaseAdmin
             .from('routines')
-            .select('id, member_id')
+            .select('id, member_id, routine_name, proof_url, thumbnail_url')
             .eq('id', taskId)
             .maybeSingle();
 
@@ -350,7 +350,8 @@ export const DbService = {
                 .eq('id', taskId);
 
             await this.awardPoints(profileId, bonus);
-            try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'approve', points: bonus, type: 'routine' })}`, 'system'); } catch (_) { }
+            const cardData = { status: 'approve', points: bonus, type: 'routine', taskText: routineEntry.routine_name || 'Daily Routine', thumbnail: routineEntry.thumbnail_url || routineEntry.proof_url || null };
+            try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
             try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
@@ -359,6 +360,7 @@ export const DbService = {
         const row = await this._getTaskRow(profileId);
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
+        const entry = idx > -1 ? history[idx] : null;
 
         if (idx > -1) {
             history[idx].status = 'approve';
@@ -379,14 +381,15 @@ export const DbService = {
             .eq('ID', row.ID);
 
         await this.awardPoints(profileId, bonus);
-        try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'approve', points: bonus, type: 'task', comment: comment || null })}`, 'system'); } catch (_) { }
+        const cardData = { status: 'approve', points: bonus, type: 'task', comment: comment || null, taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
+        try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
     },
 
     async rejectTask(taskId: string, profileId: string) {
         // Check routines table first
         const { data: routineEntry } = await supabaseAdmin
             .from('routines')
-            .select('id, member_id')
+            .select('id, member_id, routine_name, proof_url, thumbnail_url')
             .eq('id', taskId)
             .maybeSingle();
 
@@ -396,7 +399,8 @@ export const DbService = {
                 .from('routines')
                 .update({ status: 'reject', reviewed_at: new Date().toISOString() })
                 .eq('id', taskId);
-            try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'reject', points: 0, type: 'routine' })}`, 'system'); } catch (_) { }
+            const cardData = { status: 'reject', points: 0, type: 'routine', taskText: routineEntry.routine_name || 'Daily Routine', thumbnail: routineEntry.thumbnail_url || routineEntry.proof_url || null };
+            try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
             try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
@@ -405,6 +409,7 @@ export const DbService = {
         const row = await this._getTaskRow(profileId);
         const history: any[] = this._parseHistory(row);
         const idx = history.findIndex((t: any) => t.id === taskId);
+        const entry = idx > -1 ? history[idx] : null;
 
         if (idx > -1) {
             history[idx].status = 'reject';
@@ -428,7 +433,8 @@ export const DbService = {
             }
         } catch (_) { }
 
-        try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify({ status: 'reject', points: 0, penalty: 300, type: 'task' })}`, 'system'); } catch (_) { }
+        const cardData = { status: 'reject', points: 0, penalty: 300, type: 'task', taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
+        try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
     },
 
     async recalcConsistency(email: string, tz?: string) {
