@@ -40,8 +40,8 @@ export async function POST(request: Request) {
         // Fetch profile
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const q = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name').ilike('member_id', memberEmail).single();
+            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').eq('ID', memberEmail).single()
+            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').ilike('member_id', memberEmail).single();
         const { data: profile, error: profileErr } = await q;
 
         if (profileErr || !profile) {
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
         const wallet = profile.wallet || 0;
         const realEmail = profile.member_id || memberEmail;
         const senderName = (profile as any).name || realEmail.split('@')[0];
+        const senderAvatar = (profile as any).avatar_url || null;
         const profileId = profile.ID;
 
         // ═══════════════════════════════════════════════════════════
@@ -80,8 +81,8 @@ export async function POST(request: Request) {
                 await supabase.from('global_messages').insert({
                     sender_email: realEmail,
                     sender_name: senderName,
-                    sender_avatar: null,
-                    message: `DIRECT_TRIBUTE_CARD::${JSON.stringify({ senderName, amount })}`,
+                    sender_avatar: senderAvatar,
+                    message: `DIRECT_TRIBUTE_CARD::${JSON.stringify({ senderName, senderAvatar, amount })}`,
                 });
             } catch (_) {}
 
@@ -178,6 +179,7 @@ export async function POST(request: Request) {
                 const isWin = cardName === 'JACKPOT' && bonusAmount > 0;
                 const riskyPayload = {
                     senderName,
+                    senderAvatar,
                     stakeAmount: stake,
                     cardName,
                     icon: cardIcon,
@@ -188,7 +190,7 @@ export async function POST(request: Request) {
                 await supabase.from('global_messages').insert({
                     sender_email: realEmail,
                     sender_name: senderName,
-                    sender_avatar: null,
+                    sender_avatar: senderAvatar,
                     message: `RISKY_TRIBUTE_CARD::${JSON.stringify(riskyPayload)}`,
                 });
             } catch (_) {}

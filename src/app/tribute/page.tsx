@@ -71,8 +71,9 @@ export default function TributePage() {
         try {
             if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
                 const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
-                const result = d.isWin ? `won +${(d.wonAmount||0).toLocaleString()} coins` : d.lostAmount === 0 ? 'got mercy, lost nothing' : `lost ${(d.lostAmount||0).toLocaleString()} coins`;
-                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `drew ${d.cardName || 'a card'}, staked ${(d.stakeAmount||0).toLocaleString()} and ${result}`, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, created_at: created };
+                const isWin = d.isWin;
+                const resultText = isWin ? `won +${(d.wonAmount||0).toLocaleString()} coins` : d.lostAmount === 0 ? 'lost nothing' : `lost ${(d.lostAmount||0).toLocaleString()} coins`;
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `just gambled ${(d.stakeAmount||0).toLocaleString()} coins and ${resultText}`, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, isWin, stakeAmount: d.stakeAmount || 0, wonAmount: d.wonAmount || 0, lostAmount: d.lostAmount || 0, created_at: created };
             }
             if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
                 const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
@@ -512,47 +513,87 @@ export default function TributePage() {
                 const avatar = t.sender_avatar || null;
                 const initial = (t.sender_name || 'S').charAt(0).toUpperCase();
                 const when = t.created_at ? timeAgo(t.created_at) : '';
+                const isRisky = t.kind === 'risky' && t.cardIcon;
+
                 return (
                 <div key={t._id} className="trib-toast" style={{
                     position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom) + 16px)',
                     right: 12, left: 12, zIndex: 99999,
                     background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
                     border: '1px solid rgba(197,160,89,0.4)',
-                    borderRadius: 18, padding: '20px 22px',
+                    borderRadius: 18, padding: isRisky ? '0' : '20px 22px',
                     boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08)',
                     animation: t._leaving ? 'toastOut 0.4s ease-in forwards' : 'toastIn 0.4s ease-out forwards',
+                    overflow: 'hidden',
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                        {/* Sender avatar */}
-                        {avatar ? (
-                            <img src={avatar} style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        ) : (
-                            <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
-                        )}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span>Happening Now</span>
-                                {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
+                    {isRisky ? (
+                        /* ── RISKY GAME TOAST: card SVG 30% left + info right ── */
+                        <div style={{ display: 'flex', minHeight: 130 }}>
+                            {/* Card SVG — 30% left */}
+                            <div style={{
+                                flex: '0 0 30%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)',
+                                padding: 16,
+                            }}>
+                                <img src={t.cardIcon} style={{ width: '70%', maxWidth: 70, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             </div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', fontWeight: 500, lineHeight: 1.4 }}>
-                                <span style={{ color: '#c5a059' }}>{t.sender_name}</span>
-                                {' '}{displayText}
-                            </div>
-                            {/* Card icon for risky game */}
-                            {t.cardIcon && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                                    <img src={t.cardIcon} style={{ width: 32, height: 'auto', opacity: 0.85 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                    {t.cardName && <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 2 }}>{t.cardName}</span>}
+                            {/* Info — 70% right */}
+                            <div style={{ flex: 1, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>Happening Now</div>
+                                    {when && <span style={{ fontFamily: 'Orbitron, sans-serif', color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
                                 </div>
-                            )}
+                                {/* Avatar + Name */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    {avatar ? (
+                                        <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                    ) : (
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
+                                    )}
+                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#c5a059', fontWeight: 600, letterSpacing: 1 }}>{t.sender_name}</span>
+                                </div>
+                                {/* Gambled text */}
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, fontWeight: 500 }}>
+                                    just gambled {(t.stakeAmount||0).toLocaleString()} coins and {t.isWin ? <span style={{ color: '#4ade80' }}>won +{(t.wonAmount||0).toLocaleString()}</span> : t.lostAmount === 0 ? <span style={{ color: '#c5a059' }}>lost nothing</span> : <span style={{ color: '#ef4444' }}>lost {(t.lostAmount||0).toLocaleString()}</span>}
+                                </div>
+                                {/* Card name */}
+                                {t.cardName && (
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 }}>{t.cardName}</div>
+                                )}
+                                <button
+                                    onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))}
+                                    style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '5px 16px', borderRadius: 6, fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: 1, cursor: 'pointer', marginTop: 4 }}
+                                >DISMISS</button>
+                            </div>
                         </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                        <button
-                            onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))}
-                            style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '9px 0', borderRadius: 8, fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: 1, cursor: 'pointer' }}
-                        >DISMISS</button>
-                    </div>
+                    ) : (
+                        /* ── STANDARD TOAST (tribute, promotion, etc.) ── */
+                        <>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                            {avatar ? (
+                                <img src={avatar} style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            ) : (
+                                <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>Happening Now</span>
+                                    {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', fontWeight: 500, lineHeight: 1.4 }}>
+                                    <span style={{ color: '#c5a059' }}>{t.sender_name}</span>
+                                    {' '}{displayText}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                            <button
+                                onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))}
+                                style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '9px 0', borderRadius: 8, fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: 1, cursor: 'pointer' }}
+                            >DISMISS</button>
+                        </div>
+                        </>
+                    )}
                 </div>
                 );
             })}
@@ -645,7 +686,7 @@ export default function TributePage() {
                         <video
                             src="/tribute-intro.mov"
                             autoPlay muted loop playsInline
-                            style={{ width: '100%', display: 'block' }}
+                            style={{ width: '100%', display: 'block', opacity: 0.6 }}
                         />
                     </div>
                 </div>
