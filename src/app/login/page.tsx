@@ -234,16 +234,16 @@ export default function LoginPage() {
                 </div>
                 {/* Diagonal "DON'T MISS" ribbon */}
                 <div style={{
-                    position: 'absolute', top: 0, right: -20, width: 120, height: '100%',
+                    position: 'absolute', top: 0, left: -20, width: 120, height: '100%',
                     overflow: 'hidden', pointerEvents: 'none',
                 }}>
                     <div style={{
-                        position: 'absolute', top: '50%', right: -10,
-                        transform: 'translateY(-50%) rotate(-35deg)',
+                        position: 'absolute', top: '50%', left: -10,
+                        transform: 'translateY(-50%) rotate(35deg)',
                         background: 'linear-gradient(90deg, #8b1a1a, #c0392b, #8b1a1a)',
                         padding: '2px 30px',
                         fontFamily: 'Cinzel, serif', fontSize: '0.4rem', fontWeight: 700,
-                        color: '#fff', letterSpacing: '2px', whiteSpace: 'nowrap',
+                        color: '#000', letterSpacing: '2px', whiteSpace: 'nowrap',
                         animation: 'dontMissPulse 2s ease-in-out infinite',
                         boxShadow: '0 0 12px rgba(192,57,43,0.5)',
                     }}>
