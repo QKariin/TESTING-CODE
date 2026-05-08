@@ -63,38 +63,73 @@ export default function TributePage() {
         setTimeout(() => setToasts(prev => prev.filter(t => t._id !== id)), 8500);
     };
 
+    /* parse global_messages card content into toast-friendly data */
+    const parseGlobalCard = (msg: any) => {
+        const content = msg.message || msg.content || '';
+        const created = msg.created_at;
+        const avatar = msg.sender_avatar || null;
+        try {
+            if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
+                const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
+                const result = d.isWin ? `won +${(d.wonAmount||0).toLocaleString()} coins` : d.lostAmount === 0 ? 'got mercy, lost nothing' : `lost ${(d.lostAmount||0).toLocaleString()} coins`;
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `gambled ${(d.stakeAmount||0).toLocaleString()} coins and ${result}`, kind: 'risky', created_at: created };
+            }
+            if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
+                const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `sent a tribute of ${(d.amount||0).toLocaleString()} coins`, kind: 'tribute', created_at: created };
+            }
+            if (content.startsWith('PROMOTION_CARD::')) {
+                const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+                return { sender_name: d.name || 'SUBJECT', sender_avatar: avatar, text: `was promoted to ${d.newRank || 'a new rank'}`, kind: 'promotion', created_at: created };
+            }
+            if (content.startsWith('UPDATE_PHOTO_CARD::')) {
+                const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: 'shared a photo', kind: 'photo', created_at: created };
+            }
+            if (content.startsWith('CHALLENGE_TASK_CARD::')) {
+                const d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `completed a challenge task${d.passed !== false ? '' : ' (failed)'}`, kind: 'challenge', created_at: created };
+            }
+            if (content.startsWith('WELCOME_CARD::')) {
+                const d = JSON.parse(content.replace('WELCOME_CARD::', ''));
+                return { sender_name: d.name || 'New Subject', sender_avatar: avatar, text: 'entered the household', kind: 'welcome', created_at: created };
+            }
+            if (content.startsWith('UPDATE_MERIT_CARD::')) {
+                const d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `earned +${d.points || 0} merit`, kind: 'merit', created_at: created };
+            }
+        } catch {}
+        return null;
+    };
+
     /* fetch last activity item + realtime for new ones */
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetch('/api/global/updates')
-                .then(r => r.json())
-                .then(d => {
-                    if (d.updates && d.updates.length > 0) {
-                        showToast(d.updates[0]);
+        // Fetch latest global_messages card as initial toast
+        const timer = setTimeout(async () => {
+            try {
+                const supabase = createClient();
+                const { data } = await supabase
+                    .from('global_messages')
+                    .select('message, sender_name, sender_avatar, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                if (data) {
+                    for (const msg of data) {
+                        const parsed = parseGlobalCard(msg);
+                        if (parsed) { showToast(parsed); break; }
                     }
-                })
-                .catch(() => {});
+                }
+            } catch {}
         }, 7000);
 
-        // Realtime: any new insert while they're on the page
+        // Realtime: global_messages for risky game, tributes, promotions, etc.
         const supabase = createClient();
         const channel = supabase.channel('tribute-activity')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, (payload: any) => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, (payload: any) => {
                 const row = payload.new;
                 if (!row) return;
-                let text = '';
-                let senderName = 'SUBJECT';
-                if (row.type === 'wishlist') {
-                    const meta = row.metadata || {};
-                    text = `sent ${meta.title || 'a tribute'}`;
-                } else if (row.type === 'system') {
-                    text = row.content || '';
-                } else if (row.type === 'global_update') {
-                    text = 'shared a photo';
-                } else {
-                    return;
-                }
-                showToast({ sender_name: senderName, sender_avatar: null, kind: row.type, text, created_at: row.created_at });
+                const parsed = parseGlobalCard(row);
+                if (parsed) showToast(parsed);
             })
             .subscribe();
 
@@ -476,6 +511,7 @@ export default function TributePage() {
                 );
                 const avatar = t.sender_avatar || null;
                 const initial = (t.sender_name || 'S').charAt(0).toUpperCase();
+                const when = t.created_at ? timeAgo(t.created_at) : '';
                 return (
                 <div key={t._id} className="trib-toast" style={{
                     position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom) + 16px)',
@@ -494,9 +530,12 @@ export default function TributePage() {
                             <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6 }}>
-                                <svg width="10" height="8" viewBox="0 0 26 20" fill="#c5a059" style={{ verticalAlign: 'middle', marginRight: 4 }}><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>
-                                Happening Now
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span>
+                                    <svg width="10" height="8" viewBox="0 0 26 20" fill="#c5a059" style={{ verticalAlign: 'middle', marginRight: 4 }}><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg>
+                                    Happening Now
+                                </span>
+                                {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
                             </div>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', fontWeight: 500, lineHeight: 1.4 }}>
                                 <span style={{ color: '#c5a059' }}>{t.sender_name}</span>
@@ -756,9 +795,9 @@ export default function TributePage() {
                                 onClick={() => setLbPeriod(p)}
                                 style={{
                                     background: 'none', border: 'none', padding: '8px 16px',
-                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600,
+                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', fontWeight: 600,
                                     letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer',
-                                    color: lbPeriod === p ? '#c5a059' : 'rgba(255,255,255,0.15)',
+                                    color: lbPeriod === p ? '#c5a059' : 'rgba(255,255,255,0.2)',
                                     borderBottom: lbPeriod === p ? '1.5px solid rgba(197,160,89,0.4)' : '1.5px solid transparent',
                                 }}
                             >
@@ -781,46 +820,46 @@ export default function TributePage() {
                         {leaderboard.slice(0, 10).map((entry, i) => (
                             <div key={i} style={{
                                 display: 'flex', alignItems: 'center', gap: 14,
-                                padding: '12px 14px', borderRadius: 6,
-                                background: i === 0 ? 'rgba(197,160,89,0.04)' : 'rgba(255,255,255,0.01)',
-                                borderLeft: i < 3 ? `1.5px solid rgba(197,160,89,${0.3 - i * 0.08})` : '1.5px solid transparent',
+                                padding: '14px 16px', borderRadius: 8,
+                                background: i === 0 ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)',
+                                borderLeft: i < 3 ? `2px solid rgba(197,160,89,${0.35 - i * 0.08})` : '2px solid transparent',
                             }}>
                                 {/* Rank */}
                                 <div style={{
-                                    fontFamily: 'Cinzel, serif', fontSize: i === 0 ? '1.2rem' : '0.9rem',
-                                    fontWeight: 700, color: i === 0 ? '#c5a059' : i < 3 ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.12)',
-                                    width: 28, textAlign: 'center', flexShrink: 0,
+                                    fontFamily: 'Cinzel, serif', fontSize: i === 0 ? '1.3rem' : '1rem',
+                                    fontWeight: 700, color: i === 0 ? '#c5a059' : i < 3 ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.18)',
+                                    width: 30, textAlign: 'center', flexShrink: 0,
                                 }}>
                                     {i + 1}
                                 </div>
                                 {/* Avatar */}
                                 <div style={{
-                                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                                    width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
                                     background: entry.avatar
                                         ? `url(${entry.avatar}) center/cover`
-                                        : 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(197,160,89,0.03))',
-                                    border: '1px solid rgba(197,160,89,0.1)',
+                                        : 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.04))',
+                                    border: '1px solid rgba(197,160,89,0.15)',
                                 }} />
                                 {/* Name & hierarchy */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{
-                                        fontFamily: 'Cinzel, serif', fontSize: '0.78rem',
-                                        color: i === 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)',
+                                        fontFamily: 'Cinzel, serif', fontSize: '0.92rem',
+                                        color: i === 0 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.55)',
                                         fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                                     }}>
                                         {entry.name}
                                     </div>
                                     <div style={{
-                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500,
-                                        color: 'rgba(197,160,89,0.25)', letterSpacing: '1.5px',
+                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 500,
+                                        color: 'rgba(197,160,89,0.35)', letterSpacing: '1.5px',
                                     }}>
                                         {entry.hierarchy}
                                     </div>
                                 </div>
                                 {/* Score */}
                                 <div style={{
-                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', fontWeight: 700,
-                                    color: i === 0 ? '#c5a059' : 'rgba(197,160,89,0.4)',
+                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', fontWeight: 700,
+                                    color: i === 0 ? '#c5a059' : 'rgba(197,160,89,0.5)',
                                     flexShrink: 0,
                                 }}>
                                     {entry.score?.toLocaleString()}
