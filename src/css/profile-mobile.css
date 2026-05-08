@@ -23,7 +23,7 @@
 
 @property --kneel-gradient-shine {
     syntax: "<color>";
-    initial-value: #8b2020;
+    initial-value: #c5a059;
     inherits: false;
 }
 
@@ -427,7 +427,7 @@
         position: relative;
         width: 88%;
         margin: 0 auto;
-        filter: drop-shadow(0 0 10px rgba(139, 32, 32, 0.25));
+        filter: drop-shadow(0 0 10px rgba(197, 160, 89, 0.25));
     }
 
     /* Sparkle stars at pill edges — removed by request */
