@@ -79,14 +79,15 @@
 
 /* ── Email toggle ── */
 .email-toggle-btn {
-    width: 100%;
-    margin-top: 4px;
-    padding: 13px 20px;
+    width: auto;
+    margin: 12px auto 0;
+    padding: 8px 20px;
     background: transparent;
-    border: 1px dashed rgba(197,160,89,0.2);
-    color: rgba(197,160,89,0.45);
+    border: none;
+    border-bottom: 1px solid rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.35);
     font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
+    font-size: 0.55rem;
     letter-spacing: 2px;
     cursor: pointer;
     transition: all 0.3s;
@@ -94,7 +95,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .email-toggle-btn:hover {
