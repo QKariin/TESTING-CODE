@@ -107,13 +107,13 @@ function _showMenu() {
                     <span style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;">${_wallet().toLocaleString()}</span>
                 </div>
                 <button onclick="window._tributeShowSend()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                    <img src="/tribute-send.svg?v=2" style="width:100%;height:100%;object-fit:contain;display:block;">
+                    <img src="/tribute-send.svg?v=2" style="width:100%;height:100%;object-fit:cover;display:block;">
                 </button>
                 <button onclick="window._tributeShowRisky()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                    <img src="/tribute-risky.svg?v=2" style="width:100%;height:100%;object-fit:contain;display:block;">
+                    <img src="/tribute-risky.svg?v=2" style="width:100%;height:100%;object-fit:cover;display:block;">
                 </button>
                 <button onclick="window._tributeShowWishlist()" style="width:300px;height:100px;background:rgba(197,160,89,0.03);border:1px solid rgba(197,160,89,0.3);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:14px;overflow:hidden;display:block;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                    <img src="/tribute-wishlist.svg?v=2" style="width:100%;height:100%;object-fit:contain;display:block;">
+                    <img src="/tribute-wishlist.svg?v=2" style="width:100%;height:100%;object-fit:cover;display:block;">
                 </button>
             </div>
             ${_menuFooter()}
