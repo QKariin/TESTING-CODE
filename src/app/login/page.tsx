@@ -246,7 +246,7 @@ export default function LoginPage() {
             })}
 
             {/* ── BRAND HEADER — QUEEN KARIN (same as /tribute) ── */}
-            <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 440, padding: '0 clamp(20px,5vw,32px)', textAlign: 'center' }}>
+            <div className="login-content-wrap" style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 440, padding: '0 clamp(20px,5vw,32px)', textAlign: 'center' }}>
                 <div style={{ paddingTop: 'clamp(50px, 10vw, 80px)', animation: mounted ? 'loginFadeIn 1.2s ease-out both' : 'none' }}>
                     <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 22px' }}>
                         <div style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'loginRingExpand 4s ease-in-out infinite' }} />
