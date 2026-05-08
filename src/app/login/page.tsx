@@ -245,7 +245,7 @@ export default function LoginPage() {
 
                 {/* ── INTRO TEXT ── */}
                 <div style={{ marginTop: 'clamp(28px, 6vw, 44px)', animation: mounted ? 'loginFadeUp 1s ease-out 0.4s both' : 'none' }}>
-                    <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(0.95rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, fontWeight: 400, margin: '0 0 20px', borderLeft: '2px solid rgba(197,160,89,0.25)', paddingLeft: 16 }}>
+                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(0.75rem, 2.8vw, 0.9rem)', color: 'rgba(255,255,255,0.4)', lineHeight: 1.9, fontWeight: 400, margin: '0 0 20px', borderLeft: '2px solid rgba(197,160,89,0.25)', paddingLeft: 16, letterSpacing: 1 }}>
                         Welcome to the only FemDom app run entirely by a single Domme dedicated to complete control.
                     </p>
                     <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(1rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.75)', fontWeight: 600, margin: '0 0 20px', letterSpacing: 1 }}>
