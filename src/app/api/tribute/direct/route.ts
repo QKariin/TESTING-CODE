@@ -111,18 +111,6 @@ export async function POST(request: Request) {
                 });
             } catch (_) {}
 
-            // Merit earned notification
-            if (merit > 0) {
-                try {
-                    await supabase.from('global_messages').insert({
-                        sender_email: realEmail,
-                        sender_name: senderName,
-                        sender_avatar: senderAvatar,
-                        message: `UPDATE_MERIT_CARD::${JSON.stringify({ senderName, senderAvatar, points: merit })}`,
-                    });
-                } catch (_) {}
-            }
-
             // Discord notification
             discordDirectTribute(senderName, amount).catch(() => {});
 
@@ -249,18 +237,6 @@ export async function POST(request: Request) {
                     }),
                 });
             } catch (_) {}
-
-            // Merit earned notification
-            if (merit > 0) {
-                try {
-                    await supabase.from('global_messages').insert({
-                        sender_email: realEmail,
-                        sender_name: senderName,
-                        sender_avatar: senderAvatar,
-                        message: `UPDATE_MERIT_CARD::${JSON.stringify({ senderName, senderAvatar, points: merit })}`,
-                    });
-                } catch (_) {}
-            }
 
             // Discord notification
             discordRiskyTribute(senderName, stake, cardName, lossAmount, bonusAmount, cardIcon).catch(() => {});

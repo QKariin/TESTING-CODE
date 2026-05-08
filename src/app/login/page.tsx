@@ -248,6 +248,13 @@ export default function LoginPage() {
             </div>
 
             <style>{`
+                @font-face {
+                    font-family: 'Rosella Solid';
+                    src: url('/fonts/rosella-solid.woff2') format('woff2'), url('/fonts/rosella-solid.woff') format('woff');
+                    font-weight: normal;
+                    font-style: normal;
+                    font-display: swap;
+                }
                 @keyframes bannerFlow {
                     0% { background-position: 0% 0%; }
                     100% { background-position: 100% 100%; }
@@ -279,30 +286,44 @@ export default function LoginPage() {
                 }}>
                     {isRisky ? (
                         <div style={{ display: 'flex', minHeight: 130 }}>
-                            <div style={{ flex: '0 0 30%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)', padding: 16 }}>
-                                <img src={t.cardIcon} style={{ width: '70%', maxWidth: 70, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            {/* Card SVG + card name — left */}
+                            <div style={{
+                                flex: '0 0 28%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)',
+                                padding: '16px 12px', gap: 8,
+                            }}>
+                                <img src={t.cardIcon} style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                {t.cardName && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3 }}>{t.cardName}</div>}
                             </div>
-                            <div style={{ flex: 1, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>Recent Activity</div>
-                                    {when && <span style={{ fontFamily: 'Orbitron, sans-serif', color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
+                            {/* Info — right */}
+                            <div style={{ flex: 1, padding: '16px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>Recent Activity</span>
+                                    {when && <span style={{ color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     {avatar ? (
-                                        <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                        <img src={avatar} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                     ) : (
-                                        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
+                                        <div style={{ width: 38, height: 38, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
                                     )}
                                     <div>
-                                        <div style={{ fontFamily: "'Rosella Solid', serif", fontSize: '1rem', color: '#c5a059', letterSpacing: 1 }}>{t.sender_name}</div>
+                                        <div style={{ fontFamily: "'Rosella Solid', serif", fontSize: '1.05rem', color: '#c5a059', letterSpacing: 1 }}>{t.sender_name}</div>
                                         {t.hierarchy && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 1 }}>{t.hierarchy}</div>}
                                     </div>
                                 </div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, fontWeight: 500 }}>
-                                    just gambled {(t.stakeAmount||0).toLocaleString()} coins and {t.isWin ? <span style={{ color: '#4ade80' }}>won +{(t.wonAmount||0).toLocaleString()}</span> : t.lostAmount === 0 ? <span style={{ color: '#c5a059' }}>lost nothing</span> : <span style={{ color: '#ef4444' }}>lost {(t.lostAmount||0).toLocaleString()}</span>}
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500, marginTop: 4 }}>
+                                    just gambled {(t.stakeAmount||0).toLocaleString()} coins
                                 </div>
-                                {t.cardName && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 }}>{t.cardName}</div>}
-                                <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '5px 16px', borderRadius: 6, fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: 1, cursor: 'pointer', marginTop: 4 }}>DISMISS</button>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', fontWeight: 600 }}>
+                                    {t.isWin
+                                        ? <span style={{ color: '#4ade80' }}>total won: {(t.wonAmount||0).toLocaleString()}</span>
+                                        : t.lostAmount === 0
+                                            ? <span style={{ color: '#c5a059' }}>lost nothing</span>
+                                            : <span style={{ color: '#ef4444' }}>total lost: {(t.lostAmount||0).toLocaleString()}</span>
+                                    }
+                                </div>
+                                <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '5px 16px', borderRadius: 6, fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: 1, cursor: 'pointer', marginTop: 6 }}>DISMISS</button>
                             </div>
                         </div>
                     ) : (
