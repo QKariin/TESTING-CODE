@@ -242,8 +242,8 @@ export default function LoginPage() {
                         transform: 'translateY(-50%) rotate(-35deg)',
                         background: 'linear-gradient(90deg, #8b1a1a, #c0392b, #8b1a1a)',
                         padding: '2px 30px',
-                        fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', fontWeight: 700,
-                        color: '#fff', letterSpacing: '3px', whiteSpace: 'nowrap',
+                        fontFamily: 'Cinzel, serif', fontSize: '0.4rem', fontWeight: 700,
+                        color: '#fff', letterSpacing: '2px', whiteSpace: 'nowrap',
                         animation: 'dontMissPulse 2s ease-in-out infinite',
                         boxShadow: '0 0 12px rgba(192,57,43,0.5)',
                     }}>
