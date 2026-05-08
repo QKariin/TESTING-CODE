@@ -2082,7 +2082,14 @@ export function toggleEarnCoins() {
                 </div>
                 <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Add to home screen</div>
                 <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:#4ade80;letter-spacing:2px;">+1,000 COINS</div>
-            </button>` : ''}
+            </button>` : `
+            <div style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.1);border-radius:12px;opacity:0.5;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.4);">+</span>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.5);letter-spacing:2px;font-weight:700;">INSTALL APP</div>
+                </div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(74,222,128,0.5);letter-spacing:2px;">+1,000 COINS EARNED</div>
+            </div>`}
 
             <button id="earnCoinsCertBtn" style="width:100%;padding:22px 20px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;cursor:pointer;text-align:left;transition:border-color 0.2s;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">

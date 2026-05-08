@@ -18,7 +18,7 @@ export async function GET() {
         }
 
         // Collect unique member emails
-        const emails = [...new Set(reviews.map(r => r.member_id.toLowerCase()))];
+        const emails = [...new Set(reviews.map((r: any) => r.member_id.toLowerCase()))];
 
         // Fetch profile data for all reviewers
         const { data: profiles } = await supabaseAdmin
