@@ -4,14 +4,61 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import '@/css/login.css';
 
+function timeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+}
+
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [toasts, setToasts] = useState<any[]>([]);
+
+    const showToast = (item: any) => {
+        const id = Date.now() + Math.random();
+        setToasts([{ ...item, _id: id }]);
+        setTimeout(() => setToasts(prev => prev.map(t => t._id === id ? { ...t, _leaving: true } : t)), 8000);
+        setTimeout(() => setToasts(prev => prev.filter(t => t._id !== id)), 8500);
+    };
+
+    const parseGlobalCard = (msg: any) => {
+        const content = msg.message || msg.content || '';
+        const created = msg.created_at;
+        const avatar = msg.sender_avatar || null;
+        try {
+            if (content.startsWith('RISKY_TRIBUTE_CARD::')) {
+                const d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
+                const resultText = d.isWin ? `won +${(d.wonAmount||0).toLocaleString()} coins` : d.lostAmount === 0 ? 'lost nothing' : `lost ${(d.lostAmount||0).toLocaleString()} coins`;
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `just gambled ${(d.stakeAmount||0).toLocaleString()} coins and ${resultText}`, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, isWin: d.isWin, stakeAmount: d.stakeAmount || 0, wonAmount: d.wonAmount || 0, lostAmount: d.lostAmount || 0, created_at: created };
+            }
+            if (content.startsWith('DIRECT_TRIBUTE_CARD::')) {
+                const d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
+                return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, text: `sent a tribute of ${(d.amount||0).toLocaleString()} coins`, kind: 'tribute', created_at: created };
+            }
+            if (content.startsWith('PROMOTION_CARD::')) {
+                const d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+                return { sender_name: d.name || 'SUBJECT', sender_avatar: avatar, text: `was promoted to ${d.newRank || 'a new rank'}`, kind: 'promotion', created_at: created };
+            }
+            if (content.startsWith('WELCOME_CARD::')) {
+                const d = JSON.parse(content.replace('WELCOME_CARD::', ''));
+                return { sender_name: d.name || 'New Subject', sender_avatar: avatar, text: 'entered the household', kind: 'welcome', created_at: created };
+            }
+        } catch {}
+        return null;
+    };
 
     useEffect(() => {
         // Store redirect destination if provided (e.g. /keyholder funnel)
         const params = new URLSearchParams(window.location.search);
         const redirect = params.get('redirect');
         if (redirect) localStorage.setItem('post_login_redirect', redirect);
+
+        setMounted(true);
 
         // If user already has a valid session (e.g. PWA relaunch), skip login
         const supabase = createClient();
@@ -23,10 +70,43 @@ export default function LoginPage() {
             }
         });
 
+        // Fetch latest activity toast
+        const timer = setTimeout(async () => {
+            try {
+                const { data } = await supabase.from('global_messages').select('message, sender_name, sender_avatar, sender_email, created_at').order('created_at', { ascending: false }).limit(10);
+                if (data) {
+                    for (const msg of data) {
+                        const parsed = parseGlobalCard(msg);
+                        if (parsed) {
+                            if (!parsed.sender_avatar && msg.sender_email && msg.sender_email !== 'system') {
+                                try { const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', msg.sender_email).limit(1); if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url; } catch {}
+                            }
+                            showToast(parsed); break;
+                        }
+                    }
+                }
+            } catch {}
+        }, 5000);
+
+        // Realtime
+        const channel = supabase.channel('login-activity')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, async (payload: any) => {
+                const row = payload.new;
+                if (!row) return;
+                const parsed = parseGlobalCard(row);
+                if (parsed) {
+                    if (!parsed.sender_avatar && row.sender_email && row.sender_email !== 'system') {
+                        try { const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', row.sender_email).limit(1); if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url; } catch {}
+                    }
+                    showToast(parsed);
+                }
+            })
+            .subscribe();
+
         const reset = () => setLoading(false);
         window.addEventListener('focus', reset);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
-        return () => window.removeEventListener('focus', reset);
+        return () => { window.removeEventListener('focus', reset); clearTimeout(timer); supabase.removeChannel(channel); };
     }, []);
     const [error, setError] = useState<string | null>(null);
     const [emailOpen, setEmailOpen] = useState(false);
@@ -80,10 +160,102 @@ export default function LoginPage() {
             <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '40vh', background: 'radial-gradient(ellipse at center top, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
 
-            <div className="login-card">
-                <div className="login-crown">✦</div>
-                <h1>Queen Karin</h1>
-                <p className="login-subtitle">Log in to enter</p>
+            {/* ── TOAST NOTIFICATIONS ── */}
+            {toasts.map((t: any) => {
+                const avatar = t.sender_avatar || null;
+                const initial = (t.sender_name || 'S').charAt(0).toUpperCase();
+                const when = t.created_at ? timeAgo(t.created_at) : '';
+                const isRisky = t.kind === 'risky' && t.cardIcon;
+                return (
+                <div key={t._id} style={{
+                    position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom) + 16px)',
+                    right: 12, left: 12, zIndex: 99999,
+                    background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
+                    border: '1px solid rgba(197,160,89,0.4)',
+                    borderRadius: 18, padding: isRisky ? '0' : '20px 22px',
+                    boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08)',
+                    animation: t._leaving ? 'loginToastOut 0.4s ease-in forwards' : 'loginToastIn 0.4s ease-out forwards',
+                    overflow: 'hidden',
+                }}>
+                    {isRisky ? (
+                        <div style={{ display: 'flex', minHeight: 130 }}>
+                            <div style={{ flex: '0 0 30%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)', padding: 16 }}>
+                                <img src={t.cardIcon} style={{ width: '70%', maxWidth: 70, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            </div>
+                            <div style={{ flex: 1, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>Happening Now</div>
+                                    {when && <span style={{ fontFamily: 'Orbitron, sans-serif', color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    {avatar ? (
+                                        <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                    ) : (
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
+                                    )}
+                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#c5a059', fontWeight: 600, letterSpacing: 1 }}>{t.sender_name}</span>
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, fontWeight: 500 }}>
+                                    just gambled {(t.stakeAmount||0).toLocaleString()} coins and {t.isWin ? <span style={{ color: '#4ade80' }}>won +{(t.wonAmount||0).toLocaleString()}</span> : t.lostAmount === 0 ? <span style={{ color: '#c5a059' }}>lost nothing</span> : <span style={{ color: '#ef4444' }}>lost {(t.lostAmount||0).toLocaleString()}</span>}
+                                </div>
+                                {t.cardName && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 }}>{t.cardName}</div>}
+                                <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))} style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '5px 16px', borderRadius: 6, fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: 1, cursor: 'pointer', marginTop: 4 }}>DISMISS</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                            {avatar ? (
+                                <img src={avatar} style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            ) : (
+                                <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>Happening Now</span>
+                                    {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', fontWeight: 500, lineHeight: 1.4 }}>
+                                    <span style={{ color: '#c5a059' }}>{t.sender_name}</span> {t.text}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                            <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))} style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '9px 0', borderRadius: 8, fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: 1, cursor: 'pointer' }}>DISMISS</button>
+                        </div>
+                        </>
+                    )}
+                </div>
+                );
+            })}
+
+            {/* ── BRAND HEADER — QUEEN KARIN (same as /tribute) ── */}
+            <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 440, padding: '0 clamp(20px,5vw,32px)', textAlign: 'center' }}>
+                <div style={{ paddingTop: 'clamp(50px, 10vw, 80px)', animation: mounted ? 'loginFadeIn 1.2s ease-out both' : 'none' }}>
+                    <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 22px' }}>
+                        <div style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'loginRingExpand 4s ease-in-out infinite' }} />
+                        <div style={{ position: 'absolute', inset: -16, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.08)', animation: 'loginRingExpand 4s ease-in-out infinite 0.7s' }} />
+                        <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.04)', animation: 'loginRingExpand 4s ease-in-out infinite 1.4s' }} />
+                        <img src="/queen-karin.png" alt="Queen Karin" style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.35)', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.08)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    </div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500, color: 'rgba(197,160,89,0.4)', letterSpacing: 8, textTransform: 'uppercase', marginBottom: 10 }}>PRESENTED BY</div>
+                    <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.8rem, 6vw, 2.6rem)', color: '#fff', letterSpacing: 4, textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 600, lineHeight: 1.05, whiteSpace: 'nowrap' }}>QUEEN KARIN</h1>
+                    <div style={{ width: 50, height: '1.5px', margin: '14px auto 0', background: 'linear-gradient(90deg, transparent, #c5a059, transparent)' }} />
+                </div>
+
+                {/* ── INTRO TEXT ── */}
+                <div style={{ marginTop: 'clamp(28px, 6vw, 44px)', animation: mounted ? 'loginFadeUp 1s ease-out 0.4s both' : 'none' }}>
+                    <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: 'clamp(0.95rem, 3.5vw, 1.15rem)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, fontWeight: 400, margin: '0 0 18px' }}>
+                        The only femdom app ruled entirely by a single dominatrix. One woman. One vision. What started as a personal project became a global phenomenon.
+                    </p>
+                    <p style={{ fontFamily: 'Italianno, cursive', fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: 'rgba(197,160,89,0.5)', margin: '0 0 32px', lineHeight: 1.3 }}>
+                        You don&#39;t join. You&#39;re accepted.
+                    </p>
+                </div>
+
+            {/* ── LOGIN CARD ── */}
+            <div className="login-card" style={{ animation: mounted ? 'loginFadeUp 1s ease-out 0.7s both' : 'none' }}>
+                <p className="login-subtitle">Sign in to enter the household</p>
 
                 <button onClick={handleGoogleLogin} className="oauth-btn" disabled={loading}>
                     <svg width="16" height="16" viewBox="0 0 24 24">
@@ -143,6 +315,7 @@ export default function LoginPage() {
 
                 <div className="footer-text">Property of Queen Karin &nbsp;·&nbsp; Est. 2024</div>
             </div>
+            </div>{/* close brand/content wrapper */}
 
             {/* Fake mobile bottom nav */}
             <nav className="login-fake-nav">

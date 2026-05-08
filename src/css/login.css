@@ -1,18 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600&family=Italianno&family=Orbitron:wght@400;500;600;700&display=swap');
 
 * { box-sizing: border-box; }
 
 .login-container {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
     font-family: 'Cinzel', serif;
     color: #fff;
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
     background: #020202;
-    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 /* old .login-bg and .login-overlay removed — using layered tribute background now */
@@ -22,12 +22,11 @@
     z-index: 10;
     width: 100%;
     max-width: 400px;
-    padding: 48px 40px 40px;
-    background: rgba(6, 4, 2, 0.72);
-    border: 1px solid rgba(197, 160, 89, 0.18);
+    padding: 32px 32px 32px;
+    background: rgba(6, 4, 2, 0.55);
+    border: 1px solid rgba(197, 160, 89, 0.15);
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
-    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes fadeUp {
@@ -35,24 +34,7 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-.login-crown {
-    text-align: center;
-    margin-bottom: 6px;
-    font-size: 1.1rem;
-    color: rgba(197, 160, 89, 0.5);
-    letter-spacing: 6px;
-}
-
-.login-card h1 {
-    font-family: 'Cinzel', serif;
-    font-weight: 600;
-    color: #c5a059;
-    letter-spacing: 6px;
-    font-size: 1.35rem;
-    margin: 0 0 8px;
-    text-align: center;
-    text-transform: uppercase;
-}
+/* crown and h1 moved to brand header above card */
 
 .login-subtitle {
     text-align: center;
@@ -350,4 +332,16 @@
 
 @media (min-width: 769px) {
     .login-fake-nav { display: none; }
+    .login-container { padding-bottom: 40px; }
 }
+
+/* ── Keyframes ── */
+@keyframes loginFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes loginFadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes loginRingExpand {
+    0% { transform: scale(0.95); opacity: 0.4; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(0.95); opacity: 0.4; }
+}
+@keyframes loginToastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes loginToastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
