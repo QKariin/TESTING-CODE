@@ -533,7 +533,9 @@ export default function TributePage() {
                 );
                 const avatar = t.sender_avatar || null;
                 const initial = (t.sender_name || 'S').charAt(0).toUpperCase();
-                const when = t.created_at ? timeAgo(t.created_at) : '';
+                const isRecent = t.created_at && (Date.now() - new Date(t.created_at).getTime()) < 600000;
+                const headerText = isRecent ? 'Happening Now' : (t.created_at ? `Today at ${new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Recent Activity');
+                const when = isRecent && t.created_at ? timeAgo(t.created_at) : '';
                 const isRisky = t.kind === 'risky' && t.cardIcon;
 
                 return (
@@ -561,7 +563,7 @@ export default function TributePage() {
                             {/* Info — 70% right */}
                             <div style={{ flex: 1, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>Happening Now</div>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>{headerText}</div>
                                     {when && <span style={{ fontFamily: 'Orbitron, sans-serif', color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
                                 </div>
                                 {/* Avatar + Name */}
@@ -598,7 +600,7 @@ export default function TributePage() {
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span>Happening Now</span>
+                                    <span>{headerText}</span>
                                     {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
                                 </div>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', fontWeight: 500, lineHeight: 1.4 }}>

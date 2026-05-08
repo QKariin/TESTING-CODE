@@ -100,6 +100,11 @@ export default function LoginPage() {
                         if (!parsed.sender_avatar && msg.sender_email && msg.sender_email !== 'system') {
                             try { const { data: p } = await supabase.from('profiles').select('avatar_url').ilike('member_id', msg.sender_email).limit(1); if (p && p[0]?.avatar_url) parsed.sender_avatar = p[0].avatar_url; } catch {}
                         }
+                        // Show actual time instead of "Happening Now" for old events
+                        if (parsed.created_at) {
+                            const d = new Date(parsed.created_at);
+                            parsed.displayTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        }
                         showToast(parsed); break;
                     }
                 }
@@ -184,7 +189,9 @@ export default function LoginPage() {
             {toasts.map((t: any) => {
                 const avatar = t.sender_avatar || null;
                 const initial = (t.sender_name || 'S').charAt(0).toUpperCase();
-                const when = t.created_at ? timeAgo(t.created_at) : '';
+                const isRecent = t.created_at && (Date.now() - new Date(t.created_at).getTime()) < 600000;
+                const headerText = isRecent ? 'Happening Now' : (t.displayTime ? `Today at ${t.displayTime}` : 'Recent Activity');
+                const when = isRecent && t.created_at ? timeAgo(t.created_at) : '';
                 const isRisky = t.kind === 'risky' && t.cardIcon;
                 return (
                 <div key={t._id} className="login-toast" style={{
@@ -204,7 +211,7 @@ export default function LoginPage() {
                             </div>
                             <div style={{ flex: 1, padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>Happening Now</div>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase' }}>{headerText}</div>
                                     {when && <span style={{ fontFamily: 'Orbitron, sans-serif', color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -232,7 +239,7 @@ export default function LoginPage() {
                             )}
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span>Happening Now</span>
+                                    <span>{headerText}</span>
                                     {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
                                 </div>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', fontWeight: 500, lineHeight: 1.4 }}>
