@@ -621,9 +621,9 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 .faq-cb-row-queen { justify-content: flex-start; }
 .faq-cb-row-user { justify-content: flex-end; }
 .faq-cb-av {
-    width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-    border: 1px solid rgba(197,160,89,0.4); flex-shrink: 0;
-    align-self: flex-end; margin-bottom: 18px;
+    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+    border: 1.5px solid rgba(197,160,89,0.35); flex-shrink: 0;
+    align-self: flex-start; margin-top: 2px;
 }
 .faq-cb-wrap-queen { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; }
 .faq-cb-wrap-user { display: flex; flex-direction: column; align-items: flex-end; max-width: 80%; }
@@ -695,6 +695,19 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 }
 .faq-close-btn {
     border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.25);
+}
+.faq-keep-asking-wrap {
+    display: flex; justify-content: center; margin-top: 18px;
+}
+.faq-keep-asking-btn {
+    background: rgba(197,160,89,0.08); border: 1px solid rgba(197,160,89,0.3);
+    color: #c5a059; font-family: 'Cinzel', serif;
+    font-size: 0.65rem; letter-spacing: 3px; padding: 12px 28px;
+    cursor: pointer; transition: all 0.3s;
+    text-transform: uppercase;
+}
+.faq-keep-asking-btn:hover {
+    background: rgba(197,160,89,0.15); border-color: rgba(197,160,89,0.55);
 }
 
 /* FINAL CTA */
@@ -1551,29 +1564,45 @@ function selectFaqQuestion(catIndex, qIndex) {
             '<div class="faq-cb-wrap-queen"><div class="faq-a-bubble">' + pickupHtml + aHtml + '</div>' +
             '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
         body.appendChild(row);
-        // Show remaining questions from same topic
+        // Show "Keep asking" button if there are remaining questions
         var remaining = [];
         for (var i = 0; i < items.length; i++) {
             if (i !== qIndex) remaining.push(i);
         }
         if (remaining.length > 0) {
             setTimeout(function() {
-                var wrap = document.createElement('div');
-                wrap.className = 'faq-q-wrap';
-                remaining.forEach(function(ri) {
-                    var qt = items[ri].querySelector('.faq-question span').textContent;
-                    var b = document.createElement('div');
-                    b.className = 'faq-q-bubble';
-                    b.textContent = qt;
-                    b.setAttribute('data-cat', catIndex);
-                    b.setAttribute('data-q', ri);
-                    b.onclick = function() {
-                        selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
-                    };
-                    wrap.appendChild(b);
-                });
-                body.appendChild(wrap);
+                var keepWrap = document.createElement('div');
+                keepWrap.className = 'faq-keep-asking-wrap';
+                var keepBtn = document.createElement('button');
+                keepBtn.className = 'faq-keep-asking-btn';
+                keepBtn.textContent = 'KEEP ASKING';
+                keepBtn.onclick = function() {
+                    // Remove old back/close actions
+                    var oldActions = body.querySelectorAll('.faq-chat-actions');
+                    oldActions.forEach(function(a) { a.remove(); });
+                    keepWrap.remove();
+                    var wrap = document.createElement('div');
+                    wrap.className = 'faq-q-wrap';
+                    remaining.forEach(function(ri) {
+                        var qt = items[ri].querySelector('.faq-question span').textContent;
+                        var b = document.createElement('div');
+                        b.className = 'faq-q-bubble';
+                        b.textContent = qt;
+                        b.setAttribute('data-cat', catIndex);
+                        b.setAttribute('data-q', ri);
+                        b.onclick = function() {
+                            selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
+                        };
+                        wrap.appendChild(b);
+                    });
+                    body.appendChild(wrap);
+                    addChatActions(faqCatNames[catIndex]);
+                    scrollFaqChat();
+                };
+                keepWrap.appendChild(keepBtn);
+                // Also add back/close right away
                 addChatActions(faqCatNames[catIndex]);
+                body.appendChild(keepWrap);
                 scrollFaqChat();
             }, 400);
         } else {
