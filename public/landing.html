@@ -709,18 +709,20 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     display: flex; flex-direction: column; align-items: center;
     gap: 8px; margin-top: 16px; padding-bottom: 20px;
 }
-.faq-back-btn, .faq-close-btn {
-    background: none; border: 1px solid rgba(197,160,89,0.15);
-    color: rgba(197,160,89,0.4); font-family: 'Cinzel', serif;
+.faq-close-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.25); font-family: 'Cinzel', serif;
     font-size: 0.6rem; letter-spacing: 2px; padding: 12px 28px;
     border-radius: 14px; cursor: pointer;
 }
-.faq-close-btn {
-    border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.25);
-}
 .faq-keep-asking-wrap {
-    display: flex; justify-content: center; margin-top: 18px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; margin-top: 18px;
     position: relative; z-index: 2;
+}
+.faq-change-topic-btn {
+    background: transparent; border-color: rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.5);
 }
 .faq-keep-asking-btn {
     background: rgba(197,160,89,0.08); border: 1px solid rgba(197,160,89,0.3);
@@ -1567,7 +1569,7 @@ function showQuestionBubbles(catIndex, questions) {
                 scrollFaqChat();
                 // After last question, add actions
                 if (idx === questions.length - 1) {
-                    setTimeout(function() { addChatActions(faqCatNames[catIndex]); scrollFaqChat(); }, 200);
+                    setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
                 }
             }, delay);
         })(i);
@@ -1575,25 +1577,14 @@ function showQuestionBubbles(catIndex, questions) {
     }
 }
 
-function addChatActions(topicName) {
+function addChatActions() {
     var body = document.getElementById('faqChatBody');
     var actions = document.createElement('div');
     actions.className = 'faq-chat-actions';
-    if (topicName) {
-        var topic = document.createElement('div');
-        topic.style.cssText = 'font-family:Orbitron,sans-serif;font-size:0.25rem;color:rgba(197,160,89,0.3);letter-spacing:2px;text-transform:uppercase;';
-        topic.textContent = topicName;
-        actions.appendChild(topic);
-    }
-    var back = document.createElement('button');
-    back.className = 'faq-back-btn';
-    back.textContent = '← BACK TO TOPICS';
-    back.onclick = function() { goBackToCategories(); };
     var close = document.createElement('button');
     close.className = 'faq-close-btn';
     close.textContent = 'CLOSE';
     close.onclick = function() { closeFaqChat(); };
-    actions.appendChild(back);
     actions.appendChild(close);
     body.appendChild(actions);
 }
@@ -1659,18 +1650,28 @@ function selectFaqQuestion(catIndex, qIndex) {
                             body.appendChild(wrap);
                             scrollFaqChat();
                             if (idx === remaining.length - 1) {
-                                setTimeout(function() { addChatActions(faqCatNames[catIndex]); scrollFaqChat(); }, 200);
+                                setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
                             }
                         }, idx * 350);
                     });
                 };
+                var changeBtn = document.createElement('button');
+                changeBtn.className = 'faq-keep-asking-btn faq-change-topic-btn';
+                changeBtn.textContent = 'CHANGE TOPIC';
+                changeBtn.onclick = function() {
+                    var oldActions = body.querySelectorAll('.faq-chat-actions');
+                    oldActions.forEach(function(a) { a.remove(); });
+                    keepWrap.remove();
+                    goBackToCategories();
+                };
                 keepWrap.appendChild(keepBtn);
+                keepWrap.appendChild(changeBtn);
                 body.appendChild(keepWrap);
-                addChatActions(faqCatNames[catIndex]);
+                addChatActions();
                 scrollFaqChat();
             }, 400);
         } else {
-            addChatActions(faqCatNames[catIndex]);
+            addChatActions();
         }
         scrollFaqChat();
     }, 1500);
