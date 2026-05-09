@@ -617,7 +617,9 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 }
 .faq-chat-body::-webkit-scrollbar { display: none; }
 /* Chat rows */
-.faq-cb-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px; }
+.faq-cb-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px;
+    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
 .faq-cb-row-queen { justify-content: flex-start; }
 .faq-cb-row-user { justify-content: flex-end; }
 .faq-cb-av {
@@ -645,6 +647,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 /* Category chips */
 .faq-cat-chips {
     display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 4px; justify-content: flex-end;
+    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 .faq-cat-chip {
     background: #1c1c1e; border: 1px solid rgba(197,160,89,0.2);
@@ -673,16 +676,19 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     font-size: 0.95rem; line-height: 1.8; padding: 12px 14px;
     border-radius: 16px 16px 16px 3px; word-break: break-word;
     text-align: left;
-    animation: faqBubbleIn 0.3s ease forwards;
+    animation: faqBubbleIn 0.45s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 @keyframes faqBubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes faqSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 /* Typing indicator */
-.faq-typing-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px; }
+.faq-typing-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px;
+    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
 .faq-typing-bubble {
     background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.3);
     padding: 12px 18px; border-radius: 16px 16px 16px 3px;
     display: flex; gap: 5px; align-items: center;
-    animation: faqBubbleIn 0.2s ease forwards;
+    animation: faqBubbleIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 .faq-typing-dot {
     width: 7px; height: 7px; border-radius: 50%;
@@ -696,7 +702,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     30% { transform: translateY(-6px); opacity: 1; }
 }
 /* Staggered question fade-in */
-.faq-q-bubble { opacity: 0; animation: faqQFadeIn 0.35s ease forwards; }
+.faq-q-bubble { opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
 @keyframes faqQFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .faq-chat-ts {
     font-family: 'Orbitron', sans-serif; font-size: 0.3rem;
@@ -1512,7 +1518,9 @@ function addUserBubble(text) {
 
 function scrollFaqChat() {
     var body = document.getElementById('faqChatBody');
-    setTimeout(function() { body.scrollTop = body.scrollHeight; }, 50);
+    setTimeout(function() {
+        body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+    }, 50);
 }
 
 function showCategoryChips() {
