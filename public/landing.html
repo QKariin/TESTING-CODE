@@ -1546,24 +1546,32 @@ function selectFaqChatCat(index) {
 
 function showQuestionBubbles(catIndex, questions) {
     var body = document.getElementById('faqChatBody');
-    var wrap = document.createElement('div');
-    wrap.className = 'faq-q-wrap';
+    var delay = 0;
     for (var i = 0; i < questions.length; i++) {
-        var qText = questions[i].querySelector('.faq-question span').textContent;
-        var bubble = document.createElement('div');
-        bubble.className = 'faq-q-bubble';
-        bubble.style.animationDelay = (i * 0.12) + 's';
-        bubble.textContent = qText;
-        bubble.setAttribute('data-cat', catIndex);
-        bubble.setAttribute('data-q', i);
-        bubble.onclick = function() {
-            selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
-        };
-        wrap.appendChild(bubble);
+        (function(idx) {
+            setTimeout(function() {
+                var wrap = document.createElement('div');
+                wrap.className = 'faq-q-wrap';
+                var qText = questions[idx].querySelector('.faq-question span').textContent;
+                var bubble = document.createElement('div');
+                bubble.className = 'faq-q-bubble';
+                bubble.textContent = qText;
+                bubble.setAttribute('data-cat', catIndex);
+                bubble.setAttribute('data-q', idx);
+                bubble.onclick = function() {
+                    selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
+                };
+                wrap.appendChild(bubble);
+                body.appendChild(wrap);
+                scrollFaqChat();
+                // After last question, add actions
+                if (idx === questions.length - 1) {
+                    setTimeout(function() { addChatActions(faqCatNames[catIndex]); scrollFaqChat(); }, 200);
+                }
+            }, delay);
+        })(i);
+        delay += 350;
     }
-    body.appendChild(wrap);
-    addChatActions(faqCatNames[catIndex]);
-    scrollFaqChat();
 }
 
 function addChatActions(topicName) {
@@ -1629,24 +1637,27 @@ function selectFaqQuestion(catIndex, qIndex) {
                     var oldActions = body.querySelectorAll('.faq-chat-actions');
                     oldActions.forEach(function(a) { a.remove(); });
                     keepWrap.remove();
-                    var wrap = document.createElement('div');
-                    wrap.className = 'faq-q-wrap';
                     remaining.forEach(function(ri, idx) {
-                        var qt = items[ri].querySelector('.faq-question span').textContent;
-                        var b = document.createElement('div');
-                        b.className = 'faq-q-bubble';
-                        b.style.animationDelay = (idx * 0.12) + 's';
-                        b.textContent = qt;
-                        b.setAttribute('data-cat', catIndex);
-                        b.setAttribute('data-q', ri);
-                        b.onclick = function() {
-                            selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
-                        };
-                        wrap.appendChild(b);
+                        setTimeout(function() {
+                            var wrap = document.createElement('div');
+                            wrap.className = 'faq-q-wrap';
+                            var qt = items[ri].querySelector('.faq-question span').textContent;
+                            var b = document.createElement('div');
+                            b.className = 'faq-q-bubble';
+                            b.textContent = qt;
+                            b.setAttribute('data-cat', catIndex);
+                            b.setAttribute('data-q', ri);
+                            b.onclick = function() {
+                                selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
+                            };
+                            wrap.appendChild(b);
+                            body.appendChild(wrap);
+                            scrollFaqChat();
+                            if (idx === remaining.length - 1) {
+                                setTimeout(function() { addChatActions(faqCatNames[catIndex]); scrollFaqChat(); }, 200);
+                            }
+                        }, idx * 350);
                     });
-                    body.appendChild(wrap);
-                    addChatActions(faqCatNames[catIndex]);
-                    scrollFaqChat();
                 };
                 keepWrap.appendChild(keepBtn);
                 body.appendChild(keepWrap);
