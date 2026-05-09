@@ -382,6 +382,8 @@
         right: 32px !important;
         max-width: 420px !important;
         bottom: 32px !important;
+        width: auto !important;
+        transform: none !important;
     }
 }
 
@@ -405,5 +407,5 @@
     50% { transform: scale(1.05); opacity: 0.8; }
     100% { transform: scale(0.95); opacity: 0.4; }
 }
-@keyframes loginToastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes loginToastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+@keyframes loginToastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes loginToastOut { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(20px); } }

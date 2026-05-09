@@ -276,7 +276,7 @@ export default function LoginPage() {
                 return (
                 <div key={t._id} className="login-toast" style={{
                     position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom) + 16px)',
-                    right: 12, left: 12, zIndex: 99999,
+                    left: '50%', transform: 'translateX(-50%)', width: '80%', maxWidth: 420, zIndex: 99999,
                     background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
                     border: '1px solid rgba(197,160,89,0.4)',
                     borderRadius: 18, padding: isRisky ? '0' : '20px 22px',
