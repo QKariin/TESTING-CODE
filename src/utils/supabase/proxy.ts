@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/tribute')) {
+    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder')) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
@@ -159,7 +159,8 @@ export async function updateSession(request: NextRequest) {
         }
 
         const isApplyPage = pathname.startsWith('/apply');
-        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage) {
+        const isKeyholderPage = pathname.startsWith('/keyholder');
+        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage) {
             return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }
