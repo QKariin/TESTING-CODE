@@ -34,7 +34,8 @@
         font-display: swap;
     }
     /* CRITICAL CSS: FORCES BLACK SCREEN INSTANTLY */
-    html, body { background-color: #08080a; margin: 0; padding: 0; background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/queen-bg-mobile.jpg'); background-size: cover; background-position: center top; background-attachment: fixed; }
+    html, body { background-color: #08080a; margin: 0; padding: 0; }
+    .bg-fixed { position: fixed; inset: 0; z-index: -1; background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/queen-bg-mobile.jpg'); background-size: cover; background-position: center top; }
     #loader-gate { display: flex; opacity: 1; visibility: visible; }
 
 :root {
@@ -829,6 +830,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     </style>
 </head>
 <body oncontextmenu="return false;">
+    <div class="bg-fixed"></div>
 
     <div id="loader-gate" style="display:none !important;">
 
