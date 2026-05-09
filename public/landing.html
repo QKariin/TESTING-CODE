@@ -708,6 +708,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 .faq-chat-actions {
     display: flex; flex-direction: column; align-items: center;
     gap: 8px; margin-top: 16px; padding-bottom: 20px;
+    animation: faqFadeIn 0.4s ease forwards;
 }
 .faq-close-btn {
     background: none; border: 1px solid rgba(255,255,255,0.08);
@@ -719,7 +720,9 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     display: flex; flex-direction: column; align-items: center;
     gap: 10px; margin-top: 18px;
     position: relative; z-index: 2;
+    animation: faqFadeIn 0.5s ease forwards;
 }
+@keyframes faqFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .faq-change-topic-btn {
     background: transparent; border-color: rgba(197,160,89,0.15);
     color: rgba(197,160,89,0.5);
@@ -1646,31 +1649,44 @@ function selectFaqQuestion(catIndex, qIndex) {
                 keepBtn.className = 'faq-keep-asking-btn';
                 keepBtn.textContent = 'KEEP ASKING';
                 keepBtn.onclick = function() {
-                    // Remove old back/close actions
+                    // Fade out buttons
                     var oldActions = body.querySelectorAll('.faq-chat-actions');
-                    oldActions.forEach(function(a) { a.remove(); });
-                    keepWrap.remove();
-                    remaining.forEach(function(ri, idx) {
+                    oldActions.forEach(function(a) { a.style.opacity = '0'; a.style.transition = 'opacity 0.3s'; });
+                    keepWrap.style.opacity = '0';
+                    keepWrap.style.transition = 'opacity 0.3s';
+                    setTimeout(function() {
+                        oldActions.forEach(function(a) { a.remove(); });
+                        keepWrap.remove();
+                        // Show typing while "thinking"
+                        showTypingIndicator();
                         setTimeout(function() {
-                            var wrap = document.createElement('div');
-                            wrap.className = 'faq-q-wrap';
-                            var qt = items[ri].querySelector('.faq-question span').textContent;
-                            var b = document.createElement('div');
-                            b.className = 'faq-q-bubble';
-                            b.textContent = qt;
-                            b.setAttribute('data-cat', catIndex);
-                            b.setAttribute('data-q', ri);
-                            b.onclick = function() {
-                                selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
-                            };
-                            wrap.appendChild(b);
-                            body.appendChild(wrap);
-                            scrollFaqChat();
-                            if (idx === remaining.length - 1) {
-                                setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
-                            }
-                        }, idx * 350);
-                    });
+                            removeTypingIndicator();
+                            addQueenBubble('Sure, here you go:');
+                            setTimeout(function() {
+                                remaining.forEach(function(ri, idx) {
+                                    setTimeout(function() {
+                                        var wrap = document.createElement('div');
+                                        wrap.className = 'faq-q-wrap';
+                                        var qt = items[ri].querySelector('.faq-question span').textContent;
+                                        var b = document.createElement('div');
+                                        b.className = 'faq-q-bubble';
+                                        b.textContent = qt;
+                                        b.setAttribute('data-cat', catIndex);
+                                        b.setAttribute('data-q', ri);
+                                        b.onclick = function() {
+                                            selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
+                                        };
+                                        wrap.appendChild(b);
+                                        body.appendChild(wrap);
+                                        scrollFaqChat();
+                                        if (idx === remaining.length - 1) {
+                                            setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
+                                        }
+                                    }, idx * 350);
+                                });
+                            }, 400);
+                        }, 900);
+                    }, 300);
                 };
                 keepWrap.appendChild(keepBtn);
                 body.appendChild(keepWrap);
