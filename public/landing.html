@@ -676,6 +676,28 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     animation: faqBubbleIn 0.3s ease forwards;
 }
 @keyframes faqBubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* Typing indicator */
+.faq-typing-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px; }
+.faq-typing-bubble {
+    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.3);
+    padding: 12px 18px; border-radius: 16px 16px 16px 3px;
+    display: flex; gap: 5px; align-items: center;
+    animation: faqBubbleIn 0.2s ease forwards;
+}
+.faq-typing-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(197,160,89,0.5);
+    animation: faqTypingBounce 1.2s ease-in-out infinite;
+}
+.faq-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.faq-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes faqTypingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+}
+/* Staggered question fade-in */
+.faq-q-bubble { opacity: 0; animation: faqQFadeIn 0.35s ease forwards; }
+@keyframes faqQFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .faq-chat-ts {
     font-family: 'Orbitron', sans-serif; font-size: 0.3rem;
     letter-spacing: 1px; margin-top: 3px; color: rgba(255,255,255,0.15);
@@ -1431,10 +1453,11 @@ function openFaqOrbital() {
     if (speech) speech.style.display = 'none';
     body.innerHTML = '';
     overlay.classList.add('open');
-    // Queen greeting
-    setTimeout(function() { addQueenBubble('What would you like to know?'); }, 300);
+    // Queen typing then greeting
+    setTimeout(function() { showTypingIndicator(); }, 200);
+    setTimeout(function() { addQueenBubble('What would you like to know?'); }, 1200);
     // Category chips
-    setTimeout(function() { showCategoryChips(); }, 700);
+    setTimeout(function() { showCategoryChips(); }, 1600);
 }
 
 function closeFaqChat() {
@@ -1443,7 +1466,24 @@ function closeFaqChat() {
     if (speech) speech.style.display = '';
 }
 
+function showTypingIndicator() {
+    var body = document.getElementById('faqChatBody');
+    var row = document.createElement('div');
+    row.className = 'faq-typing-row';
+    row.id = 'faqTyping';
+    row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
+        '<div class="faq-typing-bubble"><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div></div>';
+    body.appendChild(row);
+    scrollFaqChat();
+}
+
+function removeTypingIndicator() {
+    var el = document.getElementById('faqTyping');
+    if (el) el.remove();
+}
+
 function addQueenBubble(text) {
+    removeTypingIndicator();
     var body = document.getElementById('faqChatBody');
     var row = document.createElement('div');
     row.className = 'faq-cb-row faq-cb-row-queen';
@@ -1496,9 +1536,12 @@ function selectFaqChatCat(index) {
     if (!cats[index]) return;
     var questions = cats[index].querySelectorAll('.faq-item');
     setTimeout(function() {
-        addQueenBubble('Here are some common questions:');
-        setTimeout(function() { showQuestionBubbles(index, questions); }, 400);
-    }, 500);
+        showTypingIndicator();
+        setTimeout(function() {
+            addQueenBubble('Here are some common questions:');
+            setTimeout(function() { showQuestionBubbles(index, questions); }, 400);
+        }, 1000);
+    }, 300);
 }
 
 function showQuestionBubbles(catIndex, questions) {
@@ -1509,6 +1552,7 @@ function showQuestionBubbles(catIndex, questions) {
         var qText = questions[i].querySelector('.faq-question span').textContent;
         var bubble = document.createElement('div');
         bubble.className = 'faq-q-bubble';
+        bubble.style.animationDelay = (i * 0.12) + 's';
         bubble.textContent = qText;
         bubble.setAttribute('data-cat', catIndex);
         bubble.setAttribute('data-q', i);
@@ -1552,13 +1596,15 @@ function selectFaqQuestion(catIndex, qIndex) {
     var aHtml = items[qIndex].querySelector('.faq-answer').innerHTML;
     // User asks
     addUserBubble(qText);
-    // Queen answer — pickup line only on first answer per topic
+    // Queen answer — typing indicator then reply
     var pickupHtml = '';
     if (!faqCatFirstAnswer[catIndex]) {
         faqCatFirstAnswer[catIndex] = true;
         pickupHtml = '<p style="color:#c5a059;margin:0 0 8px;font-family:Cinzel,serif;font-size:0.85rem;font-weight:600">' + getNextPickup() + '</p>';
     }
+    setTimeout(function() { showTypingIndicator(); }, 300);
     setTimeout(function() {
+        removeTypingIndicator();
         var body = document.getElementById('faqChatBody');
         var row = document.createElement('div');
         row.className = 'faq-cb-row faq-cb-row-queen';
@@ -1585,10 +1631,11 @@ function selectFaqQuestion(catIndex, qIndex) {
                     keepWrap.remove();
                     var wrap = document.createElement('div');
                     wrap.className = 'faq-q-wrap';
-                    remaining.forEach(function(ri) {
+                    remaining.forEach(function(ri, idx) {
                         var qt = items[ri].querySelector('.faq-question span').textContent;
                         var b = document.createElement('div');
                         b.className = 'faq-q-bubble';
+                        b.style.animationDelay = (idx * 0.12) + 's';
                         b.textContent = qt;
                         b.setAttribute('data-cat', catIndex);
                         b.setAttribute('data-q', ri);
@@ -1610,12 +1657,15 @@ function selectFaqQuestion(catIndex, qIndex) {
             addChatActions(faqCatNames[catIndex]);
         }
         scrollFaqChat();
-    }, 600);
+    }, 1500);
 }
 
 function goBackToCategories() {
-    addQueenBubble('What else would you like to know?');
-    setTimeout(function() { showCategoryChips(); }, 400);
+    showTypingIndicator();
+    setTimeout(function() {
+        addQueenBubble('What else would you like to know?');
+        setTimeout(function() { showCategoryChips(); }, 400);
+    }, 1000);
 }
 
 /* ── LEADERBOARD ── */
