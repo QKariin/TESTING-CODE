@@ -3600,6 +3600,34 @@ function getSystemLogHtml(msg: any) {
     const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
     const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const content = msg.content || msg.message || "";
+
+    // ── TASK_REVIEW_CARD ──
+    if (content.startsWith('TASK_REVIEW_CARD::')) {
+        try {
+            const dd = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
+            const approved = dd.status === 'approve';
+            const borderColor = approved ? 'rgba(74,222,128,0.5)' : 'rgba(255,60,60,0.4)';
+            const accentColor = approved ? '#4ade80' : '#e85d75';
+            const icon = approved ? '\u2713' : '\u2717';
+            const label = dd.type === 'routine' ? 'ROUTINE' : 'TASK';
+            const title = approved ? `${label} APPROVED` : `${label} REJECTED`;
+            const pointsLine = approved && dd.points ? `<div style="font-family:Orbitron,sans-serif;font-size:0.7rem;color:${accentColor};margin-top:6px;">+${dd.points} MERIT</div>` : '';
+            const penaltyLine = !approved && dd.penalty ? `<div style="font-family:Orbitron,sans-serif;font-size:0.7rem;color:${accentColor};margin-top:6px;">-${dd.penalty} COINS</div>` : '';
+            const taskText = dd.taskText ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">${dd.taskText}</div>` : '';
+            const thumb = dd.thumbnail ? `<img src="${dd.thumbnail}" style="width:100%;max-width:200px;border-radius:6px;margin-top:8px;opacity:0.7;" onerror="this.style.display='none'">` : '';
+            const comment = dd.comment ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:6px;font-style:italic;">"${dd.comment}"</div>` : '';
+            return `
+            <div style="display:flex;flex-direction:column;background:rgba(255,255,255,0.02);border-left:2px solid ${borderColor};border-radius:4px;padding:12px 16px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:1rem;color:${accentColor};">${icon}</span>
+                    <span style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:${accentColor};letter-spacing:2px;">${title}</span>
+                </div>
+                ${taskText}${thumb}${pointsLine}${penaltyLine}${comment}
+                <span style="font-family:Orbitron,sans-serif;color:rgba(255,255,255,0.2);font-size:0.55rem;margin-top:8px;">${dateStr} - ${timeStr}</span>
+            </div>`;
+        } catch (_) {}
+    }
+
     return `
     <div style="display:flex; flex-direction:column; background:rgba(255,255,255,0.02); border-left:2px solid #c5a059; padding:10px 15px; margin-bottom:10px;">
         <span style="font-family:'Orbitron'; color:#c5a059; font-size:0.85rem;">${content}</span>
