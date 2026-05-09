@@ -108,7 +108,16 @@ export default function KeyholderPage() {
             try {
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
-                if (user) setUserEmail(user.email || null);
+                if (user) {
+                    setUserEmail(user.email || null);
+                    // Auto-checkout if redirected back with a tier
+                    const autoTier = params.get('tier');
+                    if (autoTier && ['trial', 'weekly', 'monthly'].includes(autoTier)) {
+                        // Clean the URL
+                        window.history.replaceState({}, '', '/keyholder');
+                        handleCheckout(autoTier);
+                    }
+                }
             } catch {}
         };
         init();
@@ -241,6 +250,11 @@ export default function KeyholderPage() {
     const pick = (v: string) => { setAnswers([...answers, v]); setStep(step + 1); };
 
     const handleCheckout = async (tierId: string) => {
+        // If not logged in, send to login with tier saved in URL
+        if (!userEmail) {
+            window.location.href = `/login?redirect=/keyholder?tier=${tierId}`;
+            return;
+        }
         setLoading(tierId);
         try {
             const res = await fetch('/api/stripe/keyholder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tierId }) });
