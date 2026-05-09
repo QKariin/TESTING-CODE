@@ -199,6 +199,95 @@ export async function POST(req: Request) {
             }
 
             // ====================================================
+            // A2. CHASTITY KEYHOLDER
+            // ====================================================
+            if (metadata.type === 'CHASTITY_KEYHOLDER') {
+                const userId = metadata.userId;
+                const userEmail = metadata.email;
+                const userName = metadata.name || userEmail.split('@')[0];
+                const tierId = metadata.tierId || 'trial';
+                const days = parseInt(metadata.days || '3', 10);
+                const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+
+                console.log(`[KEYHOLDER] Processing ${tierId} (${days}d) for: ${userEmail}`);
+
+                // Check if profile already exists
+                const { data: existing } = await supabaseAdmin
+                    .from('profiles')
+                    .select('ID, parameters')
+                    .or(`ID.eq.${userId}${userEmail ? `,member_id.ilike.${userEmail}` : ''}`)
+                    .maybeSingle();
+
+                if (existing) {
+                    // Update existing profile with keyholder info
+                    const params = existing.parameters || {};
+                    params.source = 'chastity';
+                    params.chastity_tier = tierId;
+                    params.chastity_days = days;
+                    params.chastity_started = new Date().toISOString();
+                    params.chastity_expires = expiresAt;
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({ parameters: params })
+                        .eq('ID', existing.ID);
+                    console.log(`[KEYHOLDER] Updated existing profile for ${userEmail}`);
+                } else {
+                    // Create new profile
+                    await supabaseAdmin
+                        .from('profiles')
+                        .insert({
+                            ID: userId,
+                            member_id: userEmail,
+                            name: userName,
+                            hierarchy: 'Chastity Sub',
+                            score: 0,
+                            wallet: 0,
+                            parameters: {
+                                source: 'chastity',
+                                chastity_tier: tierId,
+                                chastity_days: days,
+                                chastity_started: new Date().toISOString(),
+                                chastity_expires: expiresAt,
+                            }
+                        });
+
+                    // Create tasks row
+                    await supabaseAdmin
+                        .from('tasks')
+                        .insert({
+                            ID: userId,
+                            member_id: userEmail,
+                            Name: userName,
+                            Status: 'idle',
+                            Taskdom_History: '[]',
+                            taskdom_active_task: null,
+                            taskdom_pending_state: null,
+                        });
+
+                    console.log(`[KEYHOLDER] New chastity profile created for ${userEmail}`);
+                }
+
+                // Discord notification
+                discordNewMember(`${userName} (Keyholder ${tierId})`).catch(() => {});
+
+                // Push notification to Queen
+                try {
+                    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
+                    await fetch(`${baseUrl}/api/push`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            externalId: 'ceo@qkarin.com',
+                            title: 'New Keyholder Sub',
+                            message: `${userName} surrendered their key — ${tierId} (${days} days)`,
+                        }),
+                    });
+                } catch (e: any) {
+                    console.error('[KEYHOLDER] Push notification error:', e.message);
+                }
+            }
+
+            // ====================================================
             // B. SUBSCRIPTION
             // Metadata: type="SUBSCRIPTION_55" OR mode="subscription"
             // ====================================================

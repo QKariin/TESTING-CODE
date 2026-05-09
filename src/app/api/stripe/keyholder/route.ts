@@ -80,7 +80,7 @@ export async function POST(req: Request) {
                 },
             ],
             mode: 'payment',
-            success_url: `${origin}/keyholder?status=success&tier=${tierId}`,
+            success_url: `${origin}/profile`,
             cancel_url: `${origin}/keyholder?status=cancelled`,
             metadata: {
                 userId: user.id,
