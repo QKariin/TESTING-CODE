@@ -1569,12 +1569,29 @@ function showQuestionBubbles(catIndex, questions) {
                 scrollFaqChat();
                 // After last question, add actions
                 if (idx === questions.length - 1) {
-                    setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
+                    setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
                 }
             }, delay);
         })(i);
         delay += 350;
     }
+}
+
+function addChangeTopic() {
+    var body = document.getElementById('faqChatBody');
+    var wrap = document.createElement('div');
+    wrap.className = 'faq-keep-asking-wrap';
+    var btn = document.createElement('button');
+    btn.className = 'faq-keep-asking-btn faq-change-topic-btn';
+    btn.textContent = 'CHANGE TOPIC';
+    btn.onclick = function() {
+        var oldActions = body.querySelectorAll('.faq-chat-actions');
+        oldActions.forEach(function(a) { a.remove(); });
+        wrap.remove();
+        goBackToCategories();
+    };
+    wrap.appendChild(btn);
+    body.appendChild(wrap);
 }
 
 function addChatActions() {
@@ -1650,22 +1667,12 @@ function selectFaqQuestion(catIndex, qIndex) {
                             body.appendChild(wrap);
                             scrollFaqChat();
                             if (idx === remaining.length - 1) {
-                                setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
+                                setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
                             }
                         }, idx * 350);
                     });
                 };
-                var changeBtn = document.createElement('button');
-                changeBtn.className = 'faq-keep-asking-btn faq-change-topic-btn';
-                changeBtn.textContent = 'CHANGE TOPIC';
-                changeBtn.onclick = function() {
-                    var oldActions = body.querySelectorAll('.faq-chat-actions');
-                    oldActions.forEach(function(a) { a.remove(); });
-                    keepWrap.remove();
-                    goBackToCategories();
-                };
                 keepWrap.appendChild(keepBtn);
-                keepWrap.appendChild(changeBtn);
                 body.appendChild(keepWrap);
                 addChatActions();
                 scrollFaqChat();
