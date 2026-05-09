@@ -252,14 +252,15 @@ export default function KeyholderPage() {
     const handleCheckout = async (tierId: string) => {
         // If not logged in, send to login with tier saved in URL
         if (!userEmail) {
-            window.location.href = `/login?redirect=/keyholder?tier=${tierId}`;
+            const url = `/login?redirect=/keyholder?tier=${tierId}`;
+            try { window.top!.location.href = url; } catch { window.location.href = url; }
             return;
         }
         setLoading(tierId);
         try {
             const res = await fetch('/api/stripe/keyholder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tierId }) });
             const data = await res.json();
-            if (data.url) window.location.href = data.url;
+            if (data.url) { try { window.top!.location.href = data.url; } catch { window.location.href = data.url; } }
             else { setStatus('error'); setLoading(null); }
         } catch { setStatus('error'); setLoading(null); }
     };
