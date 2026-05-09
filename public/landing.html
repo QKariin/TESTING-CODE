@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE SOVEREIGN | Queen Karin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+    @font-face {
+        font-family: 'Cinzel';
+        src: url('/fonts/Cinzel-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-display: swap;
+    }
+    @font-face {
+        font-family: 'Inter';
+        src: url('/fonts/Inter_18pt-Light.woff2') format('woff2');
+        font-weight: 300;
+        font-display: swap;
+    }
+    @font-face {
+        font-family: 'Inter';
+        src: url('/fonts/Inter_18pt-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-display: swap;
+    }
+    @font-face {
+        font-family: 'Italianno';
+        src: url('/fonts/Italianno-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-display: swap;
+    }
+    /* CRITICAL CSS: FORCES BLACK SCREEN INSTANTLY */
+    html, body { background-color: #08080a; margin: 0; padding: 0; background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/queen-bg-mobile.jpg'); background-size: cover; background-position: center top; background-attachment: fixed; }
+    #loader-gate { display: flex; opacity: 1; visibility: visible; }
+
+:root {
+    --gold: #c5a059;
+    --gold-dim: rgba(197, 160, 89, 0.4);
+    --bg-dark: #08080a;
+    --glass-bg: rgba(15, 15, 18, 0.7);
+    --glass-border: rgba(197, 160, 89, 0.2);
+    --blur: blur(25px) saturate(180%);
+    --transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+html, body { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* 1. HTML: CLEAN FOR STICKY SCROLL */
+html {
+    width: 100%;
+}
+
+/* 2. BODY: TRANSPARENT & CONTROLLED */
+body {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden; /* Stops side scroll */
+    background-color: #08080a !important;
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    line-height: 1.6;
+    text-align: center;
+}
+body.locked { overflow: hidden !important; height: 100vh !important; }
+
+/* SUBMISSION GATE */
+#loader-gate {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.15); /* Dark curtain to hide load */
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    z-index: 20000; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 35vh; align-items: center;
+    transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+/* KNEEL BUTTON: PURE TRANSPARENT GLASS */
+.kneel-wrapper {
+    position: relative; width: 280px; height: 60px; cursor: pointer; overflow: hidden;
+    background: transparent !important;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    box-shadow: none !important;
+    transition: transform 0.2s ease;
+}
+.kneel-fill { position: absolute; top: 0; left: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, #000000 0%, var(--gold) 50%, #000000 100%); z-index: 1; transition: width 0.1s linear; }
+.kneel-text { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-family: 'Cinzel', serif; color: var(--gold); font-size: 14px; letter-spacing: 4px; font-weight: 700; pointer-events: none; }
+.instruction { margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px; color: #ccc; opacity: 0.6; text-transform: uppercase; }
+
+/* SLAVE LOGIN BUTTON */
+    .btn-slave {
+        margin-top: 25px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #555;
+        font-family: 'Cinzel', serif;
+        font-size: 10px;
+        letter-spacing: 3px;
+        padding: 10px 25px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }
+
+    .btn-slave:hover {
+        color: var(--gold);
+        border-color: var(--gold);
+        background: rgba(197, 160, 89, 0.05);
+    }
+
+/* HEADER: DESKTOP */
+.fixed-shelf {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0; /* THIS STOPS IT FROM GOING OUT THE WINDOW */
+    width: auto; /* DO NOT USE 100% */
+
+    height: 100vh;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10vh;
+
+    background: rgba(5, 5, 6, 0.6);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: var(--transition);
+}
+.header-inner { display: flex; flex-direction: column; align-items: center; transition: var(--transition); width: 100%; }
+.welcome { font-family: 'Cinzel', serif; font-weight: 400; font-size: 11px; letter-spacing: 8px; color: #777; text-transform: uppercase; margin-bottom: 10px; }
+.royal-brand { font-family: 'Cinzel', serif; font-weight: 700; font-size: clamp(2rem, 8vw, 80px); letter-spacing: 15px; color: var(--gold); text-transform: uppercase; line-height: 1; transition: var(--transition); }
+.mix-box { display: flex; align-items: baseline; justify-content: center; margin-top: -10px; transition: var(--transition); white-space: nowrap; }
+.s-kink { font-family: 'Italianno', cursive; font-size: clamp(4rem, 15vw, 9rem); color: #fff; text-shadow: 0 0 30px rgba(197, 160, 89, 0.2); }
+.s-dom { font-family: 'Cinzel', serif; font-weight: 400; font-size: clamp(1rem, 4vw, 2.2rem); color: #fff; opacity: 0.6; margin-left: 10px; letter-spacing: 4px; }
+.tiny-seal { padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); width: 300px; margin-top: 25px; }
+.tiny-seal h2 { font-family: 'Cinzel'; font-size: 9px; letter-spacing: 5px; color: var(--gold); opacity: 0.8; }
+.btn-join {
+    --kneel-bg: #080604;
+    --kneel-highlight: #c5a059;
+    width: 280px;
+    height: 60px;
+    background: linear-gradient(var(--kneel-bg), var(--kneel-bg)) padding-box, linear-gradient(135deg, transparent, var(--kneel-highlight) 40%, transparent 60%, var(--kneel-highlight)) border-box !important;
+    border: 1.5px solid transparent !important;
+    border-radius: 999px;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 14px;
+    text-decoration: none;
+    margin-top: 25px;
+    transition: all 0.4s ease;
+    white-space: nowrap;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 1px #1a1408, 0 0 20px rgba(197, 160, 89, 0.18), 0 6px 24px rgba(0, 0, 0, 0.72);
+}
+.btn-join:hover { box-shadow: inset 0 0 0 1px #1a1408, 0 0 30px rgba(197, 160, 89, 0.35), 0 6px 24px rgba(0, 0, 0, 0.72); }
+
+/* SCROLLED HEADER STATE */
+body.scrolled .fixed-shelf { height: 110px !important; padding-top: 0 !important; align-items: center !important; background: var(--glass-bg) !important; backdrop-filter: var(--blur) !important; -webkit-backdrop-filter: var(--blur) !important; border-bottom: 1px solid var(--glass-border); }
+body.scrolled .header-inner { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 30px !important; padding: 0 5% !important; }
+body.scrolled .welcome, body.scrolled .tiny-seal, body.scrolled .mix-box { display: none !important; }
+body.scrolled .royal-brand { width: auto !important; font-size: 14px !important; letter-spacing: 4px !important; color: #fff !important; white-space: nowrap !important; margin: 0 !important; }
+body.scrolled .btn-join { width: 450px !important; height: 60px !important; margin: 0 !important; padding: 0 !important; font-size: 14px !important; letter-spacing: 4px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; background: linear-gradient(#080604, #080604) padding-box, linear-gradient(135deg, transparent, #c5a059 40%, transparent 60%, #c5a059) border-box !important; border-radius: 999px !important; white-space: nowrap !important; }
+
+/* LADDER */
+.ladder-region {
+    height: 500vh; /* Long track for 7 items */
+    width: 100%; position: relative; margin-top: 50vh;
+}
+.ladder-sticky {
+    position: sticky; top: 0;
+    width: 100%; height: 100vh;
+    display: flex;
+    align-items: flex-start; /* FORCE TOP ALIGNMENT */
+    justify-content: center;
+    padding-top: 35vh; /* 35% Down screen */
+}
+
+.bloom-area { position: relative; width: 100%; height: 200px; display: flex; justify-content: center; }
+
+.stage-wrap {
+    position: absolute; width: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 15px;
+
+    /* STATIC FADE - NO FLOATING/MOVING */
+    transition: opacity 0.3s ease-out;
+    opacity: 0; pointer-events: none;
+}
+.stage-wrap.active-stage { opacity: 1; transform: none !important; }
+.stage-wrap.exit-stage { opacity: 0; transform: translateY(-50px); filter: blur(10px); transition: all 0.8s ease; }
+.stage-wrap[style] {
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+
+/* TEXT STYLES */
+.s-line { font-family: 'Cinzel', serif !important; font-weight: 400 !important; letter-spacing: 6px; text-transform: lowercase; white-space: nowrap; transition: all 1s ease; }
+.s-top { color: var(--gold); text-shadow: 0 0 15px var(--gold-dim); font-size: 2rem; opacity: 1; }
+.s-bot {
+    color: #444; filter: blur(8px); font-size: 1.2rem; opacity: 0; margin-top: 15px;
+    transition: all 0.8s ease;
+}
+.s-bot.lit { color: #c0c0c0 !important; filter: blur(0) !important; opacity: 1 !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+.s-final { font-weight: 400 !important; letter-spacing: 8px; text-transform: uppercase; }
+
+/* CONTENT: GLASS BOXES */
+.focus-flow { max-width: 1200px; margin: 0 auto; padding: 0 20px 200px; display: flex; flex-direction: column; align-items: center; gap: 10vh; }
+
+.glass-box {
+    background: transparent !important;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 2px;
+    padding: 60px 40px;
+
+    /* WIDE CARDS ON DESKTOP */
+    width: 90% !important;
+    max-width: 1800px !important;
+
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    color: #fff !important;
+
+    /* THE FIX: NEGATIVE MARGIN PULLS THE CARD UP TO ALIGN TEXT */
+    margin: -50px auto 0;
+}
+
+/* When active (controlled by JS), show box */
+.stage-wrap.active-stage .glass-box {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+}
+
+.glass-box h3 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.5rem; margin-bottom: 25px; letter-spacing: 5px; font-weight: 700; }
+.glass-box p { font-family: 'Cinzel', serif !important; font-weight: 400; color: #ddd; font-size: 1.1rem; margin-bottom: 20px; line-height: 1.8; letter-spacing: 1px; }
+.glass-box.violation { border-color: rgba(200, 50, 50, 0.3); } .glass-box.violation h3 { color: #cc4444; }
+.nob-bullets { font-family: 'Cinzel'; font-size: 0.9rem; color: #aaa; margin-top: 20px; letter-spacing: 3px; word-spacing: 10px; }
+
+/* FUNNEL SECTIONS */
+.funnel-section {
+    padding: 80px 25px;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+    position: relative;
+}
+.funnel-section::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    z-index: -1;
+}
+.funnel-section:nth-child(odd)::before { background: rgba(0,0,0,0.7); }
+.funnel-section:nth-child(even)::before { background: rgba(0,0,0,0.4); }
+.funnel-section.visible { opacity: 1; transform: translateY(0); }
+
+.funnel-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 5px;
+    color: var(--gold);
+    opacity: 0.6;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+.funnel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    letter-spacing: 6px;
+    color: #fff;
+    font-weight: 400;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+.funnel-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--gold);
+    margin: 0 auto 30px;
+    opacity: 0.4;
+}
+.funnel-text {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: #bbb;
+    line-height: 2;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+.funnel-text.dim { color: #666; font-style: italic; }
+
+/* RANK LADDER */
+.rank-ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 10px;
+}
+.rank-step {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.3s ease;
+}
+.rank-step:last-child { border-bottom: none; }
+.rank-step.gold .rank-name { color: var(--gold); }
+.rank-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: #888;
+    text-transform: uppercase;
+}
+.rank-desc {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 1px;
+    text-align: right;
+}
+
+/* SERVICE CARDS */
+.service-card {
+    border: 1px solid rgba(197, 160, 89, 0.12);
+    padding: 40px 25px;
+    margin-bottom: 15px;
+    text-align: center;
+    background: rgba(255,255,255,0.01);
+    transition: all 0.4s ease;
+}
+.service-card:hover { border-color: rgba(197, 160, 89, 0.3); }
+.service-icon {
+    font-size: 28px;
+    color: var(--gold);
+    opacity: 0.5;
+    margin-bottom: 20px;
+}
+.service-card h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 5px;
+    color: #fff;
+    margin-bottom: 15px;
+    font-weight: 400;
+}
+.service-card p {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: #777;
+    line-height: 1.8;
+    margin-bottom: 25px;
+    letter-spacing: 0.5px;
+}
+.service-cta {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-decoration: none;
+    border: 1px solid rgba(197, 160, 89, 0.2);
+    padding: 10px 30px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+.service-cta:hover {
+    background: rgba(197, 160, 89, 0.05);
+    border-color: var(--gold);
+}
+
+/* LEADERBOARD */
+.lb-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 25px;
+}
+.lb-tab {
+    background: none;
+    border: none;
+    padding: 8px 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: rgba(255,255,255,0.2);
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+.lb-tab.active {
+    color: var(--gold);
+    border-bottom-color: rgba(197,160,89,0.4);
+}
+.lb-entry {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-left: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+.lb-entry.top1 { background: rgba(197,160,89,0.06); border-left-color: rgba(197,160,89,0.35); }
+.lb-entry.top2, .lb-entry.top3 { border-left-color: rgba(197,160,89,0.2); }
+.lb-rank {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.lb-entry.top1 .lb-rank { font-size: 1.3rem; color: var(--gold); }
+.lb-entry:not(.top1) .lb-rank { font-size: 1rem; color: rgba(255,255,255,0.18); }
+.lb-entry.top2 .lb-rank, .lb-entry.top3 .lb-rank { color: rgba(197,160,89,0.5); }
+.lb-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.04));
+    border: 1px solid rgba(197,160,89,0.15);
+    background-size: cover;
+    background-position: center;
+}
+.lb-info { flex: 1; min-width: 0; text-align: left; }
+.lb-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.lb-entry.top1 .lb-name { color: rgba(255,255,255,0.85); }
+.lb-hier {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: rgba(197,160,89,0.35);
+    letter-spacing: 1.5px;
+}
+.lb-score {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.lb-entry.top1 .lb-score { color: var(--gold); }
+.lb-entry:not(.top1) .lb-score { color: rgba(197,160,89,0.5); }
+/* 4th place and below: visually smaller / dimmer */
+.lb-entry.minor { padding: 10px 15px; border-left-color: transparent; }
+.lb-entry.minor .lb-rank { font-size: 0.75rem; color: rgba(255,255,255,0.1); }
+.lb-entry.minor .lb-avatar { width: 30px; height: 30px; opacity: 0.5; }
+.lb-entry.minor .lb-name { font-size: 0.7rem; color: rgba(255,255,255,0.25); }
+.lb-entry.minor .lb-hier { font-size: 0.45rem; color: rgba(197,160,89,0.15); }
+.lb-entry.minor .lb-score { font-size: 0.75rem; color: rgba(197,160,89,0.25); }
+
+/* REVIEW CARDS */
+.review-card {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(197,160,89,0.08);
+    margin-bottom: 20px;
+    text-align: left;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+.review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 1px rgba(197,160,89,0.2);
+}
+.review-header {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02));
+    border-bottom: 1px solid rgba(197,160,89,0.06);
+    display: flex; align-items: center; gap: 14px;
+}
+.review-avatar {
+    width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+    border: 1px solid rgba(197,160,89,0.25); flex-shrink: 0;
+}
+.review-avatar-placeholder {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05));
+    border: 1px solid rgba(197,160,89,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 0.9rem; color: rgba(197,160,89,0.6); font-weight: 600;
+}
+.review-meta { flex: 1; position: relative; }
+.review-stars {
+    position: absolute; top: 0; right: 0;
+    display: flex; gap: 2px;
+}
+.review-stars .star-on { color: #c5a059; font-size: 0.75rem; }
+.review-stars .star-off { color: rgba(255,255,255,0.08); font-size: 0.75rem; }
+.review-name {
+    font-family: 'Cinzel', serif; font-size: 0.82rem;
+    color: rgba(255,255,255,0.65); font-weight: 600; margin-bottom: 4px;
+}
+.review-merit {
+    font-family: 'Cinzel', serif; font-size: 0.6rem; font-weight: 600;
+    color: rgba(197,160,89,0.5); letter-spacing: 1.5px; margin-bottom: 3px;
+}
+.review-hierarchy {
+    font-family: 'Cinzel', serif; font-size: 0.52rem; font-weight: 500;
+    color: rgba(255,255,255,0.2); letter-spacing: 1.5px;
+}
+.review-body {
+    padding: 18px 20px 22px;
+    background: linear-gradient(160deg, rgba(12,10,6,0.7), rgba(6,5,3,0.8));
+}
+.review-body p {
+    font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+    color: rgba(255,255,255,0.45); line-height: 1.9; margin: 0;
+    font-weight: 300; font-style: italic;
+}
+
+/* FAQ */
+.faq-group {
+    margin-bottom: 0;
+    text-align: left;
+    overflow: hidden;
+}
+.faq-group-header {
+    padding: 20px 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(197,160,89,0.03);
+    border: 1px solid rgba(197,160,89,0.08);
+    border-bottom: none;
+    transition: all 0.3s ease;
+}
+.faq-group:first-child .faq-group-header { border-radius: 12px 12px 0 0; }
+.faq-group:last-child .faq-group-header { border-bottom: 1px solid rgba(197,160,89,0.08); border-radius: 0 0 12px 12px; }
+.faq-group.open:last-child .faq-group-header { border-radius: 0; }
+.faq-group.open .faq-group-header {
+    background: rgba(197,160,89,0.06);
+    border-color: rgba(197,160,89,0.15);
+}
+.faq-group-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.faq-group-icon {
+    font-size: 0.9rem;
+    color: rgba(197,160,89,0.35);
+    transition: color 0.3s ease;
+}
+.faq-group.open .faq-group-icon { color: var(--gold); }
+.faq-group-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+.faq-group.open .faq-group-title { color: var(--gold); }
+.faq-group-toggle {
+    font-size: 0.65rem;
+    color: rgba(197,160,89,0.2);
+    transition: transform 0.4s ease, color 0.3s ease;
+}
+.faq-group.open .faq-group-toggle { transform: rotate(180deg); color: var(--gold); }
+.faq-group-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    background: rgba(0,0,0,0.3);
+    border-left: 1px solid rgba(197,160,89,0.08);
+    border-right: 1px solid rgba(197,160,89,0.08);
+}
+.faq-group:last-child .faq-group-body {
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+    border-radius: 0 0 12px 12px;
+}
+.faq-group.open .faq-group-body { max-height: 2000px; }
+
+.faq-item { text-align: left; }
+.faq-question {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    gap: 16px;
+    transition: background 0.3s ease;
+}
+.faq-question:hover { background: rgba(197,160,89,0.03); }
+#faq { max-width: 100%; padding-left: 12px; padding-right: 12px; }
+.faq-question span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    text-align: left;
+    flex: 1;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+.faq-toggle {
+    display: none;
+}
+.faq-item.open .faq-toggle { transform: rotate(90deg); color: var(--gold); }
+.faq-item.open .faq-question span { color: rgba(255,255,255,0.8); }
+.faq-item.open .faq-question { background: rgba(197,160,89,0.02); }
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s ease;
+    padding: 0 22px;
+    background: rgba(197,160,89,0.015);
+    border-bottom: 1px solid rgba(197,160,89,0.05);
+}
+.faq-item.open .faq-answer {
+    max-height: 1000px;
+    padding: 16px 22px 22px;
+}
+.faq-answer p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.28);
+    line-height: 1.9;
+    margin: 0;
+    font-weight: 300;
+}
+
+/* FINAL CTA */
+.final-cta {
+    padding: 100px 25px;
+}
+.final-cta .btn-join {
+    display: inline-flex !important;
+    width: 280px !important;
+    position: static !important;
+    transform: none !important;
+}
+
+/* MOBILE */
+@media only screen and (max-width: 768px) {
+
+    /* 1. LANDING STATE */
+    .fixed-shelf {
+        padding-top: 15vh !important; height: 100vh !important; align-items: flex-start !important; justify-content: center !important;
+        background: rgba(5, 5, 6, 0.3) !important; backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
+        width: 100% !important;
+         max-width: 100% !important;
+         right: 0 !important;
+         left: 0 !important;
+    }
+    .header-inner { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; max-width: 100% !important; }
+    .royal-brand { font-size: 30px !important; letter-spacing: 5px !important; margin-bottom: 0px !important; width: 100% !important; text-align: center !important; display: block !important; white-space: normal !important; }
+    .mix-box { transform: scale(1) !important; margin-top: -15px !important; display: flex !important; justify-content: center !important; position: relative !important; top: -15px !important; max-width: 100% !important;
+ }
+    .btn-join { display: block !important; margin-top: 100px !important; width: 85% !important; padding: 14px 0 !important; font-size: 13px !important; }
+
+    /* 2. SCROLLED STATE */
+ /* 2. SCROLLED STATE (SPLIT VIEW: TEXT LEFT, BUTTON RIGHT) */
+    body.scrolled .fixed-shelf {
+        height: 70px !important; /* Fixed compact height */
+        padding: 0 !important;
+        background: rgba(15, 15, 18, 0.98) !important;
+        backdrop-filter: blur(25px) saturate(180%) !important; -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+        align-items: center !important;
+    }
+
+    body.scrolled .header-inner {
+        padding-top: 0 !important;
+        flex-direction: column !important; /* Keep Text Stacked */
+        align-items: flex-start !important; /* Push to LEFT */
+        justify-content: center !important;
+        padding-left: 20px !important; /* Gap from left edge */
+        width: 100% !important;
+        height: 100% !important;
+        position: relative !important; /* Needed for button positioning */
+    }
+
+    /* LINE 1: BRAND NAME (Top Left) */
+    body.scrolled .royal-brand {
+        font-size: 14px !important;
+        padding top: 5px;
+        letter-spacing: 2px !important;
+        width: auto !important;
+        text-align: left !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+    }
+
+    /* LINE 2: KINK-DOM (Bottom Left) */
+    body.scrolled .mix-box {
+        transform: scale(0.7) !important; /* Smaller logo */
+        transform-origin: left center !important; /* Scale from left */
+        margin: 2px 0 0 0 !important;
+        width: auto !important;
+        justify-content: flex-start !important;
+        z-index: 2 !important;
+    }
+
+    body.scrolled .s-kink { font-size: 30px !important; }
+    body.scrolled .s-dom { font-size: 10px !important; }
+
+    /* BUTTON: RIGHT SIDE */
+    body.scrolled .btn-join {
+        position: absolute !important;
+        right: 10px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        margin: 0 !important;
+        width: 50% !important;
+        height: 50px !important;
+        padding: 0 !important;
+        font-size: 12px !important;
+        letter-spacing: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: linear-gradient(#080604, #080604) padding-box, linear-gradient(135deg, transparent, #c5a059 40%, transparent 60%, #c5a059) border-box !important;
+        border: 1.5px solid transparent !important;
+        border-radius: 999px !important;
+    }
+
+    /* 3. LADDER MOBILE ADJUSTMENTS */
+    /* FORCE 35% POSITION ON MOBILE TO STOP FLYING */
+    .ladder-sticky { padding-top: 35vh !important; align-items: flex-start !important; }
+    .s-top { font-size: 20px !important; } .s-bot { font-size: 14px !important; }
+
+    .focus-flow { gap: 5vh !important; width: 100% !important; overflow-x: hidden !important; }
+
+    /* 4. CONTENT BOXES: WIDE ON MOBILE */
+   /* 4. CONTENT BOXES: WIDE ON MOBILE */
+    .glass-box {
+        padding: 30px 10px !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        backdrop-filter: blur(10px) !important;
+        background: transparent !important;
+
+        /* FORCE WIDE */
+        width: 92% !important;
+        max-width: 95vw !important;
+
+        /* THE FIX: PULL UP LESS ON MOBILE (SMALLER PADDING) */
+        margin: -25px auto 0 !important;
+    }
+
+    .glass-box h3 { font-size: 16px !important; margin-bottom: 15px !important; letter-spacing: 3px !important; }
+    .glass-box p { font-size: 11px !important; line-height: 1.5 !important; margin-bottom: 12px !important; }
+    .nob-bullets { font-size: 10px !important; word-spacing: 5px !important; }
+}
+
+/* FAKE BOTTOM NAV */
+.fake-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999999;
+    height: calc(60px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(4, 4, 12, 0.96);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(197, 160, 89, 0.18);
+    display: flex; align-items: stretch; justify-content: space-around;
+}
+.fake-nav-btn {
+    flex: 1; background: transparent; border: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; cursor: pointer; padding: 0;
+}
+.fake-nav-icon { font-size: 1.6rem; color: rgba(197, 160, 89, 0.35); line-height: 1; }
+.fake-nav-label { font-family: 'Cinzel', serif; font-size: 0.55rem; color: rgba(197, 160, 89, 0.35); letter-spacing: 1.5px; text-transform: uppercase; }
+.fake-nav-center {
+    flex: 1; background: transparent; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0; position: relative;
+    margin-top: -30px; transform: translateY(14px);
+}
+.fake-nav-avatar {
+    width: 75px; height: 75px; border-radius: 50%;
+    overflow: hidden; background: #000; flex-shrink: 0;
+}
+.fake-nav-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+/* TOAST NOTIFICATIONS */
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(20px); }
+}
+.home-toast {
+    position: fixed;
+    bottom: calc(85px + env(safe-area-inset-bottom) + 16px);
+    right: 12px; left: 12px; z-index: 99999;
+    background: linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%);
+    border: 1px solid rgba(197,160,89,0.4);
+    border-radius: 18px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08);
+    overflow: hidden;
+}
+.home-toast.entering { animation: toastIn 0.4s ease-out forwards; }
+.home-toast.leaving { animation: toastOut 0.4s ease-in forwards; }
+
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="loader-gate" style="display:none !important;">
+
+        <div class="kneel-wrapper" id="kneelBtn" oncontextmenu="return false;">
+            <div class="kneel-text">KNEEL TO ENTER</div>
+            <div class="kneel-fill" id="kneelFill"></div>
+        </div>
+        <a href="https://throne.qkarin.com/profile" class="btn-slave" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/profile'},'*')}catch(e){}">ALREADY A SLAVE</a>
+
+    </div>
+
+    <header class="fixed-shelf" id="cmd">
+        <div class="header-inner">
+            <div class="welcome">WELCOME TO</div>
+            <h1 class="royal-brand">Queen Karin's</h1>
+            <div class="mix-box">
+                <span class="s-kink">Kink</span>
+                <span class="s-dom">-dom</span>
+            </div>
+            <div class="tiny-seal">
+                <h2>NO AGENCIES &bull; NO BOTS &bull; NO FAKES</h2>
+            </div>
+            <a href="https://throne.qkarin.com/login" class="btn-join" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*')}catch(e){}">JOIN NOW</a>
+        </div>
+    </header>
+
+    <main class="content-flow" style="margin-top: 100vh;">
+
+
+        <!-- ABOUT -->
+        <section class="funnel-section" id="about">
+            <div class="funnel-label">THE SOVEREIGN</div>
+            <h2 class="funnel-title">Queen Karin</h2>
+            <div class="funnel-divider"></div>
+            <p class="funnel-text">Three years building what no platform dared to create. Not a profile on someone else's site. Not a clip store. A private world with its own economy, its own hierarchy, and one absolute ruler.</p>
+            <p class="funnel-text dim">I don't audition. I don't negotiate. I don't convince. I open doors,and I close them just as easily.</p>
+        </section>
+
+        <!-- LEADERBOARD -->
+        <section class="funnel-section" id="leaderboard-section">
+            <div class="funnel-label">THE HIERARCHY</div>
+            <h2 class="funnel-title">Your Place Is Earned</h2>
+            <div class="funnel-divider"></div>
+            <div class="lb-tabs">
+                <button class="lb-tab active" data-period="today">TODAY</button>
+                <button class="lb-tab" data-period="weekly">WEEK</button>
+                <button class="lb-tab" data-period="monthly">MONTH</button>
+                <button class="lb-tab" data-period="alltime">ALL</button>
+            </div>
+            <div id="lbEntries"></div>
+        </section>
+
+        <!-- SERVICES -->
+        <section class="funnel-section" id="services">
+            <div class="funnel-label">SERVICES</div>
+            <h2 class="funnel-title">What Happens Inside</h2>
+            <div class="funnel-divider"></div>
+
+            <div class="service-card">
+                <div class="service-icon">&#9919;</div>
+                <h3>KEYHOLDING</h3>
+                <p>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game,a commitment.</p>
+                <a href="https://throne.qkarin.com/keyholder" class="service-cta" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/keyholder'},'*')}catch(e){}">SURRENDER KEY</a>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">&#9830;</div>
+                <h3>FINANCIAL DOMINATION</h3>
+                <p>Tribute isn't a transaction. It's proof of devotion. An economy built on worship, not negotiation.</p>
+                <a href="https://throne.qkarin.com/login" class="service-cta" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*')}catch(e){}">ENTER</a>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">&#9878;</div>
+                <h3>TASK TRAINING</h3>
+                <p>Daily assignments. Photo proof. Deadlines. Real consequences. A structured system of obedience with merit and punishment.</p>
+                <a href="https://throne.qkarin.com/login" class="service-cta" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*')}catch(e){}">ENTER</a>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">&#9733;</div>
+                <h3>SISSIFICATION</h3>
+                <p>Guided transformation under absolute authority. Wardrobe. Behavior. Identity. Nothing is optional.</p>
+                <a href="https://throne.qkarin.com/login" class="service-cta" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*')}catch(e){}">ENTER</a>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">&#9764;</div>
+                <h3>ONLINE DOMINATION</h3>
+                <p>Real-time control from anywhere. Not a fantasy you browse,a lifestyle you live under Her command.</p>
+                <a href="https://throne.qkarin.com/login" class="service-cta" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*')}catch(e){}">ENTER</a>
+            </div>
+        </section>
+
+        <!-- REVIEWS -->
+        <section class="funnel-section" id="reviews">
+            <div class="funnel-label">TESTIMONIALS</div>
+            <h2 class="funnel-title">From Those Who Knelt</h2>
+            <div class="funnel-divider"></div>
+            <div id="reviewsContainer"></div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="funnel-section" id="faq">
+            <div class="funnel-label">QUESTIONS</div>
+            <h2 class="funnel-title">Before You Kneel</h2>
+            <div class="funnel-divider"></div>
+
+            <!-- GROUP 1: ABOUT QUEEN KARIN -->
+            <div class="faq-group" onclick="toggleFaqGroup(this)">
+                <div class="faq-group-header">
+                    <div class="faq-group-left">
+                        <span class="faq-group-icon">&#9819;</span>
+                        <span class="faq-group-title">About Queen Karin</span>
+                    </div>
+                    <span class="faq-group-toggle">&#9662;</span>
+                </div>
+                <div class="faq-group-body">
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Who is Queen Karin?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>A real, verified Dominatrix who built this kingdom from the ground up. Not a persona. Not a character. Every task, every message, every punishment,it comes from Her directly. She runs this with absolute authority and zero tolerance for pretenders.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Is this real or just roleplay?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>This is not a game. There are real tasks, real deadlines, real consequences. Members earn rank, lose privileges, and answer to the Queen. You can treat it as fantasy,but the ones who stay don't.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Is this website run by AI?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>No. You are dealing with a real person. The platform is custom-built technology, but every interaction, every decision, every order comes from Queen Karin herself. AI doesn't hold keys. She does.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Are the testimonials real?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Every review comes from a verified member with a real profile, real rank, and real history inside the kingdom. You can see their merit points and how long they've been serving. Nothing is fabricated.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What is the difference between Femdom and Findom?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Femdom is female-led power exchange,control, tasks, obedience, structure. Findom is financial domination,tribute as an act of surrender. They overlap but they're not the same. Inside this kingdom, both exist. Some subjects serve through devotion and discipline. Others serve through sacrifice. Many do both. You choose your path,but She decides how far it goes.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What is the appeal of Femdom for submissive men?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Relief. The world expects men to lead, decide, perform. Submission is the only place some men get to stop pretending. Handing control to someone who actually knows what to do with it isn't weakness,it's the most honest thing you'll ever do. The appeal isn't pain or humiliation. It's structure. Purpose. Someone who holds you accountable and doesn't let you hide.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GROUP 2: PRIVACY & SAFETY -->
+            <div class="faq-group" onclick="toggleFaqGroup(this)">
+                <div class="faq-group-header">
+                    <div class="faq-group-left">
+                        <span class="faq-group-icon">&#9670;</span>
+                        <span class="faq-group-title">Privacy &amp; Safety</span>
+                    </div>
+                    <span class="faq-group-toggle">&#9662;</span>
+                </div>
+                <div class="faq-group-body">
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Is my identity safe?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Absolutely. Your real name is never displayed. You choose your own alias. All payments go through Stripe,the Queen never sees your card details. Discretion isn't a feature, it's a rule.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Can anyone see that I'm a member?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>No. Your profile is only visible inside the kingdom to other members. Nothing is indexed by search engines. Your alias is the only thing anyone sees. What happens here stays here.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Is this online only?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>The kingdom operates entirely online. Tasks, check-ins, tributes, rank,everything happens through this platform. You serve from wherever you are. Distance is irrelevant. Obedience isn't.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>How do I tell if a Dominant is legitimate?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Your homework doesn't screen for what someone says,it screens for consistency over time. A scammer can script a perfect answer to "do you care about consent?" They cannot fake: years of genuine community presence, references who respond readily and warmly, writing that holds up across time and context, behavior in public threads that matches their private presentation, and a story that stays consistent when you cross-check details across platforms. If it feels off, it is. Trust your gut,and do the work before you hand anyone power over you.</p><p style="margin-top:14px;text-align:center"><a href="https://www.qkarin.com/post/vet-your-domme-always" target="_blank" style="display:block;padding:12px 20px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.25);border-radius:6px;text-decoration:none;transition:all 0.3s ease;text-align:center;max-width:260px;margin:0 auto"><span style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--gold);letter-spacing:2px;display:block">READ MY BLOG</span><span style="font-family:'Cormorant Garamond',serif;font-size:0.8rem;color:rgba(255,255,255,0.4);display:block;margin-top:4px">How to Vet Your Domme</span></a></p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>How can I protect myself?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>This one is not about being paranoid. It's about being smart.</p><p style="margin-top:12px">You are meeting strangers on the internet who know exactly what buttons to push.</p><p style="margin-top:14px"><span style="color:var(--gold);margin-right:8px">&#9670;</span> Use a scene name / alt account early on<br><span style="color:var(--gold);margin-right:8px">&#9670;</span> Never share your full legal name, home address, or workplace until you're ready<br><span style="color:var(--gold);margin-right:8px">&#9670;</span> Be careful with photos or videos, once sent you lose control of them<br><span style="color:var(--gold);margin-right:8px">&#9670;</span> Use a separate email address for kink correspondence</p><p style="margin-top:14px">The FemDom space attracts genuine people and it attracts predators who have studied genuine people very carefully. The difference is not always obvious at the start. And by the time it is obvious, some of you have already handed over your full name, your workplace, your face, your location and a folder of content that can never be taken back.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>How does an online Femdom relationship work?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Every dynamic is different. Some want to talk about their kinks. Some want to prove their worth. Some want to completely submit their life. No two dynamics are the same, and that's why honesty matters more than anything else here. Every kink has a soulmate, but if you fake your intentions to look better, to get more attention or better care, it all falls apart very quickly. There are programs here for every kind of subject. From those who just want to taste the water, to those who already know they were meant to serve. Be honest about where you are. That's how it works.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What kind of tasks can be done remotely?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Behavioral assignments, photo verification, timed challenges, writing tasks, devotion exercises, wardrobe instructions, and daily check-ins. Every task has a deadline and consequences. You submit proof. The Queen reviews. There's no faking completion,your task history is permanent and visible.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GROUP 3: PAYMENTS & COSTS -->
+            <div class="faq-group" onclick="toggleFaqGroup(this)">
+                <div class="faq-group-header">
+                    <div class="faq-group-left">
+                        <span class="faq-group-icon">&#9830;</span>
+                        <span class="faq-group-title">Payments &amp; Costs</span>
+                    </div>
+                    <span class="faq-group-toggle">&#9662;</span>
+                </div>
+                <div class="faq-group-body">
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What does it cost to join?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Entry requires a one-time tribute,a symbolic act of submission, not a subscription. After that, the kingdom runs on coins earned through kneeling, tasks, and devotion. How much you give beyond entry is between you and your devotion.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>How do payments work?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>All payments are processed through Stripe,the same system used by Amazon, Google, and Shopify. Your card details are never stored on our servers. The Queen never sees your financial information. Every transaction is encrypted and PCI-compliant.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What shows up on my bank statement?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>A discreet charge description. Nothing that would raise questions. Your privacy extends to your finances,we understand discretion isn't optional for most subjects.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Is there a subscription or recurring fee?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>No recurring charges. The entry tribute is one-time. Everything after that,tributes, risky games, coin purchases,is voluntary. You control what you spend. The Queen controls everything else.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Can I get a refund?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>A tribute is an act of submission,not a purchase you return. You kneel knowing what it means. That said, if there's a legitimate billing error, reach out and it will be handled fairly.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Do I need to be wealthy for Findom?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>No. This isn't about draining your bank account. The kingdom runs on coins,and coins are earned through kneeling, completing tasks, and daily devotion. Tribute is voluntary. The entry fee is symbolic. What matters here is consistency, not your salary. The richest subjects aren't always the highest ranked. The most devoted ones are.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GROUP 4: YOUR HESITATIONS -->
+            <div class="faq-group" onclick="toggleFaqGroup(this)">
+                <div class="faq-group-header">
+                    <div class="faq-group-left">
+                        <span class="faq-group-icon">&#9734;</span>
+                        <span class="faq-group-title">Your Hesitations</span>
+                    </div>
+                    <span class="faq-group-toggle">&#9662;</span>
+                </div>
+                <div class="faq-group-body">
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>I'm nervous to join.</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Good. You should be. That feeling is exactly why you're here. Every subject who ever knelt was nervous the first time. The difference between you and them? They did it anyway.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Do I need experience in BDSM?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>None. Most subjects start with nothing but curiosity. The hierarchy system is built to guide you from the bottom. You'll learn by doing,not by reading. Experience is earned here, not required.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What if I'm not sure this is for me?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>If you've read this far, something brought you here. Curiosity isn't weakness,it's the first honest thing you've felt in a while. The only way to know is to kneel. You'll find out fast enough.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>I'm ashamed of what I want.</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Shame is what brought most subjects here. Inside these walls, what you crave isn't judged,it's structured. You're not broken. You've just never had someone strong enough to hold what you carry.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Can I leave anytime?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>You can. No contracts, no obligations. But leaving means losing your rank, your history, and your place in the hierarchy. Most who leave come back. The ones who stay never wanted to leave.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>How do I start?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Press JOIN NOW. Create your account. Pay the entry tribute. Once inside, you'll receive your first instructions. From that moment,you belong to the kingdom.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What's the hierarchy?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Every subject starts as a Hall Boy. Through devotion, tasks, and tributes you rise,Footman, Silverman, Goldsman, and beyond. Your rank is public. Your effort is visible. The leaderboard doesn't lie.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>What are the rules of being a good submissive?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Show up. Follow through. Don't waste Her time. A good submissive is reliable, honest about their limits, and consistent in their devotion. You don't need to be perfect,you need to be present. Kneel daily. Complete your tasks. Respect the hierarchy. Everything else follows.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Can I be a submissive if I'm not into Sissification?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Yes. Sissification is one path, not the only path. This kingdom offers keyholding, financial domination, task training, and online control. You're not expected to want everything,you're expected to commit to what you choose. Your limits are respected. Your devotion is what matters.</p></div>
+                    </div>
+                    <div class="faq-item" onclick="event.stopPropagation(); toggleFaqItem(this)">
+                        <button class="faq-question"><span>Is Femdom dangerous or toxic?</span><span class="faq-toggle">&#9656;</span></button>
+                        <div class="faq-answer"><p>Bad dynamics are. This isn't one. A healthy power exchange has structure, transparency, and boundaries. There's a rank system, verified reviews, real profiles, and a Queen who built this from scratch,not a stranger in your DMs asking for gift cards. If it feels unsafe, it probably is. Here, you can see exactly what you're walking into before you kneel.</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FINAL CTA -->
+        <section class="funnel-section final-cta">
+            <p class="funnel-text dim" style="margin-bottom: 15px;">You either feel it or you don't.</p>
+            <a href="https://throne.qkarin.com/login" class="btn-join" target="_top" onclick="try{window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*')}catch(e){}">JOIN NOW</a>
+            <p class="funnel-text dim" style="margin-top: 40px; font-size: 10px; opacity: 0.3;">I don't convince. I open doors.</p>
+        </section>
+
+        <!-- Bottom padding so content doesn't hide behind nav -->
+        <div style="height: calc(100px + env(safe-area-inset-bottom));"></div>
+    </main>
+
+    <!-- FAKE BOTTOM NAV -->
+    <nav class="fake-nav">
+        <button class="fake-nav-btn" onclick="showAccessDenied('your Profile')">
+            <span class="fake-nav-icon">&#9670;</span>
+            <span class="fake-nav-label">PROFILE</span>
+        </button>
+        <button class="fake-nav-btn" onclick="showAccessDenied('your Record')">
+            <span class="fake-nav-icon">&#9638;</span>
+            <span class="fake-nav-label">RECORD</span>
+        </button>
+        <button class="fake-nav-center" onclick="showAccessDenied('Queen\'s Chat')">
+            <div class="fake-nav-avatar">
+                <img src="/queen-nav.png" alt="Queen">
+            </div>
+        </button>
+        <button class="fake-nav-btn" onclick="showAccessDenied('Queen\'s Wall')">
+            <span class="fake-nav-icon">&#9819;</span>
+            <span class="fake-nav-label">QUEEN</span>
+        </button>
+        <button class="fake-nav-btn" onclick="showAccessDenied('Global Chat')">
+            <span class="fake-nav-icon">&#9678;</span>
+            <span class="fake-nav-label">GLOBAL</span>
+        </button>
+    </nav>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer"></div>
+
+    <script>
+/* ── ACCESS DENIED OVERLAY ── */
+function showAccessDenied(section) {
+    var label = section || 'this section';
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);';
+    overlay.innerHTML = '<div style="text-align:center;padding:40px 30px;max-width:320px;">' +
+        '<div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:4px;margin-bottom:16px;">ACCESS DENIED</div>' +
+        '<div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(255,255,255,0.7);margin-bottom:12px;line-height:1.5;">You don\'t have access to ' + label + '</div>' +
+        '<div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.3);line-height:1.6;margin-bottom:24px;">Unlock your experience to explore everything inside.</div>' +
+        '<div style="display:flex;gap:8px;">' +
+            '<button id="adClose" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:10px 0;border-radius:8px;font-family:Cinzel,serif;font-size:0.5rem;letter-spacing:2px;cursor:pointer;">CLOSE</button>' +
+            '<button id="adUnlock" style="flex:2;background:linear-gradient(135deg,#c5a059 0%,#8a6d30 100%);color:#020202;border:none;padding:10px 0;border-radius:8px;font-family:Cinzel,serif;font-size:0.5rem;font-weight:700;letter-spacing:2px;cursor:pointer;">UNLOCK</button>' +
+        '</div>' +
+    '</div>';
+    overlay.querySelector('#adClose').addEventListener('click', function(e) { e.stopPropagation(); overlay.remove(); });
+    overlay.querySelector('#adUnlock').addEventListener('click', function(e) {
+        e.stopPropagation(); overlay.remove();
+        // Send to login
+        try { window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*'); } catch(err) {}
+        window.open('https://throne.qkarin.com/login', '_top');
+    });
+    overlay.addEventListener('click', function() { overlay.remove(); });
+    document.body.appendChild(overlay);
+}
+
+/* ── TOAST NOTIFICATION SYSTEM ── */
+function timeAgo(dateStr) {
+    var utcStr = (dateStr.endsWith('Z') || dateStr.indexOf('+') > -1) ? dateStr : dateStr + 'Z';
+    var diff = Date.now() - new Date(utcStr).getTime();
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
+}
+
+function parseGlobalCard(msg) {
+    var content = msg.message || msg.content || '';
+    var created = msg.created_at;
+    var avatar = msg.sender_avatar || null;
+    var hier = msg.hierarchy || null;
+    try {
+        if (content.indexOf('RISKY_TRIBUTE_CARD::') === 0) {
+            var d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
+            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, isWin: d.isWin, stakeAmount: d.stakeAmount || 0, wonAmount: d.wonAmount || 0, lostAmount: d.lostAmount || 0, created_at: created };
+        }
+        if (content.indexOf('DIRECT_TRIBUTE_CARD::') === 0) {
+            var d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
+            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'sent a tribute of ' + (d.amount||0).toLocaleString() + ' coins', kind: 'tribute', created_at: created };
+        }
+        if (content.indexOf('PROMOTION_CARD::') === 0) {
+            var d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
+            return { sender_name: d.name || 'SUBJECT', sender_avatar: avatar, hierarchy: hier, text: 'was promoted to ' + (d.newRank || 'a new rank'), kind: 'promotion', created_at: created };
+        }
+        if (content.indexOf('CHALLENGE_TASK_CARD::') === 0) {
+            var d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
+            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'completed a challenge task', kind: 'challenge', created_at: created };
+        }
+        if (content.indexOf('WELCOME_CARD::') === 0) {
+            var d = JSON.parse(content.replace('WELCOME_CARD::', ''));
+            return { sender_name: d.name || 'New Subject', sender_avatar: avatar, hierarchy: hier, text: 'entered the household', kind: 'welcome', created_at: created };
+        }
+        if (content.indexOf('UPDATE_MERIT_CARD::') === 0) {
+            var d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
+            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'earned ' + (d.points || 0) + ' points', kind: 'merit', created_at: created };
+        }
+        if (content.indexOf('UPDATE_COINS_CARD::') === 0) {
+            var d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
+            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'claimed ' + (d.points || 0) + ' coins from kneeling', kind: 'coins', created_at: created };
+        }
+        if (content.indexOf('CHALLENGE_JOIN_CARD::') === 0) {
+            var d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
+            return { sender_name: d.senderName || d.name || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'joined ' + (d.challengeName || 'a challenge'), kind: 'challenge_join', created_at: created };
+        }
+    } catch(e) {}
+    return null;
+}
+
+function showToast(item) {
+    var container = document.getElementById('toastContainer');
+    // Remove existing toasts
+    container.innerHTML = '';
+
+    var when = item.created_at ? timeAgo(item.created_at) : '';
+    var initial = (item.sender_name || 'S').charAt(0).toUpperCase();
+    var isRisky = item.kind === 'risky' && item.cardIcon;
+
+    var el = document.createElement('div');
+    el.className = 'home-toast entering';
+
+    if (isRisky) {
+        el.style.padding = '0';
+        var resultText = item.isWin
+            ? '<span style="color:#4ade80">total won: ' + (item.wonAmount||0).toLocaleString() + '</span>'
+            : item.lostAmount === 0
+                ? '<span style="color:#c5a059">lost nothing</span>'
+                : '<span style="color:#ff0000">total lost: ' + (item.lostAmount||0).toLocaleString() + '</span>';
+        var avatarHtml = item.sender_avatar
+            ? '<img src="' + item.sender_avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.5);flex-shrink:0" onerror="this.style.display=\'none\'">'
+            : '<div style="width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.35);background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:0.9rem;color:rgba(197,160,89,0.6);font-weight:600;flex-shrink:0">' + initial + '</div>';
+        el.innerHTML = '<div style="display:flex;min-height:130px">' +
+            '<div style="flex:0 0 28%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(197,160,89,0.04);border-right:1px solid rgba(197,160,89,0.12);padding:16px 12px;gap:8px">' +
+                '<img src="' + item.cardIcon + '" style="width:65%;max-width:65px;height:auto;opacity:0.9" onerror="this.style.display=\'none\'">' +
+                (item.cardName ? '<div style="font-family:Cinzel,serif;font-size:0.4rem;color:rgba(197,160,89,0.45);letter-spacing:2px;text-transform:uppercase;text-align:center;line-height:1.3">' + item.cardName + '</div>' : '') +
+            '</div>' +
+            '<div style="flex:1;padding:16px 18px 14px;display:flex;flex-direction:column;justify-content:center;gap:4px">' +
+                '<div style="font-family:Cinzel,serif;font-size:0.45rem;color:rgba(197,160,89,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between"><span>Recent Activity</span>' + (when ? '<span style="color:rgba(197,160,89,0.3);letter-spacing:1px;font-size:0.4rem">' + when + '</span>' : '') + '</div>' +
+                '<div style="display:flex;align-items:center;gap:10px">' + avatarHtml + '<div><div style="font-family:Cinzel,serif;font-size:1.05rem;color:#c5a059;letter-spacing:1px">' + item.sender_name + '</div>' + (item.hierarchy ? '<div style="font-family:Cinzel,serif;font-size:0.35rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:1px">' + item.hierarchy + '</div>' : '') + '</div></div>' +
+                '<div style="font-family:Cinzel,serif;font-size:0.8rem;color:rgba(255,255,255,0.55);font-weight:400;margin-top:6px;letter-spacing:0.5px">just gambled ' + (item.stakeAmount||0).toLocaleString() + ' coins</div>' +
+                '<div style="font-family:Cinzel,serif;font-size:0.85rem;font-weight:600;margin-top:2px;letter-spacing:0.5px">' + resultText + '</div>' +
+                '<button onclick="this.closest(\'.home-toast\').remove()" style="align-self:flex-start;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08);padding:5px 16px;border-radius:6px;font-family:Cinzel,serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;margin-top:6px">DISMISS</button>' +
+            '</div></div>';
+    } else {
+        el.style.padding = '20px 22px';
+        var displayText = item.text || '';
+        var avatarHtml = item.sender_avatar
+            ? '<img src="' + item.sender_avatar + '" style="flex-shrink:0;width:62px;height:62px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6)" onerror="this.style.display=\'none\'">'
+            : '<div style="flex-shrink:0;width:62px;height:62px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.4);background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:1.2rem;color:rgba(197,160,89,0.6);font-weight:600">' + initial + '</div>';
+        el.innerHTML = '<div style="font-family:Cinzel,serif;font-size:0.5rem;color:#c5a059;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between"><span>Recent Activity</span>' + (when ? '<span style="color:rgba(197,160,89,0.4);letter-spacing:1px;font-size:0.45rem">' + when + '</span>' : '') + '</div>' +
+            '<div style="display:flex;align-items:center;gap:14px">' + avatarHtml +
+            '<div style="flex:1;min-width:0"><div style="font-family:Cinzel,serif;font-size:1.15rem;color:#c5a059;letter-spacing:1px;line-height:1.2">' + item.sender_name + '</div>' +
+            (item.hierarchy ? '<div style="font-family:Cinzel,serif;font-size:0.4rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:2px">' + item.hierarchy + '</div>' : '') +
+            '<div style="font-family:Cinzel,serif;font-size:0.95rem;color:rgba(255,255,255,0.65);font-weight:400;line-height:1.4;margin-top:4px">' + displayText + '</div></div></div>' +
+            '<div style="display:flex;gap:8px;margin-top:14px"><button onclick="this.closest(\'.home-toast\').remove()" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:9px 0;border-radius:8px;font-family:Cinzel,serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer">DISMISS</button></div>';
+    }
+
+    container.appendChild(el);
+
+    // Auto-dismiss after 8s
+    setTimeout(function() { el.className = 'home-toast leaving'; }, 8000);
+    setTimeout(function() { el.remove(); }, 8500);
+}
+
+/* ── FETCH INITIAL TOAST + REALTIME ── */
+setTimeout(function() {
+    fetch('/api/global/messages')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var msgs = data.messages || data;
+            if (!Array.isArray(msgs)) return;
+            // Messages are oldest→newest, scan from end for newest parseable
+            for (var i = msgs.length - 1; i >= 0; i--) {
+                var parsed = parseGlobalCard(msgs[i]);
+                if (parsed) { showToast(parsed); break; }
+            }
+        }).catch(function() {});
+}, 7000);
+
+/* ── REALTIME SUBSCRIPTION via Supabase JS ── */
+(function() {
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    script.onload = function() {
+        var sbUrl = ''; var sbKey = '';
+        // Read from meta tags or inline
+        try {
+            var metas = document.querySelectorAll('meta');
+            for (var i = 0; i < metas.length; i++) {
+                if (metas[i].name === 'supabase-url') sbUrl = metas[i].content;
+                if (metas[i].name === 'supabase-key') sbKey = metas[i].content;
+            }
+        } catch(e) {}
+        // Fallback: fetch from a known endpoint
+        if (!sbUrl) {
+            fetch('/api/supabase-config')
+                .then(function(r) { return r.json(); })
+                .then(function(cfg) { initRealtime(cfg.url, cfg.key); })
+                .catch(function() {
+                    // Last resort: try window env
+                });
+            return;
+        }
+        initRealtime(sbUrl, sbKey);
+    };
+    document.head.appendChild(script);
+
+    function initRealtime(url, key) {
+        if (!url || !key) return;
+        var supabase = window.supabase.createClient(url, key);
+        supabase.channel('home-activity')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, function(payload) {
+                var row = payload.new;
+                if (!row) return;
+                var parsed = parseGlobalCard(row);
+                if (parsed) showToast(parsed);
+            })
+            .subscribe();
+    }
+})();
+    </script>
+
+    <script>
+/* ── FAQ TOGGLE ── */
+function toggleFaqGroup(group) {
+    var wasOpen = group.classList.contains('open');
+    document.querySelectorAll('.faq-group').forEach(function(g) {
+        g.classList.remove('open');
+        g.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
+    });
+    if (!wasOpen) group.classList.add('open');
+}
+function toggleFaqItem(item) {
+    var wasOpen = item.classList.contains('open');
+    item.closest('.faq-group-body').querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
+    if (!wasOpen) item.classList.add('open');
+}
+
+/* ── LEADERBOARD ── */
+function loadLeaderboard(period) {
+    fetch('/api/global/leaderboard?period=' + period)
+        .then(r => r.json())
+        .then(d => {
+            const c = document.getElementById('lbEntries');
+            if (!c || !d.entries) return;
+            c.innerHTML = '';
+            if (d.entries.length === 0) {
+                c.innerHTML = '<div style="text-align:center;padding:30px 0;font-family:Cinzel,serif;font-size:12px;color:rgba(255,255,255,0.12);">No scores yet</div>';
+                return;
+            }
+            d.entries.slice(0, 10).forEach(function(e, i) {
+                var cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'minor';
+                var av = e.avatar ? 'background-image:url(' + e.avatar + ')' : '';
+                c.innerHTML += '<div class="lb-entry ' + cls + '">' +
+                    '<div class="lb-rank">' + (i + 1) + '</div>' +
+                    '<div class="lb-avatar" style="' + av + '"></div>' +
+                    '<div class="lb-info"><div class="lb-name">' + (e.name || 'Anonymous') + '</div><div class="lb-hier">' + (e.hierarchy || '') + '</div></div>' +
+                    '<div class="lb-score">' + (e.score ? e.score.toLocaleString() : '0') + '</div>' +
+                '</div>';
+            });
+        }).catch(function() {});
+}
+loadLeaderboard('today');
+document.querySelectorAll('.lb-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.lb-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        loadLeaderboard(tab.dataset.period);
+    });
+});
+
+/* ── LOAD REVIEWS ── */
+fetch('/api/reviews/public').then(function(r) { return r.json(); }).then(function(data) {
+    var reviews = data.reviews || data;
+    var c = document.getElementById('reviewsContainer');
+    if (!c || !Array.isArray(reviews) || !reviews.length) return;
+    reviews.slice(0, 6).forEach(function(r) {
+        var rev = r.reviewer || {};
+        var name = rev.name || 'Loyal Subject';
+        var avatar = rev.avatar || null;
+        var hierarchy = rev.hierarchy || 'Hall Boy';
+        var merit = rev.merit || 0;
+        var tasks = rev.tasksCompleted || 0;
+        var serving = rev.servingText || '';
+        var rating = r.rating || 5;
+        var initial = name.charAt(0).toUpperCase();
+
+        var starsHtml = '';
+        for (var s = 0; s < 5; s++) {
+            starsHtml += '<span class="' + (s < rating ? 'star-on' : 'star-off') + '">&#9733;</span>';
+        }
+
+        var avatarHtml = avatar
+            ? '<img class="review-avatar" src="' + avatar + '" onerror="this.style.display=\'none\'">'
+            : '<div class="review-avatar-placeholder">' + initial + '</div>';
+
+        var servingHtml = serving ? ' &middot; SERVING ' + serving.toUpperCase() : '';
+
+        var d = document.createElement('div');
+        d.className = 'review-card';
+        d.innerHTML = '<div class="review-header">' +
+            avatarHtml +
+            '<div class="review-meta">' +
+                '<div class="review-stars">' + starsHtml + '</div>' +
+                '<div class="review-name">' + name + '</div>' +
+                '<div class="review-merit">' + merit.toLocaleString() + ' MERIT &middot; ' + tasks + ' TASKS</div>' +
+                '<div class="review-hierarchy">' + hierarchy.toUpperCase() + servingHtml + '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="review-body"><p>&ldquo;' + (r.text || '') + '&rdquo;</p></div>';
+        c.appendChild(d);
+    });
+}).catch(function() {});
+
+    </script>
+
+    <script>
+const btn = document.getElementById('kneelBtn');
+const fill = document.getElementById('kneelFill');
+const gate = document.getElementById('loader-gate');
+let progress = 0; let isHolding = false; let animFrame;
+let resistance = 1.0;
+
+/* --- 1. LOADER LOGIC --- */
+function tick() {
+    if (isHolding && progress < 100) {
+        progress += resistance;
+        fill.style.width = progress + '%';
+        if (progress >= 100) {
+            gate.style.opacity = '0';
+            setTimeout(() => gate.style.visibility = 'hidden', 300);
+            window.scrollTo(0, 0);
+            document.body.classList.remove('locked');
+        } else { animFrame = requestAnimationFrame(tick); }
+    }
+}
+function startHolding(e) {
+    if (e.cancelable) e.preventDefault();
+    isHolding = true;
+    resistance = (Math.random() * (1.66 - 0.33) + 0.33);
+    tick();
+}
+function stopHolding() {
+    isHolding = false; progress = 0; fill.style.width = '0%'; cancelAnimationFrame(animFrame);
+}
+btn.addEventListener('mousedown', startHolding);
+window.addEventListener('mouseup', stopHolding);
+btn.addEventListener('touchstart', startHolding);
+window.addEventListener('touchend', stopHolding);
+
+
+/* --- 2. SCROLL LOGIC (EARLY TRIGGER) --- */
+window.addEventListener('scroll', () => {
+    // A. HEADER BAR
+    if (window.scrollY > 50) document.body.classList.add('scrolled');
+    else document.body.classList.remove('scrolled');
+
+});
+
+/* --- 3. CONTENT FADE IN --- */
+const focusObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('sharp'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.glass-box').forEach(b => focusObs.observe(b));
+
+/* --- 4. FUNNEL SECTION REVEAL --- */
+const funnelObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.funnel-section').forEach(s => funnelObs.observe(s));
+    </script>
+</body>
+</html>
