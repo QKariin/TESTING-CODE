@@ -1569,7 +1569,7 @@ function showQuestionBubbles(catIndex, questions) {
                 scrollFaqChat();
                 // After last question, add actions
                 if (idx === questions.length - 1) {
-                    setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
+                    setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
                 }
             }, delay);
         })(i);
