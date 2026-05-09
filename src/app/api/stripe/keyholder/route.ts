@@ -4,9 +4,9 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const TIERS: Record<string, { amountCents: number; name: string; label: string; days: number }> = {
-    trial:   { amountCents:  2900, name: 'Chastity Trial — 3 Days',  label: '3-day keyholder access',   days: 3  },
-    weekly:  { amountCents:  5500, name: 'Chastity Week — 7 Days',   label: '7-day keyholder access',   days: 7  },
-    monthly: { amountCents: 15000, name: 'Chastity Month — 30 Days', label: '30-day keyholder access',  days: 30 },
+    trial:   { amountCents:  2900, name: 'Lock Trial — 3 Days',  label: '3-day lock access',   days: 3  },
+    weekly:  { amountCents:  5500, name: 'Lock Week — 7 Days',   label: '7-day lock access',   days: 7  },
+    monthly: { amountCents: 15000, name: 'Lock Month — 30 Days', label: '30-day lock access',  days: 30 },
 };
 
 export async function POST(req: Request) {
