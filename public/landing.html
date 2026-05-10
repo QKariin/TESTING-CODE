@@ -964,7 +964,7 @@ function parseGlobalCard(msg) {
         }
         if (content.indexOf('UPDATE_TRIBUTE_CARD::') === 0) {
             var d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
-            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'gifted "' + (d.title || 'a gift') + '" worth ' + (d.price || 0).toLocaleString() + ' coins', kind: 'wishlist', created_at: created };
+            return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'gifted "' + (d.title || 'a gift') + '" worth ' + (d.price || 0).toLocaleString() + ' coins', kind: 'wishlist', cardImage: d.image || null, cardName: d.title || 'GIFT', created_at: created };
         }
     } catch(e) {}
     return null;
@@ -978,12 +978,26 @@ function showToast(item) {
     var when = item.created_at ? timeAgo(item.created_at) : '';
     var initial = (item.sender_name || 'S').charAt(0).toUpperCase();
     var isRisky = item.kind === 'risky' && item.cardIcon;
+    var isWishlist = item.kind === 'wishlist' && item.cardImage;
 
     var el = document.createElement('div');
     el.className = 'home-toast entering';
     el.onclick = function() { el.remove(); };
 
-    if (isRisky) {
+    if (isWishlist) {
+        el.style.padding = '0';
+        var avatarHtml = item.sender_avatar
+            ? '<img src="' + item.sender_avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.5);flex-shrink:0" onerror="this.style.display=\'none\'">'
+            : '<div style="width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.35);background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:0.9rem;color:rgba(197,160,89,0.6);font-weight:600;flex-shrink:0">' + initial + '</div>';
+        el.innerHTML = '<div style="display:flex;min-height:120px">' +
+            '<div style="flex:0 0 28%;display:flex;align-items:center;justify-content:center;background:rgba(197,160,89,0.04);border-right:1px solid rgba(197,160,89,0.12);padding:12px">' +
+                '<img src="' + item.cardImage + '" style="width:80%;max-width:70px;height:auto;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'">' +
+            '</div>' +
+            '<div style="flex:1;padding:12px 14px 10px;display:flex;flex-direction:column;justify-content:center;gap:4px">' +
+                '<div style="display:flex;align-items:center;gap:10px">' + avatarHtml + '<div><div style="font-family:Cinzel,serif;font-size:0.85rem;color:#c5a059;letter-spacing:1px">' + item.sender_name + '</div>' + (item.hierarchy ? '<div style="font-family:Orbitron,sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:1px">' + item.hierarchy + '</div>' : '') + '</div></div>' +
+                '<div style="font-family:Cinzel,serif;font-size:0.7rem;color:rgba(255,255,255,0.55);font-weight:400;margin-top:4px;letter-spacing:0.5px">' + (item.text || '') + '</div>' +
+            '</div></div>';
+    } else if (isRisky) {
         el.style.padding = '0';
         var resultText = item.isWin
             ? '<span style="color:#4ade80">total won: ' + (item.wonAmount||0).toLocaleString() + '</span>'

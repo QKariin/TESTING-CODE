@@ -1038,7 +1038,7 @@ function parseActivityCard(msg) {
         }
         if (content.indexOf('UPDATE_TRIBUTE_CARD::') === 0) {
             var d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'gifted "' + (d.title || 'a gift') + '" worth ' + (d.price || 0).toLocaleString() + ' coins', kind: 'wishlist', iconEmoji: '🎁', iconLabel: 'GIFT', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'gifted "' + (d.title || 'a gift') + '" worth ' + (d.price || 0).toLocaleString() + ' coins', kind: 'wishlist', cardImage: d.image || null, cardName: d.title || 'GIFT', time: created };
         }
     } catch(e) {}
     return null;
@@ -1102,7 +1102,17 @@ function loadGlActivity() {
                 var hierHtml = item.hierarchy ? '<div class="gl-ac-hier">' + item.hierarchy + '</div>' : '';
                 var timeHtml = '<div class="gl-ac-time">' + when + '</div>';
 
-                if (item.kind === 'risky' && item.cardIcon) {
+                if (item.kind === 'wishlist' && item.cardImage) {
+                    c.innerHTML += '<div class="gl-activity-card"><div class="gl-activity-card-risky">' +
+                        timeHtml +
+                        '<div class="gl-ac-risky-left"><img src="' + item.cardImage + '" style="width:80%;max-width:70px;height:auto;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'">' +
+                        '</div>' +
+                        '<div class="gl-ac-risky-right">' +
+                            '<div style="display:flex;align-items:center;gap:10px">' + avHtml + '<div><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div></div>' +
+                            '<div class="gl-ac-text">' + (item.text || '') + '</div>' +
+                        '</div>' +
+                    '</div></div>';
+                } else if (item.kind === 'risky' && item.cardIcon) {
                     var resultText = item.isWin
                         ? '<span style="color:#4ade80">won ' + (item.wonAmount||0).toLocaleString() + ' coins</span>'
                         : item.lostAmount === 0
