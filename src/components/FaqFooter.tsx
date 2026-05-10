@@ -401,12 +401,12 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
             {/* Footer Nav */}
             <nav className="faq-footer-nav">
                 <button className="faq-footer-nav-item" onClick={() => handleNavClick('your Profile')}>
-                    <span style={{ fontSize: '1rem', opacity: 0.3 }}>&#9670;</span>
-                    <span>PROFILE</span>
+                    <span className="faq-footer-nav-icon">&#9670;</span>
+                    <span className="faq-footer-nav-label">PROFILE</span>
                 </button>
                 <button className="faq-footer-nav-item" onClick={() => handleNavClick('your Record')}>
-                    <span style={{ fontSize: '1rem', opacity: 0.3 }}>&#9638;</span>
-                    <span>RECORD</span>
+                    <span className="faq-footer-nav-icon">&#9638;</span>
+                    <span className="faq-footer-nav-label">RECORD</span>
                 </button>
                 <button className="faq-footer-queen-btn" onClick={() => (window as any).toggleFaqChat?.()}>
                     <div className="faq-nav-speech">Any questions?</div>
@@ -415,12 +415,12 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
                     </div>
                 </button>
                 <button className="faq-footer-nav-item" onClick={() => handleNavClick("Queen's Wall")}>
-                    <span style={{ fontSize: '0.85rem', opacity: 0.3 }}>&#9819;</span>
-                    <span>QUEEN</span>
+                    <span className="faq-footer-nav-icon">&#9819;</span>
+                    <span className="faq-footer-nav-label">QUEEN</span>
                 </button>
                 <button className="faq-footer-nav-item" onClick={() => handleNavClick('Global Chat')}>
-                    <span style={{ fontSize: '0.85rem', opacity: 0.3 }}>&#9678;</span>
-                    <span>GLOBAL</span>
+                    <span className="faq-footer-nav-icon">&#9678;</span>
+                    <span className="faq-footer-nav-label">GLOBAL</span>
                 </button>
             </nav>
         </>
