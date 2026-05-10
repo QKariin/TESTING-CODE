@@ -480,6 +480,11 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 .lb-entry.minor .lb-hier { font-size: 0.45rem; color: rgba(197,160,89,0.15); }
 .lb-entry.minor .lb-score { font-size: 0.75rem; color: rgba(197,160,89,0.25); }
 
+/* MARQUEE */
+.home-marquee { animation: homeMarquee 35s linear infinite; }
+.home-marquee-track { flex-shrink: 0; }
+@keyframes homeMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
 /* REVIEW CARDS */
 .review-card {
     border-radius: 14px;
@@ -731,6 +736,32 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
             <p class="funnel-text">Three years building what no platform dared to create. Not a profile on someone else's site. Not a clip store. A private world with its own economy, its own hierarchy, and one absolute ruler.</p>
             <p class="funnel-text dim">I don't audition. I don't negotiate. I don't convince. I open doors,and I close them just as easily.</p>
         </section>
+
+        <!-- MARQUEE -->
+        <div style="overflow:hidden;margin:0 -20px;mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);">
+            <div class="home-marquee" style="display:flex;align-items:center;gap:0;white-space:nowrap;font-family:Cinzel,serif;font-size:clamp(1rem,3.5vw,1.15rem);color:rgba(255,255,255,0.75);font-weight:600;letter-spacing:4px;text-transform:uppercase;">
+                <span class="home-marquee-track" style="display:inline-flex;align-items:center;gap:0;flex-shrink:0">
+                    <span>Tasks</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Sessions</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>League</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Tributes</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Tasks</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Sessions</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>League</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Tributes</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                </span>
+                <span class="home-marquee-track" style="display:inline-flex;align-items:center;gap:0;flex-shrink:0">
+                    <span>Tasks</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Sessions</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>League</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Tributes</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Tasks</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Sessions</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>League</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                    <span>Tributes</span><svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style="margin:0 14px;flex-shrink:0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                </span>
+            </div>
+        </div>
 
         <!-- LEADERBOARD -->
         <section class="funnel-section" id="leaderboard-section">
