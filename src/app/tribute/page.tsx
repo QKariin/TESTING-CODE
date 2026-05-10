@@ -552,7 +552,7 @@ export default function TributePage() {
                         margin-left: auto !important;
                         margin-right: auto !important;
                     }
-                    .trib-fake-nav {
+                    .fake-nav {
                         display: none !important;
                     }
                     .trib-bottom-pad {

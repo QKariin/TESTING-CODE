@@ -388,7 +388,7 @@ export default function KeyholderPage() {
 
                 @media (min-width: 769px) {
                     .kh-container { max-width: 1100px !important; padding: 0 60px 80px !important; }
-                    .kh-fake-nav { display: none !important; }
+                    .fake-nav { display: none !important; }
                     .kh-bottom-pad { height: 0 !important; }
                     .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
                     .kh-reviews-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)) !important; gap: 20px !important; max-width: 800px !important; margin-left: auto !important; margin-right: auto !important; }

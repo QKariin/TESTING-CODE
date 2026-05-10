@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import '@/css/faq-chat.css';
 
-/* ═══ FAQ DATA ═══ */
+/* FAQ DATA */
 const faqData = [
     {
         title: 'About Queen Karin',
@@ -59,6 +58,250 @@ const pickupLines = [
     "I'll give you the real answer.", 'You should know this.',
     'Important question.', 'Let me break it down.', 'Pay attention.'
 ];
+
+/* Exact same CSS as landing.html - embedded to guarantee identical rendering */
+const FOOTER_AND_FAQ_CSS = `
+.fake-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999999;
+    height: calc(60px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(4, 4, 12, 0.96);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(197, 160, 89, 0.18);
+    display: flex; align-items: stretch; justify-content: space-around;
+}
+.fake-nav-btn {
+    flex: 1; background: transparent; border: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; cursor: pointer; padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.fake-nav-icon { font-size: 1.6rem; color: rgba(197, 160, 89, 0.35); line-height: 1; }
+.fake-nav-label { font-family: 'Cinzel', serif; font-size: 0.55rem; color: rgba(197, 160, 89, 0.35); letter-spacing: 1.5px; text-transform: uppercase; }
+.fake-nav-center {
+    flex: 1; background: transparent; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0; position: relative;
+    margin-top: -30px; transform: translateY(14px);
+    -webkit-tap-highlight-color: transparent;
+}
+.fake-nav-avatar {
+    width: 75px; height: 75px; border-radius: 50%;
+    overflow: hidden; background: #000; flex-shrink: 0;
+}
+.fake-nav-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.faq-nav-speech {
+    position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%);
+    background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.25);
+    border-radius: 12px 12px 12px 4px; padding: 6px 14px;
+    font-family: 'Cormorant Garamond', serif; font-size: 0.8rem;
+    color: rgba(255,255,255,0.6); font-style: italic; white-space: nowrap;
+    animation: faqSpeechFloat 3s ease-in-out infinite;
+    pointer-events: none;
+}
+.faq-nav-speech::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 6px solid rgba(197,160,89,0.25);
+}
+@keyframes faqSpeechFloat {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-4px); }
+}
+
+.faq-chat-overlay,
+.faq-chat-overlay * {
+    text-transform: none !important;
+    font-variant: normal !important;
+}
+.faq-chat-overlay {
+    position: fixed; top: 0; left: 0; right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    z-index: 99999; background: #020512;
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.35s;
+}
+.faq-chat-overlay.open { transform: translateY(0); visibility: visible; }
+.faq-chat-header {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: calc(env(safe-area-inset-top) + 20px) 20px 20px;
+    border-bottom: 1px solid rgba(197,160,89,0.25);
+    border-top: 3px solid rgba(197,160,89,0.55);
+    background: #020512; z-index: 2;
+}
+.faq-chat-header-left { display: flex; align-items: center; gap: 10px; }
+.faq-chat-header-av-wrap { position: relative; width: 52px; height: 52px; }
+.faq-chat-header-av {
+    width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
+    border: 1.5px solid rgba(197,160,89,0.5);
+}
+.faq-chat-online-dot {
+    position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px;
+    background: #4ade80; border-radius: 50%; border: 2px solid #020512;
+}
+.faq-chat-header-info { display: flex; flex-direction: column; }
+.faq-chat-header-name {
+    font-family: 'Cinzel', serif; font-size: 0.85rem;
+    color: #c5a059; letter-spacing: 3px; font-weight: bold; line-height: 1;
+}
+.faq-chat-header-status {
+    font-family: 'Orbitron', sans-serif; font-size: 0.28rem;
+    color: #4ade80; letter-spacing: 2px; margin-top: 4px;
+    display: flex; align-items: center; gap: 4px;
+}
+.faq-chat-header-status::before {
+    content: ''; width: 5px; height: 5px; background: #4ade80;
+    border-radius: 50%; flex-shrink: 0;
+}
+.faq-chat-close {
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4); width: 32px; height: 32px;
+    border-radius: 50%; font-size: 0.8rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.faq-chat-body {
+    flex: 1; overflow-y: auto; padding: 20px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    -webkit-overflow-scrolling: touch;
+}
+.faq-chat-body::-webkit-scrollbar { display: none; }
+
+.faq-cb-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px;
+    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.faq-cb-row-queen { justify-content: flex-start; }
+.faq-cb-row-user { justify-content: flex-end; }
+.faq-cb-av {
+    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+    border: 1.5px solid rgba(197,160,89,0.35); flex-shrink: 0;
+    align-self: flex-end; margin-bottom: 20px;
+}
+.faq-cb-wrap-queen { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; }
+.faq-cb-wrap-user { display: flex; flex-direction: column; align-items: flex-end; max-width: 80%; }
+.faq-cb-queen {
+    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
+    color: #fff; font-family: 'Cinzel', serif; font-size: 1.05rem; line-height: 1.55;
+    letter-spacing: 0.2px; padding: 12px 16px; border-radius: 16px 16px 16px 3px;
+    word-break: break-word; white-space: pre-wrap;
+}
+.faq-cb-user {
+    background: #1c1c1e; color: #fff; font-family: 'Cinzel', serif;
+    font-size: 1.05rem; line-height: 1.55; letter-spacing: 0.2px;
+    padding: 12px 16px; border-radius: 16px 16px 3px 16px;
+    word-break: break-word; cursor: pointer; transition: background 0.2s;
+}
+.faq-cb-user:active { background: #2a2a2e; }
+
+.faq-cat-chips {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0; padding: 4px 0;
+}
+.faq-cat-chip {
+    background: linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3)); border: 1px solid rgba(255,0,199,0.3);
+    color: #ff00c7; font-family: 'Cinzel', serif;
+    font-size: 0.95rem; padding: 16px 24px; border-radius: 20px; width: 80%; box-sizing: border-box; text-align: center;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 1px;
+    opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.faq-cat-chip:active { background: rgba(255,0,199,0.25); border-color: rgba(255,0,199,0.5); }
+
+.faq-q-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0; padding: 4px 0;
+}
+.faq-q-bubble {
+    background: #1c1c1e; border: 1px solid rgba(197,160,89,0.1);
+    color: rgba(255,255,255,0.7); font-family: 'Cinzel', serif;
+    font-size: 0.85rem; line-height: 1.5; padding: 14px 24px;
+    border-radius: 20px; cursor: pointer; transition: all 0.2s;
+    text-align: center; width: 80%; box-sizing: border-box;
+    opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.faq-q-bubble:active { background: rgba(197,160,89,0.1); border-color: rgba(197,160,89,0.3); }
+
+.faq-a-bubble {
+    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
+    color: rgba(255,255,255,0.92); font-family: 'Cinzel', serif;
+    font-size: 1.05rem; line-height: 1.8; padding: 12px 14px;
+    border-radius: 16px 16px 16px 3px; word-break: break-word;
+    text-align: left;
+    animation: faqBubbleIn 0.45s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+.faq-typing-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px;
+    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.faq-typing-bubble {
+    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.3);
+    padding: 12px 18px; border-radius: 16px 16px 16px 3px;
+    display: flex; gap: 5px; align-items: center;
+    animation: faqBubbleIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.faq-typing-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(197,160,89,0.5);
+    animation: faqTypingBounce 1.2s ease-in-out infinite;
+}
+.faq-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.faq-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+.faq-chat-ts {
+    font-family: 'Orbitron', sans-serif; font-size: 0.3rem;
+    letter-spacing: 1px; margin-top: 3px; color: rgba(255,255,255,0.15);
+}
+.faq-chat-ts-queen { color: rgba(197,160,89,0.35); text-align: left; }
+.faq-chat-ts-user { text-align: right; }
+
+.faq-chat-actions {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; margin-top: 16px; padding-bottom: 20px;
+    animation: faqFadeIn 0.4s ease forwards;
+}
+.faq-close-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.25); font-family: 'Cinzel', serif;
+    font-size: 0.6rem; letter-spacing: 2px; padding: 12px 28px;
+    border-radius: 14px; cursor: pointer;
+}
+.faq-keep-asking-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; margin-top: 18px;
+    position: relative; z-index: 2;
+    animation: faqFadeIn 0.5s ease forwards;
+}
+.faq-change-topic-btn {
+    background: transparent; border-color: rgba(197,160,89,0.15);
+    color: rgba(197,160,89,0.5);
+}
+.faq-keep-asking-btn {
+    background: rgba(197,160,89,0.08); border: 1px solid rgba(197,160,89,0.3);
+    color: #c5a059; font-family: 'Cinzel', serif;
+    font-size: 0.7rem; letter-spacing: 3px; padding: 14px 32px;
+    cursor: pointer; transition: all 0.3s;
+    text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
+}
+.faq-keep-asking-btn:hover {
+    background: rgba(197,160,89,0.15); border-color: rgba(197,160,89,0.55);
+}
+
+@keyframes faqBubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes faqSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes faqTypingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+}
+@keyframes faqQFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes faqFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (min-width: 769px) {
+    .fake-nav { display: none; }
+}
+`;
 
 interface FaqFooterProps {
     onNavClick?: (section: string) => void;
@@ -350,7 +593,10 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
             overlay.classList.add('open');
             setTimeout(() => showTyping(), 200);
             setTimeout(() => { addQueenBubble('What would you like to know?'); }, 1200);
-            setTimeout(() => showCategoryChips(), 1600);
+            setTimeout(() => {
+                showCategoryChips();
+                setTimeout(() => { addChatActions(); scrollChat(); }, faqData.length * 350 + 200);
+            }, 1600);
         }
 
         function closeFaq() {
@@ -367,7 +613,6 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
             openFaq();
         }
 
-        // Expose to window for the nav button
         (window as any).toggleFaqChat = toggleFaq;
         (window as any).closeFaqChat = closeFaq;
 
@@ -380,6 +625,8 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
 
     return (
         <>
+            <style dangerouslySetInnerHTML={{ __html: FOOTER_AND_FAQ_CSS }} />
+
             {/* FAQ Chat Overlay */}
             <div id="faqChatOverlay" className="faq-chat-overlay">
                 <div className="faq-chat-header">
@@ -398,29 +645,29 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
                 <div className="faq-chat-body" id="faqChatBody" />
             </div>
 
-            {/* Footer Nav */}
-            <nav className="faq-footer-nav">
-                <button className="faq-footer-nav-item" onClick={() => handleNavClick('your Profile')}>
-                    <span className="faq-footer-nav-icon">&#9670;</span>
-                    <span className="faq-footer-nav-label">PROFILE</span>
+            {/* Footer Nav - exact same markup as landing.html */}
+            <nav className="fake-nav">
+                <button className="fake-nav-btn" onClick={() => handleNavClick('your Profile')}>
+                    <span className="fake-nav-icon">&#9670;</span>
+                    <span className="fake-nav-label">PROFILE</span>
                 </button>
-                <button className="faq-footer-nav-item" onClick={() => handleNavClick('your Record')}>
-                    <span className="faq-footer-nav-icon">&#9638;</span>
-                    <span className="faq-footer-nav-label">RECORD</span>
+                <button className="fake-nav-btn" onClick={() => handleNavClick('your Record')}>
+                    <span className="fake-nav-icon">&#9638;</span>
+                    <span className="fake-nav-label">RECORD</span>
                 </button>
-                <button className="faq-footer-queen-btn" onClick={() => (window as any).toggleFaqChat?.()}>
+                <button className="fake-nav-center" onClick={() => (window as any).toggleFaqChat?.()}>
                     <div className="faq-nav-speech">Any questions?</div>
-                    <div className="faq-footer-queen-ring">
+                    <div className="fake-nav-avatar">
                         <img src="/queen-nav.png" alt="Queen" />
                     </div>
                 </button>
-                <button className="faq-footer-nav-item" onClick={() => handleNavClick("Queen's Wall")}>
-                    <span className="faq-footer-nav-icon">&#9819;</span>
-                    <span className="faq-footer-nav-label">QUEEN</span>
+                <button className="fake-nav-btn" onClick={() => handleNavClick("Queen's Wall")}>
+                    <span className="fake-nav-icon">&#9819;</span>
+                    <span className="fake-nav-label">QUEEN</span>
                 </button>
-                <button className="faq-footer-nav-item" onClick={() => handleNavClick('Global Chat')}>
-                    <span className="faq-footer-nav-icon">&#9678;</span>
-                    <span className="faq-footer-nav-label">GLOBAL</span>
+                <button className="fake-nav-btn" onClick={() => handleNavClick('Global Chat')}>
+                    <span className="fake-nav-icon">&#9678;</span>
+                    <span className="fake-nav-label">GLOBAL</span>
                 </button>
             </nav>
         </>
