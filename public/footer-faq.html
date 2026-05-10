@@ -937,9 +937,14 @@ function handleNavClick(section) {
 function handleCenterClick() {
     // Dismiss access denied in parent
     parent.postMessage({ type: 'dismissAccessDenied' }, '*');
-    // Close global if open
+    // Close global instantly if open, then open FAQ
     var gl = document.getElementById('globalOverlay');
-    if (gl && gl.classList.contains('open')) { closeGlobal(); return; }
+    if (gl && gl.classList.contains('open')) {
+        gl.style.transition = 'none';
+        gl.classList.remove('open');
+        gl.offsetHeight;
+        gl.style.transition = '';
+    }
     // Hide notification if visible
     dismissNotif();
     // Toggle FAQ
