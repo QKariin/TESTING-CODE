@@ -856,6 +856,12 @@ window.addEventListener('message', function(e) {
             if (footerFrame) { footerFrame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; footerFrame.style.top = 'auto'; }
         }, 400);
     }
+    if (e.data.type === 'notifShow') {
+        if (footerFrame && footerFrame.style.top !== '0') footerFrame.style.height = 'calc(220px + env(safe-area-inset-bottom))';
+    }
+    if (e.data.type === 'notifHide') {
+        if (footerFrame && footerFrame.style.top !== '0') footerFrame.style.height = 'calc(140px + env(safe-area-inset-bottom))';
+    }
     if (e.data.type === 'dismissAccessDenied') {
         var existing = document.getElementById('accessDeniedOverlay');
         if (existing) existing.remove();

@@ -30,6 +30,7 @@ function showAccessDenied(section: string, onUnlock?: () => void) {
 
 export default function FaqFooter({ onNavClick, onUnlock, hideOnDesktop }: FaqFooterProps) {
     const [faqOpen, setFaqOpen] = useState(false);
+    const [notifVisible, setNotifVisible] = useState(false);
     const onNavClickRef = useRef(onNavClick);
     const onUnlockRef = useRef(onUnlock);
     onNavClickRef.current = onNavClick;
@@ -51,6 +52,12 @@ export default function FaqFooter({ onNavClick, onUnlock, hideOnDesktop }: FaqFo
                     break;
                 case 'faqClose':
                     setTimeout(() => setFaqOpen(false), 400);
+                    break;
+                case 'notifShow':
+                    setNotifVisible(true);
+                    break;
+                case 'notifHide':
+                    setNotifVisible(false);
                     break;
                 case 'dismissAccessDenied': {
                     const el = document.getElementById('accessDeniedOverlay');
@@ -76,7 +83,7 @@ export default function FaqFooter({ onNavClick, onUnlock, hideOnDesktop }: FaqFo
                     bottom: 0,
                     left: 0,
                     width: '100%',
-                    height: faqOpen ? '100%' : 'calc(140px + env(safe-area-inset-bottom))',
+                    height: faqOpen ? '100%' : notifVisible ? 'calc(220px + env(safe-area-inset-bottom))' : 'calc(140px + env(safe-area-inset-bottom))',
                     top: faqOpen ? 0 : 'auto',
                     border: 'none',
                     zIndex: 9999999,
