@@ -1102,11 +1102,13 @@ function loadGlActivity() {
                 var hierHtml = item.hierarchy ? '<div class="gl-ac-hier">' + item.hierarchy + '</div>' : '';
                 var timeHtml = '<div class="gl-ac-time">' + when + '</div>';
 
-                if (item.kind === 'wishlist' && item.cardImage) {
+                if (item.kind === 'wishlist') {
+                    var giftLeftHtml = item.cardImage
+                        ? '<img src="' + item.cardImage + '" style="width:80%;max-width:70px;height:auto;border-radius:6px;object-fit:cover" onerror="this.outerHTML=\'<span style=font-size:2rem;line-height:1>🎁</span><span>GIFT</span>\'">'
+                        : '<span style="font-size:2rem;line-height:1">🎁</span><span>GIFT</span>';
                     c.innerHTML += '<div class="gl-activity-card"><div class="gl-activity-card-risky">' +
                         timeHtml +
-                        '<div class="gl-ac-risky-left"><img src="' + item.cardImage + '" style="width:80%;max-width:70px;height:auto;border-radius:6px;object-fit:cover" onerror="this.style.display=\'none\'">' +
-                        '</div>' +
+                        '<div class="gl-ac-risky-left">' + giftLeftHtml + '</div>' +
                         '<div class="gl-ac-risky-right">' +
                             '<div style="display:flex;align-items:center;gap:10px">' + avHtml + '<div><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div></div>' +
                             '<div class="gl-ac-text">' + (item.text || '') + '</div>' +
