@@ -315,9 +315,9 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 
 <!-- FOOTER NAV -->
 <nav class="fake-nav">
-    <button class="fake-nav-btn" onclick="handleNavClick('your Profile')">
+    <button class="fake-nav-btn" onclick="handleNavClick('Home')">
         <span class="fake-nav-icon">&#9670;</span>
-        <span class="fake-nav-label">PROFILE</span>
+        <span class="fake-nav-label">HOME</span>
     </button>
     <button class="fake-nav-btn" onclick="handleNavClick('your Record')">
         <span class="fake-nav-icon">&#9638;</span>
@@ -572,7 +572,7 @@ function showQuestionBubbles(catIndex, questions) {
                 body.appendChild(wrap);
                 scrollFaqChat();
                 if (idx === questions.length - 1) {
-                    setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
+                    setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
                 }
             }, delay);
         })(i);
