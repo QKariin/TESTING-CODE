@@ -539,213 +539,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     font-weight: 300; font-style: italic;
 }
 
-/* FAQ SPEECH BUBBLE ON NAV */
-.faq-nav-speech {
-    position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%);
-    background: rgba(197,160,89,0.12); border: 1px solid rgba(197,160,89,0.25);
-    border-radius: 12px 12px 12px 4px; padding: 6px 14px;
-    font-family: 'Cormorant Garamond', serif; font-size: 0.8rem;
-    color: rgba(255,255,255,0.6); font-style: italic; white-space: nowrap;
-    animation: faqSpeechFloat 3s ease-in-out infinite;
-    pointer-events: none;
-}
-.faq-nav-speech::after {
-    content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 6px solid transparent; border-right: 6px solid transparent;
-    border-top: 6px solid rgba(197,160,89,0.25);
-}
-@keyframes faqSpeechFloat {
-    0%,100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-4px); }
-}
-/* FAQ CHAT OVERLAY */
-.faq-chat-overlay {
-    position: fixed; top: 0; left: 0; right: 0;
-    bottom: calc(60px + env(safe-area-inset-bottom));
-    z-index: 99999; background: #020512;
-    display: flex; flex-direction: column;
-    transform: translateY(100%);
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-}
-.faq-chat-overlay.open { transform: translateY(0); }
-.faq-chat-header {
-    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
-    padding: calc(env(safe-area-inset-top) + 20px) 20px 20px;
-    border-bottom: 1px solid rgba(197,160,89,0.25);
-    border-top: 3px solid rgba(197,160,89,0.55);
-    background: #020512; z-index: 2;
-}
-.faq-chat-header-left {
-    display: flex; align-items: center; gap: 10px;
-}
-.faq-chat-header-av-wrap {
-    position: relative; width: 52px; height: 52px;
-}
-.faq-chat-header-av {
-    width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
-    border: 1.5px solid rgba(197,160,89,0.5);
-}
-.faq-chat-online-dot {
-    position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px;
-    background: #4ade80; border-radius: 50%; border: 2px solid #020512;
-}
-.faq-chat-header-info { display: flex; flex-direction: column; }
-.faq-chat-header-name {
-    font-family: 'Cinzel', serif; font-size: 0.85rem;
-    color: #c5a059; letter-spacing: 3px; font-weight: bold; line-height: 1;
-}
-.faq-chat-header-status {
-    font-family: 'Orbitron', sans-serif; font-size: 0.28rem;
-    color: #4ade80; letter-spacing: 2px; margin-top: 4px;
-    display: flex; align-items: center; gap: 4px;
-}
-.faq-chat-header-status::before {
-    content: ''; width: 5px; height: 5px; background: #4ade80;
-    border-radius: 50%; flex-shrink: 0;
-}
-.faq-chat-close {
-    background: none; border: 1px solid rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.4); width: 32px; height: 32px;
-    border-radius: 50%; font-size: 0.8rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-}
-.faq-chat-body {
-    flex: 1; overflow-y: auto; padding: 20px 12px;
-    display: flex; flex-direction: column; gap: 6px;
-    -webkit-overflow-scrolling: touch;
-}
-.faq-chat-body::-webkit-scrollbar { display: none; }
-/* Chat rows */
-.faq-cb-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px;
-    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-.faq-cb-row-queen { justify-content: flex-start; }
-.faq-cb-row-user { justify-content: flex-end; }
-.faq-cb-av {
-    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-    border: 1.5px solid rgba(197,160,89,0.35); flex-shrink: 0;
-    align-self: flex-end; margin-bottom: 20px;
-}
-.faq-cb-wrap-queen { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; }
-.faq-cb-wrap-user { display: flex; flex-direction: column; align-items: flex-end; max-width: 80%; }
-/* Queen bubble */
-.faq-cb-queen {
-    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
-    color: #fff; font-family: 'Cinzel', serif; font-size: 1.05rem; line-height: 1.55;
-    letter-spacing: 0.2px; padding: 12px 16px; border-radius: 16px 16px 16px 3px;
-    word-break: break-word; white-space: pre-wrap;
-}
-/* User (question) bubble */
-.faq-cb-user {
-    background: #1c1c1e; color: #fff; font-family: 'Cinzel', serif;
-    font-size: 1.05rem; line-height: 1.55; letter-spacing: 0.2px;
-    padding: 12px 16px; border-radius: 16px 16px 3px 16px;
-    word-break: break-word; cursor: pointer; transition: background 0.2s;
-}
-.faq-cb-user:active { background: #2a2a2e; }
-/* Category chips */
-.faq-cat-chips {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 0; padding: 4px 0;
-}
-.faq-cat-chip {
-    background: linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3)); border: 1px solid rgba(255,0,199,0.3);
-    color: #ff00c7; font-family: 'Cinzel', serif;
-    font-size: 0.95rem; padding: 16px 24px; border-radius: 20px; width: 80%; box-sizing: border-box; text-align: center;
-    cursor: pointer; transition: all 0.2s; letter-spacing: 1px;
-    opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-.faq-cat-chip:active { background: rgba(255,0,199,0.25); border-color: rgba(255,0,199,0.5); }
-/* Question list bubbles - centered */
-.faq-q-wrap {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 0; padding: 4px 0;
-}
-.faq-q-bubble {
-    background: #1c1c1e; border: 1px solid rgba(197,160,89,0.1);
-    color: rgba(255,255,255,0.7); font-family: 'Cinzel', serif;
-    font-size: 0.85rem; line-height: 1.5; padding: 14px 24px;
-    border-radius: 20px; cursor: pointer; transition: all 0.2s;
-    text-align: center; width: 80%; box-sizing: border-box;
-}
-.faq-q-bubble:active { background: rgba(197,160,89,0.1); border-color: rgba(197,160,89,0.3); }
-/* Answer bubble (queen style) - left aligned text */
-.faq-a-bubble {
-    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.6), inset 0 0 20px rgba(197,160,89,0.04);
-    color: rgba(255,255,255,0.92); font-family: 'Cinzel', serif;
-    font-size: 1.05rem; line-height: 1.8; padding: 12px 14px;
-    border-radius: 16px 16px 16px 3px; word-break: break-word;
-    text-align: left;
-    animation: faqBubbleIn 0.45s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-@keyframes faqBubbleIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes faqSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-/* Typing indicator */
-.faq-typing-row { display: flex; align-items: flex-end; gap: 6px; padding: 0 4px;
-    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-.faq-typing-bubble {
-    background: #000; box-shadow: 0 0 0 1px rgba(197,160,89,0.3);
-    padding: 12px 18px; border-radius: 16px 16px 16px 3px;
-    display: flex; gap: 5px; align-items: center;
-    animation: faqBubbleIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-.faq-typing-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: rgba(197,160,89,0.5);
-    animation: faqTypingBounce 1.2s ease-in-out infinite;
-}
-.faq-typing-dot:nth-child(2) { animation-delay: 0.15s; }
-.faq-typing-dot:nth-child(3) { animation-delay: 0.3s; }
-@keyframes faqTypingBounce {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-    30% { transform: translateY(-6px); opacity: 1; }
-}
-/* Staggered question fade-in */
-.faq-q-bubble { opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
-@keyframes faqQFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.faq-chat-ts {
-    font-family: 'Orbitron', sans-serif; font-size: 0.3rem;
-    letter-spacing: 1px; margin-top: 3px; color: rgba(255,255,255,0.15);
-}
-.faq-chat-ts-queen { color: rgba(197,160,89,0.35); text-align: left; }
-.faq-chat-ts-user { text-align: right; }
-/* Back / close buttons in chat */
-.faq-chat-actions {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 8px; margin-top: 16px; padding-bottom: 20px;
-    animation: faqFadeIn 0.4s ease forwards;
-}
-.faq-close-btn {
-    background: none; border: 1px solid rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.25); font-family: 'Cinzel', serif;
-    font-size: 0.6rem; letter-spacing: 2px; padding: 12px 28px;
-    border-radius: 14px; cursor: pointer;
-}
-.faq-keep-asking-wrap {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 10px; margin-top: 18px;
-    position: relative; z-index: 2;
-    animation: faqFadeIn 0.5s ease forwards;
-}
-@keyframes faqFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-.faq-change-topic-btn {
-    background: transparent; border-color: rgba(197,160,89,0.15);
-    color: rgba(197,160,89,0.5);
-}
-.faq-keep-asking-btn {
-    background: rgba(197,160,89,0.08); border: 1px solid rgba(197,160,89,0.3);
-    color: #c5a059; font-family: 'Cinzel', serif;
-    font-size: 0.7rem; letter-spacing: 3px; padding: 14px 32px;
-    cursor: pointer; transition: all 0.3s;
-    text-transform: uppercase;
-    -webkit-tap-highlight-color: transparent;
-}
-.faq-keep-asking-btn:hover {
-    background: rgba(197,160,89,0.15); border-color: rgba(197,160,89,0.55);
-}
-
+/* FAQ + footer CSS moved to footer-faq.html */
 /* FINAL CTA */
 .final-cta {
     padding: 100px 25px;
@@ -867,35 +661,6 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     .glass-box p { font-size: 11px !important; line-height: 1.5 !important; margin-bottom: 12px !important; }
     .nob-bullets { font-size: 10px !important; word-spacing: 5px !important; }
 }
-
-/* FAKE BOTTOM NAV */
-.fake-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999999;
-    height: calc(60px + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(4, 4, 12, 0.96);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(197, 160, 89, 0.18);
-    display: flex; align-items: stretch; justify-content: space-around;
-}
-.fake-nav-btn {
-    flex: 1; background: transparent; border: none;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; cursor: pointer; padding: 0;
-}
-.fake-nav-icon { font-size: 1.6rem; color: rgba(197, 160, 89, 0.35); line-height: 1; }
-.fake-nav-label { font-family: 'Cinzel', serif; font-size: 0.55rem; color: rgba(197, 160, 89, 0.35); letter-spacing: 1.5px; text-transform: uppercase; }
-.fake-nav-center {
-    flex: 1; background: transparent; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; padding: 0; position: relative;
-    margin-top: -30px; transform: translateY(14px);
-}
-.fake-nav-avatar {
-    width: 75px; height: 75px; border-radius: 50%;
-    overflow: hidden; background: #000; flex-shrink: 0;
-}
-.fake-nav-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
 /* TOAST NOTIFICATIONS */
 @font-face {
@@ -1031,97 +796,6 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
             <div id="reviewsContainer"></div>
         </section>
 
-        <div id="faqData" style="display:none">
-                <div class="faq-cat-data" data-title="About Queen Karin">
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Who is Queen Karin?</span></button>
-                        <div class="faq-answer"><p>I have been building my FemDom brand since 2022, mastering the dynamics of every type of submissive along the way.</p><p style="margin-top:10px">Currently based in Greece with my lovely dog and crazy cat. I balance a love for fine food and hard work with a passion for global travel (nearly 100 countries visited).</p><p style="margin-top:10px">I have zero tolerance for laziness, dishonesty, or fake personalities. If you are honest, we will get along; if you lie, I will call you out instantly.</p><p style="margin-top:10px">My life goal is simple: own a boat, keep my Starlink active, and manage my subs from every corner of the world.</p><p style="margin-top:10px">You can learn more about me on my other platforms:</p><div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin-left:auto;margin-right:auto"><a href="https://x.com/qkarin_com?s=21" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">TWITTER/X</a><a href="https://fetlife.com/QKarin" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">FETLIFE</a><a href="https://discord.gg/RMJqt7uvNc" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">DISCORD</a><a href="https://www.qkarin.com/blog" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">BLOG</a></div></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Is this website run by AI?</span></button>
-                        <div class="faq-answer"><p>No. Everything here is me. I personally review tasks, I read every message, I decide who rises and who doesn't. But I built this platform with serious technology so the kingdom can run around the clock. When you kneel at 3am, I don't need to be awake for it to count. When you finish a task, you don't wait for me to notice. The system remembers everything you do, tracks your dedication, and makes sure nothing gets lost.</p><p style="margin-top:10px">That's the whole point. The tech handles the bookkeeping so I can focus on what matters. Reading your words. Watching how you behave. Deciding what you deserve next. The system tracks you. I lead you. Don't confuse the two.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>How does it work?</span></button>
-                        <div class="faq-answer"><p>Once you're inside, you get your own profile where I can see everything about you: Your rank, your merit, what tasks you completed, what you skipped. Nothing disappears here.</p><p style="margin-top:10px">You get access to over 1,000 tasks the moment you walk in. Every single one is free. I built them for those who genuinely want to serve. The ones who show up and do the work? They earn. They rise. But the ones who get lazy, who skip what I gave them, who think they can cut corners? Those ones pay.</p><p style="margin-top:10px">That's how this kingdom works.</p><p style="margin-top:10px">Devotion is rewarded.</p><p style="margin-top:10px">Disobedience has a price.</p><p style="margin-top:10px">On top of that you get challenges, a leaderboards, a real hierarchy you climb through, and for those who earn it, total ownership programs.</p><p style="margin-top:10px">This isn't a website you visit. It's a kingdom you belong to.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Can I trust the testimonials?</span></button>
-                        <div class="faq-answer"><p>Every single one. Each review comes from a member with a real profile, a real rank, and a real history inside this kingdom. You can see their merit points, how long they've served, where they stand. I don't need to fabricate proof. My subjects speak for themselves.</p><p style="margin-top:10px">If you still need more, there are reviews outside of this platform that I have no control over. I was always the person who wanted to make sure my subjects feel safe and protected under my control. See for yourself.</p><p style="margin-top:14px;text-align:center"><a href="https://disboard.org/server/reviews/1167379948173000704" target="_blank" style="display:inline-block;padding:10px 20px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.25);border-radius:6px;color:#c5a059;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;transition:all 0.3s ease">DISBOARD REVIEWS</a></p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>What makes this different from other Femdom sites?</span></button>
-                        <div class="faq-answer"><p>I'd love to answer this question but I can't.</p><p style="margin-top:10px">You will not find another app like this because it doesn't exist. No domme has ever built her own platform from the ground up. This isn't a page I put together on Wix with a wishlist and a cash app link.</p><p style="margin-top:10px">This is a living, breathing kingdom that runs 24 hours a day whether I'm online or not. Most people are used to settling for mediocre, lazy garbage. I am shooting for the moon and I don't settle for hitting stars.</p></div>
-                    </div>
-                </div>
-                <div class="faq-cat-data" data-title="Privacy &amp; Safety">
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Is my identity protected?</span></button>
-                        <div class="faq-answer"><p>Your real name is never shown anywhere. You pick an alias when you sign up and that's all anyone ever sees. Other members don't know who you are, where you live, or what your real name is. Payments go through Stripe so I never see your card details. No one can look you up here and connect it to your real life. You're as invisible as you want to be.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Where do we communicate?</span></button>
-                        <div class="faq-answer"><p>Everything stays inside this app. I don't use Instagram DMs, Telegram, WhatsApp, or any third party platform to talk to my subjects. Your conversations never touch a server owned by Meta, Google, or anyone else. No algorithms scanning your messages, no data harvesting, no risk of your kink life showing up in an ad suggestion. What you say here stays here.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>What stops you from blackmailing me?</span></button>
-                        <div class="faq-answer"><p>Nothing. That's the honest answer. If I wanted to, I could. But that's exactly why you need to pay attention to who you're giving power to. I've been building this since 2022. My name, my face, my reputation is attached to everything here. I have subjects who have been with me for years. No one is locked in. You can walk away whenever you want. And the only guarantee I offer is the one that actually matters: years of consistency, a track record you can verify yourself, and a reputation I've never had a reason to hide.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Convince me this is not a scam.</span></button>
-                        <div class="faq-answer"><p>No.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Can I disappear if I need to?</span></button>
-                        <div class="faq-answer"><p>Leaving is free. Your account, your history, your data, gone. No questions asked. I genuinely encourage you to go out there and explore. This lifestyle has a lot to offer and you should see it all.</p><p style="margin-top:10px">Now, if one day you find yourself back at my door, that's a different conversation. One I'll enjoy very much.</p></div>
-                    </div>
-                </div>
-                <div class="faq-cat-data" data-title="Payments &amp; Costs">
-                    <div class="faq-item">
-                        <button class="faq-question"><span>What am I paying for?</span></button>
-                        <div class="faq-answer"><p>The entry tribute is $55. That gets you full access to the kingdom. Your profile, over 1,000 tasks, kneeling hours, the global chat, the hierarchy, everything. That alone is more than any domme has ever offered for an entry fee. Every price range will find something inside. I'm not here to ruin your bank account. But I'm not here to be used for free either. Serving costs something. How much is between you and your devotion.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Who handles my payment?</span></button>
-                        <div class="faq-answer"><p>Stripe. The same payment system used by Amazon, Google, and Shopify. I never see your card number, your bank details, or your billing address. Every transaction is encrypted. Your financial information never touches my servers.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Will my wife see this on our statement?</span></button>
-                        <div class="faq-answer"><p>The charge shows up as a discreet description. Nothing that screams femdom, nothing that raises questions. Your privacy extends to your finances.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Can I get a refund?</span></button>
-                        <div class="faq-answer"><p>No. You knew what you were doing when you knelt. A tribute isn't a transaction. It's a decision. Make sure you're ready before you make it.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>I'm not rich. Is this for me?</span></button>
-                        <div class="faq-answer"><p>You don't need to be. The entry fee is $55. After that, the tasks are free, the kneeling is free, the hierarchy is free. The most devoted subjects in this kingdom aren't the ones who spend the most. They're the ones who show up every day. Your wallet doesn't determine your rank here. Your discipline does.</p></div>
-                    </div>
-                </div>
-                <div class="faq-cat-data" data-title="Queen's Expectations">
-                    <div class="faq-item">
-                        <button class="faq-question"><span>I'm nervous to join.</span></button>
-                        <div class="faq-answer"><p>Good. You should be. That means you're taking it seriously. Every subject who ever knelt for me was nervous the first time. The difference between you and them is they did it anyway.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>Do I need experience?</span></button>
-                        <div class="faq-answer"><p>None. Most of my subjects started with nothing but curiosity. You don't need to know the terminology, the protocols, or the "right way" to submit. I'll teach you. The only thing I need from you is honesty about where you are and willingness to learn.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>What do you expect from me?</span></button>
-                        <div class="faq-answer"><p>Honesty and consistency. That's all. I don't care how experienced you are, how much money you have, or how submissive you think you are. I care if you show up when you say you will. I care if you do what I assign you. I care if you tell me the truth even when it's uncomfortable. Everything else I can work with. But if you lie to me or waste my time, you won't last here.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>What if I fail?</span></button>
-                        <div class="faq-answer"><p>You will. Everyone does. I don't expect perfection, I expect you to get back up. Missing a task, slipping on your routine, falling behind on kneeling. That happens. What matters is what you do after. The subjects who grow here aren't the ones who never fail. They're the ones who fail and come back the next day anyway.</p></div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question"><span>I don't know what kind of submissive I am.</span></button>
-                        <div class="faq-answer"><p>That's fine. Most don't when they start. You don't need to show up with a label. Some discover they're into keyholding. Some find out they need total ownership. Some just want structure and accountability. You'll figure it out here. I've seen every type and I know how to read what you need before you do. Just walk in honest and the rest will come.</p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- FINAL CTA -->
         <section class="funnel-section final-cta">
@@ -1134,59 +808,15 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
         <div style="height: calc(100px + env(safe-area-inset-bottom));"></div>
     </main>
 
-    <!-- FAKE BOTTOM NAV -->
-    <nav class="fake-nav">
-        <button class="fake-nav-btn" onclick="showAccessDenied('your Profile')">
-            <span class="fake-nav-icon">&#9670;</span>
-            <span class="fake-nav-label">PROFILE</span>
-        </button>
-        <button class="fake-nav-btn" onclick="showAccessDenied('your Record')">
-            <span class="fake-nav-icon">&#9638;</span>
-            <span class="fake-nav-label">RECORD</span>
-        </button>
-        <button class="fake-nav-center" onclick="toggleFaqChat()">
-            <div class="faq-nav-speech">Any questions?</div>
-            <div class="fake-nav-avatar">
-                <img src="/queen-nav.png" alt="Queen">
-            </div>
-        </button>
-        <button class="fake-nav-btn" onclick="showAccessDenied('Queen\'s Wall')">
-            <span class="fake-nav-icon">&#9819;</span>
-            <span class="fake-nav-label">QUEEN</span>
-        </button>
-        <button class="fake-nav-btn" onclick="showAccessDenied('Global Chat')">
-            <span class="fake-nav-icon">&#9678;</span>
-            <span class="fake-nav-label">GLOBAL</span>
-        </button>
-    </nav>
+    <!-- FOOTER (loaded from shared file) -->
+    <iframe id="footerFrame" src="/footer-faq.html" style="position:fixed;bottom:0;left:0;width:100%;height:calc(140px + env(safe-area-inset-bottom));border:none;z-index:9999999;background:transparent;"></iframe>
 
     <!-- TOAST CONTAINER -->
     <div id="toastContainer"></div>
 
-    <!-- FAQ CHAT OVERLAY -->
-    <div id="faqChatOverlay" class="faq-chat-overlay">
-        <div class="faq-chat-header">
-            <div class="faq-chat-header-left">
-                <div class="faq-chat-header-av-wrap">
-                    <img src="/queen-nav.png" class="faq-chat-header-av" alt="Queen Karin">
-                    <div class="faq-chat-online-dot"></div>
-                </div>
-                <div class="faq-chat-header-info">
-                    <span class="faq-chat-header-name">QUEEN KARIN</span>
-                    <span class="faq-chat-header-status">ONLINE NOW</span>
-                </div>
-            </div>
-            <button class="faq-chat-close" onclick="closeFaqChat()">&#10005;</button>
-        </div>
-        <div class="faq-chat-body" id="faqChatBody"></div>
-    </div>
-
     <script>
 /* ── ACCESS DENIED OVERLAY ── */
 function showAccessDenied(section) {
-    // Close FAQ if open
-    if (typeof closeFaqChat === 'function') closeFaqChat();
-    // Toggle: if already showing, just dismiss
     var existing = document.getElementById('accessDeniedOverlay');
     if (existing) { existing.remove(); return; }
     var label = section || 'this section';
@@ -1200,18 +830,37 @@ function showAccessDenied(section) {
         '<div style="display:flex;gap:8px;">' +
             '<button id="adClose" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:10px 0;border-radius:8px;font-family:Cinzel,serif;font-size:0.5rem;letter-spacing:2px;cursor:pointer;">CLOSE</button>' +
             '<button id="adUnlock" style="flex:2;background:linear-gradient(135deg,#c5a059 0%,#8a6d30 100%);color:#020202;border:none;padding:10px 0;border-radius:8px;font-family:Cinzel,serif;font-size:0.5rem;font-weight:700;letter-spacing:2px;cursor:pointer;">UNLOCK</button>' +
-        '</div>' +
-    '</div>';
+        '</div></div>';
     overlay.querySelector('#adClose').addEventListener('click', function(e) { e.stopPropagation(); overlay.remove(); });
     overlay.querySelector('#adUnlock').addEventListener('click', function(e) {
         e.stopPropagation(); overlay.remove();
-        // Send to login
         try { window.parent.postMessage({type:'redirect',url:'https://throne.qkarin.com/login'},'*'); } catch(err) {}
         window.open('https://throne.qkarin.com/login', '_top');
     });
     overlay.addEventListener('click', function() { overlay.remove(); });
     document.body.appendChild(overlay);
 }
+
+/* ── FOOTER IFRAME COMMUNICATION ── */
+var footerFrame = document.getElementById('footerFrame');
+window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data.type !== 'string') return;
+    if (e.data.type === 'navClick') {
+        showAccessDenied(e.data.section);
+    }
+    if (e.data.type === 'faqOpen') {
+        if (footerFrame) { footerFrame.style.height = '100%'; footerFrame.style.top = '0'; }
+    }
+    if (e.data.type === 'faqClose') {
+        setTimeout(function() {
+            if (footerFrame) { footerFrame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; footerFrame.style.top = 'auto'; }
+        }, 400);
+    }
+    if (e.data.type === 'dismissAccessDenied') {
+        var existing = document.getElementById('accessDeniedOverlay');
+        if (existing) existing.remove();
+    }
+});
 
 /* ── TOAST NOTIFICATION SYSTEM ── */
 function timeAgo(dateStr) {
@@ -1381,315 +1030,6 @@ setTimeout(function() {
     </script>
 
     <script>
-/* ── FAQ CHAT ── */
-var faqCatNames = ['About Queen Karin', 'Privacy & Safety', 'Payments & Costs', "Queen's Expectations"];
-var faqCatIcons = ['&#9819;', '&#9670;', '&#9830;', '&#9734;'];
-var faqPickupLines = [
-    'Glad you asked.',
-    'Good question.',
-    'I get this one a lot.',
-    'Let me be direct.',
-    'Fair question.',
-    'I\'ll tell you exactly how it is.',
-    'Most are afraid to ask this.',
-    'You\'re smart to ask.',
-    'Honest answer?',
-    'Here\'s the truth.',
-    'I respect the curiosity.',
-    'No sugarcoating.',
-    'Straight answer.',
-    'Since you asked nicely.',
-    'That\'s worth answering.',
-    'I\'ll give you the real answer.',
-    'You should know this.',
-    'Important question.',
-    'Let me break it down.',
-    'Pay attention.'
-];
-var faqPickupIndex = 0;
-var faqCatFirstAnswer = {};
-var faqAskedQuestions = {}; // tracks asked questions per category: { catIndex: [qIndex, ...] }
-
-function getNextPickup() {
-    var line = faqPickupLines[faqPickupIndex % faqPickupLines.length];
-    faqPickupIndex++;
-    return line;
-}
-
-function getFaqTime() {
-    var now = new Date();
-    var h = now.getHours(); var m = now.getMinutes();
-    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-}
-
-function toggleFaqChat() {
-    var overlay = document.getElementById('faqChatOverlay');
-    if (overlay.classList.contains('open')) { closeFaqChat(); return; }
-    openFaqOrbital();
-}
-
-function openFaqOrbital() {
-    var overlay = document.getElementById('faqChatOverlay');
-    var body = document.getElementById('faqChatBody');
-    var speech = document.querySelector('.faq-nav-speech');
-    if (speech) speech.style.display = 'none';
-    body.innerHTML = '';
-    overlay.classList.add('open');
-    // Queen typing then greeting
-    setTimeout(function() { showTypingIndicator(); }, 200);
-    setTimeout(function() { addQueenBubble('What would you like to know?'); }, 1200);
-    // Category chips
-    setTimeout(function() { showCategoryChips(); }, 1600);
-}
-
-function closeFaqChat() {
-    document.getElementById('faqChatOverlay').classList.remove('open');
-    var speech = document.querySelector('.faq-nav-speech');
-    if (speech) speech.style.display = '';
-}
-
-function showTypingIndicator() {
-    var body = document.getElementById('faqChatBody');
-    var row = document.createElement('div');
-    row.className = 'faq-typing-row';
-    row.id = 'faqTyping';
-    row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
-        '<div class="faq-typing-bubble"><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div></div>';
-    body.appendChild(row);
-    scrollFaqChat();
-}
-
-function removeTypingIndicator() {
-    var el = document.getElementById('faqTyping');
-    if (el) el.remove();
-}
-
-function addQueenBubble(text) {
-    removeTypingIndicator();
-    var body = document.getElementById('faqChatBody');
-    var row = document.createElement('div');
-    row.className = 'faq-cb-row faq-cb-row-queen';
-    row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
-        '<div class="faq-cb-wrap-queen"><div class="faq-cb-queen">' + text + '</div>' +
-        '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
-    body.appendChild(row);
-    scrollFaqChat();
-}
-
-function addUserBubble(text) {
-    var body = document.getElementById('faqChatBody');
-    var row = document.createElement('div');
-    row.className = 'faq-cb-row faq-cb-row-user';
-    row.innerHTML = '<div class="faq-cb-wrap-user"><div class="faq-cb-user">' + text + '</div>' +
-        '<div class="faq-chat-ts faq-chat-ts-user">' + getFaqTime() + '</div></div>';
-    body.appendChild(row);
-    scrollFaqChat();
-}
-
-function scrollFaqChat() {
-    var body = document.getElementById('faqChatBody');
-    setTimeout(function() {
-        body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
-    }, 50);
-}
-
-function showCategoryChips() {
-    var body = document.getElementById('faqChatBody');
-    for (var i = 0; i < faqCatNames.length; i++) {
-        (function(idx) {
-            setTimeout(function() {
-                var wrap = document.createElement('div');
-                wrap.className = 'faq-cat-chips';
-                var chip = document.createElement('button');
-                chip.className = 'faq-cat-chip';
-                chip.innerHTML = faqCatIcons[idx] + ' ' + faqCatNames[idx];
-                chip.setAttribute('data-cat', idx);
-                chip.onclick = function() { selectFaqChatCat(parseInt(this.getAttribute('data-cat'))); };
-                wrap.appendChild(chip);
-                body.appendChild(wrap);
-                scrollFaqChat();
-            }, idx * 350);
-        })(i);
-    }
-}
-
-function selectFaqChatCat(index) {
-    // Remove chips
-    var chips = document.querySelector('.faq-cat-chips');
-    if (chips) chips.remove();
-    // User selects category
-    addUserBubble(faqCatNames[index]);
-    // Queen responds with questions
-    var cats = document.querySelectorAll('#faqData .faq-cat-data');
-    if (!cats[index]) return;
-    var questions = cats[index].querySelectorAll('.faq-item');
-    setTimeout(function() {
-        showTypingIndicator();
-        setTimeout(function() {
-            addQueenBubble('Here are some common questions:');
-            setTimeout(function() { showQuestionBubbles(index, questions); }, 400);
-        }, 1000);
-    }, 300);
-}
-
-function showQuestionBubbles(catIndex, questions) {
-    var body = document.getElementById('faqChatBody');
-    var delay = 0;
-    for (var i = 0; i < questions.length; i++) {
-        (function(idx) {
-            setTimeout(function() {
-                var wrap = document.createElement('div');
-                wrap.className = 'faq-q-wrap';
-                var qText = questions[idx].querySelector('.faq-question span').textContent;
-                var bubble = document.createElement('div');
-                bubble.className = 'faq-q-bubble';
-                bubble.textContent = qText;
-                bubble.setAttribute('data-cat', catIndex);
-                bubble.setAttribute('data-q', idx);
-                bubble.onclick = function() {
-                    selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
-                };
-                wrap.appendChild(bubble);
-                body.appendChild(wrap);
-                scrollFaqChat();
-                // After last question, add actions
-                if (idx === questions.length - 1) {
-                    setTimeout(function() { addChatActions(); scrollFaqChat(); }, 200);
-                }
-            }, delay);
-        })(i);
-        delay += 350;
-    }
-}
-
-function addChangeTopic() {
-    var body = document.getElementById('faqChatBody');
-    var wrap = document.createElement('div');
-    wrap.className = 'faq-keep-asking-wrap';
-    var btn = document.createElement('button');
-    btn.className = 'faq-keep-asking-btn faq-change-topic-btn';
-    btn.textContent = 'CHANGE TOPIC';
-    btn.onclick = function() {
-        var oldActions = body.querySelectorAll('.faq-chat-actions');
-        oldActions.forEach(function(a) { a.remove(); });
-        wrap.remove();
-        goBackToCategories();
-    };
-    wrap.appendChild(btn);
-    body.appendChild(wrap);
-}
-
-function addChatActions() {
-    var body = document.getElementById('faqChatBody');
-    var actions = document.createElement('div');
-    actions.className = 'faq-chat-actions';
-    var close = document.createElement('button');
-    close.className = 'faq-close-btn';
-    close.textContent = 'CLOSE';
-    close.onclick = function() { closeFaqChat(); };
-    actions.appendChild(close);
-    body.appendChild(actions);
-}
-
-function selectFaqQuestion(catIndex, qIndex) {
-    var cats = document.querySelectorAll('#faqData .faq-cat-data');
-    var items = cats[catIndex].querySelectorAll('.faq-item');
-    var qText = items[qIndex].querySelector('.faq-question span').textContent;
-    var aHtml = items[qIndex].querySelector('.faq-answer').innerHTML;
-    // Track asked question
-    if (!faqAskedQuestions[catIndex]) faqAskedQuestions[catIndex] = [];
-    if (faqAskedQuestions[catIndex].indexOf(qIndex) === -1) faqAskedQuestions[catIndex].push(qIndex);
-    // User asks
-    addUserBubble(qText);
-    // Queen answer - typing indicator then reply
-    var pickupHtml = '';
-    if (!faqCatFirstAnswer[catIndex]) {
-        faqCatFirstAnswer[catIndex] = true;
-        pickupHtml = '<p style="color:#c5a059;margin:0 0 8px;font-family:Cinzel,serif;font-size:0.85rem;font-weight:600">' + getNextPickup() + '</p>';
-    }
-    setTimeout(function() { showTypingIndicator(); }, 300);
-    setTimeout(function() {
-        removeTypingIndicator();
-        var body = document.getElementById('faqChatBody');
-        var row = document.createElement('div');
-        row.className = 'faq-cb-row faq-cb-row-queen';
-        row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
-            '<div class="faq-cb-wrap-queen"><div class="faq-a-bubble">' + pickupHtml + aHtml + '</div>' +
-            '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
-        body.appendChild(row);
-        // Show "Keep asking" button if there are unanswered questions
-        var asked = faqAskedQuestions[catIndex] || [];
-        var remaining = [];
-        for (var i = 0; i < items.length; i++) {
-            if (asked.indexOf(i) === -1) remaining.push(i);
-        }
-        if (remaining.length > 0) {
-            setTimeout(function() {
-                var keepWrap = document.createElement('div');
-                keepWrap.className = 'faq-keep-asking-wrap';
-                var keepBtn = document.createElement('button');
-                keepBtn.className = 'faq-keep-asking-btn';
-                keepBtn.textContent = 'KEEP ASKING';
-                keepBtn.onclick = function() {
-                    // Fade out buttons
-                    var oldActions = body.querySelectorAll('.faq-chat-actions');
-                    oldActions.forEach(function(a) { a.style.opacity = '0'; a.style.transition = 'opacity 0.3s'; });
-                    keepWrap.style.opacity = '0';
-                    keepWrap.style.transition = 'opacity 0.3s';
-                    setTimeout(function() {
-                        oldActions.forEach(function(a) { a.remove(); });
-                        keepWrap.remove();
-                        // Show typing while "thinking"
-                        showTypingIndicator();
-                        setTimeout(function() {
-                            removeTypingIndicator();
-                            addQueenBubble('Sure, here you go:');
-                            setTimeout(function() {
-                                remaining.forEach(function(ri, idx) {
-                                    setTimeout(function() {
-                                        var wrap = document.createElement('div');
-                                        wrap.className = 'faq-q-wrap';
-                                        var qt = items[ri].querySelector('.faq-question span').textContent;
-                                        var b = document.createElement('div');
-                                        b.className = 'faq-q-bubble';
-                                        b.textContent = qt;
-                                        b.setAttribute('data-cat', catIndex);
-                                        b.setAttribute('data-q', ri);
-                                        b.onclick = function() {
-                                            selectFaqQuestion(parseInt(this.getAttribute('data-cat')), parseInt(this.getAttribute('data-q')));
-                                        };
-                                        wrap.appendChild(b);
-                                        body.appendChild(wrap);
-                                        scrollFaqChat();
-                                        if (idx === remaining.length - 1) {
-                                            setTimeout(function() { addChangeTopic(); addChatActions(); scrollFaqChat(); }, 200);
-                                        }
-                                    }, idx * 350);
-                                });
-                            }, 400);
-                        }, 900);
-                    }, 300);
-                };
-                keepWrap.appendChild(keepBtn);
-                body.appendChild(keepWrap);
-                addChatActions();
-                scrollFaqChat();
-            }, 400);
-        } else {
-            addChatActions();
-        }
-        scrollFaqChat();
-    }, 1500);
-}
-
-function goBackToCategories() {
-    showTypingIndicator();
-    setTimeout(function() {
-        addQueenBubble('What else would you like to know?');
-        setTimeout(function() { showCategoryChips(); }, 400);
-    }, 1000);
-}
-
 /* ── LEADERBOARD ── */
 function loadLeaderboard(period) {
     fetch('/api/global/leaderboard?period=' + period)

@@ -552,9 +552,6 @@ export default function TributePage() {
                         margin-left: auto !important;
                         margin-right: auto !important;
                     }
-                    .fake-nav {
-                        display: none !important;
-                    }
                     .trib-bottom-pad {
                         height: 0 !important;
                     }
@@ -1185,6 +1182,6 @@ export default function TributePage() {
             </div>
 
         </div>
-        <FaqFooter onUnlock={() => handleTribute()} />
+        <FaqFooter onUnlock={() => handleTribute()} hideOnDesktop />
     </>);
 }
