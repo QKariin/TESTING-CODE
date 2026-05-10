@@ -563,7 +563,8 @@ function selectQuestion(catIndex, qIndex) {
                         showTypingIndicator();
                         setTimeout(function() {
                             removeTypingIndicator();
-                            addQueenBubble(getNextPickup());
+                            var moreLines = ['Here you go.', 'Pick one.', 'What else is on your mind?', 'Go ahead.', 'Take your pick.', 'Ask away.'];
+                            addQueenBubble(moreLines[Math.floor(Math.random() * moreLines.length)]);
                             setTimeout(function() {
                                 remaining.forEach(function(ri, idx) {
                                     setTimeout(function() {
