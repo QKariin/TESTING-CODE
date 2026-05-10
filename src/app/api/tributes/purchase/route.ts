@@ -14,8 +14,8 @@ export async function POST(request: Request) {
 
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
         const profileQuery = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name').ilike('member_id', memberEmail).single();
+            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').eq('ID', memberEmail).single()
+            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').ilike('member_id', memberEmail).single();
         const { data: profile, error: profileErr } = await profileQuery;
 
         if (profileErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
@@ -92,15 +92,17 @@ export async function POST(request: Request) {
         // Post gift card to global chat so everyone sees it
         try {
             const senderName = (profile as any).name || realEmail.split('@')[0];
+            const senderAvatar = (profile as any).avatar_url || null;
             await supabase.from('global_messages').insert({
                 sender_email: realEmail,
                 sender_name: senderName,
-                sender_avatar: null,
+                sender_avatar: senderAvatar,
                 message: `UPDATE_TRIBUTE_CARD::${JSON.stringify({
                     title: tributeTitle,
                     price: tributeCost,
                     image: tributeImage,
                     senderName,
+                    senderAvatar,
                 })}`,
             });
         } catch (_) {}
