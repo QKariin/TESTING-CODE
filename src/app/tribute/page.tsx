@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import FaqFooter from '@/components/FaqFooter';
 
 /* ── time ago helper ── */
 function timeAgo(dateStr: string) {
@@ -1210,51 +1211,7 @@ export default function TributePage() {
                 <div className="trib-bottom-pad" style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>
 
-            {/* ─── FAKE BOTTOM NAV (same as /profile, mobile only) ─── */}
-            <nav className="trib-fake-nav" style={{
-                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999999,
-                height: 'calc(60px + env(safe-area-inset-bottom))',
-                paddingBottom: 'env(safe-area-inset-bottom)',
-                background: 'rgba(4, 4, 12, 0.96)',
-                backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                borderTop: '1px solid rgba(197, 160, 89, 0.18)',
-                display: 'flex', alignItems: 'stretch', justifyContent: 'space-around',
-            }}>
-                {/* PROFILE */}
-                <button onClick={() => showAccessDenied('your Profile')} style={fakeNavBtnStyle}>
-                    <span style={fakeNavIconStyle}>{'\u25C6'}</span>
-                    <span style={fakeNavLabelStyle}>PROFILE</span>
-                </button>
-                {/* RECORD */}
-                <button onClick={() => showAccessDenied('your Record')} style={fakeNavBtnStyle}>
-                    <span style={fakeNavIconStyle}>{'\u25A6'}</span>
-                    <span style={fakeNavLabelStyle}>RECORD</span>
-                </button>
-                {/* QUEEN CIRCLE (center) */}
-                <button onClick={() => showAccessDenied('Queen\'s Chat')} style={{
-                    flex: 1, background: 'transparent', border: 'none',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', padding: 0, position: 'relative',
-                    marginTop: -30, transform: 'translateY(14px)',
-                }}>
-                    <div style={{
-                        width: 75, height: 75, borderRadius: '50%',
-                        overflow: 'hidden', background: '#000', flexShrink: 0,
-                    }}>
-                        <img src="/queen-nav.png" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} alt="Queen" />
-                    </div>
-                </button>
-                {/* QUEEN */}
-                <button onClick={() => showAccessDenied('Queen\'s Wall')} style={fakeNavBtnStyle}>
-                    <span style={fakeNavIconStyle}>{'\u265B'}</span>
-                    <span style={fakeNavLabelStyle}>QUEEN</span>
-                </button>
-                {/* GLOBAL */}
-                <button onClick={() => showAccessDenied('Global Chat')} style={fakeNavBtnStyle}>
-                    <span style={fakeNavIconStyle}>{'\u25CE'}</span>
-                    <span style={fakeNavLabelStyle}>GLOBAL</span>
-                </button>
-            </nav>
+            <FaqFooter onUnlock={() => handleTribute()} />
         </div>
     );
 }

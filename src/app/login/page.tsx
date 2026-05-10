@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import '@/css/login.css';
+import FaqFooter from '@/components/FaqFooter';
 
 function timeAgo(dateStr: string) {
     // Supabase returns timestamps without 'Z' — force UTC interpretation
@@ -463,30 +464,7 @@ export default function LoginPage() {
                 <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>{/* close brand/content wrapper */}
 
-            {/* Fake mobile bottom nav */}
-            <nav className="login-fake-nav">
-                <div className="login-nav-item">
-                    <span style={{ fontSize: '1rem', opacity: 0.3 }}>◆</span>
-                    <span>PROFILE</span>
-                </div>
-                <div className="login-nav-item">
-                    <span style={{ fontSize: '1rem', opacity: 0.3 }}>▦</span>
-                    <span>RECORD</span>
-                </div>
-                <div className="login-nav-queen-btn">
-                    <div className="login-nav-queen-ring">
-                        <img src="/queen-nav.png" alt="Queen" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                    </div>
-                </div>
-                <div className="login-nav-item">
-                    <span style={{ fontSize: '0.85rem', opacity: 0.3 }}>♛</span>
-                    <span>QUEEN</span>
-                </div>
-                <div className="login-nav-item">
-                    <span style={{ fontSize: '0.85rem', opacity: 0.3 }}>◎</span>
-                    <span>GLOBAL</span>
-                </div>
-            </nav>
+            <FaqFooter />
         </div>
     );
 }
