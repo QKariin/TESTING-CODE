@@ -391,6 +391,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 
 /* Activity feed cards */
 .gl-activity-card {
+    position: relative;
     background: rgba(15,15,18,0.7); border: 1px solid rgba(197,160,89,0.12);
     border-radius: 12px; margin: 0 12px 10px; overflow: hidden;
     animation: faqFadeIn 0.4s ease forwards;
@@ -426,8 +427,9 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     color: rgba(255,255,255,0.55); margin-top: 6px; line-height: 1.4;
 }
 .gl-ac-time {
-    font-family: 'Orbitron', sans-serif; font-size: 0.35rem;
-    color: rgba(255,255,255,0.12); letter-spacing: 1px; margin-top: 6px;
+    position: absolute; top: 10px; right: 12px;
+    font-family: 'Orbitron', sans-serif; font-size: 0.4rem;
+    color: rgba(197,160,89,0.45); letter-spacing: 1px;
 }
 /* Risky card layout */
 .gl-activity-card-risky {
@@ -1024,11 +1026,11 @@ function parseActivityCard(msg) {
         }
         if (content.indexOf('UPDATE_MERIT_CARD::') === 0) {
             var d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'earned ' + (d.points || 0) + ' points', kind: 'merit', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'earned ' + (d.points || 0) + ' merit points', kind: 'merit', iconEmoji: '⭐', iconLabel: 'MERIT', time: created };
         }
         if (content.indexOf('UPDATE_COINS_CARD::') === 0) {
             var d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'claimed ' + (d.points || 0) + ' coins from kneeling', kind: 'coins', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'claimed ' + (d.points || 0) + ' coins from kneeling', kind: 'coins', iconEmoji: '🪙', iconLabel: 'COINS', time: created };
         }
         if (content.indexOf('CHALLENGE_JOIN_CARD::') === 0) {
             var d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
@@ -1094,6 +1096,7 @@ function loadGlActivity() {
                     ? '<img class="gl-ac-av" src="' + item.avatar + '" onerror="this.outerHTML=\'<div class=gl-ac-av-fallback>' + initial + '</div>\'">'
                     : '<div class="gl-ac-av-fallback">' + initial + '</div>';
                 var hierHtml = item.hierarchy ? '<div class="gl-ac-hier">' + item.hierarchy + '</div>' : '';
+                var timeHtml = '<div class="gl-ac-time">' + when + '</div>';
 
                 if (item.kind === 'risky' && item.cardIcon) {
                     var resultText = item.isWin
@@ -1102,23 +1105,34 @@ function loadGlActivity() {
                             ? '<span style="color:#c5a059">lost nothing</span>'
                             : '<span style="color:#ff0000">lost ' + (item.lostAmount||0).toLocaleString() + ' coins</span>';
                     c.innerHTML += '<div class="gl-activity-card"><div class="gl-activity-card-risky">' +
+                        timeHtml +
                         '<div class="gl-ac-risky-left"><img src="' + item.cardIcon + '" onerror="this.style.display=\'none\'">' +
                             (item.cardName ? '<span>' + item.cardName + '</span>' : '') +
                         '</div>' +
                         '<div class="gl-ac-risky-right">' +
-                            '<div class="gl-ac-row" style="display:flex;align-items:center;gap:10px">' + avHtml + '<div><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div></div>' +
+                            '<div style="display:flex;align-items:center;gap:10px">' + avHtml + '<div><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div></div>' +
                             '<div class="gl-ac-text">gambled ' + (item.stakeAmount||0).toLocaleString() + ' coins</div>' +
                             '<div style="font-family:Cinzel,serif;font-size:0.75rem;font-weight:600;letter-spacing:0.5px">' + resultText + '</div>' +
-                            '<div class="gl-ac-time">' + when + '</div>' +
+                        '</div>' +
+                    '</div></div>';
+                } else if (item.iconEmoji) {
+                    c.innerHTML += '<div class="gl-activity-card"><div class="gl-activity-card-risky">' +
+                        timeHtml +
+                        '<div class="gl-ac-risky-left"><span style="font-size:2rem;line-height:1">' + item.iconEmoji + '</span>' +
+                            '<span>' + item.iconLabel + '</span>' +
+                        '</div>' +
+                        '<div class="gl-ac-risky-right">' +
+                            '<div style="display:flex;align-items:center;gap:10px">' + avHtml + '<div><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div></div>' +
+                            '<div class="gl-ac-text">' + (item.text || '') + '</div>' +
                         '</div>' +
                     '</div></div>';
                 } else {
                     c.innerHTML += '<div class="gl-activity-card gl-activity-card-std">' +
+                        timeHtml +
                         '<div class="gl-ac-row">' + avHtml +
                             '<div class="gl-ac-info"><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div>' +
                         '</div>' +
                         '<div class="gl-ac-text">' + (item.text || '') + '</div>' +
-                        '<div class="gl-ac-time">' + when + '</div>' +
                     '</div>';
                 }
             });
