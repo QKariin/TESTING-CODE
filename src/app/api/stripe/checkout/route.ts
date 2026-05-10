@@ -35,10 +35,10 @@ export async function POST(req: Request) {
                     price_data: {
                         currency: 'eur',
                         product_data: {
-                            name: '72H PROMO — Platform Access + 1,111 Coins',
-                            description: 'Limited-time discounted access fee with 1,111 Royal Silver bonus.',
+                            name: 'Access Fee',
+                            description: 'Full platform access.',
                         },
-                        unit_amount: 2900, // €29.00 (72h promo, normally €55)
+                        unit_amount: 5500, // €55.00
                     },
                     quantity: 1,
                 },
