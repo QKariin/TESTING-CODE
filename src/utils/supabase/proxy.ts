@@ -5,6 +5,11 @@ import { getSupabase } from '@/lib/supabase'
 export async function updateSession(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
+    // Root → /home for everyone (logged in or not)
+    if (pathname === '/') {
+        return NextResponse.redirect(new URL('/home', request.url));
+    }
+
     // 🔓 API routes: always pass through - route handlers do their own auth.
     // CRITICAL: must be before any Supabase call or the proxy will redirect
     // expired-session API POSTs to /login (307), creating an infinite POST loop.
@@ -144,14 +149,14 @@ export async function updateSession(request: NextRequest) {
                 return NextResponse.redirect(new URL('/profile', request.url));
             }
 
-            // 2. If CEO lands on Profile or Tribute -> go to Dashboard (optional, but keep it clean)
-            if (isCEO && (isTributePage || pathname === '/')) {
+            // 2. If CEO lands on Tribute -> go to Dashboard
+            if (isCEO && isTributePage) {
                 return NextResponse.redirect(new URL('/dashboard', request.url));
             }
 
-            // 3. If User on Tribute or Root -> go to Profile
+            // 3. If User on Tribute -> go to Profile
             // But let /tribute/success through so it can verify and redirect to /onboarding
-            if ((isTributePage && pathname !== '/tribute/success') || pathname === '/') {
+            if (isTributePage && pathname !== '/tribute/success') {
                 return NextResponse.redirect(new URL('/profile', request.url));
             }
 
