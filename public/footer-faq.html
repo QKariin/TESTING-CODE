@@ -592,7 +592,14 @@ function selectQuestion(catIndex, qIndex) {
                 scrollFaqChat();
             }, 400);
         } else {
-            addChatActions();
+            // All questions in this category asked — show other categories
+            setTimeout(function() {
+                showTypingIndicator();
+                setTimeout(function() {
+                    addQueenBubble('You\'ve covered everything here. Want to explore another topic?');
+                    setTimeout(function() { showCategoryChips(); setTimeout(function() { addChatActions(); scrollFaqChat(); }, faqData.length * 350 + 200); }, 400);
+                }, 900);
+            }, 400);
         }
         scrollFaqChat();
     }, 1500);
