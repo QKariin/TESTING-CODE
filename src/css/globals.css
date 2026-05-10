@@ -5,15 +5,21 @@
 @tailwind utilities;
 
 /* Kill Tailwind preflight resets on footer nav + FAQ overlay so they match landing.html exactly */
-.fake-nav button,
-.fake-nav span,
-.fake-nav div,
+.fake-nav button {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+}
 .fake-nav img,
-.faq-chat-overlay button,
-.faq-chat-overlay div,
-.faq-chat-overlay img,
-.faq-chat-overlay span {
-    all: revert;
+.faq-chat-overlay img {
+    display: inline;
+    max-width: none;
+    height: auto;
 }
 
 :root {

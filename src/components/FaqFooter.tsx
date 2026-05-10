@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 const faqData = [
     {
         title: 'About Queen Karin',
-        icon: '&#9819;',
+        icon: '\u265B\uFE0E',
         questions: [
             { q: 'Who is Queen Karin?', a: `<p>I have been building my FemDom brand since 2022, mastering the dynamics of every type of submissive along the way.</p><p style="margin-top:10px">Currently based in Greece with my lovely dog and crazy cat. I balance a love for fine food and hard work with a passion for global travel (nearly 100 countries visited).</p><p style="margin-top:10px">I have zero tolerance for laziness, dishonesty, or fake personalities. If you are honest, we will get along; if you lie, I will call you out instantly.</p><p style="margin-top:10px">My life goal is simple: own a boat, keep my Starlink active, and manage my subs from every corner of the world.</p><p style="margin-top:10px">You can learn more about me on my other platforms:</p><div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin-left:auto;margin-right:auto"><a href="https://x.com/qkarin_com?s=21" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">TWITTER/X</a><a href="https://fetlife.com/QKarin" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">FETLIFE</a><a href="https://discord.gg/RMJqt7uvNc" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">DISCORD</a><a href="https://www.qkarin.com/blog" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cinzel,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">BLOG</a></div>` },
             { q: 'Is this website run by AI?', a: `<p>No. Everything here is me. I personally review tasks, I read every message, I decide who rises and who doesn't. But I built this platform with serious technology so the kingdom can run around the clock. When you kneel at 3am, I don't need to be awake for it to count. When you finish a task, you don't wait for me to notice. The system remembers everything you do, tracks your dedication, and makes sure nothing gets lost.</p><p style="margin-top:10px">That's the whole point. The tech handles the bookkeeping so I can focus on what matters. Reading your words. Watching how you behave. Deciding what you deserve next. The system tracks you. I lead you. Don't confuse the two.</p>` },
@@ -16,7 +16,7 @@ const faqData = [
     },
     {
         title: 'Privacy & Safety',
-        icon: '&#9670;',
+        icon: '\u25C6\uFE0E',
         questions: [
             { q: 'Is my identity protected?', a: `<p>Your real name is never shown anywhere. You pick an alias when you sign up and that's all anyone ever sees. Other members don't know who you are, where you live, or what your real name is. Payments go through Stripe so I never see your card details. No one can look you up here and connect it to your real life. You're as invisible as you want to be.</p>` },
             { q: 'Where do we communicate?', a: `<p>Everything stays inside this app. I don't use Instagram DMs, Telegram, WhatsApp, or any third party platform to talk to my subjects. Your conversations never touch a server owned by Meta, Google, or anyone else. No algorithms scanning your messages, no data harvesting, no risk of your kink life showing up in an ad suggestion. What you say here stays here.</p>` },
@@ -27,7 +27,7 @@ const faqData = [
     },
     {
         title: 'Payments & Costs',
-        icon: '&#9830;',
+        icon: '\u2666\uFE0E',
         questions: [
             { q: 'What am I paying for?', a: `<p>The entry tribute is $55. That gets you full access to the kingdom. Your profile, over 1,000 tasks, kneeling hours, the global chat, the hierarchy, everything. That alone is more than any domme has ever offered for an entry fee. Every price range will find something inside. I'm not here to ruin your bank account. But I'm not here to be used for free either. Serving costs something. How much is between you and your devotion.</p>` },
             { q: 'Who handles my payment?', a: `<p>Stripe. The same payment system used by Amazon, Google, and Shopify. I never see your card number, your bank details, or your billing address. Every transaction is encrypted. Your financial information never touches my servers.</p>` },
@@ -38,7 +38,7 @@ const faqData = [
     },
     {
         title: "Queen's Expectations",
-        icon: '&#9734;',
+        icon: '\u2606\uFE0E',
         questions: [
             { q: "I'm nervous to join.", a: `<p>Good. You should be. That means you're taking it seriously. Every subject who ever knelt for me was nervous the first time. The difference between you and them is they did it anyway.</p>` },
             { q: 'Do I need experience?', a: `<p>None. Most of my subjects started with nothing but curiosity. You don't need to know the terminology, the protocols, or the "right way" to submit. I'll teach you. The only thing I need from you is honesty about where you are and willingness to learn.</p>` },
@@ -83,7 +83,7 @@ const FOOTER_AND_FAQ_CSS = `
     -webkit-tap-highlight-color: transparent; -webkit-appearance: none !important; appearance: none !important;
     min-width: 0 !important; min-height: 0 !important; text-align: center !important;
 }
-.fake-nav-icon { font-size: 1.6rem !important; color: rgba(197, 160, 89, 0.35) !important; line-height: 1 !important; }
+.fake-nav-icon { font-size: 1.6rem !important; color: rgba(197, 160, 89, 0.35) !important; line-height: 1 !important; font-variant-emoji: text !important; }
 .fake-nav-label { font-family: 'Cinzel', serif !important; font-size: 0.55rem !important; color: rgba(197, 160, 89, 0.35) !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; line-height: 1.2 !important; }
 .fake-nav-center {
     flex: 1 !important; background: transparent !important; border: none !important;
@@ -216,7 +216,7 @@ const FOOTER_AND_FAQ_CSS = `
     background: linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3)) !important; border: 1px solid rgba(255,0,199,0.3) !important;
     color: #ff00c7 !important; font-family: 'Cinzel', serif !important;
     font-size: 0.95rem !important; padding: 16px 24px !important; border-radius: 20px !important; width: 80% !important; box-sizing: border-box !important; text-align: center !important;
-    cursor: pointer !important; transition: all 0.2s !important; letter-spacing: 1px !important;
+    cursor: pointer !important; transition: all 0.2s !important; letter-spacing: 1px !important; font-variant-emoji: text !important;
     opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 .faq-cat-chip:active { background: rgba(255,0,199,0.25) !important; border-color: rgba(255,0,199,0.5) !important; }
@@ -631,6 +631,8 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
     }, []);
 
     const handleNavClick = (section: string) => {
+        // Close FAQ if it's open
+        (window as any).closeFaqChat?.();
         if (onNavClick) { onNavClick(section); return; }
         showAccessDenied(section, onUnlock);
     };
@@ -660,11 +662,11 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
             {/* Footer Nav - exact same markup as landing.html */}
             <nav className="fake-nav">
                 <button className="fake-nav-btn" onClick={() => handleNavClick('your Profile')}>
-                    <span className="fake-nav-icon">&#9670;</span>
+                    <span className="fake-nav-icon">{'\u25C6\uFE0E'}</span>
                     <span className="fake-nav-label">PROFILE</span>
                 </button>
                 <button className="fake-nav-btn" onClick={() => handleNavClick('your Record')}>
-                    <span className="fake-nav-icon">&#9638;</span>
+                    <span className="fake-nav-icon">{'\u25A6\uFE0E'}</span>
                     <span className="fake-nav-label">RECORD</span>
                 </button>
                 <button className="fake-nav-center" onClick={() => (window as any).toggleFaqChat?.()}>
@@ -674,11 +676,11 @@ export default function FaqFooter({ onNavClick, onUnlock }: FaqFooterProps) {
                     </div>
                 </button>
                 <button className="fake-nav-btn" onClick={() => handleNavClick("Queen's Wall")}>
-                    <span className="fake-nav-icon">&#9819;</span>
+                    <span className="fake-nav-icon">{'\u265B\uFE0E'}</span>
                     <span className="fake-nav-label">QUEEN</span>
                 </button>
                 <button className="fake-nav-btn" onClick={() => handleNavClick('Global Chat')}>
-                    <span className="fake-nav-icon">&#9678;</span>
+                    <span className="fake-nav-icon">{'\u25CE\uFE0E'}</span>
                     <span className="fake-nav-label">GLOBAL</span>
                 </button>
             </nav>
