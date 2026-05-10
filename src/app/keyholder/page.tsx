@@ -211,7 +211,7 @@ export default function KeyholderPage() {
                     }
                 }
             } catch {}
-        }, 7000);
+        }, 15000);
 
         const supabase = createClient();
         const channel = supabase.channel('keyholder-activity')

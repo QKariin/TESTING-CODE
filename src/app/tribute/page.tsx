@@ -170,7 +170,7 @@ export default function TributePage() {
                     }
                 }
             } catch {}
-        }, 7000);
+        }, 15000);
 
         // Realtime: global_messages for risky game, tributes, promotions, etc.
         const supabase = createClient();

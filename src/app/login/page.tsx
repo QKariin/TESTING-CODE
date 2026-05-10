@@ -136,7 +136,7 @@ export default function LoginPage() {
             } catch (err) {
                 console.log('[Login] Toast fetch error:', err);
             }
-        }, 3000);
+        }, 15000);
 
         // Realtime
         const channel = supabase.channel('login-activity')
