@@ -563,7 +563,7 @@ function selectQuestion(catIndex, qIndex) {
                         showTypingIndicator();
                         setTimeout(function() {
                             removeTypingIndicator();
-                            addQueenBubble('Sure, here you go:');
+                            addQueenBubble(getNextPickup());
                             setTimeout(function() {
                                 remaining.forEach(function(ri, idx) {
                                     setTimeout(function() {
