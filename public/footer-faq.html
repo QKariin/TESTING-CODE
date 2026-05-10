@@ -890,9 +890,13 @@ function toggleFaqChat() {
 
 /* ── NAV CLICK HANDLERS ── */
 function handleNavClick(section) {
-    // HOME navigates directly
+    // HOME just closes everything
     if (section === 'Home') {
-        window.top.location.href = '/home';
+        var faq = document.getElementById('faqChatOverlay');
+        if (faq && faq.classList.contains('open')) closeFaqChat();
+        var gl = document.getElementById('globalOverlay');
+        if (gl && gl.classList.contains('open')) closeGlobal();
+        parent.postMessage({ type: 'dismissAccessDenied' }, '*');
         return;
     }
     // Close FAQ if open
