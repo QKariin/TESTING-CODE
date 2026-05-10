@@ -890,6 +890,11 @@ function toggleFaqChat() {
 
 /* ── NAV CLICK HANDLERS ── */
 function handleNavClick(section) {
+    // HOME navigates directly
+    if (section === 'Home') {
+        window.top.location.href = '/home';
+        return;
+    }
     // Close FAQ if open
     var faq = document.getElementById('faqChatOverlay');
     if (faq && faq.classList.contains('open')) closeFaqChat();
