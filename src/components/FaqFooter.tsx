@@ -323,7 +323,7 @@ interface FaqFooterProps {
 function showAccessDenied(section: string, onUnlock?: () => void) {
     const label = section || 'this section';
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom));z-index:9999998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);';
     overlay.innerHTML = '<div style="text-align:center;padding:40px 30px;max-width:320px;">' +
         '<div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:4px;margin-bottom:16px;">ACCESS DENIED</div>' +
         '<div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(255,255,255,0.7);margin-bottom:12px;line-height:1.5;">You don\'t have access to ' + label + '</div>' +

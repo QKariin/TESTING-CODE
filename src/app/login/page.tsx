@@ -202,7 +202,7 @@ export default function LoginPage() {
         else window.location.href = '/profile';
     };
 
-    return (
+    return (<>
         <div className="login-container">
             {/* Promo countdown banner — fixed top */}
             <div style={{
@@ -464,7 +464,8 @@ export default function LoginPage() {
                 <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>{/* close brand/content wrapper */}
 
-            <FaqFooter />
         </div>
+        <FaqFooter />
+    </>
     );
 }

@@ -247,7 +247,7 @@ export default function TributePage() {
         <span key={i} style={{ color: i < n ? '#c5a059' : 'rgba(255,255,255,0.08)', fontSize: '0.75rem' }}>&#9733;</span>
     ));
 
-    return (
+    return (<>
         <div style={{ background: '#020202', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative' }}>
             {/* Promo countdown banner — fixed top */}
             <div style={{
@@ -1184,7 +1184,7 @@ export default function TributePage() {
                 <div className="trib-bottom-pad" style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>
 
-            <FaqFooter onUnlock={() => handleTribute()} />
         </div>
-    );
+        <FaqFooter onUnlock={() => handleTribute()} />
+    </>);
 }

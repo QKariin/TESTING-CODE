@@ -4,6 +4,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Kill Tailwind preflight resets on footer nav + FAQ overlay so they match landing.html exactly */
+.fake-nav button,
+.fake-nav span,
+.fake-nav div,
+.fake-nav img,
+.faq-chat-overlay button,
+.faq-chat-overlay div,
+.faq-chat-overlay img,
+.faq-chat-overlay span {
+    all: revert;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

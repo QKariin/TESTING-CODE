@@ -332,7 +332,7 @@ export default function KeyholderPage() {
         );
     }
 
-    return (
+    return (<>
         <div style={{ background: '#020202', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative' }}>
 
             <style>{`
@@ -771,7 +771,7 @@ export default function KeyholderPage() {
                 <div className="kh-bottom-pad" style={{ height: 80 }} />
             </div>
 
-            <FaqFooter />
         </div>
-    );
+        <FaqFooter />
+    </>);
 }
