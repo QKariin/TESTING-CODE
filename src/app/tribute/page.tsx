@@ -241,34 +241,7 @@ export default function TributePage() {
     const isVisible = (id: string) => visibleSections.has(id);
     const setRef = (id: string) => (el: HTMLDivElement | null) => { sectionRefs.current[id] = el; };
 
-    const showAccessDenied = (section?: string) => {
-        const label = section || 'this section';
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);';
-        overlay.innerHTML = `
-            <div style="text-align:center;padding:40px 30px;max-width:320px;">
-                <div style="font-family:Orbitron,sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:4px;margin-bottom:16px;">ACCESS DENIED</div>
-                <div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(255,255,255,0.7);margin-bottom:12px;line-height:1.5;">You don't have access to ${label}</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);line-height:1.6;margin-bottom:24px;">Unlock your experience to explore everything inside.</div>
-                <div style="display:flex;gap:8px;">
-                    <button id="adClose" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:10px 0;border-radius:8px;font-family:Orbitron,sans-serif;font-size:0.5rem;letter-spacing:2px;cursor:pointer;">CLOSE</button>
-                    <button id="adUnlock" style="flex:2;background:linear-gradient(135deg,#c5a059 0%,#8a6d30 100%);color:#020202;border:none;padding:10px 0;border-radius:8px;font-family:Orbitron,sans-serif;font-size:0.5rem;font-weight:700;letter-spacing:2px;cursor:pointer;">UNLOCK</button>
-                </div>
-            </div>
-        `;
-        overlay.querySelector('#adClose')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); });
-        overlay.querySelector('#adUnlock')?.addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); handleTribute(); });
-        overlay.addEventListener('click', () => overlay.remove());
-        document.body.appendChild(overlay);
-    };
 
-    const fakeNavBtnStyle: React.CSSProperties = {
-        flex: 1, background: 'transparent', border: 'none',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 5, cursor: 'pointer', padding: 0,
-    };
-    const fakeNavIconStyle: React.CSSProperties = { fontSize: '1.6rem', color: 'rgba(197, 160, 89, 0.35)', lineHeight: 1 };
-    const fakeNavLabelStyle: React.CSSProperties = { fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(197, 160, 89, 0.35)', letterSpacing: 1.5, textTransform: 'uppercase' };
 
     const stars = (n: number) => Array.from({ length: 5 }, (_, i) => (
         <span key={i} style={{ color: i < n ? '#c5a059' : 'rgba(255,255,255,0.08)', fontSize: '0.75rem' }}>&#9733;</span>
