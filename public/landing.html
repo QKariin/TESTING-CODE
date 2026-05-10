@@ -1043,45 +1043,40 @@ function triggerFomoToast() {
     }, 15000);
 }
 
-/* ── REALTIME SUBSCRIPTION via Supabase JS ── */
+/* ── REALTIME ACTIVITY POLLING ── */
 (function() {
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    script.onload = function() {
-        var sbUrl = ''; var sbKey = '';
-        // Read from meta tags or inline
-        try {
-            var metas = document.querySelectorAll('meta');
-            for (var i = 0; i < metas.length; i++) {
-                if (metas[i].name === 'supabase-url') sbUrl = metas[i].content;
-                if (metas[i].name === 'supabase-key') sbKey = metas[i].content;
-            }
-        } catch(e) {}
-        // Fallback: fetch from a known endpoint
-        if (!sbUrl) {
-            fetch('/api/supabase-config')
-                .then(function(r) { return r.json(); })
-                .then(function(cfg) { initRealtime(cfg.url, cfg.key); })
-                .catch(function() {
-                    // Last resort: try window env
-                });
-            return;
-        }
-        initRealtime(sbUrl, sbKey);
-    };
-    document.head.appendChild(script);
+    var lastSeenId = null;
+    var pollInterval = 30000;
 
-    function initRealtime(url, key) {
-        if (!url || !key) return;
-        var supabase = window.supabase.createClient(url, key);
-        supabase.channel('home-activity')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, function(payload) {
-                var row = payload.new;
-                if (!row) return;
-                var parsed = parseGlobalCard(row);
+    // Get initial latest ID so we don't show old stuff
+    fetch('/api/global/messages')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var msgs = data.messages || data;
+            if (Array.isArray(msgs) && msgs.length > 0) {
+                lastSeenId = msgs[msgs.length - 1].id;
+            }
+            // Start polling after getting baseline
+            setInterval(pollForNew, pollInterval);
+        })
+        .catch(function() {
+            setInterval(pollForNew, pollInterval);
+        });
+
+    function pollForNew() {
+        if (faqIsOpen) return;
+        fetch('/api/global/messages')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var msgs = data.messages || data;
+                if (!Array.isArray(msgs) || msgs.length === 0) return;
+                var latest = msgs[msgs.length - 1];
+                if (!latest.id || latest.id === lastSeenId) return;
+                lastSeenId = latest.id;
+                var parsed = parseGlobalCard(latest);
                 if (parsed) showToast(parsed);
             })
-            .subscribe();
+            .catch(function() {});
     }
 })();
     </script>
