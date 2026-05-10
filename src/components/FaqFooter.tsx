@@ -62,6 +62,12 @@ const pickupLines = [
 /* Exact same CSS as landing.html but with !important to override Tailwind Preflight reset.
    /home loads landing.html in an iframe (no Tailwind). React pages get Tailwind resets on all buttons. */
 const FOOTER_AND_FAQ_CSS = `
+@font-face {
+    font-family: 'Cinzel';
+    src: url('/fonts/Cinzel-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
 .fake-nav {
     position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999999 !important;
     height: calc(60px + env(safe-area-inset-bottom)) !important;
