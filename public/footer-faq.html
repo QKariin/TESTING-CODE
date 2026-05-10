@@ -713,6 +713,11 @@ function closeFaqChat() {
     overlay.classList.remove('open');
     // Tell parent to shrink iframe after animation
     parent.postMessage({ type: 'faqClose' }, '*');
+    // Show notification 12s after closing FAQ
+    if (!notifShown) {
+        if (notifTimer) clearTimeout(notifTimer);
+        notifTimer = setTimeout(function() { showNotif(); }, 12000);
+    }
 }
 
 function toggleFaqChat() {
@@ -769,8 +774,7 @@ function openNotif() {
     openFaqChat();
 }
 
-// Show notification after 8 seconds
-notifTimer = setTimeout(function() { showNotif(); }, 8000);
+// Notification triggers 12s after FAQ is closed (not on page load)
 
 // Listen for parent messages (e.g. openFaq)
 window.addEventListener('message', function(e) {
