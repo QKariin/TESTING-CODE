@@ -1074,21 +1074,24 @@ function loadGlActivity() {
 }
 
 function openGlobal() {
-    // Close FAQ if open
+    // Force-close FAQ instantly (no animation) if open
     var faq = document.getElementById('faqChatOverlay');
-    if (faq && faq.classList.contains('open')) closeFaqChat();
+    if (faq && faq.classList.contains('open')) {
+        faq.style.transition = 'none';
+        faq.classList.remove('open');
+        faq.offsetHeight; // force reflow
+        faq.style.transition = '';
+    }
     // Dismiss access denied in parent
     parent.postMessage({ type: 'dismissAccessDenied' }, '*');
 
     var overlay = document.getElementById('globalOverlay');
     if (!overlay) return;
     parent.postMessage({ type: 'faqOpen' }, '*');
-    setTimeout(function() {
-        overlay.classList.add('open');
-        loadGlLeaderboard('today', null);
-        loadGlActivity();
-        globalLoaded = true;
-    }, 60);
+    overlay.classList.add('open');
+    loadGlLeaderboard('today', null);
+    loadGlActivity();
+    globalLoaded = true;
 }
 
 function closeGlobal() {
