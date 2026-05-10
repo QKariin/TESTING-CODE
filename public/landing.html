@@ -646,14 +646,15 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
 .faq-cb-user:active { background: #2a2a2e; }
 /* Category chips */
 .faq-cat-chips {
-    display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 4px; justify-content: flex-end;
-    animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0; padding: 4px 0;
 }
 .faq-cat-chip {
     background: #1c1c1e; border: 1px solid rgba(197,160,89,0.2);
     color: rgba(255,255,255,0.6); font-family: 'Cinzel', serif;
-    font-size: 0.7rem; padding: 8px 14px; border-radius: 20px;
+    font-size: 0.7rem; padding: 12px 20px; border-radius: 20px;
     cursor: pointer; transition: all 0.2s; letter-spacing: 1px;
+    opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 .faq-cat-chip:active { background: rgba(197,160,89,0.15); border-color: rgba(197,160,89,0.4); }
 /* Question list bubbles - centered */
@@ -1324,25 +1325,24 @@ function showToast(item) {
                 '<img src="' + item.cardIcon + '" style="width:65%;max-width:65px;height:auto;opacity:0.9" onerror="this.style.display=\'none\'">' +
                 (item.cardName ? '<div style="font-family:Orbitron,sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.45);letter-spacing:2px;text-transform:uppercase;text-align:center;line-height:1.3">' + item.cardName + '</div>' : '') +
             '</div>' +
-            '<div style="flex:1;padding:16px 18px 14px;display:flex;flex-direction:column;justify-content:center;gap:4px">' +
-                '<div style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between"><span>Recent Activity</span>' + (when ? '<span style="color:rgba(197,160,89,0.3);letter-spacing:1px;font-size:0.4rem">' + when + '</span>' : '') + '</div>' +
-                '<div style="display:flex;align-items:center;gap:10px">' + avatarHtml + '<div><div style="font-family:Rosella Solid,serif;font-size:1.05rem;color:#c5a059;letter-spacing:1px">' + item.sender_name + '</div>' + (item.hierarchy ? '<div style="font-family:Orbitron,sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:1px">' + item.hierarchy + '</div>' : '') + '</div></div>' +
-                '<div style="font-family:Cinzel,serif;font-size:0.8rem;color:rgba(255,255,255,0.55);font-weight:400;margin-top:6px;letter-spacing:0.5px">just gambled ' + (item.stakeAmount||0).toLocaleString() + ' coins</div>' +
-                '<div style="font-family:Cinzel,serif;font-size:0.85rem;font-weight:600;margin-top:2px;letter-spacing:0.5px">' + resultText + '</div>' +
-                '<button onclick="this.closest(\'.home-toast\').remove()" style="align-self:flex-start;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08);padding:5px 16px;border-radius:6px;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;margin-top:6px">DISMISS</button>' +
+            '<div style="flex:1;padding:12px 14px 10px;display:flex;flex-direction:column;justify-content:center;gap:4px">' +
+                '<div style="display:flex;align-items:center;gap:10px">' + avatarHtml + '<div><div style="font-family:Rosella Solid,serif;font-size:0.85rem;color:#c5a059;letter-spacing:1px">' + item.sender_name + '</div>' + (item.hierarchy ? '<div style="font-family:Orbitron,sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:1px">' + item.hierarchy + '</div>' : '') + '</div></div>' +
+                '<div style="font-family:Cinzel,serif;font-size:0.7rem;color:rgba(255,255,255,0.55);font-weight:400;margin-top:4px;letter-spacing:0.5px">just gambled ' + (item.stakeAmount||0).toLocaleString() + ' coins</div>' +
+                '<div style="font-family:Cinzel,serif;font-size:0.75rem;font-weight:600;margin-top:2px;letter-spacing:0.5px">' + resultText + '</div>' +
+                '<button onclick="this.closest(\'.home-toast\').remove()" style="align-self:flex-start;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08);padding:4px 12px;border-radius:6px;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;margin-top:6px">DISMISS</button>' +
             '</div></div>';
     } else {
-        el.style.padding = '20px 22px';
+        el.style.padding = '14px 16px';
         var displayText = item.text || '';
         var avatarHtml = item.sender_avatar
-            ? '<img src="' + item.sender_avatar + '" style="flex-shrink:0;width:62px;height:62px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6)" onerror="this.style.display=\'none\'">'
-            : '<div style="flex-shrink:0;width:62px;height:62px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.4);background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:1.2rem;color:rgba(197,160,89,0.6);font-weight:600">' + initial + '</div>';
-        el.innerHTML = '<div style="font-family:Orbitron,sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between"><span>Recent Activity</span>' + (when ? '<span style="color:rgba(197,160,89,0.4);letter-spacing:1px;font-size:0.45rem">' + when + '</span>' : '') + '</div>' +
+            ? '<img src="' + item.sender_avatar + '" style="flex-shrink:0;width:46px;height:46px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6)" onerror="this.style.display=\'none\'">'
+            : '<div style="flex-shrink:0;width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.4);background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:0.9rem;color:rgba(197,160,89,0.6);font-weight:600">' + initial + '</div>';
+        el.innerHTML = '' +
             '<div style="display:flex;align-items:center;gap:14px">' + avatarHtml +
-            '<div style="flex:1;min-width:0"><div style="font-family:Rosella Solid,serif;font-size:1.15rem;color:#c5a059;letter-spacing:1px;line-height:1.2">' + item.sender_name + '</div>' +
+            '<div style="flex:1;min-width:0"><div style="font-family:Rosella Solid,serif;font-size:0.9rem;color:#c5a059;letter-spacing:1px;line-height:1.2">' + item.sender_name + '</div>' +
             (item.hierarchy ? '<div style="font-family:Orbitron,sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:2px">' + item.hierarchy + '</div>' : '') +
-            '<div style="font-family:Rajdhani,sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.65);font-weight:500;line-height:1.4;margin-top:4px">' + displayText + '</div></div></div>' +
-            '<div style="display:flex;gap:8px;margin-top:14px"><button onclick="this.closest(\'.home-toast\').remove()" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:9px 0;border-radius:8px;font-family:Orbitron,sans-serif;font-size:0.5rem;letter-spacing:1px;cursor:pointer">DISMISS</button></div>';
+            '<div style="font-family:Rajdhani,sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.65);font-weight:500;line-height:1.4;margin-top:4px">' + displayText + '</div></div></div>' +
+            '<div style="display:flex;gap:8px;margin-top:10px"><button onclick="this.closest(\'.home-toast\').remove()" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:6px 0;border-radius:8px;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer">DISMISS</button></div>';
     }
 
     container.appendChild(el);
@@ -1525,18 +1525,22 @@ function scrollFaqChat() {
 
 function showCategoryChips() {
     var body = document.getElementById('faqChatBody');
-    var chips = document.createElement('div');
-    chips.className = 'faq-cat-chips';
     for (var i = 0; i < faqCatNames.length; i++) {
-        var chip = document.createElement('button');
-        chip.className = 'faq-cat-chip';
-        chip.innerHTML = faqCatIcons[i] + ' ' + faqCatNames[i];
-        chip.setAttribute('data-cat', i);
-        chip.onclick = function() { selectFaqChatCat(parseInt(this.getAttribute('data-cat'))); };
-        chips.appendChild(chip);
+        (function(idx) {
+            setTimeout(function() {
+                var wrap = document.createElement('div');
+                wrap.className = 'faq-cat-chips';
+                var chip = document.createElement('button');
+                chip.className = 'faq-cat-chip';
+                chip.innerHTML = faqCatIcons[idx] + ' ' + faqCatNames[idx];
+                chip.setAttribute('data-cat', idx);
+                chip.onclick = function() { selectFaqChatCat(parseInt(this.getAttribute('data-cat'))); };
+                wrap.appendChild(chip);
+                body.appendChild(wrap);
+                scrollFaqChat();
+            }, idx * 350);
+        })(i);
     }
-    body.appendChild(chips);
-    scrollFaqChat();
 }
 
 function selectFaqChatCat(index) {

@@ -360,6 +360,8 @@ async function _loadTalkPreview() {
                         (m.message||'').startsWith('CHALLENGE_ELIM_CARD::') ? 'ELIMINATED' :
                         (m.message||'').startsWith('CHALLENGE_INVITE_CARD::') ? 'CHALLENGE INVITE' :
                         (m.message||'').startsWith('WELCOME_CARD::') ? 'NEW TRIBUTE' :
+                        (m.message||'').startsWith('UPDATE_COINS_CARD::') ? 'COINS EARNED' :
+                        (m.message||'').startsWith('UPDATE_MERIT_CARD::') ? 'MERIT EARNED' :
                         m.message}</div>
                 </div>
             </div>`;
@@ -964,6 +966,30 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                             <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:3px;">⚡ MERIT EARNED</div>
                             <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
                             <div style="font-family:'Orbitron';font-size:0.85rem;color:#a78bfa;font-weight:700;margin-top:2px;">+${d.points||0} MERIT</div>
+                        </div>
+                        <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
+                    </div>
+                </div>
+            </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
+    // UPDATE COINS CARD
+    if (content.startsWith('UPDATE_COINS_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
+            const cInitial = (d.senderName || 'S')[0].toUpperCase();
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+                <div style="width:60%;min-width:240px;max-width:480px;">
+                    <div style="background:rgba(197,160,89,0.05);border:1px solid rgba(197,160,89,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;">
+                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(197,160,89,0.1);border:1.5px solid rgba(197,160,89,0.35);overflow:hidden;position:relative;flex-shrink:0;">
+                            ${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}
+                            <div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:#c5a059;">${cInitial}</div>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-family:'Orbitron';font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:3px;">🪙 COINS EARNED</div>
+                            <div style="font-family:'Orbitron';font-size:0.82rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div>
+                            <div style="font-family:'Orbitron';font-size:0.85rem;color:#c5a059;font-weight:700;margin-top:2px;">+${d.points||0} COINS</div>
                         </div>
                         <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div>
                     </div>
