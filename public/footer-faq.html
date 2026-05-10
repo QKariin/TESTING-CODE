@@ -443,11 +443,13 @@ function addChangeTopic() {
     body.appendChild(wrap);
 }
 
-function showCategoryChips() {
+function showCategoryChips(excludeCat) {
     var body = document.getElementById('faqChatBody');
     if (!body) return;
+    var delay = 0;
     for (var i = 0; i < faqData.length; i++) {
-        (function(idx) {
+        if (i === excludeCat) continue;
+        (function(idx, d) {
             setTimeout(function() {
                 var wrap = document.createElement('div');
                 wrap.className = 'faq-cat-chips';
@@ -459,8 +461,9 @@ function showCategoryChips() {
                 wrap.appendChild(chip);
                 body.appendChild(wrap);
                 scrollFaqChat();
-            }, idx * 350);
-        })(i);
+            }, d * 350);
+        })(i, delay);
+        delay++;
     }
 }
 
@@ -597,7 +600,7 @@ function selectQuestion(catIndex, qIndex) {
                 showTypingIndicator();
                 setTimeout(function() {
                     addQueenBubble('You\'ve covered everything here. Want to explore another topic?');
-                    setTimeout(function() { showCategoryChips(); setTimeout(function() { addChatActions(); scrollFaqChat(); }, faqData.length * 350 + 200); }, 400);
+                    setTimeout(function() { showCategoryChips(catIndex); setTimeout(function() { addChatActions(); scrollFaqChat(); }, faqData.length * 350 + 200); }, 400);
                 }, 900);
             }, 400);
         }
