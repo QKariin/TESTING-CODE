@@ -857,6 +857,11 @@ function openFaqChat() {
     var body = document.getElementById('faqChatBody');
     if (!overlay || !body) return;
     body.innerHTML = '';
+    // Start notification timer 12s after FAQ opens
+    if (!notifShown) {
+        if (notifTimer) clearTimeout(notifTimer);
+        notifTimer = setTimeout(function() { showNotif(); }, 12000);
+    }
     // Tell parent to expand iframe
     parent.postMessage({ type: 'faqOpen' }, '*');
     // Wait for iframe resize, then animate
@@ -877,11 +882,6 @@ function closeFaqChat() {
     overlay.classList.remove('open');
     // Tell parent to shrink iframe after animation
     parent.postMessage({ type: 'faqClose' }, '*');
-    // Show notification 12s after closing FAQ
-    if (!notifShown) {
-        if (notifTimer) clearTimeout(notifTimer);
-        notifTimer = setTimeout(function() { showNotif(); }, 12000);
-    }
 }
 
 function toggleFaqChat() {
