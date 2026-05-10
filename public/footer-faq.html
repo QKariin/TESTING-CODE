@@ -929,10 +929,13 @@ function showNotif() {
     if (notifShown) return;
     notifShown = true;
     var badge = document.getElementById('msgBadge');
-    var notif = document.getElementById('msgNotif');
     if (badge) badge.classList.add('active');
-    if (notif) notif.classList.add('active');
+    // Tell parent to expand iframe FIRST, then show notification after resize
     parent.postMessage({ type: 'notifShow' }, '*');
+    setTimeout(function() {
+        var notif = document.getElementById('msgNotif');
+        if (notif) notif.classList.add('active');
+    }, 120);
 }
 
 function dismissNotif() {
