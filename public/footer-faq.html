@@ -258,6 +258,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     display: none; z-index: 9999998;
     box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     animation: notifSlideUp 0.4s ease-out forwards;
+    cursor: pointer;
 }
 .msg-notif.active { display: block; }
 .msg-notif-inner { display: flex; align-items: center; gap: 12px; }
@@ -530,17 +531,13 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 </nav>
 
 <!-- MESSAGE NOTIFICATION -->
-<div class="msg-notif" id="msgNotif">
+<div class="msg-notif" id="msgNotif" onclick="openNotif()">
     <div class="msg-notif-inner">
         <img src="/queen-nav.png" class="msg-notif-av" alt="Queen Karin">
         <div class="msg-notif-text">
             <div class="msg-notif-from">Queen Karin</div>
             <div class="msg-notif-preview">New message...</div>
         </div>
-    </div>
-    <div class="msg-notif-actions">
-        <button class="msg-notif-btn msg-notif-dismiss" onclick="dismissNotif()">DISMISS</button>
-        <button class="msg-notif-btn msg-notif-open" onclick="openNotif()">OPEN</button>
     </div>
 </div>
 
@@ -953,6 +950,10 @@ var notifShown = false;
 
 function showNotif() {
     if (notifShown) return;
+    // Don't show if FAQ or Global is already open
+    var faq = document.getElementById('faqChatOverlay');
+    var gl = document.getElementById('globalOverlay');
+    if ((faq && faq.classList.contains('open')) || (gl && gl.classList.contains('open'))) return;
     notifShown = true;
     var badge = document.getElementById('msgBadge');
     if (badge) badge.classList.add('active');

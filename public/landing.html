@@ -692,6 +692,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     border-radius: 18px;
     box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08);
     overflow: hidden;
+    cursor: pointer;
 }
 .home-toast.entering { animation: toastIn 0.4s ease-out forwards; }
 .home-toast.leaving { animation: toastOut 0.4s ease-in forwards; }
@@ -973,6 +974,7 @@ function showToast(item) {
 
     var el = document.createElement('div');
     el.className = 'home-toast entering';
+    el.onclick = function() { el.remove(); };
 
     if (isRisky) {
         el.style.padding = '0';
@@ -993,7 +995,7 @@ function showToast(item) {
                 '<div style="display:flex;align-items:center;gap:10px">' + avatarHtml + '<div><div style="font-family:Rosella Solid,serif;font-size:0.85rem;color:#c5a059;letter-spacing:1px">' + item.sender_name + '</div>' + (item.hierarchy ? '<div style="font-family:Orbitron,sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:1px">' + item.hierarchy + '</div>' : '') + '</div></div>' +
                 '<div style="font-family:Cinzel,serif;font-size:0.7rem;color:rgba(255,255,255,0.55);font-weight:400;margin-top:4px;letter-spacing:0.5px">just gambled ' + (item.stakeAmount||0).toLocaleString() + ' coins</div>' +
                 '<div style="font-family:Cinzel,serif;font-size:0.75rem;font-weight:600;margin-top:2px;letter-spacing:0.5px">' + resultText + '</div>' +
-                '<button onclick="this.closest(\'.home-toast\').remove()" style="align-self:flex-start;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08);padding:4px 12px;border-radius:6px;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer;margin-top:6px">DISMISS</button>' +
+                '' +
             '</div></div>';
     } else {
         el.style.padding = '14px 16px';
@@ -1006,7 +1008,7 @@ function showToast(item) {
             '<div style="flex:1;min-width:0"><div style="font-family:Rosella Solid,serif;font-size:0.9rem;color:#c5a059;letter-spacing:1px;line-height:1.2">' + item.sender_name + '</div>' +
             (item.hierarchy ? '<div style="font-family:Orbitron,sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:2px">' + item.hierarchy + '</div>' : '') +
             '<div style="font-family:Rajdhani,sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.65);font-weight:500;line-height:1.4;margin-top:4px">' + displayText + '</div></div></div>' +
-            '<div style="display:flex;gap:8px;margin-top:10px"><button onclick="this.closest(\'.home-toast\').remove()" style="flex:1;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);padding:6px 0;border-radius:8px;font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:1px;cursor:pointer">DISMISS</button></div>';
+            '';
     }
 
     container.appendChild(el);
