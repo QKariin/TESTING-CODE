@@ -857,11 +857,8 @@ function openFaqChat() {
     var body = document.getElementById('faqChatBody');
     if (!overlay || !body) return;
     body.innerHTML = '';
-    // Start notification timer 12s after FAQ opens
-    if (!notifShown) {
-        if (notifTimer) clearTimeout(notifTimer);
-        notifTimer = setTimeout(function() { showNotif(); }, 12000);
-    }
+    // Tell parent FAQ opened (for fomo toast timing)
+    parent.postMessage({ type: 'faqOpened' }, '*');
     // Tell parent to expand iframe
     parent.postMessage({ type: 'faqOpen' }, '*');
     // Wait for iframe resize, then animate
@@ -942,7 +939,8 @@ function openNotif() {
     openFaqChat();
 }
 
-// Notification triggers 12s after FAQ is closed (not on page load)
+// Show "New message from Queen Karin" 10s after page load
+notifTimer = setTimeout(function() { showNotif(); }, 10000);
 
 /* ── GLOBAL OVERLAY ── */
 var globalLoaded = false;

@@ -893,6 +893,9 @@ window.addEventListener('message', function(e) {
     if (e.data.type === 'notifHide') {
         if (footerFrame && footerFrame.style.top !== '0') footerFrame.style.height = 'calc(140px + env(safe-area-inset-bottom))';
     }
+    if (e.data.type === 'faqOpened') {
+        triggerFomoToast();
+    }
     if (e.data.type === 'dismissAccessDenied') {
         var existing = document.getElementById('accessDeniedOverlay');
         if (existing) existing.remove();
@@ -1008,20 +1011,24 @@ function showToast(item) {
     setTimeout(function() { el.remove(); }, 8500);
 }
 
-/* ── FETCH INITIAL TOAST + REALTIME ── */
-setTimeout(function() {
-    fetch('/api/global/messages')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            var msgs = data.messages || data;
-            if (!Array.isArray(msgs)) return;
-            // Messages are oldest→newest, scan from end for newest parseable
-            for (var i = msgs.length - 1; i >= 0; i--) {
-                var parsed = parseGlobalCard(msgs[i]);
-                if (parsed) { showToast(parsed); break; }
-            }
-        }).catch(function() {});
-}, 15000);
+/* ── FOMO TOAST: 15s after FAQ opens ── */
+var fomoFired = false;
+function triggerFomoToast() {
+    if (fomoFired) return;
+    fomoFired = true;
+    setTimeout(function() {
+        fetch('/api/global/messages')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var msgs = data.messages || data;
+                if (!Array.isArray(msgs)) return;
+                for (var i = msgs.length - 1; i >= 0; i--) {
+                    var parsed = parseGlobalCard(msgs[i]);
+                    if (parsed) { showToast(parsed); break; }
+                }
+            }).catch(function() {});
+    }, 15000);
+}
 
 /* ── REALTIME SUBSCRIPTION via Supabase JS ── */
 (function() {
