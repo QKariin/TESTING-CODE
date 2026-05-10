@@ -154,6 +154,16 @@ function buildGlMsgHtml(msg: any): string {
         } catch { /* fall through */ }
     }
 
+    // UPDATE COINS CARD
+    if (content.startsWith('UPDATE_COINS_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('UPDATE_COINS_CARD::',''));
+            const ini = (d.senderName||'S')[0].toUpperCase();
+            const avImg = d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:#c5a059;">${ini}</div>`;
+            return `<div style="display:flex;justify-content:center;padding:6px 0;margin-bottom:6px;"><div style="width:88%;min-width:220px;max-width:440px;"><div style="background:rgba(197,160,89,0.05);border:1px solid rgba(197,160,89,0.25);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:50%;background:rgba(197,160,89,0.1);border:1.5px solid rgba(197,160,89,0.35);overflow:hidden;position:relative;flex-shrink:0;">${avImg}</div><div style="flex:1;min-width:0;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">🪙 COINS EARNED</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:#c5a059;font-weight:700;margin-top:2px;">+${d.points||0} COINS</div></div><div style="font-family:'Rajdhani',sans-serif;font-size:0.35rem;color:rgba(255,255,255,0.3);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
+        } catch { /* fall through */ }
+    }
+
     // UPDATE TRIBUTE CARD
     if (content.startsWith('UPDATE_TRIBUTE_CARD::')) {
         try {
