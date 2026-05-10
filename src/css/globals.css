@@ -4,22 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Kill Tailwind preflight resets on footer nav + FAQ overlay so they match landing.html exactly */
+/* Kill Tailwind preflight resets on footer nav + FAQ overlay so they match landing.html (which runs in iframe without Tailwind) */
 .fake-nav button {
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-    line-height: inherit;
-    color: inherit;
-    letter-spacing: inherit;
-    -webkit-appearance: none;
-    appearance: none;
+    font-family: inherit !important;
+    font-feature-settings: normal !important;
+    font-variation-settings: normal !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    letter-spacing: inherit !important;
+    text-transform: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
 }
 .fake-nav img,
 .faq-chat-overlay img {
-    display: inline;
-    max-width: none;
-    height: auto;
+    display: inline !important;
+    vertical-align: middle !important;
+    max-width: none !important;
+    height: 100% !important;
 }
 
 :root {

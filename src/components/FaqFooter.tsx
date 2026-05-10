@@ -65,34 +65,26 @@ const FOOTER_AND_FAQ_CSS = `
 .fake-nav {
     position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999999 !important;
     height: calc(60px + env(safe-area-inset-bottom)) !important;
-    padding: 0 !important; padding-bottom: env(safe-area-inset-bottom) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
     background: rgba(4, 4, 12, 0.96) !important;
     backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
-    border: none !important; border-top: 1px solid rgba(197, 160, 89, 0.18) !important;
+    border-top: 1px solid rgba(197, 160, 89, 0.18) !important;
     display: flex !important; align-items: stretch !important; justify-content: space-around !important;
-    flex-direction: row !important; margin: 0 !important; border-radius: 0 !important;
-    box-shadow: none !important; transform: none !important; width: auto !important;
-    max-width: none !important; min-height: auto !important;
 }
 .fake-nav-btn {
     flex: 1 !important; background: transparent !important; border: none !important;
     display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
-    gap: 5px !important; cursor: pointer !important; padding: 0 !important; margin: 0 !important;
-    border-radius: 0 !important; box-shadow: none !important; outline: none !important;
-    font-size: inherit !important; line-height: normal !important; color: inherit !important;
-    -webkit-tap-highlight-color: transparent; -webkit-appearance: none !important; appearance: none !important;
-    min-width: 0 !important; min-height: 0 !important; text-align: center !important;
+    gap: 5px !important; cursor: pointer !important; padding: 0 !important;
+    -webkit-tap-highlight-color: transparent;
 }
 .fake-nav-icon { font-size: 1.6rem !important; color: rgba(197, 160, 89, 0.35) !important; line-height: 1 !important; font-variant-emoji: text !important; }
-.fake-nav-label { font-family: 'Cinzel', serif !important; font-size: 0.55rem !important; color: rgba(197, 160, 89, 0.35) !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; line-height: 1.2 !important; }
+.fake-nav-label { font-family: 'Cinzel', serif !important; font-size: 0.55rem !important; color: rgba(197, 160, 89, 0.35) !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; }
 .fake-nav-center {
     flex: 1 !important; background: transparent !important; border: none !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
-    cursor: pointer !important; padding: 0 !important; margin: 0 !important; position: relative !important;
+    cursor: pointer !important; padding: 0 !important; position: relative !important;
     margin-top: -30px !important; transform: translateY(14px) !important;
-    border-radius: 0 !important; box-shadow: none !important; outline: none !important;
-    -webkit-tap-highlight-color: transparent; -webkit-appearance: none !important; appearance: none !important;
-    min-width: 0 !important; min-height: 0 !important;
+    -webkit-tap-highlight-color: transparent;
 }
 .fake-nav-avatar {
     width: 75px !important; height: 75px !important; border-radius: 50% !important;
