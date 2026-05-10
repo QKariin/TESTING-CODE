@@ -95,10 +95,23 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 }
 .faq-cb-row-queen { justify-content: flex-start; }
 .faq-cb-row-user { justify-content: flex-end; }
-.faq-cb-av {
-    width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-    border: 1.5px solid rgba(197,160,89,0.35); flex-shrink: 0;
+.faq-cb-av-wrap {
+    position: relative; width: 26px; height: 26px; flex-shrink: 0;
     align-self: flex-end; margin-bottom: 20px;
+}
+.faq-cb-av {
+    width: 26px; height: 26px; border-radius: 50%; object-fit: cover;
+    border: 1.5px solid rgba(197,160,89,0.35);
+}
+.faq-cb-dot {
+    position: absolute; bottom: 0; right: 0; width: 8px; height: 8px;
+    background: #4ade80; border-radius: 50%; border: 1.5px solid #020512;
+    box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74,222,128,0.4);
+    animation: neonPulse 2s ease-in-out infinite;
+}
+@keyframes neonPulse {
+    0%, 100% { box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74,222,128,0.4); }
+    50% { box-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74,222,128,0.6), 0 0 30px rgba(74,222,128,0.2); }
 }
 .faq-cb-wrap-queen { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; }
 .faq-cb-wrap-user { display: flex; flex-direction: column; align-items: flex-end; max-width: 80%; }
@@ -377,7 +390,7 @@ function showTypingIndicator() {
     var row = document.createElement('div');
     row.className = 'faq-typing-row';
     row.id = 'faqTyping';
-    row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
+    row.innerHTML = '<div class="faq-cb-av-wrap"><img src="/queen-nav.png" class="faq-cb-av"><div class="faq-cb-dot"></div></div>' +
         '<div class="faq-typing-bubble"><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div></div>';
     body.appendChild(row);
     scrollFaqChat();
@@ -394,7 +407,7 @@ function addQueenBubble(text) {
     if (!body) return;
     var row = document.createElement('div');
     row.className = 'faq-cb-row faq-cb-row-queen';
-    row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
+    row.innerHTML = '<div class="faq-cb-av-wrap"><img src="/queen-nav.png" class="faq-cb-av"><div class="faq-cb-dot"></div></div>' +
         '<div class="faq-cb-wrap-queen"><div class="faq-cb-queen">' + text + '</div>' +
         '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
     body.appendChild(row);
@@ -536,7 +549,7 @@ function selectQuestion(catIndex, qIndex) {
         if (!body) return;
         var row = document.createElement('div');
         row.className = 'faq-cb-row faq-cb-row-queen';
-        row.innerHTML = '<img src="/queen-nav.png" class="faq-cb-av">' +
+        row.innerHTML = '<div class="faq-cb-av-wrap"><img src="/queen-nav.png" class="faq-cb-av"><div class="faq-cb-dot"></div></div>' +
             '<div class="faq-cb-wrap-queen"><div class="faq-a-bubble">' + pickupHtml + item.a + '</div>' +
             '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
         body.appendChild(row);
