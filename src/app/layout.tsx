@@ -14,25 +14,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Queen Karin",
-  description: "Femdom Revolution with Queen Karin",
+  metadataBase: new URL('https://throne.qkarin.com'),
+  title: {
+    default: 'Queen Karin — Femdom, Findom & Female Domination',
+    template: '%s | Queen Karin',
+  },
+  description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes. Apply to serve or stay locked out.',
+  keywords: ['femdom', 'findom', 'female domination', 'queen karin', 'dominatrix', 'financial domination', 'female supremacy', 'worship', 'submission', 'chastity', 'keyholder'],
+  authors: [{ name: 'Queen Karin' }],
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'Queen Karin',
-    description: 'Femdom Revolution with Queen Karin',
+    title: 'Queen Karin — Femdom, Findom & Female Domination',
+    description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes.',
     url: 'https://throne.qkarin.com',
-    siteName: 'Throne',
-    images: [{ url: 'https://throne.qkarin.com/og-cover.png', width: 1200, height: 630 }],
+    siteName: 'Queen Karin',
+    images: [{ url: '/og-cover.png', width: 1200, height: 630, alt: 'Queen Karin' }],
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Queen Karin',
-    description: 'Femdom Revolution with Queen Karin',
-    images: ['https://throne.qkarin.com/og-cover.png'],
+    title: 'Queen Karin — Femdom, Findom & Female Domination',
+    description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes.',
+    images: ['/og-cover.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 
