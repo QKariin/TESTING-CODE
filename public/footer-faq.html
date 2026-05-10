@@ -1036,6 +1036,10 @@ function parseActivityCard(msg) {
             var d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
             return { name: d.senderName || d.name || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'joined ' + (d.challengeName || 'a challenge'), kind: 'challenge_join', time: created };
         }
+        if (content.indexOf('UPDATE_TRIBUTE_CARD::') === 0) {
+            var d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'gifted "' + (d.title || 'a gift') + '" worth ' + (d.price || 0).toLocaleString() + ' coins', kind: 'wishlist', iconEmoji: '🎁', iconLabel: 'GIFT', time: created };
+        }
     } catch(e) {}
     return null;
 }
