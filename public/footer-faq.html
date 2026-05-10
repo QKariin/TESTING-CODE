@@ -388,36 +388,62 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .gl-lb-entry.minor .gl-lb-hier { font-size: 0.45rem; color: rgba(197,160,89,0.15); }
 .gl-lb-entry.minor .gl-lb-score { font-size: 0.75rem; color: rgba(197,160,89,0.25); }
 
-/* Activity feed */
-.gl-activity-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+/* Activity feed cards */
+.gl-activity-card {
+    background: rgba(15,15,18,0.7); border: 1px solid rgba(197,160,89,0.12);
+    border-radius: 12px; margin: 0 12px 10px; overflow: hidden;
     animation: faqFadeIn 0.4s ease forwards;
 }
-.gl-activity-av {
-    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-    background: linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.04));
-    border: 1px solid rgba(197,160,89,0.15);
-    background-size: cover; background-position: center;
+.gl-activity-card-std {
+    padding: 14px 16px;
+}
+.gl-activity-card-std .gl-ac-row {
+    display: flex; align-items: center; gap: 12px;
+}
+.gl-ac-av {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid rgba(197,160,89,0.5); object-fit: cover;
+}
+.gl-ac-av-fallback {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid rgba(197,160,89,0.35);
+    background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05));
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Cinzel', serif; font-size: 0.8rem; color: rgba(197,160,89,0.5); font-weight: 600;
+    font-family: 'Cinzel', serif; font-size: 0.9rem; color: rgba(197,160,89,0.6); font-weight: 600;
 }
-.gl-activity-av img {
-    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+.gl-ac-info { flex: 1; min-width: 0; }
+.gl-ac-name {
+    font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 600;
+    color: #c5a059; letter-spacing: 1px; line-height: 1.2;
 }
-.gl-activity-info { flex: 1; min-width: 0; }
-.gl-activity-name {
-    font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 600;
-    color: rgba(197,160,89,0.7); letter-spacing: 0.5px;
+.gl-ac-hier {
+    font-family: 'Orbitron', sans-serif; font-size: 0.35rem;
+    color: rgba(197,160,89,0.4); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px;
 }
-.gl-activity-text {
-    font-family: 'Cinzel', serif; font-size: 0.7rem;
-    color: rgba(255,255,255,0.4); margin-top: 2px;
+.gl-ac-text {
+    font-family: 'Cinzel', serif; font-size: 0.72rem;
+    color: rgba(255,255,255,0.55); margin-top: 6px; line-height: 1.4;
 }
-.gl-activity-time {
-    font-family: 'Orbitron', sans-serif; font-size: 0.3rem;
-    color: rgba(255,255,255,0.12); letter-spacing: 1px; flex-shrink: 0;
+.gl-ac-time {
+    font-family: 'Orbitron', sans-serif; font-size: 0.35rem;
+    color: rgba(255,255,255,0.12); letter-spacing: 1px; margin-top: 6px;
+}
+/* Risky card layout */
+.gl-activity-card-risky {
+    display: flex; min-height: 120px;
+}
+.gl-ac-risky-left {
+    flex: 0 0 28%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; background: rgba(197,160,89,0.04);
+    border-right: 1px solid rgba(197,160,89,0.12); padding: 14px 10px; gap: 6px;
+}
+.gl-ac-risky-left img { width: 60%; max-width: 55px; height: auto; opacity: 0.9; }
+.gl-ac-risky-left span {
+    font-family: 'Orbitron', sans-serif; font-size: 0.38rem;
+    color: rgba(197,160,89,0.45); letter-spacing: 2px; text-transform: uppercase; text-align: center; line-height: 1.3;
+}
+.gl-ac-risky-right {
+    flex: 1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; gap: 4px;
 }
 .gl-empty {
     text-align: center; padding: 30px 0;
@@ -977,36 +1003,35 @@ function parseActivityCard(msg) {
     try {
         if (content.indexOf('RISKY_TRIBUTE_CARD::') === 0) {
             var d = JSON.parse(content.replace('RISKY_TRIBUTE_CARD::', ''));
-            var result = d.isWin ? 'won ' + (d.wonAmount||0).toLocaleString() + ' coins' : 'lost ' + (d.lostAmount||0).toLocaleString() + ' coins';
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, text: 'gambled ' + (d.stakeAmount||0).toLocaleString() + ' coins and ' + result, time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, kind: 'risky', cardIcon: d.icon || null, cardName: d.cardName || null, isWin: d.isWin, stakeAmount: d.stakeAmount || 0, wonAmount: d.wonAmount || 0, lostAmount: d.lostAmount || 0, time: created };
         }
         if (content.indexOf('DIRECT_TRIBUTE_CARD::') === 0) {
             var d = JSON.parse(content.replace('DIRECT_TRIBUTE_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, text: 'sent a tribute of ' + (d.amount||0).toLocaleString() + ' coins', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'sent a tribute of ' + (d.amount||0).toLocaleString() + ' coins', kind: 'tribute', time: created };
         }
         if (content.indexOf('PROMOTION_CARD::') === 0) {
             var d = JSON.parse(content.replace('PROMOTION_CARD::', ''));
-            return { name: d.name || 'SUBJECT', avatar: avatar, text: 'promoted to ' + (d.newRank || 'a new rank'), time: created };
+            return { name: d.name || 'SUBJECT', avatar: avatar, hierarchy: hier, text: 'was promoted to ' + (d.newRank || 'a new rank'), kind: 'promotion', time: created };
         }
         if (content.indexOf('CHALLENGE_TASK_CARD::') === 0) {
             var d = JSON.parse(content.replace('CHALLENGE_TASK_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, text: 'completed a challenge task', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'completed a challenge task', kind: 'challenge', time: created };
         }
         if (content.indexOf('WELCOME_CARD::') === 0) {
             var d = JSON.parse(content.replace('WELCOME_CARD::', ''));
-            return { name: d.name || 'New Subject', avatar: avatar, text: 'entered the household', time: created };
+            return { name: d.name || 'New Subject', avatar: avatar, hierarchy: hier, text: 'entered the household', kind: 'welcome', time: created };
         }
         if (content.indexOf('UPDATE_MERIT_CARD::') === 0) {
             var d = JSON.parse(content.replace('UPDATE_MERIT_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, text: 'earned ' + (d.points || 0) + ' points', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'earned ' + (d.points || 0) + ' points', kind: 'merit', time: created };
         }
         if (content.indexOf('UPDATE_COINS_CARD::') === 0) {
             var d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
-            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, text: 'claimed ' + (d.points || 0) + ' coins', time: created };
+            return { name: d.senderName || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'claimed ' + (d.points || 0) + ' coins from kneeling', kind: 'coins', time: created };
         }
         if (content.indexOf('CHALLENGE_JOIN_CARD::') === 0) {
             var d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
-            return { name: d.senderName || d.name || 'SUBJECT', avatar: d.senderAvatar || avatar, text: 'joined ' + (d.challengeName || 'a challenge'), time: created };
+            return { name: d.senderName || d.name || 'SUBJECT', avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'joined ' + (d.challengeName || 'a challenge'), kind: 'challenge_join', time: created };
         }
     } catch(e) {}
     return null;
@@ -1063,15 +1088,38 @@ function loadGlActivity() {
             }
             items.forEach(function(item) {
                 var initial = (item.name || 'S').charAt(0).toUpperCase();
-                var avHtml = item.avatar
-                    ? '<div class="gl-activity-av"><img src="' + item.avatar + '" onerror="this.parentNode.textContent=\'' + initial + '\'"></div>'
-                    : '<div class="gl-activity-av">' + initial + '</div>';
                 var when = item.time ? timeAgo(item.time) : '';
-                c.innerHTML += '<div class="gl-activity-item">' +
-                    avHtml +
-                    '<div class="gl-activity-info"><div class="gl-activity-name">' + item.name + '</div><div class="gl-activity-text">' + item.text + '</div></div>' +
-                    '<div class="gl-activity-time">' + when + '</div>' +
-                '</div>';
+                var avHtml = item.avatar
+                    ? '<img class="gl-ac-av" src="' + item.avatar + '" onerror="this.outerHTML=\'<div class=gl-ac-av-fallback>' + initial + '</div>\'">'
+                    : '<div class="gl-ac-av-fallback">' + initial + '</div>';
+                var hierHtml = item.hierarchy ? '<div class="gl-ac-hier">' + item.hierarchy + '</div>' : '';
+
+                if (item.kind === 'risky' && item.cardIcon) {
+                    var resultText = item.isWin
+                        ? '<span style="color:#4ade80">won ' + (item.wonAmount||0).toLocaleString() + ' coins</span>'
+                        : item.lostAmount === 0
+                            ? '<span style="color:#c5a059">lost nothing</span>'
+                            : '<span style="color:#ff0000">lost ' + (item.lostAmount||0).toLocaleString() + ' coins</span>';
+                    c.innerHTML += '<div class="gl-activity-card"><div class="gl-activity-card-risky">' +
+                        '<div class="gl-ac-risky-left"><img src="' + item.cardIcon + '" onerror="this.style.display=\'none\'">' +
+                            (item.cardName ? '<span>' + item.cardName + '</span>' : '') +
+                        '</div>' +
+                        '<div class="gl-ac-risky-right">' +
+                            '<div class="gl-ac-row" style="display:flex;align-items:center;gap:10px">' + avHtml + '<div><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div></div>' +
+                            '<div class="gl-ac-text">gambled ' + (item.stakeAmount||0).toLocaleString() + ' coins</div>' +
+                            '<div style="font-family:Cinzel,serif;font-size:0.75rem;font-weight:600;letter-spacing:0.5px">' + resultText + '</div>' +
+                            '<div class="gl-ac-time">' + when + '</div>' +
+                        '</div>' +
+                    '</div></div>';
+                } else {
+                    c.innerHTML += '<div class="gl-activity-card gl-activity-card-std">' +
+                        '<div class="gl-ac-row">' + avHtml +
+                            '<div class="gl-ac-info"><div class="gl-ac-name">' + item.name + '</div>' + hierHtml + '</div>' +
+                        '</div>' +
+                        '<div class="gl-ac-text">' + (item.text || '') + '</div>' +
+                        '<div class="gl-ac-time">' + when + '</div>' +
+                    '</div>';
+                }
             });
         }).catch(function() { c.innerHTML = '<div class="gl-empty">Could not load</div>'; });
 }
