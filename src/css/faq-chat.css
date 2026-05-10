@@ -2,44 +2,83 @@
 
 /* FOOTER NAV */
 .faq-footer-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 9999999;
-    height: calc(60px + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(4, 4, 12, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(197, 160, 89, 0.18);
-    display: flex;
-    align-items: stretch;
-    justify-content: space-around;
+    position: fixed !important;
+    bottom: 0 !important; left: 0 !important; right: 0 !important;
+    z-index: 9999999 !important;
+    height: calc(60px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    background: rgba(4, 4, 12, 0.96) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(197, 160, 89, 0.18) !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: space-around !important;
+    flex-direction: row !important;
+    margin: 0 !important;
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: none !important;
 }
 .faq-footer-nav-item {
-    flex: 1;
-    background: transparent; border: none;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 5px; cursor: pointer; padding: 0;
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    font-size: inherit !important;
+    line-height: normal !important;
     -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 .faq-footer-nav-icon { font-size: 1.6rem !important; color: rgba(197, 160, 89, 0.35) !important; line-height: 1 !important; }
-.faq-footer-nav-label { font-family: 'Cinzel', serif !important; font-size: 0.55rem !important; color: rgba(197, 160, 89, 0.35) !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; }
+.faq-footer-nav-label { font-family: 'Cinzel', serif !important; font-size: 0.55rem !important; color: rgba(197, 160, 89, 0.35) !important; letter-spacing: 1.5px !important; text-transform: uppercase !important; line-height: 1 !important; }
 .faq-footer-queen-btn {
-    flex: 1; background: transparent; border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; padding: 0; position: relative;
-    margin-top: -30px; transform: translateY(14px);
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+    margin-top: -30px !important;
+    transform: translateY(14px) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
     -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 .faq-footer-queen-ring {
-    width: 75px; height: 75px;
-    border-radius: 50%;
-    overflow: hidden; background: #000; flex-shrink: 0;
+    width: 75px !important; height: 75px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important; background: #000 !important; flex-shrink: 0 !important;
 }
 .faq-footer-queen-ring img {
-    width: 100%; height: 100%;
-    border-radius: 50%; object-fit: cover;
+    width: 100% !important; height: 100% !important;
+    border-radius: 50% !important; object-fit: cover !important;
 }
 
 /* SPEECH BUBBLE ON NAV */
@@ -269,5 +308,5 @@
 
 /* Hide on desktop */
 @media (min-width: 769px) {
-    .faq-footer-nav { display: none; }
+    .faq-footer-nav { display: none !important; }
 }
