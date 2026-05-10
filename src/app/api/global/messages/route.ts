@@ -24,21 +24,28 @@ export async function GET() {
     // Enrich with hierarchy from profiles
     const emails = [...new Set((data || []).map((r: any) => r.sender_email).filter((e: any) => e && e !== 'system'))];
     let hierarchyMap: Record<string, string> = {};
+    let avatarMap: Record<string, string> = {};
     if (emails.length) {
-        const { data: profiles } = await supabaseAdmin.from('profiles').select('member_id, hierarchy').in('member_id', emails);
+        const { data: profiles } = await supabaseAdmin.from('profiles').select('member_id, hierarchy, avatar_url').in('member_id', emails);
         if (profiles) {
             for (const p of profiles) {
-                if (p.member_id && p.hierarchy) hierarchyMap[p.member_id.toLowerCase()] = p.hierarchy;
+                const key = (p.member_id || '').toLowerCase();
+                if (p.hierarchy) hierarchyMap[key] = p.hierarchy;
+                if (p.avatar_url) avatarMap[key] = p.avatar_url;
             }
         }
     }
 
     const QUEEN_EMAILS = ['ceo@qkarin.com'];
-    const safe = (data || []).map((row: any) => ({
-        ...row,
-        is_queen: QUEEN_EMAILS.includes((row.sender_email || '').toLowerCase()),
-        hierarchy: hierarchyMap[(row.sender_email || '').toLowerCase()] || null,
-    }));
+    const safe = (data || []).map((row: any) => {
+        const emailKey = (row.sender_email || '').toLowerCase();
+        return {
+            ...row,
+            is_queen: QUEEN_EMAILS.includes(emailKey),
+            hierarchy: hierarchyMap[emailKey] || null,
+            sender_avatar: row.sender_avatar || avatarMap[emailKey] || null,
+        };
+    });
     return NextResponse.json({ messages: safe });
 }
 
