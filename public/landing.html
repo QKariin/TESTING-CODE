@@ -693,6 +693,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08);
     overflow: hidden;
     cursor: pointer;
+    pointer-events: auto;
 }
 .home-toast.entering { animation: toastIn 0.4s ease-out forwards; }
 .home-toast.leaving { animation: toastOut 0.4s ease-in forwards; }
@@ -845,7 +846,7 @@ body.scrolled .btn-join { width: 450px !important; height: 60px !important; marg
     <iframe id="footerFrame" src="/footer-faq.html" style="position:fixed;bottom:0;left:0;width:100%;height:calc(140px + env(safe-area-inset-bottom));border:none;z-index:9999999;background:transparent;"></iframe>
 
     <!-- TOAST CONTAINER -->
-    <div id="toastContainer"></div>
+    <div id="toastContainer" style="position:fixed;top:0;left:0;width:0;height:0;overflow:visible;z-index:99999;pointer-events:none;"></div>
 
     <script>
 /* ── ACCESS DENIED OVERLAY ── */
@@ -886,9 +887,11 @@ window.addEventListener('message', function(e) {
         showAccessDenied(e.data.section);
     }
     if (e.data.type === 'faqOpen') {
+        faqIsOpen = true;
         if (footerFrame) { footerFrame.style.height = '100%'; footerFrame.style.top = '0'; }
     }
     if (e.data.type === 'faqClose') {
+        faqIsOpen = false;
         setTimeout(function() {
             if (footerFrame) { footerFrame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; footerFrame.style.top = 'auto'; }
         }, 400);
@@ -1018,12 +1021,15 @@ function showToast(item) {
     setTimeout(function() { el.remove(); }, 8500);
 }
 
-/* ── FOMO TOAST: 15s after FAQ opens ── */
+/* ── FOMO TOAST: 15s after FAQ closes ── */
 var fomoFired = false;
+var faqIsOpen = false;
 function triggerFomoToast() {
     if (fomoFired) return;
     fomoFired = true;
     setTimeout(function() {
+        // Only show if FAQ is closed
+        if (faqIsOpen) return;
         fetch('/api/global/messages')
             .then(function(r) { return r.json(); })
             .then(function(data) {
