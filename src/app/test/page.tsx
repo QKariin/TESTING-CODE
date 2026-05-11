@@ -618,9 +618,6 @@ export default function TestLandingPage() {
                 <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </main>
 
-            {/* Black backing behind footer iframe to prevent transparent bleed */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', height: 'calc(250px + env(safe-area-inset-bottom))', background: '#000', zIndex: 9999998 }} />
-
             {/* FOOTER IFRAME */}
             <iframe
                 ref={footerFrameRef}
