@@ -5,11 +5,6 @@ import { getSupabase } from '@/lib/supabase'
 export async function updateSession(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
-    // Root → /home for everyone (logged in or not)
-    if (pathname === '/') {
-        return NextResponse.redirect(new URL('/home', request.url));
-    }
-
     // 🔓 API routes: always pass through - route handlers do their own auth.
     // CRITICAL: must be before any Supabase call or the proxy will redirect
     // expired-session API POSTs to /login (307), creating an infinite POST loop.
@@ -43,6 +38,16 @@ export async function updateSession(request: NextRequest) {
     )
 
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Root → smart redirect: logged-in users go to profile/dashboard, others go to /home
+    if (pathname === '/') {
+        if (user) {
+            const email = (user.email || '').trim().toLowerCase();
+            const isCEO = email === 'ceo@qkarin.com' || email === 'queen@qkarin.com';
+            return NextResponse.redirect(new URL(isCEO ? '/dashboard' : '/profile', request.url));
+        }
+        return NextResponse.redirect(new URL('/home', request.url));
+    }
 
     if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home')) {
         return NextResponse.redirect(new URL('/home', request.url))
