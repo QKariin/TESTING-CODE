@@ -421,12 +421,6 @@ export default function TestLandingPage() {
 
     return (
         <div className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
-            <style jsx global>{`
-                html, body {
-                    background-color: #000 !important;
-                    background-image: none !important;
-                }
-            `}</style>
             {/* Google Fonts */}
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link rel="preconnect" href="https://fonts.googleapis.com" />
