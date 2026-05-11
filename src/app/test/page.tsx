@@ -152,7 +152,7 @@ export default function TestLandingPage() {
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
     const heroFrameRef = useRef<HTMLImageElement>(null);
-    const HERO_FRAME_COUNT = 18;
+    const HERO_FRAME_COUNT = 61;
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     /* ── Show Toast ── */
