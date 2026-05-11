@@ -151,6 +151,7 @@ export default function TestLandingPage() {
     const lastSeenIdRef = useRef<string | number | null>(null);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
+    const heroVideoRef = useRef<HTMLVideoElement>(null);
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     /* ── Show Toast ── */
@@ -197,9 +198,36 @@ export default function TestLandingPage() {
     }, []);
 
     /* ── Scroll listener ── */
+    const videoDurationRef = useRef(0);
+    useEffect(() => {
+        const vid = heroVideoRef.current;
+        if (vid) {
+            const onMeta = () => { videoDurationRef.current = vid.duration; };
+            vid.addEventListener('loadedmetadata', onMeta);
+            if (vid.duration) onMeta();
+            return () => vid.removeEventListener('loadedmetadata', onMeta);
+        }
+    }, []);
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
+            const y = window.scrollY;
+            setIsScrolled(y > 50);
+            // Fade the header overlay as user scrolls
+            const shelf = document.getElementById('cmd');
+            if (shelf) {
+                const fade = Math.max(0, 1 - y / (window.innerHeight * 0.6));
+                shelf.style.opacity = String(fade);
+                shelf.style.pointerEvents = fade < 0.1 ? 'none' : 'auto';
+            }
+            // Scrub hero video based on scroll
+            const dur = videoDurationRef.current;
+            if (dur && heroVideoRef.current) {
+                const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+                if (scrollRange > 0) {
+                    const progress = Math.min(y / scrollRange, 1);
+                    heroVideoRef.current.currentTime = progress * dur;
+                }
+            }
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
@@ -429,8 +457,24 @@ export default function TestLandingPage() {
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet" />
 
-            {/* Background */}
-            <div className="bg-fixed" />
+            {/* Background Video */}
+            <video
+                ref={heroVideoRef}
+                src="/hero-video.mp4"
+                muted
+                playsInline
+                preload="auto"
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    zIndex: 0,
+                    pointerEvents: 'none',
+                }}
+            />
 
             {/* Loader Gate (hidden, same as current) */}
             <div id="loader-gate" style={{ display: 'none' }}>
@@ -623,8 +667,8 @@ export default function TestLandingPage() {
                 ref={footerFrameRef}
                 id="footerFrame"
                 src="/footer-faq.html"
-                // @ts-ignore
-                allowTransparency="true"
+                // eslint-disable-next-line react/no-unknown-property
+                allowtransparency="true"
                 style={{
                     position: 'fixed',
                     bottom: 0,

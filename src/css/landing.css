@@ -6,7 +6,6 @@
 /* Override Tailwind/globals white background */
 html, body {
     background-color: #000 !important;
-    background-image: none !important;
 }
 
 @font-face {
@@ -58,7 +57,7 @@ html, body {
     width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
-    background-color: #000 !important;
+    background: transparent !important;
     color: #fff;
     font-family: 'Cinzel', serif;
     line-height: 1.6;
@@ -256,18 +255,7 @@ html, body {
     position: relative;
 }
 .funnel-section { z-index: 1; }
-.funnel-section::before {
-    content: '';
-    position: absolute;
-    top: 0; bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100vw;
-    z-index: 0;
-}
 .funnel-section > * { position: relative; z-index: 1; }
-.funnel-section:nth-child(odd)::before { backdrop-filter: brightness(0.3); -webkit-backdrop-filter: brightness(0.3); }
-.funnel-section:nth-child(even)::before { backdrop-filter: brightness(0.6); -webkit-backdrop-filter: brightness(0.6); }
 .funnel-section.visible { opacity: 1; transform: translateY(0); }
 
 .funnel-label {
