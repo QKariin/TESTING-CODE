@@ -254,12 +254,12 @@ export default function TestLandingPage() {
             }
             if (e.data.type === 'faqOpen') {
                 faqIsOpenRef.current = true;
-                if (frame) { frame.style.height = '100%'; frame.style.top = '0'; frame.style.background = '#000'; }
+                if (frame) { frame.style.height = '100%'; frame.style.top = '0'; }
             }
             if (e.data.type === 'faqClose') {
                 faqIsOpenRef.current = false;
                 setTimeout(() => {
-                    if (frame) { frame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; frame.style.top = 'auto'; frame.style.background = 'transparent'; }
+                    if (frame) { frame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; frame.style.top = 'auto'; }
                 }, 400);
             }
             if (e.data.type === 'notifShow') {
@@ -623,6 +623,8 @@ export default function TestLandingPage() {
                 ref={footerFrameRef}
                 id="footerFrame"
                 src="/footer-faq.html"
+                // @ts-ignore
+                allowTransparency="true"
                 style={{
                     position: 'fixed',
                     bottom: 0,
