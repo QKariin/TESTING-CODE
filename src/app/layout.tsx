@@ -62,6 +62,7 @@ export default function RootLayout({
         {/* Capture PWA install prompt as early as possible — before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window._deferredInstallPrompt=e;});` }} />
         <meta name="google-site-verification" content="e56kAIRP-tEuNTFI58HkKz7QakNCanWNiliRRpFXdnc" />
+        <meta name="msvalidate.01" content="3B101EEC47F0F538AB04232357A1699E" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

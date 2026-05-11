@@ -28,8 +28,8 @@ export default function HomePage() {
                     zIndex: 99999,
                 }}
             />
-            {/* SEO content — invisible to users (behind iframe), crawlable by Google */}
-            <main aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, width: '100%', overflow: 'hidden', zIndex: 0 }}>
+            {/* SEO content — invisible to users, crawlable by Google */}
+            <main aria-hidden="true" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
                 <header>
                     <h1>Queen Karin — Femdom, Findom &amp; Female Domination</h1>
                     <p>No agencies. No bots. No fakes.</p>
