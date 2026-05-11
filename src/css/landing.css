@@ -3,6 +3,12 @@
    Extracted from public/landing.html
    ============================================ */
 
+/* Override Tailwind/globals white background */
+html, body {
+    background-color: #000 !important;
+    background-image: none !important;
+}
+
 @font-face {
     font-family: 'Cinzel';
     src: url('/fonts/Cinzel-Regular.woff2') format('woff2');
