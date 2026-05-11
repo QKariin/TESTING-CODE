@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: '%s | Queen Karin',
   },
   description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes. Apply to serve or stay locked out.',
-  keywords: ['femdom', 'findom', 'findomme', 'female domination', 'financial domination', 'queen karin', 'dominatrix', 'female supremacy', 'femdom online', 'online domination', 'chastity', 'keyholder', 'chastity key holding', 'female led relationship', 'flr relationship', 'woman led relationship', 'paypigs', 'findom tribute', 'worship', 'submission', 'fin domination'],
+  keywords: ['femdom', 'femdom meaning', 'femdom definition', 'findom', 'findomme', 'findom meaning', 'female domination', 'financial domination', 'queen karin', 'dominatrix', 'female supremacy', 'femdom online', 'online domination', 'chastity', 'keyholder', 'chastity key holding', 'female led relationship', 'flr relationship', 'woman led relationship', 'paypigs', 'findom tribute', 'worship', 'submission', 'fin domination'],
   authors: [{ name: 'Queen Karin' }],
   icons: {
     icon: '/favicon.ico',
