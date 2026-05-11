@@ -457,25 +457,22 @@ export default function TestLandingPage() {
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet" />
 
-            {/* Background Video */}
-            <video
-                ref={heroVideoRef}
-                src="/hero-video.mp4"
-                muted
-                playsInline
-                autoPlay
-                preload="auto"
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    zIndex: 1,
-                    pointerEvents: 'none',
-                }}
-            />
+            {/* Background image fallback + Video */}
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none', background: 'linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)), url(/queen-bg-mobile.jpg) center/cover no-repeat' }}>
+                <video
+                    ref={heroVideoRef}
+                    src="/hero-video.mp4"
+                    muted
+                    playsInline
+                    autoPlay
+                    preload="auto"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                    }}
+                />
+            </div>
 
             {/* Loader Gate (hidden, same as current) */}
             <div id="loader-gate" style={{ display: 'none' }}>
