@@ -523,24 +523,28 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
             <path d="M1.5 2L8 7L14.5 2" stroke="#000" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
     </button>
-    <button class="fake-nav-btn" onclick="handleNavClick('Queen\'s Wall')">
-        <span class="fake-nav-icon">&#9819;</span>
-        <span class="fake-nav-label">QUEEN</span>
-    </button>
     <button class="fake-nav-btn" onclick="toggleGlobal()">
         <span class="fake-nav-icon">&#9678;</span>
         <span class="fake-nav-label">GLOBAL</span>
     </button>
+    <button class="fake-nav-btn" onclick="parent.postMessage({type:'openMenu'},'*')">
+        <span class="fake-nav-icon" style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:1rem"><span style="width:18px;height:1.5px;background:rgba(197,160,89,0.35)"></span><span style="width:18px;height:1.5px;background:rgba(197,160,89,0.35)"></span><span style="width:18px;height:1.5px;background:rgba(197,160,89,0.35)"></span></span>
+        <span class="fake-nav-label">MENU</span>
+    </button>
 </nav>
 
 <!-- MESSAGE NOTIFICATION -->
-<div class="msg-notif" id="msgNotif" onclick="openNotif()">
+<div class="msg-notif" id="msgNotif">
     <div class="msg-notif-inner">
         <img src="/queen-nav.png" class="msg-notif-av" alt="Queen Karin">
         <div class="msg-notif-text">
             <div class="msg-notif-from">Queen Karin</div>
             <div class="msg-notif-preview">New message...</div>
         </div>
+    </div>
+    <div class="msg-notif-actions">
+        <button class="msg-notif-btn msg-notif-dismiss" onclick="openNotif()">DISMISS</button>
+        <button class="msg-notif-btn msg-notif-open" onclick="openNotif()">OPEN</button>
     </div>
 </div>
 

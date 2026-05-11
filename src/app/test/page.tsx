@@ -138,12 +138,13 @@ function parseGlobalCard(msg: GlobalMessage): ToastItem | null {
 export default function TestLandingPage() {
     // State
     const [isScrolled, setIsScrolled] = useState(false);
-    const [lbPeriod, setLbPeriod] = useState('today');
+    const [lbPeriod, setLbPeriod] = useState('weekly');
     const [lbEntries, setLbEntries] = useState<LeaderboardEntry[]>([]);
     const [reviews, setReviews] = useState<ReviewData[]>([]);
     const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
     const [toastClass, setToastClass] = useState('');
     const [accessDenied, setAccessDenied] = useState<{ section: string } | null>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     // Refs
     const faqIsOpenRef = useRef(false);
@@ -151,8 +152,6 @@ export default function TestLandingPage() {
     const lastSeenIdRef = useRef<string | number | null>(null);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
-    const heroFrameRef = useRef<HTMLImageElement>(null);
-    const HERO_FRAME_COUNT = 61;
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     /* ── Show Toast ── */
@@ -198,37 +197,11 @@ export default function TestLandingPage() {
         });
     }, []);
 
-    /* ── Preload hero frames ── */
-    useEffect(() => {
-        for (let i = 1; i <= HERO_FRAME_COUNT; i++) {
-            const img = new Image();
-            img.src = `/hero-frames/frame-${String(i).padStart(3, '0')}.jpg`;
-        }
-    }, []);
-
     /* ── Scroll listener ── */
     useEffect(() => {
-        let lastFrame = 0;
         const handleScroll = () => {
             const y = window.scrollY;
-            setIsScrolled(y > 50);
-            // Fade the header overlay as user scrolls
-            const shelf = document.getElementById('cmd');
-            if (shelf) {
-                const fade = Math.max(0, 1 - y / (window.innerHeight * 0.6));
-                shelf.style.opacity = String(fade);
-                shelf.style.pointerEvents = fade < 0.1 ? 'none' : 'auto';
-            }
-            // Swap hero frame based on scroll
-            const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
-            if (scrollRange > 0 && heroFrameRef.current) {
-                const progress = Math.min(y / scrollRange, 1);
-                const frameIdx = Math.min(Math.floor(progress * HERO_FRAME_COUNT), HERO_FRAME_COUNT - 1) + 1;
-                if (frameIdx !== lastFrame) {
-                    lastFrame = frameIdx;
-                    heroFrameRef.current.src = `/hero-frames/frame-${String(frameIdx).padStart(3, '0')}.jpg`;
-                }
-            }
+            setIsScrolled(y > window.innerHeight * 0.7);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
@@ -302,6 +275,9 @@ export default function TestLandingPage() {
             }
             if (e.data.type === 'dismissAccessDenied') {
                 setAccessDenied(null);
+            }
+            if (e.data.type === 'openMenu') {
+                setMenuOpen(prev => !prev);
             }
         };
         window.addEventListener('message', handleMessage);
@@ -458,23 +434,6 @@ export default function TestLandingPage() {
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet" />
 
-            {/* Background Frame */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                ref={heroFrameRef}
-                src="/hero-frames/frame-001.jpg"
-                alt=""
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    zIndex: 1,
-                    pointerEvents: 'none',
-                }}
-            />
 
             {/* Loader Gate (hidden, same as current) */}
             <div id="loader-gate" style={{ display: 'none' }}>
@@ -485,8 +444,11 @@ export default function TestLandingPage() {
                 <a href="/profile" className="btn-slave">ALREADY A SLAVE</a>
             </div>
 
-            {/* Header */}
-            <header className="fixed-shelf" id="cmd">
+            {/* Fixed dark tint — stays forever */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
+
+            {/* Hero header — scrolls with page */}
+            <header style={{ position: 'relative', zIndex: 2, height: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '10vh', background: 'rgba(5,5,6,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
                 <div className="header-inner">
                     <div className="welcome">WELCOME TO</div>
                     <h1 className="royal-brand">Queen Karin&apos;s</h1>
@@ -497,12 +459,45 @@ export default function TestLandingPage() {
                     <div className="tiny-seal">
                         <h2>NO AGENCIES &bull; NO BOTS &bull; NO FAKES</h2>
                     </div>
-                    <a href="/login" className="btn-join">JOIN NOW</a>
+                    <nav className="shelf-nav-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: 20, width: '100%', maxWidth: 300 }}>
+                        <a href="#about" className="shelf-nav-btn">About Me</a>
+                        <a href="#leaderboard-section" className="shelf-nav-btn">Hierarchy</a>
+                        <a href="#services" className="shelf-nav-btn">Service</a>
+                        <a href="#reviews" className="shelf-nav-btn">Feedback</a>
+                        <button className="shelf-nav-btn" onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
+                    </nav>
+                    <a href="/login" className="btn-join" style={{ marginTop: 20 }}>JOIN NOW</a>
                 </div>
             </header>
 
+            {/* Sticky nav — appears after scrolling past hero */}
+            {isScrolled && (
+                <div className="sticky-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', background: 'rgba(15,15,18,0.98)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: 14, fontWeight: 700, letterSpacing: 3, color: '#c5a059', lineHeight: 1 }}>Queen Karin&apos;s</span>
+                        <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 2 }}>
+                            <span style={{ fontFamily: 'Italianno,cursive', fontSize: 20, color: '#fff' }}>Kink</span>
+                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: 8, color: '#fff', opacity: 0.6, marginLeft: 4, letterSpacing: 4 }}>-DOM</span>
+                        </div>
+                    </div>
+                    <a href="/login" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 28px', background: 'linear-gradient(#080604,#080604) padding-box, linear-gradient(135deg,transparent,#c5a059 40%,transparent 60%,#c5a059) border-box', border: '1.5px solid transparent', borderRadius: 999 }}>JOIN</a>
+                </div>
+            )}
+
+            {/* Menu overlay from footer hamburger */}
+            {menuOpen && (
+                <div className="hamburger-menu" style={{ position: 'fixed', bottom: 'calc(60px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 9999998 }}>
+                    <a href="#about" onClick={() => setMenuOpen(false)}>About Me</a>
+                    <a href="#leaderboard-section" onClick={() => setMenuOpen(false)}>Hierarchy</a>
+                    <a href="#services" onClick={() => setMenuOpen(false)}>Service</a>
+                    <a href="#reviews" onClick={() => setMenuOpen(false)}>Feedback</a>
+                    <button onClick={() => { setMenuOpen(false); const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
+                    <a href="/login" onClick={() => setMenuOpen(false)}>Join Now</a>
+                </div>
+            )}
+
             {/* Main Content */}
-            <main className="content-flow" style={{ marginTop: '100vh', position: 'relative', zIndex: 2 }}>
+            <main className="content-flow" style={{ position: 'relative', zIndex: 3, background: 'rgba(5,5,6,0.82)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
 
                 {/* ABOUT */}
                 <section className="funnel-section" id="about">
@@ -524,7 +519,6 @@ export default function TestLandingPage() {
                 {/* LEADERBOARD */}
                 <section className="funnel-section" id="leaderboard-section">
                     <div className="funnel-label">THE HIERARCHY</div>
-                    <h2 className="funnel-title">Your Place Is Earned</h2>
                     <div className="funnel-divider" />
                     <div className="lb-tabs">
                         {(['today', 'weekly', 'monthly', 'alltime'] as const).map(period => {
@@ -566,7 +560,6 @@ export default function TestLandingPage() {
                 {/* SERVICES */}
                 <section className="funnel-section" id="services">
                     <div className="funnel-label">SERVICES</div>
-                    <h2 className="funnel-title">What Happens Inside</h2>
                     <div className="funnel-divider" />
 
                     <div className="service-card">
@@ -608,7 +601,6 @@ export default function TestLandingPage() {
                 {/* REVIEWS */}
                 <section className="funnel-section" id="reviews">
                     <div className="funnel-label">TESTIMONIALS</div>
-                    <h2 className="funnel-title">From Those Who Knelt</h2>
                     <div className="funnel-divider" />
                     <div id="reviewsContainer">
                         {reviews.map((r, i) => {
