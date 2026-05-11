@@ -259,7 +259,7 @@ export default function TestLandingPage() {
             if (e.data.type === 'faqClose') {
                 faqIsOpenRef.current = false;
                 setTimeout(() => {
-                    if (frame) { frame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; frame.style.top = 'auto'; frame.style.background = 'transparent'; }
+                    if (frame) { frame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; frame.style.top = 'auto'; frame.style.background = '#000'; }
                 }, 400);
             }
             if (e.data.type === 'notifShow') {
@@ -634,7 +634,7 @@ export default function TestLandingPage() {
                     height: 'calc(140px + env(safe-area-inset-bottom))',
                     border: 'none',
                     zIndex: 9999999,
-                    background: 'transparent',
+                    background: '#000',
                 }}
             />
 
