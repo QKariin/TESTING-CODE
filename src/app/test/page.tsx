@@ -463,6 +463,7 @@ export default function TestLandingPage() {
                 src="/hero-video.mp4"
                 muted
                 playsInline
+                autoPlay
                 preload="auto"
                 style={{
                     position: 'fixed',
@@ -471,7 +472,7 @@ export default function TestLandingPage() {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    zIndex: 0,
+                    zIndex: 1,
                     pointerEvents: 'none',
                 }}
             />
@@ -502,7 +503,7 @@ export default function TestLandingPage() {
             </header>
 
             {/* Main Content */}
-            <main className="content-flow" style={{ marginTop: '100vh' }}>
+            <main className="content-flow" style={{ marginTop: '100vh', position: 'relative', zIndex: 2 }}>
 
                 {/* ABOUT */}
                 <section className="funnel-section" id="about">
