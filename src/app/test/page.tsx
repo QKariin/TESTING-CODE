@@ -634,6 +634,7 @@ export default function TestLandingPage() {
                     border: 'none',
                     zIndex: 9999999,
                     background: 'transparent',
+                    colorScheme: 'dark',
                 }}
             />
 
