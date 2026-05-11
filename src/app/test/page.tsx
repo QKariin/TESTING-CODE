@@ -667,8 +667,6 @@ export default function TestLandingPage() {
                 ref={footerFrameRef}
                 id="footerFrame"
                 src="/footer-faq.html"
-                // eslint-disable-next-line react/no-unknown-property
-                allowtransparency="true"
                 style={{
                     position: 'fixed',
                     bottom: 0,
