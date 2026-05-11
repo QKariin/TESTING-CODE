@@ -151,7 +151,8 @@ export default function TestLandingPage() {
     const lastSeenIdRef = useRef<string | number | null>(null);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
-    const heroVideoRef = useRef<HTMLVideoElement>(null);
+    const heroFrameRef = useRef<HTMLImageElement>(null);
+    const HERO_FRAME_COUNT = 18;
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     /* ── Show Toast ── */
@@ -197,18 +198,17 @@ export default function TestLandingPage() {
         });
     }, []);
 
-    /* ── Scroll listener ── */
-    const videoDurationRef = useRef(0);
+    /* ── Preload hero frames ── */
     useEffect(() => {
-        const vid = heroVideoRef.current;
-        if (vid) {
-            const onMeta = () => { videoDurationRef.current = vid.duration; };
-            vid.addEventListener('loadedmetadata', onMeta);
-            if (vid.duration) onMeta();
-            return () => vid.removeEventListener('loadedmetadata', onMeta);
+        for (let i = 1; i <= HERO_FRAME_COUNT; i++) {
+            const img = new Image();
+            img.src = `/hero-frames/frame-${String(i).padStart(3, '0')}.jpg`;
         }
     }, []);
+
+    /* ── Scroll listener ── */
     useEffect(() => {
+        let lastFrame = 0;
         const handleScroll = () => {
             const y = window.scrollY;
             setIsScrolled(y > 50);
@@ -219,13 +219,14 @@ export default function TestLandingPage() {
                 shelf.style.opacity = String(fade);
                 shelf.style.pointerEvents = fade < 0.1 ? 'none' : 'auto';
             }
-            // Scrub hero video based on scroll
-            const dur = videoDurationRef.current;
-            if (dur && heroVideoRef.current) {
-                const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
-                if (scrollRange > 0) {
-                    const progress = Math.min(y / scrollRange, 1);
-                    heroVideoRef.current.currentTime = progress * dur;
+            // Swap hero frame based on scroll
+            const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+            if (scrollRange > 0 && heroFrameRef.current) {
+                const progress = Math.min(y / scrollRange, 1);
+                const frameIdx = Math.min(Math.floor(progress * HERO_FRAME_COUNT), HERO_FRAME_COUNT - 1) + 1;
+                if (frameIdx !== lastFrame) {
+                    lastFrame = frameIdx;
+                    heroFrameRef.current.src = `/hero-frames/frame-${String(frameIdx).padStart(3, '0')}.jpg`;
                 }
             }
         };
@@ -457,22 +458,23 @@ export default function TestLandingPage() {
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet" />
 
-            {/* Background image fallback + Video */}
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none', background: 'linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)), url(/queen-bg-mobile.jpg) center/cover no-repeat' }}>
-                <video
-                    ref={heroVideoRef}
-                    src="/hero-video.mp4"
-                    muted
-                    playsInline
-                    autoPlay
-                    preload="auto"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                    }}
-                />
-            </div>
+            {/* Background Frame */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+                ref={heroFrameRef}
+                src="/hero-frames/frame-001.jpg"
+                alt=""
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    zIndex: 1,
+                    pointerEvents: 'none',
+                }}
+            />
 
             {/* Loader Gate (hidden, same as current) */}
             <div id="loader-gate" style={{ display: 'none' }}>
