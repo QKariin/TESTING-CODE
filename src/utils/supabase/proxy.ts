@@ -49,7 +49,7 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(new URL('/home', request.url));
     }
 
-    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
+    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home') && !pathname.startsWith('/test') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
         return NextResponse.redirect(new URL('/home', request.url))
     }
 
