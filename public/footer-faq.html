@@ -938,6 +938,9 @@ function openFaqChat() {
     // Close global if open
     var gl = document.getElementById('globalOverlay');
     if (gl && gl.classList.contains('open')) gl.classList.remove('open');
+    // Close menu if open
+    var menu = document.getElementById('menuOverlay');
+    if (menu && menu.classList.contains('open')) { menu.classList.remove('open'); }
     var overlay = document.getElementById('faqChatOverlay');
     var body = document.getElementById('faqChatBody');
     if (!overlay || !body) return;
@@ -975,6 +978,9 @@ function toggleFaqChat() {
 
 /* ── NAV CLICK HANDLERS ── */
 function handleNavClick(section) {
+    // Close menu if open
+    var menu = document.getElementById('menuOverlay');
+    if (menu && menu.classList.contains('open')) { menu.classList.remove('open'); parent.postMessage({ type: 'faqClose' }, '*'); }
     // HOME just closes everything
     if (section === 'Home') {
         var faq = document.getElementById('faqChatOverlay');
@@ -997,6 +1003,9 @@ function handleNavClick(section) {
 function handleCenterClick() {
     // Dismiss access denied in parent
     parent.postMessage({ type: 'dismissAccessDenied' }, '*');
+    // Close menu if open
+    var menu = document.getElementById('menuOverlay');
+    if (menu && menu.classList.contains('open')) { menu.classList.remove('open'); }
     // Close global instantly if open, then open FAQ
     var gl = document.getElementById('globalOverlay');
     if (gl && gl.classList.contains('open')) {
