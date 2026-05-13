@@ -201,7 +201,7 @@ export default function TestLandingPage() {
     useEffect(() => {
         const handleScroll = () => {
             const y = window.scrollY;
-            setIsScrolled(y > window.innerHeight * 0.7);
+            setIsScrolled(y > window.innerHeight * 0.35);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
@@ -671,7 +671,8 @@ export default function TestLandingPage() {
                 </div>
 
                 {/* REVIEWS */}
-                <section className="funnel-section funnel-section-dark" id="reviews">
+                <section className="funnel-section" id="reviews" style={{ background: 'linear-gradient(135deg, #ff00ed, #000aff)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
                     <div className="funnel-label">TESTIMONIALS</div>
                     <div className="funnel-divider" />
                     <div id="reviewsContainer">
