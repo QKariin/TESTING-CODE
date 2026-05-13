@@ -220,7 +220,7 @@ export default function TestLandingPage() {
                 // Entering: how far the top has come into the viewport (0→1)
                 const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
                 // Leaving: starts fading when bottom crosses viewport middle (1→0)
-                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.4)));
+                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.8)));
                 const raw = Math.min(enterRaw, leaveRaw);
                 const progress = 1 - Math.pow(1 - raw, 2);
                 const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
@@ -687,38 +687,40 @@ export default function TestLandingPage() {
                         const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
 
                         return (
-                            <div key={i} className="grow-card" style={{ width: '100%', maxWidth: 600, padding: 6, borderRadius: 22, background: 'linear-gradient(135deg, #ff00ed, #000aff)' }}>
+                            <div key={i} style={{ display: 'contents' }}>
                                 {i === 0 && (
-                                    <div style={{ textAlign: 'center', padding: '18px 0 8px', fontFamily: 'Cinzel,serif', fontSize: 22, fontWeight: 700, letterSpacing: 8, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>TESTIMONIALS</div>
+                                    <div className="grow-card" style={{ width: '100%', maxWidth: 600, textAlign: 'center', padding: '18px 0 8px', fontFamily: 'Cinzel,serif', fontSize: 22, fontWeight: 700, letterSpacing: 8, color: '#c5a44e', textTransform: 'uppercase' }}>TESTIMONIALS</div>
                                 )}
-                                <div className="review-card" style={{ margin: 0, borderRadius: 18 }}>
-                                    <div className="review-header">
-                                        {avatar ? (
-                                            <img className="review-avatar" src={avatar} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                        ) : (
-                                            <div className="review-avatar-placeholder">{initial}</div>
-                                        )}
-                                        <div className="review-meta">
-                                            <div className="review-stars">
-                                                {Array.from({ length: 5 }, (_, s) => (
-                                                    <span key={s} className={s < rating ? 'star-on' : 'star-off'}>&#9733;</span>
-                                                ))}
+                                <div className="grow-card" style={{ width: '100%', maxWidth: 600, padding: 6, borderRadius: 22, background: 'linear-gradient(135deg, #ff00ed, #000aff)' }}>
+                                    <div className="review-card" style={{ margin: 0, borderRadius: 18 }}>
+                                        <div className="review-header">
+                                            {avatar ? (
+                                                <img className="review-avatar" src={avatar} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                            ) : (
+                                                <div className="review-avatar-placeholder">{initial}</div>
+                                            )}
+                                            <div className="review-meta">
+                                                <div className="review-stars">
+                                                    {Array.from({ length: 5 }, (_, s) => (
+                                                        <span key={s} className={s < rating ? 'star-on' : 'star-off'}>&#9733;</span>
+                                                    ))}
+                                                </div>
+                                                <div className="review-name">{name}</div>
+                                                <div className="review-merit">{merit.toLocaleString()} MERIT &middot; {tasks} TASKS</div>
+                                                <div className="review-hierarchy">{hierarchy.toUpperCase()}{servingHtml}</div>
                                             </div>
-                                            <div className="review-name">{name}</div>
-                                            <div className="review-merit">{merit.toLocaleString()} MERIT &middot; {tasks} TASKS</div>
-                                            <div className="review-hierarchy">{hierarchy.toUpperCase()}{servingHtml}</div>
                                         </div>
+                                        <div className="review-body clamped" id={`review-body-${i}`}>
+                                            <p>&ldquo;{r.text || ''}&rdquo;</p>
+                                        </div>
+                                        <button className="review-read-more" onClick={(e) => {
+                                            const body = document.getElementById(`review-body-${i}`);
+                                            if (body) {
+                                                const isClamped = body.classList.toggle('clamped');
+                                                (e.target as HTMLElement).textContent = isClamped ? 'READ MORE ▸' : 'SHOW LESS ▴';
+                                            }
+                                        }}>READ MORE ▸</button>
                                     </div>
-                                    <div className="review-body clamped" id={`review-body-${i}`}>
-                                        <p>&ldquo;{r.text || ''}&rdquo;</p>
-                                    </div>
-                                    <button className="review-read-more" onClick={(e) => {
-                                        const body = document.getElementById(`review-body-${i}`);
-                                        if (body) {
-                                            const isClamped = body.classList.toggle('clamped');
-                                            (e.target as HTMLElement).textContent = isClamped ? 'READ MORE ▸' : 'SHOW LESS ▴';
-                                        }
-                                    }}>READ MORE ▸</button>
                                 </div>
                             </div>
                         );
