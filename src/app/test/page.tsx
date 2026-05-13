@@ -216,9 +216,11 @@ export default function TestLandingPage() {
             sections.forEach(el => {
                 const rect = el.getBoundingClientRect();
                 const distFromBottom = vh - rect.top;
-                const progress = Math.max(0, Math.min(1, distFromBottom / (vh * 0.7)));
-                const scale = 0.1 + progress * 0.9;
-                const opacity = progress;
+                const raw = Math.max(0, Math.min(1, distFromBottom / (vh * 0.6)));
+                // Ease-out curve for smoother feel
+                const progress = 1 - Math.pow(1 - raw, 2);
+                const scale = 0.85 + progress * 0.15;
+                const opacity = 0.2 + progress * 0.8;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
                 el.style.setProperty('opacity', `${opacity}`, 'important');
             });
