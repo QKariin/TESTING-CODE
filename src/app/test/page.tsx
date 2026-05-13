@@ -209,8 +209,10 @@ export default function TestLandingPage() {
 
    useEffect(() => {
     let rafId: number;
+
     const loop = () => {
         const vh = window.innerHeight;
+        // The pivot point: Middle of the display
         const mid = vh / 2;
         const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
 
@@ -218,30 +220,38 @@ export default function TestLandingPage() {
             const isHero = el.tagName === 'HEADER';
             const rect = el.getBoundingClientRect();
 
-            // Entering: Stays full size once it is in the bottom half of the screen
+            // 1. Entering Logic: 
+            // Ensures the section is 100% size by the time it reaches the bottom/middle area.
             const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.3)));
 
-            // Leaving: 
-            // 1. (rect.bottom - mid) is the distance from the bottom of the card to the screen middle.
-            // 2. We divide by mid (vh / 2) so the shrink is gradual.
-            // 3. It is at 100% scale when bottom is at the middle, and reaches 0% scale as it moves up.
+            // 2. Leaving Logic (The Shrink):
+            // When rect.bottom is below 'mid', this is > 1 (clamped to 1 by Math.min).
+            // The moment rect.bottom crosses 'mid', it starts decreasing from 1 towards 0.
             const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / mid));
 
+            // Use the smaller of the two to determine the current state
             const raw = Math.min(enterRaw, leaveRaw);
             
-            // Smoothing the transition
+            // Smoothing the transition so it isn't linear/robotic
             const progress = 1 - Math.pow(1 - raw, 2);
 
+            // Calculate final values based on your original design specs
             const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
             const opacity = isHero ? 0.5 + progress * 0.5 : progress;
 
+            // Apply styles directly to the DOM
             el.style.setProperty('transform', `scale(${scale})`, 'important');
             el.style.setProperty('opacity', `${opacity}`, 'important');
         });
+
         rafId = requestAnimationFrame(loop);
     };
+
     rafId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafId);
+
+    return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+    };
 }, []);
     /* ── IntersectionObserver for glass-box ── */
     useEffect(() => {
