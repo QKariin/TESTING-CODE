@@ -478,21 +478,19 @@ export default function TestLandingPage() {
             </header>
 
             {/* Sticky nav — appears after scrolling past hero */}
-            {isScrolled && (
-                <div className="sticky-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', background: 'rgba(15,15,18,0.98)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: 14, fontWeight: 700, letterSpacing: 3, color: '#c5a059', lineHeight: 1 }}>Queen Karin&apos;s</span>
-                        <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 2 }}>
-                            <span style={{ fontFamily: 'Italianno,cursive', fontSize: 20, color: '#fff' }}>Kink</span>
-                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: 8, color: '#fff', opacity: 0.6, marginLeft: 4, letterSpacing: 4 }}>-DOM</span>
-                        </div>
+            <div className="sticky-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', background: 'rgba(15,15,18,0.98)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)', borderBottom: '1px solid rgba(197,160,89,0.1)', transition: 'transform 0.35s ease, opacity 0.35s ease', transform: isScrolled ? 'translateY(0)' : 'translateY(-100%)', opacity: isScrolled ? 1 : 0, pointerEvents: isScrolled ? 'auto' : 'none' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: 14, fontWeight: 700, letterSpacing: 3, color: '#c5a059', lineHeight: 1 }}>Queen Karin&apos;s</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 2 }}>
+                        <span style={{ fontFamily: 'Italianno,cursive', fontSize: 20, color: '#fff' }}>Kink</span>
+                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: 8, color: '#fff', opacity: 0.6, marginLeft: 4, letterSpacing: 4 }}>-DOM</span>
                     </div>
-                    <a href="/login" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 28px', background: 'linear-gradient(#080604,#080604) padding-box, linear-gradient(135deg,transparent,#c5a059 40%,transparent 60%,#c5a059) border-box', border: '1.5px solid transparent', borderRadius: 999 }}>JOIN</a>
                 </div>
-            )}
+                <a href="/login" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 28px', background: 'linear-gradient(#080604,#080604) padding-box, linear-gradient(135deg,transparent,#c5a059 40%,transparent 60%,#c5a059) border-box', border: '1.5px solid transparent', borderRadius: 999 }}>JOIN</a>
+            </div>
 
             {/* Main Content */}
-            <main className="content-flow" style={{ position: 'relative', zIndex: 3 }}>
+            <main className="content-flow" style={{ position: 'relative', zIndex: 2 }}>
 
                 {/* ABOUT — Header + Accordion drawers */}
                 <section className="funnel-section funnel-section-glass visible" id="about" style={{ opacity: 1, transform: 'none' }}>
