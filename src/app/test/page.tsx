@@ -672,26 +672,26 @@ export default function TestLandingPage() {
                     </div>
                 </div>
 
-                {/* REVIEWS */}
-                <section className="funnel-section" id="reviews" style={{ background: 'linear-gradient(135deg, #ff00ed, #000aff)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
-                    <div className="funnel-label">TESTIMONIALS</div>
-                    <div className="funnel-divider" />
-                    <div id="reviewsContainer">
-                        {reviews.map((r, i) => {
-                            const rev = r.reviewer || {};
-                            const name = rev.name || 'Loyal Subject';
-                            const avatar = rev.avatar || null;
-                            const hierarchy = rev.hierarchy || 'Hall Boy';
-                            const merit = rev.merit || 0;
-                            const tasks = rev.tasksCompleted || 0;
-                            const serving = rev.servingText || '';
-                            const rating = r.rating || 5;
-                            const initial = name.charAt(0).toUpperCase();
-                            const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
+                {/* REVIEWS — each card grows individually */}
+                <div id="reviews" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative', zIndex: 2 }}>
+                    {reviews.map((r, i) => {
+                        const rev = r.reviewer || {};
+                        const name = rev.name || 'Loyal Subject';
+                        const avatar = rev.avatar || null;
+                        const hierarchy = rev.hierarchy || 'Hall Boy';
+                        const merit = rev.merit || 0;
+                        const tasks = rev.tasksCompleted || 0;
+                        const serving = rev.servingText || '';
+                        const rating = r.rating || 5;
+                        const initial = name.charAt(0).toUpperCase();
+                        const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
 
-                            return (
-                                <div key={i} className="review-card">
+                        return (
+                            <div key={i} className="grow-card" style={{ width: '100%', maxWidth: 600, padding: 6, borderRadius: 22, background: 'linear-gradient(135deg, #ff00ed, #000aff)' }}>
+                                {i === 0 && (
+                                    <div style={{ textAlign: 'center', padding: '18px 0 8px', fontFamily: 'Cinzel,serif', fontSize: 22, fontWeight: 700, letterSpacing: 8, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>TESTIMONIALS</div>
+                                )}
+                                <div className="review-card" style={{ margin: 0, borderRadius: 18 }}>
                                     <div className="review-header">
                                         {avatar ? (
                                             <img className="review-avatar" src={avatar} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -720,10 +720,10 @@ export default function TestLandingPage() {
                                         }
                                     }}>READ MORE ▸</button>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </section>
+                            </div>
+                        );
+                    })}
+                </div>
 
                 {/* FINAL CTA */}
                 <section className="funnel-section funnel-section-glass final-cta">
