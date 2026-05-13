@@ -216,11 +216,13 @@ export default function TestLandingPage() {
             sections.forEach(el => {
                 const isHero = el.tagName === 'HEADER';
                 const rect = el.getBoundingClientRect();
-                const center = rect.top + rect.height / 2;
-                const distFromCenter = Math.abs(center - vh / 2) / (vh * 0.7);
-                const raw = Math.max(0, Math.min(1, 1 - distFromCenter));
+                const mid = vh / 2;
+                // Entering: how far the top has come into the viewport (0→1)
+                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
+                // Leaving: starts fading when bottom crosses viewport middle (1→0)
+                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.4)));
+                const raw = Math.min(enterRaw, leaveRaw);
                 const progress = 1 - Math.pow(1 - raw, 2);
-                // Hero: subtle 0.92→1, others: dramatic 0.55→1
                 const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
                 const opacity = isHero ? 0.5 + progress * 0.5 : progress;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
