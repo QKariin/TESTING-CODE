@@ -64,15 +64,28 @@ html, body {
     text-align: center;
 }
 .landing-bg {
-    position: absolute;
-    left: 0;
-    width: 100vw;
-    z-index: 0;
-    background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat;
-    pointer-events: none;
-    /* JS positions this manually to simulate fixed — iOS can't interfere */
+    position: fixed;
     top: 0;
-    height: 100vh;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    overflow: hidden;
+}
+.landing-bg::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    right: -50px;
+    bottom: -50px;
+    background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat;
+}
 }
 
 /* BACKGROUND */

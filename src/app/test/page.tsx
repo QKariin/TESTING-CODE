@@ -207,19 +207,11 @@ export default function TestLandingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* ── Scroll-driven scale + manual background positioning ── */
+    /* ── Scroll-driven scale ── */
     useEffect(() => {
         let rafId: number;
-        const bg = document.querySelector<HTMLElement>('.landing-bg');
-        // Lock background height once in pixels
-        if (bg) {
-            const h = window.innerHeight;
-            bg.style.height = (h + 100) + 'px';
-        }
         const loop = () => {
             const vh = window.innerHeight;
-            // Simulate position:fixed on background — immune to iOS viewport shifts
-            if (bg) bg.style.top = (window.scrollY - 50) + 'px';
             const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
             sections.forEach(el => {
                 const isHero = el.tagName === 'HEADER';
