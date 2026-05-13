@@ -336,12 +336,14 @@ html, body {
 .funnel-section {
     padding: 50px 25px;
     max-width: 600px;
-    margin: 0 auto;
+    margin: 0 auto 14px;
+    border-radius: 18px;
     text-align: center;
     opacity: 0;
     transform: translateY(30px);
     transition: opacity 0.8s ease, transform 0.8s ease;
     position: relative;
+    overflow: hidden;
 }
 .funnel-section { z-index: 1; }
 .funnel-section-dark {
