@@ -218,19 +218,20 @@ export default function TestLandingPage() {
             const isHero = el.tagName === 'HEADER';
             const rect = el.getBoundingClientRect();
 
-            // Entering: Reaches full scale/opacity quickly once it's 20% into the view
-            const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.2)));
+            // Entering: Stays full size once it is in the bottom half of the screen
+            const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.3)));
 
-            // Leaving: Triggers shrink/fade precisely when the bottom reaches the middle of the display
-            // Using a 100px transition window for a smooth but immediate-feeling exit
-            const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / 100));
+            // Leaving: 
+            // 1. (rect.bottom - mid) is the distance from the bottom of the card to the screen middle.
+            // 2. We divide by mid (vh / 2) so the shrink is gradual.
+            // 3. It is at 100% scale when bottom is at the middle, and reaches 0% scale as it moves up.
+            const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / mid));
 
             const raw = Math.min(enterRaw, leaveRaw);
             
-            // Apply smoothing curve
+            // Smoothing the transition
             const progress = 1 - Math.pow(1 - raw, 2);
 
-            // Scale and Opacity calculations
             const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
             const opacity = isHero ? 0.5 + progress * 0.5 : progress;
 
