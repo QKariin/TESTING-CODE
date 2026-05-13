@@ -711,6 +711,7 @@ export default function TestLandingPage() {
                 ref={footerFrameRef}
                 id="footerFrame"
                 src="/footer-faq.html"
+                onLoad={(e) => { (e.target as HTMLIFrameElement).style.opacity = '1'; }}
                 style={{
                     position: 'fixed',
                     bottom: 0,
@@ -721,6 +722,8 @@ export default function TestLandingPage() {
                     zIndex: 9999999,
                     background: 'transparent',
                     colorScheme: 'dark',
+                    opacity: 0,
+                    transition: 'opacity 0.3s ease',
                 }}
             />
 
