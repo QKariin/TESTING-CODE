@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function TestLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
-            <style>{`html, body { background-color: #000 !important; background-image: none !important; }`}</style>
+            <style>{`html, body { background-color: #000 !important; background-image: none !important; color-scheme: dark !important; }`}</style>
             {children}
         </>
     );

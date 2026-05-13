@@ -1039,12 +1039,12 @@ function showNotif() {
         var notif = document.getElementById('msgNotif');
         if (notif) notif.classList.add('active');
     }, 120);
-    // Auto-dismiss after 3 seconds, keep badge
+    // Auto-dismiss after 2 seconds, keep badge
     setTimeout(function() {
         var notif = document.getElementById('msgNotif');
         if (notif) notif.classList.remove('active');
         parent.postMessage({ type: 'notifHide' }, '*');
-    }, 3120);
+    }, 2120);
 }
 
 function dismissNotif() {

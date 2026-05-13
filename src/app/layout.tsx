@@ -57,7 +57,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ backgroundColor: '#000' }}>
+    <html lang="en" style={{ backgroundColor: '#000', colorScheme: 'dark' }}>
       <head>
         {/* Capture PWA install prompt as early as possible — before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window._deferredInstallPrompt=e;});` }} />
