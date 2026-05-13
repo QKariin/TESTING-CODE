@@ -207,13 +207,25 @@ export default function TestLandingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* ── IntersectionObserver for funnel-section ── */
+    /* ── Scroll-driven scale: sections grow/shrink based on viewport position ── */
     useEffect(() => {
-        const funnelObs = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-        }, { threshold: 0.15 });
-        document.querySelectorAll('.funnel-section').forEach(s => funnelObs.observe(s));
-        return () => funnelObs.disconnect();
+        let rafId: number;
+        const loop = () => {
+            const vh = window.innerHeight;
+            const sections = document.querySelectorAll<HTMLElement>('.funnel-section');
+            sections.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const distFromBottom = vh - rect.top;
+                const progress = Math.max(0, Math.min(1, distFromBottom / (vh * 0.7)));
+                const scale = 0.1 + progress * 0.9;
+                const opacity = progress;
+                el.style.setProperty('transform', `scale(${scale})`, 'important');
+                el.style.setProperty('opacity', `${opacity}`, 'important');
+            });
+            rafId = requestAnimationFrame(loop);
+        };
+        rafId = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(rafId);
     }, []);
 
     /* ── IntersectionObserver for glass-box ── */
@@ -493,7 +505,7 @@ export default function TestLandingPage() {
             <main className="content-flow" style={{ position: 'relative', zIndex: 2 }}>
 
                 {/* ABOUT — Header + Accordion drawers */}
-                <section className="funnel-section funnel-section-glass visible" id="about" style={{ opacity: 1, transform: 'none' }}>
+                <section className="funnel-section funnel-section-glass" id="about">
                     <div className="funnel-label" style={{ marginBottom: 10 }}>ABOUT ME</div>
                     <h2 className="funnel-title">Queen Karin</h2>
                     <div className="funnel-divider" />

@@ -340,8 +340,9 @@ html, body {
     border-radius: 18px;
     text-align: center;
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
+    transform: scale(0.15);
+    transform-origin: center center;
+    will-change: transform, opacity;
     position: relative;
     overflow: hidden;
 }
@@ -361,7 +362,7 @@ html, body {
     padding-right: 25px;
 }
 .funnel-section > * { position: relative; z-index: 1; }
-.funnel-section.visible { opacity: 1; transform: translateY(0); }
+/* .visible class no longer used — scroll-driven scale handles it */
 
 .funnel-label {
     font-family: 'Cinzel', serif;
