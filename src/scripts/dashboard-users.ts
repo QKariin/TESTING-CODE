@@ -386,7 +386,7 @@ export async function updateDetail(u: any) {
     updateTaskQueue(u);
     updateChatterRoutine(u, gen);
     updateChatterPending(u, gen);
-    renderRoutineCalendar(u);
+    renderRoutineCalendar(u, gen);
 
     // Notify React of lock state for this user
     if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
@@ -773,6 +773,7 @@ async function updateChatterRoutine(u: any, gen?: number) {
     let todayEntry: any = null;
     try {
         const res = await fetch(`/api/routines-history?email=${encodeURIComponent(email)}`);
+        if (gen !== undefined && gen !== _detailGen) return; // stale — user switched during fetch
         if (res.ok) {
             const data = await res.json();
             const todayStr = new Date().toDateString();
@@ -922,7 +923,7 @@ async function updateChatterPending(u: any, gen?: number) {
 }
 
 /** Routine calendar — shows each day of the current month with upload status */
-async function renderRoutineCalendar(u: any) {
+async function renderRoutineCalendar(u: any, gen?: number) {
     const section = document.getElementById('routineCalendarSection');
     const grid = document.getElementById('routineCalendarGrid');
     const calToggle = document.getElementById('dpCalToggle');
@@ -936,6 +937,7 @@ async function renderRoutineCalendar(u: any) {
     let routineEntries: any[] = [];
     try {
         const res = await fetch(`/api/routines-history?email=${encodeURIComponent(email)}`);
+        if (gen !== undefined && gen !== _detailGen) return; // stale — user switched during fetch
         if (res.ok) {
             const data = await res.json();
             routineEntries = data.entries || [];

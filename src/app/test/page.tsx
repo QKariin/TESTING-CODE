@@ -459,7 +459,7 @@ export default function TestLandingPage() {
                     <div className="tiny-seal">
                         <h2>NO AGENCIES &bull; NO BOTS &bull; NO FAKES</h2>
                     </div>
-                    <nav className="shelf-nav-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: 20, width: '100%', maxWidth: 300 }}>
+                    <nav className="shelf-nav-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', marginTop: 20, width: '100%', maxWidth: 300 }}>
                         <a href="#about" className="shelf-nav-btn">About Me</a>
                         <a href="#leaderboard-section" className="shelf-nav-btn">Hierarchy</a>
                         <a href="#services" className="shelf-nav-btn">Service</a>
@@ -506,20 +506,66 @@ export default function TestLandingPage() {
                     <div className="funnel-divider" />
                     <p className="funnel-text">Three years building what no platform dared to create. Not a profile on someone else&apos;s site. Not a clip store. A private world with its own economy, its own hierarchy, and one absolute ruler.</p>
                     <p className="funnel-text dim">I don&apos;t audition. I don&apos;t negotiate. I don&apos;t convince. I open doors, and I close them just as easily.</p>
+                    <div className="section-gallery">
+                        <div className="section-gallery-item"><img src="/queen-profile.png" alt="" /><div className="section-gallery-label">The Queen</div></div>
+                        <div className="section-gallery-item"><img src="/queen-bg-mobile.jpg" alt="" /><div className="section-gallery-label">My World</div></div>
+                    </div>
                 </section>
 
-                {/* MARQUEE */}
-                <div style={{ overflow: 'hidden', margin: '0 -20px', maskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)', WebkitMaskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)' }}>
-                    <div className="home-marquee" style={{ display: 'flex', alignItems: 'center', gap: 0, whiteSpace: 'nowrap', fontFamily: 'Cinzel,serif', fontSize: 'clamp(1rem,3.5vw,1.15rem)', color: 'rgba(255,255,255,0.75)', fontWeight: 600, letterSpacing: 4, textTransform: 'uppercase' }}>
-                        <MarqueeTrack />
-                        <MarqueeTrack />
+                <section className="funnel-section">
+                    <div className="funnel-label">FEMDOM</div>
+                    <div className="funnel-divider" />
+                    <p className="funnel-text">Control is not a roleplay I put on. It is who I am. Every interaction, every rule, every punishment exists because I designed it that way. Obedience is not requested. It is the price of entry.</p>
+                    <p className="funnel-text dim">I don&apos;t play Domme. I live it. The difference is everything.</p>
+                    <div className="section-gallery">
+                        <div className="section-gallery-item"><img src="/queen-karin.png" alt="" /><div className="section-gallery-label">Authority</div></div>
+                        <div className="section-gallery-item"><img src="/login-bg.png" alt="" /><div className="section-gallery-label">Discipline</div></div>
                     </div>
-                </div>
+                </section>
+
+                <section className="funnel-section">
+                    <div className="funnel-label">KINKS</div>
+                    <div className="funnel-divider" />
+                    <p className="funnel-text">Chastity. Financial domination. Sissification. Task training. Body worship. Humiliation. Not a menu to pick from. A system to be placed into, based on what I decide you need.</p>
+                    <p className="funnel-text dim">You don&apos;t choose your kink here. I do.</p>
+                    <div className="section-gallery three-up">
+                        <div className="section-gallery-item"><img src="/collar-placeholder.png" alt="" /><div className="section-gallery-label">Chastity</div></div>
+                        <div className="section-gallery-item"><img src="/academy-obedience.png" alt="" /><div className="section-gallery-label">Training</div></div>
+                        <div className="section-gallery-item"><img src="/hero-bg.png" alt="" /><div className="section-gallery-label">Worship</div></div>
+                    </div>
+                </section>
+
+                <section className="funnel-section">
+                    <div className="funnel-label">VANILLA</div>
+                    <div className="funnel-divider" />
+                    <p className="funnel-text">Behind the protocol there is a real woman. I travel, I cook, I laugh too loud, I overthink everything. I build things obsessively and care deeply about the people in my world.</p>
+                    <p className="funnel-text dim">Kink without personality is just noise. You are not serving a character. You are serving a person.</p>
+                    <div className="section-gallery">
+                        <div className="section-gallery-item wide"><img src="/og-cover.png" alt="" /><div className="section-gallery-label">The Real Me</div></div>
+                    </div>
+                </section>
+
+                <section className="funnel-section">
+                    <div className="funnel-label">GOALS</div>
+                    <div className="funnel-divider" />
+                    <p className="funnel-text">This app is only the beginning. A full ecosystem where devotion has real weight, real consequence, and real reward. A household that operates like a private empire, not a content page.</p>
+                    <p className="funnel-text dim">I am not building a following. I am building a legacy.</p>
+                    <div className="section-gallery">
+                        <div className="section-gallery-item"><img src="/queen-bg-desktop.png" alt="" /><div className="section-gallery-label">The Vision</div></div>
+                        <div className="section-gallery-item"><img src="/queen-nav.png" alt="" /><div className="section-gallery-label">The Empire</div></div>
+                    </div>
+                </section>
 
                 {/* LEADERBOARD */}
                 <section className="funnel-section" id="leaderboard-section">
                     <div className="funnel-label">THE HIERARCHY</div>
                     <div className="funnel-divider" />
+                    <div style={{ overflow: 'hidden', margin: '0 -20px 20px', maskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)', WebkitMaskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)' }}>
+                        <div className="home-marquee" style={{ display: 'flex', alignItems: 'center', gap: 0, whiteSpace: 'nowrap', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase' }}>
+                            <MarqueeTrack />
+                            <MarqueeTrack />
+                        </div>
+                    </div>
                     <div className="lb-tabs">
                         {(['today', 'weekly', 'monthly', 'alltime'] as const).map(period => {
                             const labels: Record<string, string> = { today: 'TODAY', weekly: 'WEEK', monthly: 'MONTH', alltime: 'ALL' };
@@ -634,9 +680,16 @@ export default function TestLandingPage() {
                                             <div className="review-hierarchy">{hierarchy.toUpperCase()}{servingHtml}</div>
                                         </div>
                                     </div>
-                                    <div className="review-body">
+                                    <div className="review-body clamped" id={`review-body-${i}`}>
                                         <p>&ldquo;{r.text || ''}&rdquo;</p>
                                     </div>
+                                    <button className="review-read-more" onClick={(e) => {
+                                        const body = document.getElementById(`review-body-${i}`);
+                                        if (body) {
+                                            const isClamped = body.classList.toggle('clamped');
+                                            (e.target as HTMLElement).textContent = isClamped ? 'READ MORE ▸' : 'SHOW LESS ▴';
+                                        }
+                                    }}>READ MORE ▸</button>
                                 </div>
                             );
                         })}
