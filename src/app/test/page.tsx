@@ -572,7 +572,7 @@ export default function TestLandingPage() {
 
                 {/* LEADERBOARD */}
                 <section className="funnel-section" id="leaderboard-section" style={{ background: 'linear-gradient(135deg, #ff00ed, #000aff)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
                     <div className="funnel-label">THE HIERARCHY</div>
                     <div className="funnel-divider" />
                     <div style={{ overflow: 'hidden', margin: '0 -20px 20px', maskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)', WebkitMaskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)' }}>
@@ -792,7 +792,6 @@ export default function TestLandingPage() {
             ref={footerFrameRef}
             id="footerFrame"
             src="/footer-faq.html"
-            onLoad={(e) => { (e.target as HTMLIFrameElement).style.opacity = '1'; }}
             style={{
                 position: 'fixed',
                 bottom: 0,
@@ -803,8 +802,6 @@ export default function TestLandingPage() {
                 zIndex: 9999999,
                 background: 'transparent',
                 colorScheme: 'dark',
-                opacity: 0,
-                transition: 'opacity 0.3s ease',
             }}
         />
 

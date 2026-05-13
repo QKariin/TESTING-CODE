@@ -364,6 +364,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .global-body {
     flex: 1; overflow-y: auto; padding: 0;
     -webkit-overflow-scrolling: touch;
+    background: rgba(0,0,0,0.65);
 }
 .global-body::-webkit-scrollbar { display: none; }
 
@@ -392,6 +393,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     display: flex; align-items: center; gap: 14px;
     padding: 14px 16px; border-left: 2px solid transparent;
     transition: all 0.3s; animation: faqFadeIn 0.4s ease forwards;
+    background: rgba(0,0,0,0.35); border-radius: 12px; margin: 0 10px 6px;
 }
 .gl-lb-entry.top1 { background: rgba(197,160,89,0.06); border-left-color: rgba(197,160,89,0.35); }
 .gl-lb-entry.top2, .gl-lb-entry.top3 { border-left-color: rgba(197,160,89,0.2); }
@@ -422,7 +424,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .gl-lb-score { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; flex-shrink: 0; }
 .gl-lb-entry.top1 .gl-lb-score { color: #c5a059; }
 .gl-lb-entry:not(.top1) .gl-lb-score { color: rgba(197,160,89,0.5); }
-.gl-lb-entry.minor { padding: 10px 15px; border-left-color: transparent; }
+.gl-lb-entry.minor { padding: 10px 15px; border-left-color: transparent; background: rgba(0,0,0,0.15); }
 .gl-lb-entry.minor .gl-lb-rank { font-size: 0.75rem; color: rgba(255,255,255,0.1); }
 .gl-lb-entry.minor .gl-lb-avatar { width: 30px; height: 30px; opacity: 0.5; }
 .gl-lb-entry.minor .gl-lb-name { font-size: 0.7rem; color: rgba(255,255,255,0.25); }
