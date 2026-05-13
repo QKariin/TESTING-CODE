@@ -324,6 +324,9 @@ export default function TestLandingPage() {
 
     /* ── Apply body styles for the page ── */
     useEffect(() => {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
+
         document.body.style.margin = '0';
         document.body.style.padding = '0';
         const html = document.documentElement;
@@ -426,6 +429,9 @@ export default function TestLandingPage() {
 
     return (
         <div className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
+            {/* Fixed background — works on iOS */}
+            <div className="landing-bg" />
+
             {/* Google Fonts */}
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
             <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -57,11 +57,18 @@ html, body {
     width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
-    background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat fixed !important;
+    background: transparent !important;
     color: #fff;
     font-family: 'Cinzel', serif;
     line-height: 1.6;
     text-align: center;
+}
+.landing-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat;
+    pointer-events: none;
 }
 
 /* BACKGROUND */
