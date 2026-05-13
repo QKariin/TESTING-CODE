@@ -344,6 +344,20 @@ html, body {
     position: relative;
 }
 .funnel-section { z-index: 1; }
+.funnel-section-dark {
+    background: #08080a;
+    max-width: 100%;
+    padding-left: 25px;
+    padding-right: 25px;
+}
+.funnel-section-glass {
+    background: rgba(5,5,6,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    max-width: 100%;
+    padding-left: 25px;
+    padding-right: 25px;
+}
 .funnel-section > * { position: relative; z-index: 1; }
 .funnel-section.visible { opacity: 1; transform: translateY(0); }
 
@@ -383,6 +397,56 @@ html, body {
     font-weight: 400;
 }
 .funnel-text.dim { color: #666; font-style: italic; }
+
+/* ABOUT DRAWERS */
+.about-drawer {
+    border-bottom: 1px solid rgba(197,160,89,0.1);
+    text-align: left;
+}
+.about-drawer:first-of-type {
+    border-top: 1px solid rgba(197,160,89,0.1);
+}
+.about-drawer-title {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+.about-drawer-name {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-right: 8px;
+}
+.about-drawer-sub {
+    font-family: 'Italianno', cursive;
+    font-size: 24px;
+    color: rgba(255,255,255,0.6);
+}
+.about-drawer-arrow {
+    font-size: 14px;
+    color: rgba(197,160,89,0.4);
+    flex-shrink: 0;
+}
+.about-drawer-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+    padding: 0 4px;
+    text-align: center;
+}
+.about-drawer.open .about-drawer-body {
+    max-height: 800px;
+    padding: 10px 4px 30px;
+}
 
 /* SECTION GALLERY */
 .section-gallery {
@@ -482,19 +546,20 @@ html, body {
 }
 .service-card h3 {
     font-family: 'Cinzel', serif;
-    font-size: 20px;
-    letter-spacing: 6px;
+    font-size: 14px;
+    letter-spacing: 5px;
     color: #fff;
-    margin-bottom: 18px;
+    margin-bottom: 15px;
     font-weight: 400;
 }
 .service-card p {
-    font-family: 'Cinzel', serif;
-    font-size: 15px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
     color: #b5b0a8;
-    line-height: 1.9;
+    line-height: 1.8;
     margin-bottom: 25px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
+    font-weight: 400;
 }
 .service-cta {
     font-family: 'Cinzel', serif;

@@ -144,6 +144,7 @@ export default function TestLandingPage() {
     const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
     const [toastClass, setToastClass] = useState('');
     const [accessDenied, setAccessDenied] = useState<{ section: string } | null>(null);
+    const [openAbout, setOpenAbout] = useState<string | null>(null);
 
     // Refs
     const faqIsOpenRef = useRef(false);
@@ -491,67 +492,71 @@ export default function TestLandingPage() {
             )}
 
             {/* Main Content */}
-            <main className="content-flow" style={{ position: 'relative', zIndex: 3, background: 'rgba(5,5,6,0.82)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+            <main className="content-flow" style={{ position: 'relative', zIndex: 3 }}>
 
-                {/* ABOUT */}
-                <section className="funnel-section" id="about">
-                    <div className="funnel-label">THE SOVEREIGN</div>
+                {/* ABOUT — Header + Accordion drawers */}
+                <section className="funnel-section funnel-section-glass visible" id="about" style={{ opacity: 1, transform: 'none' }}>
+                    <div className="funnel-label" style={{ marginBottom: 10 }}>ABOUT ME</div>
                     <h2 className="funnel-title">Queen Karin</h2>
                     <div className="funnel-divider" />
                     <p className="funnel-text">Three years building what no platform dared to create. Not a profile on someone else&apos;s site. Not a clip store. A private world with its own economy, its own hierarchy, and one absolute ruler.</p>
                     <p className="funnel-text dim">I don&apos;t audition. I don&apos;t negotiate. I don&apos;t convince. I open doors, and I close them just as easily.</p>
-                    <div className="section-gallery">
+                    <div className="section-gallery" style={{ marginBottom: 30 }}>
                         <div className="section-gallery-item"><img src="/queen-profile.png" alt="" /><div className="section-gallery-label">The Queen</div></div>
                         <div className="section-gallery-item"><img src="/queen-bg-mobile.jpg" alt="" /><div className="section-gallery-label">My World</div></div>
                     </div>
-                </section>
 
-                <section className="funnel-section">
-                    <div className="funnel-label">FEMDOM</div>
-                    <div className="funnel-divider" />
-                    <p className="funnel-text">Control is not a roleplay I put on. It is who I am. Every interaction, every rule, every punishment exists because I designed it that way. Obedience is not requested. It is the price of entry.</p>
-                    <p className="funnel-text dim">I don&apos;t play Domme. I live it. The difference is everything.</p>
-                    <div className="section-gallery">
-                        <div className="section-gallery-item"><img src="/queen-karin.png" alt="" /><div className="section-gallery-label">Authority</div></div>
-                        <div className="section-gallery-item"><img src="/login-bg.png" alt="" /><div className="section-gallery-label">Discipline</div></div>
-                    </div>
-                </section>
-
-                <section className="funnel-section">
-                    <div className="funnel-label">KINKS</div>
-                    <div className="funnel-divider" />
-                    <p className="funnel-text">Chastity. Financial domination. Sissification. Task training. Body worship. Humiliation. Not a menu to pick from. A system to be placed into, based on what I decide you need.</p>
-                    <p className="funnel-text dim">You don&apos;t choose your kink here. I do.</p>
-                    <div className="section-gallery three-up">
-                        <div className="section-gallery-item"><img src="/collar-placeholder.png" alt="" /><div className="section-gallery-label">Chastity</div></div>
-                        <div className="section-gallery-item"><img src="/academy-obedience.png" alt="" /><div className="section-gallery-label">Training</div></div>
-                        <div className="section-gallery-item"><img src="/hero-bg.png" alt="" /><div className="section-gallery-label">Worship</div></div>
-                    </div>
-                </section>
-
-                <section className="funnel-section">
-                    <div className="funnel-label">VANILLA</div>
-                    <div className="funnel-divider" />
-                    <p className="funnel-text">Behind the protocol there is a real woman. I travel, I cook, I laugh too loud, I overthink everything. I build things obsessively and care deeply about the people in my world.</p>
-                    <p className="funnel-text dim">Kink without personality is just noise. You are not serving a character. You are serving a person.</p>
-                    <div className="section-gallery">
-                        <div className="section-gallery-item wide"><img src="/og-cover.png" alt="" /><div className="section-gallery-label">The Real Me</div></div>
-                    </div>
-                </section>
-
-                <section className="funnel-section">
-                    <div className="funnel-label">GOALS</div>
-                    <div className="funnel-divider" />
-                    <p className="funnel-text">This app is only the beginning. A full ecosystem where devotion has real weight, real consequence, and real reward. A household that operates like a private empire, not a content page.</p>
-                    <p className="funnel-text dim">I am not building a following. I am building a legacy.</p>
-                    <div className="section-gallery">
-                        <div className="section-gallery-item"><img src="/queen-bg-desktop.png" alt="" /><div className="section-gallery-label">The Vision</div></div>
-                        <div className="section-gallery-item"><img src="/queen-nav.png" alt="" /><div className="section-gallery-label">The Empire</div></div>
-                    </div>
+                    {[
+                        { key: 'femdom', title: 'Queen Karin', subtitle: 'The FemDom', content: (<>
+                            <p className="funnel-text">Control is not a roleplay I put on. It is who I am. Every interaction, every rule, every punishment exists because I designed it that way. Obedience is not requested. It is the price of entry.</p>
+                            <p className="funnel-text dim">I don&apos;t play Domme. I live it. The difference is everything.</p>
+                            <div className="section-gallery">
+                                <div className="section-gallery-item"><img src="/queen-karin.png" alt="" /><div className="section-gallery-label">Authority</div></div>
+                                <div className="section-gallery-item"><img src="/login-bg.png" alt="" /><div className="section-gallery-label">Discipline</div></div>
+                            </div>
+                        </>) },
+                        { key: 'kinks', title: "Queen Karin's", subtitle: 'Kinks', content: (<>
+                            <p className="funnel-text">Chastity. Financial domination. Sissification. Task training. Body worship. Humiliation. Not a menu to pick from. A system to be placed into, based on what I decide you need.</p>
+                            <p className="funnel-text dim">You don&apos;t choose your kink here. I do.</p>
+                            <div className="section-gallery three-up">
+                                <div className="section-gallery-item"><img src="/collar-placeholder.png" alt="" /><div className="section-gallery-label">Chastity</div></div>
+                                <div className="section-gallery-item"><img src="/academy-obedience.png" alt="" /><div className="section-gallery-label">Training</div></div>
+                                <div className="section-gallery-item"><img src="/hero-bg.png" alt="" /><div className="section-gallery-label">Worship</div></div>
+                            </div>
+                        </>) },
+                        { key: 'vanilla', title: 'Queen Karin', subtitle: 'The Human', content: (<>
+                            <p className="funnel-text">Behind the protocol there is a real woman. I travel, I cook, I laugh too loud, I overthink everything. I build things obsessively and care deeply about the people in my world.</p>
+                            <p className="funnel-text dim">Kink without personality is just noise. You are not serving a character. You are serving a person.</p>
+                            <div className="section-gallery">
+                                <div className="section-gallery-item wide"><img src="/og-cover.png" alt="" /><div className="section-gallery-label">The Real Me</div></div>
+                            </div>
+                        </>) },
+                        { key: 'goals', title: "Queen Karin's", subtitle: 'Goals', content: (<>
+                            <p className="funnel-text">This app is only the beginning. A full ecosystem where devotion has real weight, real consequence, and real reward. A household that operates like a private empire, not a content page.</p>
+                            <p className="funnel-text dim">I am not building a following. I am building a legacy.</p>
+                            <div className="section-gallery">
+                                <div className="section-gallery-item"><img src="/queen-bg-desktop.png" alt="" /><div className="section-gallery-label">The Vision</div></div>
+                                <div className="section-gallery-item"><img src="/queen-nav.png" alt="" /><div className="section-gallery-label">The Empire</div></div>
+                            </div>
+                        </>) },
+                    ].map(s => (
+                        <div key={s.key} className={`about-drawer${openAbout === s.key ? ' open' : ''}`}>
+                            <button className="about-drawer-title" onClick={() => setOpenAbout(openAbout === s.key ? null : s.key)}>
+                                <div>
+                                    <span className="about-drawer-name">{s.title}</span>
+                                    <span className="about-drawer-sub">{s.subtitle}</span>
+                                </div>
+                                <span className="about-drawer-arrow">{openAbout === s.key ? '▴' : '▾'}</span>
+                            </button>
+                            <div className="about-drawer-body">
+                                {s.content}
+                            </div>
+                        </div>
+                    ))}
                 </section>
 
                 {/* LEADERBOARD */}
-                <section className="funnel-section" id="leaderboard-section">
+                <section className="funnel-section funnel-section-dark" id="leaderboard-section">
                     <div className="funnel-label">THE HIERARCHY</div>
                     <div className="funnel-divider" />
                     <div style={{ overflow: 'hidden', margin: '0 -20px 20px', maskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)', WebkitMaskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)' }}>
@@ -598,7 +603,7 @@ export default function TestLandingPage() {
                 </section>
 
                 {/* SERVICES */}
-                <section className="funnel-section" id="services">
+                <section className="funnel-section funnel-section-glass" id="services">
                     <div className="funnel-label">SERVICES</div>
                     <div className="funnel-divider" />
 
@@ -639,7 +644,7 @@ export default function TestLandingPage() {
                 </section>
 
                 {/* REVIEWS */}
-                <section className="funnel-section" id="reviews">
+                <section className="funnel-section funnel-section-dark" id="reviews">
                     <div className="funnel-label">TESTIMONIALS</div>
                     <div className="funnel-divider" />
                     <div id="reviewsContainer">
@@ -691,7 +696,7 @@ export default function TestLandingPage() {
                 </section>
 
                 {/* FINAL CTA */}
-                <section className="funnel-section final-cta">
+                <section className="funnel-section funnel-section-glass final-cta">
                     <p className="funnel-text dim" style={{ marginBottom: 15 }}>You either feel it or you don&apos;t.</p>
                     <a href="/login" className="btn-join">JOIN NOW</a>
                     <p className="funnel-text dim" style={{ marginTop: 40, fontSize: 10, opacity: 0.3 }}>I don&apos;t convince. I open doors.</p>
