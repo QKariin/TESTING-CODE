@@ -218,7 +218,7 @@ export default function TestLandingPage() {
                 const rect = el.getBoundingClientRect();
                 const mid = vh / 2;
                 // Entering: how far the top has come into the viewport (0→1)
-                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.3)));
+                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.9)));
                 // Leaving: starts fading when bottom crosses viewport middle (1→0), slow fade
                 const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 1.5)));
                 const raw = Math.min(enterRaw, leaveRaw);
