@@ -144,7 +144,6 @@ export default function TestLandingPage() {
     const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
     const [toastClass, setToastClass] = useState('');
     const [accessDenied, setAccessDenied] = useState<{ section: string } | null>(null);
-    const [menuOpen, setMenuOpen] = useState(false);
 
     // Refs
     const faqIsOpenRef = useRef(false);
@@ -276,8 +275,9 @@ export default function TestLandingPage() {
             if (e.data.type === 'dismissAccessDenied') {
                 setAccessDenied(null);
             }
-            if (e.data.type === 'openMenu') {
-                setMenuOpen(prev => !prev);
+            if (e.data.type === 'menuNavigate') {
+                const el = document.querySelector(e.data.hash);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
             }
         };
         window.addEventListener('message', handleMessage);
@@ -487,18 +487,6 @@ export default function TestLandingPage() {
                         </div>
                     </div>
                     <a href="/login" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 28px', background: 'linear-gradient(#080604,#080604) padding-box, linear-gradient(135deg,transparent,#c5a059 40%,transparent 60%,#c5a059) border-box', border: '1.5px solid transparent', borderRadius: 999 }}>JOIN</a>
-                </div>
-            )}
-
-            {/* Menu overlay from footer hamburger */}
-            {menuOpen && (
-                <div className="hamburger-menu" style={{ position: 'fixed', bottom: 'calc(60px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 9999998 }}>
-                    <a href="#about" onClick={() => setMenuOpen(false)}>About Me</a>
-                    <a href="#leaderboard-section" onClick={() => setMenuOpen(false)}>Hierarchy</a>
-                    <a href="#services" onClick={() => setMenuOpen(false)}>Service</a>
-                    <a href="#reviews" onClick={() => setMenuOpen(false)}>Feedback</a>
-                    <button onClick={() => { setMenuOpen(false); const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
-                    <a href="/login" onClick={() => setMenuOpen(false)}>Join Now</a>
                 </div>
             )}
 

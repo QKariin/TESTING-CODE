@@ -334,7 +334,7 @@ html, body {
 
 /* FUNNEL SECTIONS */
 .funnel-section {
-    padding: 80px 25px;
+    padding: 50px 25px;
     max-width: 600px;
     margin: 0 auto;
     text-align: center;
@@ -374,12 +374,13 @@ html, body {
     opacity: 0.4;
 }
 .funnel-text {
-    font-family: 'Cinzel', serif;
-    font-size: 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
     color: #bbb;
-    line-height: 2;
-    letter-spacing: 0.5px;
+    line-height: 1.9;
+    letter-spacing: 0.3px;
     margin-bottom: 15px;
+    font-weight: 400;
 }
 .funnel-text.dim { color: #666; font-style: italic; }
 

@@ -237,17 +237,18 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 }
 .fake-nav-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
-/* MESSAGE BADGE on avatar */
+/* MESSAGE BADGE above center button */
 .msg-badge {
-    position: absolute; top: -2px; right: -4px; width: 22px; height: 18px;
+    position: absolute; top: -14px; left: 50%; width: 20px; height: 16px;
+    transform: translateX(-50%) rotate(-90deg);
     display: none; z-index: 2;
     filter: drop-shadow(0 0 4px rgba(197,160,89,0.9));
     animation: msgBadgePop 1.8s ease-in-out infinite;
 }
 .msg-badge.active { display: block; }
 @keyframes msgBadgePop {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+    0%, 100% { transform: translateX(-50%) rotate(-90deg) scale(1); }
+    50% { transform: translateX(-50%) rotate(-90deg) scale(1.2); }
 }
 
 /* NOTIFICATION BAR */
@@ -292,6 +293,44 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 @keyframes notifSlideUp {
     from { opacity: 0; transform: translateX(-50%) translateY(20px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* MENU OVERLAY */
+.menu-overlay {
+    position: fixed; top: 0; left: 0; right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    z-index: 99999; background: #020512;
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.35s;
+}
+.menu-overlay.open { transform: translateY(0); visibility: visible; }
+.menu-body {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 30px; gap: 22px;
+}
+.menu-nav-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    font-weight: 700;
+    color: #c5a059;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 16px 28px;
+    background: linear-gradient(rgba(5,5,6,0.4), rgba(5,5,6,0.4)) padding-box, linear-gradient(135deg, transparent, #c5a059 40%, transparent 60%, #c5a059) border-box;
+    border: 1.5px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    box-shadow: inset 0 0 0 1px rgba(26,20,8,0.5), 0 0 20px rgba(197, 160, 89, 0.18), 0 6px 24px rgba(0, 0, 0, 0.72);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 300px;
 }
 
 /* GLOBAL OVERLAY */
@@ -504,6 +543,22 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     </div>
 </div>
 
+<!-- MENU OVERLAY -->
+<div id="menuOverlay" class="menu-overlay">
+    <div class="global-header">
+        <span class="global-header-title">MENU</span>
+        <button class="global-close" onclick="closeMenu()">&#10005;</button>
+    </div>
+    <div class="menu-body">
+        <button class="menu-nav-btn" onclick="menuNavigate('#about')">About Me</button>
+        <button class="menu-nav-btn" onclick="menuNavigate('#leaderboard-section')">Hierarchy</button>
+        <button class="menu-nav-btn" onclick="menuNavigate('#services')">Service</button>
+        <button class="menu-nav-btn" onclick="menuNavigate('#reviews')">Feedback</button>
+        <button class="menu-nav-btn" onclick="closeMenu();openFaqChat();">FAQ</button>
+        <a class="menu-nav-btn" href="/login" target="_top">Join Now</a>
+    </div>
+</div>
+
 <!-- FOOTER NAV -->
 <nav class="fake-nav">
     <button class="fake-nav-btn" onclick="handleNavClick('Home')">
@@ -527,7 +582,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
         <span class="fake-nav-icon">&#9678;</span>
         <span class="fake-nav-label">GLOBAL</span>
     </button>
-    <button class="fake-nav-btn" onclick="parent.postMessage({type:'openMenu'},'*')">
+    <button class="fake-nav-btn" onclick="toggleMenu()">
         <span class="fake-nav-icon" style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:1rem"><span style="width:18px;height:1.5px;background:rgba(197,160,89,0.35)"></span><span style="width:18px;height:1.5px;background:rgba(197,160,89,0.35)"></span><span style="width:18px;height:1.5px;background:rgba(197,160,89,0.35)"></span></span>
         <span class="fake-nav-label">MENU</span>
     </button>
@@ -975,6 +1030,12 @@ function showNotif() {
         var notif = document.getElementById('msgNotif');
         if (notif) notif.classList.add('active');
     }, 120);
+    // Auto-dismiss after 3 seconds, keep badge
+    setTimeout(function() {
+        var notif = document.getElementById('msgNotif');
+        if (notif) notif.classList.remove('active');
+        parent.postMessage({ type: 'notifHide' }, '*');
+    }, 3120);
 }
 
 function dismissNotif() {
@@ -1171,8 +1232,16 @@ function openGlobal() {
     if (faq && faq.classList.contains('open')) {
         faq.style.transition = 'none';
         faq.classList.remove('open');
-        faq.offsetHeight; // force reflow
+        faq.offsetHeight;
         faq.style.transition = '';
+    }
+    // Force-close Menu if open
+    var menu = document.getElementById('menuOverlay');
+    if (menu && menu.classList.contains('open')) {
+        menu.style.transition = 'none';
+        menu.classList.remove('open');
+        menu.offsetHeight;
+        menu.style.transition = '';
     }
     // Dismiss access denied in parent
     parent.postMessage({ type: 'dismissAccessDenied' }, '*');
@@ -1198,6 +1267,51 @@ function toggleGlobal() {
     if (!overlay) return;
     if (overlay.classList.contains('open')) { closeGlobal(); return; }
     openGlobal();
+}
+
+/* ── MENU OVERLAY ── */
+function openMenu() {
+    // Close FAQ if open
+    var faq = document.getElementById('faqChatOverlay');
+    if (faq && faq.classList.contains('open')) {
+        faq.style.transition = 'none';
+        faq.classList.remove('open');
+        faq.offsetHeight;
+        faq.style.transition = '';
+    }
+    // Close Global if open
+    var gl = document.getElementById('globalOverlay');
+    if (gl && gl.classList.contains('open')) {
+        gl.style.transition = 'none';
+        gl.classList.remove('open');
+        gl.offsetHeight;
+        gl.style.transition = '';
+    }
+    dismissNotif();
+    parent.postMessage({ type: 'dismissAccessDenied' }, '*');
+    var overlay = document.getElementById('menuOverlay');
+    if (!overlay) return;
+    parent.postMessage({ type: 'faqOpen' }, '*');
+    overlay.classList.add('open');
+}
+
+function closeMenu() {
+    var overlay = document.getElementById('menuOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    parent.postMessage({ type: 'faqClose' }, '*');
+}
+
+function toggleMenu() {
+    var overlay = document.getElementById('menuOverlay');
+    if (!overlay) return;
+    if (overlay.classList.contains('open')) { closeMenu(); return; }
+    openMenu();
+}
+
+function menuNavigate(hash) {
+    closeMenu();
+    parent.postMessage({ type: 'menuNavigate', hash: hash }, '*');
 }
 
 // Listen for parent messages (e.g. openFaq)
