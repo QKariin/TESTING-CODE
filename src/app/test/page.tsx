@@ -219,8 +219,8 @@ export default function TestLandingPage() {
                 const raw = Math.max(0, Math.min(1, distFromBottom / (vh * 0.6)));
                 // Ease-out curve for smoother feel
                 const progress = 1 - Math.pow(1 - raw, 2);
-                const scale = 0.85 + progress * 0.15;
-                const opacity = 0.2 + progress * 0.8;
+                const scale = 0.55 + progress * 0.45;
+                const opacity = progress;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
                 el.style.setProperty('opacity', `${opacity}`, 'important');
             });
