@@ -719,7 +719,7 @@ export default function TestLandingPage() {
                     height: 'calc(140px + env(safe-area-inset-bottom))',
                     border: 'none',
                     zIndex: 9999999,
-                    background: 'transparent',
+                    background: '#000',
                     colorScheme: 'dark',
                 }}
             />
