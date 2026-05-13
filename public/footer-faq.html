@@ -375,8 +375,8 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .gl-section-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(197,160,89,0.12)); }
 .gl-section-line-r { background: linear-gradient(90deg, rgba(197,160,89,0.12), transparent); }
 .gl-section-text {
-    font-family: 'Orbitron', sans-serif; font-size: 0.4rem; font-weight: 500;
-    color: rgba(197,160,89,0.3); letter-spacing: 5px;
+    font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700;
+    color: rgba(197,160,89,0.5); letter-spacing: 5px;
 }
 .gl-lb-tabs {
     display: flex; justify-content: center; gap: 0; padding: 0 16px 12px;
@@ -1141,14 +1141,37 @@ function loadGlLeaderboard(period, tab) {
                 c.innerHTML = '<div class="gl-empty">No scores yet</div>';
                 return;
             }
+            var starSvg = '<svg width="W" height="W" viewBox="0 0 24 24" fill="F" style="position:absolute;TOP;LEFT;opacity:O"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>';
+            var stars = [
+                {w:12,f:'#c5a059',t:'top:3px',l:'left:6px',o:0.15},
+                {w:18,f:'#fff',t:'top:8px',l:'left:22%',o:0.08},
+                {w:10,f:'#c5a059',t:'top:2px',l:'left:42%',o:0.1},
+                {w:22,f:'#fff',t:'top:14px',l:'left:55%',o:0.06},
+                {w:14,f:'#c5a059',t:'top:5px',l:'right:40px',o:0.12},
+                {w:9,f:'#fff',t:'top:2px',l:'right:15px',o:0.09},
+                {w:16,f:'#c5a059',t:'bottom:4px',l:'left:12px',o:0.1},
+                {w:20,f:'#fff',t:'bottom:8px',l:'left:35%',o:0.07},
+                {w:11,f:'#c5a059',t:'bottom:3px',l:'right:30px',o:0.13},
+                {w:15,f:'#fff',t:'bottom:6px',l:'right:8px',o:0.08},
+                {w:8,f:'#c5a059',t:'top:50%',l:'left:3px',o:0.06},
+                {w:13,f:'#c5a059',t:'top:50%',l:'right:60px',o:0.1}
+            ];
             d.entries.slice(0, 10).forEach(function(e, i) {
                 var cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'minor';
                 var av = e.avatar ? 'background-image:url(' + e.avatar + ')' : '';
-                c.innerHTML += '<div class="gl-lb-entry ' + cls + '">' +
-                    '<div class="gl-lb-rank">' + (i + 1) + '</div>' +
-                    '<div class="gl-lb-avatar" style="' + av + '"></div>' +
-                    '<div class="gl-lb-info"><div class="gl-lb-name">' + (e.name || 'Anonymous') + '</div><div class="gl-lb-hier">' + (e.hierarchy || '') + '</div></div>' +
-                    '<div class="gl-lb-score">' + (e.score ? e.score.toLocaleString() : '0') + '</div>' +
+                var starsHtml = '';
+                if (i === 0) {
+                    stars.forEach(function(s) {
+                        starsHtml += starSvg.replace(/W/g, s.w).replace('F', s.f).replace('TOP', s.t).replace('LEFT', s.l).replace('O', s.o);
+                    });
+                }
+                var extraStyle = i === 0 ? ' style="position:relative;overflow:hidden;background:rgba(0,0,0,0.5)"' : '';
+                c.innerHTML += '<div class="gl-lb-entry ' + cls + '"' + extraStyle + '>' +
+                    starsHtml +
+                    '<div class="gl-lb-rank" style="position:relative;z-index:1">' + (i + 1) + '</div>' +
+                    '<div class="gl-lb-avatar" style="position:relative;z-index:1;' + av + '"></div>' +
+                    '<div class="gl-lb-info" style="position:relative;z-index:1"><div class="gl-lb-name">' + (e.name || 'Anonymous') + '</div><div class="gl-lb-hier">' + (e.hierarchy || '') + '</div></div>' +
+                    '<div class="gl-lb-score" style="position:relative;z-index:1">' + (e.score ? e.score.toLocaleString() : '0') + '</div>' +
                 '</div>';
             });
         }).catch(function() { c.innerHTML = '<div class="gl-empty">Could not load</div>'; });
