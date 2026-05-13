@@ -207,12 +207,11 @@ export default function TestLandingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     let rafId: number;
 
     const loop = () => {
         const vh = window.innerHeight;
-        // The pivot point: Middle of the display
         const mid = vh / 2;
         const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
 
@@ -220,26 +219,19 @@ export default function TestLandingPage() {
             const isHero = el.tagName === 'HEADER';
             const rect = el.getBoundingClientRect();
 
-            // 1. Entering Logic: 
-            // Ensures the section is 100% size by the time it reaches the bottom/middle area.
-            const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.3)));
+            // 1. Entrance: Fast grow as it enters from bottom
+            const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.2)));
 
-            // 2. Leaving Logic (The Shrink):
-            // When rect.bottom is below 'mid', this is > 1 (clamped to 1 by Math.min).
-            // The moment rect.bottom crosses 'mid', it starts decreasing from 1 towards 0.
-            const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / mid));
+            // 2. Exit: Only starts shrinking when the BOTTOM edge passes the MIDDLE of the display
+            // (rect.bottom - mid) stays positive until the bottom edge crosses the center line
+            const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.4)));
 
-            // Use the smaller of the two to determine the current state
             const raw = Math.min(enterRaw, leaveRaw);
-            
-            // Smoothing the transition so it isn't linear/robotic
             const progress = 1 - Math.pow(1 - raw, 2);
 
-            // Calculate final values based on your original design specs
             const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
             const opacity = isHero ? 0.5 + progress * 0.5 : progress;
 
-            // Apply styles directly to the DOM
             el.style.setProperty('transform', `scale(${scale})`, 'important');
             el.style.setProperty('opacity', `${opacity}`, 'important');
         });
