@@ -554,7 +554,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
         <button class="menu-nav-btn" onclick="menuNavigate('#leaderboard-section')">Hierarchy</button>
         <button class="menu-nav-btn" onclick="menuNavigate('#services')">Service</button>
         <button class="menu-nav-btn" onclick="menuNavigate('#reviews')">Feedback</button>
-        <button class="menu-nav-btn" onclick="closeMenu();openFaqChat();">FAQ</button>
+        <button class="menu-nav-btn" onclick="var m=document.getElementById('menuOverlay');if(m)m.classList.remove('open');openFaqChat();">FAQ</button>
         <a class="menu-nav-btn" href="/login" target="_top">Join Now</a>
     </div>
 </div>
