@@ -484,11 +484,11 @@ export default function TestLandingPage() {
                         <h2>NO AGENCIES &bull; NO BOTS &bull; NO FAKES</h2>
                     </div>
                     <nav className="shelf-nav-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', marginTop: 20, width: '100%', maxWidth: 300 }}>
-                        <a href="#about" className="shelf-nav-btn">About Me</a>
-                        <a href="#leaderboard-section" className="shelf-nav-btn">Hierarchy</a>
-                        <a href="#services" className="shelf-nav-btn">Service</a>
-                        <a href="#reviews" className="shelf-nav-btn">Feedback</a>
-                        <button className="shelf-nav-btn" onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
+                        <a href="#about" className="shelf-nav-btn hero-fade" style={{ animationDelay: '0.6s' }}>About Me</a>
+                        <a href="#leaderboard-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.0s' }}>Hierarchy</a>
+                        <a href="#services" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.4s' }}>Service</a>
+                        <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Feedback</a>
+                        <button className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.2s' }} onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
                     </nav>
                     {/* JOIN button only in sticky header */}
                 </div>
@@ -571,7 +571,8 @@ export default function TestLandingPage() {
                 </section>
 
                 {/* LEADERBOARD */}
-                <section className="funnel-section funnel-section-dark" id="leaderboard-section">
+                <section className="funnel-section" id="leaderboard-section" style={{ background: 'linear-gradient(135deg, #ff00ed, #000aff)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
                     <div className="funnel-label">THE HIERARCHY</div>
                     <div className="funnel-divider" />
                     <div style={{ overflow: 'hidden', margin: '0 -20px 20px', maskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)', WebkitMaskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)' }}>
@@ -602,14 +603,28 @@ export default function TestLandingPage() {
                                 const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'minor';
                                 const av = e.avatar ? { backgroundImage: `url(${e.avatar})` } : {};
                                 return (
-                                    <div key={i} className={`lb-entry ${cls}`}>
-                                        <div className="lb-rank">{i + 1}</div>
-                                        <div className="lb-avatar" style={av} />
-                                        <div className="lb-info">
+                                    <div key={i} className={`lb-entry ${cls}`} style={i === 0 ? { position: 'relative', overflow: 'hidden', background: 'rgba(0,0,0,0.5)' } : {}}>
+                                        {i === 0 && <>
+                                            <svg style={{ position: 'absolute', top: 3, left: 6, opacity: 0.15 }} width="12" height="12" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: 8, left: '22%', opacity: 0.08 }} width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: 2, left: '42%', opacity: 0.1 }} width="10" height="10" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: 14, left: '55%', opacity: 0.06 }} width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: 5, right: 40, opacity: 0.12 }} width="14" height="14" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: 2, right: 15, opacity: 0.09 }} width="9" height="9" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', bottom: 4, left: 12, opacity: 0.1 }} width="16" height="16" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', bottom: 8, left: '35%', opacity: 0.07 }} width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', bottom: 3, right: 30, opacity: 0.13 }} width="11" height="11" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', bottom: 6, right: 8, opacity: 0.08 }} width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: '50%', left: 3, opacity: 0.06, transform: 'translateY(-50%)' }} width="8" height="8" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                            <svg style={{ position: 'absolute', top: '50%', right: 60, opacity: 0.1, transform: 'translateY(-50%)' }} width="13" height="13" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                                        </>}
+                                        <div className="lb-rank" style={{ position: 'relative', zIndex: 1 }}>{i + 1}</div>
+                                        <div className="lb-avatar" style={{ ...av, position: 'relative', zIndex: 1 }} />
+                                        <div className="lb-info" style={{ position: 'relative', zIndex: 1 }}>
                                             <div className="lb-name">{e.name || 'Anonymous'}</div>
                                             <div className="lb-hier">{e.hierarchy || ''}</div>
                                         </div>
-                                        <div className="lb-score">{e.score ? e.score.toLocaleString() : '0'}</div>
+                                        <div className="lb-score" style={{ position: 'relative', zIndex: 1 }}>{e.score ? e.score.toLocaleString() : '0'}</div>
                                     </div>
                                 );
                             })
@@ -718,63 +733,6 @@ export default function TestLandingPage() {
                 <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </main>
 
-            {/* FOOTER IFRAME */}
-            <iframe
-                ref={footerFrameRef}
-                id="footerFrame"
-                src="/footer-faq.html"
-                onLoad={(e) => { (e.target as HTMLIFrameElement).style.opacity = '1'; }}
-                style={{
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    width: '100%',
-                    height: 'calc(140px + env(safe-area-inset-bottom))',
-                    border: 'none',
-                    zIndex: 9999999,
-                    background: 'transparent',
-                    colorScheme: 'dark',
-                    opacity: 0,
-                    transition: 'opacity 0.3s ease',
-                }}
-            />
-
-            {/* TOAST CONTAINER */}
-            <div id="toastContainer" style={{ position: 'fixed', top: 0, left: 0, width: 0, height: 0, overflow: 'visible', zIndex: 99999, pointerEvents: 'none' }}>
-                {renderToast()}
-            </div>
-
-            {/* ACCESS DENIED OVERLAY */}
-            {accessDenied && (
-                <div
-                    className="access-denied-overlay"
-                    onClick={() => setAccessDenied(null)}
-                >
-                    <div style={{ textAlign: 'center', padding: '40px 30px', maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 4, marginBottom: 16 }}>ACCESS DENIED</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', marginBottom: 12, lineHeight: 1.5 }}>You don&apos;t have access to {accessDenied.section}</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 24 }}>Unlock your experience to explore everything inside.</div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <button
-                                onClick={() => setAccessDenied(null)}
-                                style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 0', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.5rem', letterSpacing: 2, cursor: 'pointer' }}
-                            >
-                                CLOSE
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setAccessDenied(null);
-                                    window.location.href = '/login';
-                                }}
-                                style={{ flex: 2, background: 'linear-gradient(135deg,#c5a059 0%,#8a6d30 100%)', color: '#020202', border: 'none', padding: '10px 0', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}
-                            >
-                                UNLOCK
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* SEO content -- invisible to users, crawlable by Google */}
             <main aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
                 <header>
@@ -827,6 +785,63 @@ export default function TestLandingPage() {
                 </footer>
             </main>
         </div>
+
+        {/* FOOTER IFRAME — outside landing-page so overflow:hidden can't clip it */}
+        <iframe
+            ref={footerFrameRef}
+            id="footerFrame"
+            src="/footer-faq.html"
+            onLoad={(e) => { (e.target as HTMLIFrameElement).style.opacity = '1'; }}
+            style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                height: 'calc(140px + env(safe-area-inset-bottom))',
+                border: 'none',
+                zIndex: 9999999,
+                background: 'transparent',
+                colorScheme: 'dark',
+                opacity: 0,
+                transition: 'opacity 0.3s ease',
+            }}
+        />
+
+        {/* TOAST CONTAINER */}
+        <div id="toastContainer" style={{ position: 'fixed', top: 0, left: 0, width: 0, height: 0, overflow: 'visible', zIndex: 99999, pointerEvents: 'none' }}>
+            {renderToast()}
+        </div>
+
+        {/* ACCESS DENIED OVERLAY */}
+        {accessDenied && (
+            <div
+                className="access-denied-overlay"
+                onClick={() => setAccessDenied(null)}
+            >
+                <div style={{ textAlign: 'center', padding: '40px 30px', maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 4, marginBottom: 16 }}>ACCESS DENIED</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', marginBottom: 12, lineHeight: 1.5 }}>You don&apos;t have access to {accessDenied.section}</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 24 }}>Unlock your experience to explore everything inside.</div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                            onClick={() => setAccessDenied(null)}
+                            style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 0', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.5rem', letterSpacing: 2, cursor: 'pointer' }}
+                        >
+                            CLOSE
+                        </button>
+                        <button
+                            onClick={() => {
+                                setAccessDenied(null);
+                                window.location.href = '/login';
+                            }}
+                            style={{ flex: 2, background: 'linear-gradient(135deg,#c5a059 0%,#8a6d30 100%)', color: '#020202', border: 'none', padding: '10px 0', borderRadius: 8, fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 700, letterSpacing: 2, cursor: 'pointer' }}
+                        >
+                            UNLOCK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         </>
     );
 }
