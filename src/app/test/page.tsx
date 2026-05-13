@@ -473,7 +473,7 @@ export default function TestLandingPage() {
                         <a href="#reviews" className="shelf-nav-btn">Feedback</a>
                         <button className="shelf-nav-btn" onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
                     </nav>
-                    <a href="/login" className="btn-join" style={{ marginTop: 20 }}>JOIN NOW</a>
+                    {/* JOIN button only in sticky header */}
                 </div>
             </header>
 
