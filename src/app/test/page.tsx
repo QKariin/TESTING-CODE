@@ -215,9 +215,10 @@ export default function TestLandingPage() {
             const sections = document.querySelectorAll<HTMLElement>('.funnel-section');
             sections.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                const distFromBottom = vh - rect.top;
-                const raw = Math.max(0, Math.min(1, distFromBottom / (vh * 0.6)));
-                // Ease-out curve for smoother feel
+                const center = rect.top + rect.height / 2;
+                // Distance from viewport center, normalized 0→1 (1 = center, 0 = edge/offscreen)
+                const distFromCenter = Math.abs(center - vh / 2) / (vh * 0.7);
+                const raw = Math.max(0, Math.min(1, 1 - distFromCenter));
                 const progress = 1 - Math.pow(1 - raw, 2);
                 const scale = 0.55 + progress * 0.45;
                 const opacity = progress;
