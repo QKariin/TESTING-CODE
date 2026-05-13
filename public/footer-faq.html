@@ -527,8 +527,8 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
             <div class="gl-section-line gl-section-line-r"></div>
         </div>
         <div class="gl-lb-tabs">
-            <button class="gl-lb-tab active" onclick="loadGlLeaderboard('today', this)">TODAY</button>
-            <button class="gl-lb-tab" onclick="loadGlLeaderboard('weekly', this)">WEEK</button>
+            <button class="gl-lb-tab" onclick="loadGlLeaderboard('today', this)">TODAY</button>
+            <button class="gl-lb-tab active" onclick="loadGlLeaderboard('weekly', this)">WEEK</button>
             <button class="gl-lb-tab" onclick="loadGlLeaderboard('monthly', this)">MONTH</button>
             <button class="gl-lb-tab" onclick="loadGlLeaderboard('alltime', this)">ALL</button>
         </div>
@@ -1259,7 +1259,7 @@ function openGlobal() {
     if (!overlay) return;
     parent.postMessage({ type: 'faqOpen' }, '*');
     overlay.classList.add('open');
-    loadGlLeaderboard('today', null);
+    loadGlLeaderboard('weekly', null);
     loadGlActivity();
     globalLoaded = true;
 }
