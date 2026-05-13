@@ -349,6 +349,14 @@ export default function TestLandingPage() {
         html.style.scrollbarWidth = 'none';
         (html.style as any).msOverflowStyle = 'none';
 
+        // Lock background to pixel values so iOS viewport changes can't move it
+        const bg = document.querySelector<HTMLElement>('.landing-bg');
+        if (bg) {
+            const h = window.innerHeight;
+            bg.style.top = '-50px';
+            bg.style.height = (h + 100) + 'px';
+        }
+
         return () => {
             document.body.style.margin = '';
             document.body.style.padding = '';
