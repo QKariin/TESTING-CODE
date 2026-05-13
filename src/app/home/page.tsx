@@ -226,7 +226,7 @@ export default function TestLandingPage() {
                 const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.33)));
                 const raw = Math.min(enterRaw, leaveRaw);
                 const progress = 1 - Math.pow(1 - raw, 2);
-                const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
+                const scale = isHero ? 0.92 + progress * 0.08 : 0.8 + progress * 0.2;
                 const opacity = isHero ? 0.5 + progress * 0.5 : progress;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
                 el.style.setProperty('opacity', `${opacity}`, 'important');
