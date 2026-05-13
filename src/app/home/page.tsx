@@ -216,11 +216,14 @@ export default function TestLandingPage() {
             sections.forEach(el => {
                 const isHero = el.tagName === 'HEADER';
                 const rect = el.getBoundingClientRect();
-                const mid = vh / 2;
-                // Entering: how far the top has come into the viewport (0→1)
+                // This defines the "start shrinking" line at the top 1/3 of the screen
+                const mid = vh * 0.33; 
+                
+                // Entering: stays the same (takes 60% of screen to fully grow)
                 const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
-                // Leaving: starts fading when bottom crosses viewport middle (1→0)
-                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.2)));
+                
+                // Leaving: starts shrinking at the top 1/3 and finishes at the very top (0px)
+                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.33)));
                 const raw = Math.min(enterRaw, leaveRaw);
                 const progress = 1 - Math.pow(1 - raw, 2);
                 const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
