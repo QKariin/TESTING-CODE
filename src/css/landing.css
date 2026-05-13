@@ -363,6 +363,13 @@ html, body {
 }
 .funnel-section > * { position: relative; z-index: 1; }
 /* .visible class no longer used — scroll-driven scale handles it */
+.grow-card {
+    opacity: 0;
+    transform: scale(0.55);
+    transform-origin: center center;
+    will-change: transform, opacity;
+    border-radius: 18px;
+}
 
 .funnel-label {
     font-family: 'Cinzel', serif;

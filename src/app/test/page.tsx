@@ -212,7 +212,7 @@ export default function TestLandingPage() {
         let rafId: number;
         const loop = () => {
             const vh = window.innerHeight;
-            const sections = document.querySelectorAll<HTMLElement>('.funnel-section');
+            const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
             sections.forEach(el => {
                 const rect = el.getBoundingClientRect();
                 const center = rect.top + rect.height / 2;
@@ -615,46 +615,43 @@ export default function TestLandingPage() {
                     </div>
                 </section>
 
-                {/* SERVICES */}
-                <section className="funnel-section funnel-section-glass" id="services">
-                    <div className="funnel-label">SERVICES</div>
-                    <div className="funnel-divider" />
-
-                    <div className="service-card">
+                {/* SERVICES — each card grows individually */}
+                <div id="services" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative', zIndex: 2 }}>
+                    <div className="service-card grow-card">
                         <div className="service-icon">&#9919;</div>
                         <h3>KEYHOLDING</h3>
                         <p>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.</p>
                         <a href="/keyholder" className="service-cta">SURRENDER KEY</a>
                     </div>
 
-                    <div className="service-card">
+                    <div className="service-card grow-card">
                         <div className="service-icon">&#9830;</div>
                         <h3>FINANCIAL DOMINATION</h3>
                         <p>Tribute isn&apos;t a transaction. It&apos;s proof of devotion. An economy built on worship, not negotiation.</p>
                         <a href="/login" className="service-cta">ENTER</a>
                     </div>
 
-                    <div className="service-card">
+                    <div className="service-card grow-card">
                         <div className="service-icon">&#9878;</div>
                         <h3>TASK TRAINING</h3>
                         <p>Daily assignments. Photo proof. Deadlines. Real consequences. A structured system of obedience with merit and punishment.</p>
                         <a href="/login" className="service-cta">ENTER</a>
                     </div>
 
-                    <div className="service-card">
+                    <div className="service-card grow-card">
                         <div className="service-icon">&#9733;</div>
                         <h3>SISSIFICATION</h3>
                         <p>Guided transformation under absolute authority. Wardrobe. Behavior. Identity. Nothing is optional.</p>
                         <a href="/login" className="service-cta">ENTER</a>
                     </div>
 
-                    <div className="service-card">
+                    <div className="service-card grow-card">
                         <div className="service-icon">&#9764;</div>
                         <h3>ONLINE DOMINATION</h3>
                         <p>Real-time control from anywhere. Not a fantasy you browse, a lifestyle you live under Her command.</p>
                         <a href="/login" className="service-cta">ENTER</a>
                     </div>
-                </section>
+                </div>
 
                 {/* REVIEWS */}
                 <section className="funnel-section funnel-section-dark" id="reviews">
