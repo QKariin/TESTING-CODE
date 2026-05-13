@@ -64,13 +64,13 @@ html, body {
     text-align: center;
 }
 .landing-bg {
-    position: fixed;
+    position: absolute;
     left: 0;
     width: 100vw;
     z-index: 0;
     background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat;
     pointer-events: none;
-    /* height & top set by JS on load — immune to iOS viewport changes */
+    /* JS positions this manually to simulate fixed — iOS can't interfere */
     top: 0;
     height: 100vh;
 }

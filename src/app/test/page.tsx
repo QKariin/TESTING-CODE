@@ -207,21 +207,30 @@ export default function TestLandingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* ── Scroll-driven scale: sections grow/shrink based on viewport position ── */
+    /* ── Scroll-driven scale + manual background positioning ── */
     useEffect(() => {
         let rafId: number;
+        const bg = document.querySelector<HTMLElement>('.landing-bg');
+        // Lock background height once in pixels
+        if (bg) {
+            const h = window.innerHeight;
+            bg.style.height = (h + 100) + 'px';
+        }
         const loop = () => {
             const vh = window.innerHeight;
+            // Simulate position:fixed on background — immune to iOS viewport shifts
+            if (bg) bg.style.top = (window.scrollY - 50) + 'px';
             const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
             sections.forEach(el => {
+                const isHero = el.tagName === 'HEADER';
                 const rect = el.getBoundingClientRect();
                 const center = rect.top + rect.height / 2;
-                // Distance from viewport center, normalized 0→1 (1 = center, 0 = edge/offscreen)
                 const distFromCenter = Math.abs(center - vh / 2) / (vh * 0.7);
                 const raw = Math.max(0, Math.min(1, 1 - distFromCenter));
                 const progress = 1 - Math.pow(1 - raw, 2);
-                const scale = 0.55 + progress * 0.45;
-                const opacity = progress;
+                // Hero: subtle 0.92→1, others: dramatic 0.55→1
+                const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
+                const opacity = isHero ? 0.5 + progress * 0.5 : progress;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
                 el.style.setProperty('opacity', `${opacity}`, 'important');
             });
@@ -348,14 +357,6 @@ export default function TestLandingPage() {
         const html = document.documentElement;
         html.style.scrollbarWidth = 'none';
         (html.style as any).msOverflowStyle = 'none';
-
-        // Lock background to pixel values so iOS viewport changes can't move it
-        const bg = document.querySelector<HTMLElement>('.landing-bg');
-        if (bg) {
-            const h = window.innerHeight;
-            bg.style.top = '-50px';
-            bg.style.height = (h + 100) + 'px';
-        }
 
         return () => {
             document.body.style.margin = '';
