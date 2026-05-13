@@ -444,9 +444,10 @@ export default function TestLandingPage() {
     };
 
     return (
+        <>
+        {/* Fixed background — outside landing-page so transforms can't break position:fixed */}
+        <div className="landing-bg" />
         <div className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
-            {/* Fixed background — works on iOS */}
-            <div className="landing-bg" />
 
             {/* Google Fonts */}
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
@@ -825,5 +826,6 @@ export default function TestLandingPage() {
                 </footer>
             </main>
         </div>
+        </>
     );
 }
