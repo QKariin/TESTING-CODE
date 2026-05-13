@@ -209,30 +209,66 @@ export default function TestLandingPage() {
 
     /* ── Scroll-driven scale ── */
     useEffect(() => {
-        let rafId: number;
-        const loop = () => {
-            const vh = window.innerHeight;
-            const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
-            sections.forEach(el => {
-                const isHero = el.tagName === 'HEADER';
-                const rect = el.getBoundingClientRect();
-                const mid = vh / 2;
-                // Entering: how far the top has come into the viewport (0→1)
-                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.9)));
-                // Leaving: starts fading when bottom crosses viewport middle (1→0), slow fade
-                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 1.5)));
-                const raw = Math.min(enterRaw, leaveRaw);
-                const progress = 1 - Math.pow(1 - raw, 2);
-                const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
-                const opacity = isHero ? 0.5 + progress * 0.5 : progress;
-                el.style.setProperty('transform', `scale(${scale})`, 'important');
-                el.style.setProperty('opacity', `${opacity}`, 'important');
-            });
-            rafId = requestAnimationFrame(loop);
-        };
+    let rafId: number;
+
+    const loop = () => {
+        const vh = window.innerHeight;
+        const sections = document.querySelectorAll<HTMLElement>(
+            '.funnel-section, .grow-card'
+        );
+
+        sections.forEach(el => {
+            const isHero = el.tagName === 'HEADER';
+            const rect = el.getBoundingClientRect();
+
+            const mid = vh / 2;
+
+            // ENTER animation
+            const enterRaw = Math.max(
+                0,
+                Math.min(1, (vh - rect.top) / (vh * 0.9))
+            );
+
+            // LEAVE animation
+            // Full size until bottom hits middle of screen
+            const leaveProgress = Math.max(
+                0,
+                Math.min(1, rect.bottom / mid)
+            );
+
+            const raw = Math.min(enterRaw, leaveProgress);
+
+            // smoother easing
+            const progress = 1 - Math.pow(1 - raw, 2);
+
+            const scale = isHero
+                ? 0.92 + progress * 0.08
+                : 0.55 + progress * 0.45;
+
+            const opacity = isHero
+                ? 0.5 + progress * 0.5
+                : progress;
+
+            el.style.setProperty(
+                'transform',
+                `scale(${scale})`,
+                'important'
+            );
+
+            el.style.setProperty(
+                'opacity',
+                `${opacity}`,
+                'important'
+            );
+        });
+
         rafId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(rafId);
-    }, []);
+    };
+
+    rafId = requestAnimationFrame(loop);
+
+    return () => cancelAnimationFrame(rafId);
+}, []);
 
     /* ── IntersectionObserver for glass-box ── */
     useEffect(() => {
