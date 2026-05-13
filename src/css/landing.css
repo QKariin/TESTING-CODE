@@ -65,7 +65,10 @@ html, body {
 }
 .landing-bg {
     position: fixed;
-    inset: 0;
+    top: -50px;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh + 100px);
     z-index: 0;
     background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat;
     pointer-events: none;
