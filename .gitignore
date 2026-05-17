@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore exported CSV from editor
+/src/app/A-SLAVE+PROFILE (5).csv
