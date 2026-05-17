@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     const lastDayOfMonth = new Date(year, month, 0).getDate();
 
     const resets: string[] = ['Daily Score']; // Always reset daily
-    if (dayOfWeek === 0) resets.push('Weekly Score');
+    if (dayOfWeek === 1) resets.push('Weekly Score');
     if (date === lastDayOfMonth) resets.push('Monthly Score');
     if (month === 12 && date === 31) resets.push('Yearly Score');
 
