@@ -214,8 +214,8 @@ export function handleHoldStart(e: Event) {
     if (txtMain) txtMain.innerText = "KNEELING...";
 
     if (mobFill) {
-        mobFill.style.transition = `width ${REQUIRED_HOLD_TIME}ms linear`;
-        mobFill.style.width = "100%";
+        mobFill.style.transition = `opacity ${REQUIRED_HOLD_TIME}ms linear`;
+        mobFill.style.opacity = "0";
     }
     if (mobText) mobText.innerText = "SUBMITTING...";
     if (mobBar) {
@@ -256,8 +256,8 @@ function resetUI() {
     if (txtMain) txtMain.innerText = "HOLD TO KNEEL";
 
     if (mobFill) {
-        mobFill.style.transition = "width 0.2s ease";
-        mobFill.style.width = "0%";
+        mobFill.style.transition = "opacity 0.2s ease";
+        mobFill.style.opacity = "1";
     }
     if (mobText) mobText.innerText = "HOLD TO KNEEL";
     if (mobBar) {
@@ -349,7 +349,7 @@ export function updateKneelingUI() {
         if (fill) { fill.style.transition = "none"; fill.style.width = `${Math.max(0, progress)}%`; }
 
         if (mobText) mobText.innerText = `LOCKED: ${minLeft}m`;
-        if (mobFill) { mobFill.style.transition = "none"; mobFill.style.width = `${Math.max(0, progress)}%`; }
+        if (mobFill) { mobFill.style.transition = "none"; mobFill.style.opacity = `${Math.max(0, progress) / 100}`; }
         if (mobBar) { mobBar.style.borderColor = "rgba(80,3,3,0.9)"; mobBar.style.boxShadow = "inset 0 1px 0 rgba(120,5,5,0.12), inset 0 -4px 14px rgba(0,0,0,0.7), 0 0 14px rgba(60,2,2,0.35), 0 6px 24px rgba(0,0,0,0.85)"; }
     } else {
         // UNLOCK
