@@ -218,13 +218,19 @@ export default function TestLandingPage() {
                 const rect = el.getBoundingClientRect();
                 const mid = vh / 2;
 
-                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
-                // leaveRaw = 1 when bottom is at or below mid, fades to 0 as bottom reaches top
-                const leaveRaw = rect.bottom >= mid ? 1 : Math.max(0, rect.bottom / mid);
-                const raw = Math.min(enterRaw, leaveRaw);
-                const progress = 1 - Math.pow(1 - raw, 2);
+                let progress;
+                if (isHero) {
+                    // Hero: fully visible when rect.top=0, gone by the time rect.top = -vh*0.5
+                    const heroRaw = Math.max(0, Math.min(1, (rect.top + vh * 0.5) / (vh * 0.5)));
+                    progress = 1 - Math.pow(1 - heroRaw, 2);
+                } else {
+                    const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
+                    const leaveRaw = rect.bottom >= mid ? 1 : Math.max(0, rect.bottom / mid);
+                    const raw = Math.min(enterRaw, leaveRaw);
+                    progress = 1 - Math.pow(1 - raw, 2);
+                }
                 const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
-                const opacity = isHero ? progress : progress;
+                const opacity = progress;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
                 el.style.setProperty('opacity', `${opacity}`, 'important');
             });
@@ -505,7 +511,7 @@ export default function TestLandingPage() {
                         <span style={{ fontFamily: 'Cinzel,serif', fontSize: 8, color: '#fff', opacity: 0.6, marginLeft: 4, letterSpacing: 4 }}>-DOM</span>
                     </div>
                 </div>
-                <a href="/login" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 28px', background: 'linear-gradient(#080604,#080604) padding-box, linear-gradient(135deg,transparent,#c5a059 40%,transparent 60%,#c5a059) border-box', border: '1.5px solid transparent', borderRadius: 999 }}>JOIN</a>
+                <a href="/login" className="btn-join" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 44px', borderRadius: 999, margin: 0, width: 'auto', height: 'auto' }}>JOIN</a>
             </div>
 
             {/* Main Content */}
@@ -634,7 +640,7 @@ export default function TestLandingPage() {
                 </section>
 
                 {/* SERVICES — each card grows individually */}
-                <div id="services" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative', zIndex: 2 }}>
+                <div id="services" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 100, padding: '0 16px', marginBottom: 120, position: 'relative', zIndex: 2 }}>
                     <div className="service-card grow-card">
                         <div className="service-icon">&#9919;</div>
                         <h3>KEYHOLDING</h3>
@@ -672,7 +678,7 @@ export default function TestLandingPage() {
                 </div>
 
                 {/* REVIEWS — each card grows individually */}
-                <div id="reviews" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative', zIndex: 2 }}>
+                <div id="reviews" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 100, padding: '0 16px', position: 'relative', zIndex: 2 }}>
                     {reviews.map((r, i) => {
                         const rev = r.reviewer || {};
                         const name = rev.name || 'Loyal Subject';
