@@ -571,7 +571,6 @@ export default function TestLandingPage() {
                         <div key={s.key} className={`about-drawer${openAbout === s.key ? ' open' : ''}`}>
                             <button className="about-drawer-title" onClick={() => setOpenAbout(openAbout === s.key ? null : s.key)}>
                                 <div>
-                                    <span className="about-drawer-name">{s.title}</span>
                                     <span className="about-drawer-sub">{s.subtitle}</span>
                                 </div>
                                 <span className="about-drawer-arrow">{openAbout === s.key ? '▴' : '▾'}</span>

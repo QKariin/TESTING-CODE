@@ -216,18 +216,15 @@ export default function TestLandingPage() {
             sections.forEach(el => {
                 const isHero = el.tagName === 'HEADER';
                 const rect = el.getBoundingClientRect();
-                // This defines the "start shrinking" line at the top 1/3 of the screen
-                const mid = vh * 0.33; 
-                
-                // Entering: stays the same (takes 60% of screen to fully grow)
+                const mid = vh / 2;
+
                 const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
-                
-                // Leaving: starts shrinking at the top 1/3 and finishes at the very top (0px)
-                const leaveRaw = Math.max(0, Math.min(1, (rect.bottom - mid) / (vh * 0.33)));
+                // leaveRaw = 1 when bottom is at or below mid, fades to 0 as bottom reaches top
+                const leaveRaw = rect.bottom >= mid ? 1 : Math.max(0, rect.bottom / mid);
                 const raw = Math.min(enterRaw, leaveRaw);
                 const progress = 1 - Math.pow(1 - raw, 2);
-                const scale = isHero ? 0.92 + progress * 0.08 : 0.8 + progress * 0.2;
-                const opacity = isHero ? 0.5 + progress * 0.5 : progress;
+                const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
+                const opacity = isHero ? progress : progress;
                 el.style.setProperty('transform', `scale(${scale})`, 'important');
                 el.style.setProperty('opacity', `${opacity}`, 'important');
             });
@@ -563,7 +560,6 @@ export default function TestLandingPage() {
                         <div key={s.key} className={`about-drawer${openAbout === s.key ? ' open' : ''}`}>
                             <button className="about-drawer-title" onClick={() => setOpenAbout(openAbout === s.key ? null : s.key)}>
                                 <div>
-                                    <span className="about-drawer-name">{s.title}</span>
                                     <span className="about-drawer-sub">{s.subtitle}</span>
                                 </div>
                                 <span className="about-drawer-arrow">{openAbout === s.key ? '▴' : '▾'}</span>
