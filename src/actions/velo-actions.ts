@@ -671,6 +671,31 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
                 })
                 .eq('id', submissionId);
 
+            // Write to Taskdom_History so record page shows it
+            try {
+                const email = (profile.member_id || memberId).toLowerCase();
+                const { data: taskRow } = await getAdmin()
+                    .from('tasks')
+                    .select('ID, "Taskdom_History"')
+                    .ilike('member_id', email)
+                    .maybeSingle();
+                if (taskRow) {
+                    let history: any[] = [];
+                    try { history = typeof taskRow['Taskdom_History'] === 'string' ? JSON.parse(taskRow['Taskdom_History']) : (taskRow['Taskdom_History'] || []); } catch { history = []; }
+                    history.push({
+                        id: routineEntry.id,
+                        text: 'Daily Routine',
+                        proofUrl: routineEntry.proof_url,
+                        proofType: routineEntry.proof_type,
+                        thumbnail_url: routineEntry.thumbnail_url,
+                        timestamp: routineEntry.submitted_at,
+                        status: decision,
+                        isRoutine: true,
+                    });
+                    await getAdmin().from('tasks').update({ 'Taskdom_History': JSON.stringify(history) }).eq('ID', taskRow.ID);
+                }
+            } catch (e) { console.warn('[reviewTask] history update error:', e); }
+
             let params = profile.parameters || {};
             if (decision === 'approve') {
                 params.taskdom_current_streak = (params.taskdom_current_streak || 0) + 1;

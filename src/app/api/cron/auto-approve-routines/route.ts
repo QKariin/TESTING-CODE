@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     // Find all pending routines submitted more than 2 hours ago
     const { data: stale, error: fetchErr } = await supabaseAdmin
         .from('routines')
-        .select('id, member_id')
+        .select('id, member_id, proof_url, proof_type, thumbnail_url, submitted_at')
         .eq('status', 'pending')
         .lt('submitted_at', twoHoursAgo);
 
@@ -43,6 +43,39 @@ export async function GET(req: Request) {
     if (updateErr) {
         console.error('[cron/auto-approve] update error:', updateErr.message);
         return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    }
+
+    // Update Taskdom_History in tasks table so record page shows approved routines
+    const routinesByUser: Record<string, any[]> = {};
+    for (const r of stale) {
+        if (!routinesByUser[r.member_id]) routinesByUser[r.member_id] = [];
+        routinesByUser[r.member_id].push(r);
+    }
+    for (const [email, routines] of Object.entries(routinesByUser)) {
+        try {
+            const { data: taskRow } = await supabaseAdmin
+                .from('tasks')
+                .select('ID, "Taskdom_History"')
+                .ilike('member_id', email)
+                .maybeSingle();
+            if (taskRow) {
+                let history: any[] = [];
+                try { history = typeof taskRow['Taskdom_History'] === 'string' ? JSON.parse(taskRow['Taskdom_History']) : (taskRow['Taskdom_History'] || []); } catch { history = []; }
+                for (const r of routines) {
+                    history.push({
+                        id: r.id,
+                        text: 'Daily Routine',
+                        proofUrl: r.proof_url,
+                        proofType: r.proof_type,
+                        thumbnail_url: r.thumbnail_url,
+                        timestamp: r.submitted_at,
+                        status: 'approve',
+                        isRoutine: true,
+                    });
+                }
+                await supabaseAdmin.from('tasks').update({ 'Taskdom_History': JSON.stringify(history) }).eq('ID', taskRow.ID);
+            }
+        } catch (e) { console.warn('[cron/auto-approve] history update error for', email, e); }
     }
 
     // Recalculate consistency for each affected user
