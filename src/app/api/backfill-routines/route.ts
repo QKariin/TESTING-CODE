@@ -9,7 +9,9 @@ export async function GET(req: Request) {
     if (envSecret) {
         const authHeader = req.headers.get('authorization') || '';
         const incoming = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
-        if (incoming !== envSecret) {
+        const { searchParams } = new URL(req.url);
+        const querySecret = (searchParams.get('secret') || '').trim();
+        if (incoming !== envSecret && querySecret !== envSecret) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
     }
