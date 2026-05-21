@@ -5082,7 +5082,10 @@ async function _loadMobGlTalk() {
     try {
         const res = await fetch('/api/global/messages', { cache: 'no-store' });
         const data = await res.json();
-        const msgs: any[] = data.messages || [];
+        const msgs: any[] = (data.messages || []).filter((m: any) => {
+            const c = m.message || '';
+            return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::');
+        });
         _renderMobGlTalk(msgs);
         _mobGlLoaded['talk'] = true;
         _initMobGlRealtime();
@@ -5099,7 +5102,9 @@ function _initMobGlRealtime() {
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
             (payload: any) => {
                 const msg = payload.new;
-                const dedupKey = msg.media_url || msg.message || '';
+                const content = msg.message || '';
+                if (content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::')) return;
+                const dedupKey = msg.media_url || content;
                 if (_mobGlPendingSent.has(dedupKey)) {
                     _mobGlPendingSent.delete(dedupKey);
                     return;

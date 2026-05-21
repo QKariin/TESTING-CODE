@@ -596,6 +596,8 @@ function _initTalkRealtime() {
         .channel('global_messages_channel')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' },
             (payload: any) => {
+                const content = payload.new?.message || '';
+                if (content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::')) return;
                 const raw = getState().raw;
                 const myEmail = (raw?.member_id || raw?.email || '').toLowerCase();
                 // Skip own messages - already shown optimistically on send
@@ -641,6 +643,10 @@ function _appendMessage(msg: any) {
 function _renderMessages(messages: any[], scrollBottom: boolean) {
     const feed = document.getElementById('globalTalkFeed');
     if (!feed) return;
+    messages = messages.filter(m => {
+        const c = m.message || '';
+        return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::');
+    });
     const raw = getState().raw;
     const myName = raw?.name || raw?.member_id?.split('@')[0] || '';
     const myEmail = ((raw?.member_id || raw?.email || '') as string).toLowerCase();
