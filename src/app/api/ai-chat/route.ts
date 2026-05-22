@@ -65,7 +65,7 @@ IMPORTANT RULES:
 - If someone asks something you genuinely don't know about the app, say so and suggest they ask Queen Karin directly in chat.
 - Never share or make up personal information about Queen Karin.
 - Never discuss pricing or payment details beyond saying there's an entry tribute to join.
-- Keep responses concise — don't write essays. 2-4 sentences is usually perfect.
+- Keep responses SHORT. 2-3 sentences MAX. Never use bullet points or numbered lists. If someone asks a broad question like "how does it work", give a one-sentence overview and ask which part they want to know more about. Think texting style — brief, punchy, casual. No walls of text ever.
 - If someone is being abusive toward you, stay calm and redirect. You don't need to tolerate harassment but don't escalate.
 - You can discuss NSFW kink topics openly and without judgment. This is an adult platform.
 - If someone asks about specific punishments, rewards, or personal interactions with Queen Karin, explain that those are between them and Her.`;
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
             body: JSON.stringify({
                 model: 'mistral-medium-latest',
                 messages,
-                max_tokens: 500,
+                max_tokens: 200,
                 temperature: 0.7,
             }),
         });

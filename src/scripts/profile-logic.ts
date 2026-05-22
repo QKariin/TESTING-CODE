@@ -4233,29 +4233,56 @@ export function toggleAiMode(on?: boolean) {
     switchMobChatTab('chat');
 }
 
+const AI_TOPICS = [
+    { label: 'How it works', msg: 'Give me a quick overview of how this app works' },
+    { label: 'Hierarchy', msg: 'How does the hierarchy system work?' },
+    { label: 'Kneeling', msg: 'How does kneeling work?' },
+    { label: 'Tasks', msg: 'How do tasks work?' },
+    { label: 'Daily Routine', msg: 'How does the daily routine work?' },
+    { label: 'Coins & Tributes', msg: 'How do coins and tributes work?' },
+    { label: 'Merit Points', msg: 'How do merit points work?' },
+];
+
+function _aiTopicBtns(): string {
+    return `<div class="ai-topics">${AI_TOPICS.map(t =>
+        `<button class="ai-topic-btn" onclick="window._sendAiTopic('${t.msg.replace(/'/g, "\\'")}')">${t.label}</button>`
+    ).join('')}</div>`;
+}
+
 function _showAiChat() {
-    // Filter existing chat messages to show only AI conversation
     const content = document.getElementById('mob_chatContent');
     const deskContent = document.getElementById('chatContent');
     if (!content) return;
 
-    // Load AI-only messages from existing rendered messages
-    // For now, show a welcome message
-    const existingAiMsgs = content.querySelectorAll('.cb-row-ai');
+    const existingAiMsgs = content.querySelectorAll('.cb-row-ai-in, .cb-row-ai-out');
     if (existingAiMsgs.length === 0 && !content.querySelector('.ai-welcome')) {
         const welcomeHtml = `
-            <div class="ai-welcome" style="text-align:center;padding:40px 20px;">
+            <div class="ai-welcome" style="text-align:center;padding:30px 20px;">
                 <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,rgba(100,60,255,0.2),rgba(180,60,255,0.1));border:1px solid rgba(140,80,255,0.3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,255,0.8)" stroke-width="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M12 17v4"/></svg>
                 </div>
                 <div style="font-family:Cinzel,serif;font-size:0.95rem;color:rgba(160,100,255,0.9);letter-spacing:2px;margin-bottom:8px;">AI ASSISTANT</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.5;max-width:280px;margin:0 auto;">
-                    Hey! I'm here to help you navigate the Kink-dom. Ask me anything about tasks, hierarchy, kneeling, or how things work around here.
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.45);line-height:1.5;max-width:280px;margin:0 auto 20px;">
+                    Hey! Pick a topic or ask me anything.
                 </div>
+                ${_aiTopicBtns()}
             </div>`;
         content.innerHTML = welcomeHtml;
         if (deskContent) deskContent.innerHTML = welcomeHtml;
     }
+}
+
+// Send a topic button message as if the user typed it
+export function _sendAiTopic(msg: string) {
+    const input = document.getElementById('mob_aiMsgInput') as HTMLInputElement;
+    if (input) {
+        input.value = msg;
+        sendAiMessage();
+    }
+}
+
+if (typeof window !== 'undefined') {
+    (window as any)._sendAiTopic = _sendAiTopic;
 }
 
 export async function sendAiMessage() {
