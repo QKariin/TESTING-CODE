@@ -4257,12 +4257,76 @@ function _aiTopicBtns(): string {
     ).join('')}</div>`;
 }
 
-function _aiFollowUpBtns(): string {
+const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
+    hierarchy: [
+        { label: 'All 7 ranks', msg: 'List all 7 ranks with their requirements' },
+        { label: 'How to rank up', msg: 'What exactly do I need to do to rank up?' },
+        { label: 'Rank benefits', msg: 'What perks do I unlock at each rank?' },
+        { label: 'Chat costs per rank', msg: 'How much does chatting cost at each rank?' },
+    ],
+    kneeling: [
+        { label: 'How to kneel', msg: 'Walk me through how to do a kneeling session step by step' },
+        { label: 'Rewards', msg: 'What rewards do I get from kneeling?' },
+        { label: 'Daily goal', msg: 'What is the daily kneeling goal and max?' },
+        { label: 'Cooldown', msg: 'How does the kneeling cooldown work?' },
+    ],
+    tasks: [
+        { label: 'Task types', msg: 'What kinds of tasks does Queen Karin assign?' },
+        { label: 'How to submit', msg: 'How do I submit proof for a task?' },
+        { label: 'Auto-approve', msg: 'How does task auto-approval work?' },
+        { label: 'Task rewards', msg: 'How much merit do I earn from tasks?' },
+    ],
+    routine: [
+        { label: 'Upload window', msg: 'When exactly can I upload my daily routine proof?' },
+        { label: 'Streaks', msg: 'How do streaks work and why do they matter?' },
+        { label: 'What to upload', msg: 'What kind of proof do I need for daily routine?' },
+    ],
+    coins: [
+        { label: 'How to earn', msg: 'What are all the ways I can earn coins?' },
+        { label: 'Tributes', msg: 'How do tributes work and what do they count toward?' },
+        { label: 'Chat costs', msg: 'How much does it cost to chat at each rank?' },
+    ],
+    merit: [
+        { label: 'How to earn merit', msg: 'What are all the ways I can earn merit points?' },
+        { label: 'Merit for ranking', msg: 'How much merit do I need for each rank?' },
+    ],
+    general: [
+        { label: 'What is this app', msg: 'What is this app and why does it exist?' },
+        { label: 'Who is Queen Karin', msg: 'Tell me about Queen Karin' },
+        { label: 'How to start', msg: 'I am new here, what should I do first?' },
+    ],
+};
+
+let _lastAiTopic = 'general';
+
+function _detectTopic(msg: string): string {
+    const m = msg.toLowerCase();
+    if (m.includes('hierarch') || m.includes('rank') || m.includes('promot')) return 'hierarchy';
+    if (m.includes('kneel') || m.includes('worship')) return 'kneeling';
+    if (m.includes('task') || m.includes('assign') || m.includes('proof')) return 'tasks';
+    if (m.includes('routine') || m.includes('streak') || m.includes('daily')) return 'routine';
+    if (m.includes('coin') || m.includes('tribute') || m.includes('buy') || m.includes('purchase')) return 'coins';
+    if (m.includes('merit') || m.includes('point') || m.includes('progress')) return 'merit';
+    return 'general';
+}
+
+function _aiFollowUpBtns(userMsg: string): string {
+    _lastAiTopic = _detectTopic(userMsg);
+    const subs = AI_SUBTOPICS[_lastAiTopic] || AI_SUBTOPICS.general;
+
+    const subBtns = subs.map(s =>
+        `<button class="ai-topic-btn ai-followup-btn" onclick="window._sendAiTopic('${s.msg.replace(/'/g, "\\'")}')">${s.label}</button>`
+    ).join('');
+
     return `<div class="ai-followup">
-        <div class="ai-followup-label">Want to know more?</div>
+        <div class="ai-followup-label">Dig deeper</div>
         <div class="ai-followup-btns">
-            ${AI_TOPICS.map(t =>
-                `<button class="ai-topic-btn ai-followup-btn" onclick="window._sendAiTopic('${t.msg.replace(/'/g, "\\'")}')">${t.label}</button>`
+            ${subBtns}
+        </div>
+        <div class="ai-followup-label" style="margin-top:10px;">Or switch it up</div>
+        <div class="ai-followup-btns">
+            ${AI_TOPICS.filter(t => _detectTopic(t.msg) !== _lastAiTopic).slice(0, 4).map(t =>
+                `<button class="ai-topic-btn ai-followup-btn ai-switch-btn" onclick="window._sendAiTopic('${t.msg.replace(/'/g, "\\'")}')">${t.label}</button>`
             ).join('')}
             <button class="ai-topic-btn ai-followup-btn ai-chat-free" onclick="document.getElementById('mob_aiMsgInput')?.focus()">Just chat</button>
         </div>
@@ -4377,8 +4441,8 @@ export async function sendAiMessage() {
             if (content) content.insertAdjacentHTML('beforeend', errHtml);
         }
 
-        // Add follow-up buttons after AI response
-        if (content) content.insertAdjacentHTML('beforeend', _aiFollowUpBtns());
+        // Add contextual follow-up buttons after AI response
+        if (content) content.insertAdjacentHTML('beforeend', _aiFollowUpBtns(msg));
         _scrollChatDelayed();
     } catch (err) {
         document.getElementById('aiTyping')?.remove();

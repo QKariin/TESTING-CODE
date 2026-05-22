@@ -3090,3 +3090,12 @@
     background: rgba(255, 215, 0, 0.15) !important;
     border-color: rgba(255, 215, 0, 0.5) !important;
 }
+.ai-switch-btn {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+.ai-switch-btn:active {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
