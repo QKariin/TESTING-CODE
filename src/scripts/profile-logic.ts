@@ -4250,6 +4250,7 @@ const AI_TOPICS = [
     { label: 'Certificate', msg: 'How does the certificate system work?' },
     { label: 'Coins & Tributes', msg: 'How do coins and tributes work?' },
     { label: 'Merit Points', msg: 'How do merit points work?' },
+    { label: 'Her Wishlist', msg: 'Tell me about Queen Karins wishlist' },
     { label: 'Download & Share', msg: 'How do I download the app and share it?' },
 ];
 
@@ -4298,6 +4299,12 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'How to earn merit', msg: 'What are all the ways I can earn merit points?' },
         { label: 'Merit for ranking', msg: 'How much merit do I need for each rank?' },
     ],
+    wishlist: [
+        { label: 'What is it', msg: 'What is the wishlist and how does it work?' },
+        { label: 'How to contribute', msg: 'How do I contribute to something on Her wishlist?' },
+        { label: 'Crowdfund goals', msg: 'How do crowdfund goals work on the wishlist?' },
+        { label: 'Does it help me rank', msg: 'Does contributing to the wishlist count toward my rank?' },
+    ],
     download: [
         { label: 'iPhone install', msg: 'How do I install the app on iPhone?' },
         { label: 'Android install', msg: 'How do I install the app on Android?' },
@@ -4319,6 +4326,7 @@ function _detectTopic(msg: string): string {
     if (m.includes('task') || m.includes('assign') || m.includes('proof')) return 'tasks';
     if (m.includes('routine') || m.includes('streak') || m.includes('daily')) return 'routine';
     if (m.includes('coin') || m.includes('tribute') || m.includes('buy') || m.includes('purchase')) return 'coins';
+    if (m.includes('wishlist') || m.includes('gift') || m.includes('want') || m.includes('help her')) return 'wishlist';
     if (m.includes('download') || m.includes('install') || m.includes('share')) return 'download';
     if (m.includes('cert')) return 'certificate';
     if (m.includes('merit') || m.includes('point') || m.includes('progress')) return 'merit';
