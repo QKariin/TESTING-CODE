@@ -4271,9 +4271,9 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'Cooldown', msg: 'How does the kneeling cooldown work?' },
     ],
     tasks: [
-        { label: 'Task types', msg: 'What kinds of tasks does Queen Karin assign?' },
+        { label: 'Task types', msg: 'What kinds of tasks are there?' },
         { label: 'How to submit', msg: 'How do I submit proof for a task?' },
-        { label: 'Auto-approve', msg: 'How does task auto-approval work?' },
+        { label: 'Higher ranks', msg: 'How do tasks change as I rank up?' },
         { label: 'Task rewards', msg: 'How much merit do I earn from tasks?' },
     ],
     routine: [
