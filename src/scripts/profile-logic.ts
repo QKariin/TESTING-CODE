@@ -2959,6 +2959,7 @@ async function _pollMissedMessages() {
             _lastChatMsgId = msgId;
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
 
+            if (m.metadata?.isAI) return; // AI messages only in AI mode
             if (isSystemMessage(m)) {
                 updateSystemTicker(m);
                 appendSystemLog(m);
@@ -3062,6 +3063,8 @@ export async function initChatSystem() {
             const rowMemberId = (msg.member_id || '').toLowerCase();
             const matchesUser = rowMemberId === (userId || '').toLowerCase() || rowMemberId === email!.toLowerCase();
             if (!matchesUser) return;
+            // Skip AI messages in regular chat — they only show in AI mode
+            if (msg.metadata?.isAI) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
             if (isSystemMessage(msg)) {
@@ -3474,7 +3477,7 @@ export async function loadChatHistory(memberId: string) {
             _lastRenderedChatTs = 0;
             const allDisplay = messages.filter((m: any) => m.content && m.content.trim());
             const sysDisplay = allDisplay.filter((m: any) => isSystemMessage(m));
-            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m));
+            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m) && !m.metadata?.isAI);
 
             // Populate system log from history
             if (sysDisplay.length > 0) {
@@ -4203,9 +4206,11 @@ export function toggleAiMode(on?: boolean) {
     const queenHeader = document.getElementById('mobChatQueenHeader');
     const aiFooter = document.getElementById('mobChatAiFooter');
     const queenFooter = document.getElementById('mobChatFooterNormal');
-    const chatBox = document.getElementById('mob_chatBox');
     const aiBtn = document.getElementById('mobChatBtnAi');
     const chatBtn = document.getElementById('mobChatBtnChat');
+    const chatContent = document.getElementById('mob_chatContent');
+    const aiContent = document.getElementById('mob_aiChatContent');
+    const ticker = document.getElementById('mob_systemTicker');
 
     if (_aiMode) {
         overlay?.classList.add('ai-mode');
@@ -4215,7 +4220,10 @@ export function toggleAiMode(on?: boolean) {
         queenFooter?.classList.add('footer-hidden');
         if (aiBtn) aiBtn.classList.add('active');
         if (chatBtn) chatBtn.classList.remove('active');
-        // Show AI chat content
+        // Swap content containers
+        if (chatContent) chatContent.style.display = 'none';
+        if (aiContent) aiContent.style.display = '';
+        if (ticker) ticker.style.display = 'none';
         _showAiChat();
     } else {
         overlay?.classList.remove('ai-mode');
@@ -4225,11 +4233,11 @@ export function toggleAiMode(on?: boolean) {
         queenFooter?.classList.remove('footer-hidden');
         if (aiBtn) aiBtn.classList.remove('active');
         if (chatBtn) chatBtn.classList.add('active');
-        // Restore normal chat content
-        const chatId = getState().memberId || getState().email;
-        if (chatId) loadChatHistory(chatId);
+        // Swap content containers back
+        if (chatContent) chatContent.style.display = '';
+        if (aiContent) aiContent.style.display = 'none';
+        if (ticker) ticker.style.display = '';
     }
-    // Always show chat tab panel when switching modes
     switchMobChatTab('chat');
 }
 
@@ -4250,7 +4258,7 @@ function _aiTopicBtns(): string {
 }
 
 function _showAiChat() {
-    const content = document.getElementById('mob_chatContent');
+    const content = document.getElementById('mob_aiChatContent');
     const deskContent = document.getElementById('chatContent');
     if (!content) return;
 
@@ -4300,17 +4308,14 @@ export async function sendAiMessage() {
     const sendBtn = document.getElementById('mobAiSendBtn') as HTMLButtonElement;
     if (sendBtn) sendBtn.disabled = true;
 
-    const content = document.getElementById('mob_chatContent');
-    const deskContent = document.getElementById('chatContent');
+    const content = document.getElementById('mob_aiChatContent');
 
     // Remove welcome message if present
     content?.querySelector('.ai-welcome')?.remove();
-    deskContent?.querySelector('.ai-welcome')?.remove();
 
     // Render user message immediately
     const userHtml = _renderAiMsg(msg, true);
     if (content) content.insertAdjacentHTML('beforeend', userHtml);
-    if (deskContent) deskContent.insertAdjacentHTML('beforeend', userHtml);
     _scrollChatDelayed();
 
     // Show typing indicator
@@ -4351,7 +4356,6 @@ export async function sendAiMessage() {
         if (data.success && data.reply) {
             const aiHtml = _renderAiMsg(data.reply, false);
             if (content) content.insertAdjacentHTML('beforeend', aiHtml);
-            if (deskContent) deskContent.insertAdjacentHTML('beforeend', aiHtml);
         } else {
             const errHtml = _renderAiMsg(data.error || 'Sorry, something went wrong. Try again.', false);
             if (content) content.insertAdjacentHTML('beforeend', errHtml);

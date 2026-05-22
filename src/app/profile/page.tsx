@@ -2029,6 +2029,7 @@ export default function ProfilePage() {
                     <div id="mob_chatBox" className="mob-gl-scroll" style={{ flex: 1, position: 'relative' }}>
                         <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).switchMobChatTab('service')}>SYSTEM ONLINE</div>
                         <div id="mob_chatContent" className="chat-area"></div>
+                        <div id="mob_aiChatContent" className="chat-area" style={{ display: 'none' }}></div>
                     </div>
                     {/* Normal chat footer */}
                     <div id="mobChatFooterNormal" className="chat-footer">
