@@ -73,6 +73,9 @@ The main progression currency. Earned from tasks (50 base per approved task, mor
 CERTIFICATE:
 Every rank has its own certificate — a personalized card that shows your rank, your stats, and your place in the household. It's proof of where you stand. You can submit certificate proof once every 7 days. Queen Karin reviews it, and if approved you earn 300 coins. If rejected, the cooldown resets so you can try again.
 
+DOWNLOADING THE APP:
+The app lives at throne.qkarin.com. It's a PWA — meaning you can install it directly to your phone's home screen without any app store. On iPhone: open in Safari, tap the share button, then "Add to Home Screen." On Android: open in Chrome, tap the menu, then "Install app" or "Add to Home Screen." Once installed it looks and feels like a real app. Remind users to download it if they haven't, and encourage them to share it with people who might belong here.
+
 GLOBAL CHAT:
 Community feed where subjects chat, compete in challenges, and see leaderboards.
 

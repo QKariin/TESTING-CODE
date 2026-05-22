@@ -4250,6 +4250,7 @@ const AI_TOPICS = [
     { label: 'Certificate', msg: 'How does the certificate system work?' },
     { label: 'Coins & Tributes', msg: 'How do coins and tributes work?' },
     { label: 'Merit Points', msg: 'How do merit points work?' },
+    { label: 'Download & Share', msg: 'How do I download the app and share it?' },
 ];
 
 function _aiTopicBtns(): string {
@@ -4297,6 +4298,11 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'How to earn merit', msg: 'What are all the ways I can earn merit points?' },
         { label: 'Merit for ranking', msg: 'How much merit do I need for each rank?' },
     ],
+    download: [
+        { label: 'iPhone install', msg: 'How do I install the app on iPhone?' },
+        { label: 'Android install', msg: 'How do I install the app on Android?' },
+        { label: 'Share it', msg: 'How can I share this app with someone?' },
+    ],
     general: [
         { label: 'What is this app', msg: 'What is this app and why does it exist?' },
         { label: 'Who is Queen Karin', msg: 'Tell me about Queen Karin' },
@@ -4313,6 +4319,7 @@ function _detectTopic(msg: string): string {
     if (m.includes('task') || m.includes('assign') || m.includes('proof')) return 'tasks';
     if (m.includes('routine') || m.includes('streak') || m.includes('daily')) return 'routine';
     if (m.includes('coin') || m.includes('tribute') || m.includes('buy') || m.includes('purchase')) return 'coins';
+    if (m.includes('download') || m.includes('install') || m.includes('share')) return 'download';
     if (m.includes('cert')) return 'certificate';
     if (m.includes('merit') || m.includes('point') || m.includes('progress')) return 'merit';
     return 'general';
