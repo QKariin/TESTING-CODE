@@ -4257,6 +4257,18 @@ function _aiTopicBtns(): string {
     ).join('')}</div>`;
 }
 
+function _aiFollowUpBtns(): string {
+    return `<div class="ai-followup">
+        <div class="ai-followup-label">Want to know more?</div>
+        <div class="ai-followup-btns">
+            ${AI_TOPICS.map(t =>
+                `<button class="ai-topic-btn ai-followup-btn" onclick="window._sendAiTopic('${t.msg.replace(/'/g, "\\'")}')">${t.label}</button>`
+            ).join('')}
+            <button class="ai-topic-btn ai-followup-btn ai-chat-free" onclick="document.getElementById('mob_aiMsgInput')?.focus()">Just chat</button>
+        </div>
+    </div>`;
+}
+
 function _showAiChat() {
     const content = document.getElementById('mob_aiChatContent');
     const deskContent = document.getElementById('chatContent');
@@ -4310,8 +4322,9 @@ export async function sendAiMessage() {
 
     const content = document.getElementById('mob_aiChatContent');
 
-    // Remove welcome message if present
+    // Remove welcome message and previous follow-up buttons
     content?.querySelector('.ai-welcome')?.remove();
+    content?.querySelectorAll('.ai-followup').forEach(el => el.remove());
 
     // Render user message immediately
     const userHtml = _renderAiMsg(msg, true);
@@ -4353,6 +4366,9 @@ export async function sendAiMessage() {
         // Remove typing indicator
         document.getElementById('aiTyping')?.remove();
 
+        // Remove previous follow-up buttons
+        content?.querySelectorAll('.ai-followup').forEach(el => el.remove());
+
         if (data.success && data.reply) {
             const aiHtml = _renderAiMsg(data.reply, false);
             if (content) content.insertAdjacentHTML('beforeend', aiHtml);
@@ -4360,6 +4376,9 @@ export async function sendAiMessage() {
             const errHtml = _renderAiMsg(data.error || 'Sorry, something went wrong. Try again.', false);
             if (content) content.insertAdjacentHTML('beforeend', errHtml);
         }
+
+        // Add follow-up buttons after AI response
+        if (content) content.insertAdjacentHTML('beforeend', _aiFollowUpBtns());
         _scrollChatDelayed();
     } catch (err) {
         document.getElementById('aiTyping')?.remove();
