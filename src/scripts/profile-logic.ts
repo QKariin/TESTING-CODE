@@ -4259,10 +4259,10 @@ function _aiTopicBtns(): string {
 
 const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
     hierarchy: [
-        { label: 'All 7 ranks', msg: 'List all 7 ranks with their requirements' },
-        { label: 'How to rank up', msg: 'What exactly do I need to do to rank up?' },
-        { label: 'Rank benefits', msg: 'What perks do I unlock at each rank?' },
-        { label: 'Chat costs per rank', msg: 'How much does chatting cost at each rank?' },
+        { label: 'My next rank', msg: 'What do I need to reach the next rank?' },
+        { label: 'My benefits', msg: 'What benefits does my current rank give me?' },
+        { label: 'What I unlock next', msg: 'What do I unlock when I rank up?' },
+        { label: 'How far am I', msg: 'How close am I to ranking up based on my stats?' },
     ],
     kneeling: [
         { label: 'How to kneel', msg: 'Walk me through how to do a kneeling session step by step' },
