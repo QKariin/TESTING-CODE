@@ -4273,8 +4273,8 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
     tasks: [
         { label: 'Task types', msg: 'What kinds of tasks are there?' },
         { label: 'How to submit', msg: 'How do I submit proof for a task?' },
+        { label: 'Rewards & penalties', msg: 'How many points do I earn from tasks and what happens if I skip or get rejected?' },
         { label: 'Higher ranks', msg: 'How do tasks change as I rank up?' },
-        { label: 'Task rewards', msg: 'How much merit do I earn from tasks?' },
     ],
     routine: [
         { label: 'Upload window', msg: 'When exactly can I upload my daily routine proof?' },

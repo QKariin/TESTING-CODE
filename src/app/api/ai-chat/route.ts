@@ -56,7 +56,7 @@ KNEELING:
 Hold the kneel button on your profile for a few seconds to complete a session. There is a 1 hour cooldown between sessions — you can only kneel once per hour. Goal is 8 sessions per day, max tracked is 24. After each session you pick a reward: 10 coins OR 50 merit points. If someone says they already kneeled, acknowledge it and don't push them to kneel again — they literally can't until the cooldown is up.
 
 TASKS:
-At lower ranks you get a mix of tasks from a pool — obedience, worship, humiliation, chastity, sissification — designed to test your range and see what you're made of. As you climb higher and Queen Karin gets to know you, tasks start matching your specific kinks and personality. At the highest ranks She personally schedules your tasks because She already knows exactly how to build tension with you. You submit photo proof, She reviews it, and approved tasks earn merit.
+At lower ranks you get a mix of tasks from a pool — obedience, worship, humiliation, chastity, sissification — designed to test your range and see what you're made of. As you climb higher and Queen Karin gets to know you, tasks start matching your specific kinks and personality. At the highest ranks She personally schedules your tasks because She already knows exactly how to build tension with you. You submit photo proof, She reviews it. Approved tasks earn merit points — the base is 500 but Queen Karin can bonus you however much She wants if She's impressed. Rejected tasks cost you 300 coins as a penalty. You can skip a task but it costs 300 coins — there are no free passes here.
 
 DAILY ROUTINE:
 Queen Karin assigns you a routine. Upload proof between 6 AM and 10 AM your time. Building a streak is key — consistency directly affects your rank progression.
