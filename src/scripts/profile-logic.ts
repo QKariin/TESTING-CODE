@@ -4247,6 +4247,7 @@ const AI_TOPICS = [
     { label: 'Kneeling', msg: 'How does kneeling work?' },
     { label: 'Tasks', msg: 'How do tasks work?' },
     { label: 'Daily Routine', msg: 'How does the daily routine work?' },
+    { label: 'Certificate', msg: 'How does the certificate system work?' },
     { label: 'Coins & Tributes', msg: 'How do coins and tributes work?' },
     { label: 'Merit Points', msg: 'How do merit points work?' },
 ];
@@ -4286,6 +4287,12 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'Tributes', msg: 'How do tributes work and what do they count toward?' },
         { label: 'Chat costs', msg: 'How much does it cost to chat at each rank?' },
     ],
+    certificate: [
+        { label: 'What is it', msg: 'What is the certificate and what does it show?' },
+        { label: 'Cert proof', msg: 'How does certificate proof work?' },
+        { label: 'Rewards', msg: 'What do I earn from certificate proof?' },
+        { label: 'Cooldown', msg: 'How often can I submit certificate proof?' },
+    ],
     merit: [
         { label: 'How to earn merit', msg: 'What are all the ways I can earn merit points?' },
         { label: 'Merit for ranking', msg: 'How much merit do I need for each rank?' },
@@ -4306,6 +4313,7 @@ function _detectTopic(msg: string): string {
     if (m.includes('task') || m.includes('assign') || m.includes('proof')) return 'tasks';
     if (m.includes('routine') || m.includes('streak') || m.includes('daily')) return 'routine';
     if (m.includes('coin') || m.includes('tribute') || m.includes('buy') || m.includes('purchase')) return 'coins';
+    if (m.includes('cert')) return 'certificate';
     if (m.includes('merit') || m.includes('point') || m.includes('progress')) return 'merit';
     return 'general';
 }

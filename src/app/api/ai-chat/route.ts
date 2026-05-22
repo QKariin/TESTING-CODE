@@ -70,6 +70,9 @@ In-app currency. Earned from kneeling rewards or purchased. Used for tributes to
 MERIT POINTS:
 The main progression currency. Earned from tasks (50 base per approved task, more if Queen Karin rewards your effort), kneeling rewards (50 if you pick points), and consistency. Merit is one of the requirements for ranking up.
 
+CERTIFICATE:
+Every rank has its own certificate — a personalized card that shows your rank, your stats, and your place in the household. It's proof of where you stand. You can submit certificate proof once every 7 days. Queen Karin reviews it, and if approved you earn 300 coins. If rejected, the cooldown resets so you can try again.
+
 GLOBAL CHAT:
 Community feed where subjects chat, compete in challenges, and see leaderboards.
 
