@@ -131,9 +131,29 @@ export async function POST(req: Request) {
             if (profile?.member_id) memberEmail = profile.member_id.toLowerCase();
         }
 
+        // Fetch user profile for context
+        const { data: userProfile } = await adminClient.from('profiles')
+            .select('name, hierarchy, wallet, score')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
+
+        const { data: userTasks } = await adminClient.from('tasks')
+            .select('kneelCount, today kneeling')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
+
+        let userContext = '';
+        if (userProfile) {
+            userContext = `\n\nYOU ARE TALKING TO: ${userProfile.name || 'Unknown'}. Their rank is ${userProfile.hierarchy || 'Hall Boy'}. They have ${userProfile.wallet || 0} coins and ${userProfile.score || 0} merit points.`;
+            if (userTasks) {
+                userContext += ` They have done ${userTasks.kneelCount || 0} total kneels and ${userTasks['today kneeling'] || 0} kneels today.`;
+            }
+            userContext += ` Use their actual name when addressing them.`;
+        }
+
         // Build messages array with conversation history for context
         const messages: any[] = [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: SYSTEM_PROMPT + userContext },
         ];
 
         // Add recent conversation history (last 20 messages for context)
