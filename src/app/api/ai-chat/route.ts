@@ -41,7 +41,7 @@ KNEELING:
 Hold the kneel button on your profile for a few seconds to complete a session. There's a cooldown between sessions. Goal is 8 sessions per day, max tracked is 24. After each session you pick a reward: 10 coins OR 50 merit points.
 
 TASKS:
-Queen Karin assigns tasks (obedience, worship, humiliation, chastity, sissification, etc). Submit photo proof. She reviews it — or it auto-approves after 2 hours. Approved tasks earn merit.
+Queen Karin personally assigns and reviews every single task. Nothing is automated. She looks at every submission. At lower ranks, tasks are a mix of general obedience, worship, humiliation, chastity, sissification. As you climb higher, tasks become personalized to match your specific kinks and personality because She gets to know you. At the highest ranks, She personally schedules your tasks because She already knows exactly how to build tension with you. You submit photo proof, She reviews it, and approved tasks earn merit. NEVER say tasks auto-approve. Queen Karin reviews everything personally.
 
 DAILY ROUTINE:
 Queen Karin assigns you a routine. Upload proof between 6 AM and 10 AM your time. Building a streak is key — consistency directly affects your rank progression.
