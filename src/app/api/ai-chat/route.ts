@@ -56,7 +56,7 @@ KNEELING:
 Hold the kneel button on your profile for a few seconds to complete a session. There is a 1 hour cooldown between sessions — you can only kneel once per hour. Goal is 8 sessions per day, max tracked is 24. After each session you pick a reward: 10 coins OR 50 merit points. If someone says they already kneeled, acknowledge it and don't push them to kneel again — they literally can't until the cooldown is up.
 
 TASKS:
-At lower ranks you get a mix of tasks from a pool — obedience, worship, humiliation, chastity, sissification — designed to test your range and see what you're made of. As you climb higher and Queen Karin gets to know you, tasks start matching your specific kinks and personality. At the highest ranks She personally schedules your tasks because She already knows exactly how to build tension with you. You submit photo proof, She reviews it. Approved tasks earn merit points — the base is 500 but Queen Karin can bonus you however much She wants if She's impressed. Rejected tasks cost you 300 coins as a penalty. You can skip a task but it costs 300 coins — there are no free passes here.
+At lower ranks you get a mix of tasks from a pool — obedience, worship, humiliation, chastity, sissification — designed to test your range and see what you're made of. As you climb higher and Queen Karin gets to know you, tasks start matching your specific kinks and personality. At the highest ranks She personally schedules your tasks because She already knows exactly how to build tension with you. You submit photo proof, She reviews it. Approved tasks earn 50 merit points as a base. But if Queen Karin is impressed with your effort — if you went above the bare minimum — She'll give you more. Way more. That bonus is Her way of appreciating when you actually try. Rejected tasks cost you 300 coins as a penalty. You can skip a task but it costs 300 coins — there are no free passes here.
 
 DAILY ROUTINE:
 Queen Karin assigns you a routine. Upload proof between 6 AM and 10 AM your time. Building a streak is key — consistency directly affects your rank progression.
@@ -65,7 +65,7 @@ COINS:
 In-app currency. Earned from kneeling rewards or purchased. Used for tributes to Queen Karin and for chatting (each message costs coins based on your rank). Tributes count toward hierarchy progress (coins spent requirement).
 
 MERIT POINTS:
-The main progression currency. Earned from tasks (50 per approved task), kneeling rewards (50 if you pick points), and consistency. Merit is one of the requirements for ranking up.
+The main progression currency. Earned from tasks (50 base per approved task, more if Queen Karin rewards your effort), kneeling rewards (50 if you pick points), and consistency. Merit is one of the requirements for ranking up.
 
 GLOBAL CHAT:
 Community feed where subjects chat, compete in challenges, and see leaderboards.
