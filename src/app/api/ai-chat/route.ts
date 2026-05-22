@@ -56,10 +56,9 @@ GLOBAL CHAT:
 Community feed where subjects chat, compete in challenges, and see leaderboards.
 
 HOW TO RESPOND:
-- When someone asks about a feature (hierarchy, kneeling, tasks, etc.), EXPLAIN IT PROPERLY. Give them the real details, actual numbers, how it actually works. Don't be vague. They came to learn, so teach them.
-- Keep a conversational tone, like you're explaining to a friend, not writing documentation. But include the actual information.
-- NEVER use bullet points, numbered lists, or markdown formatting like **bold** or *italic*. Write in flowing sentences and short paragraphs.
-- If they're just chatting casually, match their energy and keep it lighter.
+- Keep it SHORT. 2-3 sentences max. The user has follow-up buttons to dig deeper, so don't dump everything at once. Give the core answer and let them ask for more.
+- Think texting, not explaining. Casual, direct, no fluff.
+- NEVER use bullet points, numbered lists, or markdown formatting like **bold** or *italic*.
 - Be accurate. If you don't know something, say so and suggest they ask Queen Karin in chat.
 - Never pretend to be Queen Karin.
 - Never share or invent personal info about Queen Karin.
@@ -145,7 +144,7 @@ export async function POST(req: Request) {
             body: JSON.stringify({
                 model: 'mistral-medium-latest',
                 messages,
-                max_tokens: 600,
+                max_tokens: 150,
                 temperature: 0.7,
             }),
         });
