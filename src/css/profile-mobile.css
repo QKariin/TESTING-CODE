@@ -1970,6 +1970,9 @@
         width: 100% !important;
         box-sizing: border-box;
     }
+    #mobChatOverlay .chat-footer.footer-hidden {
+        display: none !important;
+    }
 
     /* Input wrapper fills remaining space */
     #mobChatOverlay .chat-input-wrapper {
@@ -2912,4 +2915,117 @@
     letter-spacing: 3px;
     text-align: center;
     margin-bottom: 4px;
+}
+
+/* ── AI Chat Mode ── */
+#mobChatOverlay.ai-mode {
+    background: linear-gradient(180deg, #0a0515 0%, #080312 40%, #050210 100%);
+}
+
+#mobChatOverlay.ai-mode .mob-gl-tabs {
+    border-bottom-color: rgba(140, 80, 255, 0.15);
+}
+
+#mobChatOverlay.ai-mode .mob-gl-tab.active {
+    color: rgba(160, 100, 255, 0.9);
+    border-bottom-color: rgba(160, 100, 255, 0.7);
+}
+
+.ai-header {
+    border-bottom-color: rgba(140, 80, 255, 0.2) !important;
+    border-top-color: rgba(140, 80, 255, 0.5) !important;
+    background: #0a0515 !important;
+}
+
+.ai-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(100, 60, 255, 0.2), rgba(180, 60, 255, 0.1));
+    border: 1px solid rgba(140, 80, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ai-avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(100, 60, 255, 0.25), rgba(180, 60, 255, 0.12));
+    border: 1px solid rgba(140, 80, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.ai-footer {
+    border-top: 1px solid rgba(140, 80, 255, 0.15) !important;
+    background: rgba(10, 5, 21, 0.95) !important;
+    gap: 10px;
+}
+
+.ai-input {
+    border-color: rgba(140, 80, 255, 0.2) !important;
+    color: rgba(200, 180, 255, 0.9) !important;
+}
+
+.ai-input::placeholder {
+    color: rgba(140, 80, 255, 0.3) !important;
+}
+
+.ai-input:focus {
+    border-color: rgba(140, 80, 255, 0.4) !important;
+}
+
+/* AI message bubbles */
+.cb-row-ai-out {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.cb-row-ai-out .cb-me {
+    background: linear-gradient(135deg, rgba(140, 80, 255, 0.15), rgba(100, 60, 255, 0.08));
+    border: 1px solid rgba(140, 80, 255, 0.2);
+    color: rgba(230, 220, 255, 0.9);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    border-radius: 14px 14px 4px 14px;
+    max-width: 80%;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.cb-row-ai-in {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.cb-ai {
+    background: rgba(140, 80, 255, 0.06);
+    border: 1px solid rgba(140, 80, 255, 0.12);
+    color: rgba(220, 210, 255, 0.85);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    border-radius: 14px 14px 14px 4px;
+    max-width: 100%;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* AI typing animation */
+.ai-typing-dots span {
+    animation: aiDotPulse 1.4s infinite;
+    font-size: 1.4rem;
+    color: rgba(160, 100, 255, 0.6);
+    font-weight: bold;
+}
+
+.ai-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.ai-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes aiDotPulse {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
 }

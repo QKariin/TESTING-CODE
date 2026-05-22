@@ -101,6 +101,9 @@ import {
     _submitMobPost,
     handleInstallApp,
     showCertificate,
+    toggleAiMode,
+    sendAiMessage,
+    handleAiChatKey,
 } from '@/scripts/profile-logic';
 import { bindInlineRisky } from '@/scripts/inline-risky';
 
@@ -275,6 +278,9 @@ export default function ProfilePage() {
             (window as any).openMobChatOverlay = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobChatOverlay(); };
             (window as any).closeMobChatOverlay = () => { setMobOverlayOpen(false); closeMobChatOverlay(); };
             (window as any).switchMobChatTab = switchMobChatTab;
+            (window as any).toggleAiMode = toggleAiMode;
+            (window as any).sendAiMessage = sendAiMessage;
+            (window as any).handleAiChatKey = handleAiChatKey;
             (window as any).openMobQueenWall = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
             (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
             (window as any).switchMobQwTab = switchMobQwTab;
@@ -1974,7 +1980,8 @@ export default function ProfilePage() {
 
             {/* ── MOB CHAT OVERLAY - root level, above MOBILE_APP ── */}
             <div id="mobChatOverlay" className="mob-overlay" style={{ display: 'none' }}>
-                <div className="mob-overlay-header">
+                {/* QUEEN HEADER (normal mode) */}
+                <div id="mobChatQueenHeader" className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
                         <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
                             <img src="/queen-nav.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
@@ -1988,10 +1995,25 @@ export default function ProfilePage() {
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
                 </div>
 
+                {/* AI HEADER (ai mode) */}
+                <div id="mobChatAiHeader" className="mob-overlay-header ai-header" style={{ display: 'none' }}>
+                    <div className="mob-overlay-title-wrap">
+                        <div className="ai-avatar">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,255,0.9)" strokeWidth="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M12 17v4"/></svg>
+                        </div>
+                        <div>
+                            <div className="mob-overlay-title" style={{ color: 'rgba(160,100,255,0.9)' }}>AI ASSISTANT</div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(160,100,255,0.4)', letterSpacing: '1px' }}>ALWAYS ONLINE</div>
+                        </div>
+                    </div>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
+                </div>
+
                 {/* TAB BAR */}
                 <div className="mob-gl-tabs">
-                    <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => (window as any).switchMobChatTab('chat')}>CHAT</button>
-                    <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => (window as any).switchMobChatTab('service')}>SERVICE</button>
+                    <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => { (window as any).toggleAiMode(false); (window as any).switchMobChatTab('chat'); }}>CHAT</button>
+                    <button id="mobChatBtnAi" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(true); (window as any).switchMobChatTab('chat'); }}>AI</button>
+                    <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(false); (window as any).switchMobChatTab('service'); }}>SERVICE</button>
                 </div>
 
                 {/* CHAT TAB */}
@@ -2008,7 +2030,8 @@ export default function ProfilePage() {
                         <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).switchMobChatTab('service')}>SYSTEM ONLINE</div>
                         <div id="mob_chatContent" className="chat-area"></div>
                     </div>
-                    <div className="chat-footer">
+                    {/* Normal chat footer */}
+                    <div id="mobChatFooterNormal" className="chat-footer">
                         <div className="chat-input-wrapper">
                             <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus()}>+</button>
                             <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey(e)} />
@@ -2025,6 +2048,19 @@ export default function ProfilePage() {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* AI chat footer */}
+                    <div id="mobChatAiFooter" className="chat-footer ai-footer footer-hidden">
+                        <div className="chat-input-wrapper" style={{ flex: 1 }}>
+                            <input type="text" id="mob_aiMsgInput" className="chat-input ai-input" placeholder="Ask me anything..." onKeyPress={(e: any) => (window as any).handleAiChatKey(e)} />
+                        </div>
+                        <button id="mobAiSendBtn" className="chat-btn-send ai-send-btn" onClick={() => (window as any).sendAiMessage()}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="rgba(160,100,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="rgba(160,100,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </button>
                     </div>

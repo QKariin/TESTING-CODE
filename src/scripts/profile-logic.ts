@@ -4064,6 +4064,32 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         content = `<video src="${vidUrl}" class="chat-img-attachment" controls playsinline preload="none" style="max-width:100%;border-radius:8px;"></video>`;
     }
 
+    // AI ASSISTANT message — purple bubble, no avatar image
+    const isAI = senderEmail === 'ai-assistant' || msg.metadata?.isAI === true;
+    if (isAI && !isMe) {
+        return `
+            <div class="cb-row cb-row-ai-in" style="padding:4px 12px;">
+                <div style="display:flex;align-items:flex-start;gap:8px;max-width:85%;">
+                    <div class="ai-avatar-sm"></div>
+                    <div class="msg-col" style="align-items:flex-start;">
+                        <div class="cb-ai">${content}</div>
+                        ${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // AI mode user message (metadata.isAI but sender is the user)
+    if (isAI && isMe) {
+        return `
+            <div class="cb-row cb-row-ai-out" style="padding:4px 12px;">
+                <div class="msg-col" style="align-items:flex-end;width:100%;">
+                    <div class="cb-me">${content}</div>
+                    ${timeStr ? `<div class="chat-ts chat-ts-right">${timeStr}</div>` : ''}
+                </div>
+            </div>`;
+    }
+
     if (isMe) {
         // SLAVE - right, charcoal, no border, no avatar
         return `
@@ -4163,6 +4189,181 @@ export async function sendChatMessage() {
         _sendingChat = false;
         document.querySelectorAll('.chat-btn-send').forEach(b => (b as HTMLButtonElement).disabled = false);
     }
+}
+
+// ─── AI CHAT MODE ─────────────────────────────────────────────────────────────
+
+let _aiMode = false;
+let _aiSending = false;
+
+export function toggleAiMode(on?: boolean) {
+    _aiMode = on !== undefined ? on : !_aiMode;
+    const overlay = document.getElementById('mobChatOverlay');
+    const header = document.getElementById('mobChatAiHeader');
+    const queenHeader = document.getElementById('mobChatQueenHeader');
+    const aiFooter = document.getElementById('mobChatAiFooter');
+    const queenFooter = document.getElementById('mobChatFooterNormal');
+    const chatBox = document.getElementById('mob_chatBox');
+    const aiBtn = document.getElementById('mobChatBtnAi');
+    const chatBtn = document.getElementById('mobChatBtnChat');
+
+    if (_aiMode) {
+        overlay?.classList.add('ai-mode');
+        if (header) header.style.display = 'flex';
+        if (queenHeader) queenHeader.style.display = 'none';
+        aiFooter?.classList.remove('footer-hidden');
+        queenFooter?.classList.add('footer-hidden');
+        if (aiBtn) aiBtn.classList.add('active');
+        if (chatBtn) chatBtn.classList.remove('active');
+        // Show AI chat content
+        _showAiChat();
+    } else {
+        overlay?.classList.remove('ai-mode');
+        if (header) header.style.display = 'none';
+        if (queenHeader) queenHeader.style.display = 'flex';
+        aiFooter?.classList.add('footer-hidden');
+        queenFooter?.classList.remove('footer-hidden');
+        if (aiBtn) aiBtn.classList.remove('active');
+        if (chatBtn) chatBtn.classList.add('active');
+        // Restore normal chat content
+        const chatId = getState().memberId || getState().email;
+        if (chatId) loadChatHistory(chatId);
+    }
+    // Always show chat tab panel when switching modes
+    switchMobChatTab('chat');
+}
+
+function _showAiChat() {
+    // Filter existing chat messages to show only AI conversation
+    const content = document.getElementById('mob_chatContent');
+    const deskContent = document.getElementById('chatContent');
+    if (!content) return;
+
+    // Load AI-only messages from existing rendered messages
+    // For now, show a welcome message
+    const existingAiMsgs = content.querySelectorAll('.cb-row-ai');
+    if (existingAiMsgs.length === 0 && !content.querySelector('.ai-welcome')) {
+        const welcomeHtml = `
+            <div class="ai-welcome" style="text-align:center;padding:40px 20px;">
+                <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,rgba(100,60,255,0.2),rgba(180,60,255,0.1));border:1px solid rgba(140,80,255,0.3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,255,0.8)" stroke-width="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M12 17v4"/></svg>
+                </div>
+                <div style="font-family:Cinzel,serif;font-size:0.95rem;color:rgba(160,100,255,0.9);letter-spacing:2px;margin-bottom:8px;">AI ASSISTANT</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.5;max-width:280px;margin:0 auto;">
+                    Hey! I'm here to help you navigate the Kink-dom. Ask me anything about tasks, hierarchy, kneeling, or how things work around here.
+                </div>
+            </div>`;
+        content.innerHTML = welcomeHtml;
+        if (deskContent) deskContent.innerHTML = welcomeHtml;
+    }
+}
+
+export async function sendAiMessage() {
+    if (_aiSending) return;
+    const { memberId } = getState();
+    const inputMob = document.getElementById('mob_aiMsgInput') as HTMLInputElement;
+    const msg = (inputMob?.value || '').trim();
+
+    if (!msg || !memberId) return;
+
+    _aiSending = true;
+    if (inputMob) inputMob.value = '';
+
+    // Disable send button
+    const sendBtn = document.getElementById('mobAiSendBtn') as HTMLButtonElement;
+    if (sendBtn) sendBtn.disabled = true;
+
+    const content = document.getElementById('mob_chatContent');
+    const deskContent = document.getElementById('chatContent');
+
+    // Remove welcome message if present
+    content?.querySelector('.ai-welcome')?.remove();
+    deskContent?.querySelector('.ai-welcome')?.remove();
+
+    // Render user message immediately
+    const userHtml = _renderAiMsg(msg, true);
+    if (content) content.insertAdjacentHTML('beforeend', userHtml);
+    if (deskContent) deskContent.insertAdjacentHTML('beforeend', userHtml);
+    _scrollChatDelayed();
+
+    // Show typing indicator
+    const typingHtml = `<div id="aiTyping" class="cb-row cb-row-ai-in" style="padding:4px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div class="ai-avatar-sm"></div>
+            <div class="cb-ai" style="padding:8px 14px;"><span class="ai-typing-dots"><span>.</span><span>.</span><span>.</span></span></div>
+        </div>
+    </div>`;
+    if (content) content.insertAdjacentHTML('beforeend', typingHtml);
+    _scrollChatDelayed();
+
+    // Collect recent AI conversation for context
+    const aiMsgs: { sender: string; text: string }[] = [];
+    content?.querySelectorAll('.cb-row-ai-out, .cb-row-ai-in').forEach(row => {
+        const bubble = row.querySelector('.cb-me, .cb-ai');
+        if (bubble) {
+            const isUser = row.classList.contains('cb-row-ai-out');
+            aiMsgs.push({ sender: isUser ? 'user' : 'ai', text: bubble.textContent || '' });
+        }
+    });
+
+    try {
+        const res = await fetch('/api/ai-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: msg,
+                memberId,
+                conversationHistory: aiMsgs.slice(-20),
+            }),
+        });
+        const data = await res.json();
+
+        // Remove typing indicator
+        document.getElementById('aiTyping')?.remove();
+
+        if (data.success && data.reply) {
+            const aiHtml = _renderAiMsg(data.reply, false);
+            if (content) content.insertAdjacentHTML('beforeend', aiHtml);
+            if (deskContent) deskContent.insertAdjacentHTML('beforeend', aiHtml);
+        } else {
+            const errHtml = _renderAiMsg(data.error || 'Sorry, something went wrong. Try again.', false);
+            if (content) content.insertAdjacentHTML('beforeend', errHtml);
+        }
+        _scrollChatDelayed();
+    } catch (err) {
+        document.getElementById('aiTyping')?.remove();
+        const errHtml = _renderAiMsg('Connection error. Please try again.', false);
+        if (content) content.insertAdjacentHTML('beforeend', errHtml);
+        _scrollChatDelayed();
+    } finally {
+        _aiSending = false;
+        if (sendBtn) sendBtn.disabled = false;
+    }
+}
+
+export function handleAiChatKey(e: any) {
+    if (e.key === 'Enter') sendAiMessage();
+}
+
+function _renderAiMsg(text: string, isUser: boolean): string {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (isUser) {
+        return `<div class="cb-row cb-row-ai-out" style="padding:4px 12px;">
+            <div class="msg-col" style="align-items:flex-end;width:100%;">
+                <div class="cb-me">${text.replace(/\n/g, '<br>')}</div>
+                <div class="chat-ts chat-ts-right">${time}</div>
+            </div>
+        </div>`;
+    }
+    return `<div class="cb-row cb-row-ai-in" style="padding:4px 12px;">
+        <div style="display:flex;align-items:flex-start;gap:8px;max-width:85%;">
+            <div class="ai-avatar-sm"></div>
+            <div class="msg-col" style="align-items:flex-start;">
+                <div class="cb-ai">${text.replace(/\n/g, '<br>')}</div>
+                <div class="chat-ts chat-ts-left">${time}</div>
+            </div>
+        </div>
+    </div>`;
 }
 
 // ─── PROFILE CHAT GIF PICKER ──────────────────────────────────────────────────
@@ -4454,16 +4655,22 @@ export function switchMobChatTab(tab: 'chat' | 'service') {
     const svcPanel = document.getElementById('mobChatTabService');
     const chatBtn = document.getElementById('mobChatBtnChat');
     const svcBtn = document.getElementById('mobChatBtnService');
+    const aiBtn = document.getElementById('mobChatBtnAi');
     if (tab === 'chat') {
         if (chatPanel) chatPanel.style.display = 'flex';
         if (svcPanel) svcPanel.style.display = 'none';
-        if (chatBtn) chatBtn.classList.add('active');
+        // Active state for chat/ai is handled by toggleAiMode — only clear service here
+        if (!_aiMode) {
+            if (chatBtn) chatBtn.classList.add('active');
+            if (aiBtn) aiBtn.classList.remove('active');
+        }
         if (svcBtn) svcBtn.classList.remove('active');
         setTimeout(_scrollChat, 60);
     } else {
         if (chatPanel) chatPanel.style.display = 'none';
         if (svcPanel) svcPanel.style.display = 'flex';
         if (chatBtn) chatBtn.classList.remove('active');
+        if (aiBtn) aiBtn.classList.remove('active');
         if (svcBtn) svcBtn.classList.add('active');
     }
 }
@@ -4563,6 +4770,27 @@ export function openMobChatOverlay() {
         });
     }
 
+    // Same keyboard handling for AI input
+    const aiInput = document.getElementById('mob_aiMsgInput');
+    if (aiInput && !(aiInput as any).__mobChatFocusAttached) {
+        (aiInput as any).__mobChatFocusAttached = true;
+        aiInput.addEventListener('focus', () => {
+            const nav = document.getElementById('mobBottomNav');
+            if (nav) nav.style.display = 'none';
+            el.classList.add('mob-chat-fullscreen');
+            _applyVPHeight();
+            setTimeout(_applyVPHeight, 100);
+            setTimeout(_applyVPHeight, 300);
+        });
+        aiInput.addEventListener('blur', () => {
+            const nav = document.getElementById('mobBottomNav');
+            if (nav) nav.style.display = '';
+            el.classList.remove('mob-chat-fullscreen');
+            el.style.height = '';
+            el.style.top = '';
+        });
+    }
+
     // iOS keyboard: resize overlay to visual viewport when typing
     if (window.visualViewport && !(el as any).__vpAttached) {
         (el as any).__vpAttached = true;
@@ -4574,6 +4802,8 @@ export function openMobChatOverlay() {
 export function closeMobChatOverlay() {
     const el = document.getElementById('mobChatOverlay');
     if (!el) return;
+    // Reset AI mode on close
+    if (_aiMode) toggleAiMode(false);
     // Close tribute overlay if open inside chat
     const tributeOv = document.getElementById('mob_TributeOverlay');
     if (tributeOv) { tributeOv.style.display = 'none'; tributeOv.classList.add('hidden'); }

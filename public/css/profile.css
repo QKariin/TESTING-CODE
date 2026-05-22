@@ -394,7 +394,7 @@
     height: 100%;
 
     /* THE FIX: Fit the photo to the space */
-    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://static.wixstatic.com/media/ce3e5b_13b4c9faf6c5471ca7d292968d40feee~mv2.png');
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/queen-profile.png');
     background-size: cover;
     /* Scales the photo to fill the whole area */
     background-position: center;
