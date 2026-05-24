@@ -4529,21 +4529,18 @@ export function handleAiChatKey(e: any) {
 }
 
 function _renderAiMsg(text: string, isUser: boolean): string {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (isUser) {
-        return `<div class="cb-row cb-row-ai-out" style="padding:4px 12px;">
+        return `<div class="cb-row cb-row-ai-out" style="padding:3px 6px;">
             <div class="msg-col" style="align-items:flex-end;width:100%;">
                 <div class="cb-me">${text.replace(/\n/g, '<br>')}</div>
-                <div class="chat-ts chat-ts-right">${time}</div>
             </div>
         </div>`;
     }
-    return `<div class="cb-row cb-row-ai-in" style="padding:4px 12px;">
-        <div style="display:flex;align-items:flex-start;gap:8px;max-width:85%;">
+    return `<div class="cb-row cb-row-ai-in" style="padding:3px 6px;">
+        <div style="display:flex;align-items:flex-start;gap:8px;max-width:92%;">
             <div class="ai-avatar-sm"></div>
             <div class="msg-col" style="align-items:flex-start;">
                 <div class="cb-ai">${text.replace(/\n/g, '<br>')}</div>
-                <div class="chat-ts chat-ts-left">${time}</div>
             </div>
         </div>
     </div>`;

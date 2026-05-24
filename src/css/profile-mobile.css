@@ -2919,7 +2919,7 @@
 
 /* ── AI Chat Mode ── */
 #mobChatOverlay.ai-mode {
-    background: linear-gradient(180deg, #0a0515 0%, #080312 40%, #050210 100%);
+    background: linear-gradient(135deg, rgba(255,0,237,0.08) 0%, rgba(0,10,255,0.08) 100%), #050210;
 }
 
 #mobChatOverlay.ai-mode .mob-gl-tabs {
