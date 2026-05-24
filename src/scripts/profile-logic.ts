@@ -1882,12 +1882,18 @@ export async function skipTask() {
     if (skipConfirmCont) skipConfirmCont.style.display = 'flex';
     if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'flex';
 
+    // Show skip pass option if they have any
+    const raw = getState().raw || {};
+    const skipCount = Number(raw.skippass || 0);
+    const skipOpt = document.getElementById('mobSkipPassOption');
+    const skipCountEl = document.getElementById('mobSkipPassCount');
+    if (skipOpt) skipOpt.style.display = skipCount > 0 ? 'block' : 'none';
+    if (skipCountEl) skipCountEl.textContent = String(skipCount);
+
     if (readyText) {
-        // readyText.innerText = "Are you sure you wish to skip this duty for 300 coins?"; 
         readyText.style.opacity = '0.3';
     }
     if (mobTaskText) {
-        // mobTaskText.innerText = "Are you sure you wish to skip this duty for 300 coins?"; 
         mobTaskText.style.opacity = '0.3';
     }
 }
@@ -4544,6 +4550,203 @@ function _renderAiMsg(text: string, isUser: boolean): string {
             </div>
         </div>
     </div>`;
+}
+
+// ─── INVENTORY ────────────────────────────────────────────────────────────────
+
+const CUMPASS_PRICES: Record<string, number> = {
+    'hall boy': 500, 'footman': 750, 'silverman': 1000, 'butler': 1500,
+    'chamberlain': 2500, 'secretary': 4000, "queen's champion": 5000,
+};
+const CHECKPOINT_PRICES: Record<string, number> = {
+    'footman': 2000, 'silverman': 4000, 'butler': 8000,
+    'chamberlain': 16000, 'secretary': 32000, "queen's champion": 64000,
+};
+
+function _getInvPrice(item: string, rank: string): number | null {
+    const r = rank.toLowerCase();
+    if (item === 'cumpass') return CUMPASS_PRICES[r] ?? null;
+    if (item === 'checkpoint') return CHECKPOINT_PRICES[r] ?? null;
+    return null;
+}
+
+const INV_INFO: Record<string, { icon: string; title: string; desc: string }> = {
+    cumpass: { icon: '\u2665', title: 'CUM PASS', desc: 'Permission granted. Use it wisely.' },
+    checkpoint: { icon: '\u2611', title: 'CHECKPOINT', desc: 'Save your daily routine streak. Emergency use only.' },
+    skippass: { icon: '\u26D3', title: 'SKIP PASS', desc: 'Skip a task without penalty. Gifted by Queen Karin.' },
+};
+
+export function openInventoryModal(item: string) {
+    const modal = document.getElementById('inventoryModal');
+    if (!modal) return;
+
+    const state = getState();
+    const rank = (state.rank || 'Hall Boy').toLowerCase();
+    const raw = state.raw || {};
+    const count = Number(raw[item] || 0);
+    const price = _getInvPrice(item, rank);
+    const info = INV_INFO[item];
+    if (!info) return;
+
+    const iconEl = document.getElementById('invModalIcon');
+    const titleEl = document.getElementById('invModalTitle');
+    const descEl = document.getElementById('invModalDesc');
+    const countEl = document.getElementById('invModalCount');
+    const actionsEl = document.getElementById('invModalActions');
+    if (iconEl) iconEl.textContent = info.icon;
+    if (titleEl) titleEl.textContent = info.title;
+    if (descEl) descEl.textContent = info.desc;
+    if (countEl) countEl.textContent = `YOU OWN: ${count}`;
+
+    let html = '';
+    if (count > 0) {
+        html += `<button onclick="window.useInventoryItem('${item}')" style="width:100%;padding:14px;border-radius:10px;background:linear-gradient(90deg,rgba(197,160,89,0.15),rgba(197,160,89,0.08));border:1px solid rgba(197,160,89,0.35);color:#c5a059;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:2px;cursor:pointer;">USE NOW</button>`;
+    }
+    if (item !== 'skippass' && price !== null) {
+        html += `<button onclick="window.buyInventoryItem('${item}')" style="width:100%;padding:14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;cursor:pointer;">BUY FOR ${price!.toLocaleString()} COINS</button>`;
+    }
+    if (actionsEl) actionsEl.innerHTML = html;
+
+    modal.style.display = 'flex';
+}
+
+export function closeInventoryModal() {
+    const modal = document.getElementById('inventoryModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function _updateInvUI(item: string, count: number) {
+    const idMap: Record<string, string> = { skippass: 'invSkipCount', cumpass: 'invCumCount', checkpoint: 'invCheckCount' };
+    const el = document.getElementById(idMap[item]);
+    if (el) el.textContent = String(count);
+}
+
+export async function buyInventoryItem(item: string) {
+    const state = getState();
+    const price = _getInvPrice(item, state.rank || 'Hall Boy');
+    if (price === null) return;
+    if (state.wallet < price) {
+        alert('Insufficient coins.');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'buy', item }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            setState({ wallet: data.newWallet });
+            if (state.raw) state.raw[item] = data.newCount;
+            if (state.raw) state.raw.wallet = data.newWallet;
+            ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(id => {
+                const e = document.getElementById(id);
+                if (e) e.textContent = data.newWallet.toLocaleString();
+            });
+            _updateInvUI(item, data.newCount);
+            closeInventoryModal();
+            openInventoryModal(item);
+        } else {
+            alert(data.error || 'Purchase failed.');
+        }
+    } catch {
+        alert('Connection error.');
+    }
+}
+
+export async function useInventoryItem(item: string) {
+    const state = getState();
+    const raw = state.raw || {};
+    const count = Number(raw[item] || 0);
+    if (count <= 0) return;
+
+    try {
+        const res = await fetch('/api/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'use', item }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (state.raw) state.raw[item] = data.newCount;
+            _updateInvUI(item, data.newCount);
+            closeInventoryModal();
+            // Show confirmation
+            if (item === 'cumpass') {
+                _showInvConfirmation('Permission Granted.', "Don't waste it.");
+            } else if (item === 'checkpoint') {
+                _showInvConfirmation('Streak Saved.', 'Your routine is marked for today.');
+            } else if (item === 'skippass') {
+                _showInvConfirmation('Task Skipped.', 'No penalty applied.');
+            }
+        } else {
+            alert(data.error || 'Failed to use item.');
+        }
+    } catch {
+        alert('Connection error.');
+    }
+}
+
+export async function useSkipPass() {
+    const { id, memberId } = getState();
+    const pid = memberId || id;
+    if (!pid) return;
+
+    const raw = getState().raw || {};
+    const skipCount = Number(raw.skippass || 0);
+    if (skipCount <= 0) return;
+
+    const skipConfirmCont = document.getElementById('skipConfirmContainer');
+    const mobSkipConfirmCont = document.getElementById('mobSkipConfirmContainer');
+    if (skipConfirmCont) skipConfirmCont.style.display = 'none';
+    if (mobSkipConfirmCont) mobSkipConfirmCont.style.display = 'none';
+
+    if (taskInterval) { clearInterval(taskInterval); taskInterval = null; }
+    const activeTimerRow = document.getElementById('activeTimerRow');
+    const mobActiveTimerRow = document.querySelector('#qm_TaskActive .card-timer-row') as HTMLElement;
+    if (activeTimerRow) activeTimerRow.style.display = 'none';
+    if (mobActiveTimerRow) mobActiveTimerRow.style.display = 'none';
+
+    const readyText = document.getElementById('readyText');
+    const mobTaskText = document.getElementById('mobTaskText');
+    if (readyText) { readyText.innerHTML = 'USING SKIP PASS...'; readyText.style.color = '#c5a059'; readyText.style.opacity = '1'; }
+    if (mobTaskText) { mobTaskText.innerHTML = 'USING SKIP PASS...'; mobTaskText.style.color = '#c5a059'; mobTaskText.style.opacity = '1'; }
+
+    try {
+        const res = await fetch('/api/tasks/skip', {
+            method: 'POST',
+            body: JSON.stringify({ memberId: pid, useSkipPass: true })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            if (raw) raw.skippass = skipCount - 1;
+            _updateInvUI('skippass', skipCount - 1);
+            renderProfileSidebar(getState().raw || getState());
+            if (taskInterval) clearInterval(taskInterval);
+            showTaskFeedback('Skip Pass used. No penalty this time.', '#c5a059');
+            loadChatHistory(pid);
+        } else {
+            cancelSkipTask();
+        }
+    } catch (err) {
+        console.error('Error using skip pass', err);
+        cancelSkipTask();
+    }
+}
+
+function _showInvConfirmation(title: string, sub: string) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;';
+    overlay.innerHTML = `
+        <div style="font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;letter-spacing:4px;text-align:center;">${title}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.5);text-align:center;">${sub}</div>
+    `;
+    overlay.addEventListener('click', () => overlay.remove());
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 2500);
 }
 
 // ─── PROFILE CHAT GIF PICKER ──────────────────────────────────────────────────

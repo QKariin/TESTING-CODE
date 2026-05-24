@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
-        const { memberId } = await req.json();
+        const { memberId, useSkipPass } = await req.json();
 
         if (!memberId) {
             return NextResponse.json({ success: false, error: 'Missing memberId' }, { status: 400 });
@@ -19,10 +19,21 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
         }
 
-        // Check wallet
         const wallet = profile.wallet || 0;
-        if (wallet < 300) {
-            return NextResponse.json({ success: false, error: 'Insufficient Capital. 300 coins required to skip duties.' }, { status: 403 });
+
+        // Skip pass: consume pass instead of coins
+        if (useSkipPass) {
+            const skipCount = Number(profile.skippass || 0);
+            if (skipCount <= 0) {
+                return NextResponse.json({ success: false, error: 'No skip passes available' }, { status: 400 });
+            }
+            // Decrement skip pass
+            await supabaseAdmin.from('profiles').update({ skippass: skipCount - 1 }).eq('ID', profile.ID);
+        } else {
+            // Check wallet for coin penalty
+            if (wallet < 300) {
+                return NextResponse.json({ success: false, error: 'Insufficient Capital. 300 coins required to skip duties.' }, { status: 403 });
+            }
         }
 
         const { data: row } = await supabaseAdmin.from('tasks').select('Taskdom_History, taskdom_active_task').eq('ID', memberId).maybeSingle();
@@ -47,10 +58,9 @@ export async function POST(req: NextRequest) {
             } catch (e) { }
         }
 
-        const profileDbUpdate = await supabaseAdmin.from('profiles').update({
-            wallet: wallet - 300,
-            parameters: params
-        }).eq('ID', profile.ID);
+        const profileUpdate: any = { parameters: params };
+        if (!useSkipPass) profileUpdate.wallet = wallet - 300;
+        const profileDbUpdate = await supabaseAdmin.from('profiles').update(profileUpdate).eq('ID', profile.ID);
 
         let taskDbUpdate;
         let history: any[] = [];
@@ -59,10 +69,10 @@ export async function POST(req: NextRequest) {
         history.unshift({
             id: skippedId,
             text: skippedText,
-            proofUrl: 'SKIPPED',
+            proofUrl: useSkipPass ? 'SKIP_PASS' : 'SKIPPED',
             proofType: 'image',
             timestamp: new Date().toISOString(),
-            status: 'fail',
+            status: useSkipPass ? 'skip_pass' : 'fail',
             completed: false
         });
 
@@ -88,11 +98,15 @@ export async function POST(req: NextRequest) {
         console.log("Profile update:", profileDbUpdate.error ? profileDbUpdate.error : "SUCCESS");
         console.log("Task update:", taskDbUpdate.error ? taskDbUpdate.error : "SUCCESS");
 
-        try { await DbService.sendMessage(memberId, `TASK SKIPPED - 300 <i class="fas fa-coins" style="color:#c5a059;"></i> DEDUCTED`, 'system'); } catch (_) { }
+        const sysMsg = useSkipPass
+            ? `TASK SKIPPED - SKIP PASS USED`
+            : `TASK SKIPPED - 300 <i class="fas fa-coins" style="color:#c5a059;"></i> DEDUCTED`;
+        try { await DbService.sendMessage(memberId, sysMsg, 'system'); } catch (_) { }
 
         return NextResponse.json({
             success: true,
-            newWallet: wallet - 300
+            newWallet: useSkipPass ? wallet : wallet - 300,
+            usedSkipPass: !!useSkipPass,
         });
     } catch (error: any) {
         console.error("Failed to skip task:", error);

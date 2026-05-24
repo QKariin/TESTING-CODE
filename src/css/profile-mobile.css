@@ -3129,3 +3129,68 @@
 .ai-return-btn:active {
     opacity: 1;
 }
+
+/* ── INVENTORY SECTION ── */
+.inv-grid {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.inv-card {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(197, 160, 89, 0.15);
+    border-radius: 12px;
+    padding: 14px 8px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.inv-card:active {
+    background: rgba(197, 160, 89, 0.08);
+    border-color: rgba(197, 160, 89, 0.3);
+    transform: scale(0.97);
+}
+.inv-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    opacity: 0.7;
+}
+.inv-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.4rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 1.5px;
+    text-align: center;
+}
+.inv-count {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #c5a059;
+    line-height: 1;
+}
+.inv-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.3rem;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-top: 2px;
+}
+.inv-gift-only {
+    color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.inv-buyable {
+    color: rgba(197, 160, 89, 0.6);
+    background: rgba(197, 160, 89, 0.06);
+    border: 1px solid rgba(197, 160, 89, 0.15);
+}

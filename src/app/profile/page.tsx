@@ -104,6 +104,11 @@ import {
     toggleAiMode,
     sendAiMessage,
     handleAiChatKey,
+    openInventoryModal,
+    closeInventoryModal,
+    buyInventoryItem,
+    useInventoryItem,
+    useSkipPass,
 } from '@/scripts/profile-logic';
 import { bindInlineRisky } from '@/scripts/inline-risky';
 
@@ -281,6 +286,11 @@ export default function ProfilePage() {
             (window as any).toggleAiMode = toggleAiMode;
             (window as any).sendAiMessage = sendAiMessage;
             (window as any).handleAiChatKey = handleAiChatKey;
+            (window as any).openInventoryModal = openInventoryModal;
+            (window as any).closeInventoryModal = closeInventoryModal;
+            (window as any).buyInventoryItem = buyInventoryItem;
+            (window as any).useInventoryItem = useInventoryItem;
+            (window as any).useSkipPass = useSkipPass;
             (window as any).openMobQueenWall = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
             (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
             (window as any).switchMobQwTab = switchMobQwTab;
@@ -1853,6 +1863,42 @@ export default function ProfilePage() {
                             </button>
                         </div>
 
+                        {/* INVENTORY */}
+                        <div style={{ width: '100%', marginTop: '20px' }}>
+                            <div className="duty-label">INVENTORY</div>
+                            <div className="inv-grid">
+                                <div className="inv-card" id="invSkipPass">
+                                    <div className="inv-icon">&#9971;</div>
+                                    <div className="inv-name">SKIP PASS</div>
+                                    <div className="inv-count" id="invSkipCount">{profile?.skippass || 0}</div>
+                                    <div className="inv-tag inv-gift-only">GIFT ONLY</div>
+                                </div>
+                                <div className="inv-card" id="invCumPass" onClick={() => (window as any).openInventoryModal('cumpass')}>
+                                    <div className="inv-icon">&#9829;</div>
+                                    <div className="inv-name">CUM PASS</div>
+                                    <div className="inv-count" id="invCumCount">{profile?.cumpass || 0}</div>
+                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
+                                </div>
+                                <div className="inv-card" id="invCheckpoint" onClick={() => (window as any).openInventoryModal('checkpoint')}>
+                                    <div className="inv-icon">&#9745;</div>
+                                    <div className="inv-name">CHECKPOINT</div>
+                                    <div className="inv-count" id="invCheckCount">{profile?.checkpoint || 0}</div>
+                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* INVENTORY MODAL */}
+                        <div id="inventoryModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ maxWidth: 340, width: '100%', background: 'rgba(10,5,20,0.95)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 16, padding: '30px 24px', textAlign: 'center' }}>
+                                <div id="invModalIcon" style={{ fontSize: '2.5rem', marginBottom: 8 }}></div>
+                                <div id="invModalTitle" style={{ fontFamily: 'Cinzel', fontSize: '1rem', color: '#c5a059', letterSpacing: 3, marginBottom: 6 }}></div>
+                                <div id="invModalDesc" style={{ fontFamily: 'Rajdhani', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 16 }}></div>
+                                <div id="invModalCount" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, marginBottom: 16 }}></div>
+                                <div id="invModalActions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}></div>
+                                <button onClick={() => (window as any).closeInventoryModal()} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron', fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>CLOSE</button>
+                            </div>
+                        </div>
 
                         {/* CURRENT STATUS */}
                         <div style={{ width: '100%', marginTop: '20px' }}>
@@ -1894,6 +1940,11 @@ export default function ProfilePage() {
                                     <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 15, marginTop: 15, alignItems: 'center', background: 'rgba(20, 0, 0, 0.6)', border: '1px solid rgba(255, 0, 60, 0.4)', boxShadow: '0 0 20px rgba(255, 0, 60, 0.1)', backdropFilter: 'blur(10px)', padding: '25px', borderRadius: '12px', width: '100%' }}>
                                         <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
                                         <div style={{ color: '#ccc', fontFamily: 'Cinzel', fontSize: '0.8rem', textAlign: 'center', marginBottom: 10, lineHeight: 1.5 }}>Is that skip worth of<br /><span style={{ color: '#ff003c', fontWeight: 'bold' }}>300 coins</span>, pet?</div>
+                                        <div id="mobSkipPassOption" style={{ display: 'none', width: '90%', marginBottom: 8 }}>
+                                            <button onClick={() => (window as any).useSkipPass()} style={{ width: '100%', padding: 12, borderRadius: 8, background: 'linear-gradient(90deg, rgba(197,160,89,0.15), rgba(197,160,89,0.08))', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', fontFamily: "'Cinzel', serif", fontSize: '0.75rem', letterSpacing: 2, cursor: 'pointer' }}>
+                                                USE SKIP PASS (<span id="mobSkipPassCount">0</span> LEFT)
+                                            </button>
+                                        </div>
                                         <button id="btnMobConfirmSkip" onClick={() => (window as any).executeSkipTask()} className="action-btn" style={{ width: '90%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '8px', padding: '12px', fontSize: '0.85rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.3s ease' }}>ACCEPT PENALTY</button>
                                         <button id="btnMobCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#888', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: '1px', padding: 5, width: '95%', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>NEVERMIND, I WILL SERVE</button>
                                     </div>
