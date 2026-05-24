@@ -4411,10 +4411,13 @@ function _aiShowTopics() {
     _scrollChatDelayed();
 }
 
+let _aiFromTopicBtn = false;
+
 // Send a topic button message as if the user typed it
 export function _sendAiTopic(msg: string) {
     const input = document.getElementById('mob_aiMsgInput') as HTMLInputElement;
     if (input) {
+        _aiFromTopicBtn = true;
         input.value = msg;
         sendAiMessage();
     }
@@ -4501,8 +4504,14 @@ export async function sendAiMessage() {
             if (content) content.insertAdjacentHTML('beforeend', errHtml);
         }
 
-        // Add contextual follow-up buttons after AI response
-        if (content) content.insertAdjacentHTML('beforeend', _aiFollowUpBtns(msg));
+        // Show full follow-ups for topic buttons, just small Topics button for typed messages
+        if (_aiFromTopicBtn) {
+            if (content) content.insertAdjacentHTML('beforeend', _aiFollowUpBtns(msg));
+        } else {
+            if (content) content.insertAdjacentHTML('beforeend',
+                `<div class="ai-topics-return"><button class="ai-topic-btn ai-return-btn" onclick="window._aiShowTopics()">Topics</button></div>`);
+        }
+        _aiFromTopicBtn = false;
         _scrollChatDelayed();
     } catch (err) {
         document.getElementById('aiTyping')?.remove();
