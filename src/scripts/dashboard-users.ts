@@ -1242,6 +1242,22 @@ async function _showExtrasOverlay(memberId: string) {
                     : `<div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.25);">No review submitted</div>`}
             </div>
 
+            <!-- INVENTORY GIFT -->
+            <div style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="1"></rect><path d="M12 8v12"></path><path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path></svg>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:#fff;letter-spacing:2px;font-weight:700;">GIFT INVENTORY</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">
+                    Current: <span style="color:#c5a059;">${u?.skippass || 0}</span> skip &middot; <span style="color:#c5a059;">${u?.cumpass || 0}</span> cum &middot; <span style="color:#c5a059;">${u?.checkpoint || 0}</span> checkpoint
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="window._giftInventory('${memberId}','skippass')" style="flex:1;padding:10px 4px;background:rgba(197,160,89,0.08);color:#c5a059;border:1px solid rgba(197,160,89,0.25);border-radius:8px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:1px;cursor:pointer;">+ SKIP</button>
+                    <button onclick="window._giftInventory('${memberId}','cumpass')" style="flex:1;padding:10px 4px;background:rgba(197,160,89,0.08);color:#c5a059;border:1px solid rgba(197,160,89,0.25);border-radius:8px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:1px;cursor:pointer;">+ CUM</button>
+                    <button onclick="window._giftInventory('${memberId}','checkpoint')" style="flex:1;padding:10px 4px;background:rgba(197,160,89,0.08);color:#c5a059;border:1px solid rgba(197,160,89,0.25);border-radius:8px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:1px;cursor:pointer;">+ CHECK</button>
+                </div>
+            </div>
+
             <button onclick="document.getElementById('extrasOverlay')?.remove();" style="margin-top:8px;padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;align-self:center;">CLOSE</button>
         </div>
     `;
@@ -1274,6 +1290,28 @@ async function _rejectReview(memberId: string) {
     } catch { /* */ }
 }
 
+async function _giftInventory(memberId: string, item: string) {
+    try {
+        const res = await fetch('/api/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'gift', item, memberId, quantity: 1 }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Update local user object
+            const u = users.find(x => x.memberId === memberId);
+            if (u) u[item] = data.newCount;
+            // Refresh the overlay to show updated counts
+            _showExtrasOverlay(memberId);
+        } else {
+            alert(data.error || 'Gift failed.');
+        }
+    } catch {
+        alert('Connection error.');
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
@@ -1286,4 +1324,5 @@ if (typeof window !== 'undefined') {
     (window as any)._showExtrasOverlay = _showExtrasOverlay;
     (window as any)._approveReview = _approveReview;
     (window as any)._rejectReview = _rejectReview;
+    (window as any)._giftInventory = _giftInventory;
 }

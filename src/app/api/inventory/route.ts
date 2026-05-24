@@ -48,10 +48,38 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, item } = body; // action: 'buy' | 'use', item: 'cumpass' | 'skippass' | 'checkpoint'
 
-    if (!['buy', 'use'].includes(action)) return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    if (!['buy', 'use', 'gift'].includes(action)) return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     if (!['cumpass', 'skippass', 'checkpoint'].includes(item)) return NextResponse.json({ error: 'Invalid item' }, { status: 400 });
 
-    // Fetch current profile
+    const ADMIN_EMAILS = ['ceo@qkarin.com'];
+
+    // Gift action: admin only, target a specific user
+    if (action === 'gift') {
+        if (!ADMIN_EMAILS.includes(callerEmail)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+
+        const { memberId, quantity } = body;
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
+        const qty = Math.max(1, Number(quantity) || 1);
+
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        const { data: target } = isUuid
+            ? await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint').eq('ID', memberId).maybeSingle()
+            : await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint').ilike('member_id', memberId).maybeSingle();
+
+        if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+        const current = Number(target[item as keyof typeof target] || 0);
+        const { error: updateErr } = await supabaseAdmin
+            .from('profiles')
+            .update({ [item]: current + qty })
+            .eq(isUuid ? 'ID' : 'member_id', memberId);
+
+        if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+
+        return NextResponse.json({ success: true, item, newCount: current + qty });
+    }
+
+    // Fetch current profile for buy/use
     const { data: profile, error: pErr } = await supabaseAdmin
         .from('profiles')
         .select('wallet, hierarchy, cumpass, skippass, checkpoint')
