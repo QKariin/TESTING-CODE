@@ -152,15 +152,15 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         const { data: userTasks } = await adminClient.from('tasks')
-            .select('kneelCount, today kneeling')
+            .select('kneelCount')
             .ilike('member_id', memberEmail)
-            .maybeSingle();
+            .maybeSingle() as { data: any };
 
         let userContext = '';
         if (userProfile) {
             userContext = `\n\nYOU ARE TALKING TO: ${userProfile.name || 'Unknown'}. Their rank is ${userProfile.hierarchy || 'Hall Boy'}. They have ${userProfile.wallet || 0} coins and ${userProfile.score || 0} merit points.`;
             if (userTasks) {
-                userContext += ` They have done ${userTasks.kneelCount || 0} total kneels and ${userTasks['today kneeling'] || 0} kneels today.`;
+                userContext += ` They have done ${userTasks.kneelCount || 0} total kneels.`;
             }
             userContext += ` Use their actual name when addressing them.`;
         }
