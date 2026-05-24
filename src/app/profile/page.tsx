@@ -1870,19 +1870,19 @@ export default function ProfilePage() {
                             <div className="duty-label">INVENTORY</div>
                             <div className="inv-grid">
                                 <div className="inv-card" id="invSkipPass">
-                                    <div className="inv-icon">&#9971;</div>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>
                                     <div className="inv-name">SKIP PASS</div>
                                     <div className="inv-count" id="invSkipCount">{profile?.skippass || 0}</div>
                                     <div className="inv-tag inv-gift-only">GIFT ONLY</div>
                                 </div>
                                 <div className="inv-card" id="invCumPass" onClick={() => (window as any).openInventoryModal('cumpass')}>
-                                    <div className="inv-icon">&#9829;</div>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                                     <div className="inv-name">CUM PASS</div>
                                     <div className="inv-count" id="invCumCount">{profile?.cumpass || 0}</div>
                                     <div className="inv-tag inv-buyable">TAP TO VIEW</div>
                                 </div>
                                 <div className="inv-card" id="invCheckpoint" onClick={() => (window as any).openInventoryModal('checkpoint')}>
-                                    <div className="inv-icon">&#9745;</div>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                                     <div className="inv-name">CHECKPOINT</div>
                                     <div className="inv-count" id="invCheckCount">{profile?.checkpoint || 0}</div>
                                     <div className="inv-tag inv-buyable">TAP TO VIEW</div>
