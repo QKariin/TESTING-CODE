@@ -4459,8 +4459,8 @@ export async function sendAiMessage() {
     _scrollChatDelayed();
 
     // Show typing indicator
-    const typingHtml = `<div id="aiTyping" class="cb-row cb-row-ai-in" style="padding:4px 12px;">
-        <div style="display:flex;align-items:center;gap:8px;">
+    const typingHtml = `<div id="aiTyping" class="cb-row cb-row-ai-in" style="padding:3px 4px;">
+        <div style="display:flex;align-items:center;gap:5px;">
             <div class="ai-avatar-sm"></div>
             <div class="cb-ai" style="padding:8px 14px;"><span class="ai-typing-dots"><span>.</span><span>.</span><span>.</span></span></div>
         </div>
@@ -4536,8 +4536,8 @@ function _renderAiMsg(text: string, isUser: boolean): string {
             </div>
         </div>`;
     }
-    return `<div class="cb-row cb-row-ai-in" style="padding:3px 6px;">
-        <div style="display:flex;align-items:flex-start;gap:8px;max-width:92%;">
+    return `<div class="cb-row cb-row-ai-in" style="padding:3px 4px;">
+        <div style="display:flex;align-items:flex-start;gap:5px;max-width:94%;">
             <div class="ai-avatar-sm"></div>
             <div class="msg-col" style="align-items:flex-start;">
                 <div class="cb-ai">${text.replace(/\n/g, '<br>')}</div>

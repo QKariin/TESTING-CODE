@@ -2919,7 +2919,7 @@
 
 /* ── AI Chat Mode ── */
 #mobChatOverlay.ai-mode {
-    background: linear-gradient(135deg, rgba(255,0,237,0.08) 0%, rgba(0,10,255,0.08) 100%), #050210;
+    background: linear-gradient(135deg, rgba(255,0,237,0.12) 0%, rgba(0,10,255,0.12) 100%), rgba(10, 5, 21, 0.95);
 }
 
 #mobChatOverlay.ai-mode .mob-gl-tabs {
@@ -2950,8 +2950,8 @@
 }
 
 .ai-avatar-sm {
-    width: 28px;
-    height: 28px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(100, 60, 255, 0.25), rgba(180, 60, 255, 0.12));
     border: 1px solid rgba(140, 80, 255, 0.3);
@@ -3100,13 +3100,13 @@
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
 .ai-change-topic-btn {
-    background: rgba(140, 80, 255, 0.04) !important;
-    border-color: rgba(140, 80, 255, 0.2) !important;
-    color: rgba(140, 80, 255, 0.6) !important;
+    background: rgba(0, 200, 200, 0.06) !important;
+    border-color: rgba(0, 200, 200, 0.3) !important;
+    color: rgba(0, 220, 220, 0.7) !important;
 }
 .ai-change-topic-btn:active {
-    background: rgba(140, 80, 255, 0.12) !important;
-    border-color: rgba(140, 80, 255, 0.4) !important;
+    background: rgba(0, 200, 200, 0.15) !important;
+    border-color: rgba(0, 200, 200, 0.5) !important;
 }
 .ai-switch-panel {
     margin-top: 6px;
