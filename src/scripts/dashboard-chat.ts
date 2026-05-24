@@ -690,11 +690,11 @@ function renderToHtml(m: any) {
                 <div class="chat-gift-wrap">
                     <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
                         <div style="padding:18px 20px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:10px;">${title}</div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(197,160,89,0.6);letter-spacing:3px;margin-bottom:10px;">${title}</div>
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 12px;"></div>
                             <div style="margin-bottom:10px;">${itemIcons[d.item] || ''}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${subtitle}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.4);margin-top:4px;">Total: ${d.newCount || 0}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.5);letter-spacing:1px;">${subtitle}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(197,160,89,0.45);margin-top:4px;">Total: ${d.newCount || 0}</div>
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
