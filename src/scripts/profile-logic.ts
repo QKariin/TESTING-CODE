@@ -4241,22 +4241,23 @@ export function toggleAiMode(on?: boolean) {
     switchMobChatTab('chat');
 }
 
-const AI_TOPICS = [
+const AI_TOPICS: { label: string; msg?: string; action?: string }[] = [
     { label: 'How it works', msg: 'Give me a quick overview of how this app works' },
     { label: 'Hierarchy', msg: 'How does the hierarchy system work?' },
     { label: 'Kneeling', msg: 'How does kneeling work?' },
     { label: 'Tasks', msg: 'How do tasks work?' },
     { label: 'Daily Routine', msg: 'How does the daily routine work?' },
-    { label: 'Certificate', msg: 'How does the certificate system work?' },
+    { label: 'My Certificate', action: 'openCert' },
     { label: 'Coins & Tributes', msg: 'How do coins and tributes work?' },
     { label: 'Merit Points', msg: 'How do merit points work?' },
     { label: 'Her Wishlist', msg: 'Tell me about Queen Karins wishlist' },
-    { label: 'Download & Share', msg: 'How do I download the app and share it?' },
 ];
 
 function _aiTopicBtns(): string {
     return `<div class="ai-topics">${AI_TOPICS.map(t =>
-        `<button class="ai-topic-btn" onclick="window._sendAiTopic('${t.msg.replace(/'/g, "\\'")}')">${t.label}</button>`
+        t.action
+            ? `<button class="ai-topic-btn" onclick="window._aiAction('${t.action}')">${t.label}</button>`
+            : `<button class="ai-topic-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
     ).join('')}</div>`;
 }
 
@@ -4289,12 +4290,6 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'Tributes', msg: 'How do tributes work and what do they count toward?' },
         { label: 'Chat costs', msg: 'How much does it cost to chat at each rank?' },
     ],
-    certificate: [
-        { label: 'What is it', msg: 'What is the certificate and what does it show?' },
-        { label: 'Cert proof', msg: 'How does certificate proof work?' },
-        { label: 'Rewards', msg: 'What do I earn from certificate proof?' },
-        { label: 'Cooldown', msg: 'How often can I submit certificate proof?' },
-    ],
     merit: [
         { label: 'How to earn merit', msg: 'What are all the ways I can earn merit points?' },
         { label: 'Merit for ranking', msg: 'How much merit do I need for each rank?' },
@@ -4304,11 +4299,6 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'How to contribute', msg: 'How do I contribute to something on Her wishlist?' },
         { label: 'Crowdfund goals', msg: 'How do crowdfund goals work on the wishlist?' },
         { label: 'Does it help me rank', msg: 'Does contributing to the wishlist count toward my rank?' },
-    ],
-    download: [
-        { label: 'iPhone install', msg: 'How do I install the app on iPhone?' },
-        { label: 'Android install', msg: 'How do I install the app on Android?' },
-        { label: 'Share it', msg: 'How can I share this app with someone?' },
     ],
     general: [
         { label: 'What is this app', msg: 'What is this app and why does it exist?' },
@@ -4327,8 +4317,6 @@ function _detectTopic(msg: string): string {
     if (m.includes('routine') || m.includes('streak') || m.includes('daily')) return 'routine';
     if (m.includes('coin') || m.includes('tribute') || m.includes('buy') || m.includes('purchase')) return 'coins';
     if (m.includes('wishlist') || m.includes('gift') || m.includes('want') || m.includes('help her')) return 'wishlist';
-    if (m.includes('download') || m.includes('install') || m.includes('share')) return 'download';
-    if (m.includes('cert')) return 'certificate';
     if (m.includes('merit') || m.includes('point') || m.includes('progress')) return 'merit';
     return 'general';
 }
@@ -4379,6 +4367,13 @@ function _showAiChat() {
     }
 }
 
+// Handle action buttons (open modals, overlays, etc.)
+function _aiAction(action: string) {
+    if (action === 'openCert') {
+        (window as any).showCertificate?.();
+    }
+}
+
 // Send a topic button message as if the user typed it
 export function _sendAiTopic(msg: string) {
     const input = document.getElementById('mob_aiMsgInput') as HTMLInputElement;
@@ -4390,6 +4385,7 @@ export function _sendAiTopic(msg: string) {
 
 if (typeof window !== 'undefined') {
     (window as any)._sendAiTopic = _sendAiTopic;
+    (window as any)._aiAction = _aiAction;
 }
 
 export async function sendAiMessage() {
