@@ -4329,17 +4329,18 @@ function _aiFollowUpBtns(userMsg: string): string {
         `<button class="ai-topic-btn ai-followup-btn" onclick="window._sendAiTopic('${s.msg.replace(/'/g, "\\'")}')">${s.label}</button>`
     ).join('');
 
+    const switchBtns = AI_TOPICS.filter(t => t.msg && _detectTopic(t.msg) !== _lastAiTopic).slice(0, 4).map(t =>
+        `<button class="ai-topic-btn ai-followup-btn ai-switch-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
+    ).join('');
+
     return `<div class="ai-followup">
-        <div class="ai-followup-label">Dig deeper</div>
         <div class="ai-followup-btns">
             ${subBtns}
-        </div>
-        <div class="ai-followup-label" style="margin-top:10px;">Or switch it up</div>
-        <div class="ai-followup-btns">
-            ${AI_TOPICS.filter(t => t.msg && _detectTopic(t.msg) !== _lastAiTopic).slice(0, 4).map(t =>
-                `<button class="ai-topic-btn ai-followup-btn ai-switch-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
-            ).join('')}
+            <button class="ai-topic-btn ai-followup-btn ai-change-topic-btn" onclick="window._aiToggleSwitch(this)">Change topic</button>
             <button class="ai-topic-btn ai-followup-btn ai-chat-free" onclick="window._aiJustChat()">Just chat</button>
+        </div>
+        <div class="ai-switch-panel" style="display:none;">
+            <div class="ai-followup-btns">${switchBtns}</div>
         </div>
     </div>`;
 }
@@ -4372,6 +4373,15 @@ function _aiAction(action: string) {
     if (action === 'openCert') {
         (window as any).showCertificate?.();
     }
+}
+
+// Toggle the switch-topic panel
+function _aiToggleSwitch(btn: HTMLElement) {
+    const panel = btn.closest('.ai-followup')?.querySelector('.ai-switch-panel') as HTMLElement;
+    if (!panel) return;
+    const visible = panel.style.display !== 'none';
+    panel.style.display = visible ? 'none' : '';
+    _scrollChatDelayed();
 }
 
 // Hide follow-up buttons, show small "Topics" return button
@@ -4415,6 +4425,7 @@ if (typeof window !== 'undefined') {
     (window as any)._aiAction = _aiAction;
     (window as any)._aiJustChat = _aiJustChat;
     (window as any)._aiShowTopics = _aiShowTopics;
+    (window as any)._aiToggleSwitch = _aiToggleSwitch;
 }
 
 export async function sendAiMessage() {

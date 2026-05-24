@@ -3099,6 +3099,24 @@
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
+.ai-change-topic-btn {
+    background: rgba(140, 80, 255, 0.04) !important;
+    border-color: rgba(140, 80, 255, 0.2) !important;
+    color: rgba(140, 80, 255, 0.6) !important;
+}
+.ai-change-topic-btn:active {
+    background: rgba(140, 80, 255, 0.12) !important;
+    border-color: rgba(140, 80, 255, 0.4) !important;
+}
+.ai-switch-panel {
+    margin-top: 6px;
+}
+.ai-followup {
+    padding: 10px 16px 4px;
+}
+.ai-followup-label {
+    display: none;
+}
 .ai-topics-return {
     text-align: center;
     padding: 8px 0;
