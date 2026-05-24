@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
 
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
         const { data: target } = isUuid
-            ? await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint').eq('ID', memberId).maybeSingle()
-            : await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint').ilike('member_id', memberId).maybeSingle();
+            ? await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint, member_id').eq('ID', memberId).maybeSingle()
+            : await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint, member_id').ilike('member_id', memberId).maybeSingle();
 
         if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
@@ -81,6 +81,28 @@ export async function POST(request: NextRequest) {
         const newCount = current + qty;
         const cardData = { item, source: 'gift', newCount };
         try { await DbService.sendMessage(memberId, `INVENTORY_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+
+        // Send push notification
+        const ITEM_NAMES: Record<string, string> = { skippass: 'Skip Pass', cumpass: 'Cum Pass', checkpoint: 'Checkpoint' };
+        const targetEmail = (target.member_id || '').toLowerCase();
+        if (targetEmail) {
+            const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+            const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+            if (apiKey) {
+                fetch('https://api.onesignal.com/notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+                    body: JSON.stringify({
+                        app_id: appId,
+                        target_channel: 'push',
+                        include_aliases: { external_id: [targetEmail] },
+                        headings: { en: 'Queen Karin' },
+                        contents: { en: `You received a ${ITEM_NAMES[item] || item} from Queen Karin.` },
+                        url: 'https://throne.qkarin.com/profile',
+                    }),
+                }).catch(() => {});
+            }
+        }
 
         return NextResponse.json({ success: true, item, newCount });
     }
