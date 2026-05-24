@@ -3099,3 +3099,15 @@
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
+.ai-topics-return {
+    text-align: center;
+    padding: 8px 0;
+}
+.ai-return-btn {
+    font-size: 0.4rem !important;
+    padding: 5px 14px !important;
+    opacity: 0.5;
+}
+.ai-return-btn:active {
+    opacity: 1;
+}

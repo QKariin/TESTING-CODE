@@ -4339,7 +4339,7 @@ function _aiFollowUpBtns(userMsg: string): string {
             ${AI_TOPICS.filter(t => t.msg && _detectTopic(t.msg) !== _lastAiTopic).slice(0, 4).map(t =>
                 `<button class="ai-topic-btn ai-followup-btn ai-switch-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
             ).join('')}
-            <button class="ai-topic-btn ai-followup-btn ai-chat-free" onclick="document.getElementById('mob_aiMsgInput')?.focus()">Just chat</button>
+            <button class="ai-topic-btn ai-followup-btn ai-chat-free" onclick="window._aiJustChat()">Just chat</button>
         </div>
     </div>`;
 }
@@ -4374,6 +4374,33 @@ function _aiAction(action: string) {
     }
 }
 
+// Hide follow-up buttons, show small "Topics" return button
+function _aiJustChat() {
+    const content = document.getElementById('mob_aiChatContent');
+    content?.querySelectorAll('.ai-followup').forEach(el => el.remove());
+    if (content) {
+        content.insertAdjacentHTML('beforeend',
+            `<div class="ai-topics-return"><button class="ai-topic-btn ai-return-btn" onclick="window._aiShowTopics()">Topics</button></div>`
+        );
+    }
+    document.getElementById('mob_aiMsgInput')?.focus();
+    _scrollChatDelayed();
+}
+
+// Bring back full topic buttons
+function _aiShowTopics() {
+    const content = document.getElementById('mob_aiChatContent');
+    content?.querySelectorAll('.ai-topics-return').forEach(el => el.remove());
+    if (content) content.insertAdjacentHTML('beforeend', `<div class="ai-followup"><div class="ai-followup-btns">${
+        AI_TOPICS.map(t =>
+            t.action
+                ? `<button class="ai-topic-btn ai-followup-btn" onclick="window._aiAction('${t.action}')">${t.label}</button>`
+                : `<button class="ai-topic-btn ai-followup-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
+        ).join('')
+    }</div></div>`);
+    _scrollChatDelayed();
+}
+
 // Send a topic button message as if the user typed it
 export function _sendAiTopic(msg: string) {
     const input = document.getElementById('mob_aiMsgInput') as HTMLInputElement;
@@ -4386,6 +4413,8 @@ export function _sendAiTopic(msg: string) {
 if (typeof window !== 'undefined') {
     (window as any)._sendAiTopic = _sendAiTopic;
     (window as any)._aiAction = _aiAction;
+    (window as any)._aiJustChat = _aiJustChat;
+    (window as any)._aiShowTopics = _aiShowTopics;
 }
 
 export async function sendAiMessage() {
@@ -4405,9 +4434,10 @@ export async function sendAiMessage() {
 
     const content = document.getElementById('mob_aiChatContent');
 
-    // Remove welcome message and previous follow-up buttons
+    // Remove welcome message, follow-up buttons, and topics-return button
     content?.querySelector('.ai-welcome')?.remove();
     content?.querySelectorAll('.ai-followup').forEach(el => el.remove());
+    content?.querySelectorAll('.ai-topics-return').forEach(el => el.remove());
 
     // Render user message immediately
     const userHtml = _renderAiMsg(msg, true);
