@@ -109,6 +109,7 @@ import {
     buyInventoryItem,
     useInventoryItem,
     useSkipPass,
+    _confirmCheckpoint,
 } from '@/scripts/profile-logic';
 import { bindInlineRisky } from '@/scripts/inline-risky';
 
@@ -291,6 +292,7 @@ export default function ProfilePage() {
             (window as any).buyInventoryItem = buyInventoryItem;
             (window as any).useInventoryItem = useInventoryItem;
             (window as any).useSkipPass = useSkipPass;
+            (window as any)._confirmCheckpoint = _confirmCheckpoint;
             (window as any).openMobQueenWall = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
             (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
             (window as any).switchMobQwTab = switchMobQwTab;

@@ -2449,18 +2449,41 @@ export async function updateRoutineWidget() {
             if (timeMsg) timeMsg.classList.add('hidden');
         } else {
             // ── State 2c: After 10 AM, missed today ──────────────────────
+            const cpRaw = (window as any).__currentProfileRaw || _st.raw || _st;
+            const cpCount = Number(cpRaw?.checkpoint || 0);
+
             if (display) display.textContent = data.routine;
             if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
-                btn.textContent = 'MISSED - NEXT: 6:00 AM';
-                btn.style.background = 'linear-gradient(135deg, #2a1010 0%, #1a0808 100%)';
-                btn.style.opacity = '0.6';
-                btn.style.cursor = 'default';
-                (window as any).__routineAction = () => {};
+                btn.textContent = cpCount > 0 ? 'USE CHECKPOINT' : 'MISSED - NEXT: 6:00 AM';
+                btn.style.background = cpCount > 0 ? 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)' : 'linear-gradient(135deg, #2a1010 0%, #1a0808 100%)';
+                btn.style.opacity = cpCount > 0 ? '1' : '0.6';
+                btn.style.cursor = cpCount > 0 ? 'pointer' : 'default';
+                (window as any).__routineAction = cpCount > 0 ? () => _showCheckpointWarning() : () => {};
             }
-            if (mobBtn) { mobBtn.textContent = 'MISSED - NEXT: 6AM'; mobBtn.style.opacity = '0.5'; mobBtn.style.cursor = 'default'; mobBtn.onclick = null; }
+            if (mobBtn) {
+                if (cpCount > 0) {
+                    mobBtn.textContent = 'USE CHECKPOINT';
+                    mobBtn.style.opacity = '1';
+                    mobBtn.style.cursor = 'pointer';
+                    mobBtn.onclick = () => _showCheckpointWarning();
+                } else {
+                    mobBtn.textContent = 'MISSED - NEXT: 6AM';
+                    mobBtn.style.opacity = '0.5';
+                    mobBtn.style.cursor = 'default';
+                    mobBtn.onclick = null;
+                }
+            }
             if (mobDone) mobDone.classList.add('hidden');
-            if (timeMsg) { timeMsg.textContent = 'ROUTINE WINDOW CLOSED'; timeMsg.style.color = 'rgba(255,68,68,0.5)'; timeMsg.classList.remove('hidden'); }
+            if (timeMsg) {
+                if (cpCount > 0) {
+                    timeMsg.innerHTML = `<span style="color:rgba(255,68,68,0.6);">STREAK AT RISK</span> &mdash; <span style="color:rgba(197,160,89,0.7);">${cpCount} CHECKPOINT${cpCount > 1 ? 'S' : ''} LEFT</span>`;
+                } else {
+                    timeMsg.textContent = 'ROUTINE WINDOW CLOSED';
+                    timeMsg.style.color = 'rgba(255,68,68,0.5)';
+                }
+                timeMsg.classList.remove('hidden');
+            }
         }
 
         console.log(`[ROUTINE] routine=${!!data.routine}, uploadedToday=${data.uploadedToday}`);
@@ -4734,6 +4757,71 @@ export async function useSkipPass() {
     } catch (err) {
         console.error('Error using skip pass', err);
         cancelSkipTask();
+    }
+}
+
+function _showCheckpointWarning() {
+    const raw = getState().raw || {};
+    const cpCount = Number(raw.checkpoint || 0);
+    if (cpCount <= 0) return;
+
+    const rank = (getState().rank || 'Hall Boy').toLowerCase();
+    const price = CHECKPOINT_PRICES[rank];
+    const priceNote = price ? `Buying another costs ${price.toLocaleString()} coins.` : '';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'checkpointWarning';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+        <div style="max-width:320px;width:100%;background:rgba(10,5,20,0.95);border:1px solid rgba(255,68,68,0.3);border-radius:16px;padding:30px 24px;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">\u26A0</div>
+            <div style="font-family:'Cinzel',serif;font-size:1rem;color:#ff4444;letter-spacing:3px;margin-bottom:8px;">STREAK AT RISK</div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:6px;">
+                You missed your routine window. Your streak will reset to 0.
+            </div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(197,160,89,0.7);margin-bottom:20px;">
+                You have <strong style="color:#c5a059;">${cpCount}</strong> checkpoint${cpCount > 1 ? 's' : ''} left. ${priceNote}
+            </div>
+            <button onclick="window._confirmCheckpoint()" style="width:100%;padding:14px;border-radius:10px;background:linear-gradient(90deg,rgba(197,160,89,0.2),rgba(197,160,89,0.1));border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;margin-bottom:10px;">USE CHECKPOINT</button>
+            <button onclick="document.getElementById('checkpointWarning')?.remove()" style="width:100%;padding:10px;background:none;border:none;color:rgba(255,255,255,0.35);font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:2px;cursor:pointer;">LET IT BREAK</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+export async function _confirmCheckpoint() {
+    document.getElementById('checkpointWarning')?.remove();
+
+    try {
+        const res = await fetch('/api/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'use', item: 'checkpoint' }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            const raw = getState().raw || {};
+            raw.checkpoint = data.newCount;
+            _updateInvUI('checkpoint', data.newCount);
+
+            // Mark routine as done for today via API
+            const { memberId, id } = getState();
+            const userId = memberId || id;
+            if (userId) {
+                await fetch('/api/routine-checkpoint', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId: userId }),
+                });
+            }
+
+            _showInvConfirmation('Streak Saved.', 'Your routine is marked for today.');
+            setTimeout(() => updateRoutineWidget(), 1500);
+        } else {
+            alert(data.error || 'Failed to use checkpoint.');
+        }
+    } catch {
+        alert('Connection error.');
     }
 }
 
