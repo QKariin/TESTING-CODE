@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
+import { DbService } from '@/lib/supabase-service';
 
 const CUMPASS_PRICES: Record<string, number> = {
     'hall boy': 500,
@@ -76,7 +77,12 @@ export async function POST(request: NextRequest) {
 
         if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
-        return NextResponse.json({ success: true, item, newCount: current + qty });
+        // Send inventory card to chat
+        const newCount = current + qty;
+        const cardData = { item, source: 'gift', newCount };
+        try { await DbService.sendMessage(memberId, `INVENTORY_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+
+        return NextResponse.json({ success: true, item, newCount });
     }
 
     // Fetch current profile for buy/use
@@ -110,10 +116,20 @@ export async function POST(request: NextRequest) {
 
         if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
+        const newCount = (Number(profile[item as keyof typeof profile]) || 0) + 1;
+
+        // Send inventory card to chat
+        const cardData = { item, source: 'buy', price, newCount };
+        // Look up user's UUID for message sending
+        const { data: pLookup } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', callerEmail).maybeSingle();
+        if (pLookup?.ID) {
+            try { await DbService.sendMessage(pLookup.ID, `INVENTORY_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+        }
+
         return NextResponse.json({
             success: true,
             item,
-            newCount: (Number(profile[item as keyof typeof profile]) || 0) + 1,
+            newCount,
             newWallet: wallet - price,
             price,
         });

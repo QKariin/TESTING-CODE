@@ -42,6 +42,7 @@ function isSystemMessage(msg: any): boolean {
     if (!msg) return false;
     const raw = msg.content || msg.message || '';
     if (raw.startsWith('TASK_REVIEW_CARD::')) return false;
+    if (raw.startsWith('INVENTORY_CARD::')) return false;
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = raw.toUpperCase();
     return sender === 'system' ||
@@ -665,6 +666,35 @@ function renderToHtml(m: any) {
                             <div style="font-size:1.6rem;margin-bottom:8px;">${icon}</div>
                             ${pointsLine}
                             ${commentLine}
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // ── Inventory Card ──
+    if (content.startsWith('INVENTORY_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('INVENTORY_CARD::', ''));
+            const isGift = d.source === 'gift';
+            const itemNames: Record<string, string> = { skippass: 'SKIP PASS', cumpass: 'CUM PASS', checkpoint: 'CHECKPOINT' };
+            const title = isGift ? `${itemNames[d.item] || d.item} RECEIVED` : `${itemNames[d.item] || d.item} PURCHASED`;
+            const subtitle = isGift ? 'Gifted by Queen Karin' : `${(d.price || 0).toLocaleString()} coins`;
+            const itemIcons: Record<string, string> = {
+                skippass: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>',
+                cumpass: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+                checkpoint: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            };
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:10px;">${title}</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 12px;"></div>
+                            <div style="margin-bottom:10px;">${itemIcons[d.item] || ''}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">${subtitle}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.4);margin-top:4px;">Total: ${d.newCount || 0}</div>
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>

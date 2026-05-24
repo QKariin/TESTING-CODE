@@ -3633,6 +3633,33 @@ function getSystemLogHtml(msg: any) {
     const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const content = msg.content || msg.message || "";
 
+    // ── INVENTORY_CARD ──
+    if (content.startsWith('INVENTORY_CARD::')) {
+        try {
+            const dd = JSON.parse(content.replace('INVENTORY_CARD::', ''));
+            const isGift = dd.source === 'gift';
+            const itemNames: Record<string, string> = { skippass: 'SKIP PASS', cumpass: 'CUM PASS', checkpoint: 'CHECKPOINT' };
+            const itemIcons: Record<string, string> = {
+                skippass: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>',
+                cumpass: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+                checkpoint: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            };
+            const title = isGift ? `${itemNames[dd.item] || dd.item} RECEIVED` : `${itemNames[dd.item] || dd.item} PURCHASED`;
+            const subtitle = isGift ? 'Gifted by Queen Karin' : `${dd.price?.toLocaleString() || 0} coins spent`;
+            const icon = itemIcons[dd.item] || '';
+            return `
+            <div style="display:flex;flex-direction:column;background:rgba(197,160,89,0.04);border-left:2px solid rgba(197,160,89,0.5);border-radius:4px;padding:12px 16px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    ${icon}
+                    <span style="font-family:Cinzel,serif;font-size:0.8rem;color:#c5a059;letter-spacing:2px;">${title}</span>
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:2px;">${subtitle}</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(197,160,89,0.5);margin-top:4px;">Total: ${dd.newCount || 0}</div>
+                <span style="font-family:Cinzel,serif;color:rgba(255,255,255,0.2);font-size:0.55rem;margin-top:8px;">${dateStr} - ${timeStr}</span>
+            </div>`;
+        } catch (_) {}
+    }
+
     // ── TASK_REVIEW_CARD ──
     if (content.startsWith('TASK_REVIEW_CARD::')) {
         try {
