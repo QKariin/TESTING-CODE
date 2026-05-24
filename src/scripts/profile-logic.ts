@@ -4336,8 +4336,8 @@ function _aiFollowUpBtns(userMsg: string): string {
         </div>
         <div class="ai-followup-label" style="margin-top:10px;">Or switch it up</div>
         <div class="ai-followup-btns">
-            ${AI_TOPICS.filter(t => _detectTopic(t.msg) !== _lastAiTopic).slice(0, 4).map(t =>
-                `<button class="ai-topic-btn ai-followup-btn ai-switch-btn" onclick="window._sendAiTopic('${t.msg.replace(/'/g, "\\'")}')">${t.label}</button>`
+            ${AI_TOPICS.filter(t => t.msg && _detectTopic(t.msg) !== _lastAiTopic).slice(0, 4).map(t =>
+                `<button class="ai-topic-btn ai-followup-btn ai-switch-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
             ).join('')}
             <button class="ai-topic-btn ai-followup-btn ai-chat-free" onclick="document.getElementById('mob_aiMsgInput')?.focus()">Just chat</button>
         </div>
