@@ -2919,22 +2919,22 @@
 
 /* ── AI Chat Mode ── */
 #mobChatOverlay.ai-mode {
-    background: linear-gradient(135deg, rgba(255,0,237,0.12) 0%, rgba(0,10,255,0.12) 100%), rgba(10, 5, 21, 0.95);
+    background: linear-gradient(135deg, #ff00ed, #000aff) !important;
 }
 
 #mobChatOverlay.ai-mode .mob-gl-tabs {
-    border-bottom-color: rgba(140, 80, 255, 0.15);
+    border-bottom-color: rgba(255, 0, 237, 0.15);
 }
 
 #mobChatOverlay.ai-mode .mob-gl-tab.active {
-    color: rgba(160, 100, 255, 0.9);
-    border-bottom-color: rgba(160, 100, 255, 0.7);
+    color: rgba(255, 0, 237, 0.9);
+    border-bottom-color: rgba(255, 0, 237, 0.7);
 }
 
 .ai-header {
-    border-bottom-color: rgba(140, 80, 255, 0.2) !important;
-    border-top-color: rgba(140, 80, 255, 0.5) !important;
-    background: #0a0515 !important;
+    border-bottom-color: rgba(255, 0, 237, 0.2) !important;
+    border-top-color: rgba(255, 0, 237, 0.5) !important;
+    background: rgba(10, 0, 20, 0.8) !important;
 }
 
 .ai-avatar {
@@ -2950,31 +2950,31 @@
 }
 
 .ai-avatar-sm {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(100, 60, 255, 0.25), rgba(180, 60, 255, 0.12));
-    border: 1px solid rgba(140, 80, 255, 0.3);
+    background: linear-gradient(135deg, rgba(255, 0, 237, 0.4), rgba(0, 10, 255, 0.3));
+    border: 1px solid rgba(255, 0, 237, 0.4);
     flex-shrink: 0;
 }
 
 .ai-footer {
-    border-top: 1px solid rgba(140, 80, 255, 0.15) !important;
-    background: rgba(10, 5, 21, 0.95) !important;
+    border-top: 1px solid rgba(255, 0, 237, 0.25) !important;
+    background: linear-gradient(135deg, #ff00ed, #000aff) !important;
     gap: 10px;
 }
 
 .ai-input {
-    border-color: rgba(140, 80, 255, 0.2) !important;
-    color: rgba(200, 180, 255, 0.9) !important;
+    border-color: rgba(255, 0, 237, 0.3) !important;
+    color: rgba(255, 230, 250, 0.9) !important;
 }
 
 .ai-input::placeholder {
-    color: rgba(140, 80, 255, 0.3) !important;
+    color: rgba(255, 255, 255, 0.35) !important;
 }
 
 .ai-input:focus {
-    border-color: rgba(140, 80, 255, 0.4) !important;
+    border-color: rgba(255, 0, 237, 0.5) !important;
 }
 
 /* AI message bubbles */
@@ -2984,9 +2984,9 @@
 }
 
 .cb-row-ai-out .cb-me {
-    background: linear-gradient(135deg, rgba(140, 80, 255, 0.15), rgba(100, 60, 255, 0.08));
-    border: 1px solid rgba(140, 80, 255, 0.2);
-    color: rgba(230, 220, 255, 0.9);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     padding: 10px 14px;
@@ -3002,9 +3002,9 @@
 }
 
 .cb-ai {
-    background: rgba(140, 80, 255, 0.06);
-    border: 1px solid rgba(140, 80, 255, 0.12);
-    color: rgba(220, 210, 255, 0.85);
+    background: rgba(255, 0, 237, 0.1);
+    border: 1px solid rgba(255, 0, 237, 0.2);
+    color: rgba(255, 230, 250, 0.9);
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     padding: 10px 14px;
@@ -3018,7 +3018,7 @@
 .ai-typing-dots span {
     animation: aiDotPulse 1.4s infinite;
     font-size: 1.4rem;
-    color: rgba(160, 100, 255, 0.6);
+    color: rgba(255, 0, 237, 0.6);
     font-weight: bold;
 }
 
@@ -3040,9 +3040,9 @@
 }
 
 .ai-topic-btn {
-    background: rgba(140, 80, 255, 0.08);
-    border: 1px solid rgba(140, 80, 255, 0.25);
-    color: rgba(180, 150, 255, 0.85);
+    background: rgba(255, 0, 237, 0.08);
+    border: 1px solid rgba(255, 0, 237, 0.25);
+    color: rgba(255, 200, 250, 0.85);
     font-family: 'Orbitron', sans-serif;
     font-size: 0.5rem;
     letter-spacing: 1px;
@@ -3054,8 +3054,8 @@
 }
 
 .ai-topic-btn:active {
-    background: rgba(140, 80, 255, 0.2);
-    border-color: rgba(140, 80, 255, 0.5);
+    background: rgba(255, 0, 237, 0.2);
+    border-color: rgba(255, 0, 237, 0.5);
     transform: scale(0.95);
 }
 
@@ -3065,7 +3065,7 @@
 .ai-followup-label {
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
-    color: rgba(180, 150, 255, 0.5);
+    color: rgba(255, 200, 250, 0.5);
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 8px;
