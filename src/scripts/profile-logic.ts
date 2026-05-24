@@ -3122,7 +3122,19 @@ export async function initChatSystem() {
                     const isUrlMsg = /^https?:\/\//i.test(rawContent) || /\.(gif|jpg|jpeg|png|webp|mp4|mov)(\?|$)/i.test(rawContent);
                     const gifSrc = isGifMsg ? (msg.metadata?.gifUrl || rawContent) : (isUrlMsg && /\.(gif)/i.test(rawContent) ? rawContent : null);
                     const imgSrc = !gifSrc && isUrlMsg && /\.(jpg|jpeg|png|webp)/i.test(rawContent) ? rawContent : null;
-                    const preview = (isGifMsg || isUrlMsg) ? 'New message' : rawContent.slice(0, 80) || 'New message';
+                    // Clean preview for card messages
+                    let preview: string;
+                    if (rawContent.startsWith('INVENTORY_CARD::')) {
+                        try {
+                            const cd = JSON.parse(rawContent.replace('INVENTORY_CARD::', ''));
+                            const names: Record<string, string> = { skippass: 'Skip Pass', cumpass: 'Cum Pass', checkpoint: 'Checkpoint' };
+                            preview = cd.source === 'gift' ? `You received a ${names[cd.item] || cd.item}` : `${names[cd.item] || cd.item} purchased`;
+                        } catch { preview = 'Inventory updated'; }
+                    } else if (rawContent.startsWith('PROMOTION_CARD::') || rawContent.startsWith('WELCOME_CARD::') || rawContent.startsWith('TASK_REVIEW_CARD::') || rawContent.startsWith('ROUTINE_CHANGE::') || rawContent.startsWith('TASK_FEEDBACK::') || rawContent.startsWith('WISHLIST::')) {
+                        preview = 'New message';
+                    } else {
+                        preview = (isGifMsg || isUrlMsg) ? 'New message' : rawContent.slice(0, 80) || 'New message';
+                    }
                     showNewMessageBanner(preview, gifSrc || imgSrc || undefined);
                 }
             }
