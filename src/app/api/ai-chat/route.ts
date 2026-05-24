@@ -156,6 +156,11 @@ export async function POST(req: Request) {
             .ilike('member_id', memberEmail)
             .maybeSingle() as { data: any };
 
+        // Fetch wishlist items
+        const { data: wishlistItems } = await adminClient.from('Wishlist')
+            .select('Title, Price, Category, is_crowdfund, goal_amount, raised_amount')
+            .order('Price', { ascending: true }) as { data: any[] | null };
+
         let userContext = '';
         if (userProfile) {
             userContext = `\n\nYOU ARE TALKING TO: ${userProfile.name || 'Unknown'}. Their rank is ${userProfile.hierarchy || 'Hall Boy'}. They have ${userProfile.wallet || 0} coins and ${userProfile.score || 0} merit points.`;
@@ -163,6 +168,16 @@ export async function POST(req: Request) {
                 userContext += ` They have done ${userTasks.kneelCount || 0} total kneels.`;
             }
             userContext += ` Use their actual name when addressing them.`;
+        }
+
+        if (wishlistItems && wishlistItems.length > 0) {
+            const items = wishlistItems.map((w: any) => {
+                let desc = `${w.Title} (${w.Price} coins`;
+                if (w.is_crowdfund) desc += `, crowdfund: ${w.raised_amount || 0}/${w.goal_amount || 0} raised`;
+                desc += ')';
+                return desc;
+            }).join(', ');
+            userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST: ${items}. When they ask about the wishlist or what to get Her, recommend specific items from this list. If they can afford something based on their coin balance, mention it. For crowdfund items, tell them how close it is to the goal. Make it personal — "She'd love it if you helped finish this one" or "With your coins you could grab Her the X."`;
         }
 
         // Build messages array with conversation history for context
