@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
+import { DbService } from '@/lib/supabase-service';
 
 async function getCallerEmail(): Promise<string | null> {
     try {
@@ -52,6 +53,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Recalculate consistency so the streak is preserved immediately
+    try { await DbService.recalcConsistency(email, tz); } catch (_) { }
 
     return NextResponse.json({ success: true });
 }
