@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
         const { data: allItems } = await supabaseAdmin.from('vault_items').select('id');
         const { data: unlocked } = await supabaseAdmin.from('vault_unlocks').select('vault_item_id').eq('member_id', email);
 
-        const unlockedIds = new Set((unlocked || []).map(u => u.vault_item_id));
-        const available = (allItems || []).filter(i => !unlockedIds.has(i.id));
+        const unlockedIds = new Set((unlocked || []).map((u: any) => u.vault_item_id));
+        const available = (allItems || []).filter((i: any) => !unlockedIds.has(i.id));
 
         if (available.length === 0) {
             return NextResponse.json({ success: false, reason: 'all_unlocked' });
