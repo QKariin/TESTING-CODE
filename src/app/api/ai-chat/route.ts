@@ -227,36 +227,44 @@ export async function POST(req: Request) {
             if (profile?.member_id) memberEmail = profile.member_id.toLowerCase();
         }
 
-        // Fetch user profile for context
-        const { data: userProfile } = await adminClient.from('profiles')
-            .select('name, hierarchy, wallet, score, total_coins_spent, bestRoutinestreak, routinestreak, limits, kinks, kink, routine, taskdom_routine')
+        // Fetch user profile + tasks for context (select * to avoid column-not-found failures)
+        const { data: userProfile, error: profileErr } = await adminClient.from('profiles')
+            .select('*')
             .ilike('member_id', memberEmail)
             .maybeSingle();
+        if (profileErr) console.error('[ai-chat] Profile fetch error:', profileErr.message);
 
-        const { data: userTasks } = await adminClient.from('tasks')
-            .select('kneelCount, Taskdom_CompletedTasks')
+        const { data: userTasks, error: tasksErr } = await adminClient.from('tasks')
+            .select('*')
             .ilike('member_id', memberEmail)
-            .maybeSingle() as { data: any };
+            .maybeSingle();
+        if (tasksErr) console.error('[ai-chat] Tasks fetch error:', tasksErr.message);
 
         // Fetch wishlist items
         const { data: wishlistItems } = await adminClient.from('Wishlist')
             .select('Title, Price, Category, is_crowdfund, goal_amount, raised_amount')
             .order('Price', { ascending: true }) as { data: any[] | null };
 
+        // Debug: log what we actually got
+        console.log('[ai-chat] memberEmail:', memberEmail, '| profile found:', !!userProfile, '| tasks found:', !!userTasks);
+        if (userTasks) console.log('[ai-chat] tasks keys:', Object.keys(userTasks).filter(k => userTasks[k] != null && userTasks[k] !== ''));
+
         let userContext = '';
         if (userProfile) {
-            const rank = userProfile.hierarchy || 'Hall Boy';
-            const completedTasks = Number(userTasks?.Taskdom_CompletedTasks || 0);
-            const kneels = Number(userTasks?.kneelCount || 0);
-            const merit = Number(userProfile.score || 0);
-            const coinsSpent = Number(userProfile.total_coins_spent || 0);
-            const bestStreak = Number(userProfile.bestRoutinestreak || userProfile.routinestreak || 0);
-            const wallet = Number(userProfile.wallet || 0);
-            const hasLimits = (userProfile.limits?.length ?? 0) > 2;
-            const hasKinks = ((userProfile.kinks || userProfile.kink)?.length ?? 0) > 2;
-            const hasRoutine = (userProfile.routine?.length ?? 0) > 5 || (userProfile.taskdom_routine?.length ?? 0) > 5;
+            const p = userProfile as any;
+            const t = userTasks as any;
+            const rank = p.hierarchy || 'Hall Boy';
+            const completedTasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || t?.taskdom_completedtasks || 0);
+            const kneels = Number(t?.kneelCount || t?.kneelcount || 0);
+            const merit = Number(p.score || 0);
+            const coinsSpent = Number(p.total_coins_spent || 0);
+            const bestStreak = Number(p.bestRoutinestreak || p.bestroutinestreak || p.routinestreak || 0);
+            const wallet = Number(p.wallet || 0);
+            const hasLimits = (p.limits?.length ?? 0) > 2;
+            const hasKinks = ((p.kinks || p.kink)?.length ?? 0) > 2;
+            const hasRoutine = (p.routine?.length ?? 0) > 5 || (p.taskdom_routine?.length ?? 0) > 5;
 
-            userContext = `\n\nYOU ARE TALKING TO: ${userProfile.name || 'Unknown'}. Use their actual name when addressing them.`;
+            userContext = `\n\nYOU ARE TALKING TO: ${p.name || p.title_fld || p.title || 'Unknown'}. Use their actual name when addressing them.`;
             userContext += `\nCURRENT RANK: ${rank}`;
             userContext += `\nTHEIR STATS — LABOR (completed tasks): ${completedTasks} | ENDURANCE (total kneels): ${kneels} | MERIT (points): ${merit} | SACRIFICE (coins spent): ${coinsSpent} | CONSISTENCY (best streak): ${bestStreak} days`;
             userContext += `\nPROFILE STATUS — Limits: ${hasLimits ? 'filled' : 'MISSING'} | Kinks: ${hasKinks ? 'filled' : 'MISSING'} | Routine: ${hasRoutine ? 'assigned' : 'NOT YET'}`;
