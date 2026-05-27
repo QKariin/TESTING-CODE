@@ -4869,6 +4869,35 @@ h3,
     white-space: pre-wrap;
 }
 
+/* AI Guardian bubble — teal tint for AI conversation */
+#adminChatBox .cb-ai {
+    background: rgba(56, 189, 248, 0.08);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3), inset 0 0 20px rgba(56, 189, 248, 0.03);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    letter-spacing: 0.1px;
+    padding: 10px 14px;
+    border-radius: 16px 16px 16px 3px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+/* AI response (right side) — different corner */
+#adminChatBox .cb-ai-right {
+    background: rgba(56, 189, 248, 0.08);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3), inset 0 0 20px rgba(56, 189, 248, 0.03);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    letter-spacing: 0.1px;
+    padding: 10px 14px;
+    border-radius: 16px 16px 3px 16px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
 /* Timestamps */
 #adminChatBox .chat-ts {
     font-family: 'Rajdhani', sans-serif;

@@ -822,9 +822,16 @@ function renderToHtml(m: any) {
 
     // ── Build bubble content ──
     // Dashboard perspective: admin (isMe) → RIGHT, slave → LEFT
-    const bubbleClass = isMe ? 'cb-queen' : 'cb-slave';
+    // AI conversations: guardian color for both AI responses and user-to-AI messages
+    const senderLower = (m.sender_email || '').toLowerCase();
+    const isAiResponse = senderLower === 'ai-assistant';
+    const isUserToAi = !isMe && !isAiResponse && m.metadata?.isAI === true;
+    const isAiConversation = isAiResponse || isUserToAi;
+
+    const bubbleClass = isMe ? 'cb-queen' : isAiResponse ? 'cb-ai-right' : isUserToAi ? 'cb-ai' : 'cb-slave';
     const slaveAvatar = users.find(u => u.memberId === m.member_id)?.avatar || '';
     const slaveAv = slaveAvatar ? `<img src="${getOptimizedUrl(slaveAvatar, 60)}" class="cb-queen-av" alt="" />` : '';
+    const aiLabel = `<div style="font-family:'Orbitron',sans-serif;font-size:0.32rem;color:rgba(56,189,248,0.6);letter-spacing:2px;margin-bottom:3px;">AI GUARDIAN</div>`;
 
     let bubble = '';
     if (m.type === 'photo') {
@@ -838,6 +845,30 @@ function renderToHtml(m: any) {
         let safeHtml = purifier.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, '<br>');
         bubble = `<div class="${bubbleClass}">${safeHtml}</div>`;
+    }
+
+    // AI response → RIGHT (like queen), with guardian label
+    if (isAiResponse) {
+        return `
+            <div class="cb-row cb-row-me">
+                <div class="cb-wrap-me">
+                    ${aiLabel}
+                    ${bubble}
+                    <div class="chat-ts chat-ts-right">${timeStr}</div>
+                </div>
+            </div>`;
+    }
+
+    // User message to AI → LEFT, guardian tint
+    if (isUserToAi) {
+        return `
+            <div class="cb-row cb-row-queen">
+                ${slaveAv}
+                <div class="cb-wrap-queen">
+                    ${bubble}
+                    <div class="chat-ts chat-ts-left">${timeStr}</div>
+                </div>
+            </div>`;
     }
 
     // Admin (isMe) → RIGHT, no avatar
