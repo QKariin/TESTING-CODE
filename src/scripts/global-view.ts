@@ -83,18 +83,30 @@ if (typeof window !== 'undefined') {
         setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
     };
 
-    (window as any)._openGlobalLightbox = (url: string) => {
+    (window as any)._openGlobalLightbox = (url: string, type?: string) => {
         let lb = document.getElementById('globalChatLightbox');
         if (!lb) {
             lb = document.createElement('div');
             lb.id = 'globalChatLightbox';
             lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
             lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
-            lb.addEventListener('click', () => { lb!.style.display = 'none'; });
+            lb.addEventListener('click', (e) => {
+                if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) {
+                    const vid = lb!.querySelector('video');
+                    if (vid) vid.pause();
+                    lb!.style.display = 'none';
+                }
+            });
             document.body.appendChild(lb);
         }
         const media = document.getElementById('globalChatLightboxMedia');
-        if (media) media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+        if (media) {
+            if (type === 'video') {
+                media.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;" onclick="event.stopPropagation()"></video>`;
+            } else {
+                media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+            }
+        }
         lb.style.display = 'flex';
     };
 }
@@ -1038,7 +1050,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const _thumbBg = (msg.thumbnail_url) ? `background-image:url('${msg.thumbnail_url.replace(/'/g, "\\'")}');background-size:cover;background-position:center;` : 'background:#0a0a0a;';
     const mediaHtml = msg.media_url ? (
         hasVideo
-            ? `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_thumbBg}min-height:200px;display:flex;align-items:center;justify-content:center;" onclick="var el=this,orig=el.innerHTML,origStyle=el.style.cssText,v=document.createElement('video');v.src='${msg.media_url.replace(/'/g, "\\'")}';v.controls=true;v.playsInline=true;v.autoplay=true;v.style.cssText='width:100%;max-height:280px;object-fit:cover;display:block;';v.onerror=function(){el.innerHTML=orig;el.style.cssText=origStyle;};el.innerHTML='';el.style.cursor='default';el.style.minHeight='auto';el.style.backgroundImage='none';el.onclick=null;el.appendChild(v);">${_playSvg}</div>`
+            ? `<div style="margin-top:8px;width:160px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_thumbBg}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_playSvg}</div>`
             : isGif
                 ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
                 : `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;max-height:240px;object-fit:cover;display:block;" /></div>`
