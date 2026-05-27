@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
         const unlockMap = new Map((unlocks || []).map((u: any) => [u.vault_item_id, u]));
 
-        const result = (items || []).map(item => ({
+        const result = (items || []).map((item: any) => ({
             id: item.id,
             title: item.title,
             type: item.type,
@@ -54,9 +54,9 @@ export async function GET(req: NextRequest) {
         .select('vault_item_id');
 
     const countMap = new Map<string, number>();
-    (unlocks || []).forEach(u => countMap.set(u.vault_item_id, (countMap.get(u.vault_item_id) || 0) + 1));
+    (unlocks || []).forEach((u: any) => countMap.set(u.vault_item_id, (countMap.get(u.vault_item_id) || 0) + 1));
 
-    const result = (items || []).map(item => ({
+    const result = (items || []).map((item: any) => ({
         ...item,
         unlock_count: countMap.get(item.id) || 0,
     }));
