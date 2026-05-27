@@ -1053,7 +1053,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             ? `<div style="margin-top:8px;width:160px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_thumbBg}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_playSvg}</div>`
             : isGif
                 ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
-                : `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;max-height:240px;object-fit:cover;display:block;" /></div>`
+                : `<div style="margin-top:8px;width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`
     ) : '';
 
     // Like button helper
@@ -1062,28 +1062,25 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const heartSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="${liked ? '#e03050' : 'none'}" stroke="${liked ? '#e03050' : 'rgba(255,255,255,0.3)'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
     const likeBtn = `<button class="gl-like-btn" onclick="event.stopPropagation();window._toggleGlobalLike('${likeId.replace(/'/g, "\\'")}',this)" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;gap:4px;transition:transform 0.15s;" title="Like">${heartSvg}</button>`;
 
-    // ── QUEEN bubble — photo post card (Instagram-style) ──
+    // ── QUEEN bubble — photo post card ──
     if (isQueen && hasPhoto) {
-        const qAvSrc = av || '/queen-nav.png';
+        const qAv = av
+            ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
+            : `<img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
         const captionText = content && content !== '[PHOTO]' ? content : '';
-        return `<div class="gl-msg-row" style="margin-bottom:12px;">
-            <div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);">
-                <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;">
-                    <img src="${qAvSrc}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);" onerror="this.src='/queen-nav.png'">
-                    <div style="flex:1;min-width:0;">
-                        <div style="display:flex;align-items:center;gap:4px;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.55rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+        return `<div class="gl-msg-row" style="margin-bottom:8px;">
+            <div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                        ${qAv}
+                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                        <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                     </div>
-                    <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.45);">${time}</span>
+                    <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
                 </div>
-                <div style="width:100%;max-height:420px;overflow:hidden;cursor:pointer;position:relative;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')">
-                    <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;object-fit:cover;max-height:420px;" />
-                </div>
-                <div style="padding:8px 14px 10px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:${captionText ? '6' : '0'}px;">
-                        ${likeBtn}
-                        ${replyBtn}
-                    </div>
-                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Cinzel',serif;font-size:0.52rem;color:#c5a059;font-weight:700;margin-right:6px;">QUEEN KARIN</span>${captionText}</div>` : ''}
+                ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:6px;">${captionText}</div>` : ''}
+                <div style="width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')">
+                    <img src="${msg.media_url}" ${_imgErr} style="width:100%;height:100%;object-fit:cover;display:block;" />
                 </div>
             </div>
         </div>`;

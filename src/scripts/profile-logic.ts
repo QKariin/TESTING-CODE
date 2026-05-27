@@ -6194,7 +6194,7 @@ function _buildMobGlBubble(msg: any): string {
     const mediaHtml = msg.media_url
         ? (hasVideo
             ? `<div style="margin-top:8px;width:140px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_mobThumbStyle}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_mobPlaySvg}</div>`
-            : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')" />`)
+            : `<div style="margin-top:8px;width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')"><img src="${msg.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`)
         : '';
 
     // Like button
@@ -6208,28 +6208,21 @@ function _buildMobGlBubble(msg: any): string {
         ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);flex-shrink:0;" onerror="this.style.display='none'">`
         : `<div style="width:18px;height:18px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:0.38rem;color:#c5a059;flex-shrink:0;">${(name[0]||'S').toUpperCase()}</div>`;
 
-    // ── QUEEN photo post card (Instagram-style) ──
+    // ── QUEEN photo post card ──
     if (isQueen && hasPhoto) {
         const captionText = content && content !== '[PHOTO]' ? content : '';
-        return `<div style="margin-bottom:10px;overflow:hidden;">
-            <div style="background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1.5px solid rgba(197,160,89,0.6);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 20px rgba(197,160,89,0.08);">
-                <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;">
-                    <img src="/queen-nav.png" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.6);">
-                    <div style="flex:1;min-width:0;">
-                        <div style="display:flex;align-items:center;gap:3px;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.5rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
-                    </div>
-                    <span style="font-family:'Orbitron';font-size:0.32rem;color:rgba(197,160,89,0.45);">${time}</span>
+        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
+                <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                    <img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">
+                    <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.72rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div>
+                    <span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
                 </div>
-                <div style="width:100%;max-height:400px;overflow:hidden;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')">
-                    <img src="${msg.media_url}" style="width:100%;display:block;object-fit:cover;max-height:400px;" />
-                </div>
-                <div style="padding:8px 12px 10px;">
-                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:${captionText ? '5' : '0'}px;">
-                        ${_likeBtn}
-                        ${replyBtn}
-                    </div>
-                    ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.7);line-height:1.5;"><span style="font-family:'Cinzel',serif;font-size:0.48rem;color:#c5a059;font-weight:700;margin-right:5px;">QUEEN KARIN</span>${captionText}</div>` : ''}
-                </div>
+                <div style="display:flex;align-items:center;gap:4px;">${_likeBtn}${replyBtn}</div>
+            </div>
+            ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:6px;">${captionText}</div>` : ''}
+            <div style="width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')">
+                <img src="${msg.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />
             </div>
         </div>`;
     }
