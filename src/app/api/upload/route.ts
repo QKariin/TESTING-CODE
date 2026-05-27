@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 120; // allow up to 2 min for large video uploads
 
 export async function POST(req: NextRequest) {
     try {

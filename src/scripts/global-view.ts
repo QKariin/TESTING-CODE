@@ -1788,18 +1788,27 @@ function _openVideoThumbnailPicker(file: File, senderEmail: string, raw: any) {
         statusEl.textContent = 'UPLOADING VIDEO...';
 
         try {
-            // 1) Upload the video
+            // 1) Upload the video via signed URL (bypasses Next.js body size limit)
             const vExt = (file.name.split('.').pop() || 'mp4').toLowerCase();
-            const vFd = new FormData();
-            vFd.append('file', file);
-            vFd.append('bucket', 'media');
-            vFd.append('folder', 'global-chat');
-            vFd.append('ext', vExt);
-            const vRes = await fetch('/api/upload', { method: 'POST', body: vFd });
-            const vData = await vRes.json();
-            if (!vData.url) { statusEl.textContent = 'VIDEO UPLOAD FAILED'; confirmBtn.disabled = false; return; }
+            const vPath = `global-chat/${crypto.randomUUID()}.${vExt}`;
+            const signRes = await fetch('/api/upload/signed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bucket: 'media', path: vPath }),
+            });
+            const signData = await signRes.json();
+            if (!signData.signedUrl) { statusEl.textContent = 'VIDEO UPLOAD FAILED'; confirmBtn.disabled = false; return; }
 
-            // 2) Upload the thumbnail
+            // Direct upload to Supabase Storage
+            const upRes = await fetch(signData.signedUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': file.type || 'video/mp4' },
+                body: file,
+            });
+            if (!upRes.ok) { statusEl.textContent = 'VIDEO UPLOAD FAILED'; confirmBtn.disabled = false; return; }
+            const videoPublicUrl = signData.publicUrl;
+
+            // 2) Upload the thumbnail (small, can use normal route)
             statusEl.textContent = 'UPLOADING THUMBNAIL...';
             let thumbBlob: Blob;
             if (customThumbFile) {
@@ -1836,7 +1845,7 @@ function _openVideoThumbnailPicker(file: File, senderEmail: string, raw: any) {
                 is_queen: isQueenLocal,
                 is_me: true,
                 message: '[VIDEO]',
-                media_url: vData.url,
+                media_url: videoPublicUrl,
                 media_type: 'video',
                 thumbnail_url: thumbUrl,
                 created_at: new Date().toISOString(),
@@ -1845,7 +1854,7 @@ function _openVideoThumbnailPicker(file: File, senderEmail: string, raw: any) {
             await fetch('/api/global/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: '[VIDEO]', senderEmail, media_url: vData.url, media_type: 'video', thumbnail_url: thumbUrl }),
+                body: JSON.stringify({ message: '[VIDEO]', senderEmail, media_url: videoPublicUrl, media_type: 'video', thumbnail_url: thumbUrl }),
             });
 
             URL.revokeObjectURL(videoUrl);
