@@ -851,25 +851,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         </div>`;
     }
 
-    // ── Photo Card ── same card style as GIF
-    if (msg.media_url && msg.media_type === 'image' && !content.startsWith('UPDATE_PHOTO_CARD::') && !content.startsWith('GIFT_SENT::')) {
-        const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
-        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
-            <div style="width:60%;min-width:220px;max-width:360px;">
-                <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.35);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                    <div style="width:100%;overflow:hidden;background:#0a0703;">
-                        <img src="${msg.media_url}" ${_imgErr} style="width:100%;display:block;max-height:240px;object-fit:cover;" />
-                    </div>
-                    <div style="padding:10px 16px 14px;text-align:center;border-top:1px solid rgba(197,160,89,0.12);">
-                        <div style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${name}</div>
-                    </div>
-                </div>
-                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
-            </div>
-        </div>`;
-    }
-
-    // UPDATE PHOTO CARD
+    // UPDATE PHOTO CARD (profile update announcements — keep as card)
     if (content.startsWith('UPDATE_PHOTO_CARD::')) {
         try {
             const d = JSON.parse(content.replace('UPDATE_PHOTO_CARD::', ''));
@@ -1046,14 +1028,15 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';
     const hasVideo = msg.media_url && msg.media_type === 'video';
+    const _isMediaOnly = (hasVideo || hasPhoto || isGif) && (!content || content === '[VIDEO]' || content === '[PHOTO]' || content === '[GIF]');
     const _playSvg = `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="23" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/><path d="M19 14.5L35 24L19 33.5V14.5Z" fill="rgba(255,255,255,0.9)"/></svg>`;
     const _thumbBg = (msg.thumbnail_url) ? `background-image:url('${msg.thumbnail_url.replace(/'/g, "\\'")}');background-size:cover;background-position:center;` : 'background:#0a0a0a;';
     const mediaHtml = msg.media_url ? (
         hasVideo
-            ? `<div style="margin-top:8px;width:160px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_thumbBg}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_playSvg}</div>`
+            ? `<div style="margin-top:6px;width:160px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;position:relative;cursor:pointer;${_thumbBg}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_playSvg}</div>`
             : isGif
                 ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
-                : `<div style="margin-top:8px;width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`
+                : `<div style="margin-top:6px;width:160px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`
     ) : '';
 
     // Like button helper
@@ -1062,67 +1045,64 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const heartSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="${liked ? '#e03050' : 'none'}" stroke="${liked ? '#e03050' : 'rgba(255,255,255,0.3)'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
     const likeBtn = `<button class="gl-like-btn" onclick="event.stopPropagation();window._toggleGlobalLike('${likeId.replace(/'/g, "\\'")}',this)" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;gap:4px;transition:transform 0.15s;" title="Like">${heartSvg}</button>`;
 
-    // ── QUEEN bubble — photo post card ──
-    if (isQueen && hasPhoto) {
-        const qAv = av
-            ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
-            : `<img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
-        const captionText = content && content !== '[PHOTO]' ? content : '';
-        return `<div class="gl-msg-row" style="margin-bottom:8px;">
-            <div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
-                    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-                        ${qAv}
-                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
-                        <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
-                </div>
-                ${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:6px;">${captionText}</div>` : ''}
-                <div style="width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')">
-                    <img src="${msg.media_url}" ${_imgErr} style="width:100%;height:100%;object-fit:cover;display:block;" />
-                </div>
-            </div>
-        </div>`;
-    }
-
-    // ── QUEEN bubble (gold frame, text or video) ──
+    // ── QUEEN bubble ──
     if (isQueen) {
         const qAv = av
             ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;" onerror="this.style.display='none'">`
             : `<img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;">`;
+        const _qTextContent = (isGif || hasVideo || (content === '[PHOTO]' && hasPhoto)) ? '' : content;
+        const _qHeader = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
+            <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                ${qAv}
+                <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
+                <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
+        </div>`;
+
+        if (_isMediaOnly) {
+            // Frameless — just header + media, no border/background
+            return `<div class="gl-msg-row" style="margin-bottom:8px;padding:4px 13px;">
+                ${_qHeader}
+                ${mediaHtml}
+            </div>`;
+        }
+        // Text bubble with gold frame
         return `<div class="gl-msg-row" style="margin-bottom:8px;">
             <div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
-                    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-                        ${qAv}
-                        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN}<span style="font-family:'Cinzel',serif;font-size:0.65rem;color:#c5a059;letter-spacing:1px;font-weight:700;">QUEEN KARIN</span></div>
-                        <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(197,160,89,0.55);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
-                </div>
-                ${quoteHtml}${(isGif || hasVideo || (content === '[PHOTO]' && hasPhoto)) ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${content}</div>`}
+                ${_qHeader}
+                ${quoteHtml}${_qTextContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${_qTextContent}</div>` : ''}
                 ${mediaHtml}
             </div>
         </div>`;
     }
 
-    // ── Regular user bubble (silver frame, full-width feed style) ──
+    // ── Regular user bubble ──
     const initial = (name[0] || 'S').toUpperCase();
     const userAv = av
         ? `<img src="${av}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.35);flex-shrink:0;" onerror="this.style.display='none'">`
         : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.42rem;color:#c5a059;flex-shrink:0;">${initial}</div>`;
+    const _uHeader = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
+            ${userAv}
+            <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
+            <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
+    </div>`;
+    const _uTextContent = (isGif || hasVideo || (content === '[PHOTO]' && hasPhoto)) ? '' : content;
+
+    if (_isMediaOnly) {
+        // Frameless — just header + media
+        return `<div class="gl-msg-row" style="margin-bottom:8px;padding:4px 13px;">
+            ${_uHeader}
+            ${mediaHtml}
+        </div>`;
+    }
     return `<div class="gl-msg-row" style="margin-bottom:8px;">
         <div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">
-                    ${userAv}
-                    <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.6);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</span>
-                    <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> · ${time}</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
-            </div>
-            ${quoteHtml}${(isGif || hasVideo || (content === '[PHOTO]' && hasPhoto)) ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${content}</div>`}
+            ${_uHeader}
+            ${quoteHtml}${_uTextContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${_uTextContent}</div>` : ''}
             ${mediaHtml}
         </div>
     </div>`;

@@ -357,12 +357,16 @@ function _buildMobGlBubble(msg: any): string {
 
     const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';
     const hasVideo = msg.media_url && msg.media_type === 'video';
+    const isGif = (content === '[GIF]' && msg.media_url);
+    const _isMediaOnly = (hasVideo || hasPhoto || isGif) && (!content || content === '[VIDEO]' || content === '[PHOTO]' || content === '[GIF]');
     const _mobPlaySvg = `<svg width="44" height="44" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="23" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/><path d="M19 14.5L35 24L19 33.5V14.5Z" fill="rgba(255,255,255,0.9)"/></svg>`;
     const _mobThumbStyle = msg.thumbnail_url ? `background-image:url('${msg.thumbnail_url.replace(/'/g, "\\'")}');background-size:cover;background-position:center;` : 'background:#0a0a0a;';
     const mediaHtml = msg.media_url
         ? (hasVideo
-            ? `<div style="margin-top:8px;width:140px;aspect-ratio:9/16;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_mobThumbStyle}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_mobPlaySvg}</div>`
-            : `<div style="margin-top:8px;width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')"><img src="${msg.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`)
+            ? `<div style="margin-top:6px;width:160px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;position:relative;cursor:pointer;${_mobThumbStyle}display:flex;align-items:center;justify-content:center;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${msg.media_url.replace(/'/g, "\\'")}','video')">${_mobPlaySvg}</div>`
+            : isGif
+                ? `<img src="${msg.media_url}" style="max-width:200px;width:auto;height:auto;max-height:180px;border-radius:10px;display:block;margin-top:4px;" />`
+                : `<div style="margin-top:6px;width:160px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')"><img src="${msg.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`)
         : '';
 
     // Like button
@@ -376,16 +380,15 @@ function _buildMobGlBubble(msg: any): string {
         ? `<img src="${av}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid rgba(197,160,89,0.4);flex-shrink:0;" onerror="this.style.display='none'">`
         : `<div style="width:18px;height:18px;border-radius:50%;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.25);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:0.38rem;color:#c5a059;flex-shrink:0;">${(name[0]||'S').toUpperCase()}</div>`;
 
-    // QUEEN photo post card
-    if (isQueen && hasPhoto) {
-        const captionText = content && content !== '[PHOTO]' ? content : '';
-        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;"><div style="display:flex;align-items:center;gap:5px;flex-shrink:0;"><img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;"><div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.72rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> \u00B7 ${time}</span></div><div style="display:flex;align-items:center;gap:4px;">${_likeBtn}${replyBtn}</div></div>${captionText ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:6px;">${captionText}</div>` : ''}<div style="width:180px;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" style="width:100%;height:100%;object-fit:cover;display:block;" /></div></div>`;
-    }
-
-    // QUEEN bubble (text or video)
+    // QUEEN bubble
     if (isQueen) {
+        const _qHeader = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;"><div style="display:flex;align-items:center;gap:5px;flex-shrink:0;"><img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;"><div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.72rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> \u00B7 ${time}</span></div><div style="display:flex;align-items:center;gap:4px;">${_likeBtn}${replyBtn}</div></div>`;
         const qContent = ((content === '[GIF]' || content === '[VIDEO]' || content === '[PHOTO]') && msg.media_url) ? '' : content;
-        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;"><div style="display:flex;align-items:center;gap:5px;flex-shrink:0;"><img src="/queen-nav.png" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(197,160,89,0.7);flex-shrink:0;"><div style="display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;">${SVG_CROWN_MOB}<span style="font-family:'Cinzel',serif;font-size:0.72rem;color:#c5a059;letter-spacing:1px;font-weight:700;white-space:nowrap;">QUEEN KARIN</span></div><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.6);white-space:nowrap;flex-shrink:0;"> \u00B7 ${time}</span></div><div style="display:flex;align-items:center;gap:4px;">${_likeBtn}${replyBtn}</div></div>${quoteHtml}${qContent ? `<span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${qContent}</span>` : ''}${mediaHtml}</div>`;
+
+        if (_isMediaOnly) {
+            return `<div style="padding:4px 10px;margin-bottom:6px;">${_qHeader}${mediaHtml}</div>`;
+        }
+        return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">${_qHeader}${quoteHtml}${qContent ? `<span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${qContent}</span>` : ''}${mediaHtml}</div>`;
     }
 
     // GIF CARD
@@ -397,16 +400,20 @@ function _buildMobGlBubble(msg: any): string {
     // Default message bubble
     const isMediaLabel = (content === '[GIF]' || content === '[VIDEO]' || content === '[PHOTO]') && mediaHtml;
     const contentEl = isMediaLabel ? '' : `<span class="mob-gl-talk-content">${content}</span>`;
-
-    return `<div class="mob-gl-talk-msg">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-            <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
-                ${avatarHtml}
-                <span class="mob-gl-talk-name">${name}</span>
-                <span class="mob-gl-talk-time"> \u00B7 ${time}</span>
-            </div>
-            ${replyBtn}
+    const _uMobHeader = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
+            ${avatarHtml}
+            <span class="mob-gl-talk-name">${name}</span>
+            <span class="mob-gl-talk-time"> \u00B7 ${time}</span>
         </div>
+        ${replyBtn}
+    </div>`;
+
+    if (_isMediaOnly) {
+        return `<div style="padding:4px 10px;margin-bottom:6px;">${_uMobHeader}${mediaHtml}</div>`;
+    }
+    return `<div class="mob-gl-talk-msg">
+        ${_uMobHeader}
         ${quoteHtml ? `<div style="margin-bottom:3px;">${quoteHtml}</div>` : ''}
         ${contentEl}
         ${mediaHtml}
