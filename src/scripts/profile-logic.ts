@@ -6188,9 +6188,12 @@ function _buildMobGlBubble(msg: any): string {
     }
 
     const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';
+    const hasVideo = msg.media_url && msg.media_type === 'video';
+    const _mobPlaySvg = `<svg width="44" height="44" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="23" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/><path d="M19 14.5L35 24L19 33.5V14.5Z" fill="rgba(255,255,255,0.9)"/></svg>`;
+    const _mobThumbStyle = msg.thumbnail_url ? `background-image:url('${msg.thumbnail_url.replace(/'/g, "\\'")}');background-size:cover;background-position:center;` : 'background:#0a0a0a;';
     const mediaHtml = msg.media_url
-        ? (msg.media_type === 'video'
-            ? `<div style="position:relative;width:100%;background:#000;border-radius:8px;margin-top:8px;cursor:pointer;" onclick="var v=this.querySelector('video');if(v){this.querySelector('.vid-play-btn').style.display='none';v.style.pointerEvents='auto';v.setAttribute('controls','');this.onclick=null;this.style.cursor='default';v.play().catch(function(){});}"><div class="vid-play-btn" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;border-radius:8px;"><div style="width:50px;height:50px;border-radius:50%;background:rgba(197,160,89,0.9);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">▶</div></div><video src="${msg.media_url}" playsinline preload="metadata" style="width:100%;border-radius:8px;max-height:260px;object-fit:cover;display:block;pointer-events:none;"></video></div>`
+        ? (hasVideo
+            ? `<div style="position:relative;width:100%;border-radius:10px;margin-top:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);cursor:pointer;${_mobThumbStyle}min-height:200px;display:flex;align-items:center;justify-content:center;" onclick="var v=document.createElement('video');v.src='${msg.media_url.replace(/'/g, "\\'")}';v.controls=true;v.playsInline=true;v.autoplay=true;v.style.cssText='width:100%;max-height:280px;object-fit:cover;display:block;';this.innerHTML='';this.style.cursor='default';this.style.minHeight='auto';this.style.backgroundImage='none';this.onclick=null;this.appendChild(v);">${_mobPlaySvg}</div>`
             : `<img src="${msg.media_url}" style="width:100%;border-radius:8px;margin-top:8px;max-height:260px;object-fit:cover;display:block;cursor:pointer;" onclick="window._openGlobalLightbox&&window._openGlobalLightbox('${(msg.media_url||'').replace(/'/g,"\\'")}')" />`)
         : '';
 
@@ -6233,7 +6236,7 @@ function _buildMobGlBubble(msg: any): string {
 
     // ── QUEEN bubble (text or video) ──
     if (isQueen) {
-        const qContent = (content === '[GIF]' && msg.media_url) ? '' : content;
+        const qContent = ((content === '[GIF]' || content === '[VIDEO]' || content === '[PHOTO]') && msg.media_url) ? '' : content;
         return `<div style="padding:8px 12px 10px;margin-bottom:6px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.12);overflow:hidden;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;">
                 <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
@@ -6462,8 +6465,8 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
-    const isGifText = content === '[GIF]' && mediaHtml;
-    const contentEl = isGifText ? '' : `<span class="mob-gl-talk-content">${content}</span>`;
+    const isMediaLabel = (content === '[GIF]' || content === '[VIDEO]' || content === '[PHOTO]') && mediaHtml;
+    const contentEl = isMediaLabel ? '' : `<span class="mob-gl-talk-content">${content}</span>`;
 
     return `<div class="mob-gl-talk-msg">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
