@@ -1092,7 +1092,7 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                     </div>
                     <div style="display:flex;align-items:center;gap:4px;">${likeBtn}${replyBtn}</div>
                 </div>
-                ${quoteHtml}${(isGif || hasVideo || (content === '[PHOTO]' && hasPhoto)) ? '' : `<div style="font-family:'Orbitron',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.6);line-height:1.5;">${content}</div>`}
+                ${quoteHtml}${(isGif || hasVideo || (content === '[PHOTO]' && hasPhoto)) ? '' : `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${content}</div>`}
                 ${mediaHtml}
             </div>
         </div>`;
