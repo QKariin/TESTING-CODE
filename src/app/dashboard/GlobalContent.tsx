@@ -123,7 +123,7 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                         </div>
                         <div id="globalTalkFeed" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingTop: '8px' }}></div>
                         <div style={{ display: 'flex', gap: '8px', padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, background: 'rgba(0,0,0,0.25)' }}>
-                            <input id="globalTalkPhotoInput" type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => (window as any).handleGlobalChatPhotoUpload?.(e.target)} />
+                            <input id="globalTalkPhotoInput" type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={(e) => (window as any).handleGlobalChatPhotoUpload?.(e.target)} />
                             <input id="globalTalkInput" type="text" placeholder="Say something to everyone..." onKeyDown={(e) => handleGlobalTalkKey(e as any)} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontFamily: 'Rajdhani', fontSize: '0.9rem', padding: '8px 12px', outline: 'none', borderRadius: '6px', minWidth: 0 }} />
                             <button onClick={() => document.getElementById('globalTalkPhotoInput')?.click()} title="Send photo" style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.55)', cursor: 'pointer', borderRadius: '6px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 {SVG_CAMERA}

@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { senderEmail, message, media_url, media_type, reply_to } = body;
+    const { senderEmail, message, media_url, media_type, reply_to, thumbnail_url } = body;
 
     if (!message?.trim()) return NextResponse.json({ error: 'Message required' }, { status: 400 });
     if (!senderEmail) return NextResponse.json({ error: 'Sender required' }, { status: 400 });
@@ -83,6 +83,7 @@ export async function POST(req: Request) {
         message: message.trim(),
         media_url: media_url || null,
         media_type: media_type || null,
+        thumbnail_url: thumbnail_url || null,
         reply_to: reply_to || null,
         sender_email: realEmail.toLowerCase(),
         created_at: new Date().toISOString()
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
         if (error.message.includes('reply_to')) delete stripped.reply_to;
         if (error.message.includes('sender_email')) delete stripped.sender_email;
         if (error.message.includes('created_at')) delete stripped.created_at;
+        if (error.message.includes('thumbnail_url')) delete stripped.thumbnail_url;
         const retry = await supabaseAdmin.from('global_messages').insert(stripped).select().single();
         if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
         return NextResponse.json({ success: true, message: retry.data });

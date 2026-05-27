@@ -1034,9 +1034,11 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     const _imgErr = `onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/api/media?url='+encodeURIComponent(this.src);}"`;
     const hasPhoto = msg.media_url && msg.media_type !== 'video' && msg.media_type !== 'gif';
     const hasVideo = msg.media_url && msg.media_type === 'video';
+    const _playSvg = `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="23" fill="rgba(0,0,0,0.55)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/><path d="M19 14.5L35 24L19 33.5V14.5Z" fill="rgba(255,255,255,0.9)"/></svg>`;
+    const _thumbBg = (msg.thumbnail_url) ? `background-image:url('${msg.thumbnail_url.replace(/'/g, "\\'")}');background-size:cover;background-position:center;` : 'background:#0a0a0a;';
     const mediaHtml = msg.media_url ? (
         hasVideo
-            ? `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);"><video src="${msg.media_url}" controls playsinline preload="none" ${_vidErr} style="width:100%;max-height:220px;object-fit:cover;display:block;"></video></div>`
+            ? `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);position:relative;cursor:pointer;${_thumbBg}min-height:200px;display:flex;align-items:center;justify-content:center;" onclick="var v=document.createElement('video');v.src='${msg.media_url.replace(/'/g, "\\'")}';v.controls=true;v.playsInline=true;v.autoplay=true;v.style.cssText='width:100%;max-height:280px;object-fit:cover;display:block;';this.innerHTML='';this.style.cursor='default';this.style.minHeight='auto';this.style.backgroundImage='none';this.onclick=null;this.appendChild(v);">${_playSvg}</div>`
             : isGif
                 ? `<img src="${msg.media_url}" ${_imgErr} style="max-width:220px;width:auto;height:auto;max-height:200px;border-radius:10px;display:block;margin-top:4px;" />`
                 : `<div style="margin-top:8px;max-width:280px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);cursor:pointer;" onclick="window._openGlobalLightbox('${(msg.media_url || '').replace(/'/g, "\\'")}')"><img src="${msg.media_url}" ${_imgErr} style="width:100%;max-height:240px;object-fit:cover;display:block;" /></div>`
@@ -1639,6 +1641,15 @@ export async function handleGlobalChatPhotoUpload(input: HTMLInputElement) {
     const senderEmail = raw?.member_id || raw?.email;
     if (!senderEmail) return;
 
+    const isVideo = file.type.startsWith('video/');
+
+    // For videos, open a thumbnail picker modal first
+    if (isVideo) {
+        _openVideoThumbnailPicker(file, senderEmail, raw);
+        input.value = '';
+        return;
+    }
+
     // Show uploading indicator in input
     const btn = document.querySelector<HTMLButtonElement>('button[title="Send photo"]');
     if (btn) btn.textContent = '⏳';
@@ -1681,6 +1692,169 @@ export async function handleGlobalChatPhotoUpload(input: HTMLInputElement) {
         input.value = '';
         if (btn) btn.textContent = '📷';
     }
+}
+
+// ─── VIDEO THUMBNAIL PICKER ──────────────────────────────────────────────────
+
+function _openVideoThumbnailPicker(file: File, senderEmail: string, raw: any) {
+    const overlay = document.createElement('div');
+    overlay.id = 'videoThumbPickerOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:#0e0e12;border:1px solid rgba(197,160,89,0.35);border-radius:14px;padding:28px 24px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.8);';
+
+    modal.innerHTML = `
+        <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#c5a059;letter-spacing:3px;text-align:center;margin-bottom:6px;">PICK A THUMBNAIL</div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,255,255,0.3);text-align:center;letter-spacing:2px;margin-bottom:20px;">SCRUB THE VIDEO OR UPLOAD YOUR OWN</div>
+        <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden;margin-bottom:14px;">
+            <video id="thumbPickerVideo" style="width:100%;height:100%;object-fit:contain;display:block;" muted playsinline></video>
+        </div>
+        <input id="thumbPickerScrub" type="range" min="0" max="100" value="0" step="0.1" style="width:100%;margin-bottom:16px;accent-color:#c5a059;cursor:pointer;" />
+        <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;">
+            <label style="padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-family:'Orbitron';font-size:0.42rem;cursor:pointer;border-radius:6px;letter-spacing:1px;text-align:center;">
+                UPLOAD THUMBNAIL
+                <input id="thumbPickerCustom" type="file" accept="image/*" style="display:none;" />
+            </label>
+            <button id="thumbPickerConfirm" style="padding:8px 24px;background:linear-gradient(135deg,#c5a059,#a07830);border:none;color:#000;font-family:'Orbitron';font-size:0.48rem;font-weight:700;cursor:pointer;border-radius:6px;letter-spacing:1px;">USE THIS FRAME</button>
+            <button id="thumbPickerCancel" style="padding:8px 16px;background:none;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);font-family:'Orbitron';font-size:0.42rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">CANCEL</button>
+        </div>
+        <div id="thumbPickerStatus" style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.5);text-align:center;margin-top:12px;letter-spacing:1px;display:none;"></div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const video = document.getElementById('thumbPickerVideo') as HTMLVideoElement;
+    const scrub = document.getElementById('thumbPickerScrub') as HTMLInputElement;
+    const confirmBtn = document.getElementById('thumbPickerConfirm') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('thumbPickerCancel') as HTMLButtonElement;
+    const customInput = document.getElementById('thumbPickerCustom') as HTMLInputElement;
+    const statusEl = document.getElementById('thumbPickerStatus') as HTMLElement;
+
+    let customThumbFile: File | null = null;
+
+    // Load video from file
+    const videoUrl = URL.createObjectURL(file);
+    video.src = videoUrl;
+    video.addEventListener('loadedmetadata', () => {
+        video.currentTime = 0;
+    });
+
+    // Scrub to pick frame
+    scrub.addEventListener('input', () => {
+        if (video.duration) {
+            video.currentTime = (parseFloat(scrub.value) / 100) * video.duration;
+        }
+        customThumbFile = null;
+        confirmBtn.textContent = 'USE THIS FRAME';
+    });
+
+    // Custom thumbnail upload
+    customInput.addEventListener('change', () => {
+        const f = customInput.files?.[0];
+        if (!f) return;
+        customThumbFile = f;
+        const reader = new FileReader();
+        reader.onload = () => {
+            video.style.display = 'none';
+            const parent = video.parentElement!;
+            let img = parent.querySelector('img#thumbPreviewImg') as HTMLImageElement;
+            if (!img) {
+                img = document.createElement('img');
+                img.id = 'thumbPreviewImg';
+                img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+                parent.appendChild(img);
+            }
+            img.src = reader.result as string;
+            confirmBtn.textContent = 'USE CUSTOM THUMBNAIL';
+        };
+        reader.readAsDataURL(f);
+    });
+
+    // Cancel
+    cancelBtn.addEventListener('click', () => {
+        URL.revokeObjectURL(videoUrl);
+        overlay.remove();
+    });
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) { URL.revokeObjectURL(videoUrl); overlay.remove(); }
+    });
+
+    // Confirm — capture frame or use custom, then upload both video + thumbnail
+    confirmBtn.addEventListener('click', async () => {
+        confirmBtn.disabled = true;
+        statusEl.style.display = 'block';
+        statusEl.textContent = 'UPLOADING VIDEO...';
+
+        try {
+            // 1) Upload the video
+            const vExt = (file.name.split('.').pop() || 'mp4').toLowerCase();
+            const vFd = new FormData();
+            vFd.append('file', file);
+            vFd.append('bucket', 'media');
+            vFd.append('folder', 'global-chat');
+            vFd.append('ext', vExt);
+            const vRes = await fetch('/api/upload', { method: 'POST', body: vFd });
+            const vData = await vRes.json();
+            if (!vData.url) { statusEl.textContent = 'VIDEO UPLOAD FAILED'; confirmBtn.disabled = false; return; }
+
+            // 2) Upload the thumbnail
+            statusEl.textContent = 'UPLOADING THUMBNAIL...';
+            let thumbBlob: Blob;
+            if (customThumbFile) {
+                thumbBlob = customThumbFile;
+            } else {
+                // Capture current frame from canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 360;
+                const ctx = canvas.getContext('2d')!;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                thumbBlob = await new Promise<Blob>((res) => canvas.toBlob(b => res(b!), 'image/jpeg', 0.85));
+            }
+
+            const tFd = new FormData();
+            tFd.append('file', new File([thumbBlob], 'thumb.jpg', { type: customThumbFile?.type || 'image/jpeg' }));
+            tFd.append('bucket', 'media');
+            tFd.append('folder', 'global-chat');
+            tFd.append('ext', customThumbFile ? (customThumbFile.name.split('.').pop() || 'jpg') : 'jpg');
+            const tRes = await fetch('/api/upload', { method: 'POST', body: tFd });
+            const tData = await tRes.json();
+            const thumbUrl = tData.url || '';
+
+            // 3) Send message with video + thumbnail
+            const QUEEN_EMAILS = ['ceo@qkarin.com'];
+            const isQueenLocal = QUEEN_EMAILS.includes(senderEmail.toLowerCase());
+            const senderName = raw?.name || (isQueenLocal ? 'QUEEN KARIN' : senderEmail.split('@')[0]) || 'SUBJECT';
+            const senderAvatar = raw?.avatar_url || raw?.avatar || (isQueenLocal ? '/queen-nav.png' : null);
+
+            _appendMessage({
+                sender_name: senderName,
+                sender_avatar: senderAvatar,
+                sender_email: senderEmail,
+                is_queen: isQueenLocal,
+                is_me: true,
+                message: '[VIDEO]',
+                media_url: vData.url,
+                media_type: 'video',
+                thumbnail_url: thumbUrl,
+                created_at: new Date().toISOString(),
+            });
+
+            await fetch('/api/global/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: '[VIDEO]', senderEmail, media_url: vData.url, media_type: 'video', thumbnail_url: thumbUrl }),
+            });
+
+            URL.revokeObjectURL(videoUrl);
+            overlay.remove();
+        } catch (err) {
+            statusEl.textContent = 'UPLOAD FAILED';
+            confirmBtn.disabled = false;
+        }
+    });
 }
 
 // ─── CHALLENGES PREVIEW ───────────────────────────────────────────────────────
