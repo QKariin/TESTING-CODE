@@ -4721,8 +4721,12 @@ export function openInventoryModal(item: string) {
     if (count > 0) {
         html += `<button onclick="window.useInventoryItem('${item}')" style="width:100%;padding:14px;border-radius:10px;background:linear-gradient(90deg,rgba(197,160,89,0.15),rgba(197,160,89,0.08));border:1px solid rgba(197,160,89,0.35);color:#c5a059;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:2px;cursor:pointer;">USE NOW</button>`;
     }
-    if (item !== 'skippass' && price !== null) {
+    if (item === 'skippass') {
+        html += `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);text-align:center;padding:8px 0;">Gift only — awarded by Queen Karin</div>`;
+    } else if (price !== null) {
         html += `<button onclick="window.buyInventoryItem('${item}')" style="width:100%;padding:14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:2px;cursor:pointer;">BUY FOR ${price!.toLocaleString()} COINS</button>`;
+    } else if (item === 'checkpoint') {
+        html += `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);text-align:center;padding:8px 0;">Available from Footman rank</div>`;
     }
     if (actionsEl) actionsEl.innerHTML = html;
 
