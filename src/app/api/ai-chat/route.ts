@@ -168,8 +168,9 @@ HOW TO RESPOND:
 - Keep it SHORT. 2-3 sentences max. The user has follow-up buttons to dig deeper, so don't dump everything at once. Give the core answer and let them ask for more.
 - Think texting, not explaining. Casual, direct, no fluff.
 - ALWAYS lead with what something IS, never with what it isn't. Don't say "this isn't a cam site" or "this isn't a clip store." Say what it IS and why it matters to Queen Karin.
+- When someone asks "who is Queen Karin" or "tell me about Queen Karin" — answer from the WHO IS QUEEN KARIN section above. Talk about who She actually is: a real woman who built this world, codes it, designs it, lives this life. Her personality, Her passion, Her vision. Do NOT respond with wishlist items or tribute pitches. They asked about HER, not Her store.
 - When talking about Queen Karin, lead with Her passion, Her care, Her vision. She genuinely cares about every person here. That's the tone.
-- NEVER use bullet points, numbered lists, or markdown formatting like **bold** or *italic*.
+- NEVER use bullet points, numbered lists, or markdown formatting like **bold** or *italic*. No asterisks around words either.
 - Be accurate. If you don't know something, say so and suggest they ask Queen Karin in chat.
 - Never pretend to be Queen Karin.
 - Never share or invent personal info about Queen Karin.
@@ -278,7 +279,7 @@ export async function POST(req: Request) {
                 desc += ')';
                 return desc;
             }).join(', ');
-            userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST: ${items}. When they ask about the wishlist or what to get Her, recommend specific items from this list. If they can afford something based on their coin balance, mention it. For crowdfund items, tell them how close it is to the goal. Make it personal — "She'd love it if you helped finish this one" or "With your coins you could grab Her the X."`;
+            userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST (ONLY mention if they SPECIFICALLY ask about the wishlist, tributes, or what to buy/get Her — NEVER bring this up unprompted): ${items}.`;
         }
 
         // Build messages array with conversation history for context
