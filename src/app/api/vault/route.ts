@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
             .select('vault_item_id, source, unlocked_at')
             .eq('member_id', email);
 
-        const unlockMap = new Map((unlocks || []).map((u: any) => [u.vault_item_id, u]));
+        const unlockMap = new Map<string, any>((unlocks || []).map((u: any) => [u.vault_item_id, u]));
 
         const result = (items || []).map((item: any) => ({
             id: item.id,
