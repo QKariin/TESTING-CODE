@@ -33,7 +33,7 @@ export async function renderChat(messages: any[]) {
     const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::') || txt.startsWith('INVENTORY_CARD::')) return false;
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::') || txt.startsWith('INVENTORY_CARD::') || txt.startsWith('VAULT_UNLOCK_CARD::')) return false;
         if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
         const up = txt.toUpperCase();
         return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||
@@ -220,6 +220,28 @@ export async function renderChat(messages: any[]) {
                 } catch { contentHtml = `<div class="msg m-queen">Inventory Updated</div>`; }
             }
 
+            // A3. VAULT UNLOCK CARD
+            else if (originalMsg.startsWith('VAULT_UNLOCK_CARD::')) {
+                try {
+                    const d = JSON.parse(originalMsg.replace('VAULT_UNLOCK_CARD::', ''));
+                    const sourceLabels: Record<string, string> = { gift: 'Gifted by Queen Karin', risky_game: 'Won in Risky Game', leaderboard: 'Leaderboard Reward', milestone: 'Milestone Reward' };
+                    const thumb = d.thumbnail ? `<div style="width:100%;height:120px;overflow:hidden;border-radius:14px 14px 0 0;"><img src="${d.thumbnail}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'" /></div>` : '';
+                    contentHtml = `
+                    <div style="width:min(55%,260px);margin:0 auto;">
+                        <div style="border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                            ${thumb}
+                            <div style="padding:16px 20px;text-align:center;">
+                                <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(197,160,89,0.6);letter-spacing:3px;margin-bottom:8px;">VAULT UNLOCKED</div>
+                                <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 10px;"></div>
+                                <div style="margin-bottom:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                                <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:4px;">${d.title || 'Exclusive'}</div>
+                                <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(197,160,89,0.45);">${sourceLabels[d.source] || 'Unlocked'}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                } catch { contentHtml = `<div class="msg m-queen">Vault Item Unlocked</div>`; }
+            }
+
             // B. PROMOTION CARD
             else if (originalMsg.startsWith('PROMOTION_CARD::')) {
                 try {
@@ -398,7 +420,7 @@ export async function renderChat(messages: any[]) {
             }
         }
 
-        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::') || originalMsg.startsWith('ROUTINE_CHANGE::') || originalMsg.startsWith('TASK_REVIEW_CARD::') || originalMsg.startsWith('INVENTORY_CARD::'))) {
+        if (originalMsg && (originalMsg.startsWith('WISHLIST::') || originalMsg.startsWith('TASK_FEEDBACK::') || originalMsg.startsWith('PROMOTION_CARD::') || originalMsg.startsWith('WELCOME_CARD::') || originalMsg.startsWith('ROUTINE_CHANGE::') || originalMsg.startsWith('TASK_REVIEW_CARD::') || originalMsg.startsWith('INVENTORY_CARD::') || originalMsg.startsWith('VAULT_UNLOCK_CARD::'))) {
             return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
         }
 

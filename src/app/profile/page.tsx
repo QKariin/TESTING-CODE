@@ -1890,6 +1890,22 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
+                        {/* THE VAULT */}
+                        <div style={{ width: '100%', marginTop: '20px' }}>
+                            <div className="duty-label">THE VAULT</div>
+                            <div id="vaultGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: 'Rajdhani', fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', padding: 20 }}>Loading...</div>
+                            </div>
+                        </div>
+
+                        {/* VAULT PREVIEW MODAL */}
+                        <div id="vaultPreviewModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+                                <div id="vaultPreviewContent"></div>
+                                <button onClick={() => { const m = document.getElementById('vaultPreviewModal'); if (m) m.style.display = 'none'; }} style={{ marginTop: 20, background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel', fontSize: '0.6rem', letterSpacing: 3, padding: '10px 30px', cursor: 'pointer' }}>CLOSE</button>
+                            </div>
+                        </div>
+
                         {/* INVENTORY MODAL */}
                         <div id="inventoryModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
                             <div style={{ maxWidth: 340, width: '100%', background: 'rgba(10,5,20,0.95)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 16, padding: '30px 24px', textAlign: 'center' }}>

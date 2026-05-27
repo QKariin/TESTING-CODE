@@ -3130,6 +3130,8 @@ export async function initChatSystem() {
                             const names: Record<string, string> = { skippass: 'Skip Pass', cumpass: 'Cum Pass', checkpoint: 'Checkpoint' };
                             preview = cd.source === 'gift' ? `You received a ${names[cd.item] || cd.item}` : `${names[cd.item] || cd.item} purchased`;
                         } catch { preview = 'Inventory updated'; }
+                    } else if (rawContent.startsWith('VAULT_UNLOCK_CARD::')) {
+                        preview = 'A new item was added to your Vault';
                     } else if (rawContent.startsWith('PROMOTION_CARD::') || rawContent.startsWith('WELCOME_CARD::') || rawContent.startsWith('TASK_REVIEW_CARD::') || rawContent.startsWith('ROUTINE_CHANGE::') || rawContent.startsWith('TASK_FEEDBACK::') || rawContent.startsWith('WISHLIST::')) {
                         preview = 'New message';
                     } else {
@@ -3613,7 +3615,7 @@ function isSystemMessage(msg: any) {
     if (!msg) return false;
     const content = (msg.content || msg.message || '');
     // Card messages are NOT system messages — they render as rich cards in regular chat
-    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
+    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
     if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const upper = content.toUpperCase();
@@ -3961,6 +3963,29 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
         } catch (_) {
             return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Inventory Updated</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
+        }
+    }
+
+    // VAULT UNLOCK CARD
+    if (content.startsWith('VAULT_UNLOCK_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('VAULT_UNLOCK_CARD::', ''));
+            const sourceLabels: Record<string, string> = { gift: 'Gifted by Queen Karin', risky_game: 'Won in Risky Game', leaderboard: 'Leaderboard Reward', milestone: 'Milestone Reward' };
+            const thumb = d.thumbnail ? `<div style="width:100%;height:120px;overflow:hidden;border-radius:14px 14px 0 0;"><img src="${d.thumbnail}" style="width:100%;height:100%;object-fit:cover;display:block;filter:blur(0);" onerror="this.style.display='none'" /></div>` : '';
+            const cardHtml = `
+            <div style="width:min(85%,260px);margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                ${thumb}
+                <div style="padding:16px 20px;text-align:center;">
+                    <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(197,160,89,0.6);letter-spacing:3px;margin-bottom:8px;">VAULT UNLOCKED</div>
+                    <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 10px;"></div>
+                    <div style="margin-bottom:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                    <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:4px;">${d.title || 'Exclusive'}</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(197,160,89,0.45);">${sourceLabels[d.source] || 'Unlocked'}</div>
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Vault Item Unlocked</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
         }
     }
 
@@ -4906,6 +4931,72 @@ function _showInvConfirmation(title: string, sub: string) {
     overlay.addEventListener('click', () => overlay.remove());
     document.body.appendChild(overlay);
     setTimeout(() => overlay.remove(), 2500);
+}
+
+// ─── THE VAULT ─────────────────────────────────────────────────────────────────
+
+async function loadVault() {
+    const grid = document.getElementById('vaultGrid');
+    if (!grid) return;
+
+    const { memberId, id } = getState();
+    const userId = memberId || id;
+    if (!userId) return;
+
+    try {
+        const res = await fetch(`/api/vault?memberId=${encodeURIComponent(userId)}`);
+        const { items } = await res.json();
+
+        if (!items || items.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.15);padding:30px 0;">No items yet</div>`;
+            return;
+        }
+
+        grid.innerHTML = items.map((item: any) => `
+            <div onclick="${item.unlocked ? `window._openVaultPreview('${item.id}')` : ''}" style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid ${item.unlocked ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.06)'};cursor:${item.unlocked ? 'pointer' : 'default'};background:#0a0703;">
+                <img src="${item.thumbnail_url || item.media_url || ''}" style="width:100%;height:100%;object-fit:cover;display:block;${item.unlocked ? '' : 'filter:blur(12px) brightness(0.25);'}" onerror="this.style.display='none'" />
+                ${item.unlocked ? '' : `
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>`}
+                ${item.unlocked ? `
+                    <div style="position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,0.85));">
+                        <div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(197,160,89,0.7);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title || ''}</div>
+                    </div>` : ''}
+            </div>
+        `).join('');
+
+        // Store items for preview
+        (window as any).__vaultItems = items;
+    } catch {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,100,100,0.4);padding:20px 0;">Failed to load</div>`;
+    }
+}
+
+function _openVaultPreview(itemId: string) {
+    const items = (window as any).__vaultItems || [];
+    const item = items.find((i: any) => i.id === itemId);
+    if (!item || !item.unlocked) return;
+
+    const modal = document.getElementById('vaultPreviewModal');
+    const content = document.getElementById('vaultPreviewContent');
+    if (!modal || !content) return;
+
+    const isVideo = item.type === 'video';
+    const mediaHtml = isVideo
+        ? `<video src="${item.media_url}" controls playsinline style="width:100%;max-height:70vh;border-radius:12px;border:1px solid rgba(197,160,89,0.25);"></video>`
+        : `<img src="${item.media_url}" style="width:100%;max-height:70vh;object-fit:contain;border-radius:12px;border:1px solid rgba(197,160,89,0.25);" />`;
+
+    content.innerHTML = `
+        ${mediaHtml}
+        <div style="font-family:Cinzel,serif;font-size:0.8rem;color:rgba(197,160,89,0.6);letter-spacing:2px;margin-top:14px;">${item.title || 'Exclusive'}</div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+if (typeof window !== 'undefined') {
+    (window as any)._openVaultPreview = _openVaultPreview;
 }
 
 // ─── PROFILE CHAT GIF PICKER ──────────────────────────────────────────────────
@@ -7206,6 +7297,9 @@ export function renderProfileSidebar(u: any) {
 
     // Load routine widget state from server (bypasses RLS via admin API)
     updateRoutineWidget();
+
+    // Load vault items
+    loadVault();
 
     // ─── AUTO PROMOTION TRIGGER ───
     if (report.canPromote && !isPromoting && u.member_id) {

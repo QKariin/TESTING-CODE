@@ -1258,6 +1258,16 @@ async function _showExtrasOverlay(memberId: string) {
                 </div>
             </div>
 
+            <!-- VAULT -->
+            <div style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:#fff;letter-spacing:2px;font-weight:700;">THE VAULT</div>
+                </div>
+                <div id="extrasVaultGrid" style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);">Loading...</div>
+                <button onclick="window._giftVaultItem('${memberId}')" style="margin-top:12px;width:100%;padding:10px;background:rgba(197,160,89,0.08);color:#c5a059;border:1px solid rgba(197,160,89,0.25);border-radius:8px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:1px;cursor:pointer;">+ GIFT RANDOM VAULT ITEM</button>
+            </div>
+
             <button onclick="document.getElementById('extrasOverlay')?.remove();" style="margin-top:8px;padding:12px 40px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:4px;cursor:pointer;align-self:center;">CLOSE</button>
         </div>
     `;
@@ -1265,6 +1275,9 @@ async function _showExtrasOverlay(memberId: string) {
     document.body.appendChild(overlay);
     requestAnimationFrame(() => { overlay.style.opacity = '1'; });
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    // Load vault items for this user
+    _loadVaultForUser(memberId);
 }
 
 async function _approveReview(memberId: string) {
@@ -1312,6 +1325,60 @@ async function _giftInventory(memberId: string, item: string) {
     }
 }
 
+async function _loadVaultForUser(memberId: string) {
+    const grid = document.getElementById('extrasVaultGrid');
+    if (!grid) return;
+    try {
+        const res = await fetch(`/api/vault?memberId=${encodeURIComponent(memberId)}`);
+        const { items } = await res.json();
+        if (!items || items.length === 0) {
+            grid.innerHTML = '<div style="color:rgba(255,255,255,0.25);">No vault items in pool yet.</div>';
+            return;
+        }
+        const unlocked = items.filter((i: any) => i.unlocked).length;
+        grid.innerHTML = `
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:10px;">
+                <span style="color:#c5a059;">${unlocked}</span> / ${items.length} unlocked
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+                ${items.map((i: any) => `
+                    <div style="position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;border:1px solid ${i.unlocked ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.08)'};">
+                        <img src="${i.thumbnail_url || i.media_url || ''}" style="width:100%;height:100%;object-fit:cover;${i.unlocked ? '' : 'filter:blur(8px) brightness(0.3);'}" onerror="this.style.display='none'" />
+                        ${i.unlocked
+                            ? `<div style="position:absolute;top:2px;right:2px;width:12px;height:12px;background:rgba(74,222,128,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                               </div>`
+                            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                               </div>`}
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch {
+        grid.innerHTML = '<div style="color:rgba(255,100,100,0.5);">Failed to load vault.</div>';
+    }
+}
+
+async function _giftVaultItem(memberId: string) {
+    try {
+        const res = await fetch('/api/vault/unlock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId, random: true, source: 'gift' }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            _showExtrasOverlay(memberId);
+        } else if (data.reason === 'all_unlocked') {
+            alert('All vault items already unlocked for this user.');
+        } else {
+            alert(data.error || 'Gift failed.');
+        }
+    } catch {
+        alert('Connection error.');
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).updateDetail = updateDetail;
     (window as any).deleteQueueItem = deleteQueueItem;
@@ -1325,4 +1392,5 @@ if (typeof window !== 'undefined') {
     (window as any)._approveReview = _approveReview;
     (window as any)._rejectReview = _rejectReview;
     (window as any)._giftInventory = _giftInventory;
+    (window as any)._giftVaultItem = _giftVaultItem;
 }
