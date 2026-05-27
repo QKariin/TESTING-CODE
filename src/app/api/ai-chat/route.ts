@@ -282,17 +282,27 @@ export async function POST(req: Request) {
             userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST (ONLY mention if they SPECIFICALLY ask about the wishlist, tributes, or what to buy/get Her — NEVER bring this up unprompted): ${items}.`;
         }
 
-        // Build messages array with conversation history for context
+        // Fetch conversation history from DB (persists across sessions/reloads)
+        const { data: chatHistory } = await adminClient.from('chats')
+            .select('sender_email, content, metadata')
+            .ilike('member_id', memberEmail)
+            .eq('metadata->>isAI', 'true')
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+        // Build messages array with full persistent history
         const messages: any[] = [
             { role: 'system', content: SYSTEM_PROMPT + userContext },
         ];
 
-        // Add recent conversation history (last 20 messages for context)
-        if (conversationHistory && Array.isArray(conversationHistory)) {
-            for (const msg of conversationHistory.slice(-20)) {
+        // Add history oldest-first (DB returns newest-first)
+        if (chatHistory && chatHistory.length > 0) {
+            const reversed = [...chatHistory].reverse();
+            for (const row of reversed) {
+                const isAiMsg = row.sender_email === 'ai-assistant';
                 messages.push({
-                    role: msg.sender === 'ai' ? 'assistant' : 'user',
-                    content: msg.text,
+                    role: isAiMsg ? 'assistant' : 'user',
+                    content: row.content,
                 });
             }
         }
