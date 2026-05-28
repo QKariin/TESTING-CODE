@@ -118,11 +118,17 @@ export async function POST(req: Request) {
             }
         }
 
-        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + userContext + chatHistory;
+        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + userContext;
+
+        let userContent = '';
+        if (chatHistory) {
+            userContent += chatHistory + '\n\n';
+        }
+        userContent += `THE USER JUST SAID: "${userMessage}"\n\nRespond to this in context of the conversation above. Your answer MUST directly relate to what they said and what was discussed. Do NOT make up topics.`;
 
         const messages = [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage },
+            { role: 'user', content: userContent },
         ];
 
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
