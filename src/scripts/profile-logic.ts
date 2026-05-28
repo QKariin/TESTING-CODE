@@ -4383,10 +4383,10 @@ const AI_TOPICS: { label: string; msg?: string; action?: string }[] = [
     { label: 'Kneeling', msg: 'How does kneeling work?' },
     { label: 'Tasks', msg: 'How do tasks work?' },
     { label: 'Daily Routine', msg: 'How does the daily routine work?' },
+    { label: 'Leaderboard', msg: 'How does the leaderboard and rewards work?' },
     { label: 'My Certificate', action: 'openCert' },
     { label: 'Coins & Tributes', msg: 'How do coins and tributes work?' },
-    { label: 'Merit Points', msg: 'How do merit points work?' },
-    { label: 'Her Wishlist', msg: 'Tell me about Queen Karins wishlist' },
+    { label: 'Her Wishlist', action: 'openWishlist' },
 ];
 
 function _aiTopicBtns(): string {
@@ -4426,6 +4426,12 @@ const AI_SUBTOPICS: Record<string, { label: string; msg: string }[]> = {
         { label: 'Tributes', msg: 'How do tributes work and what do they count toward?' },
         { label: 'Chat costs', msg: 'How much does it cost to chat at each rank?' },
     ],
+    leaderboard: [
+        { label: 'How scoring works', msg: 'How does the leaderboard scoring work?' },
+        { label: 'Rewards', msg: 'What rewards does the leaderboard champion get?' },
+        { label: 'When does it reset', msg: 'When do the leaderboard scores reset?' },
+        { label: 'Inventory items', msg: 'What are Skip Pass, Cum Pass, and Checkpoint?' },
+    ],
     merit: [
         { label: 'How to earn merit', msg: 'What are all the ways I can earn merit points?' },
         { label: 'Merit for ranking', msg: 'How much merit do I need for each rank?' },
@@ -4452,6 +4458,7 @@ function _detectTopic(msg: string): string {
     if (m.includes('task') || m.includes('assign') || m.includes('proof')) return 'tasks';
     if (m.includes('routine') || m.includes('streak') || m.includes('daily')) return 'routine';
     if (m.includes('coin') || m.includes('tribute') || m.includes('buy') || m.includes('purchase')) return 'coins';
+    if (m.includes('leaderboard') || m.includes('champion') || m.includes('reward') || m.includes('skip pass') || m.includes('cum pass') || m.includes('checkpoint') || m.includes('inventory')) return 'leaderboard';
     if (m.includes('wishlist') || m.includes('gift') || m.includes('want') || m.includes('help her')) return 'wishlist';
     if (m.includes('merit') || m.includes('point') || m.includes('progress')) return 'merit';
     return 'general';
@@ -4508,6 +4515,8 @@ function _showAiChat() {
 function _aiAction(action: string) {
     if (action === 'openCert') {
         (window as any).showCertificate?.();
+    } else if (action === 'openWishlist') {
+        (window as any).toggleTributeHunt?.();
     }
 }
 
