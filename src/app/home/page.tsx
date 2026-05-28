@@ -128,6 +128,10 @@ function parseGlobalCard(msg: GlobalMessage): ToastItem | null {
             const d = JSON.parse(content.replace('UPDATE_TRIBUTE_CARD::', ''));
             return { sender_name: d.senderName || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: hier, text: 'gifted "' + (d.title || 'a gift') + '" worth ' + (d.price || 0).toLocaleString() + ' coins', kind: 'wishlist', cardImage: d.image || null, cardName: d.title || 'GIFT', created_at: created };
         }
+        if (content.indexOf('LEADERBOARD_REWARD_CARD::') === 0) {
+            const d = JSON.parse(content.replace('LEADERBOARD_REWARD_CARD::', ''));
+            return { sender_name: d.winnerName || 'SUBJECT', sender_avatar: avatar, hierarchy: hier, text: 'is the ' + (d.title || 'CHAMPION') + ' with ' + (d.score || 0).toLocaleString() + ' pts', kind: 'champion', created_at: created };
+        }
     } catch (e) { /* ignore parse errors */ }
     return null;
 }

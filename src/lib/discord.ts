@@ -199,6 +199,21 @@ export function discordReviewSubmitted(name: string, rating: number) {
     });
 }
 
+export function discordLeaderboardChampion(name: string, period: string, score: number, reward: string) {
+    const titles: Record<string, string> = { Daily: 'DAILY CHAMPION', Weekly: 'WEEKLY CHAMPION', Monthly: 'MONTHLY CHAMPION' };
+    const title = titles[period] || `${period.toUpperCase()} CHAMPION`;
+    return sendDiscordEmbed({
+        title,
+        description: `**${name}** dominated the ${period.toLowerCase()} leaderboard\n\n[See the leaderboard](${APP_LINK})`,
+        color: 16766720,
+        fields: [
+            { name: 'Score', value: score.toLocaleString(), inline: true },
+            { name: 'Reward', value: reward, inline: true },
+        ],
+        image: { url: cardUrl('champion', title, `${name} — Score: ${score.toLocaleString()}`, reward) },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',

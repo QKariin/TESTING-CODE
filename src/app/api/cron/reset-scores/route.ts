@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { discordLeaderboardChampion } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +106,10 @@ async function rewardWinner(scoreCol: string) {
             }),
         }).catch(() => {});
     }
+
+    // Discord announcement
+    const period = scoreCol.replace(' Score', '');
+    discordLeaderboardChampion(profile.name || 'SUBJECT', period, topScore, rewardText).catch(() => {});
 
     console.log(`[cron/reward] ${reward.label}: ${profile.name} (${winnerEmail}) — score ${topScore} — reward: ${rewardText}`);
     return { winner: profile.name, email: winnerEmail, score: topScore, reward: rewardText };

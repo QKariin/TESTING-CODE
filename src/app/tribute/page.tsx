@@ -107,6 +107,10 @@ export default function TributePage() {
                 const d = JSON.parse(content.replace('CHALLENGE_JOIN_CARD::', ''));
                 return { sender_name: d.senderName || d.name || 'SUBJECT', sender_avatar: d.senderAvatar || avatar, hierarchy: msgHierarchy, text: `joined ${d.challengeName || 'a challenge'}`, kind: 'challenge', created_at: created };
             }
+            if (content.startsWith('LEADERBOARD_REWARD_CARD::')) {
+                const d = JSON.parse(content.replace('LEADERBOARD_REWARD_CARD::', ''));
+                return { sender_name: d.winnerName || 'SUBJECT', sender_avatar: avatar, hierarchy: msgHierarchy, text: `is the ${d.title || 'CHAMPION'} with ${(d.score || 0).toLocaleString()} pts`, kind: 'champion', created_at: created };
+            }
         } catch {}
         return null;
     };
