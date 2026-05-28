@@ -367,11 +367,6 @@ export function reviewTask(decision: 'approve' | 'reject') {
         // --- GLOBAL SYNC ---
         setGlobalQueue(globalQueue.filter((x: any) => x.id !== taskData.id));
 
-        // Send task media + note to member chat
-        if (rejectNote) {
-            sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, rejectNote, taskData.id, taskData.thumbnailUrl);
-        }
-
         import('./dashboard-main').then(m => m.renderMainDashboard());
         closeModal();
 
@@ -529,11 +524,6 @@ export function confirmReward() {
     // 5. Update selected user detail if we are looking at them
     if (u && currId === taskData.memberId) {
         import('./dashboard-users').then(m => m.updateDetail(u));
-    }
-
-    // Send task media + approval comment to member chat
-    if (comment) {
-        sendChatFeedback(taskData.memberId!, taskData.mediaUrl ?? null, taskData.mediaType ?? null, comment, taskData.id, taskData.thumbnailUrl);
     }
 
     closeModal();
