@@ -126,8 +126,7 @@ async function rewardWinner(scoreCol: string) {
     }
 
     // Discord announcement
-    const period = scoreCol.replace(' Score', '');
-    discordLeaderboardChampion(profile.name || 'SUBJECT', period, topScore, rewardText).catch(() => {});
+    discordLeaderboardChampion(profile.name || 'SUBJECT', scoreCol.replace(' Score', ''), topScore, rewardText).catch(() => {});
 
     console.log(`[cron/reward] ${reward.label}: ${profile.name} (${winnerEmail}) — score ${topScore} — reward: ${rewardText}`);
     return { winner: profile.name, email: winnerEmail, score: topScore, reward: rewardText };
