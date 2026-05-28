@@ -4344,6 +4344,10 @@ export function toggleAiMode(on?: boolean) {
     const aiContent = document.getElementById('mob_aiChatContent');
     const ticker = document.getElementById('mob_systemTicker');
 
+    // Close wishlist overlay when switching modes
+    const wishlistOv = document.getElementById('mob_TributeOverlay');
+    if (wishlistOv) { wishlistOv.style.display = 'none'; wishlistOv.classList.remove('mob-overlay-open'); }
+
     if (_aiMode) {
         overlay?.classList.add('ai-mode');
         if (header) header.style.display = 'flex';
@@ -5295,6 +5299,10 @@ function _isOverlayOpen(id: string) {
 }
 
 export function switchMobChatTab(tab: 'chat' | 'service') {
+    // Close wishlist overlay when switching tabs
+    const wishlistOv = document.getElementById('mob_TributeOverlay');
+    if (wishlistOv) { wishlistOv.style.display = 'none'; wishlistOv.classList.remove('mob-overlay-open'); }
+
     const chatPanel = document.getElementById('mobChatTabChat');
     const svcPanel = document.getElementById('mobChatTabService');
     const chatBtn = document.getElementById('mobChatBtnChat');
