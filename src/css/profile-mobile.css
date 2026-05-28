@@ -169,17 +169,6 @@
         overflow: hidden;
     }
 
-    /* Blur fallback for Android — painted behind content */
-    .halo-circle-lg::before {
-        content: '';
-        position: absolute;
-        inset: -40px;
-        background: inherit;
-        filter: blur(18px);
-        -webkit-filter: blur(18px);
-        z-index: -1;
-        border-radius: 50%;
-    }
 
     .halo-name-lg {
         font-family: 'Cinzel', serif;
