@@ -4528,7 +4528,7 @@ function _aiAction(action: string) {
     if (action === 'openCert') {
         (window as any).showCertificate?.();
     } else if (action === 'openWishlist') {
-        (window as any).toggleTributeHunt?.();
+        (window as any)._tributeShowWishlist?.();
     }
 }
 
