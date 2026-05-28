@@ -1082,7 +1082,7 @@ export default function TributePage() {
                 </div>
 
             {/* extra padding so content doesn't hide behind bottom nav */}
-                <div className="trib-bottom-pad" style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
+                <div className="trib-bottom-pad" style={{ height: 'calc(60px + env(safe-area-inset-bottom))' }} />
             </div>
 
         </div>
