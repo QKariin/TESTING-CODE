@@ -282,6 +282,14 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
+    // LEADERBOARD REWARD CARD
+    if (content.startsWith('LEADERBOARD_REWARD_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LEADERBOARD_REWARD_CARD::', ''));
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:85%;max-width:340px;min-width:200px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0b06 0%,#110d04 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.6);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.1);"><div style="padding:20px 20px;text-align:center;"><div style="font-size:1.6rem;margin-bottom:6px;">👑</div><div style="font-family:'Cinzel',serif;font-size:0.8rem;color:#c5a059;letter-spacing:3px;margin-bottom:4px;">${d.title || 'CHAMPION'}</div><div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent);margin:8px auto;"></div>${d.winnerName ? `<div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">${d.winnerName}</div>` : ''}<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.8);margin-bottom:6px;">${d.rewards || ''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">SCORE: ${(d.score || 0).toLocaleString()} · ${(d.period || '').toUpperCase()}</div></div></div><div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
+        } catch { /* fall through */ }
+    }
+
     // UPDATE TRIBUTE CARD
     if (content.startsWith('UPDATE_TRIBUTE_CARD::')) {
         try {

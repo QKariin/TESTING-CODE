@@ -703,6 +703,26 @@ function renderToHtml(m: any) {
         } catch { /* fall through */ }
     }
 
+    // ── Leaderboard Reward Card ──
+    if (content.startsWith('LEADERBOARD_REWARD_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LEADERBOARD_REWARD_CARD::', ''));
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:280px;width:70vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.6);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.1);">
+                        <div style="padding:20px 20px;text-align:center;">
+                            <div style="font-size:1.6rem;margin-bottom:6px;">👑</div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:#c5a059;letter-spacing:3px;margin-bottom:4px;">${d.title || 'CHAMPION'}</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent);margin:8px auto;"></div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.8);margin-bottom:6px;">${d.rewards || ''}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">SCORE: ${(d.score || 0).toLocaleString()} · ${(d.period || '').toUpperCase()}</div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
+    }
+
     // ── Vault Unlock Card ──
     if (content.startsWith('VAULT_UNLOCK_CARD::')) {
         try {

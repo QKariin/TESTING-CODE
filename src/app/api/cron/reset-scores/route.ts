@@ -3,6 +3,113 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
+// ── Leaderboard rewards: first place only ──
+const REWARDS: Record<string, { items: Record<string, number>; coins: number; label: string }> = {
+    'Daily Score':   { items: { skippass: 1 }, coins: 0, label: 'DAILY CHAMPION' },
+    'Weekly Score':  { items: { cumpass: 1 }, coins: 1000, label: 'WEEKLY CHAMPION' },
+    'Monthly Score': { items: { checkpoint: 1, cumpass: 3, skippass: 5 }, coins: 0, label: 'MONTHLY CHAMPION' },
+};
+
+async function rewardWinner(scoreCol: string) {
+    const reward = REWARDS[scoreCol];
+    if (!reward) return null;
+
+    // Find #1 by this score
+    const { data: top } = await supabaseAdmin
+        .from('tasks')
+        .select('member_id, "' + scoreCol + '"')
+        .order(scoreCol, { ascending: false })
+        .limit(1);
+
+    if (!top?.[0]) return null;
+    const topScore = Number(top[0][scoreCol] || 0);
+    if (topScore <= 0) return null; // no activity = no reward
+
+    const winnerEmail = (top[0].member_id || '').toLowerCase();
+    if (!winnerEmail) return null;
+
+    // Fetch winner profile
+    const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('ID, name, cumpass, skippass, checkpoint, wallet')
+        .ilike('member_id', winnerEmail)
+        .maybeSingle();
+
+    if (!profile) return null;
+
+    // Build update: increment items + add coins
+    const profileUpdate: Record<string, any> = {};
+    for (const [item, qty] of Object.entries(reward.items)) {
+        profileUpdate[item] = (Number((profile as any)[item] || 0)) + qty;
+    }
+    if (reward.coins > 0) {
+        profileUpdate.wallet = (Number(profile.wallet || 0)) + reward.coins;
+    }
+
+    const { error: updateErr } = await supabaseAdmin
+        .from('profiles')
+        .update(profileUpdate)
+        .ilike('member_id', winnerEmail);
+
+    if (updateErr) {
+        console.error(`[cron/reward] Failed to update ${winnerEmail}:`, updateErr.message);
+        return null;
+    }
+
+    // Send reward card to private chat
+    const itemNames: Record<string, string> = { skippass: 'Skip Pass', cumpass: 'Cum Pass', checkpoint: 'Checkpoint' };
+    const itemList = Object.entries(reward.items).map(([k, v]) => `${v}x ${itemNames[k] || k}`).join(', ');
+    const rewardText = reward.coins > 0 ? `${itemList} + ${reward.coins.toLocaleString()} coins` : itemList;
+
+    const cardData = {
+        title: reward.label,
+        rewards: rewardText,
+        score: topScore,
+        period: scoreCol.replace(' Score', ''),
+    };
+
+    try {
+        await supabaseAdmin.from('chats').insert({
+            member_id: winnerEmail,
+            sender_email: 'queen',
+            content: `LEADERBOARD_REWARD_CARD::${JSON.stringify(cardData)}`,
+            type: 'text',
+            metadata: { isQueen: true },
+        });
+    } catch (_) {}
+
+    // Post in global chat
+    try {
+        await supabaseAdmin.from('global_messages').insert({
+            sender_email: 'system',
+            sender_name: 'SYSTEM',
+            sender_avatar: null,
+            message: `LEADERBOARD_REWARD_CARD::${JSON.stringify({ ...cardData, winnerName: profile.name || 'SUBJECT' })}`,
+        });
+    } catch (_) {}
+
+    // Push notification
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    if (apiKey) {
+        fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+            body: JSON.stringify({
+                app_id: appId,
+                target_channel: 'push',
+                include_aliases: { external_id: [winnerEmail] },
+                headings: { en: 'Queen Karin' },
+                contents: { en: `You are the ${reward.label}! Your reward: ${rewardText}` },
+                url: 'https://throne.qkarin.com/profile',
+            }),
+        }).catch(() => {});
+    }
+
+    console.log(`[cron/reward] ${reward.label}: ${profile.name} (${winnerEmail}) — score ${topScore} — reward: ${rewardText}`);
+    return { winner: profile.name, email: winnerEmail, score: topScore, reward: rewardText };
+}
+
 // Runs daily at 22:59 UTC = 23:59 CET (Europe/Prague)
 export async function GET(req: Request) {
     // Auth check - only enforced if CRON_SECRET is actually set and non-empty
@@ -32,12 +139,19 @@ export async function GET(req: Request) {
     if (date === lastDayOfMonth) resets.push('Monthly Score');
     if (month === 12 && date === 31) resets.push('Yearly Score');
 
+    // ── REWARD WINNERS BEFORE RESETTING ──
+    const rewards: any[] = [];
+    for (const field of resets) {
+        const result = await rewardWinner(field);
+        if (result) rewards.push({ period: field, ...result });
+    }
+
+    // ── RESET SCORES ──
     const updates: Record<string, number> = {};
     for (const field of resets) updates[field] = 0;
 
     console.log('[cron/reset-scores] Resetting fields:', resets, 'Prague time:', pragueTime.toISOString());
 
-    // Use .not('member_id','is',null) - cleaner than neq to empty string
     const { error, count } = await supabaseAdmin
         .from('tasks')
         .update(updates)
@@ -49,6 +163,6 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    console.log(`[cron/reset-scores] Success. Rows affected: ${count ?? 'unknown'}. Reset: ${resets.join(', ')}`);
-    return NextResponse.json({ success: true, reset: resets, rowsAffected: count });
+    console.log(`[cron/reset-scores] Success. Rows affected: ${count ?? 'unknown'}. Reset: ${resets.join(', ')}. Rewards: ${rewards.length}`);
+    return NextResponse.json({ success: true, reset: resets, rowsAffected: count, rewards });
 }
