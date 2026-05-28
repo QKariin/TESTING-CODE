@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getCaller } from '@/lib/api-auth';
-import { SYSTEM_PROMPT as AI_KNOWLEDGE } from '../ai-chat/prompt';
+import { SYSTEM_PROMPT as AI_KNOWLEDGE } from '../../ai-chat/prompt';
 
 export const dynamic = 'force-dynamic';
 
