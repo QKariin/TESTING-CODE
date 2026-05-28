@@ -72,8 +72,30 @@ export async function POST(req: Request) {
         if (userProfile?.wallet) contextLines.push(`Coins: ${userProfile.wallet}`);
         const contextBlock = contextLines.length > 0 ? `\n\nUSER CONTEXT:\n${contextLines.join('\n')}` : '';
 
+        // Fetch last 10 messages for conversation context
+        const { data: recentMsgs } = await adminClient.from('chats')
+            .select('sender_email, content, type')
+            .ilike('member_id', memberEmail)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        let chatHistory = '';
+        if (recentMsgs && recentMsgs.length > 0) {
+            const historyLines = recentMsgs.reverse().map((msg: any) => {
+                const sender = (msg.sender_email || '').toLowerCase();
+                const content = msg.content || '';
+                // Skip card/system messages
+                if (content.startsWith('TASK_') || content.startsWith('WISHLIST::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('CERT_') || content.startsWith('DIRECT_TRIBUTE_CARD::') || content.startsWith('RISKY_TRIBUTE_CARD::') || content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::') || msg.type === 'system') return null;
+                const label = sender === 'guardian' ? 'Guardian' : sender.includes('qkarin') || sender.includes('queen') ? 'Queen Karin' : 'User';
+                return `${label}: ${content.slice(0, 300)}`;
+            }).filter(Boolean);
+            if (historyLines.length > 0) {
+                chatHistory = `\n\nRECENT CONVERSATION:\n${historyLines.join('\n')}`;
+            }
+        }
+
         const messages = [
-            { role: 'system', content: GUARDIAN_PROMPT + contextBlock },
+            { role: 'system', content: GUARDIAN_PROMPT + contextBlock + chatHistory },
             { role: 'user', content: userMessage },
         ];
 
