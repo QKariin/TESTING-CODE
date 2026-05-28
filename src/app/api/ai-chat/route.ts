@@ -164,6 +164,12 @@ If someone asks about installing, tell them to install it for a better experienc
 GLOBAL CHAT:
 Community feed where subjects chat, compete in challenges, and see leaderboards.
 
+LEADERBOARD REWARDS:
+Every score period, the first place winner on the leaderboard gets rewarded automatically. Daily champion gets 1 Skip Pass. Weekly champion gets 1 Cum Pass and 1,000 coins. Monthly champion gets 1 Checkpoint, 3 Cum Passes, and 5 Skip Passes. Only first place gets rewarded — no participation trophies. The winner gets a reward card in their private chat and it's announced in global chat. Score resets happen at midnight CET: daily scores reset every night, weekly resets on Monday, monthly resets on the last day of the month.
+
+INVENTORY ITEMS:
+Skip Pass — lets you skip a task without paying the 300 coin penalty. Cum Pass — permission to cum, granted by Queen Karin through this pass. Checkpoint — saves your routine streak so if you miss a day, your streak is restored instead of resetting to zero. These items are earned through leaderboard rewards, gifts from Queen Karin, or purchased in the shop. They are stored in your profile inventory.
+
 HOW TO RESPOND:
 - Keep it SHORT. 2-3 sentences max. The user has follow-up buttons to dig deeper, so don't dump everything at once. Give the core answer and let them ask for more.
 - Think texting, not explaining. Casual, direct, no fluff.
@@ -270,6 +276,12 @@ export async function POST(req: Request) {
             userContext += `\nTHEIR STATS — LABOR (completed tasks): ${completedTasks} | ENDURANCE (total kneels): ${kneels} | MERIT (points): ${merit} | SACRIFICE (coins spent): ${coinsSpent} | CONSISTENCY (best streak): ${bestStreak} days`;
             userContext += `\nPROFILE STATUS — Limits: ${hasLimits ? 'filled' : 'MISSING'} | Kinks: ${hasKinks ? 'filled' : 'MISSING'} | Routine: ${hasRoutine ? 'assigned' : 'NOT YET'}`;
             userContext += `\nWALLET: ${wallet} coins`;
+            const skipPasses = Number(p.skippass || 0);
+            const cumPasses = Number(p.cumpass || 0);
+            const checkpoints = Number(p.checkpoint || 0);
+            if (skipPasses || cumPasses || checkpoints) {
+                userContext += `\nINVENTORY: ${skipPasses} Skip Pass, ${cumPasses} Cum Pass, ${checkpoints} Checkpoint`;
+            }
         }
 
         if (wishlistItems && wishlistItems.length > 0) {

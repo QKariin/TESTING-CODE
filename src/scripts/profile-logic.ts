@@ -293,7 +293,7 @@ function renderTributes() {
                     <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
                 </div>
                 <div style="padding:8px 10px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                    <div style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${t.title}</div>
+                    <div style="font-family:'Cinzel', serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${t.title}</div>
                     <div style="flex-shrink:0; text-align:center; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; font-family:'Orbitron', sans-serif; font-size:0.5rem; font-weight:700; letter-spacing:1px; padding:6px 10px; border-radius:5px;">SEND</div>
                 </div>
             </div>
@@ -324,7 +324,7 @@ function renderTributes() {
                     <!-- LEFT: Info -->
                     <div style="flex:1; display:flex; flex-direction:column; gap:14px; padding:28px; min-width:0;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
-                            <div style="font-family:'Orbitron', sans-serif; font-size:2rem; color:#fff; line-height:1.1; font-weight:700; letter-spacing:2px; text-transform:uppercase;">${t.title}</div>
+                            <div style="font-family:'Cinzel', serif; font-size:2rem; color:#fff; line-height:1.1; font-weight:700; letter-spacing:2px; text-transform:uppercase;">${t.title}</div>
                             ${t.top_contributor ? `
                             <div style="display:flex; flex-direction:column; align-items:flex-end; background:rgba(197,160,89,0.08); padding:8px 15px; border-radius:12px; border:1px solid rgba(197,160,89,0.3);">
                                 <span style="font-family:'Orbitron', sans-serif; font-size:0.5rem; color:#c5a059; text-transform:uppercase; letter-spacing:2px;">Top Contributor</span>
@@ -375,7 +375,7 @@ function renderTributes() {
                         <i class="fas fa-coins" style="color:#c5a059; font-size:0.65rem;"></i>
                         <span style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
                     </div>
-                    <div style="font-family:'Orbitron', sans-serif; font-size:0.8rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
+                    <div style="font-family:'Cinzel', serif; font-size:0.85rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
                     <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price})"
                         style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:7px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s;"
                         onmouseover="this.style.opacity='0.85';"
@@ -422,7 +422,7 @@ function renderGridMobile(gridEl: HTMLElement) {
                     <img src="${img}" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='/queen-karin.png'">
                 </div>
                 <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
-                    <div style="font-family:'Orbitron',sans-serif; font-size:1rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${t.title}</div>
+                    <div style="font-family:'Cinzel',serif; font-size:1.05rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${t.title}</div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-family:'Orbitron',sans-serif; font-size:0.75rem; color:#c5a059; font-weight:700;">${raised.toLocaleString()}</span>
                         <span style="font-family:'Orbitron',sans-serif; font-size:0.6rem; color:rgba(255,255,255,0.3);">/ ${goal.toLocaleString()}</span>
@@ -450,7 +450,7 @@ function renderGridMobile(gridEl: HTMLElement) {
                 <i class="fas fa-coins" style="color:#c5a059; font-size:0.55rem;"></i>
                 <span style="font-family:'Orbitron',sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
             </div>
-            <div style="font-family:'Orbitron',sans-serif; font-size:0.65rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
+            <div style="font-family:'Cinzel',serif; font-size:0.72rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
             <button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
                 style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:9px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
                 SEND GIFT
