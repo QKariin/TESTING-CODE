@@ -11,29 +11,41 @@ const REWARDS: Record<string, { items: Record<string, number>; coins: number; la
     'Monthly Score': { items: { checkpoint: 1, cumpass: 3, skippass: 5 }, coins: 0, label: 'MONTHLY CHAMPION' },
 };
 
+const PERIOD_MAP: Record<string, string> = {
+    'Daily Score': 'today',
+    'Weekly Score': 'weekly',
+    'Monthly Score': 'monthly',
+};
+
 async function rewardWinner(scoreCol: string) {
     const reward = REWARDS[scoreCol];
     if (!reward) return null;
 
-    // Find #1 by this score — fetch all and sort client-side (same as leaderboard API)
-    const { data: allTasks } = await supabaseAdmin
-        .from('tasks')
-        .select('member_id, "Daily Score", "Weekly Score", "Monthly Score", "Score"');
+    // Ask the actual leaderboard API who is #1 — same data the UI shows
+    const period = PERIOD_MAP[scoreCol] || 'today';
+    const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
+    const lbRes = await fetch(`${base}/api/global/leaderboard?period=${period}`);
+    if (!lbRes.ok) {
+        console.error(`[cron/reward] Leaderboard fetch failed for ${period}:`, lbRes.status);
+        return null;
+    }
+    const lbData = await lbRes.json();
+    const entries = lbData.entries || [];
+    if (entries.length === 0) return null;
 
-    if (!allTasks || allTasks.length === 0) return null;
+    const winner = entries[0];
+    const topScore = Number(winner.score || 0);
+    if (topScore <= 0) return null;
 
-    // Sort client-side to match leaderboard exactly
-    const sorted = allTasks
-        .map((t: any) => ({ member_id: t.member_id, score: Number(t[scoreCol] || 0) }))
-        .filter((t: any) => t.score > 0)
-        .sort((a: any, b: any) => b.score - a.score);
+    console.log(`[cron/reward] ${scoreCol} leaderboard #1: ${winner.name} (${topScore}), top 3:`, entries.slice(0, 3).map((e: any) => `${e.name}: ${e.score}`));
 
-    if (sorted.length === 0) return null;
-    const topScore = sorted[0].score;
-    const winnerEmail = (sorted[0].member_id || '').toLowerCase();
+    // Find winner's email via member_number (UUID) or name
+    let winnerEmail = '';
+    if (winner.member_number) {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', winner.member_number).maybeSingle();
+        if (prof?.member_id) winnerEmail = prof.member_id.toLowerCase();
+    }
     if (!winnerEmail) return null;
-
-    console.log(`[cron/reward] ${scoreCol} top 3:`, sorted.slice(0, 3));
 
     // Fetch winner profile
     const { data: profile } = await supabaseAdmin
