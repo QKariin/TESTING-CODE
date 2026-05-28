@@ -404,6 +404,7 @@ function renderGridMobile(gridEl: HTMLElement) {
     gridEl.style.overflowY = 'auto';
     gridEl.style.flex = '1';
     gridEl.style.alignContent = 'start';
+    gridEl.style.alignItems = 'start';
 
     gridEl.innerHTML = globalTributes.map(t => {
         const img = getOptimizedUrl(t.image, 400) || '';
@@ -445,18 +446,18 @@ function renderGridMobile(gridEl: HTMLElement) {
         }
 
         return `
-        <div style="border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); box-shadow:0 4px 16px rgba(0,0,0,0.4);">
-            ${img ? `<div style="width:100%; height:100px; background:#050510; overflow:hidden;">
+        <div style="border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); box-shadow:0 4px 16px rgba(0,0,0,0.4); display:flex; flex-direction:column;">
+            ${img ? `<div style="width:100%; height:90px; background:#050510; overflow:hidden; flex-shrink:0;">
                 <img src="${img}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'">
             </div>` : ''}
-            <div style="padding:12px; display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <i class="fas fa-coins" style="color:#c5a059; font-size:0.55rem;"></i>
-                    <span style="font-family:'Orbitron',sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
+            <div style="padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px; flex:1;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <i class="fas fa-coins" style="color:#c5a059; font-size:9px;"></i>
+                    <span style="font-family:'Orbitron',sans-serif; font-size:11px; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
                 </div>
-                <div style="font-family:'Cinzel',serif; font-size:0.72rem; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
+                <div style="font-family:'Cinzel',serif; font-size:13px; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
                 <button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
-                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:9px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:0.42rem; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
+                    style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:10px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:1.5px; cursor:pointer; margin-top:auto;">
                     SEND GIFT
                 </button>
             </div>

@@ -451,15 +451,17 @@ function _showRiskyResult(data: any) {
 // ─── WISHLIST (existing overlay) ───────────────────────────────────────────
 
 function _showWishlist() {
-    closeStandaloneTribute();
-    setTimeout(() => {
-        // mob_TributeOverlay lives inside the chat overlay, so open chat first
-        if ((window as any).openMobChatOverlay) (window as any).openMobChatOverlay();
-        // Then force open the wishlist overlay inside it
-        setTimeout(() => {
-            if ((window as any).openTributeHunt) (window as any).openTributeHunt();
-        }, 100);
-    }, 100);
+    const el = _el(); if (!el) return;
+    el.innerHTML = `
+        <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 4px;">
+            ${_header('QUEEN\'S WISHLIST')}
+            <div id="standaloneWishlistGrid" style="margin-top:16px;"></div>
+            ${_backFooter()}
+        </div>`;
+    const grid = document.getElementById('standaloneWishlistGrid');
+    if (grid && (window as any)._renderTributeGridMobile) {
+        (window as any)._renderTributeGridMobile(grid);
+    }
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
