@@ -15,19 +15,25 @@ async function rewardWinner(scoreCol: string) {
     const reward = REWARDS[scoreCol];
     if (!reward) return null;
 
-    // Find #1 by this score
-    const { data: top } = await supabaseAdmin
+    // Find #1 by this score — fetch all and sort client-side (same as leaderboard API)
+    const { data: allTasks } = await supabaseAdmin
         .from('tasks')
-        .select('member_id, "' + scoreCol + '"')
-        .order(scoreCol, { ascending: false })
-        .limit(1);
+        .select('member_id, "Daily Score", "Weekly Score", "Monthly Score", "Score"');
 
-    if (!top?.[0]) return null;
-    const topScore = Number(top[0][scoreCol] || 0);
-    if (topScore <= 0) return null; // no activity = no reward
+    if (!allTasks || allTasks.length === 0) return null;
 
-    const winnerEmail = (top[0].member_id || '').toLowerCase();
+    // Sort client-side to match leaderboard exactly
+    const sorted = allTasks
+        .map((t: any) => ({ member_id: t.member_id, score: Number(t[scoreCol] || 0) }))
+        .filter((t: any) => t.score > 0)
+        .sort((a: any, b: any) => b.score - a.score);
+
+    if (sorted.length === 0) return null;
+    const topScore = sorted[0].score;
+    const winnerEmail = (sorted[0].member_id || '').toLowerCase();
     if (!winnerEmail) return null;
+
+    console.log(`[cron/reward] ${scoreCol} top 3:`, sorted.slice(0, 3));
 
     // Fetch winner profile
     const { data: profile } = await supabaseAdmin
