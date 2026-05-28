@@ -128,6 +128,14 @@ export async function GET(req: Request) {
     // Get current time in Prague timezone
     const now = new Date();
     const pragueTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+    const pragueHour = pragueTime.getHours();
+
+    // Only run if it's 23:XX in Prague (handles DST — cron fires at both 21:59 and 22:59 UTC)
+    if (pragueHour !== 23) {
+        console.log(`[cron/reset-scores] Skipped — Prague hour is ${pragueHour}, not 23`);
+        return NextResponse.json({ skipped: true, pragueHour });
+    }
+
     const dayOfWeek = pragueTime.getDay(); // 0=Sunday
     const date = pragueTime.getDate();
     const month = pragueTime.getMonth() + 1;
