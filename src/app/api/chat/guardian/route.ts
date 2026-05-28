@@ -1,45 +1,34 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getCaller } from '@/lib/api-auth';
+import { SYSTEM_PROMPT as AI_KNOWLEDGE } from '../ai-chat/prompt';
 
 export const dynamic = 'force-dynamic';
 
-const GUARDIAN_PROMPT = `You are the Guardian. Queen Karin activated you in her private conversation with this user because she does not feel like answering right now. You speak on her behalf.
+const GUARDIAN_WRAPPER = `IMPORTANT OVERRIDE — YOU ARE NOT THE REGULAR AI ASSISTANT RIGHT NOW.
 
-ABOUT THE APP (Queen Karin's Court):
-This is a luxury BDSM domination app. Users are "slaves" who serve Queen Karin. Here is how everything works:
-- Ranks: Hall Boy (lowest), Butler, Valet, Footman, Page, Squire, Knight, Noble, Lord, Duke, Prince, King (highest). You climb by earning merit points.
-- Merit points: Earned by completing tasks that Queen Karin assigns, getting them approved, and doing your routine. Merit is your reputation score.
-- Coins: The in-app currency. Earned through kneeling sessions, task rewards, and Queen's gifts. Spent on tributes, paid media, skip passes, and the store.
-- Kneeling: Daily devotion sessions. Goal is 8 per day (shown as x/8). Each session lasts a short time. After 8 you keep going up to 24 with gold display. Resets at UTC midnight.
-- Tasks: Queen Karin assigns tasks (called Directives). You upload proof (photo/video). She reviews and approves or rejects. Approved = merit + coins. Rejected = coin penalty.
-- Routine: A daily obligation (like Chastity Check, Worship, etc). Must upload proof daily before midnight CET or you break your streak.
-- Tributes: Gifts you send to Queen Karin from the wishlist or direct coin tributes. This is how you show devotion.
-- Skip Pass: Lets you skip a task without penalty. Costs coins or can be gifted.
-- Cum Pass: Permission pass. Costs coins or gifted by Queen.
-- Checkpoint: Saves your streak progress. Costs coins or gifted.
-- Leaderboard: Daily, weekly, monthly rankings by merit score. Top performers get rewards.
-- Vault: Exclusive media content. Unlocked through rewards, gifts, or winning risky tributes.
-- Risky Tribute: A gamble. You stake coins, pick a card, and either win big or Queen takes your coins.
+You are THE GUARDIAN. Queen Karin activated you inside her private conversation with this user because she does not feel like answering right now. You appear as a special message bubble in the chat, visually different from Queen Karin's messages. The user can see you are not Queen Karin.
 
-YOUR PERSONALITY:
-- You are warm, a little cheeky, but genuinely helpful. Think friendly older sibling energy.
-- You care about the user. You are not their enemy. The playful teasing is affectionate, never cruel.
-- You represent Queen Karin, so you speak with respect for her authority. She is always right.
-- You sound like a real person texting, not a corporate chatbot.
+YOUR GUARDIAN PERSONALITY:
+- Warm, a little cheeky, genuinely helpful. Friendly older sibling energy.
+- You care about this user. Playful teasing is affectionate, never cruel.
+- You represent Queen Karin. She is always right. You back her up.
+- You sound like a real person texting, not a chatbot.
 
-HOW TO RESPOND:
-1. READ THE RECENT CONVERSATION CAREFULLY. Your answer must directly relate to what was just discussed. Do not make up topics. Do not guess. If they said "I dont understand", look at what came before and explain THAT.
-2. One short playful opener (half a sentence max), then get to the actual answer.
-3. Keep it 2-4 sentences total. Short and punchy like a text message.
-4. If the conversation is casual (like "how are you", small talk), just be warm and redirect. Something like "The Queen is doing great as always, but she didnt call me for small talk. Got a real question for me?"
-5. If you genuinely do not know the answer from context, say "Hmm, that one is above my pay grade. You will have to wait for the Queen herself on that one."
+HOW TO RESPOND AS GUARDIAN:
+1. READ THE RECENT CONVERSATION. Your answer must directly relate to what was just discussed. If they said "I dont understand", explain what came before. Never invent topics.
+2. One short playful opener (half a sentence max), then the actual answer.
+3. Keep it 2-4 sentences total. Short and punchy.
+4. If it is casual small talk, be warm but redirect: "The Queen is doing great as always, but she didnt call me here for small talk. Got a real question?"
+5. If you cannot answer from context: "That one is above my pay grade. You will have to wait for the Queen herself."
 
-STRICT FORMATTING RULES:
-- Plain text only. Like a text message. No asterisks, no bold, no italic, no dashes, no bullet points, no headers, no markdown.
-- No emojis.
-- No special characters for emphasis. Just use your words.
-- Never start with a long preamble. Get to it.`;
+STRICT FORMATTING (GUARDIAN):
+- Plain text only. Like a text message. No asterisks, no bold, no italic, no dashes, no bullet points, no headers, no markdown, no special characters for emphasis.
+- No emojis. No preamble. Get to it.
+
+Below is your full knowledge base about the app. Use it to answer questions accurately:
+
+`;
 
 export async function POST(req: Request) {
     const caller = await getCaller();
@@ -71,21 +60,36 @@ export async function POST(req: Request) {
             if (profile?.member_id) memberEmail = profile.member_id.toLowerCase();
         }
 
-        // Fetch user context
+        // Fetch user profile + tasks for full context (same as ai-chat)
         const { data: userProfile } = await adminClient.from('profiles')
-            .select('name, hierarchy, score, wallet')
+            .select('*')
             .ilike('member_id', memberEmail)
             .maybeSingle();
 
-        const contextLines = [];
-        if (userProfile?.name) contextLines.push(`User's name: ${userProfile.name}`);
-        if (userProfile?.hierarchy) contextLines.push(`Their rank: ${userProfile.hierarchy}`);
-        if (userProfile?.score) contextLines.push(`Merit points: ${userProfile.score}`);
-        if (userProfile?.wallet) contextLines.push(`Coins: ${userProfile.wallet}`);
-        const contextBlock = contextLines.length > 0 ? `\n\nUSER CONTEXT:\n${contextLines.join('\n')}` : '';
+        const { data: userTasks } = await adminClient.from('tasks')
+            .select('*')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
 
-        // Fetch last 10 messages for conversation context
-        // Query both UUID and email since chats.member_id can store either
+        let userContext = '';
+        if (userProfile) {
+            const p = userProfile as any;
+            const t = userTasks as any;
+            const rank = p.hierarchy || 'Hall Boy';
+            const completedTasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || t?.taskdom_completedtasks || 0);
+            const kneels = Number(t?.kneelCount || t?.kneelcount || 0);
+            const merit = Number(p.score || 0);
+            const coinsSpent = Number(p.total_coins_spent || 0);
+            const bestStreak = Number(p.bestRoutinestreak || p.bestroutinestreak || p.routinestreak || 0);
+            const wallet = Number(p.wallet || 0);
+
+            userContext = `\n\nYOU ARE TALKING TO: ${p.name || 'Unknown'}`;
+            userContext += `\nCURRENT RANK: ${rank}`;
+            userContext += `\nSTATS — LABOR: ${completedTasks} | ENDURANCE: ${kneels} | MERIT: ${merit} | SACRIFICE: ${coinsSpent} | CONSISTENCY: ${bestStreak} days`;
+            userContext += `\nWALLET: ${wallet} coins`;
+        }
+
+        // Fetch last 10 messages — query both UUID and email
         let chatQuery = adminClient.from('chats')
             .select('sender_email, content, type')
             .order('created_at', { ascending: false })
@@ -102,25 +106,26 @@ export async function POST(req: Request) {
             const historyLines = recentMsgs.reverse().map((msg: any) => {
                 const sender = (msg.sender_email || '').toLowerCase();
                 const content = msg.content || '';
-                // Skip card/system messages
                 if (content.startsWith('TASK_') || content.startsWith('WISHLIST::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('CERT_') || content.startsWith('DIRECT_TRIBUTE_CARD::') || content.startsWith('RISKY_TRIBUTE_CARD::') || content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::') || msg.type === 'system') return null;
                 const label = sender === 'guardian' ? 'Guardian' : sender.includes('qkarin') || sender.includes('queen') ? 'Queen Karin' : 'User';
                 return `${label}: ${content.slice(0, 300)}`;
             }).filter(Boolean);
             if (historyLines.length > 0) {
-                chatHistory = `\n\nRECENT CONVERSATION:\n${historyLines.join('\n')}`;
+                chatHistory = `\n\nRECENT CONVERSATION (this is the private chat between Queen Karin and this user — read it carefully before answering):\n${historyLines.join('\n')}`;
             }
         }
 
+        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + userContext + chatHistory;
+
         const messages = [
-            { role: 'system', content: GUARDIAN_PROMPT + contextBlock + chatHistory },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
         ];
 
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: 200, temperature: 0.8 }),
+            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: 250, temperature: 0.7 }),
         });
 
         if (!response.ok) {
@@ -131,7 +136,7 @@ export async function POST(req: Request) {
 
         const data = await response.json();
         let reply = data.choices?.[0]?.message?.content || 'Hmm, even I am stumped on this one. You will have to wait for the Queen.';
-        // Strip markdown formatting the AI might sneak in
+        // Strip markdown the AI might sneak in
         reply = reply.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_{2,}/g, '').replace(/^-{3,}$/gm, '').replace(/^#{1,}\s*/gm, '').trim();
 
         // Save guardian message to chats table
