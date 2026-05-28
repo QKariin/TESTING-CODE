@@ -4243,21 +4243,8 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     // GUARDIAN AI — distinct bubble, no queen avatar
     const isGuardian = senderEmail === 'guardian' || msg.metadata?.isGuardian === true;
     if (isGuardian) {
-        return `
-            <div class="cb-row cb-row-queen">
-                <div class="cb-wrap-queen">
-                    <div class="cb-guardian">
-                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="url(#grdG)" stroke-width="2"><defs><linearGradient id="grdG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff00ed"/><stop offset="100%" stop-color="#000aff"/></linearGradient></defs><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            <span style="font-family:'Orbitron',sans-serif;font-size:0.32rem;background:linear-gradient(135deg,#ff00ed,#000aff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">THE GUARDIAN</span>
-                        </div>
-                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.38rem;color:rgba(255,0,237,0.4);letter-spacing:1px;margin-bottom:4px;">on behalf of Queen Karin</div>
-                        ${content}
-                    </div>
-                    ${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}
-                </div>
-            </div>
-        `;
+        const gHeader = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="url(#grdG)" stroke-width="2"><defs><linearGradient id="grdG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff00ed"/><stop offset="100%" stop-color="#000aff"/></linearGradient></defs><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="font-family:Orbitron,sans-serif;font-size:0.3rem;background:linear-gradient(135deg,#ff00ed,#000aff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">THE GUARDIAN</span></div><div style="font-family:Rajdhani,sans-serif;font-size:0.35rem;color:rgba(255,0,237,0.35);letter-spacing:1px;margin-bottom:6px;">on behalf of Queen Karin</div>';
+        return `<div class="cb-row cb-row-queen"><div class="cb-wrap-queen"><div class="cb-guardian">${gHeader}${content}</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
     }
 
     if (isMe) {

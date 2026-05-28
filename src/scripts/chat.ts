@@ -453,14 +453,8 @@ export async function renderChat(messages: any[]) {
         const isPlainMsg = !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('ROUTINE_CHANGE::') && !originalMsg.startsWith('TASK_REVIEW_CARD::') && !originalMsg.startsWith('INVENTORY_CARD::') && !originalMsg.startsWith('LEADERBOARD_REWARD_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl);
 
         if (isGuardian && isPlainMsg) {
-            contentHtml = `<div class="msg m-guardian">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="url(#grdG)" stroke-width="2"><defs><linearGradient id="grdG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff00ed"/><stop offset="100%" stop-color="#000aff"/></linearGradient></defs><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span style="font-family:'Orbitron',sans-serif;font-size:0.35rem;background:linear-gradient(135deg,#ff00ed,#000aff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">THE GUARDIAN</span>
-                </div>
-                <div style="font-family:'Rajdhani',sans-serif;font-size:0.4rem;color:rgba(255,0,237,0.4);letter-spacing:1px;margin-bottom:4px;">on behalf of Queen Karin</div>
-                <div style="flex:1;">${quoteHtml}<span>${txt}</span></div>
-            </div>`;
+            const gH = '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="url(#grdG)" stroke-width="2"><defs><linearGradient id="grdG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff00ed"/><stop offset="100%" stop-color="#000aff"/></linearGradient></defs><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="font-family:Orbitron,sans-serif;font-size:0.3rem;background:linear-gradient(135deg,#ff00ed,#000aff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">THE GUARDIAN</span></div><div style="font-family:Rajdhani,sans-serif;font-size:0.35rem;color:rgba(255,0,237,0.35);letter-spacing:1px;margin-bottom:6px;">on behalf of Queen Karin</div>';
+            contentHtml = `<div class="msg m-guardian">${gH}${quoteHtml}<span>${txt}</span></div>`;
         } else if (!isMe && !isGuardian && isPlainMsg) {
             contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
