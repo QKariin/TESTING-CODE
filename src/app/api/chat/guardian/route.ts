@@ -99,7 +99,10 @@ export async function POST(req: Request) {
         } else {
             chatQuery = chatQuery.ilike('member_id', memberEmail);
         }
-        const { data: recentMsgs } = await chatQuery;
+        const { data: recentMsgs, error: chatErr } = await chatQuery;
+        console.log('[guardian] memberId:', memberId, '| isUUID:', isUUID, '| memberEmail:', memberEmail);
+        console.log('[guardian] recentMsgs count:', recentMsgs?.length || 0, '| error:', chatErr?.message || 'none');
+        if (recentMsgs) console.log('[guardian] messages:', recentMsgs.map((m: any) => `${m.sender_email}: ${(m.content || '').slice(0, 50)}`));
 
         let chatHistory = '';
         if (recentMsgs && recentMsgs.length > 0) {
