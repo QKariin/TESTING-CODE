@@ -349,7 +349,7 @@ function renderTributes() {
                             </div>
                             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                                 <input type="range" id="crowdfund_input_${t.id}" min="10" max="${sliderMax}" step="10" value="${sliderDefault}"
-                                    oninput="window.updateCrowdfundSlider('${t.id}', this.value)"
+                                    oninput="window.updateCrowdfundSlider(this)"
                                     style="flex:1; min-width:100px; height:6px; border-radius:3px; appearance:none; outline:none; background:rgba(197,160,89,0.2); cursor:pointer; accent-color:#c5a059;" />
                                 <button id="crowdfund_btn_${t.id}" onclick="window.contributeCrowdfund('${t.id}', '${t.title}')"
                                     style="background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:12px 22px; border-radius:10px; font-family:'Orbitron', sans-serif; font-size:0.65rem; cursor:pointer; font-weight:700; letter-spacing:1px; box-shadow:0 6px 20px rgba(197,160,89,0.3); transition:all 0.2s; white-space:nowrap;"
@@ -429,7 +429,7 @@ function renderGridMobile(gridEl: HTMLElement) {
                     </div>
                     <div style="display:flex; gap:8px; align-items:center;">
                         <input type="range" id="crowdfund_input_${t.id}" min="10" max="${sliderMax}" step="10" value="${sliderDefault}"
-                            oninput="window.updateCrowdfundSlider('${t.id}',this.value)"
+                            oninput="window.updateCrowdfundSlider(this)"
                             style="flex:1; height:5px; appearance:none; background:rgba(197,160,89,0.2); border-radius:3px; accent-color:#c5a059;" />
                         <button id="crowdfund_btn_${t.id}" onclick="window.contributeCrowdfund('${t.id}','${t.title}')"
                             style="background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:9px 14px; border-radius:8px; font-family:'Orbitron',sans-serif; font-size:0.5rem; font-weight:700; letter-spacing:1px; cursor:pointer; white-space:nowrap;">
@@ -769,22 +769,25 @@ if (typeof window !== 'undefined') {
     (window as any).toggleTributeHuntGlobal = () => toggleTributeHunt();
     (window as any).openTributeHunt = () => openTributeHunt();
     (window as any)._renderTributeGridMobile = (grid: HTMLElement) => renderGridMobile(grid);
-    (window as any).updateCrowdfundSlider = (id: string, value: string) => {
-        const v = Number(value);
-        const display = document.getElementById(`crowdfund_display_${id}`);
-        const btn = document.getElementById(`crowdfund_btn_${id}`);
-        if (display) {
-            // Desktop: display is a standalone div (with coins icon)
-            // Mobile: display is a span inside the button (number only)
-            if (display.tagName === 'DIV') {
-                display.innerHTML = v.toLocaleString() + ' <i class="fas fa-coins" style="font-size:1rem;"></i>';
-            } else {
-                display.textContent = v.toLocaleString();
-            }
-        }
-        // Desktop: update button text separately
-        if (btn && btn !== display?.parentElement) {
+    (window as any).updateCrowdfundSlider = (inputEl: HTMLInputElement) => {
+        const v = Number(inputEl.value);
+        // Find sibling button in the same container (works for both desktop and mobile)
+        const container = inputEl.parentElement;
+        if (!container) return;
+        const btn = container.querySelector('button');
+        const span = btn?.querySelector('span');
+        if (span) {
+            // Mobile: button contains "SEND <span>value</span>"
+            span.textContent = v.toLocaleString();
+        } else if (btn) {
+            // Desktop: button text is "SEND X COINS"
             btn.textContent = 'SEND ' + v.toLocaleString() + ' COINS';
+        }
+        // Desktop: also update the standalone display div above the slider
+        const wrapper = container.parentElement;
+        const displayDiv = wrapper?.querySelector('div[id^="crowdfund_display_"]') as HTMLElement;
+        if (displayDiv) {
+            displayDiv.innerHTML = v.toLocaleString() + ' <i class="fas fa-coins" style="font-size:1rem;"></i>';
         }
     };
 }
