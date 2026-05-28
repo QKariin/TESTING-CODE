@@ -388,6 +388,9 @@ function renderTributes() {
 
     if (gridDesk) renderGrid(gridDesk);
     if (gridMob) renderGridMobile(gridMob);
+    // Also refresh standalone wishlist grid (landing page tribute menu) if open
+    const gridStandalone = document.getElementById('standaloneWishlistGrid');
+    if (gridStandalone) renderGridMobile(gridStandalone);
 }
 
 function renderGridMobile(gridEl: HTMLElement) {
@@ -396,15 +399,7 @@ function renderGridMobile(gridEl: HTMLElement) {
     const walletForSlider = getState()?.wallet || 0;
 
     // Set the grid container itself
-    gridEl.style.cssText = ''; // reset any previous inline styles
-    gridEl.style.display = 'grid';
-    gridEl.style.gridTemplateColumns = '1fr 1fr';
-    gridEl.style.gap = '10px';
-    gridEl.style.padding = '12px 10px 24px';
-    gridEl.style.overflowY = 'auto';
-    gridEl.style.flex = '1';
-    gridEl.style.alignContent = 'start';
-    gridEl.style.alignItems = 'start';
+    gridEl.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 10px 24px;overflow-y:auto;flex:1;align-content:start;align-items:start;width:100%;min-height:0;box-sizing:border-box;';
 
     gridEl.innerHTML = globalTributes.map(t => {
         const img = getOptimizedUrl(t.image, 400) || '';
@@ -778,8 +773,19 @@ if (typeof window !== 'undefined') {
         const v = Number(value);
         const display = document.getElementById(`crowdfund_display_${id}`);
         const btn = document.getElementById(`crowdfund_btn_${id}`);
-        if (display) display.innerHTML = v.toLocaleString() + ' <i class="fas fa-coins" style="font-size:1rem;"></i>';
-        if (btn) btn.textContent = 'SEND ' + v.toLocaleString() + ' COINS';
+        if (display) {
+            // Desktop: display is a standalone div (with coins icon)
+            // Mobile: display is a span inside the button (number only)
+            if (display.tagName === 'DIV') {
+                display.innerHTML = v.toLocaleString() + ' <i class="fas fa-coins" style="font-size:1rem;"></i>';
+            } else {
+                display.textContent = v.toLocaleString();
+            }
+        }
+        // Desktop: update button text separately
+        if (btn && btn !== display?.parentElement) {
+            btn.textContent = 'SEND ' + v.toLocaleString() + ' COINS';
+        }
     };
 }
 
