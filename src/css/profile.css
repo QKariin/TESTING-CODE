@@ -2926,6 +2926,14 @@
     border-radius: 12px 12px 12px 2px;
 }
 
+/* Guardian AI Bubble */
+.m-guardian {
+    background: linear-gradient(135deg, rgba(255,0,237,0.1), rgba(0,10,255,0.1));
+    border: 1px solid rgba(255,0,237,0.25);
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 12px 12px 12px 2px;
+}
+
 /* Kill the Circus Avatars */
 .chat-av,
 .msg-avatar,

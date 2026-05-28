@@ -4883,6 +4883,42 @@ h3,
     word-break: break-word;
     white-space: pre-wrap;
 }
+/* Guardian AI bubble — blue-pink gradient */
+#adminChatBox .cb-guardian {
+    background: linear-gradient(135deg, rgba(255,0,237,0.12), rgba(0,10,255,0.12));
+    box-shadow: 0 0 0 1px rgba(255,0,237,0.3), inset 0 0 20px rgba(0,10,255,0.05);
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    letter-spacing: 0.1px;
+    padding: 10px 14px;
+    border-radius: 16px 16px 3px 16px;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+/* Guardian AI call button on slave messages */
+.cb-guardian-btn {
+    background: linear-gradient(135deg, #ff00ed, #000aff);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.28rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.cb-row-queen:hover .cb-guardian-btn {
+    opacity: 0.6;
+}
+.cb-guardian-btn:hover {
+    opacity: 1 !important;
+}
+
 /* AI response (right side) — different corner */
 #adminChatBox .cb-ai-right {
     background: rgba(56, 189, 248, 0.08);

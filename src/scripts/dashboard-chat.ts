@@ -844,14 +844,16 @@ function renderToHtml(m: any) {
     // Dashboard perspective: admin (isMe) → RIGHT, slave → LEFT
     // AI conversations: guardian color for both AI responses and user-to-AI messages
     const senderLower = (m.sender_email || '').toLowerCase();
+    const isGuardian = senderLower === 'guardian' || m.metadata?.isGuardian === true;
     const isAiResponse = senderLower === 'ai-assistant';
-    const isUserToAi = !isMe && !isAiResponse && m.metadata?.isAI === true;
+    const isUserToAi = !isMe && !isAiResponse && !isGuardian && m.metadata?.isAI === true;
     const isAiConversation = isAiResponse || isUserToAi;
 
-    const bubbleClass = isMe ? 'cb-queen' : isAiResponse ? 'cb-ai-right' : isUserToAi ? 'cb-ai' : 'cb-slave';
+    const bubbleClass = isMe ? 'cb-queen' : isGuardian ? 'cb-guardian' : isAiResponse ? 'cb-ai-right' : isUserToAi ? 'cb-ai' : 'cb-slave';
     const slaveAvatar = users.find(u => u.memberId === m.member_id)?.avatar || '';
     const slaveAv = slaveAvatar ? `<img src="${getOptimizedUrl(slaveAvatar, 60)}" class="cb-queen-av" alt="" />` : '';
     const aiLabel = `<div style="font-family:'Orbitron',sans-serif;font-size:0.32rem;color:rgba(56,189,248,0.6);letter-spacing:2px;margin-bottom:3px;">AI GUARDIAN</div>`;
+    const guardianLabel = `<div style="font-family:'Orbitron',sans-serif;font-size:0.32rem;background:linear-gradient(135deg,#ff00ed,#000aff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;margin-bottom:3px;">THE GUARDIAN</div>`;
 
     let bubble = '';
     if (m.type === 'photo') {
@@ -865,6 +867,18 @@ function renderToHtml(m: any) {
         let safeHtml = purifier.sanitize(content);
         safeHtml = safeHtml.replace(/\n/g, '<br>');
         bubble = `<div class="${bubbleClass}">${safeHtml}</div>`;
+    }
+
+    // Guardian AI → RIGHT (like queen), with gradient label
+    if (isGuardian) {
+        return `
+            <div class="cb-row cb-row-me">
+                <div class="cb-wrap-me">
+                    ${guardianLabel}
+                    ${bubble}
+                    <div class="chat-ts chat-ts-right">${timeStr}</div>
+                </div>
+            </div>`;
     }
 
     // AI response → RIGHT (like queen), with guardian label
@@ -901,13 +915,19 @@ function renderToHtml(m: any) {
                 </div>
             </div>`;
     } else {
-        // Slave → LEFT, slave avatar
+        // Slave → LEFT, slave avatar + Guardian AI button
+        const guardianBtn = (m.type === 'text' || (!m.type && content && !content.startsWith('TASK_') && !content.startsWith('WISHLIST::') && !content.startsWith('PROMOTION_CARD::') && !content.startsWith('WELCOME_CARD::') && !content.startsWith('ROUTINE_CHANGE::') && !content.startsWith('INVENTORY_CARD::') && !content.startsWith('VAULT_UNLOCK_CARD::') && !content.startsWith('LEADERBOARD_REWARD_CARD::') && !content.startsWith('CERT_') && !content.startsWith('DIRECT_TRIBUTE_CARD::') && !content.startsWith('RISKY_TRIBUTE_CARD::') && !content.startsWith('UPDATE_COINS_CARD::') && !content.startsWith('UPDATE_MERIT_CARD::') && !content.startsWith('http')))
+            ? `<button class="cb-guardian-btn" onclick="event.stopPropagation();window._callGuardian('${(content || '').replace(/'/g, "&#39;").replace(/\\/g, '\\\\').replace(/\n/g, ' ').slice(0, 200)}','${m.member_id || ''}')" title="Call the Guardian">AI</button>`
+            : '';
         return `
             <div class="cb-row cb-row-queen">
                 ${slaveAv}
                 <div class="cb-wrap-queen">
                     ${bubble}
-                    <div class="chat-ts chat-ts-left">${timeStr}</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="chat-ts chat-ts-left">${timeStr}</div>
+                        ${guardianBtn}
+                    </div>
                 </div>
             </div>`;
     }
@@ -1518,6 +1538,23 @@ async function _rejectCertProof(memberId: string, cardId: string) {
     } catch (e) { alert('Error rejecting proof.'); }
 }
 
+async function _callGuardian(userMessage: string, memberId: string) {
+    if (!userMessage || !memberId) return;
+    try {
+        const res = await fetch('/api/chat/guardian', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userMessage, memberId }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            console.error('[Guardian] Error:', err);
+        }
+    } catch (e) {
+        console.error('[Guardian] Fetch error:', e);
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
@@ -1539,6 +1576,7 @@ if (typeof window !== 'undefined') {
     (window as any)._shareNewMemberOnX = _shareNewMemberOnX;
     (window as any)._approveCertProof = _approveCertProof;
     (window as any)._rejectCertProof = _rejectCertProof;
+    (window as any)._callGuardian = _callGuardian;
 }
 
 function _shareNewMemberOnX(name: string, rank: string, avatarUrl: string) {

@@ -115,11 +115,12 @@ export async function renderChat(messages: any[]) {
         let txt = DOMPurify.sanitize(originalMsg);
         const senderLower = (m.sender_email || m.sender || "").toLowerCase();
         const isMe = senderLower === 'user' || senderLower === 'slave';
-        const isQueen = m.metadata?.isQueen || (!isMe && senderLower !== 'system');
+        const isGuardian = senderLower === 'guardian' || m.metadata?.isGuardian === true;
+        const isQueen = !isGuardian && (m.metadata?.isQueen || (!isMe && senderLower !== 'system'));
 
         txt = txt.replace(/\n/g, "<br>");
         const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const msgClass = isMe ? 'm-slave' : 'm-queen';
+        const msgClass = isMe ? 'm-slave' : isGuardian ? 'm-guardian' : 'm-queen';
 
         // Quote block for replied-to messages
         const replyTo = m.metadata?.reply_to;
@@ -444,7 +445,14 @@ export async function renderChat(messages: any[]) {
         }
 
         const avatarUrl = "/queen-karin.png";
-        if (!isMe && !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('ROUTINE_CHANGE::') && !originalMsg.startsWith('TASK_REVIEW_CARD::') && !originalMsg.startsWith('INVENTORY_CARD::') && !originalMsg.startsWith('LEADERBOARD_REWARD_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl)) {
+        const isPlainMsg = !originalMsg.startsWith('WISHLIST::') && !originalMsg.startsWith('TASK_FEEDBACK::') && !originalMsg.startsWith('PROMOTION_CARD::') && !originalMsg.startsWith('WELCOME_CARD::') && !originalMsg.startsWith('ROUTINE_CHANGE::') && !originalMsg.startsWith('TASK_REVIEW_CARD::') && !originalMsg.startsWith('INVENTORY_CARD::') && !originalMsg.startsWith('LEADERBOARD_REWARD_CARD::') && !originalMsg.startsWith('http') && m.type !== 'gif' && !(originalMsg === '[GIF]' && m.metadata?.gifUrl);
+
+        if (isGuardian && isPlainMsg) {
+            contentHtml = `<div class="msg m-guardian">
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.35rem;background:linear-gradient(135deg,#ff00ed,#000aff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;margin-bottom:4px;">THE GUARDIAN</div>
+                <div style="flex:1;">${quoteHtml}<span>${txt}</span></div>
+            </div>`;
+        } else if (!isMe && !isGuardian && isPlainMsg) {
             contentHtml = `<div class="msg ${msgClass}">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;flex-shrink:0;">
