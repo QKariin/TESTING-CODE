@@ -445,20 +445,26 @@ function renderGridMobile(gridEl: HTMLElement) {
             </div>`;
         }
 
+        const locked = t.price > walletForSlider;
+        const lockOverlay = locked ? `<div style="position:absolute; inset:0; background:rgba(4,4,16,0.7); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:2; display:flex; align-items:center; justify-content:center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>` : '';
+
         return `
-        <div onclick="window.buyTribute('${t.id}','${t.title}',${t.price})" style="position:relative; border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.22); box-shadow:0 4px 16px rgba(0,0,0,0.4); aspect-ratio:3/4; cursor:pointer;">
+        <div onclick="${locked ? '' : `window.buyTribute('${t.id}','${t.title}',${t.price})`}" style="position:relative; border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid ${locked ? 'rgba(255,255,255,0.06)' : 'rgba(197,160,89,0.22)'}; box-shadow:0 4px 16px rgba(0,0,0,0.4); aspect-ratio:3/4; cursor:${locked ? 'default' : 'pointer'};">
             ${img ? `<img src="${img}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">` : ''}
             <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(4,4,16,0.95) 0%, rgba(4,4,16,0.6) 40%, transparent 65%);"></div>
-            <div style="position:absolute; bottom:0; left:0; right:0; padding:10px 12px 12px; display:flex; flex-direction:column; gap:6px;">
+            ${lockOverlay}
+            <div style="position:absolute; bottom:0; left:0; right:0; padding:10px 12px 12px; display:flex; flex-direction:column; gap:6px; ${locked ? 'z-index:3;' : ''}">
                 <div style="display:flex; align-items:center; gap:5px;">
-                    <i class="fas fa-coins" style="color:#c5a059; font-size:9px;"></i>
-                    <span style="font-family:'Orbitron',sans-serif; font-size:11px; color:#c5a059; font-weight:700;">${t.price.toLocaleString()}</span>
+                    <i class="fas fa-coins" style="color:${locked ? 'rgba(197,160,89,0.35)' : '#c5a059'}; font-size:9px;"></i>
+                    <span style="font-family:'Orbitron',sans-serif; font-size:11px; color:${locked ? 'rgba(197,160,89,0.35)' : '#c5a059'}; font-weight:700;">${t.price.toLocaleString()}</span>
                 </div>
-                <div style="font-family:'Cinzel',serif; font-size:13px; color:#fff; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
-                <button onclick="event.stopPropagation();"
+                <div style="font-family:'Cinzel',serif; font-size:13px; color:${locked ? 'rgba(255,255,255,0.3)' : '#fff'}; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
+                ${locked ? '' : `<button onclick="event.stopPropagation();"
                     style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:10px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
                     SEND GIFT
-                </button>
+                </button>`}
             </div>
         </div>`;
     }).join('');
