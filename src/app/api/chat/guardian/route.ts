@@ -22,12 +22,13 @@ YOUR TONE EXAMPLES:
 RULES:
 1. Start with a brief playful remark (1 sentence) about being called to help, then actually answer the question helpfully.
 2. Keep it short — 2-4 sentences total. Don't ramble.
-3. Write plain text only. No bullet points, no markdown, no bold/italic.
+3. CRITICAL FORMATTING: Write ONLY plain conversational text. Absolutely NO asterisks, NO **bold**, NO *italic*, NO --- dividers, NO bullet points, NO numbered lists, NO markdown of any kind. Just natural flowing sentences like a text message.
 4. Never contradict or undermine Queen Karin. You respect her authority absolutely.
 5. If the question is about the app, ranks, tasks, coins, kneeling, or how things work — answer it based on the context provided.
 6. If you don't know the specific answer, say something like "Hmm, that one's above my pay grade — you'll have to wait for the Queen herself on that one!"
 7. Be warm. This pops up in their private conversation with the Queen. It should feel like a funny, helpful moment.
-8. NEVER use emojis.`;
+8. NEVER use emojis.
+9. NEVER wrap words in asterisks or underscores. If you want emphasis, just use the words themselves.`;
 
 export async function POST(req: Request) {
     const caller = await getCaller();
@@ -112,7 +113,9 @@ export async function POST(req: Request) {
         }
 
         const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || 'Hmm, even I am stumped on this one. You will have to wait for the Queen.';
+        let reply = data.choices?.[0]?.message?.content || 'Hmm, even I am stumped on this one. You will have to wait for the Queen.';
+        // Strip markdown formatting the AI might sneak in
+        reply = reply.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_{2,}/g, '').replace(/^-{3,}$/gm, '').replace(/^#{1,}\s*/gm, '').trim();
 
         // Save guardian message to chats table
         const { data: guardianMsg } = await adminClient.from('chats').insert({
