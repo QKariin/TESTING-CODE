@@ -149,25 +149,22 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const loadData = useCallback(async () => {
         try {
-            const [listRes, unread] = await Promise.all([
+            // Fetch everything in parallel — including server read state
+            const [listRes, unread, readRes] = await Promise.all([
                 fetch('/api/dashboard-list').then(r => r.json()),
                 getUnreadMessageStatus(),
+                fetch('/api/chat/mark-read?type=admin').then(r => r.json()).catch(() => ({ chatRead: {} })),
             ]);
+            // Sync server-side read timestamps to localStorage BEFORE setting state
+            // so the first render already has accurate read times from desktop
+            const serverReadMap: Record<string, string> = readRes.chatRead || {};
+            Object.entries(serverReadMap).forEach(([id, ts]) => {
+                const key = 'read_' + id.toLowerCase();
+                const localTs = parseInt(localStorage.getItem(key) || '0');
+                const serverTs = new Date(ts as string).getTime();
+                if (serverTs > localTs) localStorage.setItem(key, serverTs.toString());
+            });
             setUnreadMap(unread);
-            // Sync server-side read timestamps to localStorage (cross-device read state).
-            // Desktop writes admin_chat_read via /api/chat/mark-read; mobile reads it here
-            // so reads done on desktop are reflected on mobile and vice-versa.
-            try {
-                const readRes = await fetch('/api/chat/mark-read?type=admin');
-                const readData = await readRes.json();
-                const serverReadMap: Record<string, string> = readData.chatRead || {};
-                Object.entries(serverReadMap).forEach(([id, ts]) => {
-                    const key = 'read_' + id.toLowerCase();
-                    const localTs = parseInt(localStorage.getItem(key) || '0');
-                    const serverTs = new Date(ts).getTime();
-                    if (serverTs > localTs) localStorage.setItem(key, serverTs.toString());
-                });
-            } catch { /* non-critical */ }
             if (listRes.success && listRes.users) {
                 // Sign proof URLs in per-user review queues
                 await Promise.all((listRes.users as any[]).map((u: any) => u.reviewQueue?.length ? signQueueItems(u.reviewQueue) : Promise.resolve()));
@@ -305,7 +302,17 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
     const markPendingRead = useCallback(() => {
         const id = pendingReadIdRef.current;
-        if (id) { localStorage.setItem('read_' + id.toLowerCase(), Date.now().toString()); pendingReadIdRef.current = null; }
+        if (id) {
+            const key = id.toLowerCase();
+            const now = Date.now();
+            localStorage.setItem('read_' + key, now.toString());
+            fetch('/api/chat/mark-read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'admin', slaveEmail: id, timestamp: new Date(now).toISOString() }),
+            }).catch(() => {});
+            pendingReadIdRef.current = null;
+        }
     }, []);
 
     const handleLogout = async () => {
@@ -422,11 +429,16 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         unreadMap={unreadMap} onlineJoinTime={onlineJoinTimeRef.current}
                         onSelect={(u) => {
                             markPendingRead();
-                            // Mark as read immediately on open — any new messages that
-                            // arrive while in chat will be caught when we navigate away
+                            // Mark as read immediately on open — persist to server AND localStorage
                             const key = u.memberId.toLowerCase();
-                            localStorage.setItem('read_' + key, Date.now().toString());
-                            pendingReadIdRef.current = key; // also set pending so back nav refreshes
+                            const now = Date.now();
+                            localStorage.setItem('read_' + key, now.toString());
+                            fetch('/api/chat/mark-read', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ role: 'admin', slaveEmail: u.memberId, timestamp: new Date(now).toISOString() }),
+                            }).catch(() => {});
+                            pendingReadIdRef.current = key;
                             setSelectedUser(u); setProfileTab('chat');
                         }}
                         onMarkAllRead={() => {
