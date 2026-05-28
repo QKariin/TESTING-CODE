@@ -1063,13 +1063,19 @@ export default function DashboardPage() {
                         readMap[id.toLowerCase()] = new Date(ts as string).getTime();
                     });
 
-                    // Migration bridge: merge localStorage read state into DB map
-                    // Takes the newer timestamp from either source
+                    // Sync: server wins when newer, localStorage wins when newer
+                    // Then update localStorage so mobile/desktop stay in sync
                     mappedUsers.forEach((u: any) => {
                         const uuid = (u.memberId || '').toLowerCase();
                         if (!uuid) return;
-                        const localTs = parseInt(localStorage.getItem('read_' + uuid) || '0');
-                        if (localTs > (readMap[uuid] || 0)) {
+                        const key = 'read_' + uuid;
+                        const localTs = parseInt(localStorage.getItem(key) || '0');
+                        const serverTs = readMap[uuid] || 0;
+                        if (serverTs > localTs) {
+                            // Server is newer (e.g. read on mobile) — update localStorage
+                            localStorage.setItem(key, serverTs.toString());
+                        } else if (localTs > serverTs) {
+                            // localStorage is newer — use it and persist to server
                             readMap[uuid] = localTs;
                         }
                     });

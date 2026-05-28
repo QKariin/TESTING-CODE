@@ -98,7 +98,12 @@ export async function renderChat(messages: any[]) {
         const lastMsg = conversationMessages[conversationMessages.length - 1];
         const lastId = lastMsg.id || lastMsg._id;
         if (lastId !== lastNotifiedMessageId) {
-            triggerSound('msgSound');
+            // Only play sound for incoming messages (queen, guardian, AI) — not user's own
+            const lastSender = (lastMsg.sender_email || lastMsg.sender || '').toLowerCase();
+            const isSelf = lastSender === 'user' || lastSender === 'slave';
+            if (!isSelf) {
+                triggerSound('msgSound');
+            }
             setLastNotifiedMessageId(lastId);
         }
     }

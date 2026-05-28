@@ -16,6 +16,7 @@ export function presenceKey(email: string): string {
 }
 
 export const onlineMembers = new Set<string>();
+let _lastValidSync = 0; // timestamp of last sync that had members
 
 type PresenceListener = () => void;
 const _listeners: PresenceListener[] = [];
@@ -61,8 +62,12 @@ export function initPresenceTracking() {
                     }
                 });
 
-            // If sync returned 0 members but we had members before, it's a reconnect — skip
-            if (nowPresent.size === 0 && onlineMembers.size > 0) return;
+            // If sync returned 0 members but we had members before, it might be a reconnect glitch.
+            // Skip only if the last valid sync was recent (< 30s). Otherwise accept it — everyone is offline.
+            if (nowPresent.size === 0 && onlineMembers.size > 0) {
+                if (Date.now() - _lastValidSync < 30000) return;
+            }
+            if (nowPresent.size > 0) _lastValidSync = Date.now();
 
             let changed = false;
 
