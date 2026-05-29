@@ -5324,49 +5324,57 @@ h3,
     min-width: 0;
 }
 
-/* Column 4 — Routine (full-bleed card) */
+/* Column 4 — Routine (glass card with overlay controls) */
 .vu-col-routine {
-    padding: 0;
+    justify-content: center;
+}
+.vu-col-routine .vu-glass-card {
+    width: 100%;
+    min-width: 0;
+}
+.vu-routine-glass {
     position: relative;
     overflow: hidden;
+    padding: 0 !important;
 }
-.vu-routine-wrap {
+.vu-routine-overlay {
     position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-}
-.vu-routine-header {
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: relative;
-    z-index: 3;
     padding: 10px 14px 6px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+    pointer-events: none;
+}
+.vu-routine-overlay > * {
+    pointer-events: auto;
 }
 .vu-col-routine .dp-routine-content {
     position: relative;
     z-index: 2;
-    flex: 1;
-    min-height: 0;
+    min-height: 80px;
 }
 .vu-col-routine .dp-routine-card {
     width: 100%;
     max-width: none;
     height: 100%;
+    min-height: 80px;
     margin: 0;
-    border-radius: 0;
+    border-radius: 12px;
     border: none;
-    border-left: 1px solid rgba(197,160,89,0.1);
 }
 .vu-col-routine .dp-routine-card-overlay {
     padding: 6px 10px;
 }
 .vu-col-routine .dp-routine-awaiting {
+    min-height: 80px;
     height: 100%;
-    border-radius: 0;
+    border-radius: 12px;
     border: none;
-    border-left: 1px solid rgba(197,160,89,0.06);
 }
 .vu-col-routine #routineCalendarSection {
     position: relative;

@@ -1814,8 +1814,8 @@ export default function DashboardPage() {
 
                                 {/* Column 4 — Routine */}
                                 <div className="vu-col vu-col-routine">
-                                    <div className="vu-routine-wrap">
-                                        <div className="vu-routine-header">
+                                    <div className="vu-glass-card vu-routine-glass">
+                                        <div className="vu-routine-overlay">
                                             <span className="vu-glass-label">ROUTINE</span>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <button id="dpChangeRoutineBtn" title="Change routine" onClick={() => { const w = window as any; if (w.changeRoutine && w._currChatterId) w.changeRoutine(w._currChatterId, w._currRoutineName || ''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', color: 'rgba(197,160,89,0.4)', fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}>
