@@ -5347,38 +5347,34 @@ h3,
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px 6px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
     pointer-events: none;
 }
 .vu-routine-overlay > * {
     pointer-events: auto;
 }
 .vu-col-routine .dp-routine-content {
-    position: relative;
+    position: absolute;
+    inset: 0;
     z-index: 2;
-    min-height: 80px;
 }
-.vu-col-routine .dp-routine-card {
-    width: 100%;
-    max-width: none;
-    height: 100%;
-    min-height: 80px;
-    margin: 0;
-    border-radius: 12px;
-    border: none;
+.vu-col-routine .dp-routine-card,
+.vu-col-routine .dp-routine-awaiting {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
 }
 .vu-col-routine .dp-routine-card-overlay {
-    padding: 6px 10px;
-}
-.vu-col-routine .dp-routine-awaiting {
-    min-height: 80px;
-    height: 100%;
-    border-radius: 12px;
-    border: none;
+    display: none;
 }
 .vu-col-routine #routineCalendarSection {
-    position: relative;
-    z-index: 4;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 6;
     background: rgba(8,8,8,0.95);
     border-top: 1px solid rgba(197,160,89,0.1);
     padding: 0 14px 10px;
