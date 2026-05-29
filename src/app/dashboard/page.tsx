@@ -1811,6 +1811,29 @@ export default function DashboardPage() {
                                         <div id="vuKneelDots" className="vu-kneel-dots"></div>
                                     </div>
                                 </div>
+
+                                {/* Column 4 — Routine */}
+                                <div className="vu-col vu-col-routine">
+                                    <div className="vu-routine-wrap">
+                                        <div className="vu-routine-header">
+                                            <span className="vu-glass-label">ROUTINE</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <button id="dpChangeRoutineBtn" title="Change routine" onClick={() => { const w = window as any; if (w.changeRoutine && w._currChatterId) w.changeRoutine(w._currChatterId, w._currRoutineName || ''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', color: 'rgba(197,160,89,0.4)', fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}>
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </button>
+                                                <button className="dp-cal-toggle" id="dpCalToggle" onClick={() => { const el = document.getElementById('routineCalendarDrop'); if (el) { const open = el.style.display !== 'none'; el.style.display = open ? 'none' : 'block'; } }}>
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="chatter_RoutineContent" className="dp-routine-content">No routine assigned</div>
+                                        <div id="routineCalendarSection" style={{ display: 'none' }}>
+                                            <div id="routineCalendarDrop" style={{ display: 'none', marginTop: 10 }}>
+                                                <div id="routineCalendarGrid"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1927,27 +1950,6 @@ export default function DashboardPage() {
 
                                 {/* ═══ SECTIONS ═══ */}
                                 <div className="dp-sections">
-
-                                {/* ── ROUTINE (above directives) ── */}
-                                <div className="dp-section">
-                                    <div className="dp-divider-label">
-                                        <span className="dp-divider-text" style={{ fontFamily: "'Cinzel', serif" }}>ROUTINE</span>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <button id="dpChangeRoutineBtn" title="Change routine" onClick={() => { const w = window as any; if (w.changeRoutine && w._currChatterId) w.changeRoutine(w._currChatterId, w._currRoutineName || ''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', color: 'rgba(197,160,89,0.5)', fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}>
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                        </button>
-                                        <button className="dp-cal-toggle" id="dpCalToggle" onClick={() => { const el = document.getElementById('routineCalendarDrop'); if (el) { const open = el.style.display !== 'none'; el.style.display = open ? 'none' : 'block'; } }}>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
-                                        </button>
-                                        </div>
-                                    </div>
-                                    <div id="chatter_RoutineContent" className="dp-routine-content">No routine assigned</div>
-                                    <div id="routineCalendarSection" style={{ display: 'none' }}>
-                                        <div id="routineCalendarDrop" style={{ display: 'none', marginTop: 14 }}>
-                                            <div id="routineCalendarGrid"></div>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 {/* ── DIRECTIVE (collapsible) ── */}
                                 <div className="dp-section">
