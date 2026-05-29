@@ -1,6 +1,7 @@
 // src/lib/supabase-service.ts
 import { supabase, supabaseAdmin } from './supabase';
 import { cacheGet, cacheSet } from '@/lib/api-cache';
+import { checkAndPromote } from '@/lib/promote';
 
 export const DbService = {
     // --- PROFILES ---
@@ -396,6 +397,9 @@ export const DbService = {
                     await supabaseAdmin.from('profiles').update({ parameters: params }).ilike('member_id', userRoutine.member_id);
                 }
             } catch (_) { }
+
+            // Check if user now qualifies for promotion
+            checkAndPromote(profileId).catch(() => {});
             return;
         }
 
@@ -426,6 +430,9 @@ export const DbService = {
         await this.awardPoints(profileId, bonus);
         const cardData = { status: 'approve', points: bonus, type: 'task', comment: comment || null, taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
         try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+
+        // Check if user now qualifies for promotion
+        checkAndPromote(profileId).catch(() => {});
     },
 
     async rejectTask(taskId: string, profileId: string) {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkAndPromote } from '@/lib/promote';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,6 +89,9 @@ export async function GET(req: Request) {
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
             }
         } catch (_) { }
+
+        // Check if user now qualifies for promotion
+        checkAndPromote(ur.member_id).catch(() => {});
     }
 
     console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines`);

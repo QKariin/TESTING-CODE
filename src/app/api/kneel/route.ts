@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { checkAndPromote } from '@/lib/promote';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
@@ -112,6 +113,9 @@ export async function POST(req: Request) {
         }
 
         try { await DbService.sendMessage(memberId, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
+
+        // Check if user now qualifies for promotion
+        checkAndPromote(memberId).catch(() => {});
 
         // Push notification: send immediately with TTL so it arrives ~when cooldown expires
         try {

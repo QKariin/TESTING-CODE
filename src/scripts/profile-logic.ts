@@ -7372,31 +7372,8 @@ export function renderProfileSidebar(u: any) {
     // Load vault items
     loadVault();
 
-    // ─── AUTO PROMOTION TRIGGER ───
-    if (report.canPromote && !isPromoting && u.member_id) {
-        isPromoting = true;
-        fetch('/api/promote', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: u.member_id })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.promoted) {
-                    // Slight delay so the user can enjoy seeing the bars hit 100% before the reload
-                    setTimeout(() => {
-                        alert(`✨ PROMOTION UNLOCKED ✨\nYou have been elevated to ${data.newRank.toUpperCase()}.`);
-                        window.location.reload();
-                    }, 800);
-                } else {
-                    isPromoting = false;
-                }
-            })
-            .catch(err => {
-                console.error("Auto-promote check failed", err);
-                isPromoting = false;
-            });
-    }
+    // Auto-promotion is handled server-side (on routine/task approve, kneel, etc.)
+    // The user sees their new rank on next page load via the PROMOTION_CARD in chat.
 
     const { currentRank, nextRank, isMax, currentBenefits, nextBenefits, requirements } = report;
 
