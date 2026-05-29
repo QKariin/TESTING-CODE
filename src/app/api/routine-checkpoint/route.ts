@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
             params.consistency = streak;
             params.routine_streak = best;
             params.taskdom_current_streak = streak;
-            await supabaseAdmin.from('profiles').update({ parameters: params, bestRoutinestreak: best, routinestreak: streak }).eq('ID', prof.ID);
+            await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
         }
     } catch (_) { }
 

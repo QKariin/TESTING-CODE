@@ -28,11 +28,7 @@ async function runBackfill() {
             params.routine_streak = ur.best_streak || 0;
             params.taskdom_current_streak = ur.current_streak || 0;
 
-            await supabaseAdmin.from('profiles').update({
-                parameters: params,
-                bestRoutinestreak: ur.best_streak || 0,
-                routinestreak: ur.current_streak || 0,
-            }).eq('ID', prof.ID);
+            await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
 
             results.push({ email: ur.member_id, consistency: ur.current_streak || 0 });
             updated++;

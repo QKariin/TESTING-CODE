@@ -85,11 +85,7 @@ export async function GET(req: Request) {
                 params.consistency = newStreak;
                 params.routine_streak = newBest;
                 params.taskdom_current_streak = newStreak;
-                await supabaseAdmin.from('profiles').update({
-                    parameters: params,
-                    bestRoutinestreak: newBest,
-                    routinestreak: newStreak,
-                }).eq('ID', prof.ID);
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
             }
         } catch (_) { }
     }

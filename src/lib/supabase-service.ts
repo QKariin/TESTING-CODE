@@ -393,7 +393,7 @@ export const DbService = {
                     params.consistency = newStreak;
                     params.routine_streak = newBest;
                     params.taskdom_current_streak = newStreak;
-                    await supabaseAdmin.from('profiles').update({ parameters: params, bestRoutinestreak: newBest, routinestreak: newStreak }).ilike('member_id', userRoutine.member_id);
+                    await supabaseAdmin.from('profiles').update({ parameters: params }).ilike('member_id', userRoutine.member_id);
                 }
             } catch (_) { }
             return;
