@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
+import { HIERARCHY_RULES, getHierarchyReport } from '@/lib/hierarchyRules';
 import { getCaller, isCEO } from '@/lib/api-auth';
 import { discordPromotion } from '@/lib/discord';
+import { mapUserProfile } from '@/lib/mapUserProfile';
 
 export const dynamic = "force-dynamic";
 
@@ -11,20 +12,41 @@ const clean = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 export async function POST(req: Request) {
     const caller = await getCaller();
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     try {
-        const { memberId } = await req.json();
+        const body = await req.json();
+        const memberId = body.memberId || body.memberEmail;
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-        // 1. Fetch Profile by UUID
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('*')
-            .eq('ID', memberId)
-            .maybeSingle();
+        // 1. Fetch Profile (by UUID or email)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+        const { data: profile } = isUuid
+            ? await supabaseAdmin.from('profiles').select('*').eq('ID', memberId).maybeSingle()
+            : await supabaseAdmin.from('profiles').select('*').ilike('member_id', memberId).maybeSingle();
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+
+        // Non-CEO callers can only promote themselves
+        const callerEmail = caller.email?.toLowerCase();
+        const profileEmail = (profile.member_id || '').toLowerCase();
+        if (!isCEO(callerEmail) && callerEmail !== profileEmail) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        // 2. Fetch tasks data for hierarchy check
+        const { data: taskRow } = await supabaseAdmin
+            .from('tasks')
+            .select('*')
+            .eq('ID', profile.ID)
+            .maybeSingle();
+
+        const mapped = mapUserProfile(profile, taskRow);
+        const report = getHierarchyReport(mapped);
+
+        // Non-CEO callers must actually qualify
+        if (!isCEO(callerEmail) && !report.canPromote) {
+            return NextResponse.json({ success: true, promoted: false, reason: 'Requirements not met' });
+        }
 
         const exactEmail = profile.member_id;
 
