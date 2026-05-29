@@ -1988,6 +1988,30 @@ export default function DashboardPage() {
                                     <div id="admin_ProgressContainer" className="dp-promo-bars"></div>
                                 </div>
 
+                                {/* ── INVENTORY ── */}
+                                <div className="dp-section">
+                                    <div className="dp-divider-label">
+                                        <span className="dp-divider-text">INVENTORY</span>
+                                    </div>
+                                    <div className="dp-inv-grid">
+                                        <div className="dp-inv-card">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>
+                                            <div className="dp-inv-name">SKIP PASS</div>
+                                            <div className="dp-inv-count" id="dpInvSkip">0</div>
+                                        </div>
+                                        <div className="dp-inv-card">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                            <div className="dp-inv-name">CUM PASS</div>
+                                            <div className="dp-inv-count" id="dpInvCum">0</div>
+                                        </div>
+                                        <div className="dp-inv-card">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                            <div className="dp-inv-name">CHECKPOINT</div>
+                                            <div className="dp-inv-count" id="dpInvCheck">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* ── TELEMETRY + KINKS ── */}
                                 <div className="dp-section dp-section-split">
                                     <div id="telemetry_section" className="dp-split-half" onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)'; } }}>

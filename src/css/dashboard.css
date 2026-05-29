@@ -5955,6 +5955,41 @@ h3,
 }
 .dp-promo-bars { }
 
+/* ── Inventory (dashboard panel) ── */
+.dp-inv-grid {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0 4px;
+}
+.dp-inv-card {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(197, 160, 89, 0.12);
+    border-radius: 10px;
+    padding: 10px 6px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+.dp-inv-card svg {
+    opacity: 0.5;
+}
+.dp-inv-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.32rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1.5px;
+    text-align: center;
+}
+.dp-inv-count {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #c5a059;
+    line-height: 1;
+}
+
 /* ── Split section (Intel + Kinks) ── */
 .dp-section-split {
     display: flex;

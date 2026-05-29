@@ -216,6 +216,11 @@ export async function updateDetail(u: any) {
     setText('dMirrorPoints', (u.points || 0).toLocaleString());
     setText('dMirrorWallet', (u.wallet || 0).toLocaleString());
 
+    // Inventory
+    setText('dpInvSkip', String(u.skippass || 0));
+    setText('dpInvCum', String(u.cumpass || 0));
+    setText('dpInvCheck', String(u.checkpoint || 0));
+
     const totalKneel = u.kneelCount || 0;
     const kneelHrs = (totalKneel * 0.25).toFixed(1);
     setText('dMirrorKneel', `${kneelHrs} h`);
