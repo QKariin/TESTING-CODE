@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,12 +16,12 @@ export async function GET(req: Request) {
 
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
-    // Find all pending routines submitted more than 2 hours ago
+    // Find all user_routines with a pending submission older than 2 hours
     const { data: stale, error: fetchErr } = await supabaseAdmin
-        .from('routines')
-        .select('id, member_id, proof_url, proof_type, thumbnail_url, submitted_at')
-        .eq('status', 'pending')
-        .lt('submitted_at', twoHoursAgo);
+        .from('user_routines')
+        .select('*')
+        .not('pending_id', 'is', null)
+        .lt('pending_submitted_at', twoHoursAgo);
 
     if (fetchErr) {
         console.error('[cron/auto-approve] fetch error:', fetchErr.message);
@@ -33,57 +32,68 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: true, approved: 0 });
     }
 
-    // Batch-update all stale routines to approved
-    const ids = stale.map((r: any) => r.id);
-    const { error: updateErr } = await supabaseAdmin
-        .from('routines')
-        .update({ status: 'approve', reviewed_at: new Date().toISOString() })
-        .in('id', ids);
+    const now = new Date().toISOString();
+    const todayStr = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-    if (updateErr) {
-        console.error('[cron/auto-approve] update error:', updateErr.message);
-        return NextResponse.json({ error: updateErr.message }, { status: 500 });
-    }
+    for (const ur of stale) {
+        const history: any[] = ur.history || [];
 
-    // Update Taskdom_History in tasks table so record page shows approved routines
-    const routinesByUser: Record<string, any[]> = {};
-    for (const r of stale) {
-        if (!routinesByUser[r.member_id]) routinesByUser[r.member_id] = [];
-        routinesByUser[r.member_id].push(r);
-    }
-    for (const [email, routines] of Object.entries(routinesByUser)) {
+        // Find the pending entry and approve it
+        const pendingIdx = history.findIndex((e: any) => e.id === ur.pending_id);
+        if (pendingIdx > -1) {
+            history[pendingIdx].status = 'approve';
+            history[pendingIdx].reviewed_at = now;
+            history[pendingIdx].points_awarded = 50;
+        }
+
+        // Calculate streak
+        const lastApproved = ur.last_approved_date;
+        let newStreak = 1;
+        if (lastApproved === yesterdayStr || lastApproved === todayStr) {
+            newStreak = (ur.current_streak || 0) + 1;
+        }
+        const newBest = Math.max(newStreak, ur.best_streak || 0);
+
+        await supabaseAdmin
+            .from('user_routines')
+            .update({
+                history,
+                current_streak: newStreak,
+                best_streak: newBest,
+                last_approved_date: todayStr,
+                pending_id: null,
+                pending_proof_url: null,
+                pending_proof_type: null,
+                pending_thumbnail_url: null,
+                pending_submitted_at: null,
+                updated_at: now,
+            })
+            .eq('member_id', ur.member_id);
+
+        // Update profiles.parameters for backward compat
         try {
-            const { data: taskRow } = await supabaseAdmin
-                .from('tasks')
-                .select('ID, "Taskdom_History"')
-                .ilike('member_id', email)
+            const { data: prof } = await supabaseAdmin
+                .from('profiles')
+                .select('ID, parameters')
+                .ilike('member_id', ur.member_id)
                 .maybeSingle();
-            if (taskRow) {
-                let history: any[] = [];
-                try { history = typeof taskRow['Taskdom_History'] === 'string' ? JSON.parse(taskRow['Taskdom_History']) : (taskRow['Taskdom_History'] || []); } catch { history = []; }
-                for (const r of routines) {
-                    history.push({
-                        id: r.id,
-                        text: 'Daily Routine',
-                        proofUrl: r.proof_url,
-                        proofType: r.proof_type,
-                        thumbnail_url: r.thumbnail_url,
-                        timestamp: r.submitted_at,
-                        status: 'approve',
-                        isRoutine: true,
-                    });
-                }
-                await supabaseAdmin.from('tasks').update({ 'Taskdom_History': JSON.stringify(history) }).eq('ID', taskRow.ID);
+            if (prof) {
+                const params = prof.parameters || {};
+                params.consistency = newStreak;
+                params.routine_streak = newBest;
+                params.taskdom_current_streak = newStreak;
+                await supabaseAdmin.from('profiles').update({
+                    parameters: params,
+                    bestRoutinestreak: newBest,
+                    routinestreak: newStreak,
+                }).eq('ID', prof.ID);
             }
-        } catch (e) { console.warn('[cron/auto-approve] history update error for', email, e); }
+        } catch (_) { }
     }
 
-    // Recalculate consistency for each affected user
-    const uniqueEmails = [...new Set(stale.map((r: any) => r.member_id as string))];
-    for (const email of uniqueEmails) {
-        try { await DbService.recalcConsistency(email as string); } catch (e) { console.warn('[cron/auto-approve] recalc error for', email, e); }
-    }
-
-    console.log(`[cron/auto-approve] Auto-approved ${ids.length} routines for ${uniqueEmails.length} users`);
-    return NextResponse.json({ success: true, approved: ids.length, users: uniqueEmails.length });
+    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines`);
+    return NextResponse.json({ success: true, approved: stale.length });
 }

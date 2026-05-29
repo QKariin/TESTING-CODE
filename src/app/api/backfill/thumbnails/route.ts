@@ -78,34 +78,48 @@ export async function GET(req: Request) {
     let updated = 0;
     let skipped = 0;
 
-    // ── ROUTINES TABLE ──
+    // ── USER_ROUTINES TABLE (JSONB history) ──
     if (source === 'routines' || source === 'both') {
-        const { data: routines } = await supabaseAdmin
-            .from('routines')
-            .select('id, proof_url, proof_type, thumbnail_url')
-            .or('thumbnail_url.is.null,thumbnail_url.eq.')
-            .not('proof_url', 'is', null)
-            .limit(limit);
+        const { data: userRoutines } = await supabaseAdmin
+            .from('user_routines')
+            .select('member_id, history')
+            .not('history', 'is', null)
+            .limit(100);
 
-        for (const r of routines || []) {
-            if (!r.proof_url || !isImageUrl(r.proof_url)) { skipped++; results.push({ type: 'routine_skip', id: r.id, url: r.proof_url, proof_type: r.proof_type, reason: 'not_image_url' }); continue; }
-            if (r.proof_type === 'video') { skipped++; results.push({ type: 'routine_skip', id: r.id, reason: 'video' }); continue; }
-            processed++;
+        let routineCount = 0;
+        for (const ur of userRoutines || []) {
+            if (routineCount >= limit) break;
+            const history: any[] = ur.history || [];
+            let changed = false;
 
-            if (dry) {
-                results.push({ type: 'routine', id: r.id, url: r.proof_url, action: 'would_process' });
-                continue;
+            for (const entry of history) {
+                if (routineCount >= limit) break;
+                if (entry.thumbnail_url) continue;
+                if (!entry.proof_url || !isImageUrl(entry.proof_url)) { skipped++; continue; }
+                if (entry.proof_type === 'video') { skipped++; continue; }
+                processed++;
+                routineCount++;
+
+                if (dry) {
+                    results.push({ type: 'routine', id: entry.id, url: entry.proof_url, action: 'would_process' });
+                    continue;
+                }
+
+                const thumbBuf = await fetchAndResize(entry.proof_url);
+                if (!thumbBuf) { results.push({ type: 'routine', id: entry.id, error: 'fetch_failed' }); continue; }
+
+                const thumbUrl = await uploadThumb(thumbBuf);
+                if (!thumbUrl) { results.push({ type: 'routine', id: entry.id, error: 'upload_failed' }); continue; }
+
+                entry.thumbnail_url = thumbUrl;
+                changed = true;
+                updated++;
+                results.push({ type: 'routine', id: entry.id, thumbUrl });
             }
 
-            const thumbBuf = await fetchAndResize(r.proof_url);
-            if (!thumbBuf) { results.push({ type: 'routine', id: r.id, error: 'fetch_failed' }); continue; }
-
-            const thumbUrl = await uploadThumb(thumbBuf);
-            if (!thumbUrl) { results.push({ type: 'routine', id: r.id, error: 'upload_failed' }); continue; }
-
-            await supabaseAdmin.from('routines').update({ thumbnail_url: thumbUrl }).eq('id', r.id);
-            updated++;
-            results.push({ type: 'routine', id: r.id, thumbUrl });
+            if (changed) {
+                await supabaseAdmin.from('user_routines').update({ history }).eq('member_id', ur.member_id);
+            }
         }
     }
 

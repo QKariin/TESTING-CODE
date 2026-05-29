@@ -13,13 +13,23 @@ export async function GET(req: Request) {
     if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
 
     const { data, error } = await supabaseAdmin
-        .from('routines')
-        .select('id, submitted_at, status, proof_url, proof_type, thumbnail_url')
+        .from('user_routines')
+        .select('history')
         .eq('member_id', email.toLowerCase())
-        .order('submitted_at', { ascending: false })
-        .limit(200);
+        .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ entries: data || [] });
+    const history: any[] = data?.history || [];
+    // Return in descending order, matching the old format
+    const entries = [...history].reverse().map((e: any) => ({
+        id: e.id,
+        submitted_at: e.submitted_at,
+        status: e.status,
+        proof_url: e.proof_url,
+        proof_type: e.proof_type || 'image',
+        thumbnail_url: e.thumbnail_url,
+    }));
+
+    return NextResponse.json({ entries });
 }

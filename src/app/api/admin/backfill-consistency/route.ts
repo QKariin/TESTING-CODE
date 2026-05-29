@@ -1,50 +1,44 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = 'force-dynamic';
 
+// Backfills profiles.parameters consistency/streak from user_routines
 async function runBackfill() {
-    const { data: profiles, error: profErr } = await supabaseAdmin
-        .from('profiles')
-        .select('ID, member_id, parameters');
+    const { data: userRoutines, error } = await supabaseAdmin
+        .from('user_routines')
+        .select('member_id, current_streak, best_streak');
 
-    if (profErr) return { error: profErr.message };
+    if (error) return { error: error.message };
 
     let updated = 0;
     const results: { email: string; consistency: number }[] = [];
 
-    for (const p of (profiles || [])) {
-        const email = (p.member_id || '').toLowerCase();
-        if (!email) continue;
-
+    for (const ur of (userRoutines || [])) {
         try {
-            // Get user's timezone from profile if available
-            let tz = 'UTC';
-            try {
-                const { data: tzProf } = await supabaseAdmin
-                    .from('profiles')
-                    .select('timezone')
-                    .eq('ID', p.ID)
-                    .maybeSingle();
-                if (tzProf?.timezone) tz = tzProf.timezone;
-            } catch { /* timezone column may not exist */ }
-
-            await DbService.recalcConsistency(email, tz);
-
-            // Read back the updated value
-            const { data: refreshed } = await supabaseAdmin
+            const { data: prof } = await supabaseAdmin
                 .from('profiles')
-                .select('parameters')
-                .eq('ID', p.ID)
+                .select('ID, parameters')
+                .ilike('member_id', ur.member_id)
                 .maybeSingle();
+            if (!prof) continue;
 
-            const consistency = refreshed?.parameters?.consistency || 0;
-            results.push({ email, consistency });
+            const params = prof.parameters || {};
+            params.consistency = ur.current_streak || 0;
+            params.routine_streak = ur.best_streak || 0;
+            params.taskdom_current_streak = ur.current_streak || 0;
+
+            await supabaseAdmin.from('profiles').update({
+                parameters: params,
+                bestRoutinestreak: ur.best_streak || 0,
+                routinestreak: ur.current_streak || 0,
+            }).eq('ID', prof.ID);
+
+            results.push({ email: ur.member_id, consistency: ur.current_streak || 0 });
             updated++;
         } catch (e: any) {
-            console.warn('[backfill] error for', email, e?.message || e);
-            results.push({ email, consistency: -1 });
+            console.warn('[backfill] error for', ur.member_id, e?.message || e);
+            results.push({ email: ur.member_id, consistency: -1 });
         }
     }
 

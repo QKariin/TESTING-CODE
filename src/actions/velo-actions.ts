@@ -100,7 +100,7 @@ export async function getAdminDashboardData() {
             getAdmin().from('system_rules').select('*'),
             getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", kneel_history'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
-            getAdmin().from('routines').select('*').eq('status', 'pending'),
+            getAdmin().from('user_routines').select('*').not('pending_id', 'is', null),
         ]);
 
         if (pError) throw pError;
@@ -151,17 +151,17 @@ export async function getAdminDashboardData() {
                 reviewQueue.push({ ...entry, member_id: resolvedMid });
             }
         }
-        // Routines from dedicated routines table
-        for (const r of (pendingRoutines || [])) {
-            const resolvedMid = emailToProfileUuid[r.member_id] || r.member_id;
+        // Routines from user_routines table (pending submissions)
+        for (const ur of (pendingRoutines || [])) {
+            const resolvedMid = emailToProfileUuid[ur.member_id] || ur.member_id;
             reviewQueue.push({
-                id: r.id,
-                text: 'Daily Routine',
-                proofUrl: r.proof_url,
-                proofType: r.proof_type,
-                thumbnail_url: r.thumbnail_url,
-                timestamp: r.submitted_at,
-                status: r.status,
+                id: ur.pending_id,
+                text: ur.routine_name || 'Daily Routine',
+                proofUrl: ur.pending_proof_url,
+                proofType: ur.pending_proof_type,
+                thumbnail_url: ur.pending_thumbnail_url,
+                timestamp: ur.pending_submitted_at,
+                status: 'pending',
                 isRoutine: true,
                 member_id: resolvedMid,
             });
@@ -653,61 +653,30 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
         const profile = await getProfile(memberId);
         if (!profile) return null;
 
-        // Check routines table for this submission
+        // Check user_routines table for this submission
         const { data: routineEntry } = await getAdmin()
-            .from('routines')
-            .select('*')
-            .eq('id', submissionId)
+            .from('user_routines')
+            .select('pending_id')
+            .eq('pending_id', submissionId)
             .maybeSingle();
 
         if (routineEntry) {
-            // Update routine status
-            await getAdmin()
-                .from('routines')
-                .update({
-                    status: decision,
-                    reviewed_at: new Date().toISOString(),
-                    points_awarded: decision === 'approve' ? 50 : 0,
-                })
-                .eq('id', submissionId);
-
-            // Write to Taskdom_History so record page shows it
-            try {
-                const email = (profile.member_id || memberId).toLowerCase();
-                const { data: taskRow } = await getAdmin()
-                    .from('tasks')
-                    .select('ID, "Taskdom_History"')
-                    .ilike('member_id', email)
-                    .maybeSingle();
-                if (taskRow) {
-                    let history: any[] = [];
-                    try { history = typeof taskRow['Taskdom_History'] === 'string' ? JSON.parse(taskRow['Taskdom_History']) : (taskRow['Taskdom_History'] || []); } catch { history = []; }
-                    history.push({
-                        id: routineEntry.id,
-                        text: 'Daily Routine',
-                        proofUrl: routineEntry.proof_url,
-                        proofType: routineEntry.proof_type,
-                        thumbnail_url: routineEntry.thumbnail_url,
-                        timestamp: routineEntry.submitted_at,
-                        status: decision,
-                        isRoutine: true,
-                    });
-                    await getAdmin().from('tasks').update({ 'Taskdom_History': JSON.stringify(history) }).eq('ID', taskRow.ID);
-                }
-            } catch (e) { console.warn('[reviewTask] history update error:', e); }
-
-            let params = profile.parameters || {};
+            // Delegate to DbService which handles all routine logic
             if (decision === 'approve') {
-                params.taskdom_current_streak = (params.taskdom_current_streak || 0) + 1;
-            } else if (decision === 'reject') {
-                params.taskdom_current_streak = 0;
+                await DbService.approveTask(submissionId, memberId, 50, null, null);
+            } else {
+                await DbService.rejectTask(submissionId, memberId);
             }
 
-            const tempRecord = { ...profile, parameters: params, ...params };
-            const report = getHierarchyReport(tempRecord);
-
-            await updateProfile(profile.ID, { parameters: params, hierarchy: report.currentRank });
-            return { item: { ...profile, parameters: params, hierarchy: report.currentRank }, report };
+            // Fetch fresh profile for hierarchy update
+            const updatedProfile = await getProfile(memberId);
+            if (updatedProfile) {
+                const tempRecord = { ...updatedProfile, ...(updatedProfile.parameters || {}) };
+                const report = getHierarchyReport(tempRecord);
+                await updateProfile(updatedProfile.ID, { hierarchy: report.currentRank });
+                return { item: { ...updatedProfile, hierarchy: report.currentRank }, report };
+            }
+            return null;
         }
 
         return null;

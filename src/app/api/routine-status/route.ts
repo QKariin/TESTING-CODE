@@ -22,7 +22,7 @@ async function getRoutineStatus(memberId: string, tz: string) {
         supabaseAdmin.from('profiles').update({ timezone: tz }).ilike('member_id', email).then(() => {}).catch(() => {});
     }
 
-    // Check today's routine from the dedicated routines table
+    // Check today's routine from user_routines table
     let uploadedToday = false;
     let todayStatus = 'none';
 
@@ -41,26 +41,39 @@ async function getRoutineStatus(memberId: string, tz: string) {
     if (localHour < 6) windowDate.setDate(windowDate.getDate() - 1);
     const todayStr = windowDate.toLocaleDateString('en-CA', { timeZone: tz });
 
-    const { data: todaysRoutines } = await supabaseAdmin
-        .from('routines')
-        .select('submitted_at, status')
+    const { data: userRoutine } = await supabaseAdmin
+        .from('user_routines')
+        .select('pending_id, pending_submitted_at, history')
         .eq('member_id', email)
-        .gte('submitted_at', todayStr + 'T00:00:00Z')
-        .order('submitted_at', { ascending: false })
-        .limit(5);
+        .maybeSingle();
 
-    if (todaysRoutines && todaysRoutines.length > 0) {
-        // Check if any match today's window
-        for (const r of todaysRoutines) {
+    if (userRoutine) {
+        // Check pending submission first
+        if (userRoutine.pending_submitted_at) {
             try {
-                const localDate = new Date(r.submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
-                if (localDate === todayStr) {
+                const pendingDate = new Date(userRoutine.pending_submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
+                if (pendingDate === todayStr) {
                     uploadedToday = true;
-                    const raw = (r.status || 'pending').toLowerCase();
-                    todayStatus = raw === 'approve' ? 'approved' : raw === 'reject' ? 'rejected' : raw;
-                    break;
+                    todayStatus = 'pending';
                 }
             } catch { /* skip */ }
+        }
+
+        // Check history for today's completed entry
+        if (!uploadedToday && userRoutine.history) {
+            const entries = (userRoutine.history as any[]);
+            for (let i = entries.length - 1; i >= 0; i--) {
+                const entry = entries[i];
+                try {
+                    const entryDate = entry.date || new Date(entry.submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
+                    if (entryDate === todayStr) {
+                        uploadedToday = true;
+                        const raw = (entry.status || 'pending').toLowerCase();
+                        todayStatus = raw === 'approve' ? 'approved' : raw === 'reject' ? 'rejected' : raw;
+                        break;
+                    }
+                } catch { /* skip */ }
+            }
         }
     }
 

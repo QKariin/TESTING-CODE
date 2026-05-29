@@ -32,16 +32,18 @@ export async function GET() {
         }
     }
 
-    // 2. Check routines table for video entries missing thumbnails
-    const { data: routines } = await supabaseAdmin
-        .from('routines')
-        .select('id, proof_url, proof_type, thumbnail_url')
-        .is('thumbnail_url', null);
+    // 2. Check user_routines history for video entries missing thumbnails
+    const { data: userRoutines } = await supabaseAdmin
+        .from('user_routines')
+        .select('member_id, history')
+        .not('history', 'is', null);
 
-    for (const r of (routines || [])) {
-        const isVideo = r.proof_type === 'video' || /\.(mp4|mov|webm)/i.test(r.proof_url || '');
-        if (isVideo && r.proof_url) {
-            missing.push({ taskRowId: r.id, entryId: r.id, proofUrl: r.proof_url, idx: -1, source: 'routines' });
+    for (const ur of (userRoutines || [])) {
+        for (const entry of (ur.history || [])) {
+            const isVideo = entry.proof_type === 'video' || /\.(mp4|mov|webm)/i.test(entry.proof_url || '');
+            if (isVideo && entry.proof_url && !entry.thumbnail_url) {
+                missing.push({ taskRowId: ur.member_id, entryId: entry.id, proofUrl: entry.proof_url, idx: -1, source: 'routines' as any });
+            }
         }
     }
 
@@ -58,12 +60,22 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    // If source is 'routines', update routines table directly
+    // If source is 'routines', update entry in user_routines history JSONB
     if (source === 'routines') {
-        const { error } = await supabaseAdmin
-            .from('routines')
-            .update({ thumbnail_url: thumbnailUrl })
-            .eq('id', entryId);
+        // taskRowId is member_id for user_routines
+        const { data: ur, error: fetchErr } = await supabaseAdmin
+            .from('user_routines')
+            .select('history')
+            .eq('member_id', taskRowId)
+            .maybeSingle();
+        if (fetchErr || !ur) return NextResponse.json({ error: fetchErr?.message || 'Not found' }, { status: 500 });
+
+        const history: any[] = ur.history || [];
+        const entry = history.find((e: any) => e.id === entryId);
+        if (!entry) return NextResponse.json({ error: 'Entry not found in history' }, { status: 404 });
+
+        entry.thumbnail_url = thumbnailUrl;
+        const { error } = await supabaseAdmin.from('user_routines').update({ history }).eq('member_id', taskRowId);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json({ success: true });
     }

@@ -331,28 +331,71 @@ export const DbService = {
     },
 
     async approveTask(taskId: string, profileId: string, bonus: number, sticker: string | null, comment: string | null) {
-        // Check routines table first
-        const { data: routineEntry } = await supabaseAdmin
-            .from('routines')
-            .select('id, member_id, routine_name, proof_url, thumbnail_url')
-            .eq('id', taskId)
+        // Check user_routines table for pending routine with this ID
+        const { data: userRoutine } = await supabaseAdmin
+            .from('user_routines')
+            .select('*')
+            .eq('pending_id', taskId)
             .maybeSingle();
 
-        if (routineEntry) {
-            // ── ROUTINE: update in routines table ──
+        if (userRoutine) {
+            // ── ROUTINE APPROVAL ──
+            const now = new Date().toISOString();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const history: any[] = userRoutine.history || [];
+
+            // Update the pending entry in history to approved
+            const pendingIdx = history.findIndex((e: any) => e.id === taskId);
+            if (pendingIdx > -1) {
+                history[pendingIdx].status = 'approve';
+                history[pendingIdx].reviewed_at = now;
+                history[pendingIdx].points_awarded = bonus;
+            }
+
+            // Calculate new streak
+            const lastApproved = userRoutine.last_approved_date;
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            let newStreak = 1;
+            if (lastApproved === yesterdayStr || lastApproved === todayStr) {
+                newStreak = (userRoutine.current_streak || 0) + 1;
+            }
+            const newBest = Math.max(newStreak, userRoutine.best_streak || 0);
+
             await supabaseAdmin
-                .from('routines')
+                .from('user_routines')
                 .update({
-                    status: 'approve',
-                    reviewed_at: new Date().toISOString(),
-                    points_awarded: bonus,
+                    history,
+                    current_streak: newStreak,
+                    best_streak: newBest,
+                    last_approved_date: todayStr,
+                    pending_id: null,
+                    pending_proof_url: null,
+                    pending_proof_type: null,
+                    pending_thumbnail_url: null,
+                    pending_submitted_at: null,
+                    updated_at: now,
                 })
-                .eq('id', taskId);
+                .eq('member_id', userRoutine.member_id);
 
             await this.awardPoints(profileId, bonus);
-            const cardData = { status: 'approve', points: bonus, type: 'routine', taskText: routineEntry.routine_name || 'Daily Routine', thumbnail: routineEntry.thumbnail_url || routineEntry.proof_url || null };
+            const thumb = userRoutine.pending_thumbnail_url || userRoutine.pending_proof_url || null;
+            const cardData = { status: 'approve', points: bonus, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb };
             try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
-            try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
+
+            // Update profiles.parameters for backward compat
+            try {
+                const prof = await this.getProfile(profileId);
+                if (prof) {
+                    const params = prof.parameters || {};
+                    params.consistency = newStreak;
+                    params.routine_streak = newBest;
+                    params.taskdom_current_streak = newStreak;
+                    await supabaseAdmin.from('profiles').update({ parameters: params, bestRoutinestreak: newBest, routinestreak: newStreak }).ilike('member_id', userRoutine.member_id);
+                }
+            } catch (_) { }
             return;
         }
 
@@ -386,22 +429,43 @@ export const DbService = {
     },
 
     async rejectTask(taskId: string, profileId: string) {
-        // Check routines table first
-        const { data: routineEntry } = await supabaseAdmin
-            .from('routines')
-            .select('id, member_id, routine_name, proof_url, thumbnail_url')
-            .eq('id', taskId)
+        // Check user_routines table for pending routine with this ID
+        const { data: userRoutine } = await supabaseAdmin
+            .from('user_routines')
+            .select('*')
+            .eq('pending_id', taskId)
             .maybeSingle();
 
-        if (routineEntry) {
-            // ── ROUTINE: update in routines table, no penalty ──
+        if (userRoutine) {
+            // ── ROUTINE REJECTION ──
+            const now = new Date().toISOString();
+            const history: any[] = userRoutine.history || [];
+
+            // Update the pending entry in history to rejected
+            const pendingIdx = history.findIndex((e: any) => e.id === taskId);
+            if (pendingIdx > -1) {
+                history[pendingIdx].status = 'reject';
+                history[pendingIdx].reviewed_at = now;
+            }
+
+            // Streak resets on rejection
             await supabaseAdmin
-                .from('routines')
-                .update({ status: 'reject', reviewed_at: new Date().toISOString() })
-                .eq('id', taskId);
-            const cardData = { status: 'reject', points: 0, type: 'routine', taskText: routineEntry.routine_name || 'Daily Routine', thumbnail: routineEntry.thumbnail_url || routineEntry.proof_url || null };
+                .from('user_routines')
+                .update({
+                    history,
+                    current_streak: 0,
+                    pending_id: null,
+                    pending_proof_url: null,
+                    pending_proof_type: null,
+                    pending_thumbnail_url: null,
+                    pending_submitted_at: null,
+                    updated_at: now,
+                })
+                .eq('member_id', userRoutine.member_id);
+
+            const thumb = userRoutine.pending_thumbnail_url || userRoutine.pending_proof_url || null;
+            const cardData = { status: 'reject', points: 0, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb };
             try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
-            try { await this.recalcConsistency(routineEntry.member_id); } catch (_) { }
             return;
         }
 
@@ -437,78 +501,6 @@ export const DbService = {
         try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
     },
 
-    async recalcConsistency(email: string, tz?: string) {
-        const normalEmail = email.toLowerCase();
-
-        const { data: prof } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, parameters')
-            .ilike('member_id', normalEmail)
-            .maybeSingle();
-        if (!prof) return;
-
-        // Try to read timezone separately (column may not exist on all setups)
-        let storedTz: string | null = null;
-        try {
-            const { data: tzRow } = await supabaseAdmin.from('profiles').select('timezone').eq('ID', prof.ID).maybeSingle();
-            storedTz = tzRow?.timezone || null;
-        } catch { /* column might not exist */ }
-
-        const userTz = tz || storedTz || 'UTC';
-
-        const { data: routines } = await supabaseAdmin
-            .from('routines')
-            .select('submitted_at, status')
-            .eq('member_id', normalEmail)
-            .neq('status', 'reject')
-            .order('submitted_at', { ascending: false })
-            .limit(90);
-
-        // Convert timestamp to routine day (6 AM boundary in user's tz)
-        const toDay = (d: Date) => {
-            const shifted = new Date(d.getTime() - 6 * 60 * 60 * 1000);
-            return shifted.toLocaleDateString('en-CA', { timeZone: userTz });
-        };
-
-        if (!routines || routines.length === 0) {
-            const params = prof.parameters || {};
-            await supabaseAdmin.from('profiles').update({
-                parameters: { ...params, consistency: 0, taskdom_current_streak: 0 },
-            }).eq('ID', prof.ID);
-            return;
-        }
-
-        // Deduplicate by day
-        const days: string[] = [];
-        for (const r of routines) {
-            const day = toDay(new Date(r.submitted_at));
-            if (days.length === 0 || days[days.length - 1] !== day) days.push(day);
-        }
-
-        const todayDay = toDay(new Date());
-        const td = new Date(todayDay + 'T12:00:00Z');
-        td.setUTCDate(td.getUTCDate() - 1);
-        const yesterdayDay = td.toISOString().split('T')[0];
-
-        let consistency = 0;
-        if (days[0] === todayDay || days[0] === yesterdayDay) {
-            consistency = 1;
-            for (let i = 1; i < days.length; i++) {
-                const prev = new Date(days[i - 1] + 'T12:00:00Z');
-                const curr = new Date(days[i] + 'T12:00:00Z');
-                const diff = Math.round((prev.getTime() - curr.getTime()) / (24 * 60 * 60 * 1000));
-                if (diff === 1) consistency++;
-                else break;
-            }
-        }
-
-        const params = prof.parameters || {};
-        const bestStreak = Math.max(consistency, Number(params.routine_streak || 0));
-        await supabaseAdmin.from('profiles').update({
-            parameters: { ...params, consistency, routine_streak: bestStreak, taskdom_current_streak: consistency },
-        }).eq('ID', prof.ID);
-    },
-
     async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false, thumbnailUrl: string | null = null, tz: string = 'UTC') {
         const now = new Date().toISOString();
         const taskId = Date.now().toString();
@@ -516,33 +508,62 @@ export const DbService = {
         const email = (profile?.member_id || memberId).toLowerCase();
 
         if (isRoutine) {
-            // ── ROUTINE: write to dedicated routines table ──
-            // Remove any existing pending routine for today before adding
-            const todayStr = new Date().toISOString().split('T')[0];
-            await supabaseAdmin
-                .from('routines')
-                .delete()
+            // ── ROUTINE: write to user_routines table ──
+            const pType = (proofType || '').startsWith('video') ? 'video' : 'image';
+            const newEntry = {
+                id: taskId,
+                date: new Date().toISOString().split('T')[0],
+                submitted_at: now,
+                status: 'pending',
+                proof_url: proofUrl,
+                proof_type: pType,
+                thumbnail_url: thumbnailUrl || null,
+                points_awarded: 0,
+            };
+
+            const { data: existing } = await supabaseAdmin
+                .from('user_routines')
+                .select('*')
                 .eq('member_id', email)
-                .eq('status', 'pending')
-                .gte('submitted_at', todayStr + 'T00:00:00Z')
-                .lt('submitted_at', todayStr + 'T23:59:59Z');
+                .maybeSingle();
 
-            const { error: routineErr } = await supabaseAdmin
-                .from('routines')
-                .insert({
-                    id: taskId,
-                    member_id: email,
-                    routine_name: profile?.routine || 'Daily Routine',
-                    proof_url: proofUrl,
-                    proof_type: (proofType || '').startsWith('video') ? 'video' : 'image',
-                    thumbnail_url: thumbnailUrl || null,
-                    status: 'pending',
-                    submitted_at: now,
-                });
-            if (routineErr) throw routineErr;
+            if (existing) {
+                // Remove any previous pending entry from history (re-submission)
+                const history: any[] = (existing.history || []).filter((e: any) => e.status !== 'pending');
+                history.push(newEntry);
 
-            // Recalculate consistency streak
-            try { await this.recalcConsistency(email, tz); } catch (e) { console.warn('[submitTask] consistency error:', e); }
+                const { error: routineErr } = await supabaseAdmin
+                    .from('user_routines')
+                    .update({
+                        history,
+                        pending_id: taskId,
+                        pending_proof_url: proofUrl,
+                        pending_proof_type: pType,
+                        pending_thumbnail_url: thumbnailUrl || null,
+                        pending_submitted_at: now,
+                        routine_name: profile?.routine || existing.routine_name || 'Daily Routine',
+                        updated_at: now,
+                    })
+                    .eq('member_id', email);
+                if (routineErr) throw routineErr;
+            } else {
+                // First routine ever — create the row
+                const { error: routineErr } = await supabaseAdmin
+                    .from('user_routines')
+                    .insert({
+                        member_id: email,
+                        routine_name: profile?.routine || 'Daily Routine',
+                        history: [newEntry],
+                        pending_id: taskId,
+                        pending_proof_url: proofUrl,
+                        pending_proof_type: pType,
+                        pending_thumbnail_url: thumbnailUrl || null,
+                        pending_submitted_at: now,
+                        current_streak: 0,
+                        best_streak: 0,
+                    });
+                if (routineErr) throw routineErr;
+            }
         } else {
             // ── TASK: write to Taskdom_History as before ──
             const row = await this._getTaskRow(memberId);
