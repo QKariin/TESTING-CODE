@@ -25,25 +25,21 @@ export async function POST(request: NextRequest) {
     // Look up profile
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
     const { data: profile } = isUuid
-        ? await supabaseAdmin.from('profiles').select('member_id, timezone').eq('ID', memberId).maybeSingle()
-        : await supabaseAdmin.from('profiles').select('member_id, timezone').ilike('member_id', memberId).maybeSingle();
+        ? await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle()
+        : await supabaseAdmin.from('profiles').select('member_id').ilike('member_id', memberId).maybeSingle();
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
     const email = (profile.member_id || '').toLowerCase();
-    const tz = profile.timezone || 'UTC';
 
-    // Calculate today's date in user's timezone
-    const now = new Date();
-    const localHour = parseInt(
-        new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now), 10
-    );
-    const windowDate = new Date(now);
-    if (localHour < 6) windowDate.setDate(windowDate.getDate() - 1);
-    const todayStr = windowDate.toLocaleDateString('en-CA', { timeZone: tz });
+    // Use UTC dates — must match approval routes (supabase-service.ts, auto-approve cron)
+    const nowIso = new Date().toISOString();
+    const todayStr = nowIso.split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     // Insert a checkpoint into user_routines history (auto-approved)
-    const nowIso = new Date().toISOString();
     const checkpointEntry = {
         id: Date.now().toString(),
         date: todayStr,
@@ -61,15 +57,14 @@ export async function POST(request: NextRequest) {
         .eq('member_id', email)
         .maybeSingle();
 
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
     if (userRoutine) {
         const history = [...(userRoutine.history || []), checkpointEntry];
         const lastApproved = userRoutine.last_approved_date;
-        let newStreak = 1;
-        if (lastApproved === yesterdayStr || lastApproved === todayStr) {
+        // Checkpoint preserves the streak: as long as last approval was recent, keep going
+        let newStreak = (userRoutine.current_streak || 0) + 1;
+        if (lastApproved !== yesterdayStr && lastApproved !== todayStr) {
+            // Gap is more than 1 day — checkpoint still saves the streak,
+            // just continue from current value (that's the whole point of a checkpoint)
             newStreak = (userRoutine.current_streak || 0) + 1;
         }
         const newBest = Math.max(newStreak, userRoutine.best_streak || 0);
@@ -108,13 +103,12 @@ export async function POST(request: NextRequest) {
     try {
         const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', email).maybeSingle();
         if (prof) {
-            const ur = userRoutine;
-            const streak = ur ? Math.max(1, (ur.last_approved_date === yesterdayStr || ur.last_approved_date === todayStr) ? (ur.current_streak || 0) + 1 : 1) : 1;
-            const best = Math.max(streak, ur?.best_streak || 0);
+            const currentStreak = userRoutine ? (userRoutine.current_streak || 0) + 1 : 1;
+            const best = Math.max(currentStreak, userRoutine?.best_streak || 0);
             const params = prof.parameters || {};
-            params.consistency = streak;
+            params.consistency = currentStreak;
             params.routine_streak = best;
-            params.taskdom_current_streak = streak;
+            params.taskdom_current_streak = currentStreak;
             await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
         }
     } catch (_) { }
