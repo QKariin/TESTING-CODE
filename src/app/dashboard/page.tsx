@@ -1386,9 +1386,13 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: "'Rajdhani', sans-serif", fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
                 </div>
-                <div onClick={() => (window as any).showHome()} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
+                <div onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showHome(); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', flex: 1 }}>DASHBOARD</span>
                     <span style={{ fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }}>⌂</span>
+                </div>
+                <div onClick={() => { (window as any).showHome(); setShowChallenges(false); setShowGlobal(true); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: showGlobal ? 'rgba(197,160,89,0.08)' : 'transparent' }}>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.4)', letterSpacing: '3px', flex: 1 }}>GLOBAL</span>
+                    <span style={{ fontSize: '0.8rem', color: showGlobal ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.2)' }}>⊕</span>
                 </div>
                 <div className="sb-head">SUB LIST</div>
                 <div id="userList" className="user-list"></div>
