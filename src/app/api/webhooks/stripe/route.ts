@@ -78,7 +78,7 @@ export async function POST(req: Request) {
                         name: userName,
                         hierarchy: 'Hall Boy',
                         score: 0,
-                        wallet: 1111,
+                        wallet: 4999,
                         parameters: { devotion: 100, promo72h: true }
                     });
 
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
                         message: `WELCOME_CARD::${JSON.stringify({
                             name: userName,
                             rank: 'Hall Boy',
-                            coins: 1111,
+                            coins: 4999,
                         })}`,
                     });
                     console.log(`[TRIBUTE] Welcome card posted for ${userName}`);
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
                         body: JSON.stringify({
                             externalId: 'ceo@qkarin.com',
                             title: 'New Tribute Received',
-                            message: `${userName} just entered the court as Hall Boy — 1,111 coins deposited.`,
+                            message: `${userName} just entered the court as Hall Boy — 4,999 coins deposited.`,
                         }),
                     });
                     console.log(`[TRIBUTE] Push notification sent to Queen`);
