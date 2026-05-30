@@ -1158,7 +1158,8 @@ export function showCertificate() {
     btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-top:16px;width:355px;max-width:92vw;padding-bottom:40px;';
 
     // Check if cert already downloaded for this rank
-    const certsDownloaded = params.certs_downloaded || {};
+    const certParams = raw?.parameters || {};
+    const certsDownloaded = certParams.certs_downloaded || {};
     const rankKey = rank.toLowerCase().replace(/[^a-z0-9]/g, '');
     const alreadyDownloaded = !!certsDownloaded[rankKey];
 
