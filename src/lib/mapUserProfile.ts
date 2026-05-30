@@ -79,6 +79,11 @@ export function mapUserProfile(p: any, t: any, crowdfundTotal: number = 0): any 
         kinks: p.kinks || '',
         limits: p.limits || '',
         silence: p.silence === true,
+        cert_approved_for: params.cert_approved_for || '',
+        certs_downloaded: params.certs_downloaded || {},
+        skippass: Number(p.skippass || 0),
+        cumpass: Number(p.cumpass || 0),
+        checkpoint: Number(p.checkpoint || 0),
         parameters: {
             ...params,
             taskdom_active_task: activeTask,

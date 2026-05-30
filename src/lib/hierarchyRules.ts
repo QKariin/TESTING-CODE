@@ -277,7 +277,18 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
         }
     });
 
-    // 4. Can Promote?
+    // 4. Certificate requirement
+    const certApprovedFor = (item as any).cert_approved_for || '';
+    const certClean = clean(certApprovedFor);
+    const nextClean = clean(nextRankObj.name);
+    report.requirements.push({
+        id: "cert",
+        label: "CERTIFICATE",
+        status: certClean === nextClean ? "VERIFIED" : "MISSING",
+        type: "check"
+    });
+
+    // 5. Can Promote?
     report.canPromote = report.requirements.every(r => {
         if (r.type === "check") return r.status === "VERIFIED";
         if (r.type === "bar") return (r.current ?? 0) >= (r.target ?? 0);

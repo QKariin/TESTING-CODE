@@ -38,9 +38,13 @@ export async function checkAndPromote(profileIdOrEmail: string): Promise<{ promo
         const currentRank = HIERARCHY_RULES[currentIndex].name;
         const nextRank = HIERARCHY_RULES[currentIndex - 1].name;
 
+        // Clear cert_approved_for so they need a new cert for the next rank
+        const params = profile.parameters || {};
+        delete params.cert_approved_for;
+
         const { error } = await supabaseAdmin
             .from('profiles')
-            .update({ hierarchy: nextRank })
+            .update({ hierarchy: nextRank, parameters: params })
             .eq('ID', profile.ID);
 
         if (error) { console.error('[promote] DB error:', error); return null; }
