@@ -7557,10 +7557,34 @@ export function renderProfileSidebar(u: any) {
         const iconMap: Record<string, string> = { LABOR: '', KNEELING: '', MERIT: '', SACRIFICE: '', CONSISTENCY: '' };
         const fieldIdMap: Record<string, string> = { IDENTITY: 'name', PHOTO: 'avatar_url', LIMITS: 'limits', KINKS: 'kinks', ROUTINE: 'routine' };
 
+        const buildCertRow = (status: string) => {
+            const done = status === 'VERIFIED';
+            const labelColor = done ? '#00ff00' : '#c5a059';
+            const certIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${labelColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+            const wrapperStyle = `display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:0.65rem;font-family:'Orbitron';letter-spacing:1px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;`;
+
+            if (done) {
+                return `<div style="${wrapperStyle}">
+                    <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;">
+                        ${certIcon} CERTIFICATE
+                    </span>
+                    <span style="color:#00ff00;font-weight:bold;font-size:0.55rem;letter-spacing:1px;">✓ APPROVED</span>
+                </div>`;
+            }
+            return `<div style="${wrapperStyle}">
+                <span style="color:${labelColor};display:flex;align-items:center;gap:8px;font-weight:bold;">
+                    ${certIcon} CERTIFICATE
+                </span>
+                <button onclick="window.showCertificate()" style="padding:2px 8px;background:transparent;color:#c5a059;border:1px solid #c5a059;border-radius:4px;font-family:'Orbitron';font-size:0.55rem;font-weight:bold;cursor:pointer;letter-spacing:1px;">OPEN</button>
+            </div>`;
+        };
+
         let html = '';
         requirements.forEach(r => {
             if (r.type === 'bar') {
                 html += buildBar(r.label, iconMap[r.label] || '•', r.current ?? 0, r.target ?? 0);
+            } else if (r.id === 'cert') {
+                html += buildCertRow(r.status ?? '');
             } else {
                 // Hide IDENTITY and PHOTO rows entirely if already verified
                 if ((r.label === 'IDENTITY' || r.label === 'PHOTO') && r.status === 'VERIFIED') return;

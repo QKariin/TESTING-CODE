@@ -278,7 +278,7 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
     });
 
     // 4. Certificate requirement
-    const certApprovedFor = (item as any).cert_approved_for || '';
+    const certApprovedFor = (item as any).cert_approved_for || (item as any).parameters?.cert_approved_for || '';
     const certClean = clean(certApprovedFor);
     const nextClean = clean(nextRankObj.name);
     report.requirements.push({
