@@ -708,14 +708,28 @@ if (typeof window !== 'undefined') {
     };
 }
 
+let _buyingTribute = false;
 export async function buyTribute(id: string, title: string, cost: number) {
+    if (_buyingTribute) return;
+    _buyingTribute = true;
+
     const { memberId, wallet } = getState();
-    if (!memberId) return;
+    if (!memberId) { _buyingTribute = false; return; }
 
     if (wallet < cost) {
+        _buyingTribute = false;
         showPovertyModal(title);
         return;
     }
+
+    // Disable all SEND GIFT buttons immediately
+    document.querySelectorAll<HTMLButtonElement>('button').forEach(btn => {
+        if (btn.textContent?.trim() === 'SEND GIFT') {
+            btn.disabled = true;
+            btn.style.opacity = '0.4';
+            btn.style.pointerEvents = 'none';
+        }
+    });
 
     try {
         const res = await fetch('/api/tributes/purchase', {
@@ -760,6 +774,8 @@ export async function buyTribute(id: string, title: string, cost: number) {
 
     } catch (err) {
         console.error("Critical error purchasing tribute", err);
+    } finally {
+        _buyingTribute = false;
     }
 }
 
