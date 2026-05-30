@@ -456,7 +456,7 @@ function renderGridMobile(gridEl: HTMLElement) {
                     <span style="font-family:'Orbitron',sans-serif; font-size:11px; color:${locked ? 'rgba(197,160,89,0.35)' : '#c5a059'}; font-weight:700;">${t.price.toLocaleString()}</span>
                 </div>
                 <div style="font-family:'Cinzel',serif; font-size:13px; color:${locked ? 'rgba(255,255,255,0.3)' : '#fff'}; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
-                ${locked ? '' : `<button onclick="event.stopPropagation();"
+                ${locked ? '' : `<button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
                     style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:10px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
                     SEND GIFT
                 </button>`}
