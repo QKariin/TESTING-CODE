@@ -29,10 +29,25 @@ export interface TaskAssignment {
     task_pool_id: string;
 }
 
+export type ChallengeDifficulty = 'easy' | 'medium' | 'hard';
+
+/**
+ * Which pool difficulties are eligible for each user-chosen difficulty:
+ *   easy   → easy + medium tasks
+ *   medium → all tasks (easy + medium + hard)
+ *   hard   → medium + hard tasks only
+ */
+const DIFFICULTY_FILTER: Record<ChallengeDifficulty, ChallengeDifficulty[]> = {
+    easy:   ['easy', 'medium'],
+    medium: ['easy', 'medium', 'hard'],
+    hard:   ['medium', 'hard'],
+};
+
 /**
  * Assign tasks from pool for a range of days.
  * Milestone tasks land on their fixed day. Other days get random pool picks.
  * Previously assigned tasks (across all attempts) are excluded when possible.
+ * Difficulty filters which pool tasks are eligible.
  */
 export async function assignTasksForDays(
     challengeId: string,
@@ -40,6 +55,7 @@ export async function assignTasksForDays(
     startDay: number,
     endDay: number,
     attemptNumber: number,
+    difficulty: ChallengeDifficulty = 'medium',
 ): Promise<TaskAssignment[]> {
     const { data: pool } = await supabaseAdmin
         .from('challenge_task_pool')
@@ -49,7 +65,13 @@ export async function assignTasksForDays(
     if (!pool || pool.length === 0) return [];
 
     const milestones = pool.filter((t: any) => t.is_milestone && t.milestone_day != null);
-    const regularPool = pool.filter((t: any) => !t.is_milestone) as TaskPoolEntry[];
+    const allRegular = pool.filter((t: any) => !t.is_milestone) as TaskPoolEntry[];
+
+    // Filter pool by chosen difficulty
+    const allowed = DIFFICULTY_FILTER[difficulty] || DIFFICULTY_FILTER.medium;
+    let regularPool = allRegular.filter(t => allowed.includes(t.difficulty));
+    // Fallback: if filtering leaves nothing, use all
+    if (regularPool.length === 0) regularPool = allRegular;
 
     // Past assignments for this member (all attempts)
     const { data: pastAssignments } = await supabaseAdmin

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateEvergreenWindows, TimeSlot } from '@/lib/evergreen-windows';
-import { assignTasksForDays, getNextTier, TierDef } from '@/lib/challenge-tasks';
+import { assignTasksForDays, getNextTier, TierDef, ChallengeDifficulty } from '@/lib/challenge-tasks';
 
 /**
  * POST /api/challenges/[id]/extend
@@ -34,7 +34,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         // Get participant
         const { data: participant } = await supabaseAdmin
             .from('challenge_participants')
-            .select('*')
+            .select('*, difficulty')
             .eq('challenge_id', challengeId)
             .eq('member_id', memberId)
             .maybeSingle();
@@ -71,7 +71,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const startDay = currentTierDays + 1;
         const endDay = nextTier.days;
         const attemptNumber = (participant.rejoin_count || 0) + 1;
-        const assignments = await assignTasksForDays(challengeId, memberId, startDay, endDay, attemptNumber);
+        const difficulty: ChallengeDifficulty = participant.difficulty || 'medium';
+        const assignments = await assignTasksForDays(challengeId, memberId, startDay, endDay, attemptNumber, difficulty);
 
         // Generate windows for new days
         const timezone = participant.timezone || profile.timezone || 'UTC';

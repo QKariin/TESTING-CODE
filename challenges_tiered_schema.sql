@@ -11,6 +11,7 @@ ALTER TABLE challenges ADD COLUMN IF NOT EXISTS tiers JSONB;
 -- 2. New columns on challenge_participants
 ALTER TABLE challenge_participants ADD COLUMN IF NOT EXISTS tier_days INTEGER;
 ALTER TABLE challenge_participants ADD COLUMN IF NOT EXISTS current_tier TEXT;
+ALTER TABLE challenge_participants ADD COLUMN IF NOT EXISTS difficulty TEXT DEFAULT 'medium';
 
 -- 3. task_name on windows (may already exist from prior migration)
 ALTER TABLE challenge_windows ADD COLUMN IF NOT EXISTS task_name TEXT;

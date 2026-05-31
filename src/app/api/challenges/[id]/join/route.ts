@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateEvergreenWindows, TimeSlot } from '@/lib/evergreen-windows';
 import { discordChallengeJoin } from '@/lib/discord';
-import { assignTasksForDays, getTierForDays, TierDef } from '@/lib/challenge-tasks';
+import { assignTasksForDays, getTierForDays, TierDef, ChallengeDifficulty } from '@/lib/challenge-tasks';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -41,6 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             const timezone: string = body.timezone || 'UTC';
             const chosenSlots: TimeSlot[] = body.chosen_slots || ['morning'];
             const tierDays: number = body.tier_days;
+            const difficulty: ChallengeDifficulty = ['easy', 'medium', 'hard'].includes(body.difficulty) ? body.difficulty : 'medium';
 
             const tiers: TierDef[] = challenge.tiers || [];
             const selectedTier = getTierForDays(tiers, tierDays);
@@ -85,11 +86,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 coins_paid: joinCost,
                 tier_days: tierDays,
                 current_tier: selectedTier.label,
+                difficulty,
             });
             if (joinErr) throw joinErr;
 
-            // Assign tasks from pool
-            const assignments = await assignTasksForDays(challengeId, memberId, 1, tierDays, 1);
+            // Assign tasks from pool (filtered by difficulty)
+            const assignments = await assignTasksForDays(challengeId, memberId, 1, tierDays, 1, difficulty);
 
             // Generate personal windows
             const slotMinutes = challenge.slot_duration_minutes || challenge.window_minutes || 360;
