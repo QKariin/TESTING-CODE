@@ -977,16 +977,14 @@ function CreateTab({ allChallenges, onCreate }: {
     });
 
     // ── Tiered challenge state ──
-    const [tiers, setTiers] = useState([
+    const PRESET_TIERS = [
         { days: 3, label: 'Bronze', cost: 3000, cost_soft: 3000, cost_strict: 3500, cost_brutal: 4500, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 },
         { days: 7, label: 'Silver', cost: 4500, cost_soft: 4500, cost_strict: 5000, cost_brutal: 6500, daily_soft: 100, daily_strict: 150, daily_brutal: 200, finish_soft: 500, finish_strict: 750, finish_brutal: 1000 },
         { days: 14, label: 'Gold', cost: 7000, cost_soft: 7000, cost_strict: 8000, cost_brutal: 10000, daily_soft: 150, daily_strict: 225, daily_brutal: 300, finish_soft: 1000, finish_strict: 1500, finish_brutal: 2000 },
         { days: 30, label: 'Legendary', cost: 10000, cost_soft: 10000, cost_strict: 12000, cost_brutal: 14000, daily_soft: 200, daily_strict: 300, daily_brutal: 400, finish_soft: 2000, finish_strict: 3000, finish_brutal: 4000 },
-    ]);
-    const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([
-        { day: 3, task_name: '' }, { day: 7, task_name: '' },
-        { day: 14, task_name: '' }, { day: 30, task_name: '' },
-    ]);
+    ];
+    const [tiers, setTiers] = useState<typeof PRESET_TIERS>([]);
+    const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([]);
     const [poolTasks, setPoolTasks] = useState<{ task_name: string; difficulty: string }[]>([
         { task_name: '', difficulty: 'easy' },
     ]);
@@ -1299,6 +1297,31 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
 
                         <Divider label="TIERS & PRICING" />
+
+                        {/* Load preset or start from scratch */}
+                        {tiers.length === 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '30px 20px', marginBottom: 20 }}>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#999', textAlign: 'center' }}>No tiers configured yet</div>
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <button type="button" onClick={() => {
+                                        setTiers(PRESET_TIERS);
+                                        setMilestoneTasks(PRESET_TIERS.map(t => ({ day: t.days, task_name: '' })));
+                                    }} style={{
+                                        padding: '12px 24px', borderRadius: 12, border: `1.5px solid ${PINK}`,
+                                        background: gradSoft, cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif',
+                                        fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', color: '#1a1a1a',
+                                    }}>LOAD PRESET (3/7/14/30)</button>
+                                    <button type="button" onClick={() => {
+                                        setTiers([{ days: 7, label: '', cost: 5000, cost_soft: 5000, cost_strict: 6000, cost_brutal: 8000, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
+                                    }} style={{
+                                        padding: '12px 24px', borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.08)',
+                                        background: '#faf9f7', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif',
+                                        fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', color: '#999',
+                                    }}>START EMPTY</button>
+                                </div>
+                            </div>
+                        )}
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
                             {tiers.map((tier, i) => {
                                 const updateTier = (key: string, val: any) => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], [key]: val }; return n; });
