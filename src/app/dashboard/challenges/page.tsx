@@ -1303,7 +1303,18 @@ function CreateTab({ allChallenges, onCreate }: {
                             </div>
                         </div>
 
-                        <Divider label="TIERS & PRICING" />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Divider label="TIERS & PRICING" />
+                            {tiers.length > 0 && (
+                                <button type="button" onClick={() => setTiers([])} style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600,
+                                    color: '#bbb', letterSpacing: '2px', padding: '4px 8px',
+                                }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#dc2626'; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#bbb'; }}>CLEAR ALL</button>
+                            )}
+                        </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
                             {tiers.length === 0 && (
