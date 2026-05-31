@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { discordLeaderboardChampion } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // prevent timeout — cron does self-fetch + multiple DB ops
 
 // ── Leaderboard rewards: first place only ──
 const REWARDS: Record<string, { items: Record<string, number>; coins: number; label: string }> = {
@@ -56,26 +57,7 @@ async function rewardWinner(scoreCol: string) {
 
     if (!profile) return null;
 
-    // Build update: increment items + add coins
-    const profileUpdate: Record<string, any> = {};
-    for (const [item, qty] of Object.entries(reward.items)) {
-        profileUpdate[item] = (Number((profile as any)[item] || 0)) + qty;
-    }
-    if (reward.coins > 0) {
-        profileUpdate.wallet = (Number(profile.wallet || 0)) + reward.coins;
-    }
-
-    const { error: updateErr } = await supabaseAdmin
-        .from('profiles')
-        .update(profileUpdate)
-        .ilike('member_id', winnerEmail);
-
-    if (updateErr) {
-        console.error(`[cron/reward] Failed to update ${winnerEmail}:`, updateErr.message);
-        return null;
-    }
-
-    // Send reward card to private chat
+    // Build card data + reward text FIRST (before any writes)
     const itemNames: Record<string, string> = { skippass: 'Skip Pass', cumpass: 'Cum Pass', checkpoint: 'Checkpoint' };
     const itemList = Object.entries(reward.items).map(([k, v]) => `${v}x ${itemNames[k] || k}`).join(', ');
     const rewardText = reward.coins > 0 ? `${itemList} + ${reward.coins.toLocaleString()} coins` : itemList;
@@ -87,24 +69,25 @@ async function rewardWinner(scoreCol: string) {
         period: scoreCol.replace(' Score', ''),
     };
 
-    const chatPayload = {
+    // ── ANNOUNCEMENTS FIRST (so they go out even if function times out later) ──
+
+    // Private chat card
+    const { error: chatErr } = await supabaseAdmin.from('chats').insert({
         member_id: winnerEmail,
         sender_email: 'queen',
         content: `LEADERBOARD_REWARD_CARD::${JSON.stringify(cardData)}`,
         type: 'text',
         metadata: { isQueen: true },
-    };
-    const { error: chatErr } = await supabaseAdmin.from('chats').insert(chatPayload);
+    });
     if (chatErr) console.error('[cron/reward] CHAT INSERT FAILED:', chatErr.message, chatErr.details, chatErr.code);
 
-    // Post in global chat
-    const globalPayload = {
+    // Global chat card
+    const { error: globalErr } = await supabaseAdmin.from('global_messages').insert({
         sender_email: 'system',
         sender_name: 'SYSTEM',
         sender_avatar: null,
         message: `LEADERBOARD_REWARD_CARD::${JSON.stringify({ ...cardData, winnerName: profile.name || 'SUBJECT' })}`,
-    };
-    const { error: globalErr } = await supabaseAdmin.from('global_messages').insert(globalPayload);
+    });
     if (globalErr) console.error('[cron/reward] GLOBAL INSERT FAILED:', globalErr.message, globalErr.details, globalErr.code);
 
     // Push notification
@@ -127,6 +110,24 @@ async function rewardWinner(scoreCol: string) {
 
     // Discord announcement
     discordLeaderboardChampion(profile.name || 'SUBJECT', scoreCol.replace(' Score', ''), topScore, rewardText).catch(() => {});
+
+    // ── NOW apply the actual reward ──
+    const profileUpdate: Record<string, any> = {};
+    for (const [item, qty] of Object.entries(reward.items)) {
+        profileUpdate[item] = (Number((profile as any)[item] || 0)) + qty;
+    }
+    if (reward.coins > 0) {
+        profileUpdate.wallet = (Number(profile.wallet || 0)) + reward.coins;
+    }
+
+    const { error: updateErr } = await supabaseAdmin
+        .from('profiles')
+        .update(profileUpdate)
+        .ilike('member_id', winnerEmail);
+
+    if (updateErr) {
+        console.error(`[cron/reward] Failed to update ${winnerEmail}:`, updateErr.message);
+    }
 
     console.log(`[cron/reward] ${reward.label}: ${profile.name} (${winnerEmail}) — score ${topScore} — reward: ${rewardText}`);
     return { winner: profile.name, email: winnerEmail, score: topScore, reward: rewardText };
