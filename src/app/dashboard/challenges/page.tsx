@@ -1303,18 +1303,7 @@ function CreateTab({ allChallenges, onCreate }: {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Divider label="TIERS & PRICING" />
-                            {tiers.length > 0 && (
-                                <button type="button" onClick={() => setTiers([])} style={{
-                                    background: 'none', border: 'none', cursor: 'pointer',
-                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600,
-                                    color: '#bbb', letterSpacing: '2px', padding: '4px 8px',
-                                }}
-                                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#dc2626'; }}
-                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#bbb'; }}>CLEAR ALL</button>
-                            )}
-                        </div>
+                        <Divider label="TIERS & PRICING" />
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
                             {tiers.length === 0 && (
@@ -1424,20 +1413,58 @@ function CreateTab({ allChallenges, onCreate }: {
                                 </div>
                                 );
                             })}
-                            {/* Add tier */}
-                            <button type="button" onClick={() => {
-                                setTiers(prev => [...prev, { days: 0, label: '', cost: 0, cost_soft: 0, cost_strict: 0, cost_brutal: 0, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
-                            }} style={{
-                                padding: '20px 14px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.15)',
-                                background: 'transparent', cursor: 'pointer', display: 'flex',
-                                alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.25s',
-                            }}
-                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.4)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,0,237,0.02)'; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.15)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                                <div style={{ fontSize: '1.5rem', background: gradMain, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', opacity: 0.5 }}>+</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#bbb', letterSpacing: '3px' }}>ADD TIER</div>
-                            </button>
+                            {/* Add tier + Clear all */}
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button type="button" onClick={() => {
+                                    setTiers(prev => [...prev, { days: 0, label: '', cost: 0, cost_soft: 0, cost_strict: 0, cost_brutal: 0, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
+                                }} style={{
+                                    flex: 1, padding: '20px 14px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.15)',
+                                    background: 'transparent', cursor: 'pointer', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.25s',
+                                }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.4)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,0,237,0.02)'; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.15)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                                    <div style={{ fontSize: '1.5rem', background: gradMain, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', opacity: 0.5 }}>+</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#bbb', letterSpacing: '3px' }}>ADD TIER</div>
+                                </button>
+                                {tiers.length > 0 && (
+                                    <button type="button" onClick={() => setTiers([])} style={{
+                                        padding: '20px 14px', borderRadius: 18, border: '2px dashed rgba(220,38,38,0.15)',
+                                        background: 'transparent', cursor: 'pointer', display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.25s',
+                                    }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(220,38,38,0.4)'; (e.currentTarget as HTMLElement).style.background = 'rgba(220,38,38,0.02)'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(220,38,38,0.15)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#dc2626', letterSpacing: '3px' }}>CLEAR ALL</div>
+                                    </button>
+                                )}
+                            </div>
                         </div>
+
+                        {/* Auto badges preview */}
+                        {tiers.length > 0 && (
+                            <div style={{ marginBottom: 12 }}>
+                                <Divider label="AUTO BADGES" />
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                                    <span style={{ padding: '5px 12px', borderRadius: 20, fontSize: '0.7rem', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, letterSpacing: '1px', background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)', color: '#999' }}>PARTICIPANT</span>
+                                    {tiers.map((t, i) => (
+                                        <span key={i} style={{
+                                            padding: '5px 12px', borderRadius: 20, fontSize: '0.7rem',
+                                            fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, letterSpacing: '1px',
+                                            background: t.label.toLowerCase() === 'legendary' ? 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,180,0,0.1))' :
+                                                t.label.toLowerCase() === 'gold' ? 'rgba(202,138,4,0.08)' : 'rgba(0,0,0,0.03)',
+                                            border: `1px solid ${t.label.toLowerCase() === 'legendary' ? 'rgba(255,215,0,0.3)' :
+                                                t.label.toLowerCase() === 'gold' ? 'rgba(202,138,4,0.15)' : 'rgba(0,0,0,0.06)'}`,
+                                            color: t.label.toLowerCase() === 'legendary' ? '#b8860b' :
+                                                t.label.toLowerCase() === 'gold' ? '#ca8a04' : '#999',
+                                        }}>{t.label || `Tier ${i + 1}`} ({t.days}d)</span>
+                                    ))}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: '#bbb', marginTop: 6 }}>
+                                    These badges are created automatically when the challenge is forged
+                                </div>
+                            </div>
+                        )}
 
                         {/* Tiered settings */}
                         <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
