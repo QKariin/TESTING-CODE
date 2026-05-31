@@ -172,7 +172,18 @@ export async function POST(request: Request) {
 
             if (cErr) throw cErr;
 
-            // No global windows for evergreen — they're generated per participant on join
+            // Save task pool if difficulty mode is on
+            if (difficulty_pricing && task_pool && Array.isArray(task_pool) && task_pool.length > 0) {
+                const poolRows = task_pool.map((t: any) => ({
+                    challenge_id: challenge.id,
+                    task_name: t.task_name || '',
+                    task_description: t.task_description || null,
+                    difficulty: ['easy', 'medium', 'hard'].includes(t.difficulty) ? t.difficulty : 'medium',
+                    is_milestone: !!t.is_milestone,
+                    milestone_day: t.is_milestone ? (t.milestone_day || null) : null,
+                }));
+                await supabaseAdmin.from('challenge_task_pool').insert(poolRows);
+            }
 
             // Auto-create badge definitions
             await supabaseAdmin.from('badges').insert([

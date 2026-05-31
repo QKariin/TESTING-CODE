@@ -1100,6 +1100,9 @@ function CreateTab({ allChallenges, onCreate }: {
                     daily_task: dailyTask,
                 });
             } else if (form.is_evergreen) {
+                const pool = form.has_difficulty
+                    ? poolTasks.filter(t => t.task_name.trim()).map(t => ({ task_name: t.task_name, difficulty: t.difficulty, is_milestone: false, milestone_day: null }))
+                    : null;
                 await onCreate({
                     ...form,
                     start_date: null,
@@ -1110,6 +1113,7 @@ function CreateTab({ allChallenges, onCreate }: {
                     ...(form.has_difficulty ? {
                         daily_task: dailyTask,
                         difficulty_pricing: diffPricing,
+                        task_pool: pool,
                     } : {}),
                 });
             } else {
@@ -1312,7 +1316,7 @@ function CreateTab({ allChallenges, onCreate }: {
                                         fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', color: '#1a1a1a',
                                     }}>LOAD PRESET (3/7/14/30)</button>
                                     <button type="button" onClick={() => {
-                                        setTiers([{ days: 7, label: '', cost: 5000, cost_soft: 5000, cost_strict: 6000, cost_brutal: 8000, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
+                                        setTiers([{ days: 0, label: '', cost: 0, cost_soft: 0, cost_strict: 0, cost_brutal: 0, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
                                     }} style={{
                                         padding: '12px 24px', borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.08)',
                                         background: '#faf9f7', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif',
@@ -1325,9 +1329,10 @@ function CreateTab({ allChallenges, onCreate }: {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
                             {tiers.map((tier, i) => {
                                 const updateTier = (key: string, val: any) => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], [key]: val }; return n; });
-                                const numField = (key: string, val: number, _color?: string) => (
-                                    <input type="number" className="forge-num" min={0} value={val}
-                                        onChange={e => updateTier(key, Number(e.target.value))}
+                                const numField = (key: string, val: number) => (
+                                    <input type="number" className="forge-num" min={0} value={val || ''}
+                                        placeholder="0"
+                                        onChange={e => updateTier(key, Number(e.target.value) || 0)}
                                         style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
                                 );
                                 return (
@@ -1366,19 +1371,19 @@ function CreateTab({ allChallenges, onCreate }: {
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#dc2626', letterSpacing: '1px', textAlign: 'center' }}>BRUTAL</div>
                                         {/* Entry cost row */}
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>ENTRY</div>
-                                        {numField('cost_soft', tier.cost_soft ?? tier.cost, '#16a34a')}
-                                        {numField('cost_strict', tier.cost_strict ?? tier.cost, '#ca8a04')}
-                                        {numField('cost_brutal', tier.cost_brutal ?? tier.cost, '#dc2626')}
+                                        {numField('cost_soft', tier.cost_soft ?? tier.cost)}
+                                        {numField('cost_strict', tier.cost_strict ?? tier.cost)}
+                                        {numField('cost_brutal', tier.cost_brutal ?? tier.cost)}
                                         {/* Daily cashback row */}
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>DAILY</div>
-                                        {numField('daily_soft', tier.daily_soft ?? 0, '#16a34a')}
-                                        {numField('daily_strict', tier.daily_strict ?? 0, '#ca8a04')}
-                                        {numField('daily_brutal', tier.daily_brutal ?? 0, '#dc2626')}
+                                        {numField('daily_soft', tier.daily_soft ?? 0)}
+                                        {numField('daily_strict', tier.daily_strict ?? 0)}
+                                        {numField('daily_brutal', tier.daily_brutal ?? 0)}
                                         {/* Finish bonus row */}
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>FINISH</div>
-                                        {numField('finish_soft', tier.finish_soft ?? 0, '#16a34a')}
-                                        {numField('finish_strict', tier.finish_strict ?? 0, '#ca8a04')}
-                                        {numField('finish_brutal', tier.finish_brutal ?? 0, '#dc2626')}
+                                        {numField('finish_soft', tier.finish_soft ?? 0)}
+                                        {numField('finish_strict', tier.finish_strict ?? 0)}
+                                        {numField('finish_brutal', tier.finish_brutal ?? 0)}
                                     </div>
 
                                     {/* Return % preview */}
@@ -1420,8 +1425,7 @@ function CreateTab({ allChallenges, onCreate }: {
                             })}
                             {/* Add tier */}
                             <button type="button" onClick={() => {
-                                const maxDay = Math.max(...tiers.map(t => t.days), 0);
-                                setTiers(prev => [...prev, { days: maxDay + 7, label: `Tier ${prev.length + 1}`, cost: 1000, cost_soft: 1000, cost_strict: 1500, cost_brutal: 2000, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
+                                setTiers(prev => [...prev, { days: 0, label: '', cost: 0, cost_soft: 0, cost_strict: 0, cost_brutal: 0, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
                             }} style={{
                                 padding: '20px 14px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.15)',
                                 background: 'transparent', cursor: 'pointer', display: 'flex',
@@ -1686,8 +1690,8 @@ function CreateTab({ allChallenges, onCreate }: {
                 )}
             </div>
 
-            {/* TASK POOL (tiered) */}
-            {form.is_tiered && (
+            {/* TASK POOL (tiered or evergreen with difficulty) */}
+            {(form.is_tiered || (form.is_evergreen && form.has_difficulty)) && (
                 <div style={card}>
                     <Divider label="TASK POOL" />
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#aaa', marginBottom: 14, textAlign: 'center' }}>
