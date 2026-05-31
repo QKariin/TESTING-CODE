@@ -120,8 +120,8 @@ export async function POST(request: Request) {
             }
 
             // Create tier milestone badges + participant badge
-            const badgeRows: { challenge_id: string; type: string; name: string; description: string; rarity: string; tier_level: string | null }[] = [
-                { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common', tier_level: null },
+            const badgeRows: { challenge_id: string; type: string; name: string; description: string; rarity: string; tier_level: string | null; image_url: string | null }[] = [
+                { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common', tier_level: null, image_url: null },
             ];
             for (const tier of tiersArr) {
                 const level = (tier.label || '').toLowerCase();
@@ -132,6 +132,7 @@ export async function POST(request: Request) {
                     description: `Survived ${tier.days} days of ${name}`,
                     rarity: level === 'legendary' ? 'legendary' : level === 'gold' ? 'rare' : 'common',
                     tier_level: level,
+                    image_url: tier.badge_icon ? `icon:${tier.badge_icon}` : null,
                 });
             }
             await supabaseAdmin.from('badges').insert(badgeRows);

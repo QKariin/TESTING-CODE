@@ -977,11 +977,25 @@ function CreateTab({ allChallenges, onCreate }: {
     });
 
     // ── Tiered challenge state ──
+    const BADGE_ICONS: { id: string; label: string; svg: string }[] = [
+        { id: 'shield', label: 'Shield', svg: '<path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7L12 2z" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+        { id: 'crown', label: 'Crown', svg: '<path d="M2 20h20L19 8l-4 5-3-7-3 7-4-5L2 20z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 20h16v2H4z" fill="currentColor" opacity="0.3"/>' },
+        { id: 'diamond', label: 'Diamond', svg: '<path d="M6 3h12l4 6-10 13L2 9l4-6z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 9h20M8 3l-2 6 6 13M16 3l2 6-6 13" fill="none" stroke="currentColor" stroke-width="1" opacity="0.4"/>' },
+        { id: 'flame', label: 'Flame', svg: '<path d="M12 23c-4-2-7-6-7-10 0-3 2-5 3-7 .5 2 2 3 3 3-1-3 0-7 3-9 0 3 2 5 4 6 2-2 2-4 2-5 2 3 3 6 3 8 0 5-4 10-7 10-1 0-3-1-4-2" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+        { id: 'star', label: 'Star', svg: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.27 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+        { id: 'sword', label: 'Sword', svg: '<path d="M14.5 17.5L3 6V3h3l11.5 11.5M12 15l7 7M17 12l5-5M9 2l3 3M2 9l3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' },
+        { id: 'medal', label: 'Medal', svg: '<circle cx="12" cy="15" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 3h7l-1.5 6h-4L8.5 3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 9v-6" stroke="currentColor" stroke-width="1"/>' },
+        { id: 'skull', label: 'Skull', svg: '<circle cx="12" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="15" cy="9" r="1.5" fill="currentColor"/><path d="M9 22v-5M12 22v-5M15 22v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' },
+        { id: 'bolt', label: 'Bolt', svg: '<path d="M13 2L4 14h7l-2 8 9-12h-7L13 2z" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+        { id: 'heart', label: 'Heart', svg: '<path d="M12 21C12 21 4 15 4 9.5 4 6.5 6.5 4 9 4c1.74 0 3 1 3 1s1.26-1 3-1c2.5 0 5 2.5 5 5.5C20 15 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+        { id: 'trophy', label: 'Trophy', svg: '<path d="M6 2h12v6a6 6 0 01-12 0V2zM6 4H3v2a3 3 0 003 3M18 4h3v2a3 3 0 01-3 3M9 14h6v2H9zM10 16h4v4a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4z" fill="none" stroke="currentColor" stroke-width="1.5"/>' },
+        { id: 'lock', label: 'Lock', svg: '<rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11V7a4 4 0 018 0v4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/>' },
+    ];
     const PRESET_TIERS = [
-        { days: 3, label: 'Bronze', cost: 3000, cost_soft: 3000, cost_strict: 3500, cost_brutal: 4500, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 },
-        { days: 7, label: 'Silver', cost: 4500, cost_soft: 4500, cost_strict: 5000, cost_brutal: 6500, daily_soft: 100, daily_strict: 150, daily_brutal: 200, finish_soft: 500, finish_strict: 750, finish_brutal: 1000 },
-        { days: 14, label: 'Gold', cost: 7000, cost_soft: 7000, cost_strict: 8000, cost_brutal: 10000, daily_soft: 150, daily_strict: 225, daily_brutal: 300, finish_soft: 1000, finish_strict: 1500, finish_brutal: 2000 },
-        { days: 30, label: 'Legendary', cost: 10000, cost_soft: 10000, cost_strict: 12000, cost_brutal: 14000, daily_soft: 200, daily_strict: 300, daily_brutal: 400, finish_soft: 2000, finish_strict: 3000, finish_brutal: 4000 },
+        { days: 3, label: 'Bronze', badge_icon: 'shield', cost: 3000, cost_soft: 3000, cost_strict: 3500, cost_brutal: 4500, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 },
+        { days: 7, label: 'Silver', badge_icon: 'star', cost: 4500, cost_soft: 4500, cost_strict: 5000, cost_brutal: 6500, daily_soft: 100, daily_strict: 150, daily_brutal: 200, finish_soft: 500, finish_strict: 750, finish_brutal: 1000 },
+        { days: 14, label: 'Gold', badge_icon: 'crown', cost: 7000, cost_soft: 7000, cost_strict: 8000, cost_brutal: 10000, daily_soft: 150, daily_strict: 225, daily_brutal: 300, finish_soft: 1000, finish_strict: 1500, finish_brutal: 2000 },
+        { days: 30, label: 'Legendary', badge_icon: 'diamond', cost: 10000, cost_soft: 10000, cost_strict: 12000, cost_brutal: 14000, daily_soft: 200, daily_strict: 300, daily_brutal: 400, finish_soft: 2000, finish_strict: 3000, finish_brutal: 4000 },
     ];
     const [tiers, setTiers] = useState<typeof PRESET_TIERS>([]);
     const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([
@@ -1147,7 +1161,7 @@ function CreateTab({ allChallenges, onCreate }: {
         boxShadow: '0 2px 16px rgba(0,0,0,0.04)',
     };
     const diffColor = (d: string) => d === 'easy' ? '#16a34a' : d === 'hard' ? '#dc2626' : '#ca8a04';
-    const tierEmoji = (label: string) => label === 'Bronze' ? '\u{1F949}' : label === 'Silver' ? '\u{1F948}' : label === 'Gold' ? '\u{1F947}' : '\u{1F451}';
+
 
     const Divider = ({ label }: { label: string }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
@@ -1319,11 +1333,13 @@ function CreateTab({ allChallenges, onCreate }: {
                             )}
                             {tiers.map((tier, i) => {
                                 const updateTier = (key: string, val: any) => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], [key]: val }; return n; });
-                                const numField = (key: string, val: number) => (
-                                    <input type="number" className="forge-num" min={0} value={val}
+                                const numField = (field: string, val: number) => (
+                                    <input type="number" className="forge-num" min={0}
+                                        value={val}
+                                        onFocus={e => e.target.select()}
+                                        onChange={e => updateTier(field, e.target.value === '' ? 0 : Number(e.target.value))}
                                         placeholder="0"
-                                        onChange={e => updateTier(key, e.target.value === '' ? 0 : Number(e.target.value))}
-                                        style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
+                                        style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%', cursor: 'text' }} />
                                 );
                                 return (
                                 <div key={i} style={{
@@ -1340,7 +1356,9 @@ function CreateTab({ allChallenges, onCreate }: {
                                     )}
                                     {/* Tier header: emoji + name + days */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                                        <div style={{ fontSize: '1.6rem' }}>{tierEmoji(tier.label)}</div>
+                                        <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a1a1a' }}>
+                                            {(() => { const icon = BADGE_ICONS.find(b => b.id === (tier as any).badge_icon); return icon ? <svg width="28" height="28" viewBox="0 0 24 24" dangerouslySetInnerHTML={{ __html: icon.svg }} /> : <svg width="28" height="28" viewBox="0 0 24 24"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7L12 2z" fill="none" stroke="currentColor" strokeWidth="1.5"/></svg>; })()}
+                                        </div>
                                         <input className="forge-input" value={tier.label} placeholder="Tier name"
                                             onChange={e => updateTier('label', e.target.value)}
                                             style={{ flex: 1, background: 'rgba(255,255,255,0.6)', border: 'none', fontFamily: "'Cinzel', serif", fontSize: '0.95rem', letterSpacing: '2px', padding: '8px 12px' }} />
@@ -1392,6 +1410,29 @@ function CreateTab({ allChallenges, onCreate }: {
                                         })}
                                     </div>
 
+                                    {/* Badge picker */}
+                                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#999', letterSpacing: '2px', marginBottom: 6 }}>BADGE ICON</div>
+                                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                            {BADGE_ICONS.map(icon => {
+                                                const selected = (tier as any).badge_icon === icon.id;
+                                                return (
+                                                    <button key={icon.id} type="button" title={icon.label}
+                                                        onClick={() => updateTier('badge_icon', icon.id)} style={{
+                                                        width: 36, height: 36, borderRadius: 8, border: 'none', cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        background: selected ? gradSoft : 'rgba(0,0,0,0.02)',
+                                                        boxShadow: selected ? `0 0 0 2px ${PINK}` : 'none',
+                                                        color: selected ? '#1a1a1a' : '#999',
+                                                        transition: 'all 0.15s',
+                                                    }}>
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" dangerouslySetInnerHTML={{ __html: icon.svg }} />
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
                                     {/* Milestone task */}
                                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '2px solid rgba(255,0,237,0.12)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -1416,7 +1457,7 @@ function CreateTab({ allChallenges, onCreate }: {
                             {/* Add tier + Clear all */}
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button type="button" onClick={() => {
-                                    setTiers(prev => [...prev, { days: 0, label: '', cost: 0, cost_soft: 0, cost_strict: 0, cost_brutal: 0, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
+                                    setTiers(prev => [...prev, { days: 0, label: '', badge_icon: 'shield', cost: 0, cost_soft: 0, cost_strict: 0, cost_brutal: 0, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
                                 }} style={{
                                     flex: 1, padding: '20px 14px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.15)',
                                     background: 'transparent', cursor: 'pointer', display: 'flex',
@@ -1447,18 +1488,25 @@ function CreateTab({ allChallenges, onCreate }: {
                                 <Divider label="AUTO BADGES" />
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
                                     <span style={{ padding: '5px 12px', borderRadius: 20, fontSize: '0.7rem', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, letterSpacing: '1px', background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)', color: '#999' }}>PARTICIPANT</span>
-                                    {tiers.map((t, i) => (
-                                        <span key={i} style={{
-                                            padding: '5px 12px', borderRadius: 20, fontSize: '0.7rem',
-                                            fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, letterSpacing: '1px',
-                                            background: t.label.toLowerCase() === 'legendary' ? 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,180,0,0.1))' :
-                                                t.label.toLowerCase() === 'gold' ? 'rgba(202,138,4,0.08)' : 'rgba(0,0,0,0.03)',
-                                            border: `1px solid ${t.label.toLowerCase() === 'legendary' ? 'rgba(255,215,0,0.3)' :
-                                                t.label.toLowerCase() === 'gold' ? 'rgba(202,138,4,0.15)' : 'rgba(0,0,0,0.06)'}`,
-                                            color: t.label.toLowerCase() === 'legendary' ? '#b8860b' :
-                                                t.label.toLowerCase() === 'gold' ? '#ca8a04' : '#999',
-                                        }}>{t.label || `Tier ${i + 1}`} ({t.days}d)</span>
-                                    ))}
+                                    {tiers.map((t, idx) => {
+                                        const badgeIcon = BADGE_ICONS.find(b => b.id === (t as any).badge_icon);
+                                        return (
+                                            <span key={idx} style={{
+                                                padding: '5px 12px', borderRadius: 20, fontSize: '0.7rem',
+                                                fontFamily: 'Rajdhani, sans-serif', fontWeight: 600, letterSpacing: '1px',
+                                                display: 'inline-flex', alignItems: 'center', gap: 5,
+                                                background: t.label.toLowerCase() === 'legendary' ? 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,180,0,0.1))' :
+                                                    t.label.toLowerCase() === 'gold' ? 'rgba(202,138,4,0.08)' : 'rgba(0,0,0,0.03)',
+                                                border: `1px solid ${t.label.toLowerCase() === 'legendary' ? 'rgba(255,215,0,0.3)' :
+                                                    t.label.toLowerCase() === 'gold' ? 'rgba(202,138,4,0.15)' : 'rgba(0,0,0,0.06)'}`,
+                                                color: t.label.toLowerCase() === 'legendary' ? '#b8860b' :
+                                                    t.label.toLowerCase() === 'gold' ? '#ca8a04' : '#999',
+                                            }}>
+                                                {badgeIcon && <svg width="12" height="12" viewBox="0 0 24 24" style={{ color: 'inherit' }} dangerouslySetInnerHTML={{ __html: badgeIcon.svg }} />}
+                                                {t.label || `Tier ${idx + 1}`} ({t.days}d)
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: '#bbb', marginTop: 6 }}>
                                     These badges are created automatically when the challenge is forged
