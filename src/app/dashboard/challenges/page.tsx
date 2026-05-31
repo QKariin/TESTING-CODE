@@ -964,7 +964,23 @@ function CreateTab({ allChallenges, onCreate }: {
         start_date: '', start_time: '08:00',
         image_url: '',
         is_evergreen: false, slot_duration_minutes: 360, evergreen_join_cost: 0, evergreen_rejoin_cost: 1000,
+        is_tiered: false,
     });
+
+    // ── Tiered challenge state ──
+    const [tiers, setTiers] = useState([
+        { days: 3, label: 'Bronze', cost: 500 },
+        { days: 7, label: 'Silver', cost: 1000 },
+        { days: 14, label: 'Gold', cost: 2500 },
+        { days: 30, label: 'Legendary', cost: 5000 },
+    ]);
+    const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([
+        { day: 3, task_name: '' }, { day: 7, task_name: '' },
+        { day: 14, task_name: '' }, { day: 30, task_name: '' },
+    ]);
+    const [poolTasks, setPoolTasks] = useState<{ task_name: string; difficulty: string }[]>([
+        { task_name: '', difficulty: 'easy' },
+    ]);
     const [submitting, setSubmitting] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
     const [imageError, setImageError] = useState('');
@@ -1051,10 +1067,31 @@ function CreateTab({ allChallenges, onCreate }: {
 
     const handleSubmit = async () => {
         if (!form.name) return;
-        if (!form.is_evergreen && !form.start_date) return;
+        if (!form.is_evergreen && !form.is_tiered && !form.start_date) return;
         setSubmitting(true);
         try {
-            if (form.is_evergreen) {
+            if (form.is_tiered) {
+                // Build task pool payload: milestones + pool tasks
+                const milestones = milestoneTasks
+                    .filter(m => m.task_name.trim())
+                    .map(m => ({ task_name: m.task_name, difficulty: 'hard', is_milestone: true, milestone_day: m.day }));
+                const pool = poolTasks
+                    .filter(t => t.task_name.trim())
+                    .map(t => ({ task_name: t.task_name, difficulty: t.difficulty, is_milestone: false, milestone_day: null }));
+                const maxDays = Math.max(...tiers.map(t => t.days));
+                await onCreate({
+                    ...form,
+                    start_date: null,
+                    is_evergreen: true,
+                    is_tiered: true,
+                    duration_days: maxDays,
+                    tasks_per_day: 1,
+                    tiers,
+                    task_pool: [...milestones, ...pool],
+                    slot_duration_minutes: form.slot_duration_minutes,
+                    evergreen_rejoin_cost: form.evergreen_rejoin_cost,
+                });
+            } else if (form.is_evergreen) {
                 await onCreate({
                     ...form,
                     start_date: null,
@@ -1139,16 +1176,21 @@ function CreateTab({ allChallenges, onCreate }: {
                     <div className="ch-field">
                         <label className="ch-label">CHALLENGE TYPE</label>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            <button type="button" onClick={() => set('is_evergreen', false)}
-                                style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${!form.is_evergreen ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.06)'}`, background: !form.is_evergreen ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: !form.is_evergreen ? '#c5a059' : '#555', letterSpacing: '2px', marginBottom: 4 }}>CLASSIC</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>Fixed start date, shared windows</div>
-                            </button>
-                            <button type="button" onClick={() => set('is_evergreen', true)}
-                                style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${form.is_evergreen ? 'rgba(74,222,128,0.5)' : 'rgba(255,255,255,0.06)'}`, background: form.is_evergreen ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: form.is_evergreen ? '#4ade80' : '#555', letterSpacing: '2px', marginBottom: 4 }}>EVERGREEN</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>Join anytime, personal timeline</div>
-                            </button>
+                            {[
+                                { key: 'classic', label: 'CLASSIC', sub: 'Fixed start, shared windows', color: '#c5a059', active: !form.is_evergreen && !form.is_tiered },
+                                { key: 'evergreen', label: 'EVERGREEN', sub: 'Join anytime, personal timeline', color: '#4ade80', active: form.is_evergreen && !form.is_tiered },
+                                { key: 'tiered', label: 'TIERED', sub: 'Tiers + task pool + badges', color: '#a855f7', active: form.is_tiered },
+                            ].map(t => (
+                                <button key={t.key} type="button" onClick={() => {
+                                    if (t.key === 'classic') { set('is_evergreen', false); set('is_tiered', false); }
+                                    else if (t.key === 'evergreen') { set('is_evergreen', true); set('is_tiered', false); }
+                                    else { set('is_evergreen', true); set('is_tiered', true); set('tasks_per_day', 1); }
+                                }}
+                                    style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${t.active ? t.color + '80' : 'rgba(255,255,255,0.06)'}`, background: t.active ? t.color + '14' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: t.active ? t.color : '#555', letterSpacing: '2px', marginBottom: 4 }}>{t.label}</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>{t.sub}</div>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -1177,7 +1219,7 @@ function CreateTab({ allChallenges, onCreate }: {
                     </div>
 
                     {/* Schedule */}
-                    {form.is_evergreen ? (
+                    {form.is_tiered ? null : form.is_evergreen ? (
                         <div className="ch-form-grid">
                             <div className="ch-field">
                                 <label className="ch-label">DURATION (DAYS)</label>
@@ -1205,7 +1247,7 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                     )}
 
-                    {form.is_evergreen && (
+                    {form.is_evergreen && !form.is_tiered && (
                         <>
                             <div className="ch-form-grid-3">
                                 <div className="ch-field">
@@ -1233,8 +1275,137 @@ function CreateTab({ allChallenges, onCreate }: {
                         </>
                     )}
 
+                    {/* ── TIERED CONFIG ── */}
+                    {form.is_tiered && (
+                        <>
+                            {/* Tier definitions */}
+                            <div>
+                                <label className="ch-label" style={{ display: 'block', marginBottom: 8 }}>TIERS</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {tiers.map((tier, i) => (
+                                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 14px', background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: 10 }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#a855f7', fontWeight: 700, minWidth: 28 }}>
+                                                {tier.label === 'Bronze' ? '\u{1F949}' : tier.label === 'Silver' ? '\u{1F948}' : tier.label === 'Gold' ? '\u{1F947}' : '\u{1F451}'}
+                                            </div>
+                                            <input className="ch-input" style={{ flex: 1, maxWidth: 120 }} placeholder="Label" value={tier.label}
+                                                onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], label: e.target.value }; return n; })} />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555' }}>DAYS</span>
+                                                <input type="number" className="ch-input" style={{ width: 60 }} min={1} max={365} value={tier.days}
+                                                    onChange={e => {
+                                                        const days = Number(e.target.value);
+                                                        setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], days }; return n; });
+                                                    }} />
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555' }}>COST</span>
+                                                <input type="number" className="ch-input" style={{ width: 80 }} min={0} value={tier.cost}
+                                                    onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], cost: Number(e.target.value) }; return n; })} />
+                                            </div>
+                                            {tiers.length > 1 && (
+                                                <button type="button" onClick={() => setTiers(prev => prev.filter((_, j) => j !== i))}
+                                                    style={{ background: 'none', border: 'none', color: '#e03030', cursor: 'pointer', fontSize: '0.8rem', padding: '0 4px' }}>✕</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={() => {
+                                        const maxDay = Math.max(...tiers.map(t => t.days), 0);
+                                        setTiers(prev => [...prev, { days: maxDay + 7, label: `Tier ${prev.length + 1}`, cost: 1000 }]);
+                                    }} style={{ padding: '8px 14px', background: 'rgba(168,85,247,0.06)', border: '1px dashed rgba(168,85,247,0.3)', borderRadius: 8, color: '#a855f7', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', textAlign: 'center' }}>
+                                        + ADD TIER
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Slot duration */}
+                            <div className="ch-form-grid">
+                                <div className="ch-field">
+                                    <label className="ch-label">SLOT DURATION (MIN)</label>
+                                    <input type="number" className="ch-input" min={30} max={360} value={form.slot_duration_minutes} onChange={e => set('slot_duration_minutes', Math.min(360, Math.max(30, Number(e.target.value))))} />
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', marginTop: 4 }}>360 = full 6hr slot</div>
+                                </div>
+                                <div className="ch-field">
+                                    <label className="ch-label">REJOIN COST (COINS)</label>
+                                    <input type="number" className="ch-input" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} />
+                                </div>
+                            </div>
+
+                            {/* Milestone tasks */}
+                            <div>
+                                <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>MILESTONE TASKS</label>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>
+                                    Fixed tasks on tier completion days. Always the same for everyone.
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {tiers.map((tier, i) => (
+                                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#a855f7', letterSpacing: '1px', minWidth: 70, flexShrink: 0 }}>
+                                                DAY {tier.days}
+                                            </div>
+                                            <input className="ch-input" style={{ flex: 1 }}
+                                                placeholder={`${tier.label} milestone task...`}
+                                                value={milestoneTasks.find(m => m.day === tier.days)?.task_name || ''}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    setMilestoneTasks(prev => {
+                                                        const existing = prev.find(m => m.day === tier.days);
+                                                        if (existing) return prev.map(m => m.day === tier.days ? { ...m, task_name: val } : m);
+                                                        return [...prev, { day: tier.days, task_name: val }];
+                                                    });
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Task pool */}
+                            <div>
+                                <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>TASK POOL</label>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>
+                                    Random tasks assigned on non-milestone days. More tasks = more variety on re-joins.
+                                    <span style={{ color: '#a855f7', marginLeft: 6 }}>{poolTasks.filter(t => t.task_name.trim()).length} tasks added</span>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 350, overflowY: 'auto', paddingRight: 4 }}>
+                                    {poolTasks.map((task, i) => (
+                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            <input className="ch-input" style={{ flex: 1 }} placeholder={`Task ${i + 1}...`}
+                                                value={task.task_name}
+                                                onChange={e => setPoolTasks(prev => { const n = [...prev]; n[i] = { ...n[i], task_name: e.target.value }; return n; })}
+                                            />
+                                            <select value={task.difficulty} onChange={e => setPoolTasks(prev => { const n = [...prev]; n[i] = { ...n[i], difficulty: e.target.value }; return n; })}
+                                                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 6px', color: task.difficulty === 'easy' ? '#4ade80' : task.difficulty === 'hard' ? '#e03030' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', letterSpacing: '1px', cursor: 'pointer' }}>
+                                                <option value="easy">EASY</option>
+                                                <option value="medium">MED</option>
+                                                <option value="hard">HARD</option>
+                                            </select>
+                                            {poolTasks.length > 1 && (
+                                                <button type="button" onClick={() => setPoolTasks(prev => prev.filter((_, j) => j !== i))}
+                                                    style={{ background: 'none', border: 'none', color: '#e03030', cursor: 'pointer', fontSize: '0.8rem', padding: '0 4px', flexShrink: 0 }}>✕</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <button type="button" onClick={() => setPoolTasks(prev => [...prev, { task_name: '', difficulty: 'medium' }])}
+                                    style={{ marginTop: 8, padding: '8px 14px', background: 'rgba(168,85,247,0.06)', border: '1px dashed rgba(168,85,247,0.3)', borderRadius: 8, color: '#a855f7', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
+                                    + ADD TASK
+                                </button>
+                            </div>
+
+                            {/* Info box */}
+                            <div style={{ padding: '12px 16px', background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: 8 }}>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#666', lineHeight: 1.5 }}>
+                                    Tiered challenges let users pick a commitment level. They complete one task per day.
+                                    Milestone tasks land on tier completion days. Other days get random tasks from the pool.
+                                    On re-join, previously assigned tasks are excluded for variety.
+                                    <span style={{ color: '#a855f7' }}> Max duration: {Math.max(...tiers.map(t => t.days))} days.</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
                     {/* Start date */}
-                    {!form.is_evergreen && (
+                    {!form.is_evergreen && !form.is_tiered && (
                         <div className="ch-form-grid">
                             <div className="ch-field">
                                 <label className="ch-label">START DATE</label>
@@ -1247,8 +1418,8 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                     )}
 
-                    {/* Daily Task Schedule - per day */}
-                    {!form.is_evergreen && (
+                    {/* Daily Task Schedule - per day (classic only) */}
+                    {!form.is_evergreen && !form.is_tiered && (
                     <div>
                         <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>DAILY TASK SCHEDULE</label>
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
@@ -1356,19 +1527,32 @@ function CreateTab({ allChallenges, onCreate }: {
                     </div>
 
                     {/* Total windows preview */}
-                    <div style={{ padding: '12px 16px', background: form.is_evergreen ? 'rgba(74,222,128,0.04)' : 'rgba(197,160,89,0.04)', border: `1px solid ${form.is_evergreen ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.1)'}`, borderRadius: 8 }}>
-                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>
-                            {form.is_evergreen ? 'TASKS PER PARTICIPANT: ' : 'TOTAL WINDOWS: '}</span>
-                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: form.is_evergreen ? '#4ade80' : '#c5a059', fontWeight: 700 }}>
-                            {form.duration_days * form.tasks_per_day}
-                        </span>
-                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>
-                            ({form.duration_days} days × {form.tasks_per_day} tasks)
-                        </span>
+                    <div style={{ padding: '12px 16px', background: form.is_tiered ? 'rgba(168,85,247,0.04)' : form.is_evergreen ? 'rgba(74,222,128,0.04)' : 'rgba(197,160,89,0.04)', border: `1px solid ${form.is_tiered ? 'rgba(168,85,247,0.1)' : form.is_evergreen ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.1)'}`, borderRadius: 8 }}>
+                        {form.is_tiered ? (
+                            <>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>TIERS: </span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#a855f7', fontWeight: 700 }}>{tiers.length}</span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>MAX DAYS: </span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#a855f7', fontWeight: 700 }}>{Math.max(...tiers.map(t => t.days))}</span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>POOL: </span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#a855f7', fontWeight: 700 }}>{poolTasks.filter(t => t.task_name.trim()).length}</span>
+                            </>
+                        ) : (
+                            <>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>
+                                    {form.is_evergreen ? 'TASKS PER PARTICIPANT: ' : 'TOTAL WINDOWS: '}</span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: form.is_evergreen ? '#4ade80' : '#c5a059', fontWeight: 700 }}>
+                                    {form.duration_days * form.tasks_per_day}
+                                </span>
+                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>
+                                    ({form.duration_days} days × {form.tasks_per_day} tasks)
+                                </span>
+                            </>
+                        )}
                     </div>
 
-                    <button className="ch-submit-btn" disabled={submitting || !form.name || (!form.is_evergreen && !form.start_date)} onClick={handleSubmit}>
-                        {submitting ? 'CREATING...' : form.is_evergreen ? '⚔ CREATE EVERGREEN CHALLENGE' : '⚔ CREATE & GENERATE WINDOWS'}
+                    <button className="ch-submit-btn" disabled={submitting || !form.name || (!form.is_evergreen && !form.is_tiered && !form.start_date)} onClick={handleSubmit}>
+                        {submitting ? 'CREATING...' : form.is_tiered ? '⚔ CREATE TIERED CHALLENGE' : form.is_evergreen ? '⚔ CREATE EVERGREEN CHALLENGE' : '⚔ CREATE & GENERATE WINDOWS'}
                     </button>
                 </div>
             </div>

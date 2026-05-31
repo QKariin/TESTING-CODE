@@ -45,7 +45,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
             // 20 flat + 10/7/5 bonus for 1st/2nd/3rd
             const { data: challenge } = await supabaseAdmin.from('challenges')
-                .select('points_per_completion, first_place_points, second_place_points, third_place_points')
+                .select('points_per_completion, first_place_points, second_place_points, third_place_points, is_tiered, tiers, name')
                 .eq('id', id).single();
 
             const flat = challenge?.points_per_completion ?? 20;
@@ -59,10 +59,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
             if (totalPoints > 0) {
                 const { data: profile } = await supabaseAdmin.from('profiles')
-                    .select('score').eq('member_id', completion.member_id).single();
+                    .select('score, taskdom_completed_tasks').eq('member_id', completion.member_id).single();
                 if (profile) {
                     await supabaseAdmin.from('profiles')
-                        .update({ score: (profile.score || 0) + totalPoints })
+                        .update({
+                            score: (profile.score || 0) + totalPoints,
+                            taskdom_completed_tasks: ((profile as any).taskdom_completed_tasks || 0) + 1,
+                        })
                         .eq('member_id', completion.member_id);
                 }
             }
@@ -118,7 +121,71 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 `${taskNum}/${totalTasks}`, totalPoints, fasterCount + 1,
             ).catch(() => {});
 
-            return NextResponse.json({ success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1 });
+            // ── TIERED: check if tier is complete ──
+            let tierCompleted: string | null = null;
+            let nextTierOffer: any = null;
+            if (ch && challenge?.is_tiered && challenge?.tiers) {
+                const { data: part } = await supabaseAdmin.from('challenge_participants')
+                    .select('tier_days, current_tier, rejoin_count')
+                    .eq('challenge_id', id).ilike('member_id', completion.member_id).maybeSingle();
+
+                if (part?.tier_days) {
+                    const tierTotalTasks = part.tier_days; // 1 task/day
+                    if (taskNum >= tierTotalTasks) {
+                        // Tier complete — mark as finished
+                        await supabaseAdmin.from('challenge_participants').update({
+                            status: 'finished',
+                        }).eq('challenge_id', id).ilike('member_id', completion.member_id);
+
+                        tierCompleted = part.current_tier;
+
+                        // Award tier badge
+                        const tierLevel = (part.current_tier || '').toLowerCase();
+                        const { data: tierBadge } = await supabaseAdmin.from('badges')
+                            .select('id').eq('challenge_id', id).eq('type', 'tier_milestone').eq('tier_level', tierLevel).maybeSingle();
+                        if (tierBadge) {
+                            await supabaseAdmin.from('user_badges').upsert({
+                                member_id: completion.member_id, badge_id: tierBadge.id, challenge_id: id,
+                                earned_at: new Date().toISOString(), is_active: true,
+                            }, { onConflict: 'member_id,badge_id,challenge_id' });
+                        }
+
+                        // Check if there's a next tier to offer
+                        const tiersList = (challenge.tiers as any[]).sort((a: any, b: any) => a.days - b.days);
+                        const currentIdx = tiersList.findIndex((t: any) => t.days === part.tier_days);
+                        if (currentIdx !== -1 && currentIdx < tiersList.length - 1) {
+                            const next = tiersList[currentIdx + 1];
+                            const currentCost = tiersList[currentIdx].cost || 0;
+                            nextTierOffer = {
+                                label: next.label,
+                                days: next.days,
+                                cost: Math.max(0, next.cost - currentCost),
+                            };
+                        }
+
+                        // Post tier completion card to global feed
+                        try {
+                            const tierCardData = {
+                                title: `${part.current_tier?.toUpperCase()} TIER COMPLETE`,
+                                tier: part.current_tier,
+                                challengeName: challenge.name || '',
+                                winnerName: (prof as any)?.name || completion.member_id.split('@')[0],
+                                days: part.tier_days,
+                                nextTier: nextTierOffer,
+                            };
+                            await supabaseAdmin.from('global_messages').insert({
+                                sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                                message: `CHALLENGE_TIER_CARD::${JSON.stringify(tierCardData)}`,
+                            });
+                        } catch (_) {}
+                    }
+                }
+            }
+
+            return NextResponse.json({
+                success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1,
+                tier_completed: tierCompleted, next_tier: nextTierOffer,
+            });
         } else {
             if (windowStillOpen) {
                 // Window still open - delete so they can resubmit

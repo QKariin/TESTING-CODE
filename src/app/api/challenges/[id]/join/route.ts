@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateEvergreenWindows, TimeSlot } from '@/lib/evergreen-windows';
 import { discordChallengeJoin } from '@/lib/discord';
+import { assignTasksForDays, getTierForDays, TierDef } from '@/lib/challenge-tasks';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -33,6 +34,124 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             .maybeSingle();
 
         if (existing) return NextResponse.json({ success: true, already_joined: true, status: existing.status });
+
+        if (challenge.is_tiered) {
+            // ── TIERED JOIN ──
+            const body = await req.json().catch(() => ({}));
+            const timezone: string = body.timezone || 'UTC';
+            const chosenSlots: TimeSlot[] = body.chosen_slots || ['morning'];
+            const tierDays: number = body.tier_days;
+
+            const tiers: TierDef[] = challenge.tiers || [];
+            const selectedTier = getTierForDays(tiers, tierDays);
+            if (!selectedTier) {
+                return NextResponse.json({ success: false, error: `Invalid tier: ${tierDays} days` }, { status: 400 });
+            }
+
+            // Validate slots (tiered = 1 task/day = 1 slot)
+            const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
+            const cleanSlots = chosenSlots.filter(s => validSlots.includes(s)).slice(0, 1);
+            if (cleanSlots.length === 0) cleanSlots.push('morning');
+
+            // Charge tier cost
+            const joinCost = selectedTier.cost;
+            const currentWallet = profile.wallet ?? 0;
+            if (currentWallet < joinCost) {
+                return NextResponse.json({
+                    success: false,
+                    error: `Need ${joinCost} coins to join. You have ${currentWallet}.`,
+                }, { status: 400 });
+            }
+            if (joinCost > 0) {
+                await supabaseAdmin.from('profiles')
+                    .update({ wallet: currentWallet - joinCost })
+                    .eq('ID', profile.ID);
+            }
+
+            const now = new Date();
+            const personalEnd = new Date(now);
+            personalEnd.setDate(personalEnd.getDate() + tierDays);
+
+            // Create participant
+            const { error: joinErr } = await supabaseAdmin.from('challenge_participants').insert({
+                challenge_id: challengeId,
+                member_id: memberId,
+                status: 'active',
+                joined_at: now.toISOString(),
+                timezone,
+                chosen_slots: cleanSlots,
+                personal_start: now.toISOString(),
+                personal_end: personalEnd.toISOString(),
+                coins_paid: joinCost,
+                tier_days: tierDays,
+                current_tier: selectedTier.label,
+            });
+            if (joinErr) throw joinErr;
+
+            // Assign tasks from pool
+            const assignments = await assignTasksForDays(challengeId, memberId, 1, tierDays, 1);
+
+            // Generate personal windows
+            const slotMinutes = challenge.slot_duration_minutes || challenge.window_minutes || 360;
+            const windows = generateEvergreenWindows(
+                challengeId, memberId, now, timezone,
+                cleanSlots, tierDays, slotMinutes,
+            );
+
+            // Bake task names into windows
+            const windowsWithTasks = windows.map(w => {
+                const assignment = assignments.find(a => a.day_number === w.day_number);
+                return { ...w, task_name: assignment?.task_name || null };
+            });
+
+            const { error: wErr } = await supabaseAdmin.from('challenge_windows').insert(windowsWithTasks);
+            if (wErr) throw wErr;
+
+            // Save timezone
+            await supabaseAdmin.from('profiles').update({ timezone }).eq('ID', profile.ID);
+
+            // Global feed card
+            try {
+                const { count: activeCount } = await supabaseAdmin
+                    .from('challenge_participants').select('*', { count: 'exact', head: true })
+                    .eq('challenge_id', challengeId).eq('status', 'active');
+                await supabaseAdmin.from('global_messages').insert({
+                    sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                    message: `CHALLENGE_JOIN_CARD::${JSON.stringify({
+                        name: profile.name || memberEmail.split('@')[0],
+                        photo: profile.avatar_url || null,
+                        challengeName: challenge.name,
+                        challengeImage: challenge.image_url || null,
+                        activeCount: activeCount || 0,
+                        tier: selectedTier.label,
+                        tierDays: tierDays,
+                    })}`,
+                });
+            } catch (_) {}
+
+            // Participant badge
+            const { data: badge } = await supabaseAdmin.from('badges')
+                .select('id').eq('challenge_id', challengeId).eq('type', 'participant').maybeSingle();
+            if (badge) {
+                await supabaseAdmin.from('user_badges').upsert({
+                    member_id: memberId, badge_id: badge.id, challenge_id: challengeId,
+                    earned_at: now.toISOString(), is_active: true,
+                }, { onConflict: 'member_id,badge_id,challenge_id' });
+            }
+
+            discordChallengeJoin(profile.name || memberEmail.split('@')[0], `${challenge.name} (${selectedTier.label})`, 0).catch(() => {});
+
+            return NextResponse.json({
+                success: true,
+                already_joined: false,
+                is_tiered: true,
+                tier: selectedTier.label,
+                tier_days: tierDays,
+                coins_charged: joinCost,
+                windows_created: windowsWithTasks.length,
+                first_window: windowsWithTasks[0] || null,
+            });
+        }
 
         if (challenge.is_evergreen) {
             // ── EVERGREEN JOIN ──

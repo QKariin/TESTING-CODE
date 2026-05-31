@@ -50,6 +50,8 @@ export async function POST(request: Request) {
             // Evergreen fields
             is_evergreen = false, slot_duration_minutes = 360,
             evergreen_join_cost = null, evergreen_rejoin_cost = 1000,
+            // Tiered fields
+            is_tiered = false, tiers = null, task_pool = null,
         } = body;
 
         // Classic challenges require start_date; evergreen don't
@@ -64,6 +66,80 @@ export async function POST(request: Request) {
 
         const durationNum = Number(duration_days);
         const tpd = Number(tasks_per_day);
+
+        if (is_tiered) {
+            // ── TIERED CHALLENGE ──
+            // Always evergreen + 1 task/day. Duration = max tier days.
+            const tiersArr = Array.isArray(tiers) ? tiers : [];
+            if (tiersArr.length === 0) {
+                return NextResponse.json({ success: false, error: 'Tiered challenges need at least one tier' }, { status: 400 });
+            }
+            const maxDays = Math.max(...tiersArr.map((t: any) => Number(t.days)));
+            const lowestCost = Math.min(...tiersArr.map((t: any) => Number(t.cost)));
+
+            const { data: challenge, error: cErr } = await supabaseAdmin
+                .from('challenges')
+                .insert({
+                    name, theme, description, status: 'active', is_template: false,
+                    is_evergreen: true, is_tiered: true,
+                    tiers: tiersArr,
+                    duration_days: maxDays, tasks_per_day: 1,
+                    window_minutes: Number(slot_duration_minutes) || 360,
+                    slot_duration_minutes: Number(slot_duration_minutes) || 360,
+                    evergreen_join_cost: lowestCost,
+                    evergreen_rejoin_cost: Number(evergreen_rejoin_cost) || lowestCost,
+                    points_per_completion: Number(points_per_completion),
+                    first_place_points: Number(first_place_points),
+                    second_place_points: Number(second_place_points),
+                    third_place_points: Number(third_place_points),
+                    start_date: null, end_date: null,
+                    image_url: image_url || null,
+                    task_names: null,
+                })
+                .select().single();
+
+            if (cErr) throw cErr;
+
+            // Insert task pool
+            const poolTasks = Array.isArray(task_pool) ? task_pool : [];
+            if (poolTasks.length > 0) {
+                const poolRows = poolTasks.map((t: any) => ({
+                    challenge_id: challenge.id,
+                    task_name: t.task_name || '',
+                    task_description: t.task_description || null,
+                    difficulty: ['easy', 'medium', 'hard'].includes(t.difficulty) ? t.difficulty : 'medium',
+                    is_milestone: !!t.is_milestone,
+                    milestone_day: t.is_milestone ? (t.milestone_day || null) : null,
+                }));
+                const { error: poolErr } = await supabaseAdmin.from('challenge_task_pool').insert(poolRows);
+                if (poolErr) throw poolErr;
+            }
+
+            // Create tier milestone badges + participant badge
+            const badgeRows: { challenge_id: string; type: string; name: string; description: string; rarity: string; tier_level: string | null }[] = [
+                { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common', tier_level: null },
+            ];
+            for (const tier of tiersArr) {
+                const level = (tier.label || '').toLowerCase();
+                badgeRows.push({
+                    challenge_id: challenge.id,
+                    type: 'tier_milestone',
+                    name: `${name} - ${tier.label}`,
+                    description: `Survived ${tier.days} days of ${name}`,
+                    rarity: level === 'legendary' ? 'legendary' : level === 'gold' ? 'rare' : 'common',
+                    tier_level: level,
+                });
+            }
+            await supabaseAdmin.from('badges').insert(badgeRows);
+
+            return NextResponse.json({
+                success: true, challenge,
+                windows_created: 0,
+                is_tiered: true,
+                tiers: tiersArr,
+                pool_tasks: poolTasks.length,
+            });
+        }
 
         if (is_evergreen) {
             // ── EVERGREEN CHALLENGE ──
