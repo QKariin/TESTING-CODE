@@ -983,7 +983,7 @@ function CreateTab({ allChallenges, onCreate }: {
         { days: 14, label: 'Gold', cost: 7000, cost_soft: 7000, cost_strict: 8000, cost_brutal: 10000, daily_soft: 150, daily_strict: 225, daily_brutal: 300, finish_soft: 1000, finish_strict: 1500, finish_brutal: 2000 },
         { days: 30, label: 'Legendary', cost: 10000, cost_soft: 10000, cost_strict: 12000, cost_brutal: 14000, daily_soft: 200, daily_strict: 300, daily_brutal: 400, finish_soft: 2000, finish_strict: 3000, finish_brutal: 4000 },
     ];
-    const [tiers, setTiers] = useState<typeof PRESET_TIERS>([...PRESET_TIERS]);
+    const [tiers, setTiers] = useState<typeof PRESET_TIERS>([]);
     const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([
         { day: 3, task_name: '' }, { day: 7, task_name: '' },
         { day: 14, task_name: '' }, { day: 30, task_name: '' },
@@ -1306,6 +1306,17 @@ function CreateTab({ allChallenges, onCreate }: {
                         <Divider label="TIERS & PRICING" />
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
+                            {tiers.length === 0 && (
+                                <button type="button" onClick={() => setTiers([...PRESET_TIERS])} style={{
+                                    padding: '24px 18px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.25)',
+                                    background: gradSoft, cursor: 'pointer', textAlign: 'center', transition: 'all 0.25s',
+                                }}
+                                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.5)'; }}
+                                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.25)'; }}>
+                                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.95rem', fontWeight: 600, color: '#1a1a1a', letterSpacing: '2px', marginBottom: 4 }}>LOAD PRESET TEMPLATE</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#999' }}>Bronze 3d · Silver 7d · Gold 14d · Legendary 30d — with difficulty pricing</div>
+                                </button>
+                            )}
                             {tiers.map((tier, i) => {
                                 const updateTier = (key: string, val: any) => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], [key]: val }; return n; });
                                 const numField = (key: string, val: number) => (
