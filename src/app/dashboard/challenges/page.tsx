@@ -969,10 +969,10 @@ function CreateTab({ allChallenges, onCreate }: {
 
     // ── Tiered challenge state ──
     const [tiers, setTiers] = useState([
-        { days: 3, label: 'Bronze', cost: 500 },
-        { days: 7, label: 'Silver', cost: 1000 },
-        { days: 14, label: 'Gold', cost: 2500 },
-        { days: 30, label: 'Legendary', cost: 5000 },
+        { days: 3, label: 'Bronze', cost: 3000 },
+        { days: 7, label: 'Silver', cost: 5000 },
+        { days: 14, label: 'Gold', cost: 10000 },
+        { days: 30, label: 'Legendary', cost: 15000 },
     ]);
     const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([
         { day: 3, task_name: '' }, { day: 7, task_name: '' },
