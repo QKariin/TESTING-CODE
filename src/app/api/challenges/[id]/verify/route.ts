@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { discordChallengeVerified } from '@/lib/discord';
+import { getTierForDays, getDailyCashback, getFinishBonus, TierDef, ChallengeDifficulty, TASKS_PER_DAY } from '@/lib/challenge-tasks';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -17,7 +18,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
         const { data: completion } = await supabaseAdmin
             .from('challenge_completions')
-            .select('*, challenge_windows!challenge_completions_window_id_fkey(id, closes_at, opens_at)')
+            .select('*, challenge_windows!challenge_completions_window_id_fkey(id, day_number, window_number, closes_at, opens_at)')
             .eq('id', completionId).single();
 
         if (!completion) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
@@ -121,20 +122,89 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 `${taskNum}/${totalTasks}`, totalPoints, fasterCount + 1,
             ).catch(() => {});
 
-            // ── TIERED: check if tier is complete ──
+            // ── TIERED: perfect day detection + cashback + tier completion ──
             let tierCompleted: string | null = null;
             let nextTierOffer: any = null;
+            let dailyCashbackAwarded = 0;
+            let finishBonusAwarded = 0;
             if (ch && challenge?.is_tiered && challenge?.tiers) {
                 const { data: part } = await supabaseAdmin.from('challenge_participants')
-                    .select('tier_days, current_tier, rejoin_count')
+                    .select('tier_days, current_tier, rejoin_count, difficulty, perfect_days, coins_earned')
                     .eq('challenge_id', id).ilike('member_id', completion.member_id).maybeSingle();
 
                 if (part?.tier_days) {
-                    const tierTotalTasks = part.tier_days; // 1 task/day
+                    const difficulty: ChallengeDifficulty = (part.difficulty as ChallengeDifficulty) || 'medium';
+                    const tasksPerDay = TASKS_PER_DAY[difficulty] || 3;
+                    const tiers: TierDef[] = challenge.tiers as TierDef[];
+                    const currentTier = getTierForDays(tiers, part.tier_days);
+
+                    // Check if this verification completes a perfect day
+                    const dayNumber = window?.day_number;
+                    if (dayNumber && currentTier) {
+                        // Get all windows for this day
+                        const { data: dayWindows } = await supabaseAdmin
+                            .from('challenge_windows')
+                            .select('id')
+                            .eq('challenge_id', id)
+                            .ilike('member_id', completion.member_id)
+                            .eq('day_number', dayNumber);
+
+                        // Count verified completions that belong to this day's windows
+                        const dayWindowIds = new Set((dayWindows || []).map((w: any) => w.id));
+                        const { data: allMyCompletions } = await supabaseAdmin
+                            .from('challenge_completions')
+                            .select('id, window_id, verified')
+                            .eq('challenge_id', id)
+                            .ilike('member_id', completion.member_id)
+                            .eq('verified', true);
+
+                        const verifiedCountForDay = (allMyCompletions || []).filter(
+                            (c: any) => dayWindowIds.has(c.window_id)
+                        ).length;
+
+                        const totalWindowsForDay = dayWindows?.length || tasksPerDay;
+
+                        if (verifiedCountForDay >= totalWindowsForDay) {
+                            // PERFECT DAY! Award daily cashback
+                            const cashback = getDailyCashback(currentTier, difficulty);
+                            if (cashback > 0) {
+                                // Credit to wallet
+                                const { data: memberProfile } = await supabaseAdmin
+                                    .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                                if (memberProfile) {
+                                    await supabaseAdmin.from('profiles')
+                                        .update({ wallet: (memberProfile.wallet || 0) + cashback })
+                                        .ilike('member_id', completion.member_id);
+                                }
+                                dailyCashbackAwarded = cashback;
+                            }
+                            // Increment perfect_days
+                            await supabaseAdmin.from('challenge_participants').update({
+                                perfect_days: (part.perfect_days || 0) + 1,
+                                coins_earned: (part.coins_earned || 0) + cashback,
+                            }).eq('challenge_id', id).ilike('member_id', completion.member_id);
+                        }
+                    }
+
+                    // Check if full tier is complete
+                    const tierTotalTasks = part.tier_days * tasksPerDay;
                     if (taskNum >= tierTotalTasks) {
                         // Tier complete — mark as finished
+                        const finishBonus = currentTier ? getFinishBonus(currentTier, difficulty) : 0;
+                        if (finishBonus > 0) {
+                            const { data: memberProfile } = await supabaseAdmin
+                                .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                            if (memberProfile) {
+                                await supabaseAdmin.from('profiles')
+                                    .update({ wallet: (memberProfile.wallet || 0) + finishBonus })
+                                    .ilike('member_id', completion.member_id);
+                            }
+                            finishBonusAwarded = finishBonus;
+                        }
+
                         await supabaseAdmin.from('challenge_participants').update({
                             status: 'finished',
+                            coins_earned: (part.coins_earned || 0) + dailyCashbackAwarded + finishBonus,
                         }).eq('challenge_id', id).ilike('member_id', completion.member_id);
 
                         tierCompleted = part.current_tier;
@@ -155,11 +225,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                         const currentIdx = tiersList.findIndex((t: any) => t.days === part.tier_days);
                         if (currentIdx !== -1 && currentIdx < tiersList.length - 1) {
                             const next = tiersList[currentIdx + 1];
-                            const currentCost = tiersList[currentIdx].cost || 0;
                             nextTierOffer = {
                                 label: next.label,
                                 days: next.days,
-                                cost: Math.max(0, next.cost - currentCost),
+                                cost_soft: (next.cost_soft || next.cost || 0) - (tiersList[currentIdx].cost_soft || tiersList[currentIdx].cost || 0),
+                                cost_strict: (next.cost_strict || next.cost || 0) - (tiersList[currentIdx].cost_strict || tiersList[currentIdx].cost || 0),
+                                cost_brutal: (next.cost_brutal || next.cost || 0) - (tiersList[currentIdx].cost_brutal || tiersList[currentIdx].cost || 0),
                             };
                         }
 
@@ -171,6 +242,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                                 challengeName: challenge.name || '',
                                 winnerName: (prof as any)?.name || completion.member_id.split('@')[0],
                                 days: part.tier_days,
+                                difficulty: part.difficulty,
+                                finishBonus: finishBonusAwarded,
                                 nextTier: nextTierOffer,
                             };
                             await supabaseAdmin.from('global_messages').insert({
@@ -185,6 +258,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             return NextResponse.json({
                 success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1,
                 tier_completed: tierCompleted, next_tier: nextTierOffer,
+                daily_cashback: dailyCashbackAwarded, finish_bonus: finishBonusAwarded,
             });
         } else {
             if (windowStillOpen) {

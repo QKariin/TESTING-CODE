@@ -52,6 +52,7 @@ export async function POST(request: Request) {
             evergreen_join_cost = null, evergreen_rejoin_cost = 1000,
             // Tiered fields
             is_tiered = false, tiers = null, task_pool = null,
+            daily_task = null,
         } = body;
 
         // Classic challenges require start_date; evergreen don't
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
                     name, theme, description, status: 'active', is_template: false,
                     is_evergreen: true, is_tiered: true,
                     tiers: tiersArr,
+                    daily_task: daily_task || 'Morning photo check-in',
                     duration_days: maxDays, tasks_per_day: 1,
                     window_minutes: Number(slot_duration_minutes) || 360,
                     slot_duration_minutes: Number(slot_duration_minutes) || 360,

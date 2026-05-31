@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateEvergreenWindows, TimeSlot } from '@/lib/evergreen-windows';
 import { discordChallengeJoin } from '@/lib/discord';
-import { assignTasksForDays, getTierForDays, TierDef, ChallengeDifficulty } from '@/lib/challenge-tasks';
+import { assignTasksForDays, getTierForDays, getTierCost, TierDef, ChallengeDifficulty, TASKS_PER_DAY } from '@/lib/challenge-tasks';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -49,13 +49,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 return NextResponse.json({ success: false, error: `Invalid tier: ${tierDays} days` }, { status: 400 });
             }
 
-            // Validate slots (tiered = 1 task/day = 1 slot)
-            const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
-            const cleanSlots = chosenSlots.filter(s => validSlots.includes(s)).slice(0, 1);
-            if (cleanSlots.length === 0) cleanSlots.push('morning');
+            // Determine tasks per day based on difficulty
+            const tasksPerDay = TASKS_PER_DAY[difficulty] || 3;
+            const poolTasksPerDay = tasksPerDay - 1; // first task is always morning photo
 
-            // Charge tier cost
-            const joinCost = selectedTier.cost;
+            // Validate slots — need enough slots for tasks
+            const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
+            const cleanSlots = chosenSlots.filter(s => validSlots.includes(s));
+            // Auto-assign slots based on tasks per day
+            const allSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
+            const neededSlots = Math.min(tasksPerDay, 3);
+            const finalSlots = cleanSlots.length >= neededSlots ? cleanSlots.slice(0, neededSlots) : allSlots.slice(0, neededSlots);
+
+            // Charge tier cost (per-difficulty pricing)
+            const joinCost = getTierCost(selectedTier, difficulty);
             const currentWallet = profile.wallet ?? 0;
             if (currentWallet < joinCost) {
                 return NextResponse.json({
@@ -90,19 +97,28 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             });
             if (joinErr) throw joinErr;
 
-            // Assign tasks from pool (filtered by difficulty)
-            const assignments = await assignTasksForDays(challengeId, memberId, 1, tierDays, 1, difficulty);
+            // Assign pool tasks (filtered by difficulty, multiple per day)
+            const assignments = await assignTasksForDays(challengeId, memberId, 1, tierDays, 1, difficulty, poolTasksPerDay);
 
-            // Generate personal windows
+            // Generate personal windows — one per slot per day
             const slotMinutes = challenge.slot_duration_minutes || challenge.window_minutes || 360;
             const windows = generateEvergreenWindows(
                 challengeId, memberId, now, timezone,
-                cleanSlots, tierDays, slotMinutes,
+                finalSlots, tierDays, slotMinutes,
             );
 
             // Bake task names into windows
+            // Window 1 each day = daily morning task, rest = pool assignments
+            const dailyTask = challenge.daily_task || 'Morning photo check-in';
             const windowsWithTasks = windows.map(w => {
-                const assignment = assignments.find(a => a.day_number === w.day_number);
+                if (w.window_number === 1) {
+                    // First window each day = morning photo
+                    return { ...w, task_name: dailyTask };
+                }
+                // Remaining windows get pool task assignments
+                const dayAssignments = assignments.filter(a => a.day_number === w.day_number);
+                const poolIndex = w.window_number - 2; // 0-based index into pool tasks
+                const assignment = dayAssignments[poolIndex];
                 return { ...w, task_name: assignment?.task_name || null };
             });
 

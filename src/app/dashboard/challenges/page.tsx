@@ -967,12 +967,14 @@ function CreateTab({ allChallenges, onCreate }: {
         is_tiered: false,
     });
 
+    const [dailyTask, setDailyTask] = useState('Morning photo check-in');
+
     // ── Tiered challenge state ──
     const [tiers, setTiers] = useState([
-        { days: 3, label: 'Bronze', cost: 3000 },
-        { days: 7, label: 'Silver', cost: 5000 },
-        { days: 14, label: 'Gold', cost: 10000 },
-        { days: 30, label: 'Legendary', cost: 15000 },
+        { days: 3, label: 'Bronze', cost: 3000, cost_soft: 3000, cost_strict: 3500, cost_brutal: 4500, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 },
+        { days: 7, label: 'Silver', cost: 4500, cost_soft: 4500, cost_strict: 5000, cost_brutal: 6500, daily_soft: 100, daily_strict: 150, daily_brutal: 200, finish_soft: 500, finish_strict: 750, finish_brutal: 1000 },
+        { days: 14, label: 'Gold', cost: 7000, cost_soft: 7000, cost_strict: 8000, cost_brutal: 10000, daily_soft: 150, daily_strict: 225, daily_brutal: 300, finish_soft: 1000, finish_strict: 1500, finish_brutal: 2000 },
+        { days: 30, label: 'Legendary', cost: 10000, cost_soft: 10000, cost_strict: 12000, cost_brutal: 14000, daily_soft: 200, daily_strict: 300, daily_brutal: 400, finish_soft: 2000, finish_strict: 3000, finish_brutal: 4000 },
     ]);
     const [milestoneTasks, setMilestoneTasks] = useState<{ day: number; task_name: string }[]>([
         { day: 3, task_name: '' }, { day: 7, task_name: '' },
@@ -1090,6 +1092,7 @@ function CreateTab({ allChallenges, onCreate }: {
                     task_pool: [...milestones, ...pool],
                     slot_duration_minutes: form.slot_duration_minutes,
                     evergreen_rejoin_cost: form.evergreen_rejoin_cost,
+                    daily_task: dailyTask,
                 });
             } else if (form.is_evergreen) {
                 await onCreate({
@@ -1274,14 +1277,30 @@ function CreateTab({ allChallenges, onCreate }: {
                 {/* TIERED CONFIG */}
                 {form.is_tiered && (
                     <>
-                        <Divider label="TIERS" />
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 20 }}>
-                            {tiers.map((tier, i) => (
+                        {/* Daily morning task */}
+                        <Divider label="DAILY TASK" />
+                        <div style={{ marginBottom: 20 }}>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 8 }}>EVERY DAY — FIRST TASK (MORNING PHOTO)</div>
+                            <input className="forge-input" placeholder="e.g. Morning photo check-in" value={dailyTask} onChange={e => setDailyTask(e.target.value)} />
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>
+                                Soft = 2 tasks/day (1 photo + 1 pool) &middot; Strict = 3 tasks/day &middot; Brutal = 5 tasks/day
+                            </div>
+                        </div>
+
+                        <Divider label="TIERS & PRICING" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
+                            {tiers.map((tier, i) => {
+                                const updateTier = (key: string, val: any) => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], [key]: val }; return n; });
+                                const numField = (key: string, val: number, _color?: string) => (
+                                    <input type="number" className="forge-num" min={0} value={val}
+                                        onChange={e => updateTier(key, Number(e.target.value))}
+                                        style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
+                                );
+                                return (
                                 <div key={i} style={{
                                     padding: '22px 18px', borderRadius: 18, position: 'relative',
                                     background: gradSoft,
                                     border: '1px solid rgba(255,0,237,0.12)',
-                                    transition: 'all 0.25s',
                                     boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
                                 }}>
                                     {tiers.length > 1 && (
@@ -1290,24 +1309,62 @@ function CreateTab({ allChallenges, onCreate }: {
                                             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#dc2626'; }}
                                             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#ccc'; }}>{'\u00D7'}</button>
                                     )}
-                                    <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{tierEmoji(tier.label)}</div>
-                                    <input className="forge-input" value={tier.label} placeholder="Tier name"
-                                        onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], label: e.target.value }; return n; })}
-                                        style={{ background: 'rgba(255,255,255,0.6)', border: 'none', fontFamily: "'Cinzel', serif", fontSize: '0.95rem', letterSpacing: '2px', padding: '8px 12px', marginBottom: 14 }} />
-                                    <div style={{ display: 'flex', gap: 16 }}>
-                                        <div style={{ flex: 1, textAlign: 'center' }}>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: PINK, letterSpacing: '2px', marginBottom: 6 }}>DAYS</div>
+                                    {/* Tier header: emoji + name + days */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                                        <div style={{ fontSize: '1.6rem' }}>{tierEmoji(tier.label)}</div>
+                                        <input className="forge-input" value={tier.label} placeholder="Tier name"
+                                            onChange={e => updateTier('label', e.target.value)}
+                                            style={{ flex: 1, background: 'rgba(255,255,255,0.6)', border: 'none', fontFamily: "'Cinzel', serif", fontSize: '0.95rem', letterSpacing: '2px', padding: '8px 12px' }} />
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: PINK, letterSpacing: '2px' }}>DAYS</div>
                                             <input type="number" className="forge-num" min={1} max={365} value={tier.days}
-                                                onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], days: Number(e.target.value) }; return n; })} />
-                                        </div>
-                                        <div style={{ flex: 1, textAlign: 'center' }}>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: BLUE, letterSpacing: '2px', marginBottom: 6 }}>COST</div>
-                                            <input type="number" className="forge-num" min={0} value={tier.cost}
-                                                onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], cost: Number(e.target.value) }; return n; })} />
+                                                onChange={e => updateTier('days', Number(e.target.value))}
+                                                style={{ width: 60, fontSize: '1.3rem' }} />
                                         </div>
                                     </div>
-                                    {/* Milestone task — prominent */}
-                                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '2px solid rgba(255,0,237,0.12)' }}>
+
+                                    {/* Pricing grid: Soft / Strict / Brutal */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr', gap: '6px 8px', alignItems: 'center' }}>
+                                        {/* Column headers */}
+                                        <div />
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#16a34a', letterSpacing: '1px', textAlign: 'center' }}>SOFT</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#ca8a04', letterSpacing: '1px', textAlign: 'center' }}>STRICT</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#dc2626', letterSpacing: '1px', textAlign: 'center' }}>BRUTAL</div>
+                                        {/* Entry cost row */}
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>ENTRY</div>
+                                        {numField('cost_soft', tier.cost_soft ?? tier.cost, '#16a34a')}
+                                        {numField('cost_strict', tier.cost_strict ?? tier.cost, '#ca8a04')}
+                                        {numField('cost_brutal', tier.cost_brutal ?? tier.cost, '#dc2626')}
+                                        {/* Daily cashback row */}
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>DAILY</div>
+                                        {numField('daily_soft', tier.daily_soft ?? 0, '#16a34a')}
+                                        {numField('daily_strict', tier.daily_strict ?? 0, '#ca8a04')}
+                                        {numField('daily_brutal', tier.daily_brutal ?? 0, '#dc2626')}
+                                        {/* Finish bonus row */}
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>FINISH</div>
+                                        {numField('finish_soft', tier.finish_soft ?? 0, '#16a34a')}
+                                        {numField('finish_strict', tier.finish_strict ?? 0, '#ca8a04')}
+                                        {numField('finish_brutal', tier.finish_brutal ?? 0, '#dc2626')}
+                                    </div>
+
+                                    {/* Return % preview */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr', gap: '2px 8px', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: '#bbb', letterSpacing: '1px' }}>RETURN</div>
+                                        {(['soft', 'strict', 'brutal'] as const).map(d => {
+                                            const cost = (tier as any)[`cost_${d}`] ?? tier.cost;
+                                            const daily = (tier as any)[`daily_${d}`] ?? 0;
+                                            const finish = (tier as any)[`finish_${d}`] ?? 0;
+                                            const total = daily * tier.days + finish;
+                                            const pct = cost > 0 ? Math.round((total / cost) * 100) : 0;
+                                            return <div key={d} style={{
+                                                fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center',
+                                                color: pct > 100 ? '#16a34a' : pct >= 80 ? '#ca8a04' : '#999',
+                                            }}>{pct}%</div>;
+                                        })}
+                                    </div>
+
+                                    {/* Milestone task */}
+                                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '2px solid rgba(255,0,237,0.12)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: PINK }} />
                                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 700, color: PINK, letterSpacing: '2px' }}>MILESTONE TASK</div>
@@ -1325,19 +1382,20 @@ function CreateTab({ allChallenges, onCreate }: {
                                             style={{ background: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', padding: '10px 14px' }} />
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                             {/* Add tier */}
                             <button type="button" onClick={() => {
                                 const maxDay = Math.max(...tiers.map(t => t.days), 0);
-                                setTiers(prev => [...prev, { days: maxDay + 7, label: `Tier ${prev.length + 1}`, cost: 1000 }]);
+                                setTiers(prev => [...prev, { days: maxDay + 7, label: `Tier ${prev.length + 1}`, cost: 1000, cost_soft: 1000, cost_strict: 1500, cost_brutal: 2000, daily_soft: 0, daily_strict: 0, daily_brutal: 0, finish_soft: 0, finish_strict: 0, finish_brutal: 0 }]);
                             }} style={{
-                                padding: '28px 14px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.15)',
-                                background: 'transparent', cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 200, transition: 'all 0.25s',
+                                padding: '20px 14px', borderRadius: 18, border: '2px dashed rgba(255,0,237,0.15)',
+                                background: 'transparent', cursor: 'pointer', display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.25s',
                             }}
                                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.4)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,0,237,0.02)'; }}
                                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,237,0.15)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                                <div style={{ fontSize: '2rem', background: gradMain, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', opacity: 0.5 }}>+</div>
+                                <div style={{ fontSize: '1.5rem', background: gradMain, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', opacity: 0.5 }}>+</div>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#bbb', letterSpacing: '3px' }}>ADD TIER</div>
                             </button>
                         </div>

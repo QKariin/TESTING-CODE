@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateEvergreenWindows, TimeSlot } from '@/lib/evergreen-windows';
-import { assignTasksForDays, getNextTier, TierDef, ChallengeDifficulty } from '@/lib/challenge-tasks';
+import { assignTasksForDays, getNextTier, getTierCost, TierDef, ChallengeDifficulty, TASKS_PER_DAY } from '@/lib/challenge-tasks';
 
 /**
  * POST /api/challenges/[id]/extend
@@ -48,9 +48,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const nextTier = getNextTier(tiers, currentTierDays);
         if (!nextTier) return NextResponse.json({ success: false, error: 'Already at max tier' }, { status: 400 });
 
-        // Cost = next tier cost minus what they already paid
-        const currentTierCost = tiers.find(t => t.days === currentTierDays)?.cost || 0;
-        const extensionCost = Math.max(0, nextTier.cost - currentTierCost);
+        // Cost = next tier cost minus what they already paid (per-difficulty)
+        const difficulty: ChallengeDifficulty = participant.difficulty || 'medium';
+        const currentTierObj = tiers.find(t => t.days === currentTierDays);
+        const currentTierCost = currentTierObj ? getTierCost(currentTierObj, difficulty) : 0;
+        const nextTierCost = getTierCost(nextTier, difficulty);
+        const extensionCost = Math.max(0, nextTierCost - currentTierCost);
 
         const wallet = profile.wallet ?? 0;
         if (wallet < extensionCost) {
@@ -71,8 +74,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const startDay = currentTierDays + 1;
         const endDay = nextTier.days;
         const attemptNumber = (participant.rejoin_count || 0) + 1;
-        const difficulty: ChallengeDifficulty = participant.difficulty || 'medium';
-        const assignments = await assignTasksForDays(challengeId, memberId, startDay, endDay, attemptNumber, difficulty);
+        const tasksPerDay = TASKS_PER_DAY[difficulty] || 3;
+        const poolTasksPerDay = tasksPerDay - 1;
+        const assignments = await assignTasksForDays(challengeId, memberId, startDay, endDay, attemptNumber, difficulty, poolTasksPerDay);
 
         // Generate windows for new days
         const timezone = participant.timezone || profile.timezone || 'UTC';
@@ -89,12 +93,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             chosenSlots, endDay - currentTierDays, slotMinutes,
         );
 
-        // Fix day numbers (generateEvergreenWindows starts from 1, we need startDay..endDay)
-        const fixedWindows = newWindows.map((w, i) => ({
-            ...w,
-            day_number: w.day_number + currentTierDays,
-            task_name: assignments[i]?.task_name || null,
-        }));
+        // Fix day numbers and bake in task names
+        const dailyTask = challenge.daily_task || 'Morning photo check-in';
+        const fixedWindows = newWindows.map(w => {
+            const fixedDay = w.day_number + currentTierDays;
+            if (w.window_number === 1) {
+                return { ...w, day_number: fixedDay, task_name: dailyTask };
+            }
+            const dayAssignments = assignments.filter(a => a.day_number === fixedDay);
+            const poolIndex = w.window_number - 2;
+            const assignment = dayAssignments[poolIndex];
+            return { ...w, day_number: fixedDay, task_name: assignment?.task_name || null };
+        });
 
         const { error: wErr } = await supabaseAdmin.from('challenge_windows').insert(fixedWindows);
         if (wErr) throw wErr;
