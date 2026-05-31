@@ -1114,299 +1114,257 @@ function CreateTab({ allChallenges, onCreate }: {
         { key: 'purple', label: 'PURPLE' }, { key: 'blue', label: 'BLUE' },
     ];
 
+    const accentColor = form.is_tiered ? '#a855f7' : form.is_evergreen ? '#4ade80' : '#c5a059';
+    const accentDim = form.is_tiered ? 'rgba(168,85,247,' : form.is_evergreen ? 'rgba(74,222,128,' : 'rgba(197,160,89,';
+    const tierEmoji = (label: string) => label === 'Bronze' ? '\u{1F949}' : label === 'Silver' ? '\u{1F948}' : label === 'Gold' ? '\u{1F947}' : '\u{1F451}';
+    const tierGrad = (i: number) => {
+        const grads = ['linear-gradient(135deg, #cd7f3220, #8b451320)', 'linear-gradient(135deg, #c0c0c020, #71717120)', 'linear-gradient(135deg, #ffd70020, #b8860b20)', 'linear-gradient(135deg, #a855f720, #6d28d920)'];
+        return grads[i % grads.length];
+    };
+    const tierBorder = (i: number) => {
+        const borders = ['rgba(205,127,50,0.3)', 'rgba(192,192,192,0.3)', 'rgba(255,215,0,0.3)', 'rgba(168,85,247,0.4)'];
+        return borders[i % borders.length];
+    };
+    const diffColor = (d: string) => d === 'easy' ? '#4ade80' : d === 'hard' ? '#ef4444' : '#c5a059';
+    const diffDot = (d: string) => <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: diffColor(d), marginRight: 6, boxShadow: `0 0 6px ${diffColor(d)}60` }} />;
+
+    const SectionLabel = ({ step, label, sub, color }: { step: number; label: string; sub?: string; color?: string }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${color || accentColor}18`, border: `1px solid ${color || accentColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: color || accentColor, fontWeight: 700, flexShrink: 0 }}>{step}</div>
+            <div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.85rem', color: color || accentColor, letterSpacing: '3px', textTransform: 'uppercase' as const }}>{label}</div>
+                {sub && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: '#555', marginTop: 1 }}>{sub}</div>}
+            </div>
+        </div>
+    );
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            <div className="ch-section-header">
-                <div>
-                    <div className="ch-section-title">CREATE CHALLENGE</div>
-                    <div className="ch-section-sub">All challenges are saved as templates for reuse</div>
-                </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {/* Header */}
+            <div style={{ marginBottom: 32 }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: '1.6rem', color: accentColor, letterSpacing: '5px' }}>FORGE A CHALLENGE</div>
+                <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, ${accentColor}, transparent)`, marginTop: 8 }} />
             </div>
 
-            {/* Past challenges */}
+            {/* Past challenges - compact */}
             {allChallenges.length > 0 && (
-                <div>
-                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#555', letterSpacing: '2px', marginBottom: 12 }}>USE A PAST CHALLENGE</div>
-                    <div className="ch-templates-grid">
+                <div style={{ marginBottom: 28 }}>
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', letterSpacing: '3px', marginBottom: 10 }}>REUSE A PREVIOUS DESIGN</div>
+                    <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
                         {allChallenges.map(c => (
-                            <div key={c.id} className="ch-template-card" onClick={() => prefill(c)}>
-                                <span className={`ch-template-badge badge-${c.status}`}>{c.status.toUpperCase()}</span>
-                                {(c as any).is_evergreen && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#4ade80', letterSpacing: '1px', marginLeft: 8 }}>EVERGREEN</span>}
-                                <div className="ch-template-name">{c.name}</div>
-                                <div className="ch-template-meta">
-                                    <span>{c.duration_days} days · {c.tasks_per_day}×/day · {c.window_minutes}min windows</span>
-                                    <span style={{ color: themeColor(c.theme) }}>◉ {c.theme.toUpperCase()}</span>
-                                    {c.participant_total != null && <span>{c.participant_total} participants</span>}
-                                </div>
+                            <div key={c.id} onClick={() => prefill(c)} style={{ flexShrink: 0, padding: '10px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s', minWidth: 160 }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = accentColor + '60'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#ddd', marginBottom: 3 }}>{c.name}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#555' }}>{c.duration_days}d · {c.tasks_per_day}x · <span style={{ color: themeColor(c.theme) }}>{c.theme}</span></div>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Form */}
-            <div className="ch-card">
-                <div className="ch-form">
-                    {/* Name + Theme */}
-                    <div className="ch-form-grid">
+            {/* ─── STEP 1: IDENTITY ─── */}
+            <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 16, padding: '28px 28px 24px', marginBottom: 2 }}>
+                <SectionLabel step={1} label="Identity" sub="Name, theme, and cover image" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'start' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         <div className="ch-field">
                             <label className="ch-label">CHALLENGE NAME</label>
-                            <input className="ch-input" placeholder="e.g. Iron Week" value={form.name} onChange={e => set('name', e.target.value)} />
+                            <input className="ch-input" placeholder="e.g. Chastity Challenge" value={form.name} onChange={e => set('name', e.target.value)} style={{ fontSize: '1.1rem', padding: '12px 16px' }} />
                         </div>
                         <div className="ch-field">
-                            <label className="ch-label">THEME</label>
-                            <div className="ch-theme-row">
-                                {themes.map(t => (
-                                    <button key={t.key} type="button" className={`ch-theme-chip ${form.theme === t.key ? 'active' : ''}`} data-theme={t.key} onClick={() => set('theme', t.key)}>
-                                        <div className="dot" />
-                                        {t.label}
-                                    </button>
-                                ))}
-                            </div>
+                            <label className="ch-label">DESCRIPTION</label>
+                            <textarea className="ch-input" placeholder="What is this challenge about..." value={form.description} onChange={e => set('description', e.target.value)} style={{ minHeight: 60 }} />
                         </div>
                     </div>
-
-                    {/* Description */}
-                    <div className="ch-field">
-                        <label className="ch-label">DESCRIPTION (OPTIONAL)</label>
-                        <textarea className="ch-input" placeholder="What is this challenge about..." value={form.description} onChange={e => set('description', e.target.value)} />
-                    </div>
-
-                    {/* Challenge Type Toggle */}
-                    <div className="ch-field">
-                        <label className="ch-label">CHALLENGE TYPE</label>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            {[
-                                { key: 'classic', label: 'CLASSIC', sub: 'Fixed start, shared windows', color: '#c5a059', active: !form.is_evergreen && !form.is_tiered },
-                                { key: 'evergreen', label: 'EVERGREEN', sub: 'Join anytime, personal timeline', color: '#4ade80', active: form.is_evergreen && !form.is_tiered },
-                                { key: 'tiered', label: 'TIERED', sub: 'Tiers + task pool + badges', color: '#a855f7', active: form.is_tiered },
-                            ].map(t => (
-                                <button key={t.key} type="button" onClick={() => {
-                                    if (t.key === 'classic') { set('is_evergreen', false); set('is_tiered', false); }
-                                    else if (t.key === 'evergreen') { set('is_evergreen', true); set('is_tiered', false); }
-                                    else { set('is_evergreen', true); set('is_tiered', true); set('tasks_per_day', 1); }
-                                }}
-                                    style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${t.active ? t.color + '80' : 'rgba(255,255,255,0.06)'}`, background: t.active ? t.color + '14' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
-                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: t.active ? t.color : '#555', letterSpacing: '2px', marginBottom: 4 }}>{t.label}</div>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>{t.sub}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+                        <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
+                        <div onClick={() => !imageUploading && imageInputRef.current?.click()} style={{ width: 110, height: 110, borderRadius: 14, border: `1px dashed ${form.image_url ? accentColor + '60' : 'rgba(255,255,255,0.1)'}`, background: form.image_url ? 'transparent' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                            {form.image_url ? (
+                                <>
+                                    <img src={form.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                    <button type="button" onClick={e => { e.stopPropagation(); set('image_url', ''); }} style={{ position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>x</button>
+                                </>
+                            ) : (
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.4rem', opacity: 0.2, marginBottom: 4 }}>+</div>
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#444', letterSpacing: '1px' }}>COVER</div>
+                                </div>
+                            )}
+                        </div>
+                        {imageError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#e03030' }}>{imageError}</div>}
+                        <div className="ch-theme-row" style={{ gap: 6 }}>
+                            {themes.map(t => (
+                                <button key={t.key} type="button" onClick={() => set('theme', t.key)}
+                                    style={{ width: 22, height: 22, borderRadius: '50%', border: `2px solid ${form.theme === t.key ? themeColor(t.key) : 'rgba(255,255,255,0.08)'}`, background: themeColor(t.key) + '30', cursor: 'pointer', padding: 0, transition: 'all 0.2s', boxShadow: form.theme === t.key ? `0 0 10px ${themeColor(t.key)}40` : 'none' }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: themeColor(t.key), margin: 'auto' }} />
                                 </button>
                             ))}
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Cover Image */}
-                    <div className="ch-field">
-                        <label className="ch-label">COVER IMAGE (OPTIONAL)</label>
-                        <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                            {form.image_url ? (
-                                <div style={{ position: 'relative', flexShrink: 0 }}>
-                                    <img src={form.image_url} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '2px solid rgba(74,222,128,0.4)' }} alt="cover" />
-                                    <button type="button" onClick={() => { set('image_url', ''); setImageError(''); }} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#e03030', border: 'none', color: '#fff', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>✕</button>
+            {/* ─── STEP 2: TYPE ─── */}
+            <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderRadius: '0 0 0 0', padding: '28px 28px 24px', marginBottom: 2 }}>
+                <SectionLabel step={2} label="Challenge Type" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                    {[
+                        { key: 'classic', label: 'CLASSIC', sub: 'Shared windows, fixed start', icon: '\u25C9', color: '#c5a059' },
+                        { key: 'evergreen', label: 'EVERGREEN', sub: 'Personal timeline, join anytime', icon: '\u221E', color: '#4ade80' },
+                        { key: 'tiered', label: 'TIERED', sub: 'Tiers, task pool, badges', icon: '\u2666', color: '#a855f7' },
+                    ].map(t => {
+                        const active = t.key === 'tiered' ? form.is_tiered : t.key === 'evergreen' ? (form.is_evergreen && !form.is_tiered) : (!form.is_evergreen && !form.is_tiered);
+                        return (
+                            <button key={t.key} type="button" onClick={() => {
+                                if (t.key === 'classic') { set('is_evergreen', false); set('is_tiered', false); }
+                                else if (t.key === 'evergreen') { set('is_evergreen', true); set('is_tiered', false); }
+                                else { set('is_evergreen', true); set('is_tiered', true); set('tasks_per_day', 1); }
+                            }} style={{ padding: '18px 14px', borderRadius: 12, border: `1px solid ${active ? t.color + '60' : 'rgba(255,255,255,0.04)'}`, background: active ? `linear-gradient(135deg, ${t.color}10, ${t.color}05)` : 'transparent', cursor: 'pointer', textAlign: 'center', transition: 'all 0.25s' }}>
+                                <div style={{ fontSize: '1.2rem', color: active ? t.color : '#333', marginBottom: 8, transition: 'all 0.25s' }}>{t.icon}</div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: active ? t.color : '#555', letterSpacing: '2px', marginBottom: 4, transition: 'all 0.25s' }}>{t.label}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.68rem', color: '#444', lineHeight: 1.3 }}>{t.sub}</div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* ─── STEP 3: CONFIGURATION (varies by type) ─── */}
+            <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderRadius: '0 0 0 0', padding: '28px 28px 24px', marginBottom: 2 }}>
+
+                {/* ── TIERED CONFIG ── */}
+                {form.is_tiered && (
+                    <>
+                        <SectionLabel step={3} label="Tiers" sub="Define commitment levels and pricing" color="#a855f7" />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 20 }}>
+                            {tiers.map((tier, i) => (
+                                <div key={i} style={{ padding: '18px 16px', borderRadius: 14, background: tierGrad(i), border: `1px solid ${tierBorder(i)}`, position: 'relative', transition: 'all 0.2s' }}>
+                                    {tiers.length > 1 && (
+                                        <button type="button" onClick={() => setTiers(prev => prev.filter((_, j) => j !== i))}
+                                            style={{ position: 'absolute', top: 8, right: 10, background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '0.7rem', padding: 0 }}>x</button>
+                                    )}
+                                    <div style={{ fontSize: '1.6rem', marginBottom: 8 }}>{tierEmoji(tier.label)}</div>
+                                    <input className="ch-input" value={tier.label} placeholder="Tier name"
+                                        onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], label: e.target.value }; return n; })}
+                                        style={{ background: 'rgba(0,0,0,0.3)', border: 'none', fontSize: '0.95rem', fontFamily: "'Cinzel', serif", letterSpacing: '2px', padding: '6px 10px', marginBottom: 10 }} />
+                                    <div style={{ display: 'flex', gap: 12 }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#666', letterSpacing: '2px', marginBottom: 4 }}>DAYS</div>
+                                            <input type="number" className="ch-input" min={1} max={365} value={tier.days}
+                                                onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], days: Number(e.target.value) }; return n; })}
+                                                style={{ background: 'rgba(0,0,0,0.3)', border: 'none', textAlign: 'center', fontFamily: 'Orbitron, monospace', fontSize: '1rem', fontWeight: 700, padding: '6px' }} />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#666', letterSpacing: '2px', marginBottom: 4 }}>COST</div>
+                                            <input type="number" className="ch-input" min={0} value={tier.cost}
+                                                onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], cost: Number(e.target.value) }; return n; })}
+                                                style={{ background: 'rgba(0,0,0,0.3)', border: 'none', textAlign: 'center', fontFamily: 'Orbitron, monospace', fontSize: '1rem', fontWeight: 700, padding: '6px' }} />
+                                        </div>
+                                    </div>
+                                    {/* Milestone task inline */}
+                                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.28rem', color: '#666', letterSpacing: '2px', marginBottom: 4 }}>MILESTONE TASK</div>
+                                        <input className="ch-input" placeholder={`Day ${tier.days} final task...`}
+                                            value={milestoneTasks.find(m => m.day === tier.days)?.task_name || ''}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                setMilestoneTasks(prev => {
+                                                    const existing = prev.find(m => m.day === tier.days);
+                                                    if (existing) return prev.map(m => m.day === tier.days ? { ...m, task_name: val } : m);
+                                                    return [...prev, { day: tier.days, task_name: val }];
+                                                });
+                                            }}
+                                            style={{ background: 'rgba(0,0,0,0.3)', border: 'none', fontSize: '0.8rem', padding: '6px 10px' }} />
+                                    </div>
                                 </div>
-                            ) : null}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <button type="button" onClick={() => imageInputRef.current?.click()}
-                                    style={{ padding: '10px 18px', background: form.image_url ? 'rgba(74,222,128,0.06)' : 'rgba(197,160,89,0.06)', border: `1px solid ${form.image_url ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: imageUploading ? '#555' : form.image_url ? '#4ade80' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', letterSpacing: '1.5px', cursor: imageUploading ? 'default' : 'pointer' }}
-                                    disabled={imageUploading}>
-                                    {imageUploading ? '⏳ UPLOADING...' : form.image_url ? '✓ UPLOADED - CHANGE?' : '⬆ UPLOAD COVER'}
-                                </button>
-                                {imageError && (
-                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#e03030', letterSpacing: '1px' }}>⚠ {imageError}</div>
-                                )}
-                            </div>
+                            ))}
+                            {/* Add tier card */}
+                            <button type="button" onClick={() => {
+                                const maxDay = Math.max(...tiers.map(t => t.days), 0);
+                                setTiers(prev => [...prev, { days: maxDay + 7, label: `Tier ${prev.length + 1}`, cost: 1000 }]);
+                            }} style={{ padding: '28px 14px', borderRadius: 14, border: '1px dashed rgba(168,85,247,0.2)', background: 'transparent', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 180, transition: 'all 0.2s' }}
+                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#a855f7'; }}
+                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.2)'; }}>
+                                <div style={{ fontSize: '1.8rem', color: '#a855f730' }}>+</div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#555', letterSpacing: '2px' }}>ADD TIER</div>
+                            </button>
                         </div>
-                    </div>
 
-                    {/* Schedule */}
-                    {form.is_tiered ? null : form.is_evergreen ? (
-                        <div className="ch-form-grid">
-                            <div className="ch-field">
-                                <label className="ch-label">DURATION (DAYS)</label>
-                                <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} />
+                        {/* Settings row */}
+                        <div style={{ display: 'flex', gap: 16, marginBottom: 0 }}>
+                            <div className="ch-field" style={{ flex: 1 }}>
+                                <label className="ch-label">SLOT DURATION</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <input type="number" className="ch-input" min={30} max={360} value={form.slot_duration_minutes} onChange={e => set('slot_duration_minutes', Math.min(360, Math.max(30, Number(e.target.value))))} style={{ textAlign: 'center' }} />
+                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#444' }}>MIN</span>
+                                </div>
                             </div>
-                            <div className="ch-field">
-                                <label className="ch-label">TASKS PER DAY</label>
-                                <input type="number" className="ch-input" min={1} max={3} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(3, Math.max(1, Number(e.target.value))))} />
+                            <div className="ch-field" style={{ flex: 1 }}>
+                                <label className="ch-label">REJOIN COST</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <input type="number" className="ch-input" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} style={{ textAlign: 'center' }} />
+                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#444' }}>COINS</span>
+                                </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="ch-form-grid-3">
+                    </>
+                )}
+
+                {/* ── EVERGREEN CONFIG ── */}
+                {form.is_evergreen && !form.is_tiered && (
+                    <>
+                        <SectionLabel step={3} label="Schedule" sub="Duration, frequency, and costs" color="#4ade80" />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                            <div className="ch-field">
+                                <label className="ch-label">DURATION</label>
+                                <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }} />
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#555', textAlign: 'center', letterSpacing: '2px', marginTop: 4 }}>DAYS</div>
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">TASKS / DAY</label>
+                                <input type="number" className="ch-input" min={1} max={3} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(3, Math.max(1, Number(e.target.value))))} style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }} />
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#555', textAlign: 'center', letterSpacing: '2px', marginTop: 4 }}>SLOTS</div>
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">SLOT DURATION</label>
+                                <input type="number" className="ch-input" min={30} max={360} value={form.slot_duration_minutes} onChange={e => set('slot_duration_minutes', Math.min(360, Math.max(30, Number(e.target.value))))} style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }} />
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#555', textAlign: 'center', letterSpacing: '2px', marginTop: 4 }}>MINUTES</div>
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
+                            <div className="ch-field">
+                                <label className="ch-label">JOIN COST (COINS)</label>
+                                <input type="number" className="ch-input" min={0} value={form.evergreen_join_cost} onChange={e => set('evergreen_join_cost', Number(e.target.value))} />
+                                {form.evergreen_join_cost === 0 && <div style={{ fontFamily: 'Rajdhani', fontSize: '0.7rem', color: '#4ade80', marginTop: 3 }}>Auto: {form.duration_days <= 7 ? '2,000' : form.duration_days <= 14 ? '5,000' : '10,000'}</div>}
+                            </div>
+                            <div className="ch-field">
+                                <label className="ch-label">REJOIN COST (COINS)</label>
+                                <input type="number" className="ch-input" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} />
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* ── CLASSIC CONFIG ── */}
+                {!form.is_evergreen && !form.is_tiered && (
+                    <>
+                        <SectionLabel step={3} label="Schedule" sub="Duration, tasks, and start date" color="#c5a059" />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
                             <div className="ch-field">
                                 <label className="ch-label">DURATION (DAYS)</label>
                                 <input type="number" className="ch-input" min={1} max={30} value={form.duration_days} onChange={e => handleDurationChange(Math.min(30, Math.max(1, Number(e.target.value))))} />
                             </div>
                             <div className="ch-field">
-                                <label className="ch-label">TASKS PER DAY</label>
+                                <label className="ch-label">TASKS / DAY</label>
                                 <input type="number" className="ch-input" min={1} max={10} value={form.tasks_per_day} onChange={e => handleTasksPerDayChange(Math.min(10, Math.max(1, Number(e.target.value))))} />
                             </div>
                             <div className="ch-field">
-                                <label className="ch-label">WINDOW DURATION (MIN)</label>
+                                <label className="ch-label">WINDOW (MIN)</label>
                                 <input type="number" className="ch-input" min={5} max={120} value={form.window_minutes} onChange={e => set('window_minutes', Number(e.target.value))} />
                             </div>
                         </div>
-                    )}
-
-                    {form.is_evergreen && !form.is_tiered && (
-                        <>
-                            <div className="ch-form-grid-3">
-                                <div className="ch-field">
-                                    <label className="ch-label">SLOT DURATION (MIN)</label>
-                                    <input type="number" className="ch-input" min={30} max={360} value={form.slot_duration_minutes} onChange={e => set('slot_duration_minutes', Math.min(360, Math.max(30, Number(e.target.value))))} />
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', marginTop: 4 }}>360 = full 6hr slot</div>
-                                </div>
-                                <div className="ch-field">
-                                    <label className="ch-label">JOIN COST (COINS)</label>
-                                    <input type="number" className="ch-input" min={0} value={form.evergreen_join_cost} onChange={e => set('evergreen_join_cost', Number(e.target.value))} />
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', marginTop: 4 }}>0 = auto by duration</div>
-                                </div>
-                                <div className="ch-field">
-                                    <label className="ch-label">REJOIN COST (COINS)</label>
-                                    <input type="number" className="ch-input" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} />
-                                </div>
-                            </div>
-                            <div style={{ padding: '12px 16px', background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: 8 }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#666', lineHeight: 1.5 }}>
-                                    Evergreen challenges are always active. Each participant starts their own personal Day 1 when they join.
-                                    They pick time slots (morning/afternoon/evening) and tasks appear in their schedule.
-                                    {form.evergreen_join_cost === 0 && <span style={{ color: '#4ade80' }}> Auto join cost: {form.duration_days <= 7 ? '2,000' : form.duration_days <= 14 ? '5,000' : '10,000'} coins.</span>}
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {/* ── TIERED CONFIG ── */}
-                    {form.is_tiered && (
-                        <>
-                            {/* Tier definitions */}
-                            <div>
-                                <label className="ch-label" style={{ display: 'block', marginBottom: 8 }}>TIERS</label>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    {tiers.map((tier, i) => (
-                                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '10px 14px', background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: 10 }}>
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#a855f7', fontWeight: 700, minWidth: 28 }}>
-                                                {tier.label === 'Bronze' ? '\u{1F949}' : tier.label === 'Silver' ? '\u{1F948}' : tier.label === 'Gold' ? '\u{1F947}' : '\u{1F451}'}
-                                            </div>
-                                            <input className="ch-input" style={{ flex: 1, maxWidth: 120 }} placeholder="Label" value={tier.label}
-                                                onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], label: e.target.value }; return n; })} />
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555' }}>DAYS</span>
-                                                <input type="number" className="ch-input" style={{ width: 60 }} min={1} max={365} value={tier.days}
-                                                    onChange={e => {
-                                                        const days = Number(e.target.value);
-                                                        setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], days }; return n; });
-                                                    }} />
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555' }}>COST</span>
-                                                <input type="number" className="ch-input" style={{ width: 80 }} min={0} value={tier.cost}
-                                                    onChange={e => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], cost: Number(e.target.value) }; return n; })} />
-                                            </div>
-                                            {tiers.length > 1 && (
-                                                <button type="button" onClick={() => setTiers(prev => prev.filter((_, j) => j !== i))}
-                                                    style={{ background: 'none', border: 'none', color: '#e03030', cursor: 'pointer', fontSize: '0.8rem', padding: '0 4px' }}>✕</button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button type="button" onClick={() => {
-                                        const maxDay = Math.max(...tiers.map(t => t.days), 0);
-                                        setTiers(prev => [...prev, { days: maxDay + 7, label: `Tier ${prev.length + 1}`, cost: 1000 }]);
-                                    }} style={{ padding: '8px 14px', background: 'rgba(168,85,247,0.06)', border: '1px dashed rgba(168,85,247,0.3)', borderRadius: 8, color: '#a855f7', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', textAlign: 'center' }}>
-                                        + ADD TIER
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Slot duration */}
-                            <div className="ch-form-grid">
-                                <div className="ch-field">
-                                    <label className="ch-label">SLOT DURATION (MIN)</label>
-                                    <input type="number" className="ch-input" min={30} max={360} value={form.slot_duration_minutes} onChange={e => set('slot_duration_minutes', Math.min(360, Math.max(30, Number(e.target.value))))} />
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444', marginTop: 4 }}>360 = full 6hr slot</div>
-                                </div>
-                                <div className="ch-field">
-                                    <label className="ch-label">REJOIN COST (COINS)</label>
-                                    <input type="number" className="ch-input" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} />
-                                </div>
-                            </div>
-
-                            {/* Milestone tasks */}
-                            <div>
-                                <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>MILESTONE TASKS</label>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>
-                                    Fixed tasks on tier completion days. Always the same for everyone.
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    {tiers.map((tier, i) => (
-                                        <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#a855f7', letterSpacing: '1px', minWidth: 70, flexShrink: 0 }}>
-                                                DAY {tier.days}
-                                            </div>
-                                            <input className="ch-input" style={{ flex: 1 }}
-                                                placeholder={`${tier.label} milestone task...`}
-                                                value={milestoneTasks.find(m => m.day === tier.days)?.task_name || ''}
-                                                onChange={e => {
-                                                    const val = e.target.value;
-                                                    setMilestoneTasks(prev => {
-                                                        const existing = prev.find(m => m.day === tier.days);
-                                                        if (existing) return prev.map(m => m.day === tier.days ? { ...m, task_name: val } : m);
-                                                        return [...prev, { day: tier.days, task_name: val }];
-                                                    });
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Task pool */}
-                            <div>
-                                <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>TASK POOL</label>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>
-                                    Random tasks assigned on non-milestone days. More tasks = more variety on re-joins.
-                                    <span style={{ color: '#a855f7', marginLeft: 6 }}>{poolTasks.filter(t => t.task_name.trim()).length} tasks added</span>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 350, overflowY: 'auto', paddingRight: 4 }}>
-                                    {poolTasks.map((task, i) => (
-                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                            <input className="ch-input" style={{ flex: 1 }} placeholder={`Task ${i + 1}...`}
-                                                value={task.task_name}
-                                                onChange={e => setPoolTasks(prev => { const n = [...prev]; n[i] = { ...n[i], task_name: e.target.value }; return n; })}
-                                            />
-                                            <select value={task.difficulty} onChange={e => setPoolTasks(prev => { const n = [...prev]; n[i] = { ...n[i], difficulty: e.target.value }; return n; })}
-                                                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 6px', color: task.difficulty === 'easy' ? '#4ade80' : task.difficulty === 'hard' ? '#e03030' : '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', letterSpacing: '1px', cursor: 'pointer' }}>
-                                                <option value="easy">EASY</option>
-                                                <option value="medium">MED</option>
-                                                <option value="hard">HARD</option>
-                                            </select>
-                                            {poolTasks.length > 1 && (
-                                                <button type="button" onClick={() => setPoolTasks(prev => prev.filter((_, j) => j !== i))}
-                                                    style={{ background: 'none', border: 'none', color: '#e03030', cursor: 'pointer', fontSize: '0.8rem', padding: '0 4px', flexShrink: 0 }}>✕</button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <button type="button" onClick={() => setPoolTasks(prev => [...prev, { task_name: '', difficulty: 'medium' }])}
-                                    style={{ marginTop: 8, padding: '8px 14px', background: 'rgba(168,85,247,0.06)', border: '1px dashed rgba(168,85,247,0.3)', borderRadius: 8, color: '#a855f7', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', textAlign: 'center', width: '100%' }}>
-                                    + ADD TASK
-                                </button>
-                            </div>
-
-                            {/* Info box */}
-                            <div style={{ padding: '12px 16px', background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: 8 }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#666', lineHeight: 1.5 }}>
-                                    Tiered challenges let users pick a commitment level. They complete one task per day.
-                                    Milestone tasks land on tier completion days. Other days get random tasks from the pool.
-                                    On re-join, previously assigned tasks are excluded for variety.
-                                    <span style={{ color: '#a855f7' }}> Max duration: {Math.max(...tiers.map(t => t.days))} days.</span>
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Start date */}
-                    {!form.is_evergreen && !form.is_tiered && (
-                        <div className="ch-form-grid">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                             <div className="ch-field">
                                 <label className="ch-label">START DATE</label>
                                 <input type="date" className="ch-input" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
@@ -1416,145 +1374,139 @@ function CreateTab({ allChallenges, onCreate }: {
                                 <input type="time" className="ch-input" value={form.start_time} onChange={e => set('start_time', e.target.value)} />
                             </div>
                         </div>
-                    )}
+                    </>
+                )}
+            </div>
 
-                    {/* Daily Task Schedule - per day (classic only) */}
-                    {!form.is_evergreen && !form.is_tiered && (
-                    <div>
-                        <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>DAILY TASK SCHEDULE</label>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 12 }}>
-                            Set tasks and times for each day individually. Window stays open for {form.window_minutes} minutes.
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {taskTimes.map((dayTimes, dayIdx) => (
-                                <div key={dayIdx} style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
-                                    {/* Day header */}
-                                    <button type="button" onClick={() => setExpandedDay(expandedDay === dayIdx ? -1 : dayIdx)}
-                                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: expandedDay === dayIdx ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.01)', border: 'none', cursor: 'pointer' }}>
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', flexShrink: 0 }}>
-                                            DAY {dayIdx + 1}
-                                        </div>
-                                        {expandedDay !== dayIdx && taskNames[dayIdx]?.some(n => n) && (
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', textAlign: 'left' }}>
-                                                {taskNames[dayIdx].filter(n => n).join(' · ')}
-                                            </div>
-                                        )}
-                                        {expandedDay !== dayIdx && dayTimes.some(t => t) && (
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#444', flexShrink: 0 }}>
-                                                {dayTimes.join(' · ')}
-                                            </div>
-                                        )}
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#444', marginLeft: 'auto', flexShrink: 0 }}>
-                                            {expandedDay === dayIdx ? '▲' : '▼'}
-                                        </div>
-                                    </button>
-                                    {expandedDay === dayIdx && (
-                                        <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                            {dayTimes.map((t, taskIdx) => {
-                                                const [h, m] = t.split(':').map(Number);
-                                                const closeH = Math.floor((h * 60 + m + form.window_minutes) / 60) % 24;
-                                                const closeM = (m + form.window_minutes) % 60;
-                                                const closeStr = `${String(closeH).padStart(2,'0')}:${String(closeM).padStart(2,'0')}`;
-                                                return (
-                                                    <div key={taskIdx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#666', letterSpacing: '2px' }}>TASK {taskIdx + 1}</div>
-                                                        <input type="text" className="ch-input"
-                                                            placeholder="Task name (e.g. Morning run, Cold shower...)"
-                                                            value={taskNames[dayIdx]?.[taskIdx] || ''}
-                                                            onChange={e => setTaskNames(prev => { const n = prev.map(d => [...d]); n[dayIdx][taskIdx] = e.target.value; return n; })}
-                                                        />
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: '#555', flexShrink: 0 }}>Opens at</div>
-                                                            <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
-                                                                onChange={e => setTaskTimes(prev => { const n = prev.map(d => [...d]); n[dayIdx][taskIdx] = e.target.value; return n; })}
-                                                            />
-                                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#444', flexShrink: 0, letterSpacing: '1px' }}>closes {closeStr}</div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
-                                                {dayIdx > 0 && (
-                                                    <button type="button" onClick={() => {
-                                                        setTaskTimes(prev => { const n = prev.map(d => [...d]); n[dayIdx] = [...taskTimes[0]]; return n; });
-                                                        setTaskNames(prev => { const n = prev.map(d => [...d]); n[dayIdx] = [...taskNames[0]]; return n; });
-                                                    }} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer' }}>
-                                                        COPY FROM DAY 1
-                                                    </button>
-                                                )}
-                                                {dayIdx === 0 && form.duration_days > 1 && (
-                                                    <button type="button" onClick={() => {
-                                                        setTaskTimes(prev => prev.map(() => [...taskTimes[0]]));
-                                                        setTaskNames(prev => prev.map(() => [...taskNames[0]]));
-                                                    }} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer' }}>
-                                                        COPY TO ALL DAYS
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+            {/* ─── STEP 4: TASK POOL (tiered only) ─── */}
+            {form.is_tiered && (
+                <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderRadius: '0 0 0 0', padding: '28px 28px 24px', marginBottom: 2 }}>
+                    <SectionLabel step={4} label="Task Pool" sub={`${poolTasks.filter(t => t.task_name.trim()).length} tasks loaded \u00B7 random assignment on non-milestone days`} color="#a855f7" />
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
+                        {poolTasks.map((task, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 10px', borderRadius: 8, background: task.task_name.trim() ? 'rgba(255,255,255,0.02)' : 'transparent', transition: 'background 0.15s' }}>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: '#333', width: 18, flexShrink: 0, textAlign: 'right' }}>{i + 1}</div>
+                                {diffDot(task.difficulty)}
+                                <input className="ch-input" style={{ flex: 1, border: 'none', background: 'transparent', padding: '6px 8px', fontSize: '0.88rem' }}
+                                    placeholder={`Task ${i + 1}...`}
+                                    value={task.task_name}
+                                    onChange={e => setPoolTasks(prev => { const n = [...prev]; n[i] = { ...n[i], task_name: e.target.value }; return n; })}
+                                />
+                                <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                                    {(['easy', 'medium', 'hard'] as const).map(d => (
+                                        <button key={d} type="button" onClick={() => setPoolTasks(prev => { const n = [...prev]; n[i] = { ...n[i], difficulty: d }; return n; })}
+                                            style={{ width: 20, height: 20, borderRadius: 4, border: `1px solid ${task.difficulty === d ? diffColor(d) + '60' : 'rgba(255,255,255,0.04)'}`, background: task.difficulty === d ? diffColor(d) + '18' : 'transparent', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.25rem', color: task.difficulty === d ? diffColor(d) : '#444' }}>{d[0].toUpperCase()}</span>
+                                        </button>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                                {poolTasks.length > 1 && (
+                                    <button type="button" onClick={() => setPoolTasks(prev => prev.filter((_, j) => j !== i))}
+                                        style={{ background: 'none', border: 'none', color: '#333', cursor: 'pointer', fontSize: '0.7rem', padding: '0 2px', flexShrink: 0, transition: 'color 0.15s' }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#e03030'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#333'; }}>x</button>
+                                )}
+                            </div>
+                        ))}
                     </div>
-                    )}
-
-                    {/* Points */}
-                    <div>
-                        <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>FLAT POINTS PER VERIFIED TASK</label>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>Every participant who gets a task verified earns this. Default: 20.</div>
-                        <input type="number" className="ch-input" style={{ maxWidth: 120 }} min={0} value={form.points_per_completion} onChange={e => set('points_per_completion', Number(e.target.value))} />
-                    </div>
-
-                    <div>
-                        <label className="ch-label" style={{ display: 'block', marginBottom: 4 }}>SPEED BONUS PER TASK (1ST/2ND/3RD)</label>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#555', marginBottom: 10 }}>Bonus points awarded per task to the fastest 3 verified submissions.</div>
-                        <div className="ch-points-row">
-                            {[
-                                { rank: '🥇', label: '1ST PLACE', key: 'first_place_points' },
-                                { rank: '🥈', label: '2ND PLACE', key: 'second_place_points' },
-                                { rank: '🥉', label: '3RD PLACE', key: 'third_place_points' },
-                            ].map(({ rank, label, key }) => (
-                                <div key={key} className="ch-points-card">
-                                    <div className="ch-points-rank">{rank}</div>
-                                    <div className="ch-points-label">{label}</div>
-                                    <input type="number" className="ch-points-input" min={0}
-                                        value={(form as any)[key]}
-                                        onChange={e => set(key, Number(e.target.value))} />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Total windows preview */}
-                    <div style={{ padding: '12px 16px', background: form.is_tiered ? 'rgba(168,85,247,0.04)' : form.is_evergreen ? 'rgba(74,222,128,0.04)' : 'rgba(197,160,89,0.04)', border: `1px solid ${form.is_tiered ? 'rgba(168,85,247,0.1)' : form.is_evergreen ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.1)'}`, borderRadius: 8 }}>
-                        {form.is_tiered ? (
-                            <>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>TIERS: </span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#a855f7', fontWeight: 700 }}>{tiers.length}</span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>MAX DAYS: </span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#a855f7', fontWeight: 700 }}>{Math.max(...tiers.map(t => t.days))}</span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>POOL: </span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: '#a855f7', fontWeight: 700 }}>{poolTasks.filter(t => t.task_name.trim()).length}</span>
-                            </>
-                        ) : (
-                            <>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '2px' }}>
-                                    {form.is_evergreen ? 'TASKS PER PARTICIPANT: ' : 'TOTAL WINDOWS: '}</span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: form.is_evergreen ? '#4ade80' : '#c5a059', fontWeight: 700 }}>
-                                    {form.duration_days * form.tasks_per_day}
-                                </span>
-                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px', marginLeft: 16 }}>
-                                    ({form.duration_days} days × {form.tasks_per_day} tasks)
-                                </span>
-                            </>
-                        )}
-                    </div>
-
-                    <button className="ch-submit-btn" disabled={submitting || !form.name || (!form.is_evergreen && !form.is_tiered && !form.start_date)} onClick={handleSubmit}>
-                        {submitting ? 'CREATING...' : form.is_tiered ? '⚔ CREATE TIERED CHALLENGE' : form.is_evergreen ? '⚔ CREATE EVERGREEN CHALLENGE' : '⚔ CREATE & GENERATE WINDOWS'}
+                    <button type="button" onClick={() => setPoolTasks(prev => [...prev, { task_name: '', difficulty: 'medium' }])}
+                        style={{ marginTop: 8, padding: '10px', width: '100%', borderRadius: 8, border: '1px dashed rgba(168,85,247,0.15)', background: 'transparent', color: '#a855f740', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '3px', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#a855f7'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.4)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#a855f740'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.15)'; }}>
+                        + ADD TASK
                     </button>
                 </div>
+            )}
+
+            {/* ─── CLASSIC: Daily Task Schedule ─── */}
+            {!form.is_evergreen && !form.is_tiered && (
+                <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', padding: '28px 28px 24px', marginBottom: 2 }}>
+                    <SectionLabel step={4} label="Daily Schedule" sub={`Window stays open for ${form.window_minutes} minutes`} color="#c5a059" />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {taskTimes.map((dayTimes, dayIdx) => (
+                            <div key={dayIdx} style={{ border: '1px solid rgba(255,255,255,0.04)', borderRadius: 10, overflow: 'hidden' }}>
+                                <button type="button" onClick={() => setExpandedDay(expandedDay === dayIdx ? -1 : dayIdx)}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', background: expandedDay === dayIdx ? 'rgba(197,160,89,0.04)' : 'transparent', border: 'none', cursor: 'pointer' }}>
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', flexShrink: 0 }}>DAY {dayIdx + 1}</div>
+                                    {expandedDay !== dayIdx && taskNames[dayIdx]?.some(n => n) && (
+                                        <div style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: '#555', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', textAlign: 'left' }}>{taskNames[dayIdx].filter(n => n).join(' \u00B7 ')}</div>
+                                    )}
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#333', marginLeft: 'auto' }}>{expandedDay === dayIdx ? '\u25B2' : '\u25BC'}</div>
+                                </button>
+                                {expandedDay === dayIdx && (
+                                    <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                        {dayTimes.map((t, taskIdx) => {
+                                            const [h, m] = t.split(':').map(Number);
+                                            const closeH = Math.floor((h * 60 + m + form.window_minutes) / 60) % 24;
+                                            const closeM = (m + form.window_minutes) % 60;
+                                            const closeStr = `${String(closeH).padStart(2,'0')}:${String(closeM).padStart(2,'0')}`;
+                                            return (
+                                                <div key={taskIdx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#666', letterSpacing: '2px' }}>TASK {taskIdx + 1}</div>
+                                                    <input type="text" className="ch-input" placeholder="Task name..." value={taskNames[dayIdx]?.[taskIdx] || ''}
+                                                        onChange={e => setTaskNames(prev => { const n = prev.map(d => [...d]); n[dayIdx][taskIdx] = e.target.value; return n; })} />
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                        <span style={{ fontFamily: 'Rajdhani', fontSize: '0.8rem', color: '#555' }}>Opens</span>
+                                                        <input type="time" className="ch-input" style={{ flex: 1 }} value={t}
+                                                            onChange={e => setTaskTimes(prev => { const n = prev.map(d => [...d]); n[dayIdx][taskIdx] = e.target.value; return n; })} />
+                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#444' }}>closes {closeStr}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+                                            {dayIdx > 0 && <button type="button" onClick={() => { setTaskTimes(p => { const n = p.map(d => [...d]); n[dayIdx] = [...taskTimes[0]]; return n; }); setTaskNames(p => { const n = p.map(d => [...d]); n[dayIdx] = [...taskNames[0]]; return n; }); }} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, color: '#555', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer' }}>COPY FROM DAY 1</button>}
+                                            {dayIdx === 0 && form.duration_days > 1 && <button type="button" onClick={() => { setTaskTimes(p => p.map(() => [...taskTimes[0]])); setTaskNames(p => p.map(() => [...taskNames[0]])); }} style={{ padding: '5px 12px', background: 'transparent', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.35rem', letterSpacing: '1px', cursor: 'pointer' }}>COPY TO ALL DAYS</button>}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ─── STEP 5: POINTS ─── */}
+            <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '28px 28px 24px', marginBottom: 20 }}>
+                <SectionLabel step={form.is_tiered ? 5 : !form.is_evergreen ? 5 : 4} label="Scoring" sub="Points per verified task" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr', gap: 12, alignItems: 'end' }}>
+                    <div className="ch-field">
+                        <label className="ch-label">BASE</label>
+                        <input type="number" className="ch-input" style={{ width: 70, textAlign: 'center', fontFamily: 'Orbitron', fontWeight: 700, fontSize: '1.1rem' }} min={0} value={form.points_per_completion} onChange={e => set('points_per_completion', Number(e.target.value))} />
+                    </div>
+                    {[
+                        { label: '1ST', key: 'first_place_points', color: '#ffd700' },
+                        { label: '2ND', key: 'second_place_points', color: '#c0c0c0' },
+                        { label: '3RD', key: 'third_place_points', color: '#cd7f32' },
+                    ].map(({ label, key, color }) => (
+                        <div key={key} className="ch-field">
+                            <label className="ch-label" style={{ color }}>{label} BONUS</label>
+                            <input type="number" className="ch-input" style={{ textAlign: 'center', fontFamily: 'Orbitron', fontWeight: 700, fontSize: '1.1rem' }} min={0}
+                                value={(form as any)[key]} onChange={e => set(key, Number(e.target.value))} />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ─── LAUNCH ─── */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+                <div>
+                    {form.is_tiered && (
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px' }}>
+                            {tiers.length} tiers \u00B7 {Math.max(...tiers.map(t => t.days))} max days \u00B7 {poolTasks.filter(t => t.task_name.trim()).length} pool tasks
+                        </div>
+                    )}
+                    {!form.is_tiered && (
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: '#555', letterSpacing: '1px' }}>
+                            {form.duration_days}d \u00D7 {form.tasks_per_day} tasks = {form.duration_days * form.tasks_per_day} total
+                        </div>
+                    )}
+                </div>
+                <button disabled={submitting || !form.name || (!form.is_evergreen && !form.is_tiered && !form.start_date)} onClick={handleSubmit}
+                    style={{ padding: '14px 36px', background: submitting ? '#333' : `linear-gradient(135deg, ${accentColor}, ${accentColor}90)`, border: 'none', borderRadius: 10, color: '#000', fontFamily: "'Cinzel', serif", fontSize: '0.7rem', fontWeight: 700, letterSpacing: '4px', cursor: submitting ? 'default' : 'pointer', opacity: (!form.name || (!form.is_evergreen && !form.is_tiered && !form.start_date)) ? 0.3 : 1, transition: 'all 0.2s', boxShadow: submitting ? 'none' : `0 0 20px ${accentColor}30` }}>
+                    {submitting ? 'FORGING...' : 'FORGE'}
+                </button>
             </div>
         </div>
     );
