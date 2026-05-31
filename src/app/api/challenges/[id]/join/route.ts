@@ -177,21 +177,41 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             const timezone: string = body.timezone || 'UTC';
             const chosenSlots: TimeSlot[] = body.chosen_slots || ['morning'];
 
-            // Validate slots
-            const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
-            const cleanSlots = chosenSlots.filter(s => validSlots.includes(s));
-            if (cleanSlots.length === 0) {
-                return NextResponse.json({ success: false, error: 'Choose at least one time slot' }, { status: 400 });
-            }
-            if (cleanSlots.length !== challenge.tasks_per_day) {
-                return NextResponse.json({
-                    success: false,
-                    error: `This challenge requires ${challenge.tasks_per_day} task(s) per day. Pick ${challenge.tasks_per_day} slot(s).`
-                }, { status: 400 });
+            // Check if this challenge has difficulty mode
+            const dp = challenge.difficulty_pricing;
+            const hasDifficulty = !!dp;
+            const difficulty: ChallengeDifficulty = hasDifficulty && ['easy', 'medium', 'hard'].includes(body.difficulty) ? body.difficulty : 'medium';
+
+            let joinCost: number;
+            let tasksPerDay: number;
+            let finalSlots: TimeSlot[];
+
+            if (hasDifficulty) {
+                // Difficulty mode — cost + tasks per day from difficulty
+                const costKey = difficulty === 'easy' ? 'cost_soft' : difficulty === 'hard' ? 'cost_brutal' : 'cost_strict';
+                joinCost = dp[costKey] ?? challenge.evergreen_join_cost ?? 0;
+                tasksPerDay = TASKS_PER_DAY[difficulty] || 3;
+                const allSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
+                finalSlots = allSlots.slice(0, Math.min(tasksPerDay, 3));
+            } else {
+                // Standard evergreen — validate slots match tasks_per_day
+                const validSlots: TimeSlot[] = ['morning', 'afternoon', 'evening'];
+                const cleanSlots2 = chosenSlots.filter(s => validSlots.includes(s));
+                if (cleanSlots2.length === 0) {
+                    return NextResponse.json({ success: false, error: 'Choose at least one time slot' }, { status: 400 });
+                }
+                if (cleanSlots2.length !== challenge.tasks_per_day) {
+                    return NextResponse.json({
+                        success: false,
+                        error: `This challenge requires ${challenge.tasks_per_day} task(s) per day. Pick ${challenge.tasks_per_day} slot(s).`
+                    }, { status: 400 });
+                }
+                joinCost = challenge.evergreen_join_cost || 0;
+                tasksPerDay = challenge.tasks_per_day;
+                finalSlots = cleanSlots2;
             }
 
             // Charge join cost
-            const joinCost = challenge.evergreen_join_cost || 0;
             const currentWallet = profile.wallet ?? 0;
             if (currentWallet < joinCost) {
                 return NextResponse.json({
@@ -217,10 +237,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 status: 'active',
                 joined_at: now.toISOString(),
                 timezone,
-                chosen_slots: cleanSlots,
+                chosen_slots: finalSlots,
                 personal_start: now.toISOString(),
                 personal_end: personalEnd.toISOString(),
                 coins_paid: joinCost,
+                ...(hasDifficulty ? { difficulty, tier_days: challenge.duration_days } : {}),
             });
             if (joinErr) throw joinErr;
 
@@ -228,10 +249,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             const slotMinutes = challenge.slot_duration_minutes || challenge.window_minutes || 360;
             const windows = generateEvergreenWindows(
                 challengeId, memberId, now, timezone,
-                cleanSlots, challenge.duration_days, slotMinutes,
+                finalSlots, challenge.duration_days, slotMinutes,
             );
 
-            const { error: wErr } = await supabaseAdmin.from('challenge_windows').insert(windows);
+            // For difficulty mode: bake daily task + pool tasks into windows
+            let windowsToInsert = windows;
+            if (hasDifficulty) {
+                const poolTasksPerDay = tasksPerDay - 1;
+                const assignments = await assignTasksForDays(challengeId, memberId, 1, challenge.duration_days, 1, difficulty, poolTasksPerDay);
+                const dailyTaskName = challenge.daily_task || 'Morning photo check-in';
+                windowsToInsert = windows.map(w => {
+                    if (w.window_number === 1) {
+                        return { ...w, task_name: dailyTaskName };
+                    }
+                    const dayAssignments = assignments.filter(a => a.day_number === w.day_number);
+                    const poolIndex = w.window_number - 2;
+                    const assignment = dayAssignments[poolIndex];
+                    return { ...w, task_name: assignment?.task_name || null };
+                });
+            }
+
+            const { error: wErr } = await supabaseAdmin.from('challenge_windows').insert(windowsToInsert);
             if (wErr) throw wErr;
 
             // Save timezone on profile for future use

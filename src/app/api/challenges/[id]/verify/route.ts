@@ -255,6 +255,74 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 }
             }
 
+            // ── EVERGREEN + DIFFICULTY: perfect day + cashback (non-tiered) ──
+            if (!challenge?.is_tiered && challenge?.difficulty_pricing && ch) {
+                const dp = challenge.difficulty_pricing as any;
+                const { data: part } = await supabaseAdmin.from('challenge_participants')
+                    .select('difficulty, perfect_days, coins_earned, tier_days')
+                    .eq('challenge_id', id).ilike('member_id', completion.member_id).maybeSingle();
+
+                if (part?.difficulty) {
+                    const difficulty: ChallengeDifficulty = (part.difficulty as ChallengeDifficulty) || 'medium';
+                    const tasksPerDay = TASKS_PER_DAY[difficulty] || 3;
+                    const dayNumber = window?.day_number;
+
+                    if (dayNumber) {
+                        const { data: dayWindows } = await supabaseAdmin
+                            .from('challenge_windows').select('id')
+                            .eq('challenge_id', id).ilike('member_id', completion.member_id).eq('day_number', dayNumber);
+
+                        const dayWindowIds = new Set((dayWindows || []).map((w: any) => w.id));
+                        const { data: allMyCompletions } = await supabaseAdmin
+                            .from('challenge_completions').select('id, window_id')
+                            .eq('challenge_id', id).ilike('member_id', completion.member_id).eq('verified', true);
+
+                        const verifiedCountForDay = (allMyCompletions || []).filter((c: any) => dayWindowIds.has(c.window_id)).length;
+
+                        if (verifiedCountForDay >= (dayWindows?.length || tasksPerDay)) {
+                            // Perfect day — award daily cashback
+                            const dailyKey = difficulty === 'easy' ? 'daily_soft' : difficulty === 'hard' ? 'daily_brutal' : 'daily_strict';
+                            const cashback = dp[dailyKey] ?? 0;
+                            if (cashback > 0) {
+                                const { data: memberProfile } = await supabaseAdmin
+                                    .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                                if (memberProfile) {
+                                    await supabaseAdmin.from('profiles')
+                                        .update({ wallet: (memberProfile.wallet || 0) + cashback })
+                                        .ilike('member_id', completion.member_id);
+                                }
+                                dailyCashbackAwarded = cashback;
+                            }
+                            await supabaseAdmin.from('challenge_participants').update({
+                                perfect_days: (part.perfect_days || 0) + 1,
+                                coins_earned: (part.coins_earned || 0) + cashback,
+                            }).eq('challenge_id', id).ilike('member_id', completion.member_id);
+                        }
+                    }
+
+                    // Check if challenge fully complete
+                    const totalTasks = ch.duration_days * tasksPerDay;
+                    if (taskNum >= totalTasks) {
+                        const finishKey = difficulty === 'easy' ? 'finish_soft' : difficulty === 'hard' ? 'finish_brutal' : 'finish_strict';
+                        const finishBonus = dp[finishKey] ?? 0;
+                        if (finishBonus > 0) {
+                            const { data: memberProfile } = await supabaseAdmin
+                                .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                            if (memberProfile) {
+                                await supabaseAdmin.from('profiles')
+                                    .update({ wallet: (memberProfile.wallet || 0) + finishBonus })
+                                    .ilike('member_id', completion.member_id);
+                            }
+                            finishBonusAwarded = finishBonus;
+                        }
+                        await supabaseAdmin.from('challenge_participants').update({
+                            status: 'finished',
+                            coins_earned: (part.coins_earned || 0) + dailyCashbackAwarded + finishBonus,
+                        }).eq('challenge_id', id).ilike('member_id', completion.member_id);
+                    }
+                }
+            }
+
             return NextResponse.json({
                 success: true, action: 'verified', points_awarded: totalPoints, placement: fasterCount + 1,
                 tier_completed: tierCompleted, next_tier: nextTierOffer,

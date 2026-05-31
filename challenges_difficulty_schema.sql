@@ -10,8 +10,9 @@ ALTER TABLE challenges ADD COLUMN IF NOT EXISTS daily_task TEXT;
 ALTER TABLE challenge_participants ADD COLUMN IF NOT EXISTS perfect_days INTEGER DEFAULT 0;
 ALTER TABLE challenge_participants ADD COLUMN IF NOT EXISTS coins_earned INTEGER DEFAULT 0;
 
--- 3. Expand difficulty values to include soft/strict/brutal aliases
--- (keeping easy/medium/hard for backward compat, code maps display names)
+-- 3. Difficulty pricing for standalone evergreen challenges (non-tiered)
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS difficulty_pricing JSONB;
+-- Format: {"cost_soft":4500,"cost_strict":5000,"cost_brutal":6500,"daily_soft":100,...}
 
 -- NOTE: The tiers JSONB on challenges will now use this format per tier:
 -- {

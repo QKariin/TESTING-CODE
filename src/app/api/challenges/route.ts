@@ -53,6 +53,8 @@ export async function POST(request: Request) {
             // Tiered fields
             is_tiered = false, tiers = null, task_pool = null,
             daily_task = null,
+            // Difficulty pricing (for evergreen with difficulty mode)
+            difficulty_pricing = null,
         } = body;
 
         // Classic challenges require start_date; evergreen don't
@@ -157,6 +159,7 @@ export async function POST(request: Request) {
                     slot_duration_minutes: Number(slot_duration_minutes),
                     evergreen_join_cost: joinCost,
                     evergreen_rejoin_cost: Number(evergreen_rejoin_cost),
+                    ...(difficulty_pricing ? { difficulty_pricing, daily_task: daily_task || 'Morning photo check-in' } : {}),
                     points_per_completion: Number(points_per_completion),
                     first_place_points: Number(first_place_points),
                     second_place_points: Number(second_place_points),

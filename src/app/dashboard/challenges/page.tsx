@@ -964,10 +964,17 @@ function CreateTab({ allChallenges, onCreate }: {
         start_date: '', start_time: '08:00',
         image_url: '',
         is_evergreen: false, slot_duration_minutes: 360, evergreen_join_cost: 0, evergreen_rejoin_cost: 1000,
-        is_tiered: false,
+        is_tiered: false, has_difficulty: false,
     });
 
     const [dailyTask, setDailyTask] = useState('Morning photo check-in');
+
+    // Difficulty pricing for standalone evergreen challenges (not tiered)
+    const [diffPricing, setDiffPricing] = useState({
+        cost_soft: 4500, cost_strict: 5000, cost_brutal: 6500,
+        daily_soft: 100, daily_strict: 150, daily_brutal: 200,
+        finish_soft: 500, finish_strict: 750, finish_brutal: 1000,
+    });
 
     // ── Tiered challenge state ──
     const [tiers, setTiers] = useState([
@@ -1100,8 +1107,12 @@ function CreateTab({ allChallenges, onCreate }: {
                     start_date: null,
                     is_evergreen: true,
                     slot_duration_minutes: form.slot_duration_minutes,
-                    evergreen_join_cost: form.evergreen_join_cost || null,
+                    evergreen_join_cost: form.has_difficulty ? diffPricing.cost_soft : (form.evergreen_join_cost || null),
                     evergreen_rejoin_cost: form.evergreen_rejoin_cost,
+                    ...(form.has_difficulty ? {
+                        daily_task: dailyTask,
+                        difficulty_pricing: diffPricing,
+                    } : {}),
                 });
             } else {
                 const startDt = new Date(`${form.start_date}T${form.start_time}:00`);
@@ -1448,7 +1459,91 @@ function CreateTab({ allChallenges, onCreate }: {
                             </div>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#bbb', marginTop: 6 }}>{form.duration_days} days selected</div>
                         </div>
-                        {/* Tasks per day */}
+
+                        {/* Difficulty mode toggle */}
+                        <div style={{ marginBottom: 22 }}>
+                            <button type="button" onClick={() => set('has_difficulty', !form.has_difficulty)} style={{
+                                width: '100%', padding: '14px 18px', borderRadius: 14,
+                                border: `1.5px solid ${form.has_difficulty ? PINK : 'rgba(0,0,0,0.06)'}`,
+                                background: form.has_difficulty ? gradSoft : '#faf9f7',
+                                cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 12,
+                            }}>
+                                <div style={{
+                                    width: 36, height: 20, borderRadius: 10, position: 'relative', transition: 'all 0.2s',
+                                    background: form.has_difficulty ? gradMain : 'rgba(0,0,0,0.1)',
+                                }}>
+                                    <div style={{
+                                        width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2,
+                                        left: form.has_difficulty ? 18 : 2, transition: 'left 0.2s',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                    }} />
+                                </div>
+                                <div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 700, color: form.has_difficulty ? '#1a1a1a' : '#999', letterSpacing: '2px', textAlign: 'left' }}>DIFFICULTY MODE</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: '#bbb', textAlign: 'left' }}>Soft / Strict / Brutal — different prices, tasks per day, and cashback</div>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Difficulty pricing grid */}
+                        {form.has_difficulty && (
+                            <>
+                                <div style={{ marginBottom: 18 }}>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 8 }}>DAILY MORNING TASK</div>
+                                    <input className="forge-input" placeholder="e.g. Morning photo check-in" value={dailyTask} onChange={e => setDailyTask(e.target.value)} />
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>
+                                        Soft = 2 tasks/day &middot; Strict = 3 tasks/day &middot; Brutal = 5 tasks/day
+                                    </div>
+                                </div>
+                                <div style={{
+                                    padding: '18px', borderRadius: 16, background: gradSoft,
+                                    border: '1px solid rgba(255,0,237,0.12)', marginBottom: 18,
+                                }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr', gap: '6px 8px', alignItems: 'center' }}>
+                                        <div />
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#16a34a', letterSpacing: '1px', textAlign: 'center' }}>SOFT</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#ca8a04', letterSpacing: '1px', textAlign: 'center' }}>STRICT</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: '#dc2626', letterSpacing: '1px', textAlign: 'center' }}>BRUTAL</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>ENTRY</div>
+                                        {(['cost_soft', 'cost_strict', 'cost_brutal'] as const).map(k => (
+                                            <input key={k} type="number" className="forge-num" min={0} value={(diffPricing as any)[k]}
+                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: Number(e.target.value) }))}
+                                                style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
+                                        ))}
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>DAILY</div>
+                                        {(['daily_soft', 'daily_strict', 'daily_brutal'] as const).map(k => (
+                                            <input key={k} type="number" className="forge-num" min={0} value={(diffPricing as any)[k]}
+                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: Number(e.target.value) }))}
+                                                style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
+                                        ))}
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>FINISH</div>
+                                        {(['finish_soft', 'finish_strict', 'finish_brutal'] as const).map(k => (
+                                            <input key={k} type="number" className="forge-num" min={0} value={(diffPricing as any)[k]}
+                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: Number(e.target.value) }))}
+                                                style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
+                                        ))}
+                                    </div>
+                                    {/* Return % preview */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr', gap: '2px 8px', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: '#bbb', letterSpacing: '1px' }}>RETURN</div>
+                                        {(['soft', 'strict', 'brutal'] as const).map(d => {
+                                            const cost = (diffPricing as any)[`cost_${d}`] || 1;
+                                            const daily = (diffPricing as any)[`daily_${d}`] || 0;
+                                            const finish = (diffPricing as any)[`finish_${d}`] || 0;
+                                            const total = daily * form.duration_days + finish;
+                                            const pct = Math.round((total / cost) * 100);
+                                            return <div key={d} style={{
+                                                fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 700, textAlign: 'center',
+                                                color: pct > 100 ? '#16a34a' : pct >= 80 ? '#ca8a04' : '#999',
+                                            }}>{pct}%</div>;
+                                        })}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Tasks per day (only when no difficulty mode) */}
+                        {!form.has_difficulty && (
                         <div style={{ marginBottom: 22 }}>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>TASKS PER DAY</div>
                             <div style={{ display: 'flex', gap: 10 }}>
@@ -1465,6 +1560,8 @@ function CreateTab({ allChallenges, onCreate }: {
                                 ))}
                             </div>
                         </div>
+                        )}
+
                         {/* Slot duration */}
                         <div style={{ marginBottom: 22 }}>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>SLOT DURATION</div>
@@ -1483,11 +1580,13 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                         {/* Costs */}
                         <div style={{ display: 'flex', gap: 20 }}>
+                            {!form.has_difficulty && (
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '2px', marginBottom: 8 }}>JOIN COST</div>
                                 <input type="number" className="forge-num" min={0} value={form.evergreen_join_cost} onChange={e => set('evergreen_join_cost', Number(e.target.value))} style={{ fontSize: '1.2rem' }} />
                                 {form.evergreen_join_cost === 0 && <div style={{ fontFamily: 'Rajdhani', fontSize: '0.75rem', color: PINK, marginTop: 4, textAlign: 'center', opacity: 0.6 }}>Auto: {form.duration_days <= 7 ? '2,000' : form.duration_days <= 14 ? '5,000' : '10,000'}</div>}
                             </div>
+                            )}
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '2px', marginBottom: 8 }}>REJOIN COST</div>
                                 <input type="number" className="forge-num" min={0} value={form.evergreen_rejoin_cost} onChange={e => set('evergreen_rejoin_cost', Number(e.target.value))} style={{ fontSize: '1.2rem' }} />
