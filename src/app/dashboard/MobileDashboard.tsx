@@ -2617,6 +2617,73 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                             } catch { /* fall through */ }
                         }
 
+                        if (text.startsWith('LEADERBOARD_REWARD_CARD::')) {
+                            try {
+                                const d = JSON.parse(text.replace('LEADERBOARD_REWARD_CARD::', ''));
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0' }}>
+                                        <div style={{ width: '82%', maxWidth: 260, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06,#110d04,#0a0703)', border: '1px solid rgba(197,160,89,0.6)', boxShadow: '0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.1)' }}>
+                                            <div style={{ padding: '20px 20px', textAlign: 'center' }}>
+                                                <div style={{ fontSize: '1.6rem', marginBottom: 6 }}>👑</div>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.8rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 4 }}>{d.title || 'CHAMPION'}</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent)', margin: '8px auto' }} />
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.8)', marginBottom: 6 }}>{d.rewards || ''}</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>SCORE: {(d.score || 0).toLocaleString()} · {(d.period || '').toUpperCase()}</div>
+                                            </div>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.35)', marginTop: 4 }}>{timeStr}</span>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
+                        if (text.startsWith('INVENTORY_CARD::')) {
+                            try {
+                                const d = JSON.parse(text.replace('INVENTORY_CARD::', ''));
+                                const itemIcons: Record<string, string> = { skippass: '⏭', cumpass: '💦', checkpoint: '🛡' };
+                                const itemNames: Record<string, string> = { skippass: 'SKIP PASS', cumpass: 'CUM PASS', checkpoint: 'CHECKPOINT' };
+                                const title = d.source === 'gift' ? 'GIFT RECEIVED' : d.source === 'purchase' ? 'ITEM PURCHASED' : 'INVENTORY';
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0' }}>
+                                        <div style={{ width: '70%', maxWidth: 220, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06,#110d04,#0a0703)', border: '1px solid rgba(197,160,89,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ padding: '18px 20px', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 10 }}>{title}</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent)', margin: '0 auto 12px' }} />
+                                                <div style={{ fontSize: '1.4rem', marginBottom: 10 }}>{itemIcons[d.item] || '📦'}</div>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{itemNames[d.item] || d.item}</div>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.75rem', color: 'rgba(197,160,89,0.45)', marginTop: 4 }}>Total: {d.newCount || 0}</div>
+                                            </div>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.35)', marginTop: 4 }}>{timeStr}</span>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
+                        if (text.startsWith('VAULT_UNLOCK_CARD::')) {
+                            try {
+                                const d = JSON.parse(text.replace('VAULT_UNLOCK_CARD::', ''));
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0' }}>
+                                        <div style={{ width: '75%', maxWidth: 240, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0b06,#110d04,#0a0703)', border: '1px solid rgba(197,160,89,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
+                                            {d.thumbnail && <img src={d.thumbnail} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} alt="" />}
+                                            <div style={{ padding: '16px 20px', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 8 }}>VAULT UNLOCKED</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent)', margin: '0 auto 10px' }} />
+                                                <div style={{ fontSize: '1.2rem', marginBottom: 8 }}>🔓</div>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{d.title || 'New Content'}</div>
+                                            </div>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.35)', marginTop: 4 }}>{timeStr}</span>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
+                        if (text.startsWith('ROUTINE_CHANGE::') || text.startsWith('WISHLIST::') || text.startsWith('CERT_APPROVED::') || text.startsWith('CERT_REJECTED::') || text.startsWith('CERT_PROOF::')) {
+                            return null;
+                        }
+
                         return (
                             <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
                                 <div style={{ background: isAdmin ? '#000' : '#1c1c1e', color: '#fff', padding: (isPhoto || isVideo) ? '4px' : '10px 14px', borderRadius: isAdmin ? '16px 16px 3px 16px' : '16px 16px 16px 3px', maxWidth: '78%', fontSize: '0.95rem', lineHeight: 1.55, fontFamily: 'Orbitron,sans-serif', wordBreak: 'break-word', boxShadow: isAdmin ? '0 0 0 1px rgba(197,160,89,0.55)' : undefined, border: !isAdmin ? '1px solid rgba(255,255,255,0.06)' : undefined }}>
@@ -3095,7 +3162,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
 function isSystemMessage(msg: any): boolean {
     if (!msg) return false;
     const raw = msg.content || msg.message || '';
-    if (raw.startsWith('TASK_REVIEW_CARD::')) return false;
+    if (raw.startsWith('TASK_REVIEW_CARD::') || raw.startsWith('LEADERBOARD_REWARD_CARD::') || raw.startsWith('INVENTORY_CARD::') || raw.startsWith('VAULT_UNLOCK_CARD::') || raw.startsWith('PROMOTION_CARD::') || raw.startsWith('WELCOME_CARD::') || raw.startsWith('TASK_FEEDBACK::') || raw.startsWith('WISHLIST::') || raw.startsWith('ROUTINE_CHANGE::')) return false;
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = raw.toUpperCase();
     return sender === 'system' || content.includes('COINS RECEIVED') || content.includes('TASK APPROVED') || content.includes('POINTS RECEIVED') || content.includes('TASK REJECTED') || content.includes('TASK VERIFIED');
