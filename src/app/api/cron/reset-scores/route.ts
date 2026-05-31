@@ -87,25 +87,25 @@ async function rewardWinner(scoreCol: string) {
         period: scoreCol.replace(' Score', ''),
     };
 
-    try {
-        await supabaseAdmin.from('chats').insert({
-            member_id: winnerEmail,
-            sender_email: 'queen',
-            content: `LEADERBOARD_REWARD_CARD::${JSON.stringify(cardData)}`,
-            type: 'text',
-            metadata: { isQueen: true },
-        });
-    } catch (_) {}
+    const chatPayload = {
+        member_id: winnerEmail,
+        sender_email: 'queen',
+        content: `LEADERBOARD_REWARD_CARD::${JSON.stringify(cardData)}`,
+        type: 'text',
+        metadata: { isQueen: true },
+    };
+    const { error: chatErr } = await supabaseAdmin.from('chats').insert(chatPayload);
+    if (chatErr) console.error('[cron/reward] CHAT INSERT FAILED:', chatErr.message, chatErr.details, chatErr.code);
 
     // Post in global chat
-    try {
-        await supabaseAdmin.from('global_messages').insert({
-            sender_email: 'system',
-            sender_name: 'SYSTEM',
-            sender_avatar: null,
-            message: `LEADERBOARD_REWARD_CARD::${JSON.stringify({ ...cardData, winnerName: profile.name || 'SUBJECT' })}`,
-        });
-    } catch (_) {}
+    const globalPayload = {
+        sender_email: 'system',
+        sender_name: 'SYSTEM',
+        sender_avatar: null,
+        message: `LEADERBOARD_REWARD_CARD::${JSON.stringify({ ...cardData, winnerName: profile.name || 'SUBJECT' })}`,
+    };
+    const { error: globalErr } = await supabaseAdmin.from('global_messages').insert(globalPayload);
+    if (globalErr) console.error('[cron/reward] GLOBAL INSERT FAILED:', globalErr.message, globalErr.details, globalErr.code);
 
     // Push notification
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
