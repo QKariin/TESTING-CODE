@@ -1309,9 +1309,9 @@ function CreateTab({ allChallenges, onCreate }: {
                             {tiers.map((tier, i) => {
                                 const updateTier = (key: string, val: any) => setTiers(prev => { const n = [...prev]; n[i] = { ...n[i], [key]: val }; return n; });
                                 const numField = (key: string, val: number) => (
-                                    <input type="number" className="forge-num" min={0} value={val || ''}
+                                    <input type="number" className="forge-num" min={0} value={val}
                                         placeholder="0"
-                                        onChange={e => updateTier(key, Number(e.target.value) || 0)}
+                                        onChange={e => updateTier(key, e.target.value === '' ? 0 : Number(e.target.value))}
                                         style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
                                 );
                                 return (
@@ -1336,7 +1336,7 @@ function CreateTab({ allChallenges, onCreate }: {
                                         <div style={{ textAlign: 'center' }}>
                                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 600, color: PINK, letterSpacing: '2px' }}>DAYS</div>
                                             <input type="number" className="forge-num" min={1} max={365} value={tier.days}
-                                                onChange={e => updateTier('days', Number(e.target.value))}
+                                                onChange={e => updateTier('days', e.target.value === '' ? 1 : Number(e.target.value))}
                                                 style={{ width: 60, fontSize: '1.3rem' }} />
                                         </div>
                                     </div>
@@ -1513,19 +1513,19 @@ function CreateTab({ allChallenges, onCreate }: {
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>ENTRY</div>
                                         {(['cost_soft', 'cost_strict', 'cost_brutal'] as const).map(k => (
                                             <input key={k} type="number" className="forge-num" min={0} value={(diffPricing as any)[k]}
-                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: Number(e.target.value) }))}
+                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: e.target.value === '' ? 0 : Number(e.target.value) }))}
                                                 style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
                                         ))}
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>DAILY</div>
                                         {(['daily_soft', 'daily_strict', 'daily_brutal'] as const).map(k => (
                                             <input key={k} type="number" className="forge-num" min={0} value={(diffPricing as any)[k]}
-                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: Number(e.target.value) }))}
+                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: e.target.value === '' ? 0 : Number(e.target.value) }))}
                                                 style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
                                         ))}
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#999', letterSpacing: '1px' }}>FINISH</div>
                                         {(['finish_soft', 'finish_strict', 'finish_brutal'] as const).map(k => (
                                             <input key={k} type="number" className="forge-num" min={0} value={(diffPricing as any)[k]}
-                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: Number(e.target.value) }))}
+                                                onChange={e => setDiffPricing(p => ({ ...p, [k]: e.target.value === '' ? 0 : Number(e.target.value) }))}
                                                 style={{ fontSize: '0.95rem', padding: '4px 2px', width: '100%' }} />
                                         ))}
                                     </div>
