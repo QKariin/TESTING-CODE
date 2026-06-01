@@ -8,12 +8,16 @@ const supabaseAdmin = createClient(
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const channel = searchParams.get('channel') || 'global';
+
     // Fetch newest 100 messages (descending), then reverse so oldest→newest for display
     // Filter out rows with NULL created_at to prevent ghost messages sorting weirdly
     const { data: rawData, error } = await supabaseAdmin
         .from('global_messages')
         .select('*')
+        .eq('channel', channel)
         .not('created_at', 'is', null)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -55,7 +59,7 @@ export async function POST(req: Request) {
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { senderEmail, message, media_url, media_type, reply_to, thumbnail_url } = body;
+    const { senderEmail, message, media_url, media_type, reply_to, thumbnail_url, channel } = body;
 
     if (!message?.trim()) return NextResponse.json({ error: 'Message required' }, { status: 400 });
     if (!senderEmail) return NextResponse.json({ error: 'Sender required' }, { status: 400 });
@@ -86,6 +90,7 @@ export async function POST(req: Request) {
         thumbnail_url: thumbnail_url || null,
         reply_to: reply_to || null,
         sender_email: realEmail.toLowerCase(),
+        channel: channel || 'global',
         created_at: new Date().toISOString()
     };
 

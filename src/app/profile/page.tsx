@@ -112,6 +112,7 @@ import {
     _confirmCheckpoint,
 } from '@/scripts/profile-logic';
 import { bindInlineRisky } from '@/scripts/inline-risky';
+import { bindStreamPlayer, initStreamPlayer, destroyStreamPlayer } from '@/scripts/stream-player';
 
 
 export default function ProfilePage() {
@@ -327,6 +328,9 @@ export default function ProfilePage() {
                     });
                 },
             );
+            // Stream player
+            bindStreamPlayer();
+            initStreamPlayer(() => { const s = getState(); return s?.email || s?.memberId || ''; });
             // Global chat lightbox + like
             if (!(window as any)._openGlobalLightbox) {
                 (window as any)._openGlobalLightbox = (url: string, type?: string) => {

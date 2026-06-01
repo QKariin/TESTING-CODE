@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import '@/css/landing.css';
+import { initStreamPreview, destroyStreamPlayer } from '@/scripts/stream-player';
 
 /* ── TYPES ── */
 interface LeaderboardEntry {
@@ -251,6 +252,12 @@ export default function TestLandingPage() {
         }, { threshold: 0.1 });
         document.querySelectorAll('.glass-box').forEach(b => focusObs.observe(b));
         return () => focusObs.disconnect();
+    }, []);
+
+    /* ── Livestream blurred preview ── */
+    useEffect(() => {
+        initStreamPreview();
+        return () => destroyStreamPlayer();
     }, []);
 
     /* ── Load leaderboard ── */
