@@ -166,7 +166,7 @@ export async function GET(req: Request) {
     const lastDayOfMonth = new Date(year, month, 0).getDate();
 
     const resets: string[] = ['Daily Score']; // Always reset daily
-    if (dayOfWeek === 1) resets.push('Weekly Score');
+    if (dayOfWeek === 0) resets.push('Weekly Score'); // Sunday night = end of week
     if (date === lastDayOfMonth) resets.push('Monthly Score');
     if (month === 12 && date === 31) resets.push('Yearly Score');
 
