@@ -19,12 +19,9 @@ export async function GET(req: Request) {
         .select('*')
         .not('created_at', 'is', null);
 
-    // Only filter by channel if requesting non-default (stream chat)
-    // This way existing messages without the column still show in global
+    // Only filter when explicitly requesting stream chat
     if (channel === 'stream') {
         query = query.eq('channel', 'stream');
-    } else {
-        query = query.or('channel.eq.global,channel.is.null');
     }
 
     const { data: rawData, error } = await query
