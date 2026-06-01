@@ -130,8 +130,8 @@ export async function POST(request: Request) {
             }
 
             const stake = Math.floor(wallet * stakePercent / 100);
-            if (stake <= 0) {
-                return NextResponse.json({ success: false, error: 'INSUFFICIENT_FUNDS' }, { status: 400 });
+            if (stake < 1000) {
+                return NextResponse.json({ success: false, error: 'Minimum stake is 1,000 coins' }, { status: 400 });
             }
 
             // Shuffle cards and determine outcome

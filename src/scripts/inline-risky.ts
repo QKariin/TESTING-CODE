@@ -104,6 +104,18 @@ function _irPickPercent(pct: number) {
     _irPercent = pct;
     _irStake = Math.floor(w * pct / 100);
 
+    if (_irStake < 1000) {
+        const display = document.getElementById('irStakeDisplay');
+        if (display) display.innerHTML = `
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(220,38,38,0.6);letter-spacing:2px;margin-bottom:4px;">MINIMUM 1,000 COINS</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:rgba(197,160,89,0.3);font-weight:700;">${_irStake.toLocaleString()} <span style="font-size:0.65rem;color:rgba(197,160,89,0.3);">COINS</span></div>`;
+        const wrap = document.getElementById('irConfirmWrap');
+        if (wrap) wrap.style.display = 'none';
+        _irPercent = 0;
+        _irStake = 0;
+        return;
+    }
+
     [10, 25, 50, 75, 100].forEach(p => {
         const b = document.getElementById(`irPct_${p}`);
         if (b) {
