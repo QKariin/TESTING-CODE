@@ -76,16 +76,11 @@ function _irShowStake() {
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">How much do you dare to risk?</div>
             </div>
             <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;">
-                ${pcts.map(p => {
-                    const stk = Math.floor(w * p / 100);
-                    const blocked = stk < 1000;
-                    return `<button id="irPct_${p}" ${blocked ? 'disabled' : `onclick="window._irPickPercent(${p})"`} style="width:58px;padding:14px 0;border:1px solid ${blocked ? 'rgba(255,255,255,0.05)' : 'rgba(197,160,89,0.2)'};border-radius:10px;background:${blocked ? 'rgba(255,255,255,0.02)' : 'rgba(197,160,89,0.04)'};cursor:${blocked ? 'not-allowed' : 'pointer'};display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;opacity:${blocked ? '0.25' : '1'};">
-                    <span style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:${blocked ? 'rgba(255,255,255,0.2)' : '#c5a059'};font-weight:700;">${p}%</span>
-                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:${blocked ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.35)'};">${stk.toLocaleString()}</span>
-                </button>`;
-                }).join('')}
+                ${pcts.map(p => `<button id="irPct_${p}" onclick="window._irPickPercent(${p})" style="width:58px;padding:14px 0;border:1px solid rgba(197,160,89,0.2);border-radius:10px;background:rgba(197,160,89,0.04);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.2s;">
+                    <span style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#c5a059;font-weight:700;">${p}%</span>
+                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.35);">${Math.floor(w * p / 100).toLocaleString()}</span>
+                </button>`).join('')}
             </div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.2);letter-spacing:1px;text-align:center;margin-bottom:10px;">MINIMUM STAKE: 1,000 COINS</div>
             <div id="irStakeDisplay" style="text-align:center;margin-bottom:24px;min-height:50px;"></div>
             <div id="irConfirmWrap" style="display:none;text-align:center;">
                 <style>
