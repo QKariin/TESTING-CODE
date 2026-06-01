@@ -165,8 +165,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                         const totalWindowsForDay = dayWindows?.length || tasksPerDay;
 
                         if (verifiedCountForDay >= totalWindowsForDay) {
-                            // PERFECT DAY! Award daily cashback
-                            const cashback = getDailyCashback(currentTier, difficulty);
+                            // PERFECT DAY! Award daily cashback (skip for rejoined players)
+                            const isRejoin = (part.rejoin_count || 0) > 0;
+                            const cashback = isRejoin ? 0 : getDailyCashback(currentTier, difficulty);
                             if (cashback > 0) {
                                 // Credit to wallet
                                 const { data: memberProfile } = await supabaseAdmin
@@ -189,8 +190,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                     // Check if full tier is complete
                     const tierTotalTasks = part.tier_days * tasksPerDay;
                     if (taskNum >= tierTotalTasks) {
-                        // Tier complete — mark as finished
-                        const finishBonus = currentTier ? getFinishBonus(currentTier, difficulty) : 0;
+                        // Tier complete — mark as finished (no finish bonus for rejoined players)
+                        const isRejoinFinish = (part.rejoin_count || 0) > 0;
+                        const finishBonus = (!isRejoinFinish && currentTier) ? getFinishBonus(currentTier, difficulty) : 0;
                         if (finishBonus > 0) {
                             const { data: memberProfile } = await supabaseAdmin
                                 .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
@@ -259,7 +261,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             if (!challenge?.is_tiered && challenge?.difficulty_pricing && ch) {
                 const dp = challenge.difficulty_pricing as any;
                 const { data: part } = await supabaseAdmin.from('challenge_participants')
-                    .select('difficulty, perfect_days, coins_earned, tier_days')
+                    .select('difficulty, perfect_days, coins_earned, tier_days, rejoin_count')
                     .eq('challenge_id', id).ilike('member_id', completion.member_id).maybeSingle();
 
                 if (part?.difficulty) {
@@ -280,9 +282,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                         const verifiedCountForDay = (allMyCompletions || []).filter((c: any) => dayWindowIds.has(c.window_id)).length;
 
                         if (verifiedCountForDay >= (dayWindows?.length || tasksPerDay)) {
-                            // Perfect day — award daily cashback
+                            // Perfect day — award daily cashback (skip for rejoined players)
+                            const isRejoin = (part.rejoin_count || 0) > 0;
                             const dailyKey = difficulty === 'easy' ? 'daily_soft' : difficulty === 'hard' ? 'daily_brutal' : 'daily_strict';
-                            const cashback = dp[dailyKey] ?? 0;
+                            const cashback = isRejoin ? 0 : (dp[dailyKey] ?? 0);
                             if (cashback > 0) {
                                 const { data: memberProfile } = await supabaseAdmin
                                     .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
@@ -304,7 +307,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                     const totalTasks = ch.duration_days * tasksPerDay;
                     if (taskNum >= totalTasks) {
                         const finishKey = difficulty === 'easy' ? 'finish_soft' : difficulty === 'hard' ? 'finish_brutal' : 'finish_strict';
-                        const finishBonus = dp[finishKey] ?? 0;
+                        const isRejoinFinish = (part.rejoin_count || 0) > 0;
+                        const finishBonus = isRejoinFinish ? 0 : (dp[finishKey] ?? 0);
                         if (finishBonus > 0) {
                             const { data: memberProfile } = await supabaseAdmin
                                 .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
