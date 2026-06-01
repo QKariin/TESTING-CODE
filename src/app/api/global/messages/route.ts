@@ -14,11 +14,20 @@ export async function GET(req: Request) {
 
     // Fetch newest 100 messages (descending), then reverse so oldest→newest for display
     // Filter out rows with NULL created_at to prevent ghost messages sorting weirdly
-    const { data: rawData, error } = await supabaseAdmin
+    let query = supabaseAdmin
         .from('global_messages')
         .select('*')
-        .eq('channel', channel)
-        .not('created_at', 'is', null)
+        .not('created_at', 'is', null);
+
+    // Only filter by channel if requesting non-default (stream chat)
+    // This way existing messages without the column still show in global
+    if (channel === 'stream') {
+        query = query.eq('channel', 'stream');
+    } else {
+        query = query.or('channel.eq.global,channel.is.null');
+    }
+
+    const { data: rawData, error } = await query
         .order('created_at', { ascending: false })
         .limit(100);
     const data = (rawData || []).reverse();
