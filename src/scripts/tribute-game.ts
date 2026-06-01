@@ -278,11 +278,22 @@ function _pickPercent(pct: number) {
     });
 
     const display = document.getElementById('riskyStakeDisplay');
+    const wrap = document.getElementById('riskyConfirmWrap');
+
+    if (_riskyStake < 1000) {
+        if (display) display.innerHTML = `
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(220,38,38,0.7);letter-spacing:2px;margin-bottom:4px;">MINIMUM 1,000 COINS TO GAMBLE</div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:rgba(197,160,89,0.3);font-weight:700;">${_riskyStake.toLocaleString()} <span style="font-size:0.65rem;color:rgba(197,160,89,0.3);">COINS</span></div>`;
+        if (wrap) wrap.style.display = 'none';
+        _riskyPercent = 0;
+        _riskyStake = 0;
+        return;
+    }
+
     if (display) display.innerHTML = `
         <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:4px;">YOU RISK</div>
         <div style="font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#c5a059;font-weight:700;">${_riskyStake.toLocaleString()} <span style="font-size:0.65rem;color:rgba(197,160,89,0.5);">COINS</span></div>`;
 
-    const wrap = document.getElementById('riskyConfirmWrap');
     if (wrap) wrap.style.display = 'block';
 }
 
