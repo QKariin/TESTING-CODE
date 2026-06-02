@@ -1245,7 +1245,19 @@ export function showCertificate() {
     closeBtn.textContent = 'CLOSE';
     closeBtn.onclick = () => overlay.remove();
 
+    const instructions = document.createElement('div');
+    instructions.style.cssText = 'text-align:center;padding:8px 12px;';
+    instructions.innerHTML = `
+        <div style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:6px;">HOW TO EARN 300 COINS</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);line-height:1.5;">
+            1. Save your certificate above<br>
+            2. Share it on <span style="color:rgba(197,160,89,0.7);">X</span> or <span style="color:rgba(197,160,89,0.7);">FetLife</span> and tag <span style="color:rgba(197,160,89,0.7);">@qkarin_com</span><br>
+            3. Upload a screenshot as proof below
+        </div>
+    `;
+
     btnWrap.appendChild(shareBtn);
+    btnWrap.appendChild(instructions);
     btnWrap.appendChild(uploadBtn);
     btnWrap.appendChild(closeBtn);
     overlay.appendChild(card);
