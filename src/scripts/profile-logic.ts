@@ -7096,6 +7096,11 @@ async function _doProfileUpload() {
             if (data.success && data.url) {
                 if (elProfilePic) elProfilePic.src = data.url;
                 if (elHudPic) elHudPic.src = data.url;
+                const elHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
+                if (elHaloPic) elHaloPic.src = data.url;
+                // Update cached state so certificate/other features see the new avatar
+                if ((window as any).__currentProfileRaw) (window as any).__currentProfileRaw.avatar_url = data.url;
+                const s = getState(); if (s?.raw) s.raw.avatar_url = data.url;
             } else {
                 alert('Photo upload failed: ' + (data.error || 'Unknown error'));
             }
