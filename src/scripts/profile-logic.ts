@@ -1223,21 +1223,18 @@ export function showCertificate() {
     uploadBtn.id = 'certUploadBtn';
     uploadBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.2);background:rgba(197,160,89,0.03);color:rgba(197,160,89,0.6);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:400;';
 
-    // Check if proof is on cooldown (7 days)
+    // Lock proof upload until user reaches a new rank
     const params = (raw?.parameters || {});
-    const lastProofAt = params.last_cert_proof_at ? new Date(params.last_cert_proof_at).getTime() : 0;
-    const cooldownMs = 7 * 24 * 60 * 60 * 1000;
-    const proofTimePassed = lastProofAt ? Date.now() - lastProofAt : cooldownMs + 1;
+    const lastProofRank = params.last_cert_proof_rank || '';
+    const proofLocked = lastProofRank.toLowerCase() === rank.toLowerCase();
 
-    if (lastProofAt && proofTimePassed < cooldownMs) {
-        const hoursLeft = Math.ceil((cooldownMs - proofTimePassed) / 3600000);
-        const daysLeft = Math.floor(hoursLeft / 24);
-        const hLeft = hoursLeft % 24;
-        const lockText = daysLeft > 0 ? `LOCKED: ${daysLeft}d ${hLeft}h` : `LOCKED: ${hLeft}h`;
-        uploadBtn.textContent = lockText;
+    if (proofLocked) {
+        uploadBtn.textContent = 'PROOF SUBMITTED — UNLOCK AT NEXT RANK';
         uploadBtn.disabled = true;
-        uploadBtn.style.opacity = '0.35';
+        uploadBtn.style.opacity = '0.5';
         uploadBtn.style.cursor = 'not-allowed';
+        uploadBtn.style.color = 'rgba(255,255,255,0.3)';
+        uploadBtn.style.borderColor = 'rgba(255,255,255,0.08)';
     } else {
         uploadBtn.textContent = 'UPLOAD PROOF \u2014 EARN 300 C';
         uploadBtn.onclick = () => _uploadCertProof();
@@ -1648,18 +1645,22 @@ function _uploadCertProof() {
                 return;
             }
 
-            // Lock the button with 7d countdown
+            // Lock the button until next rank
             if (btn) {
-                btn.textContent = 'LOCKED: 7d 0h';
+                btn.textContent = 'PROOF SUBMITTED — UNLOCK AT NEXT RANK';
                 btn.disabled = true;
-                btn.style.opacity = '0.35';
+                btn.style.opacity = '0.5';
                 btn.style.cursor = 'not-allowed';
+                btn.style.color = 'rgba(255,255,255,0.3)';
+                btn.style.borderColor = 'rgba(255,255,255,0.08)';
                 btn.onclick = null;
             }
 
             // Update local state so reopening certificate keeps button locked
-            const currentRaw = (window as any).__currentProfileRaw || getState().raw || {};
-            const updatedParams = { ...(currentRaw.parameters || {}), last_cert_proof_at: new Date().toISOString() };
+            const state0 = getState();
+            const currentRank = (state0 as any).rank || (window as any).__currentProfileRaw?.hierarchy || 'Hall Boy';
+            const currentRaw = (window as any).__currentProfileRaw || state0.raw || {};
+            const updatedParams = { ...(currentRaw.parameters || {}), last_cert_proof_rank: currentRank };
             const updatedRaw = { ...currentRaw, parameters: updatedParams };
             setState({ raw: updatedRaw });
             (window as any).__currentProfileRaw = updatedRaw;

@@ -67,19 +67,17 @@ export async function POST(req: Request) {
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-        // Check 7-day cooldown
+        // Lock until user reaches a new rank
         const params = profile.parameters || {};
-        const lastProof = params.last_cert_proof_at ? new Date(params.last_cert_proof_at).getTime() : 0;
-        const cooldownMs = 7 * 24 * 60 * 60 * 1000;
-        if (lastProof && Date.now() - lastProof < cooldownMs) {
-            const hoursLeft = Math.ceil((cooldownMs - (Date.now() - lastProof)) / 3600000);
-            return NextResponse.json({ error: `You can submit again in ${hoursLeft}h` }, { status: 429 });
+        const lastProofRank = params.last_cert_proof_rank || '';
+        if (lastProofRank && lastProofRank.toLowerCase() === (profile.hierarchy || '').toLowerCase()) {
+            return NextResponse.json({ error: 'Proof already submitted for this rank. Unlock at next rank.' }, { status: 429 });
         }
 
-        // Update cooldown timestamp
+        // Store which rank the proof was submitted for
         await adminClient
             .from('profiles')
-            .update({ parameters: { ...params, last_cert_proof_at: new Date().toISOString() } })
+            .update({ parameters: { ...params, last_cert_proof_rank: profile.hierarchy || 'Hall Boy' } })
             .eq('ID', profile.ID);
 
         // Send as chat message (type: 'chat' so it shows in regular messages on both sides)
@@ -161,9 +159,9 @@ export async function POST(req: Request) {
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-        // Reset cooldown so they can try again
+        // Reset lock so they can try again
         const params = profile.parameters || {};
-        delete params.last_cert_proof_at;
+        delete params.last_cert_proof_rank;
         await adminClient
             .from('profiles')
             .update({ parameters: params })
