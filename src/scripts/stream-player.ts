@@ -53,7 +53,7 @@ function _showFloatingPlayer() {
     wrap.id = 'streamFloat';
     wrap.innerHTML = `
         <div id="streamFloatInner" style="
-            position:fixed; bottom:80px; right:12px; z-index:9000;
+            position:fixed; bottom:80px; right:12px; z-index:10000010;
             width:200px; border-radius:12px; overflow:hidden;
             border:1px solid rgba(197,160,89,0.3);
             box-shadow:0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.8);
@@ -125,7 +125,7 @@ function _streamClose() {
     btn.id = 'streamReopenBtn';
     btn.onclick = () => { btn.remove(); _showFloatingPlayer(); };
     btn.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;margin-right:4px;vertical-align:middle;"></div><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.7);letter-spacing:2px;vertical-align:middle;">LIVE</span>`;
-    btn.style.cssText = 'position:fixed;bottom:85px;right:12px;z-index:9000;padding:6px 12px;border-radius:20px;border:1px solid rgba(197,160,89,0.3);background:rgba(0,0,0,0.85);cursor:pointer;backdrop-filter:blur(8px);';
+    btn.style.cssText = 'position:fixed;bottom:85px;right:12px;z-index:10000010;padding:6px 12px;border-radius:20px;border:1px solid rgba(197,160,89,0.3);background:rgba(0,0,0,0.85);cursor:pointer;backdrop-filter:blur(8px);';
     document.body.appendChild(btn);
 }
 
@@ -140,7 +140,7 @@ async function _openStreamChat() {
 
     const ov = document.createElement('div');
     ov.id = 'streamChatOverlay';
-    ov.style.cssText = 'position:fixed;bottom:80px;right:12px;z-index:9100;width:320px;max-width:90vw;height:400px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
+    ov.style.cssText = 'position:fixed;bottom:80px;right:12px;z-index:10000011;width:320px;max-width:90vw;height:400px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
     ov.innerHTML = `
         <div style="padding:10px 14px;border-bottom:1px solid rgba(197,160,89,0.1);display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:6px;">
@@ -217,7 +217,7 @@ function _updateLiveDot() {
     if (_isLive && !dot) {
         dot = document.createElement('div');
         dot.id = 'navLiveDot';
-        dot.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9999;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(0,0,0,0.7);border:1px solid rgba(239,68,68,0.3);backdrop-filter:blur(8px);cursor:pointer;';
+        dot.style.cssText = 'position:fixed;top:8px;right:8px;z-index:10000012;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(0,0,0,0.7);border:1px solid rgba(239,68,68,0.3);backdrop-filter:blur(8px);cursor:pointer;';
         dot.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#ef4444;letter-spacing:2px;">LIVE</span>`;
         dot.onclick = () => {
             const player = document.getElementById('streamFloat');
