@@ -92,9 +92,7 @@ export async function POST(req: Request) {
             const skipPasses = Number(p.skippass || 0);
             const cumPasses = Number(p.cumpass || 0);
             const checkpoints = Number(p.checkpoint || 0);
-            if (skipPasses || cumPasses || checkpoints) {
-                userContext += `\nINVENTORY: ${skipPasses} Skip Pass, ${cumPasses} Cum Pass, ${checkpoints} Checkpoint`;
-            }
+            userContext += `\nINVENTORY: ${skipPasses} Skip Pass, ${cumPasses} Cum Pass, ${checkpoints} Checkpoint`;
         }
 
         if (wishlistItems && wishlistItems.length > 0) {
