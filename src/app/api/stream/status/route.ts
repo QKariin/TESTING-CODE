@@ -15,6 +15,10 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Track last notification time to deduplicate (survives within same serverless instance)
+let _lastNotifSentAt = 0;
+const NOTIF_COOLDOWN = 60 * 60 * 1000; // 1 hour
+
 // GET /api/stream/status — check if stream is live
 export async function GET() {
     let isLive = false;
@@ -55,40 +59,61 @@ export async function GET() {
     return NextResponse.json({ live: isLive });
 }
 
-// POST /api/stream/status — Queen triggers "going live" (sends push to all)
-export async function POST(req: Request) {
-    const { getCaller, isCEO } = await import('@/lib/api-auth');
-    const caller = await getCaller();
-    if (!caller || !isCEO(caller.email)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+// POST /api/stream/status — auto-triggered when stream goes live, sends push to all
+// Deduplicated: only sends once per hour regardless of how many clients call it
+export async function POST() {
+    // Dedup: skip if notification was sent recently
+    if (Date.now() - _lastNotifSentAt < NOTIF_COOLDOWN) {
+        return NextResponse.json({ success: true, skipped: true });
     }
+
+    // Verify stream is actually live before sending
+    let isLive = false;
+    try {
+        const res = await fetch(
+            `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/lifecycle`,
+            { cache: 'no-store' }
+        );
+        if (res.ok) {
+            const data = await res.json();
+            isLive = data.live === true;
+        }
+    } catch {}
+
+    if (!isLive) {
+        return NextResponse.json({ success: false, reason: 'not live' });
+    }
+
+    _lastNotifSentAt = Date.now();
 
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
 
-    if (!apiKey) {
-        return NextResponse.json({ error: 'Push not configured' }, { status: 500 });
+    let pushData = null;
+    if (apiKey) {
+        try {
+            const pushRes = await fetch('https://api.onesignal.com/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    app_id: appId,
+                    included_segments: ['All'],
+                    headings: { en: 'Queen Karin is LIVE' },
+                    contents: { en: 'The Queen is streaming now. Join and watch.' },
+                    url: 'https://throne.qkarin.com/profile',
+                }),
+            });
+            pushData = await pushRes.json();
+            console.log('[stream] Push sent to all:', pushData);
+        } catch (e) {
+            console.error('[stream] Push error:', e);
+        }
     }
 
-    // Send push notification to ALL subscribers
-    const pushRes = await fetch('https://api.onesignal.com/notifications', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${apiKey}`,
-        },
-        body: JSON.stringify({
-            app_id: appId,
-            included_segments: ['All'],
-            headings: { en: 'Queen Karin is LIVE' },
-            contents: { en: 'The Queen is streaming now. Join and watch.' },
-            url: 'https://throne.qkarin.com/profile',
-        }),
-    });
-
-    const pushData = await pushRes.json();
-
-    // Also post to global chat
+    // Post to global chat
     try {
         await supabaseAdmin.from('global_messages').insert({
             sender_email: 'system',

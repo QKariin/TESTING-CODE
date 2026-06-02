@@ -14,6 +14,16 @@ let _pollTimer: ReturnType<typeof setInterval> | null = null;
 let _chatOpen = false;
 let _playerMinimized = false;
 let _getEmail: () => string = () => '';
+let _notifSent = false;
+
+// ── Drag state ──
+let _dragStartX = 0;
+let _dragStartY = 0;
+let _dragOffsetX = 0;
+let _dragOffsetY = 0;
+let _dragging = false;
+let _playerX = -1; // -1 = use default position
+let _playerY = -1;
 
 // ── LIVE CHECK ──
 async function checkLive(): Promise<boolean> {
@@ -27,23 +37,56 @@ async function checkLive(): Promise<boolean> {
     }
 }
 
+// ── AUTO PUSH NOTIFICATION ──
+async function _sendGoLiveNotif() {
+    if (_notifSent) return;
+    _notifSent = true;
+    try {
+        await fetch('/api/stream/status', { method: 'POST' });
+    } catch {}
+}
+
 // ── PROFILE: FLOATING PLAYER ──
 export async function initStreamPlayer(emailFn: () => string) {
     _getEmail = emailFn;
 
     // Initial check
     _isLive = await checkLive();
-    if (_isLive) _showFloatingPlayer();
+    if (_isLive) {
+        _showFloatingPlayer();
+        _sendGoLiveNotif();
+    }
     _updateLiveDot();
 
     // Poll every 30s
     _pollTimer = setInterval(async () => {
         const was = _isLive;
         _isLive = await checkLive();
-        if (_isLive && !was) _showFloatingPlayer();
-        if (!_isLive && was) _hideFloatingPlayer();
+        if (_isLive && !was) {
+            _showFloatingPlayer();
+            _sendGoLiveNotif();
+        }
+        if (!_isLive && was) {
+            _hideFloatingPlayer();
+            _notifSent = false; // reset so next stream sends notif again
+        }
         _updateLiveDot();
     }, 30000);
+}
+
+function _getPlayerPos() {
+    if (_playerX < 0 || _playerY < 0) {
+        return { right: '12px', bottom: '80px', left: 'auto', top: 'auto' };
+    }
+    return { left: _playerX + 'px', top: _playerY + 'px', right: 'auto', bottom: 'auto' };
+}
+
+function _applyPos(el: HTMLElement) {
+    const pos = _getPlayerPos();
+    el.style.left = pos.left;
+    el.style.top = pos.top;
+    el.style.right = pos.right;
+    el.style.bottom = pos.bottom;
 }
 
 function _showFloatingPlayer() {
@@ -51,26 +94,28 @@ function _showFloatingPlayer() {
 
     const wrap = document.createElement('div');
     wrap.id = 'streamFloat';
+
+    const pos = _getPlayerPos();
     wrap.innerHTML = `
         <div id="streamFloatInner" style="
-            position:fixed; bottom:80px; right:12px; z-index:10000010;
+            position:fixed; ${pos.bottom !== 'auto' ? 'bottom:' + pos.bottom : 'top:' + pos.top}; ${pos.right !== 'auto' ? 'right:' + pos.right : 'left:' + pos.left}; z-index:10000010;
             width:200px; border-radius:12px; overflow:hidden;
             border:1px solid rgba(197,160,89,0.3);
             box-shadow:0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.8);
-            background:#000; transition:all 0.3s ease;
+            background:#000; touch-action:none; user-select:none;
         ">
-            <div style="position:relative;">
+            <div id="streamDragHandle" style="position:relative;cursor:grab;">
                 <iframe src="${IFRAME_URL}?muted=true&autoplay=true&controls=false"
-                    style="width:100%;aspect-ratio:16/9;border:none;display:block;"
+                    style="width:100%;aspect-ratio:16/9;border:none;display:block;pointer-events:none;"
                     allow="autoplay;encrypted-media" allowfullscreen></iframe>
                 <div style="position:absolute;top:6px;left:6px;display:flex;align-items:center;gap:4px;">
                     <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
                     <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#fff;letter-spacing:2px;text-shadow:0 1px 4px rgba(0,0,0,0.8);">LIVE</span>
                 </div>
                 <div style="position:absolute;top:4px;right:4px;display:flex;gap:4px;">
-                    <button onclick="window._streamExpand()" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.6);color:#fff;cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center;">⛶</button>
-                    <button onclick="window._streamMinimize()" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.6);color:#fff;cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center;">−</button>
-                    <button onclick="window._streamClose()" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.6);color:#fff;cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center;">×</button>
+                    <button onclick="window._streamExpand()" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.6);color:#fff;cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center;">&#x26F6;</button>
+                    <button onclick="window._streamMinimize()" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.6);color:#fff;cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center;">&minus;</button>
+                    <button onclick="window._streamClose()" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(0,0,0,0.6);color:#fff;cursor:pointer;font-size:0.6rem;display:flex;align-items:center;justify-content:center;">&times;</button>
                 </div>
             </div>
             <div style="display:flex;border-top:1px solid rgba(197,160,89,0.15);">
@@ -82,6 +127,66 @@ function _showFloatingPlayer() {
         </style>
     `;
     document.body.appendChild(wrap);
+    _initDrag();
+}
+
+// ── DRAG LOGIC ──
+function _initDrag() {
+    const handle = document.getElementById('streamDragHandle');
+    if (!handle) return;
+
+    const onStart = (cx: number, cy: number) => {
+        const inner = document.getElementById('streamFloatInner');
+        if (!inner) return;
+        _dragging = true;
+        handle.style.cursor = 'grabbing';
+        const rect = inner.getBoundingClientRect();
+        _dragOffsetX = cx - rect.left;
+        _dragOffsetY = cy - rect.top;
+        inner.style.transition = 'none';
+    };
+
+    const onMove = (cx: number, cy: number) => {
+        if (!_dragging) return;
+        const inner = document.getElementById('streamFloatInner');
+        if (!inner) return;
+        let x = cx - _dragOffsetX;
+        let y = cy - _dragOffsetY;
+        // Clamp to viewport
+        x = Math.max(0, Math.min(x, window.innerWidth - inner.offsetWidth));
+        y = Math.max(0, Math.min(y, window.innerHeight - inner.offsetHeight));
+        _playerX = x;
+        _playerY = y;
+        inner.style.left = x + 'px';
+        inner.style.top = y + 'px';
+        inner.style.right = 'auto';
+        inner.style.bottom = 'auto';
+    };
+
+    const onEnd = () => {
+        _dragging = false;
+        handle.style.cursor = 'grab';
+        const inner = document.getElementById('streamFloatInner');
+        if (inner) inner.style.transition = 'width 0.3s ease, max-width 0.3s ease';
+        _repositionChat();
+    };
+
+    // Mouse
+    handle.addEventListener('mousedown', (e) => { e.preventDefault(); onStart(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', onEnd);
+
+    // Touch
+    handle.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        onStart(t.clientX, t.clientY);
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+        if (!_dragging) return;
+        const t = e.touches[0];
+        onMove(t.clientX, t.clientY);
+    }, { passive: true });
+    window.addEventListener('touchend', onEnd);
 }
 
 function _hideFloatingPlayer() {
@@ -93,10 +198,20 @@ function _streamExpand() {
     const inner = document.getElementById('streamFloatInner');
     if (!inner) return;
     const isExpanded = inner.style.width === '92vw';
-    inner.style.width = isExpanded ? '200px' : '92vw';
-    inner.style.maxWidth = isExpanded ? '200px' : '500px';
-    inner.style.bottom = isExpanded ? '80px' : '80px';
-    inner.style.right = isExpanded ? '12px' : '4vw';
+    if (isExpanded) {
+        inner.style.width = '200px';
+        inner.style.maxWidth = '200px';
+        // Enable iframe pointer-events block for drag
+        const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
+        if (iframe) iframe.style.pointerEvents = 'none';
+    } else {
+        inner.style.width = '92vw';
+        inner.style.maxWidth = '500px';
+        // Allow iframe interaction when expanded
+        const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
+        if (iframe) iframe.style.pointerEvents = 'auto';
+    }
+    _repositionChat();
 }
 
 function _streamMinimize() {
@@ -134,30 +249,47 @@ function _streamToggleChat() {
     _chatOpen ? _closeStreamChat() : _openStreamChat();
 }
 
+function _repositionChat() {
+    const ov = document.getElementById('streamChatOverlay');
+    const inner = document.getElementById('streamFloatInner');
+    if (!ov || !inner) return;
+    const rect = inner.getBoundingClientRect();
+    ov.style.left = rect.left + 'px';
+    ov.style.top = (rect.bottom + 6) + 'px';
+    ov.style.right = 'auto';
+    ov.style.bottom = 'auto';
+    // If chat would go off screen bottom, position above instead
+    const chatH = ov.offsetHeight;
+    if (rect.bottom + 6 + chatH > window.innerHeight) {
+        ov.style.top = Math.max(0, rect.top - chatH - 6) + 'px';
+    }
+}
+
 async function _openStreamChat() {
     _chatOpen = true;
     if (document.getElementById('streamChatOverlay')) return;
 
     const ov = document.createElement('div');
     ov.id = 'streamChatOverlay';
-    ov.style.cssText = 'position:fixed;bottom:80px;right:12px;z-index:10000011;width:320px;max-width:90vw;height:400px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
+    ov.style.cssText = 'position:fixed;z-index:10000011;width:320px;max-width:90vw;height:350px;max-height:50vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
     ov.innerHTML = `
         <div style="padding:10px 14px;border-bottom:1px solid rgba(197,160,89,0.1);display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:6px;">
                 <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
                 <span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.7);letter-spacing:2px;">STREAM CHAT</span>
             </div>
-            <button onclick="window._closeStreamChat()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.9rem;padding:0;line-height:1;">×</button>
+            <button onclick="window._closeStreamChat()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.9rem;padding:0;line-height:1;">&times;</button>
         </div>
         <div id="streamChatMsgs" style="flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;"></div>
         <div style="padding:8px 10px;border-top:1px solid rgba(197,160,89,0.1);display:flex;gap:6px;">
             <input id="streamChatInput" type="text" placeholder="Say something..."
                 onkeydown="if(event.key==='Enter')window._sendStreamChat()"
-                style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(197,160,89,0.1);border-radius:8px;padding:8px 10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.8rem;outline:none;" />
+                style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(197,160,89,0.1);border-radius:8px;padding:8px 10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;" />
             <button onclick="window._sendStreamChat()" style="padding:8px 14px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:1px;">SEND</button>
         </div>
     `;
     document.body.appendChild(ov);
+    _repositionChat();
     _loadStreamChat();
     _startStreamChatPoll();
 }
