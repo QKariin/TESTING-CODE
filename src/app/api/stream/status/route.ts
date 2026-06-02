@@ -9,7 +9,6 @@ const CF_LIVE_INPUT_ID = process.env.CLOUDFLARE_LIVE_INPUT_ID || '';
 
 const CF_SUBDOMAIN = 'customer-d8ziir1df1lqjii2.cloudflarestream.com';
 const CF_STREAM_ID = '9a3ae8586ec9914c65a5c3a752671fd6';
-const HLS_URL = `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/manifest/video.m3u8`;
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,13 +38,16 @@ export async function GET() {
         }
     }
 
-    // Method 2: Fallback — try fetching HLS manifest
+    // Method 2: Fallback — Cloudflare Stream lifecycle endpoint (no API key needed)
     if (!isLive) {
         try {
-            const res = await fetch(HLS_URL, { method: 'GET', cache: 'no-store' });
+            const res = await fetch(
+                `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/lifecycle`,
+                { cache: 'no-store' }
+            );
             if (res.ok) {
-                const text = await res.text();
-                isLive = text.includes('#EXTINF') || text.includes('#EXT-X-STREAM-INF');
+                const data = await res.json();
+                isLive = data.live === true;
             }
         } catch {}
     }
