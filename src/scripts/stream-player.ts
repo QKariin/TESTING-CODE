@@ -18,8 +18,10 @@ let _getEmail: () => string = () => '';
 // ── LIVE CHECK ──
 async function checkLive(): Promise<boolean> {
     try {
-        const res = await fetch(HLS_URL, { method: 'HEAD', cache: 'no-store' });
-        return res.ok;
+        const res = await fetch('/api/stream/status', { cache: 'no-store' });
+        if (!res.ok) return false;
+        const data = await res.json();
+        return !!data.live;
     } catch {
         return false;
     }
