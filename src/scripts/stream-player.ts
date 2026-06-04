@@ -340,7 +340,7 @@ async function _openStreamChat() {
     // Move player to top when chat opens
     const inner = document.getElementById('streamFloatInner');
     if (inner && inner.dataset.expanded === '1') {
-        inner.style.top = '10px';
+        inner.style.top = '60px';
         inner.style.bottom = 'auto';
     }
 
@@ -363,6 +363,9 @@ async function _openStreamChat() {
             <button onclick="window._sendStreamChat()" style="padding:8px 14px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:1px;">SEND</button>
         </div>
     `;
+    // Prevent touch/mouse on chat from triggering player drag
+    ov.addEventListener('mousedown', (e) => e.stopPropagation());
+    ov.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
     document.body.appendChild(ov);
     _repositionChat();
     _loadStreamChat();
