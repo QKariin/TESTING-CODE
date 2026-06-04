@@ -22,6 +22,7 @@ let _dragStartY = 0;
 let _dragOffsetX = 0;
 let _dragOffsetY = 0;
 let _dragging = false;
+let _didDrag = false; // true if an actual drag occurred (prevents click-on-release)
 let _playerX = -1; // -1 = use default position
 let _playerY = -1;
 
@@ -76,9 +77,9 @@ export async function initStreamPlayer(emailFn: () => string) {
 
 function _getPlayerPos() {
     if (_playerX < 0 || _playerY < 0) {
-        return { right: '12px', bottom: '80px', left: 'auto', top: 'auto' };
+        return { right: 'auto', bottom: 'auto', left: '50%', top: '10px', transform: 'translateX(-50%)' };
     }
-    return { left: _playerX + 'px', top: _playerY + 'px', right: 'auto', bottom: 'auto' };
+    return { left: _playerX + 'px', top: _playerY + 'px', right: 'auto', bottom: 'auto', transform: 'none' };
 }
 
 function _applyPos(el: HTMLElement) {
@@ -87,6 +88,7 @@ function _applyPos(el: HTMLElement) {
     el.style.top = pos.top;
     el.style.right = pos.right;
     el.style.bottom = pos.bottom;
+    el.style.transform = pos.transform;
 }
 
 function _showFloatingPlayer() {
@@ -98,8 +100,8 @@ function _showFloatingPlayer() {
     const pos = _getPlayerPos();
     wrap.innerHTML = `
         <div id="streamFloatInner" style="
-            position:fixed; ${pos.bottom !== 'auto' ? 'bottom:' + pos.bottom : 'top:' + pos.top}; ${pos.right !== 'auto' ? 'right:' + pos.right : 'left:' + pos.left}; z-index:10000010;
-            width:200px; border-radius:12px; overflow:hidden;
+            position:fixed; top:${pos.top}; left:${pos.left}; right:${pos.right}; bottom:${pos.bottom}; transform:${pos.transform}; z-index:10000010;
+            width:90vw; max-width:400px; border-radius:12px; overflow:hidden;
             border:1px solid rgba(197,160,89,0.3);
             box-shadow:0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.8);
             background:#000; touch-action:none; user-select:none;
@@ -139,6 +141,9 @@ function _initDrag() {
         const inner = document.getElementById('streamFloatInner');
         if (!inner) return;
         _dragging = true;
+        _didDrag = false;
+        _dragStartX = cx;
+        _dragStartY = cy;
         handle.style.cursor = 'grabbing';
         const rect = inner.getBoundingClientRect();
         _dragOffsetX = cx - rect.left;
@@ -148,6 +153,10 @@ function _initDrag() {
 
     const onMove = (cx: number, cy: number) => {
         if (!_dragging) return;
+        // Only count as drag if moved more than 5px
+        if (!_didDrag && (Math.abs(cx - _dragStartX) > 5 || Math.abs(cy - _dragStartY) > 5)) {
+            _didDrag = true;
+        }
         const inner = document.getElementById('streamFloatInner');
         if (!inner) return;
         let x = cx - _dragOffsetX;
@@ -161,6 +170,7 @@ function _initDrag() {
         inner.style.top = y + 'px';
         inner.style.right = 'auto';
         inner.style.bottom = 'auto';
+        inner.style.transform = 'none';
     };
 
     const onEnd = () => {
@@ -195,19 +205,18 @@ function _hideFloatingPlayer() {
 }
 
 function _streamExpand() {
+    if (_didDrag) { _didDrag = false; return; }
     const inner = document.getElementById('streamFloatInner');
     if (!inner) return;
-    const isExpanded = inner.style.width === '92vw';
+    const isExpanded = inner.style.maxWidth === '500px';
     if (isExpanded) {
-        inner.style.width = '200px';
-        inner.style.maxWidth = '200px';
-        // Enable iframe pointer-events block for drag
+        inner.style.width = '90vw';
+        inner.style.maxWidth = '400px';
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'none';
     } else {
-        inner.style.width = '92vw';
+        inner.style.width = '95vw';
         inner.style.maxWidth = '500px';
-        // Allow iframe interaction when expanded
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'auto';
     }
@@ -215,6 +224,7 @@ function _streamExpand() {
 }
 
 function _streamMinimize() {
+    if (_didDrag) { _didDrag = false; return; }
     const inner = document.getElementById('streamFloatInner');
     if (!inner) return;
     _playerMinimized = !_playerMinimized;
@@ -225,14 +235,15 @@ function _streamMinimize() {
         if (iframe) iframe.style.display = 'none';
         _closeStreamChat();
     } else {
-        inner.style.width = '200px';
-        inner.style.maxWidth = '200px';
+        inner.style.width = '90vw';
+        inner.style.maxWidth = '400px';
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.display = 'block';
     }
 }
 
 function _streamClose() {
+    if (_didDrag) { _didDrag = false; return; }
     _hideFloatingPlayer();
     // Show a small "LIVE" button to reopen
     if (document.getElementById('streamReopenBtn')) return;
@@ -423,6 +434,119 @@ export function destroyStreamPlayer() {
     document.getElementById('streamReopenBtn')?.remove();
 }
 
+// ── DASHBOARD: STREAM CHAT (Queen only — no video player, just chat) ──
+let _dashStreamChatOpen = false;
+let _dashStreamPollTimer: ReturnType<typeof setInterval> | null = null;
+let _dashStreamLivePollTimer: ReturnType<typeof setInterval> | null = null;
+let _dashGetEmail: () => string = () => '';
+
+export async function initDashStreamChat(emailFn: () => string) {
+    _dashGetEmail = emailFn;
+    const live = await checkLive();
+    if (live) _showDashStreamBtn();
+    _dashStreamLivePollTimer = setInterval(async () => {
+        const nowLive = await checkLive();
+        if (nowLive && !document.getElementById('dashStreamBtn')) _showDashStreamBtn();
+        if (!nowLive) {
+            document.getElementById('dashStreamBtn')?.remove();
+            _closeDashStreamChat();
+        }
+    }, 30000);
+}
+
+function _showDashStreamBtn() {
+    if (document.getElementById('dashStreamBtn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'dashStreamBtn';
+    btn.onclick = () => _dashStreamChatOpen ? _closeDashStreamChat() : _openDashStreamChat();
+    btn.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></div><span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:#c5a059;letter-spacing:2px;vertical-align:middle;">STREAM CHAT</span>`;
+    btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000010;padding:10px 18px;border-radius:25px;border:1px solid rgba(197,160,89,0.4);background:rgba(0,0,0,0.9);cursor:pointer;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+    const style = document.createElement('style');
+    style.textContent = `@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }`;
+    btn.appendChild(style);
+    document.body.appendChild(btn);
+}
+
+function _openDashStreamChat() {
+    _dashStreamChatOpen = true;
+    if (document.getElementById('dashStreamChatPanel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'dashStreamChatPanel';
+    panel.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10000011;width:360px;max-width:90vw;height:420px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.25);background:rgba(2,5,18,0.97);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);';
+    panel.innerHTML = `
+        <div style="padding:12px 16px;border-bottom:1px solid rgba(197,160,89,0.12);display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:7px;height:7px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
+                <span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.8);letter-spacing:2px;">STREAM CHAT</span>
+            </div>
+            <button onclick="window._closeDashStreamChat()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:1rem;padding:0;line-height:1;">&times;</button>
+        </div>
+        <div id="dashStreamMsgs" style="flex:1;overflow-y:auto;padding:10px 14px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;"></div>
+        <div style="padding:10px 12px;border-top:1px solid rgba(197,160,89,0.12);display:flex;gap:8px;">
+            <input id="dashStreamInput" type="text" placeholder="Message stream chat..."
+                onkeydown="if(event.key==='Enter')window._sendDashStreamMsg()"
+                style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:10px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;" />
+            <button onclick="window._sendDashStreamMsg()" style="padding:10px 16px;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:1px;">SEND</button>
+        </div>
+    `;
+    document.body.appendChild(panel);
+    _loadDashStreamMsgs();
+    _dashStreamPollTimer = setInterval(_loadDashStreamMsgs, 4000);
+}
+
+function _closeDashStreamChat() {
+    _dashStreamChatOpen = false;
+    document.getElementById('dashStreamChatPanel')?.remove();
+    if (_dashStreamPollTimer) { clearInterval(_dashStreamPollTimer); _dashStreamPollTimer = null; }
+}
+
+async function _loadDashStreamMsgs() {
+    const container = document.getElementById('dashStreamMsgs');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/global/messages?channel=stream');
+        const data = await res.json();
+        const msgs = data.messages || [];
+        const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 40;
+        container.innerHTML = msgs.map((m: any) => {
+            const name = m.sender_name || 'SUBJECT';
+            const isQueen = m.is_queen;
+            const isSystem = m.sender_email === 'system';
+            if (isSystem) return '';
+            const nameColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.4)';
+            const msgColor = isQueen ? 'rgba(197,160,89,0.8)' : 'rgba(255,255,255,0.65)';
+            return `<div style="padding:3px 0;">
+                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:${nameColor};letter-spacing:1px;margin-right:6px;">${name}</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:${msgColor};">${m.message}</span>
+            </div>`;
+        }).join('');
+        if (wasAtBottom) container.scrollTop = container.scrollHeight;
+    } catch {}
+}
+
+async function _sendDashStreamMsg() {
+    const input = document.getElementById('dashStreamInput') as HTMLInputElement;
+    if (!input || !input.value.trim()) return;
+    const msg = input.value.trim();
+    input.value = '';
+    const email = _dashGetEmail();
+    if (!email) return;
+    try {
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail: email, message: msg, channel: 'stream' }),
+        });
+        _loadDashStreamMsgs();
+    } catch {}
+}
+
+export function destroyDashStreamChat() {
+    _closeDashStreamChat();
+    if (_dashStreamLivePollTimer) { clearInterval(_dashStreamLivePollTimer); _dashStreamLivePollTimer = null; }
+    document.getElementById('dashStreamBtn')?.remove();
+}
+
 // ── WINDOW BINDINGS ──
 export function bindStreamPlayer() {
     (window as any)._streamExpand = _streamExpand;
@@ -431,6 +555,9 @@ export function bindStreamPlayer() {
     (window as any)._streamToggleChat = _streamToggleChat;
     (window as any)._closeStreamChat = _closeStreamChat;
     (window as any)._sendStreamChat = _sendStreamChat;
+    (window as any)._closeDashStreamChat = _closeDashStreamChat;
+    (window as any)._sendDashStreamMsg = _sendDashStreamMsg;
     (window as any).initStreamPlayer = initStreamPlayer;
     (window as any).initStreamPreview = initStreamPreview;
+    (window as any).initDashStreamChat = initDashStreamChat;
 }

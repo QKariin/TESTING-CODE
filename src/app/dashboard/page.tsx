@@ -30,6 +30,7 @@ import { reconnectDashboardChat } from '@/scripts/dashboard-chat';
 import { reconnectDashboardMain } from '@/scripts/dashboard-main';
 import { bindDashMobGlobal } from '@/scripts/dash-mobile-global';
 import { bindInlineRisky } from '@/scripts/inline-risky';
+import { initDashStreamChat, destroyDashStreamChat, bindStreamPlayer } from '@/scripts/stream-player';
 
 const PAYWALL_PRESETS = [
     "Monthly tribute not received. Pay now.",
@@ -980,6 +981,10 @@ export default function DashboardPage() {
             // Bind mobile global overlay functions
             bindDashMobGlobal();
 
+            // Stream chat for dashboard (Queen can chat with stream viewers)
+            bindStreamPlayer();
+            initDashStreamChat(() => adminEmail || '');
+
             // Bind inline risky send (standalone module — works on dashboard too)
             bindInlineRisky(
                 () => adminEmail || '',
@@ -1021,7 +1026,7 @@ export default function DashboardPage() {
         }
 
         // Mobile uses MobileDashboard — skip all desktop init
-        if (window.innerWidth < 768) return () => { cleanupPresenceTracking(); };
+        if (window.innerWidth < 768) return () => { cleanupPresenceTracking(); destroyDashStreamChat(); };
 
         // 1. Initialize System (UI Listeners)
         initDashboard();
@@ -1364,6 +1369,7 @@ export default function DashboardPage() {
             supabaseRt.removeChannel(tasksChannel);
             supabaseRt.removeChannel(restrictChannel);
             cleanupPresenceTracking();
+            destroyDashStreamChat();
         };
     }, []);
 

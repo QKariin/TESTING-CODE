@@ -15,9 +15,7 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Track last notification time to deduplicate (survives within same serverless instance)
-let _lastNotifSentAt = 0;
-const NOTIF_COOLDOWN = 60 * 60 * 1000; // 1 hour
+const NOTIF_COOLDOWN_MIN = 60; // 1 hour in minutes
 
 // GET /api/stream/status — check if stream is live
 export async function GET() {
@@ -60,11 +58,21 @@ export async function GET() {
 }
 
 // POST /api/stream/status — auto-triggered when stream goes live, sends push to all
-// Deduplicated: only sends once per hour regardless of how many clients call it
+// Deduplicated via DB: only sends once per hour regardless of how many clients/instances call it
 export async function POST() {
-    // Dedup: skip if notification was sent recently
-    if (Date.now() - _lastNotifSentAt < NOTIF_COOLDOWN) {
-        return NextResponse.json({ success: true, skipped: true });
+    // Dedup via DB: check if STREAM_LIVE was posted to global_messages recently
+    try {
+        const { data: recent } = await supabaseAdmin.from('global_messages')
+            .select('id')
+            .eq('sender_email', 'system')
+            .like('message', 'STREAM_LIVE::%')
+            .gte('created_at', new Date(Date.now() - NOTIF_COOLDOWN_MIN * 60 * 1000).toISOString())
+            .limit(1);
+        if (recent && recent.length > 0) {
+            return NextResponse.json({ success: true, skipped: true });
+        }
+    } catch (e) {
+        console.error('[stream/status] Dedup check error:', e);
     }
 
     // Verify stream is actually live before sending
@@ -83,8 +91,6 @@ export async function POST() {
     if (!isLive) {
         return NextResponse.json({ success: false, reason: 'not live' });
     }
-
-    _lastNotifSentAt = Date.now();
 
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;

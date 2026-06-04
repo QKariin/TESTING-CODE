@@ -38,17 +38,9 @@ export async function claimKneelReward(type: 'coins' | 'points') {
     if (_claiming) return;
     _claiming = true;
 
-    // Lock buttons so they can't press again
-    document.querySelectorAll('#kneelRewardOverlay button, #mobKneelReward button').forEach(btn => {
-        (btn as HTMLButtonElement).disabled = true;
-        (btn as HTMLElement).style.opacity = '0.3';
-        (btn as HTMLElement).style.pointerEvents = 'none';
-    });
-    // Hide overlay after short delay so they see the button went dead
-    setTimeout(() => {
-        document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
-        document.getElementById('mobKneelReward')?.classList.add('hidden');
-    }, 1500);
+    // Hide overlay immediately — _claiming flag prevents double-taps
+    document.getElementById('kneelRewardOverlay')?.classList.add('hidden');
+    document.getElementById('mobKneelReward')?.classList.add('hidden');
 
     const currentState = getState();
     const { raw, id, memberId, wallet, score } = currentState;
