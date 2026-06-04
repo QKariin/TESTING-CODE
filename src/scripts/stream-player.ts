@@ -130,6 +130,7 @@ function _showFloatingPlayer() {
     `;
     document.body.appendChild(wrap);
     _initDrag();
+    window.addEventListener('resize', _clampToViewport);
 }
 
 // ── DRAG LOGIC ──
@@ -186,6 +187,7 @@ function _initDrag() {
         handle.style.cursor = 'grab';
         const inner = document.getElementById('streamFloatInner');
         if (inner) inner.style.transition = 'width 0.3s ease, max-width 0.3s ease';
+        _clampToViewport();
         _repositionChat();
     };
 
@@ -205,6 +207,28 @@ function _initDrag() {
         onMove(t.clientX, t.clientY);
     }, { passive: true });
     window.addEventListener('touchend', onEnd);
+}
+
+function _clampToViewport() {
+    const inner = document.getElementById('streamFloatInner');
+    if (!inner || inner.dataset.expanded === '1') return;
+    const rect = inner.getBoundingClientRect();
+    let changed = false;
+    let x = rect.left;
+    let y = rect.top;
+    if (rect.right > window.innerWidth) { x = window.innerWidth - rect.width; changed = true; }
+    if (rect.bottom > window.innerHeight) { y = window.innerHeight - rect.height; changed = true; }
+    if (x < 0) { x = 0; changed = true; }
+    if (y < 0) { y = 0; changed = true; }
+    if (changed) {
+        _playerX = x;
+        _playerY = y;
+        inner.style.left = x + 'px';
+        inner.style.top = y + 'px';
+        inner.style.right = 'auto';
+        inner.style.bottom = 'auto';
+        inner.style.transform = 'none';
+    }
 }
 
 function _hideFloatingPlayer() {
@@ -236,6 +260,7 @@ function _streamExpand() {
         }
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'none';
+        requestAnimationFrame(_clampToViewport);
     } else {
         // Expand to fixed center position
         inner.dataset.expanded = '1';
@@ -460,6 +485,7 @@ function _hideBlurredPreview() {
 export function destroyStreamPlayer() {
     if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
     if (_chatPollTimer) { clearInterval(_chatPollTimer); _chatPollTimer = null; }
+    window.removeEventListener('resize', _clampToViewport);
     _hideFloatingPlayer();
     _hideBlurredPreview();
     document.getElementById('navLiveDot')?.remove();
