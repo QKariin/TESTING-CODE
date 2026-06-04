@@ -5378,6 +5378,12 @@ function _closeAllMobOverlays(except?: string) {
         el.style.top = '';
         setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     });
+    // Collapse stream player + close stream chat
+    (window as any)._closeStreamChat?.();
+    const streamInner = document.getElementById('streamFloatInner');
+    if (streamInner && streamInner.dataset.expanded === '1') {
+        (window as any)._streamExpand?.(); // toggles back to small
+    }
     // Always restore bottom nav when switching overlays
     const nav = document.getElementById('mobBottomNav');
     if (nav) nav.style.display = '';
