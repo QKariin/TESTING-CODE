@@ -321,7 +321,7 @@ async function _openStreamChat() {
                 <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
                 <span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.7);letter-spacing:2px;">STREAM CHAT</span>
             </div>
-            <button onclick="window._closeStreamChat()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.9rem;padding:0;line-height:1;">&times;</button>
+            <button onclick="window._closeStreamChat()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.6);cursor:pointer;font-size:1.1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;">&times;</button>
         </div>
         <div id="streamChatMsgs" style="flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;"></div>
         <div style="padding:8px 10px;border-top:1px solid rgba(197,160,89,0.1);display:flex;gap:6px;">
