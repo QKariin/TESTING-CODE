@@ -262,15 +262,15 @@ function _streamExpand() {
         if (iframe) iframe.style.pointerEvents = 'none';
         requestAnimationFrame(_clampToViewport);
     } else {
-        // Expand to fixed center position
+        // Expand to above footer, centered horizontally
         inner.dataset.expanded = '1';
         inner.style.width = '92vw';
         inner.style.maxWidth = '500px';
         inner.style.left = '50%';
-        inner.style.top = '50%';
+        inner.style.top = 'auto';
         inner.style.right = 'auto';
-        inner.style.bottom = 'auto';
-        inner.style.transform = 'translate(-50%, -50%)';
+        inner.style.bottom = '70px';
+        inner.style.transform = 'translateX(-50%)';
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'auto';
     }
@@ -337,6 +337,13 @@ async function _openStreamChat() {
     _chatOpen = true;
     if (document.getElementById('streamChatOverlay')) return;
 
+    // Move player to top when chat opens
+    const inner = document.getElementById('streamFloatInner');
+    if (inner && inner.dataset.expanded === '1') {
+        inner.style.top = '10px';
+        inner.style.bottom = 'auto';
+    }
+
     const ov = document.createElement('div');
     ov.id = 'streamChatOverlay';
     ov.style.cssText = 'position:fixed;z-index:10000011;width:200px;max-width:90vw;height:350px;max-height:50vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
@@ -366,6 +373,12 @@ function _closeStreamChat() {
     _chatOpen = false;
     document.getElementById('streamChatOverlay')?.remove();
     if (_chatPollTimer) { clearInterval(_chatPollTimer); _chatPollTimer = null; }
+    // Move player back above footer
+    const inner = document.getElementById('streamFloatInner');
+    if (inner && inner.dataset.expanded === '1') {
+        inner.style.top = 'auto';
+        inner.style.bottom = '70px';
+    }
 }
 
 let _chatPollTimer: ReturnType<typeof setInterval> | null = null;
