@@ -237,15 +237,15 @@ function _streamExpand() {
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'none';
     } else {
-        // Expand to fixed center-top position
+        // Expand to fixed center position
         inner.dataset.expanded = '1';
         inner.style.width = '92vw';
         inner.style.maxWidth = '500px';
         inner.style.left = '50%';
-        inner.style.top = '10px';
+        inner.style.top = '50%';
         inner.style.right = 'auto';
         inner.style.bottom = 'auto';
-        inner.style.transform = 'translateX(-50%)';
+        inner.style.transform = 'translate(-50%, -50%)';
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'auto';
     }
@@ -294,6 +294,9 @@ function _repositionChat() {
     const inner = document.getElementById('streamFloatInner');
     if (!ov || !inner) return;
     const rect = inner.getBoundingClientRect();
+    // Match player width
+    ov.style.width = rect.width + 'px';
+    ov.style.maxWidth = '90vw';
     ov.style.left = rect.left + 'px';
     ov.style.top = (rect.bottom + 6) + 'px';
     ov.style.right = 'auto';
@@ -311,7 +314,7 @@ async function _openStreamChat() {
 
     const ov = document.createElement('div');
     ov.id = 'streamChatOverlay';
-    ov.style.cssText = 'position:fixed;z-index:10000011;width:320px;max-width:90vw;height:350px;max-height:50vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
+    ov.style.cssText = 'position:fixed;z-index:10000011;width:200px;max-width:90vw;height:350px;max-height:50vh;border-radius:14px;border:1px solid rgba(197,160,89,0.2);background:rgba(2,5,18,0.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);';
     ov.innerHTML = `
         <div style="padding:10px 14px;border-bottom:1px solid rgba(197,160,89,0.1);display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:6px;">
