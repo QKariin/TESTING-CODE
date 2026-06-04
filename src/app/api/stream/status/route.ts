@@ -21,6 +21,7 @@ const NOTIF_COOLDOWN_MIN = 60; // 1 hour in minutes
 // GET /api/stream/status — check if stream is live
 export async function GET() {
     let isLive = false;
+    let method = 'none';
 
     // Method 1: Cloudflare API (most reliable)
     if (CF_ACCOUNT_ID && CF_API_TOKEN && CF_LIVE_INPUT_ID) {
@@ -34,11 +35,18 @@ export async function GET() {
             );
             if (res.ok) {
                 const data = await res.json();
-                isLive = data?.result?.status?.current?.state === 'connected';
+                const state = data?.result?.status?.current?.state;
+                isLive = state === 'connected';
+                method = `cf-api:${state || 'unknown'}`;
+            } else {
+                method = `cf-api:http${res.status}`;
             }
         } catch (e) {
+            method = 'cf-api:error';
             console.error('[stream/status] CF API error:', e);
         }
+    } else {
+        method = 'cf-api:no-env';
     }
 
     // Method 2: Fallback — Cloudflare Stream lifecycle endpoint (no API key needed)
@@ -51,11 +59,17 @@ export async function GET() {
             if (res.ok) {
                 const data = await res.json();
                 isLive = data.live === true;
+                method += `|lifecycle:${JSON.stringify(data)}`;
+            } else {
+                method += `|lifecycle:http${res.status}`;
             }
-        } catch {}
+        } catch {
+            method += '|lifecycle:error';
+        }
     }
 
-    return NextResponse.json({ live: isLive });
+    console.log(`[stream/status] GET → live=${isLive} method=${method}`);
+    return NextResponse.json({ live: isLive, method });
 }
 
 // POST /api/stream/status — auto-triggered when stream goes live, sends push to all
@@ -70,6 +84,7 @@ export async function POST() {
             .gte('created_at', new Date(Date.now() - NOTIF_COOLDOWN_MIN * 60 * 1000).toISOString())
             .limit(1);
         if (recent && recent.length > 0) {
+            console.log('[stream/status] POST skipped — dedup hit, recent STREAM_LIVE exists');
             return NextResponse.json({ success: true, skipped: true });
         }
     } catch (e) {
@@ -90,8 +105,11 @@ export async function POST() {
     } catch {}
 
     if (!isLive) {
+        console.log('[stream/status] POST skipped — lifecycle says not live');
         return NextResponse.json({ success: false, reason: 'not live' });
     }
+
+    console.log('[stream/status] POST — stream is live, sending notifications...');
 
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
