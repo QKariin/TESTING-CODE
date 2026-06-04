@@ -700,6 +700,37 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         <div style="font-family:'Rajdhani';font-size:0.78rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 60).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
+    // ── Stream Live Card ──
+    if (content.startsWith('STREAM_LIVE::')) {
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+            <div style="width:70%;min-width:260px;max-width:480px;">
+                <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0a0205 0%,#0e0308 60%,#080103 100%);border:1px solid rgba(239,68,68,0.4);box-shadow:0 12px 40px rgba(239,68,68,0.1),0 0 0 1px rgba(0,0,0,0.8);">
+                    <div style="position:relative;width:100%;height:140px;background:#080103;overflow:hidden;">
+                        <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(239,68,68,0.06),rgba(197,160,89,0.04));display:flex;align-items:center;justify-content:center;">
+                            <div style="width:60px;height:60px;border-radius:50%;border:2px solid rgba(239,68,68,0.5);display:flex;align-items:center;justify-content:center;background:rgba(239,68,68,0.08);">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3" fill="rgba(239,68,68,0.3)"/></svg>
+                            </div>
+                        </div>
+                        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,#0a0205 100%);"></div>
+                        <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:rgba(10,2,5,0.9);border:1px solid rgba(239,68,68,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                            <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
+                            <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:#ef4444;letter-spacing:3px;">LIVE NOW</span>
+                        </div>
+                    </div>
+                    <div style="padding:14px 18px 18px;text-align:center;">
+                        <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">Queen Karin</div>
+                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:12px;">is streaming right now</div>
+                        <a href="/profile" style="display:inline-flex;align-items:center;gap:6px;padding:8px 22px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.4);border-radius:20px;text-decoration:none;font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#ef4444;letter-spacing:2px;transition:all 0.2s;">
+                            <div style="width:5px;height:5px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
+                            JOIN STREAM
+                        </a>
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+            </div>
+        </div>`;
+    }
+
     // ── Promotion Card ── centered
     if (content.startsWith('PROMOTION_CARD::')) {
         try {

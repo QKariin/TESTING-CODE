@@ -214,6 +214,15 @@ export function discordLeaderboardChampion(name: string, period: string, score: 
     });
 }
 
+export function discordStreamLive() {
+    return sendDiscordEmbed({
+        title: 'QUEEN KARIN IS LIVE',
+        description: `The Queen is streaming right now. Join and watch.\n\n[Join the stream](${APP_LINK}/profile)`,
+        color: 15548997, // red
+        image: { url: cardUrl('stream', 'QUEEN IS LIVE', 'The Queen is streaming right now', 'Join and watch') },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',

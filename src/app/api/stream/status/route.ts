@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { discordStreamLive } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,6 +119,9 @@ export async function POST() {
             console.error('[stream] Push error:', e);
         }
     }
+
+    // Discord notification
+    discordStreamLive().catch(() => {});
 
     // Post to global chat
     try {
