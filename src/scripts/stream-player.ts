@@ -77,7 +77,7 @@ export async function initStreamPlayer(emailFn: () => string) {
 
 function _getPlayerPos() {
     if (_playerX < 0 || _playerY < 0) {
-        return { right: 'auto', bottom: 'auto', left: '50%', top: '10px', transform: 'translateX(-50%)' };
+        return { right: '12px', bottom: '80px', left: 'auto', top: 'auto', transform: 'none' };
     }
     return { left: _playerX + 'px', top: _playerY + 'px', right: 'auto', bottom: 'auto', transform: 'none' };
 }
@@ -100,8 +100,8 @@ function _showFloatingPlayer() {
     const pos = _getPlayerPos();
     wrap.innerHTML = `
         <div id="streamFloatInner" style="
-            position:fixed; top:${pos.top}; left:${pos.left}; right:${pos.right}; bottom:${pos.bottom}; transform:${pos.transform}; z-index:10000010;
-            width:90vw; max-width:400px; border-radius:12px; overflow:hidden;
+            position:fixed; ${pos.bottom !== 'auto' ? 'bottom:' + pos.bottom : 'top:' + pos.top}; ${pos.right !== 'auto' ? 'right:' + pos.right : 'left:' + pos.left}; z-index:10000010;
+            width:200px; border-radius:12px; overflow:hidden;
             border:1px solid rgba(197,160,89,0.3);
             box-shadow:0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.8);
             background:#000; touch-action:none; user-select:none;
@@ -159,6 +159,14 @@ function _initDrag() {
         }
         const inner = document.getElementById('streamFloatInner');
         if (!inner) return;
+        // If expanded, collapse back to small when dragging
+        if (inner.dataset.expanded === '1') {
+            inner.dataset.expanded = '0';
+            inner.style.width = '200px';
+            inner.style.maxWidth = '';
+            const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
+            if (iframe) iframe.style.pointerEvents = 'none';
+        }
         let x = cx - _dragOffsetX;
         let y = cy - _dragOffsetY;
         // Clamp to viewport
@@ -208,15 +216,36 @@ function _streamExpand() {
     if (_didDrag) { _didDrag = false; return; }
     const inner = document.getElementById('streamFloatInner');
     if (!inner) return;
-    const isExpanded = inner.style.maxWidth === '500px';
+    const isExpanded = inner.dataset.expanded === '1';
     if (isExpanded) {
-        inner.style.width = '90vw';
-        inner.style.maxWidth = '400px';
+        // Collapse back to small, restore drag position or default
+        inner.dataset.expanded = '0';
+        inner.style.width = '200px';
+        inner.style.maxWidth = '';
+        inner.style.transform = 'none';
+        if (_playerX >= 0 && _playerY >= 0) {
+            inner.style.left = _playerX + 'px';
+            inner.style.top = _playerY + 'px';
+            inner.style.right = 'auto';
+            inner.style.bottom = 'auto';
+        } else {
+            inner.style.left = 'auto';
+            inner.style.top = 'auto';
+            inner.style.right = '12px';
+            inner.style.bottom = '80px';
+        }
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'none';
     } else {
-        inner.style.width = '95vw';
+        // Expand to fixed center-top position
+        inner.dataset.expanded = '1';
+        inner.style.width = '92vw';
         inner.style.maxWidth = '500px';
+        inner.style.left = '50%';
+        inner.style.top = '10px';
+        inner.style.right = 'auto';
+        inner.style.bottom = 'auto';
+        inner.style.transform = 'translateX(-50%)';
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.pointerEvents = 'auto';
     }
@@ -235,8 +264,8 @@ function _streamMinimize() {
         if (iframe) iframe.style.display = 'none';
         _closeStreamChat();
     } else {
-        inner.style.width = '90vw';
-        inner.style.maxWidth = '400px';
+        inner.style.width = '200px';
+        inner.style.maxWidth = '';
         const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
         if (iframe) iframe.style.display = 'block';
     }
