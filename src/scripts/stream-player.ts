@@ -107,7 +107,7 @@ function _showFloatingPlayer() {
             background:#000; touch-action:none; user-select:none;
         ">
             <div id="streamDragHandle" style="position:relative;cursor:grab;">
-                <iframe src="${IFRAME_URL}?muted=true&autoplay=true&controls=false"
+                <iframe src="${IFRAME_URL}?muted=true&autoplay=true&controls=true"
                     style="width:100%;aspect-ratio:16/9;border:none;display:block;pointer-events:none;"
                     allow="autoplay;encrypted-media" allowfullscreen></iframe>
                 <div style="position:absolute;top:6px;left:6px;display:flex;align-items:center;gap:4px;">
