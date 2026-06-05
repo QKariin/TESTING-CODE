@@ -508,37 +508,64 @@ export function destroyStreamPlayer() {
     document.getElementById('streamReopenBtn')?.remove();
 }
 
-// ── DASHBOARD: STREAM CHAT (Queen only — no video player, just chat) ──
+// ── DASHBOARD: GO LIVE BUTTON + STREAM CHAT (Queen only) ──
 let _dashStreamChatOpen = false;
 let _dashStreamPollTimer: ReturnType<typeof setInterval> | null = null;
 let _dashStreamLivePollTimer: ReturnType<typeof setInterval> | null = null;
 let _dashGetEmail: () => string = () => '';
+let _dashIsLive = false;
 
 export async function initDashStreamChat(emailFn: () => string) {
     _dashGetEmail = emailFn;
-    const live = await checkLive();
-    if (live) _showDashStreamBtn();
-    _dashStreamLivePollTimer = setInterval(async () => {
-        const nowLive = await checkLive();
-        if (nowLive && !document.getElementById('dashStreamBtn')) _showDashStreamBtn();
-        if (!nowLive) {
-            document.getElementById('dashStreamBtn')?.remove();
-            _closeDashStreamChat();
-        }
-    }, 30000);
+    _showDashGoLiveBtn();
+    // Check if already live
+    _dashIsLive = await checkLive();
+    if (_dashIsLive) _updateDashBtnToLive();
 }
 
-function _showDashStreamBtn() {
+function _showDashGoLiveBtn() {
     if (document.getElementById('dashStreamBtn')) return;
     const btn = document.createElement('button');
     btn.id = 'dashStreamBtn';
-    btn.onclick = () => _dashStreamChatOpen ? _closeDashStreamChat() : _openDashStreamChat();
-    btn.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></div><span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:#c5a059;letter-spacing:2px;vertical-align:middle;">STREAM CHAT</span>`;
-    btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000010;padding:10px 18px;border-radius:25px;border:1px solid rgba(197,160,89,0.4);background:rgba(0,0,0,0.9);cursor:pointer;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+    btn.onclick = _handleDashStreamBtn;
+    btn.innerHTML = `<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:#ef4444;letter-spacing:2px;vertical-align:middle;">GO LIVE</span>`;
+    btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000010;padding:10px 18px;border-radius:25px;border:1px solid rgba(239,68,68,0.4);background:rgba(0,0,0,0.9);cursor:pointer;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.5);';
     const style = document.createElement('style');
     style.textContent = `@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }`;
     btn.appendChild(style);
     document.body.appendChild(btn);
+}
+
+function _updateDashBtnToLive() {
+    const btn = document.getElementById('dashStreamBtn');
+    if (!btn) return;
+    btn.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></div><span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:#c5a059;letter-spacing:2px;vertical-align:middle;">STREAM CHAT</span>`;
+    btn.style.borderColor = 'rgba(197,160,89,0.4)';
+    _dashIsLive = true;
+}
+
+async function _handleDashStreamBtn() {
+    if (_dashIsLive) {
+        // Already live — toggle stream chat
+        _dashStreamChatOpen ? _closeDashStreamChat() : _openDashStreamChat();
+        return;
+    }
+    // GO LIVE — send all notifications (push, discord, global card)
+    const btn = document.getElementById('dashStreamBtn');
+    if (btn) btn.innerHTML = `<span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(239,68,68,0.5);letter-spacing:2px;">SENDING...</span>`;
+    try {
+        const res = await fetch('/api/stream/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ force: true }),
+        });
+        const data = await res.json();
+        console.log('[dash] GO LIVE result:', data);
+    } catch (e) {
+        console.error('[dash] GO LIVE error:', e);
+    }
+    _updateDashBtnToLive();
+    _openDashStreamChat();
 }
 
 function _openDashStreamChat() {

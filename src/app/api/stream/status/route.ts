@@ -74,9 +74,16 @@ export async function GET() {
 
 // POST /api/stream/status — auto-triggered when stream goes live, sends push to all
 // Deduplicated via DB: only sends once per hour regardless of how many clients/instances call it
-export async function POST() {
-    // Dedup via DB: check if STREAM_LIVE was posted to global_messages recently
+export async function POST(req: Request) {
+    // Allow force-send from dashboard (Queen pressed GO LIVE button)
+    let force = false;
     try {
+        const body = await req.json().catch(() => ({}));
+        force = body?.force === true;
+    } catch {}
+
+    // Dedup via DB: check if STREAM_LIVE was posted to global_messages recently
+    if (!force) try {
         const { data: recent } = await supabaseAdmin.from('global_messages')
             .select('id')
             .eq('sender_email', 'system')
@@ -91,25 +98,27 @@ export async function POST() {
         console.error('[stream/status] Dedup check error:', e);
     }
 
-    // Verify stream is actually live before sending
-    let isLive = false;
-    try {
-        const res = await fetch(
-            `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/lifecycle`,
-            { cache: 'no-store' }
-        );
-        if (res.ok) {
-            const data = await res.json();
-            isLive = data.live === true;
-        }
-    } catch {}
+    // Verify stream is actually live before sending (skip if Queen forced it)
+    if (!force) {
+        let isLive = false;
+        try {
+            const res = await fetch(
+                `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/lifecycle`,
+                { cache: 'no-store' }
+            );
+            if (res.ok) {
+                const data = await res.json();
+                isLive = data.live === true;
+            }
+        } catch {}
 
-    if (!isLive) {
-        console.log('[stream/status] POST skipped — lifecycle says not live');
-        return NextResponse.json({ success: false, reason: 'not live' });
+        if (!isLive) {
+            console.log('[stream/status] POST skipped — lifecycle says not live');
+            return NextResponse.json({ success: false, reason: 'not live' });
+        }
     }
 
-    console.log('[stream/status] POST — stream is live, sending notifications...');
+    console.log(`[stream/status] POST — sending notifications (force=${force})...`);
 
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
