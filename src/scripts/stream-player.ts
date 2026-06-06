@@ -217,10 +217,9 @@ function _handleVisibility() {
     if (!inner) return;
     const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
     if (!iframe) return;
-    // Reload iframe src to restart the stream after returning from background
-    const src = iframe.src;
-    iframe.src = '';
-    requestAnimationFrame(() => { iframe.src = src; });
+    // Reload iframe with cache buster to restart stream — no blank frame
+    const base = `${IFRAME_URL}?muted=true&autoplay=true&controls=true`;
+    iframe.src = base + '&_t=' + Date.now();
 }
 
 // ── DRAG LOGIC ──
