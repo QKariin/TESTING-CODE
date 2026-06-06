@@ -446,7 +446,9 @@ async function _openStreamChat() {
             <button onclick="window._closeStreamChat()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.6);cursor:pointer;font-size:1.1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;">&times;</button>
         </div>
         <div id="streamChatMsgs" style="flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;"></div>
-        <div style="padding:8px 10px;border-top:1px solid rgba(197,160,89,0.1);display:flex;gap:6px;">
+        <div id="streamGifPicker" style="display:none;border-top:1px solid rgba(197,160,89,0.1);background:rgba(0,0,0,0.3);max-height:200px;overflow-y:auto;padding:6px;"></div>
+        <div style="padding:8px 10px;border-top:1px solid rgba(197,160,89,0.1);display:flex;gap:6px;align-items:center;">
+            <button onclick="window._toggleStreamGifPicker()" style="padding:6px 8px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.15);border-radius:8px;cursor:pointer;font-size:0.65rem;color:rgba(197,160,89,0.6);line-height:1;">GIF</button>
             <input id="streamChatInput" type="text" placeholder="Say something..."
                 onkeydown="if(event.key==='Enter')window._sendStreamChat()"
                 style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(197,160,89,0.1);border-radius:8px;padding:8px 10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;" />
@@ -493,8 +495,13 @@ async function _loadStreamChat() {
             const isQueen = m.is_queen;
             const nameColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.4)';
             const msgColor = isQueen ? 'rgba(197,160,89,0.8)' : 'rgba(255,255,255,0.65)';
+            const isGif = m.media_type === 'gif' && m.media_url;
+            const nameHtml = `<span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:${nameColor};letter-spacing:1px;margin-right:6px;">${name}</span>`;
+            if (isGif) {
+                return `<div style="padding:3px 0;">${nameHtml}<br><img src="${m.media_url}" style="max-width:180px;max-height:140px;border-radius:8px;display:block;margin-top:2px;" /></div>`;
+            }
             return `<div style="padding:3px 0;">
-                <span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:${nameColor};letter-spacing:1px;margin-right:6px;">${name}</span>
+                ${nameHtml}
                 <span style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:${msgColor};">${m.message}</span>
             </div>`;
         }).join('');
@@ -681,7 +688,9 @@ function _openDashStreamChat() {
         </div>
         <div id="dashViewerList" style="display:none;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.1);max-height:120px;overflow-y:auto;scrollbar-width:none;background:rgba(0,0,0,0.15);"></div>
         <div id="dashStreamMsgs" style="flex:1;overflow-y:auto;padding:10px 14px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;background:rgba(0,0,0,0.2);"></div>
-        <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);display:flex;gap:8px;">
+        <div id="dashStreamGifPicker" style="display:none;border-top:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);max-height:200px;overflow-y:auto;padding:6px;"></div>
+        <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.25);display:flex;gap:8px;align-items:center;">
+            <button onclick="window._toggleDashStreamGifPicker()" style="padding:8px 10px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:0.7rem;color:rgba(255,255,255,0.7);line-height:1;">GIF</button>
             <input id="dashStreamInput" type="text" placeholder="Message stream chat..."
                 onkeydown="if(event.key==='Enter')window._sendDashStreamMsg()"
                 style="flex:1;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;" />
@@ -753,8 +762,13 @@ async function _loadDashStreamMsgs() {
             if (isSystem) return '';
             const nameColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.7)';
             const msgColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.85)';
+            const isGif = m.media_type === 'gif' && m.media_url;
+            const nameHtml = `<span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:${nameColor};letter-spacing:1px;margin-right:6px;">${name}</span>`;
+            if (isGif) {
+                return `<div style="padding:4px 0;">${nameHtml}<br><img src="${m.media_url}" style="max-width:220px;max-height:160px;border-radius:10px;display:block;margin-top:3px;" /></div>`;
+            }
             return `<div style="padding:4px 0;">
-                <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:${nameColor};letter-spacing:1px;margin-right:6px;">${name}</span>
+                ${nameHtml}
                 <span style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:${msgColor};">${m.message}</span>
             </div>`;
         }).join('');
@@ -785,6 +799,119 @@ export function destroyDashStreamChat() {
     document.getElementById('dashStreamBtn')?.remove();
 }
 
+// ── GIF PICKER (shared logic for both profile + dashboard stream chat) ──
+let _streamGifTimeout: ReturnType<typeof setTimeout> | null = null;
+let _dashStreamGifTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function _renderGifGrid(containerId: string, results: any[], onSelectFn: string) {
+    const grid = document.getElementById(containerId);
+    if (!grid) return;
+    if (!results?.length) {
+        grid.querySelector('[data-gif-grid]')!.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:16px;font-family:'Orbitron';font-size:0.45rem;color:rgba(255,255,255,0.25);">NO RESULTS</div>`;
+        return;
+    }
+    grid.querySelector('[data-gif-grid]')!.innerHTML = results.map((r: any) =>
+        `<div onclick="window.${onSelectFn}('${encodeURIComponent(r.url)}')" style="cursor:pointer;border-radius:6px;overflow:hidden;aspect-ratio:1;background:rgba(255,255,255,0.04);"><img src="${r.preview}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"></div>`
+    ).join('');
+}
+
+async function _searchStreamGifs(q: string, containerId: string, onSelectFn: string) {
+    const picker = document.getElementById(containerId);
+    if (!picker) return;
+    const grid = picker.querySelector('[data-gif-grid]') as HTMLElement;
+    if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:16px;font-family:'Orbitron';font-size:0.45rem;color:rgba(255,255,255,0.25);">LOADING...</div>`;
+    try {
+        const res = await fetch(`/api/global/gifs?q=${encodeURIComponent(q)}`);
+        const { results } = await res.json();
+        _renderGifGrid(containerId, results, onSelectFn);
+    } catch {
+        if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:16px;font-family:'Orbitron';font-size:0.45rem;color:rgba(255,255,255,0.25);">FAILED</div>`;
+    }
+}
+
+function _buildGifPickerHtml(searchInputId: string) {
+    return `
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <input id="${searchInputId}" type="text" placeholder="Search GIFs..." autocomplete="off"
+                style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:0.9rem;padding:6px 10px;border-radius:6px;outline:none;" />
+        </div>
+        <div data-gif-grid style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+            <div style="grid-column:1/-1;text-align:center;padding:16px;font-family:'Orbitron';font-size:0.45rem;color:rgba(255,255,255,0.25);">LOADING...</div>
+        </div>
+        <div style="padding:3px 0;text-align:right;"><span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span></div>
+    `;
+}
+
+// ── Profile stream chat GIF ──
+function _toggleStreamGifPicker() {
+    const picker = document.getElementById('streamGifPicker');
+    if (!picker) return;
+    if (picker.style.display !== 'none') {
+        picker.style.display = 'none';
+        picker.innerHTML = '';
+        return;
+    }
+    picker.style.display = 'block';
+    picker.innerHTML = _buildGifPickerHtml('streamGifSearch');
+    const input = document.getElementById('streamGifSearch') as HTMLInputElement;
+    input?.addEventListener('input', () => {
+        if (_streamGifTimeout) clearTimeout(_streamGifTimeout);
+        _streamGifTimeout = setTimeout(() => _searchStreamGifs(input.value || 'funny', 'streamGifPicker', '_selectStreamGif'), 400);
+    });
+    _searchStreamGifs('funny', 'streamGifPicker', '_selectStreamGif');
+    setTimeout(() => input?.focus(), 50);
+}
+
+async function _selectStreamGif(encodedUrl: string) {
+    const url = decodeURIComponent(encodedUrl);
+    const picker = document.getElementById('streamGifPicker');
+    if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
+    try {
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail: _getEmail(), message: '[GIF]', media_url: url, media_type: 'gif', channel: 'stream' }),
+        });
+        _loadStreamChat();
+    } catch {}
+}
+
+// ── Dashboard stream chat GIF ──
+function _toggleDashStreamGifPicker() {
+    const picker = document.getElementById('dashStreamGifPicker');
+    if (!picker) return;
+    if (picker.style.display !== 'none') {
+        picker.style.display = 'none';
+        picker.innerHTML = '';
+        return;
+    }
+    picker.style.display = 'block';
+    picker.innerHTML = _buildGifPickerHtml('dashStreamGifSearch');
+    const input = document.getElementById('dashStreamGifSearch') as HTMLInputElement;
+    input?.addEventListener('input', () => {
+        if (_dashStreamGifTimeout) clearTimeout(_dashStreamGifTimeout);
+        _dashStreamGifTimeout = setTimeout(() => _searchStreamGifs(input.value || 'funny', 'dashStreamGifPicker', '_selectDashStreamGif'), 400);
+    });
+    _searchStreamGifs('funny', 'dashStreamGifPicker', '_selectDashStreamGif');
+    setTimeout(() => input?.focus(), 50);
+}
+
+async function _selectDashStreamGif(encodedUrl: string) {
+    const url = decodeURIComponent(encodedUrl);
+    const picker = document.getElementById('dashStreamGifPicker');
+    if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
+    const email = _dashGetEmail();
+    if (!email) return;
+    try {
+        await fetch('/api/global/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senderEmail: email, message: '[GIF]', media_url: url, media_type: 'gif', channel: 'stream' }),
+        });
+        _loadDashStreamMsgs();
+    } catch {}
+}
+
 // ── WINDOW BINDINGS ──
 export function bindStreamPlayer() {
     (window as any)._streamExpand = _streamExpand;
@@ -796,6 +923,10 @@ export function bindStreamPlayer() {
     (window as any)._closeDashStreamChat = _closeDashStreamChat;
     (window as any)._sendDashStreamMsg = _sendDashStreamMsg;
     (window as any)._toggleDashViewerList = _toggleDashViewerList;
+    (window as any)._toggleStreamGifPicker = _toggleStreamGifPicker;
+    (window as any)._selectStreamGif = _selectStreamGif;
+    (window as any)._toggleDashStreamGifPicker = _toggleDashStreamGifPicker;
+    (window as any)._selectDashStreamGif = _selectDashStreamGif;
     (window as any).initStreamPlayer = initStreamPlayer;
     (window as any).initStreamPreview = initStreamPreview;
     (window as any).initDashStreamChat = initDashStreamChat;
