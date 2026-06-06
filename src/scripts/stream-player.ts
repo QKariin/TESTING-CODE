@@ -645,23 +645,23 @@ function _openDashStreamChat() {
 
     const panel = document.createElement('div');
     panel.id = 'dashStreamChatPanel';
-    panel.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10000011;width:360px;max-width:90vw;height:420px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.25);background:rgba(2,5,18,0.97);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);';
+    panel.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10000011;width:360px;max-width:90vw;height:420px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.3);background:linear-gradient(170deg,#1a1812 0%,#15130e 40%,#1a1610 100%);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5);';
     panel.innerHTML = `
-        <div style="padding:12px 16px;border-bottom:1px solid rgba(197,160,89,0.12);display:flex;align-items:center;justify-content:space-between;">
+        <div style="padding:12px 16px;border-bottom:1px solid rgba(197,160,89,0.18);background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:7px;height:7px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
-                <span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.8);letter-spacing:2px;">STREAM CHAT</span>
-                <span id="dashViewerCount" style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.3);letter-spacing:1px;cursor:pointer;" onclick="window._toggleDashViewerList()">0 watching</span>
+                <span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">STREAM CHAT</span>
+                <span id="dashViewerCount" style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:1px;cursor:pointer;" onclick="window._toggleDashViewerList()">0 watching</span>
             </div>
-            <button onclick="window._closeDashStreamChat()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.6);cursor:pointer;font-size:1.1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;">&times;</button>
+            <button onclick="window._closeDashStreamChat()" style="background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.2);border-radius:6px;color:#c5a059;cursor:pointer;font-size:1.1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;">&times;</button>
         </div>
-        <div id="dashViewerList" style="display:none;padding:8px 14px;border-bottom:1px solid rgba(197,160,89,0.08);max-height:120px;overflow-y:auto;scrollbar-width:none;"></div>
+        <div id="dashViewerList" style="display:none;padding:8px 14px;border-bottom:1px solid rgba(197,160,89,0.1);max-height:120px;overflow-y:auto;scrollbar-width:none;background:rgba(197,160,89,0.03);"></div>
         <div id="dashStreamMsgs" style="flex:1;overflow-y:auto;padding:10px 14px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;"></div>
-        <div style="padding:10px 12px;border-top:1px solid rgba(197,160,89,0.12);display:flex;gap:8px;">
+        <div style="padding:10px 12px;border-top:1px solid rgba(197,160,89,0.18);background:rgba(197,160,89,0.04);display:flex;gap:8px;">
             <input id="dashStreamInput" type="text" placeholder="Message stream chat..."
                 onkeydown="if(event.key==='Enter')window._sendDashStreamMsg()"
-                style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(197,160,89,0.12);border-radius:8px;padding:10px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;" />
-            <button onclick="window._sendDashStreamMsg()" style="padding:10px 16px;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.25);border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:1px;">SEND</button>
+                style="flex:1;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.2);border-radius:8px;padding:10px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;" />
+            <button onclick="window._sendDashStreamMsg()" style="padding:10px 16px;background:rgba(197,160,89,0.15);border:1px solid rgba(197,160,89,0.35);border-radius:8px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:1px;">SEND</button>
         </div>
     `;
     document.body.appendChild(panel);
@@ -706,11 +706,11 @@ function _renderDashViewerList() {
     const list = document.getElementById('dashViewerList');
     if (!list) return;
     if (_streamViewers.length === 0) {
-        list.innerHTML = `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.2);">No viewers yet</div>`;
+        list.innerHTML = `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);">No viewers yet</div>`;
         return;
     }
     list.innerHTML = _streamViewers.map(v =>
-        `<div style="padding:3px 0;font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.5);">${v.name}</div>`
+        `<div style="padding:3px 0;font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.7);">${v.name}</div>`
     ).join('');
 }
 
@@ -727,11 +727,11 @@ async function _loadDashStreamMsgs() {
             const isQueen = m.is_queen;
             const isSystem = m.sender_email === 'system';
             if (isSystem) return '';
-            const nameColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.4)';
-            const msgColor = isQueen ? 'rgba(197,160,89,0.8)' : 'rgba(255,255,255,0.65)';
-            return `<div style="padding:3px 0;">
+            const nameColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.7)';
+            const msgColor = isQueen ? '#c5a059' : 'rgba(255,255,255,0.85)';
+            return `<div style="padding:4px 0;">
                 <span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:${nameColor};letter-spacing:1px;margin-right:6px;">${name}</span>
-                <span style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:${msgColor};">${m.message}</span>
+                <span style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:${msgColor};">${m.message}</span>
             </div>`;
         }).join('');
         if (wasAtBottom) container.scrollTop = container.scrollHeight;
