@@ -154,11 +154,22 @@ function _applyPos(el: HTMLElement) {
     el.style.transform = pos.transform;
 }
 
+function _tryJoinPresence() {
+    if (_viewerChannel) return; // already joined
+    const email = _getEmail();
+    if (!email) return false;
+    _joinViewerPresence(email, _getName() || email.split('@')[0]);
+    return true;
+}
+
 function _showFloatingPlayer() {
     if (document.getElementById('streamFloat')) return;
-    // Join viewer presence
-    const email = _getEmail();
-    if (email) _joinViewerPresence(email, _getName() || email.split('@')[0]);
+    // Join viewer presence (retry if email not ready yet)
+    if (!_tryJoinPresence()) {
+        const retryId = setInterval(() => {
+            if (_tryJoinPresence() || !document.getElementById('streamFloat')) clearInterval(retryId);
+        }, 2000);
+    }
 
     const wrap = document.createElement('div');
     wrap.id = 'streamFloat';
