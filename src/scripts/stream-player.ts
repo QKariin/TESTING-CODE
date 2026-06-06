@@ -208,6 +208,19 @@ function _showFloatingPlayer() {
     document.body.appendChild(wrap);
     _initDrag();
     window.addEventListener('resize', _clampToViewport);
+    document.addEventListener('visibilitychange', _handleVisibility);
+}
+
+function _handleVisibility() {
+    if (document.visibilityState !== 'visible') return;
+    const inner = document.getElementById('streamFloatInner');
+    if (!inner) return;
+    const iframe = inner.querySelector('iframe') as HTMLIFrameElement;
+    if (!iframe) return;
+    // Reload iframe src to restart the stream after returning from background
+    const src = iframe.src;
+    iframe.src = '';
+    requestAnimationFrame(() => { iframe.src = src; });
 }
 
 // ── DRAG LOGIC ──
@@ -580,6 +593,7 @@ export function destroyStreamPlayer() {
     if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
     if (_chatPollTimer) { clearInterval(_chatPollTimer); _chatPollTimer = null; }
     window.removeEventListener('resize', _clampToViewport);
+    document.removeEventListener('visibilitychange', _handleVisibility);
     _hideFloatingPlayer();
     _hideBlurredPreview();
     document.getElementById('navLiveDot')?.remove();
