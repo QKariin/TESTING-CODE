@@ -6118,6 +6118,26 @@ function _buildMobGlBubble(msg: any): string {
         <div style="font-family:'Rajdhani';font-size:0.75rem;color:rgba(255,255,255,0.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(msg.reply_to.content || '').slice(0, 55).replace(/</g, '&lt;')}</div>
     </div>` : '';
 
+    // STREAM LIVE CARD
+    if (content.startsWith('STREAM_LIVE::')) {
+        return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+            <div style="width:85%;max-width:340px;min-width:200px;">
+                <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#1a0505 0%,#2a0808 60%,#1a0505 100%);border:1px solid rgba(239,68,68,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(239,68,68,0.08);">
+                    <div style="padding:20px;text-align:center;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;">
+                            <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
+                            <span style="font-family:'Orbitron',sans-serif;font-size:0.55rem;color:#ef4444;letter-spacing:3px;">LIVE NOW</span>
+                        </div>
+                        <div style="font-family:'Cinzel',serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:6px;">QUEEN KARIN</div>
+                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;">is streaming right now</div>
+                        <a href="/profile" style="display:inline-block;padding:10px 28px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.5);border-radius:10px;text-decoration:none;font-family:'Orbitron',sans-serif;font-size:0.45rem;color:#ef4444;letter-spacing:3px;">JOIN STREAM</a>
+                    </div>
+                </div>
+                <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+            </div>
+        </div>`;
+    }
+
     // PROMOTION CARD - same card as desktop global chat
     if (content.startsWith('PROMOTION_CARD::')) {
         try {
