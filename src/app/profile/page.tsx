@@ -330,7 +330,10 @@ export default function ProfilePage() {
             );
             // Stream player
             bindStreamPlayer();
-            initStreamPlayer(() => { const s = getState(); return s?.email || s?.memberId || ''; });
+            initStreamPlayer(
+                () => { const s = getState(); return s?.email || s?.memberId || ''; },
+                () => { const s = getState(); return s?.raw?.name || ''; }
+            );
             // Global chat lightbox + like
             if (!(window as any)._openGlobalLightbox) {
                 (window as any)._openGlobalLightbox = (url: string, type?: string) => {

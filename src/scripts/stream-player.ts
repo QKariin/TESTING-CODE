@@ -4,6 +4,8 @@
  * Call `initStreamPreview()` on home page for blurred teaser.
  */
 
+import { createClient } from '@/utils/supabase/client';
+
 const CF_SUBDOMAIN = 'customer-d8ziir1df1lqjii2.cloudflarestream.com';
 const CF_STREAM_ID = '9a3ae8586ec9914c65a5c3a752671fd6';
 const HLS_URL = `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/manifest/video.m3u8`;
@@ -14,6 +16,7 @@ let _pollTimer: ReturnType<typeof setInterval> | null = null;
 let _chatOpen = false;
 let _playerMinimized = false;
 let _getEmail: () => string = () => '';
+let _getName: () => string = () => '';
 let _notifSent = false;
 
 // ── Drag state ──
@@ -25,6 +28,65 @@ let _dragging = false;
 let _didDrag = false; // true if an actual drag occurred (prevents click-on-release)
 let _playerX = -1; // -1 = use default position
 let _playerY = -1;
+
+// ── VIEWER PRESENCE ──
+let _viewerChannel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null;
+let _streamViewers: { name: string; email: string }[] = [];
+let _viewerListeners: (() => void)[] = [];
+
+function _joinViewerPresence(email: string, name: string) {
+    if (_viewerChannel) return;
+    const supabase = createClient();
+    _viewerChannel = supabase.channel('stream-viewers');
+    _viewerChannel
+        .on('presence', { event: 'sync' }, () => {
+            const state = _viewerChannel!.presenceState<{ email: string; name: string }>();
+            const seen = new Set<string>();
+            _streamViewers = [];
+            Object.values(state).flat().forEach((p: any) => {
+                if (p?.email && !seen.has(p.email)) {
+                    seen.add(p.email);
+                    _streamViewers.push({ name: p.name || p.email.split('@')[0], email: p.email });
+                }
+            });
+            _viewerListeners.forEach(cb => cb());
+        })
+        .subscribe(async (status: string) => {
+            if (status === 'SUBSCRIBED') {
+                await _viewerChannel!.track({ email, name });
+            }
+        });
+}
+
+function _leaveViewerPresence() {
+    if (_viewerChannel) {
+        _viewerChannel.untrack();
+        _viewerChannel.unsubscribe();
+        _viewerChannel = null;
+    }
+    _streamViewers = [];
+}
+
+// Dashboard subscribes to viewer list (read-only, no track)
+function _subscribeDashViewers() {
+    if (_viewerChannel) return;
+    const supabase = createClient();
+    _viewerChannel = supabase.channel('stream-viewers');
+    _viewerChannel
+        .on('presence', { event: 'sync' }, () => {
+            const state = _viewerChannel!.presenceState<{ email: string; name: string }>();
+            const seen = new Set<string>();
+            _streamViewers = [];
+            Object.values(state).flat().forEach((p: any) => {
+                if (p?.email && !seen.has(p.email)) {
+                    seen.add(p.email);
+                    _streamViewers.push({ name: p.name || p.email.split('@')[0], email: p.email });
+                }
+            });
+            _viewerListeners.forEach(cb => cb());
+        })
+        .subscribe();
+}
 
 // ── LIVE CHECK ──
 async function checkLive(): Promise<boolean> {
@@ -48,8 +110,9 @@ async function _sendGoLiveNotif() {
 }
 
 // ── PROFILE: FLOATING PLAYER ──
-export async function initStreamPlayer(emailFn: () => string) {
+export async function initStreamPlayer(emailFn: () => string, nameFn?: () => string) {
     _getEmail = emailFn;
+    _getName = nameFn || (() => '');
 
     // Initial check
     _isLive = await checkLive();
@@ -93,6 +156,9 @@ function _applyPos(el: HTMLElement) {
 
 function _showFloatingPlayer() {
     if (document.getElementById('streamFloat')) return;
+    // Join viewer presence
+    const email = _getEmail();
+    if (email) _joinViewerPresence(email, _getName() || email.split('@')[0]);
 
     const wrap = document.createElement('div');
     wrap.id = 'streamFloat';
@@ -232,6 +298,7 @@ function _clampToViewport() {
 }
 
 function _hideFloatingPlayer() {
+    _leaveViewerPresence();
     document.getElementById('streamFloat')?.remove();
     _closeStreamChat();
 }
@@ -571,6 +638,11 @@ async function _handleDashStreamBtn() {
 function _openDashStreamChat() {
     _dashStreamChatOpen = true;
     if (document.getElementById('dashStreamChatPanel')) return;
+
+    // Subscribe to viewer presence
+    _subscribeDashViewers();
+    _viewerListeners.push(_updateDashViewerCount);
+
     const panel = document.createElement('div');
     panel.id = 'dashStreamChatPanel';
     panel.style.cssText = 'position:fixed;bottom:70px;right:20px;z-index:10000011;width:360px;max-width:90vw;height:420px;max-height:60vh;border-radius:14px;border:1px solid rgba(197,160,89,0.25);background:rgba(2,5,18,0.97);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);';
@@ -579,9 +651,11 @@ function _openDashStreamChat() {
             <div style="display:flex;align-items:center;gap:8px;">
                 <div style="width:7px;height:7px;border-radius:50%;background:#ef4444;animation:livePulse 1.5s ease-in-out infinite;"></div>
                 <span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(197,160,89,0.8);letter-spacing:2px;">STREAM CHAT</span>
+                <span id="dashViewerCount" style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(255,255,255,0.3);letter-spacing:1px;cursor:pointer;" onclick="window._toggleDashViewerList()">0 watching</span>
             </div>
-            <button onclick="window._closeDashStreamChat()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:1rem;padding:0;line-height:1;">&times;</button>
+            <button onclick="window._closeDashStreamChat()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.6);cursor:pointer;font-size:1.1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;">&times;</button>
         </div>
+        <div id="dashViewerList" style="display:none;padding:8px 14px;border-bottom:1px solid rgba(197,160,89,0.08);max-height:120px;overflow-y:auto;scrollbar-width:none;"></div>
         <div id="dashStreamMsgs" style="flex:1;overflow-y:auto;padding:10px 14px;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;"></div>
         <div style="padding:10px 12px;border-top:1px solid rgba(197,160,89,0.12);display:flex;gap:8px;">
             <input id="dashStreamInput" type="text" placeholder="Message stream chat..."
@@ -593,12 +667,51 @@ function _openDashStreamChat() {
     document.body.appendChild(panel);
     _loadDashStreamMsgs();
     _dashStreamPollTimer = setInterval(_loadDashStreamMsgs, 4000);
+    _updateDashViewerCount();
 }
 
 function _closeDashStreamChat() {
     _dashStreamChatOpen = false;
     document.getElementById('dashStreamChatPanel')?.remove();
     if (_dashStreamPollTimer) { clearInterval(_dashStreamPollTimer); _dashStreamPollTimer = null; }
+    _viewerListeners = _viewerListeners.filter(cb => cb !== _updateDashViewerCount);
+    _leaveViewerPresence();
+}
+
+function _updateDashViewerCount() {
+    const el = document.getElementById('dashViewerCount');
+    if (!el) return;
+    const count = _streamViewers.length;
+    el.textContent = `${count} watching`;
+
+    // Update viewer list if visible
+    const list = document.getElementById('dashViewerList');
+    if (list && list.style.display !== 'none') {
+        _renderDashViewerList();
+    }
+}
+
+function _toggleDashViewerList() {
+    const list = document.getElementById('dashViewerList');
+    if (!list) return;
+    if (list.style.display === 'none') {
+        list.style.display = 'block';
+        _renderDashViewerList();
+    } else {
+        list.style.display = 'none';
+    }
+}
+
+function _renderDashViewerList() {
+    const list = document.getElementById('dashViewerList');
+    if (!list) return;
+    if (_streamViewers.length === 0) {
+        list.innerHTML = `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.2);">No viewers yet</div>`;
+        return;
+    }
+    list.innerHTML = _streamViewers.map(v =>
+        `<div style="padding:3px 0;font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.5);">${v.name}</div>`
+    ).join('');
 }
 
 async function _loadDashStreamMsgs() {
@@ -658,6 +771,7 @@ export function bindStreamPlayer() {
     (window as any)._sendStreamChat = _sendStreamChat;
     (window as any)._closeDashStreamChat = _closeDashStreamChat;
     (window as any)._sendDashStreamMsg = _sendDashStreamMsg;
+    (window as any)._toggleDashViewerList = _toggleDashViewerList;
     (window as any).initStreamPlayer = initStreamPlayer;
     (window as any).initStreamPreview = initStreamPreview;
     (window as any).initDashStreamChat = initDashStreamChat;
