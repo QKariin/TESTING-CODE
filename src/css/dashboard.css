@@ -209,6 +209,7 @@ body {
     flex-direction: column;
     color: #ffffff !important;
     gap: 6px;
+    background: linear-gradient(160deg, rgba(255,0,237,0.10) 0%, rgba(0,10,255,0.10) 100%);
 }
 
 /* USER ITEMS */
@@ -226,8 +227,8 @@ body {
     cursor: pointer;
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid transparent;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255,255,255,0.06);
     transition: all 0.2s;
     position: relative;
     flex-shrink: 0;
