@@ -1022,6 +1022,9 @@ export async function sendMsg() {
         if (data.success) {
             console.log(`[DASHBOARD-CHAT] Message sent successfully.`);
             inp.value = "";
+            inp.style.height = 'auto';
+            inp.style.color = '';
+            inp.style.borderColor = '';
             // Append instantly for UX
             if (data.data) {
                 appendChatMessage(data.data);
@@ -1561,7 +1564,7 @@ async function requestAiDraft() {
     if (!activeCurrId) return;
 
     const btn = document.getElementById('aiDraftBtn') as HTMLButtonElement;
-    const inp = document.getElementById('adminInp') as HTMLInputElement;
+    const inp = document.getElementById('adminInp') as HTMLTextAreaElement;
     if (!btn || !inp) return;
 
     // Show loading state
@@ -1579,6 +1582,9 @@ async function requestAiDraft() {
         const data = await res.json();
         if (data.draft) {
             inp.value = data.draft;
+            // Auto-grow textarea to fit draft
+            inp.style.height = 'auto';
+            inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
             inp.focus();
             // Purple tint to show it's AI-generated
             inp.style.color = 'rgba(192,160,255,0.9)';
