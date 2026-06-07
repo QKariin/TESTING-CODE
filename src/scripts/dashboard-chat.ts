@@ -124,6 +124,10 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     const tickerEl = document.getElementById('dashSystemTicker');
     if (tickerEl) tickerEl.innerHTML = '';
 
+    // Clear input from previous chat
+    const inp = document.getElementById('adminInp') as HTMLTextAreaElement;
+    if (inp) { inp.value = ''; inp.style.height = 'auto'; inp.style.color = ''; inp.style.borderColor = ''; }
+
     activeChatEmail = activeId;
 
     // ── Restore from cache or fetch fresh ──
