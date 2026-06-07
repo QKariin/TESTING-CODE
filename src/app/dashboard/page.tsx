@@ -1899,6 +1899,7 @@ export default function DashboardPage() {
                                     <button className="btn-plus" onClick={() => (window as any).triggerAdminMediaPick()}>+</button>
                                     <input type="text" id="adminInp" className="inp" placeholder="Issue Command..." onKeyPress={(e) => { if (e.key === 'Enter') (window as any).sendMsg(); }} />
                                     <button onClick={() => (window as any).openChatGifPicker?.()} style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>GIF</button>
+                                    <button id="aiDraftBtn" onClick={() => (window as any).requestAiDraft?.()} style={{ padding: '6px 8px', background: 'rgba(147,51,234,0.1)', border: '1px solid rgba(147,51,234,0.3)', color: 'rgba(147,51,234,0.7)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, cursor: 'pointer', borderRadius: '4px', letterSpacing: '1px' }}>AI</button>
                                     <button onClick={() => (window as any).sendMsg()} className="btn-send">{'>'}</button>
                                 </div>
                             </div>

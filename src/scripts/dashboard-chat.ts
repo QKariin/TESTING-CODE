@@ -1555,6 +1555,51 @@ async function _callGuardian(userMessage: string, memberId: string) {
     }
 }
 
+// ─── AI DRAFT REPLY ──────────────────────────────────────────────────────────
+async function requestAiDraft() {
+    const activeCurrId = currId || (window as any).currId;
+    if (!activeCurrId) return;
+
+    const btn = document.getElementById('aiDraftBtn') as HTMLButtonElement;
+    const inp = document.getElementById('adminInp') as HTMLInputElement;
+    if (!btn || !inp) return;
+
+    // Show loading state
+    const origText = btn.textContent;
+    btn.textContent = '...';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+
+    try {
+        const res = await fetch('/api/chat/ai-draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: activeCurrId }),
+        });
+        const data = await res.json();
+        if (data.draft) {
+            inp.value = data.draft;
+            inp.focus();
+            // Purple tint to show it's AI-generated
+            inp.style.color = 'rgba(192,160,255,0.9)';
+            inp.style.borderColor = 'rgba(147,51,234,0.4)';
+            // Reset color on edit
+            const resetStyle = () => {
+                inp.style.color = '';
+                inp.style.borderColor = '';
+                inp.removeEventListener('input', resetStyle);
+            };
+            inp.addEventListener('input', resetStyle);
+        }
+    } catch (e) {
+        console.error('[ai-draft] Error:', e);
+    }
+
+    btn.textContent = origText;
+    btn.disabled = false;
+    btn.style.opacity = '';
+}
+
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
@@ -1577,6 +1622,7 @@ if (typeof window !== 'undefined') {
     (window as any)._approveCertProof = _approveCertProof;
     (window as any)._rejectCertProof = _rejectCertProof;
     (window as any)._callGuardian = _callGuardian;
+    (window as any).requestAiDraft = requestAiDraft;
 }
 
 function _shareNewMemberOnX(name: string, rank: string, avatarUrl: string) {
