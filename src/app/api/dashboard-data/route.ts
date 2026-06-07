@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { getMasterData } from '@/actions/velo-actions';
-import { cached } from '@/lib/api-cache';
+import { cached, cacheDelete } from '@/lib/api-cache';
 import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
@@ -18,6 +18,12 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');
+        const fresh = searchParams.get('fresh') === '1';
+
+        // Bust cache if fresh=1 (triggered by realtime events)
+        if (fresh) {
+            cacheDelete('dashboard:');
+        }
 
         const [users, tributes, reviewQueue] = await Promise.all([
             cached('dashboard:users', USERS_TTL, () => getMasterData()),

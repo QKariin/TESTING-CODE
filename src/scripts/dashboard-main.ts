@@ -99,9 +99,9 @@ export function initDashboard() {
     debouncedBackfill();
 }
 
-async function refreshQueueFromServer() {
+async function refreshQueueFromServer(fresh = false) {
     try {
-        const res = await fetch('/api/dashboard-data');
+        const res = await fetch(`/api/dashboard-data${fresh ? '?fresh=1' : ''}`);
         const data = await res.json();
         if (!data.success) return;
 
@@ -164,7 +164,7 @@ let _purchaseWatchChannel: ReturnType<ReturnType<typeof createClient>['channel']
 let _refreshTimer: ReturnType<typeof setTimeout> | null = null;
 function debouncedRefresh() {
     if (_refreshTimer) clearTimeout(_refreshTimer);
-    _refreshTimer = setTimeout(() => refreshQueueFromServer(), 1500);
+    _refreshTimer = setTimeout(() => refreshQueueFromServer(true), 1500);
 }
 
 function subscribeToDashboardTaskUpdates() {
