@@ -84,10 +84,11 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
         profilesId
             ? supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', profilesId)
             : supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', emailOrUuid),
-        supabaseAdmin.from('user_routines').select('history').eq('member_id', email).maybeSingle(),
+        supabaseAdmin.from('user_routines').select('history').ilike('member_id', email).maybeSingle(),
     ]);
 
     // Merge user_routines history entries into Taskdom_History so profile gallery shows them
+    console.log('[slave-profile] user_routines for', email, ':', userRoutineRow?.history?.length || 0, 'entries');
     if (userRoutineRow?.history && Array.isArray(userRoutineRow.history)) {
         let taskHistory: any[] = [];
         try {
