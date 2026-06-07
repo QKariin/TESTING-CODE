@@ -70,7 +70,7 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
         if (data && !taskCandidates.some((c: any) => c.member_id === data.member_id)) taskCandidates.push(data);
     }
     // Pick the row with the most data (highest kneelCount + CompletedTasks)
-    const taskData = taskCandidates.length === 0 ? null :
+    let taskData = taskCandidates.length === 0 ? null :
         taskCandidates.length === 1 ? taskCandidates[0] :
         taskCandidates.reduce((best: any, x: any) => {
             const xScore = Number(x.kneelCount || 0) + Number(x['Taskdom_CompletedTasks'] || 0);
@@ -78,12 +78,46 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
             return xScore > bScore ? x : best;
         }, taskCandidates[0]);
 
-    const [{ data: contribData }] = await Promise.all([
+    const email = (profileData?.member_id || emailOrUuid).toLowerCase();
+
+    const [{ data: contribData }, { data: userRoutineRow }] = await Promise.all([
         profilesId
             ? supabaseAdmin.from('crowdfund_contributions').select('amount_given').eq('member_id', profilesId)
             : supabaseAdmin.from('crowdfund_contributions').select('amount_given').ilike('member_id', emailOrUuid),
+        supabaseAdmin.from('user_routines').select('history').eq('member_id', email).maybeSingle(),
     ]);
 
+    // Merge user_routines history entries into Taskdom_History so profile gallery shows them
+    if (userRoutineRow?.history && Array.isArray(userRoutineRow.history)) {
+        let taskHistory: any[] = [];
+        try {
+            taskHistory = typeof taskData?.Taskdom_History === 'string'
+                ? JSON.parse(taskData.Taskdom_History)
+                : (taskData?.Taskdom_History || []);
+        } catch { taskHistory = []; }
+
+        const existingIds = new Set(taskHistory.map((e: any) => e.id));
+
+        for (const entry of userRoutineRow.history) {
+            if (existingIds.has(entry.id)) continue;
+            taskHistory.push({
+                id: entry.id,
+                timestamp: entry.submitted_at || entry.date,
+                status: entry.status,
+                proofUrl: entry.proof_url || null,
+                thumbnail_url: entry.thumbnail_url || null,
+                isRoutine: true,
+                meritAwarded: entry.points_awarded || 0,
+                text: 'Daily Routine',
+            });
+        }
+
+        if (taskData) {
+            taskData.Taskdom_History = JSON.stringify(taskHistory);
+        } else {
+            taskData = { Taskdom_History: JSON.stringify(taskHistory) };
+        }
+    }
 
     const crowdfundTotal = ((contribData as any[] | null) || []).reduce((sum: number, r: any) => sum + (r.amount_given || 0), 0);
     return mapUserProfile(profileData || {}, taskData || {}, crowdfundTotal);
