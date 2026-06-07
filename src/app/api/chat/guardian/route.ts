@@ -80,8 +80,16 @@ export async function POST(req: Request) {
             const completedTasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || t?.taskdom_completedtasks || 0);
             const kneels = Number(t?.kneelCount || t?.kneelcount || 0);
             const merit = Number(p.score || 0);
-            const coinsSpent = Number(p.total_coins_spent || 0);
-            const bestStreak = Number(p.bestRoutinestreak || p.bestroutinestreak || p.routinestreak || 0);
+            const params = p.parameters || {};
+            // Sacrifice = wishlist_spent OR sum of tribute history amounts
+            let coinsSpent = Number(params.wishlist_spent || 0);
+            if (!coinsSpent && t?.['Tribute History']) {
+                try {
+                    const arr = typeof t['Tribute History'] === 'string' ? JSON.parse(t['Tribute History']) : t['Tribute History'];
+                    if (Array.isArray(arr)) coinsSpent = arr.reduce((sum: number, e: any) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
+                } catch {}
+            }
+            const bestStreak = Number(params.routine_streak || params.taskdom_current_streak || p.bestRoutinestreak || 0);
             const wallet = Number(p.wallet || 0);
 
             userContext = `\n\nYOU ARE TALKING TO: ${p.name || 'Unknown'}`;
