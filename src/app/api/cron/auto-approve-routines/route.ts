@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkAndPromote } from '@/lib/promote';
+import { cacheDelete } from '@/lib/api-cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,7 +75,10 @@ export async function GET(req: Request) {
             })
             .eq('member_id', ur.member_id);
 
-        // Update profiles.parameters for backward compat
+        // Bust routine-status cache so next fetch returns approved
+        cacheDelete(`routine:${ur.member_id.toLowerCase()}`);
+
+        // Update profiles.parameters for backward compat + notify member
         try {
             const { data: prof } = await supabaseAdmin
                 .from('profiles')
@@ -87,6 +91,12 @@ export async function GET(req: Request) {
                 params.routine_streak = newBest;
                 params.taskdom_current_streak = newStreak;
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
+
+                // Broadcast to profile page so UI updates from "SUBMITTED" to "DONE"
+                const ch = supabaseAdmin.channel(`member-notify-${prof.ID}`);
+                await ch.subscribe();
+                await ch.send({ type: 'broadcast', event: 'routine_approved', payload: {} });
+                setTimeout(() => supabaseAdmin.removeChannel(ch), 1500);
             }
         } catch (_) { }
 

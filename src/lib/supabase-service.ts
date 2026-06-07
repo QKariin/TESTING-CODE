@@ -1,6 +1,6 @@
 // src/lib/supabase-service.ts
 import { supabase, supabaseAdmin } from './supabase';
-import { cacheGet, cacheSet } from '@/lib/api-cache';
+import { cacheGet, cacheSet, cacheDelete } from '@/lib/api-cache';
 import { checkAndPromote } from '@/lib/promote';
 
 export const DbService = {
@@ -381,6 +381,9 @@ export const DbService = {
                 })
                 .eq('member_id', userRoutine.member_id);
 
+            // Bust routine-status cache so next fetch returns approved
+            cacheDelete(`routine:${userRoutine.member_id.toLowerCase()}`);
+
             await this.awardPoints(profileId, bonus);
             const thumb = userRoutine.pending_thumbnail_url || userRoutine.pending_proof_url || null;
             const cardData = { status: 'approve', points: bonus, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb };
@@ -469,6 +472,9 @@ export const DbService = {
                     updated_at: now,
                 })
                 .eq('member_id', userRoutine.member_id);
+
+            // Bust routine-status cache so next fetch returns rejected
+            cacheDelete(`routine:${userRoutine.member_id.toLowerCase()}`);
 
             const thumb = userRoutine.pending_thumbnail_url || userRoutine.pending_proof_url || null;
             const cardData = { status: 'reject', points: 0, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb };

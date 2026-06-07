@@ -2964,6 +2964,9 @@ function _showRoutineToast(approved: boolean) {
         toast.style.transform = 'translateX(-50%) translateY(-80px)';
         setTimeout(() => toast.remove(), 350);
     }, 4000);
+
+    // Re-fetch routine status so UI updates from "SUBMITTED" to "DONE" / "REJECTED"
+    updateRoutineWidget().catch(() => {});
 }
 
 /** Tear down all intervals + realtime channels. Safe to call multiple times. */
