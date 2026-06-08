@@ -810,7 +810,7 @@ export default function TestLandingPage() {
         <iframe
             ref={footerFrameRef}
             id="footerFrame"
-            src="/footer-faq.html"
+            src="/footer-faq.html?v=3"
             style={{
                 position: 'fixed',
                 left: 0,

@@ -612,7 +612,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 </nav>
 
 <!-- MESSAGE NOTIFICATION -->
-<div class="msg-notif" id="msgNotif" onclick="openNotif()">
+<div class="msg-notif" id="msgNotif" onclick="openNotif(event)">
     <div class="msg-notif-inner">
         <img src="/queen-nav.png" class="msg-notif-av" alt="Queen Karin">
         <div class="msg-notif-text">
@@ -621,8 +621,8 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
         </div>
     </div>
     <div class="msg-notif-actions">
-        <button class="msg-notif-btn msg-notif-dismiss" onclick="openNotif()">DISMISS</button>
-        <button class="msg-notif-btn msg-notif-open" onclick="openNotif()">OPEN</button>
+        <button class="msg-notif-btn msg-notif-dismiss" onclick="event.stopPropagation(); dismissNotif();">DISMISS</button>
+        <button class="msg-notif-btn msg-notif-open" onclick="event.stopPropagation(); openNotif(event);">OPEN</button>
     </div>
 </div>
 
