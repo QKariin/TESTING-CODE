@@ -346,7 +346,7 @@ export default function ProfilePage() {
                         lb.addEventListener('click', (e) => {
                             if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) {
                                 const vid = lb!.querySelector('video');
-                                if (vid) vid.pause();
+                                if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
                                 lb!.style.display = 'none';
                             }
                         });
@@ -354,8 +354,18 @@ export default function ProfilePage() {
                     }
                     const media = document.getElementById('globalChatLightboxMedia');
                     if (media) {
+                        media.innerHTML = '';
                         if (type === 'video') {
-                            media.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;" onclick="event.stopPropagation()"></video>`;
+                            const vid = document.createElement('video');
+                            vid.setAttribute('controls', '');
+                            vid.setAttribute('playsinline', '');
+                            vid.setAttribute('webkit-playsinline', '');
+                            vid.setAttribute('preload', 'auto');
+                            vid.style.cssText = 'max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;background:#000;';
+                            vid.addEventListener('click', (e) => e.stopPropagation());
+                            vid.src = url;
+                            media.appendChild(vid);
+                            vid.play().catch(() => {});
                         } else {
                             media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
                         }
