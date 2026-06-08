@@ -612,7 +612,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 </nav>
 
 <!-- MESSAGE NOTIFICATION -->
-<div class="msg-notif" id="msgNotif" onclick="openNotif(event)">
+<div class="msg-notif" id="msgNotif" onclick="openNotif()">
     <div class="msg-notif-inner">
         <img src="/queen-nav.png" class="msg-notif-av" alt="Queen Karin">
         <div class="msg-notif-text">
@@ -621,8 +621,8 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
         </div>
     </div>
     <div class="msg-notif-actions">
-        <button class="msg-notif-btn msg-notif-dismiss" onclick="event.stopPropagation(); dismissNotif();">DISMISS</button>
-        <button class="msg-notif-btn msg-notif-open" onclick="event.stopPropagation(); openNotif(event);">OPEN</button>
+        <button class="msg-notif-btn msg-notif-dismiss" onclick="event.stopPropagation(); openNotif();">DISMISS</button>
+        <button class="msg-notif-btn msg-notif-open" onclick="event.stopPropagation(); openNotif();">OPEN</button>
     </div>
 </div>
 
@@ -1079,13 +1079,12 @@ function dismissNotif() {
 }
 
 function openNotif() {
-    // Hide notification visually WITHOUT sending notifHide (don't shrink iframe)
     var badge = document.getElementById('msgBadge');
     var notif = document.getElementById('msgNotif');
     if (badge) badge.classList.remove('active');
     if (notif) notif.classList.remove('active');
     parent.postMessage({ type: 'dismissAccessDenied' }, '*');
-    handleCenterClick();
+    openFaqChat();
 }
 
 // Show "New message from Queen Karin" 10s after page load

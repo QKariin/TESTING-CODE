@@ -1131,7 +1131,7 @@ export default function TributePage() {
         <iframe
             ref={footerFrameRef}
             id="footerFrame"
-            src="/footer-faq.html?v=3"
+            src="/footer-faq.html?v=4"
             style={{
                 position: 'fixed',
                 left: 0,
