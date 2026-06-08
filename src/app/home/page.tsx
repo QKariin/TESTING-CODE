@@ -150,6 +150,7 @@ export default function TestLandingPage() {
     const [toastClass, setToastClass] = useState('');
     const [accessDenied, setAccessDenied] = useState<{ section: string } | null>(null);
     const [openAbout, setOpenAbout] = useState<string | null>(null);
+    const [iframeFull, setIframeFull] = useState(false);
 
     // Refs
     const faqIsOpenRef = useRef(false);
@@ -291,19 +292,17 @@ export default function TestLandingPage() {
             }
             if (e.data.type === 'faqOpen') {
                 faqIsOpenRef.current = true;
-                if (frame) { frame.style.height = '100%'; frame.style.top = '0'; }
+                setIframeFull(true);
             }
             if (e.data.type === 'faqClose') {
                 faqIsOpenRef.current = false;
-                setTimeout(() => {
-                    if (frame) { frame.style.height = 'calc(140px + env(safe-area-inset-bottom))'; frame.style.top = 'auto'; }
-                }, 400);
+                setTimeout(() => setIframeFull(false), 400);
             }
             if (e.data.type === 'notifShow') {
-                if (frame && frame.style.top !== '0') frame.style.height = 'calc(220px + env(safe-area-inset-bottom))';
+                if (!faqIsOpenRef.current && frame) frame.style.height = 'calc(220px + env(safe-area-inset-bottom))';
             }
             if (e.data.type === 'notifHide') {
-                if (frame && frame.style.top !== '0') frame.style.height = 'calc(140px + env(safe-area-inset-bottom))';
+                if (!faqIsOpenRef.current && frame) frame.style.height = 'calc(140px + env(safe-area-inset-bottom))';
             }
             if (e.data.type === 'faqOpened') {
                 triggerFomoToast();
@@ -814,14 +813,15 @@ export default function TestLandingPage() {
             src="/footer-faq.html"
             style={{
                 position: 'fixed',
-                bottom: 0,
                 left: 0,
                 width: '100%',
-                height: 'calc(140px + env(safe-area-inset-bottom))',
                 border: 'none',
                 zIndex: 9999999,
                 background: 'transparent',
                 colorScheme: 'dark',
+                ...(iframeFull
+                    ? { top: 0, bottom: 0, height: '100%' }
+                    : { top: 'auto', bottom: 0, height: 'calc(140px + env(safe-area-inset-bottom))' }),
             }}
         />
 
