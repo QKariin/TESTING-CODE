@@ -1079,11 +1079,6 @@ function dismissNotif() {
 }
 
 function openNotif() {
-    var badge = document.getElementById('msgBadge');
-    var notif = document.getElementById('msgNotif');
-    if (badge) badge.classList.remove('active');
-    if (notif) notif.classList.remove('active');
-    parent.postMessage({ type: 'dismissAccessDenied' }, '*');
     openFaqChat();
 }
 

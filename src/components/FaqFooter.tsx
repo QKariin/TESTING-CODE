@@ -81,7 +81,7 @@ export default function FaqFooter({ onNavClick, onUnlock, hideOnDesktop }: FaqFo
             )}
             <iframe
                 id="footer-faq-frame"
-                src="/footer-faq.html?v=4"
+                src="/footer-faq.html?v=5"
                 style={{
                     position: 'fixed',
                     bottom: 0,
