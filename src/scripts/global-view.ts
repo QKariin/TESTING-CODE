@@ -88,7 +88,7 @@ if (typeof window !== 'undefined') {
         if (!lb) {
             lb = document.createElement('div');
             lb.id = 'globalChatLightbox';
-            lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
+            lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10000002;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
             lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
             lb.addEventListener('click', (e) => {
                 if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) {
