@@ -304,6 +304,12 @@ export default function TestLandingPage() {
             if (e.data.type === 'faqOpened') {
                 triggerFomoToast();
             }
+            if (e.data.type === 'openFaqFromNotif') {
+                faqIsOpenRef.current = true;
+                iframeFullRef.current = true;
+                setIframeFull(true);
+                setTimeout(() => { frame?.contentWindow?.postMessage({ type: 'doOpenFaq' }, '*'); }, 100);
+            }
             if (e.data.type === 'dismissAccessDenied') {
                 setAccessDenied(null);
             }
@@ -807,7 +813,7 @@ export default function TestLandingPage() {
         <iframe
             ref={footerFrameRef}
             id="footerFrame"
-            src="/footer-faq.html?v=5"
+            src="/footer-faq.html?v=6"
             style={{
                 position: 'fixed',
                 left: 0,

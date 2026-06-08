@@ -1079,8 +1079,21 @@ function dismissNotif() {
 }
 
 function openNotif() {
-    openFaqChat();
+    // Hide notification
+    var badge = document.getElementById('msgBadge');
+    var notif = document.getElementById('msgNotif');
+    if (badge) badge.classList.remove('active');
+    if (notif) notif.classList.remove('active');
+    // Tell parent to expand iframe, parent will message back when ready
+    parent.postMessage({ type: 'openFaqFromNotif' }, '*');
 }
+
+// Listen for parent confirming iframe is expanded
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'doOpenFaq') {
+        openFaqChat();
+    }
+});
 
 // Show "New message from Queen Karin" 10s after page load
 notifTimer = setTimeout(function() { showNotif(); }, 10000);

@@ -235,6 +235,11 @@ export default function TributePage() {
             if (e.data.type === 'notifHide') {
                 if (!iframeFullRef.current && frame) frame.style.height = 'calc(140px + env(safe-area-inset-bottom))';
             }
+            if (e.data.type === 'openFaqFromNotif') {
+                iframeFullRef.current = true;
+                setIframeFull(true);
+                setTimeout(() => { frame?.contentWindow?.postMessage({ type: 'doOpenFaq' }, '*'); }, 100);
+            }
             if (e.data.type === 'dismissAccessDenied') {
                 document.getElementById('accessDeniedOverlay')?.remove();
             }
@@ -1131,7 +1136,7 @@ export default function TributePage() {
         <iframe
             ref={footerFrameRef}
             id="footerFrame"
-            src="/footer-faq.html?v=5"
+            src="/footer-faq.html?v=6"
             style={{
                 position: 'fixed',
                 left: 0,
