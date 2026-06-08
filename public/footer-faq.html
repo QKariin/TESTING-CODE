@@ -612,7 +612,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 </nav>
 
 <!-- MESSAGE NOTIFICATION -->
-<div class="msg-notif" id="msgNotif">
+<div class="msg-notif" id="msgNotif" onclick="openNotif()">
     <div class="msg-notif-inner">
         <img src="/queen-nav.png" class="msg-notif-av" alt="Queen Karin">
         <div class="msg-notif-text">
@@ -1079,7 +1079,18 @@ function dismissNotif() {
 }
 
 function openNotif() {
-    handleCenterClick();
+    dismissNotif();
+    parent.postMessage({ type: 'dismissAccessDenied' }, '*');
+    var menu = document.getElementById('menuOverlay');
+    if (menu && menu.classList.contains('open')) menu.classList.remove('open');
+    var gl = document.getElementById('globalOverlay');
+    if (gl && gl.classList.contains('open')) {
+        gl.style.transition = 'none';
+        gl.classList.remove('open');
+        gl.offsetHeight;
+        gl.style.transition = '';
+    }
+    openFaqChat();
 }
 
 // Show "New message from Queen Karin" 10s after page load
