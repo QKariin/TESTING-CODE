@@ -1079,18 +1079,13 @@ function dismissNotif() {
 }
 
 function openNotif() {
-    dismissNotif();
+    // Hide notification visually WITHOUT sending notifHide (don't shrink iframe)
+    var badge = document.getElementById('msgBadge');
+    var notif = document.getElementById('msgNotif');
+    if (badge) badge.classList.remove('active');
+    if (notif) notif.classList.remove('active');
     parent.postMessage({ type: 'dismissAccessDenied' }, '*');
-    var menu = document.getElementById('menuOverlay');
-    if (menu && menu.classList.contains('open')) menu.classList.remove('open');
-    var gl = document.getElementById('globalOverlay');
-    if (gl && gl.classList.contains('open')) {
-        gl.style.transition = 'none';
-        gl.classList.remove('open');
-        gl.offsetHeight;
-        gl.style.transition = '';
-    }
-    openFaqChat();
+    handleCenterClick();
 }
 
 // Show "New message from Queen Karin" 10s after page load
