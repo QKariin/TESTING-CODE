@@ -143,6 +143,27 @@ export async function renderChat(messages: any[]) {
 
         let contentHtml = `<div class="msg ${msgClass}">${quoteHtml}${txt}</div>`;
 
+        // --- WISHLIST CARD (type-based) ---
+        if (m.type === 'wishlist') {
+            const meta = m.metadata || {};
+            const cardImgUrl = meta.image ? getOptimizedUrl(meta.image, 300) : '';
+            contentHtml = `
+            <div class="msg-wishlist-card" style="margin:0 auto; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.35); border-radius:14px; max-width:220px; width:60vw; box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                <div style="width:100%; height:130px; overflow:hidden; position:relative; background:#050510;">
+                     ${cardImgUrl ? `<img src="${cardImgUrl}" onload="window.forceBottom()" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">` : ''}
+                     <div style="position:absolute; inset:0; background:linear-gradient(to bottom, transparent 50%, rgba(10,10,20,0.8) 100%);"></div>
+                     ${meta.price ? `<div style="position:absolute; top:8px; right:8px; background:rgba(5,5,20,0.9); border:1px solid rgba(197,160,89,0.6); border-radius:20px; padding:3px 9px; display:flex; align-items:center; gap:4px; backdrop-filter:blur(6px);">
+                         <span style="font-family:'Orbitron', sans-serif; font-size:0.6rem; color:#c5a059; font-weight:700; letter-spacing:1px;"><i class="fas fa-coins" style="font-size:0.55rem; color:#c5a059;"></i> ${Number(meta.price).toLocaleString()}</span>
+                     </div>` : ''}
+                </div>
+                <div style="padding:10px 13px 13px;">
+                    <div style="font-family:'Orbitron', sans-serif; font-size:0.45rem; color:rgba(197,160,89,0.5); letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">✦ Gift Sent</div>
+                    <div style="font-family:'Orbitron', sans-serif; font-size:0.75rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3;">${meta.title || ''}</div>
+                </div>
+            </div>`;
+            return `<div class="msg-row" style="justify-content:center; margin: 10px 0;"><div class="msg-col" style="align-items:center;">${contentHtml}<div class="msg-time">${timeStr}</div></div></div>`;
+        }
+
         // --- MEDIA HANDLER ---
         if (originalMsg) {
 

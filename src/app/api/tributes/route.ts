@@ -36,7 +36,7 @@ export async function GET() {
             }
 
             let topContributorName = null;
-            const tributeId = tribute.id ?? tribute._id ?? tribute.Title;
+            const tributeId = tribute.ID ?? tribute.id ?? tribute._id ?? tribute.Title;
 
             if (tribute.is_crowdfund) {
                 const { data: topContrData } = await supabase

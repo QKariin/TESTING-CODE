@@ -66,20 +66,27 @@ export async function POST(request: Request) {
         // Insert wishlist-type record so the Updates feed picks it up
         let tributeImage: string | null = null;
         try {
-            // Table is uppercase 'Wishlist', image column is 'Image'
+            // Fetch item image from Wishlist table — try by ID first, then by Title
             let tributeRow: any = null;
-            const { data: r1 } = await supabase.from('Wishlist').select('Image, image_url').eq('id', tributeId).maybeSingle();
-            tributeRow = r1;
-            if (!tributeRow) {
-                const { data: r2 } = await supabase.from('wishlist').select('Image, image_url').eq('id', tributeId).maybeSingle();
-                tributeRow = r2;
+            if (tributeId) {
+                const { data: r1 } = await supabase.from('Wishlist').select('Image').eq('ID', tributeId).maybeSingle();
+                tributeRow = r1;
+                if (!tributeRow) {
+                    const { data: r2 } = await supabase.from('Wishlist').select('Image').eq('Title', tributeId).maybeSingle();
+                    tributeRow = r2;
+                }
             }
-            let rawImg = tributeRow?.Image || tributeRow?.image_url || '';
+            if (!tributeRow && tributeTitle) {
+                const { data: r3 } = await supabase.from('Wishlist').select('Image').eq('Title', tributeTitle).maybeSingle();
+                tributeRow = r3;
+            }
+            let rawImg = tributeRow?.Image || '';
             if (rawImg.startsWith('wix:image://v1/')) {
                 const wixId = rawImg.split('/')[3].split('~')[0];
                 rawImg = `https://static.wixstatic.com/media/${wixId}`;
             }
             tributeImage = rawImg || null;
+            console.log('[tributes/purchase] tributeId:', tributeId, '| tributeTitle:', tributeTitle, '| image:', tributeImage ? 'found' : 'MISSING');
             await supabase.from('chats').insert({
                 member_id: realEmail,
                 sender_email: realEmail,
@@ -109,7 +116,7 @@ export async function POST(request: Request) {
 
         // Discord notification
         const senderNameFinal = (profile as any).name || realEmail.split('@')[0];
-        discordWishlistPurchase(senderNameFinal, tributeTitle, tributeCost).catch(() => {});
+        discordWishlistPurchase(senderNameFinal, tributeTitle, tributeCost, tributeImage).catch(() => {});
 
         return NextResponse.json({ success: true, newWallet, newScore, meritGained: meritGain, message: `Tribute "${tributeTitle}" purchased successfully.` });
     } catch (err: any) {

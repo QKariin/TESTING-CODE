@@ -223,7 +223,7 @@ export function discordStreamLive() {
     });
 }
 
-export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number) {
+export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number, itemImage?: string | null) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',
         description: `**${senderName}** purchased **${itemTitle}** for the Queen\n\n[See the wishlist](${APP_LINK})`,
@@ -231,6 +231,6 @@ export function discordWishlistPurchase(senderName: string, itemTitle: string, c
         fields: [
             { name: 'Cost', value: `${cost.toLocaleString()} coins`, inline: true },
         ],
-        image: { url: cardUrl('wishlist', 'WISHLIST TRIBUTE', `${senderName} purchased ${itemTitle}`, `${cost.toLocaleString()} coins`) },
+        image: { url: itemImage || cardUrl('wishlist', 'WISHLIST TRIBUTE', `${senderName} purchased ${itemTitle}`, `${cost.toLocaleString()} coins`) },
     });
 }
