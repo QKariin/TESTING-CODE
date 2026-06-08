@@ -107,11 +107,14 @@ if (typeof window !== 'undefined') {
                 vid.setAttribute('controls', '');
                 vid.setAttribute('playsinline', '');
                 vid.setAttribute('webkit-playsinline', '');
-                vid.setAttribute('preload', 'none');
+                vid.setAttribute('preload', 'metadata');
+                vid.muted = true;
                 vid.style.cssText = 'max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;background:#000;';
                 vid.addEventListener('click', (e) => e.stopPropagation());
+                vid.addEventListener('ended', () => { vid.pause(); lb!.style.display = 'none'; });
                 vid.src = url;
                 media.appendChild(vid);
+                vid.play().then(() => { vid.muted = false; }).catch(() => {});
             } else {
                 media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
             }

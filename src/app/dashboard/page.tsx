@@ -962,18 +962,41 @@ export default function DashboardPage() {
             (window as any).toggleDashSystemLog = () => import('@/scripts/dashboard-chat').then(m => m.toggleDashSystemLog());
             // Global chat lightbox for photo posts
             if (!(window as any)._openGlobalLightbox) {
-                (window as any)._openGlobalLightbox = (url: string) => {
+                (window as any)._openGlobalLightbox = (url: string, type?: string) => {
                     let lb = document.getElementById('globalChatLightbox');
                     if (!lb) {
                         lb = document.createElement('div');
                         lb.id = 'globalChatLightbox';
-                        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px);';
+                        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10000002;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(6px);';
                         lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
-                        lb.addEventListener('click', () => { lb!.style.display = 'none'; });
+                        lb.addEventListener('click', (e) => {
+                            if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) {
+                                const vid = lb!.querySelector('video');
+                                if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
+                                lb!.style.display = 'none';
+                            }
+                        });
                         document.body.appendChild(lb);
                     }
                     const media = document.getElementById('globalChatLightboxMedia');
-                    if (media) media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+                    if (media) {
+                        media.innerHTML = '';
+                        if (type === 'video') {
+                            const vid = document.createElement('video');
+                            vid.setAttribute('controls', '');
+                            vid.setAttribute('playsinline', '');
+                            vid.setAttribute('preload', 'metadata');
+                            vid.muted = true;
+                            vid.style.cssText = 'max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;background:#000;';
+                            vid.addEventListener('click', (e) => e.stopPropagation());
+                            vid.addEventListener('ended', () => { vid.pause(); lb!.style.display = 'none'; });
+                            vid.src = url;
+                            media.appendChild(vid);
+                            vid.play().then(() => { vid.muted = false; }).catch(() => {});
+                        } else {
+                            media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+                        }
+                    }
                     lb.style.display = 'flex';
                 };
             }
