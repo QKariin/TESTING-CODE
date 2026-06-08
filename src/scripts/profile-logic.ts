@@ -284,7 +284,7 @@ function renderTributes() {
         }
 
         const quickItemsHtml = lastTributeHtml + quickItems.map((t) => `
-            <div onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price})" style="position:relative; border-radius:10px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.25s ease; box-shadow:0 4px 20px rgba(0,0,0,0.4); flex-shrink:1; min-height:0;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 30px rgba(197,160,89,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.4)';">
+            <div onclick="window.buyTribute('${t.id}', '${t.title}', ${t.price}, '${(t.image||'').replace(/'/g, "\\'")}')" style="position:relative; border-radius:10px; overflow:hidden; background:#0a0a14; border:1px solid rgba(197,160,89,0.2); cursor:pointer; transition:all 0.25s ease; box-shadow:0 4px 20px rgba(0,0,0,0.4); flex-shrink:1; min-height:0;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 30px rgba(197,160,89,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.4)';">
                     <div style="width:100%; height:80px; background-color:#050510; position:relative; overflow:hidden;">
                         <img src="${getOptimizedUrl(t.image, 400)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='/queen-karin.png'">
                     </div>
@@ -376,7 +376,7 @@ function renderTributes() {
                         <span style="font-family:'Orbitron', sans-serif; font-size:0.7rem; color:#c5a059; font-weight:700; letter-spacing:1px;">${t.price.toLocaleString()}</span>
                     </div>
                     <div style="font-family:'Cinzel', serif; font-size:0.85rem; color:#fff; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.3; flex:1;">${t.title}</div>
-                    <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price})"
+                    <button onclick="event.stopPropagation(); window.buyTribute('${t.id}', '${t.title}', ${t.price}, '${(t.image||'').replace(/'/g, "\\'")}')"
                         style="width:100%; background:linear-gradient(135deg, #c5a059 0%, #8b6914 100%); color:#000; border:none; padding:10px 0; border-radius:7px; font-family:'Orbitron', sans-serif; font-size:0.55rem; font-weight:700; letter-spacing:2px; cursor:pointer; transition:all 0.2s;"
                         onmouseover="this.style.opacity='0.85';"
                         onmouseout="this.style.opacity='1';">SEND GIFT</button>
@@ -446,7 +446,7 @@ function renderGridMobile(gridEl: HTMLElement) {
         </div>` : '';
 
         return `
-        <div onclick="${locked ? '' : `window.buyTribute('${t.id}','${t.title}',${t.price})`}" style="position:relative; border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid ${locked ? 'rgba(255,255,255,0.06)' : 'rgba(197,160,89,0.22)'}; box-shadow:0 4px 16px rgba(0,0,0,0.4); aspect-ratio:3/4; cursor:${locked ? 'default' : 'pointer'};">
+        <div onclick="${locked ? '' : `window.buyTribute('${t.id}','${t.title}',${t.price},'${(t.image||'').replace(/'/g, "\\'")}')`}" style="position:relative; border-radius:12px; overflow:hidden; background:#0a0a14; border:1px solid ${locked ? 'rgba(255,255,255,0.06)' : 'rgba(197,160,89,0.22)'}; box-shadow:0 4px 16px rgba(0,0,0,0.4); aspect-ratio:3/4; cursor:${locked ? 'default' : 'pointer'};">
             ${img ? `<img src="${img}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">` : ''}
             <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(4,4,16,0.95) 0%, rgba(4,4,16,0.6) 40%, transparent 65%);"></div>
             ${lockOverlay}
@@ -456,7 +456,7 @@ function renderGridMobile(gridEl: HTMLElement) {
                     <span style="font-family:'Orbitron',sans-serif; font-size:11px; color:${locked ? 'rgba(197,160,89,0.35)' : '#c5a059'}; font-weight:700;">${t.price.toLocaleString()}</span>
                 </div>
                 <div style="font-family:'Cinzel',serif; font-size:13px; color:${locked ? 'rgba(255,255,255,0.3)' : '#fff'}; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; line-height:1.3;">${t.title}</div>
-                ${locked ? '' : `<button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price})"
+                ${locked ? '' : `<button onclick="event.stopPropagation(); window.buyTribute('${t.id}','${t.title}',${t.price},'${(t.image||'').replace(/'/g, "\\'")}')"
                     style="width:100%; background:linear-gradient(135deg,#c5a059,#8b6914); color:#000; border:none; padding:10px 0; border-radius:6px; font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:1.5px; cursor:pointer;">
                     SEND GIFT
                 </button>`}
@@ -709,7 +709,7 @@ if (typeof window !== 'undefined') {
 }
 
 let _buyingTribute = false;
-export async function buyTribute(id: string, title: string, cost: number) {
+export async function buyTribute(id: string, title: string, cost: number, image?: string) {
     if (_buyingTribute) return;
     _buyingTribute = true;
 
@@ -735,7 +735,7 @@ export async function buyTribute(id: string, title: string, cost: number) {
         const res = await fetch('/api/tributes/purchase', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberEmail: memberId, tributeId: id, tributeTitle: title, tributeCost: cost })
+            body: JSON.stringify({ memberEmail: memberId, tributeId: id, tributeTitle: title, tributeCost: cost, tributeImage: image || null })
         });
 
         const data = await res.json();

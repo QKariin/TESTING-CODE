@@ -6,7 +6,7 @@ import { discordWishlistPurchase } from '@/lib/discord';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { memberEmail, tributeId, tributeTitle, tributeCost } = body;
+        const { memberEmail, tributeId, tributeTitle, tributeCost, tributeImage: clientImage } = body;
 
         if (!memberEmail || !tributeTitle || tributeCost === undefined) {
             return NextResponse.json({ success: false, error: 'Missing required parameters' }, { status: 400 });
@@ -64,29 +64,9 @@ export async function POST(request: Request) {
         } catch (_) {}
 
         // Insert wishlist-type record so the Updates feed picks it up
-        let tributeImage: string | null = null;
+        // Use image from frontend (already resolved) — no flaky DB lookup needed
+        const tributeImage: string | null = clientImage || null;
         try {
-            // Fetch item image from Wishlist table — try by ID first, then by Title
-            let tributeRow: any = null;
-            if (tributeId) {
-                const { data: r1 } = await supabase.from('Wishlist').select('Image').eq('ID', tributeId).maybeSingle();
-                tributeRow = r1;
-                if (!tributeRow) {
-                    const { data: r2 } = await supabase.from('Wishlist').select('Image').eq('Title', tributeId).maybeSingle();
-                    tributeRow = r2;
-                }
-            }
-            if (!tributeRow && tributeTitle) {
-                const { data: r3 } = await supabase.from('Wishlist').select('Image').eq('Title', tributeTitle).maybeSingle();
-                tributeRow = r3;
-            }
-            let rawImg = tributeRow?.Image || '';
-            if (rawImg.startsWith('wix:image://v1/')) {
-                const wixId = rawImg.split('/')[3].split('~')[0];
-                rawImg = `https://static.wixstatic.com/media/${wixId}`;
-            }
-            tributeImage = rawImg || null;
-            console.log('[tributes/purchase] tributeId:', tributeId, '| tributeTitle:', tributeTitle, '| image:', tributeImage ? 'found' : 'MISSING');
             await supabase.from('chats').insert({
                 member_id: realEmail,
                 sender_email: realEmail,
