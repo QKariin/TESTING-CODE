@@ -1116,15 +1116,15 @@ export default function TributePage() {
 
 
                 {/* ─── FOOTER ─── */}
-                <div style={{ textAlign: 'center', marginTop: 60, borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: 20 }}>
+                <div style={{ textAlign: 'center', marginTop: 60, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 24, paddingBottom: 100 }}>
                     {userEmail && (
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500, color: 'rgba(255,255,255,0.08)', letterSpacing: '2px', marginBottom: 8 }}>{userEmail}</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', fontWeight: 500, color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginBottom: 14 }}>{userEmail}</div>
                     )}
                     <button onClick={handleLogout}
                         style={{
-                            background: 'none', border: '1px solid rgba(255,255,255,0.03)', borderRadius: 4,
-                            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500,
-                            color: 'rgba(255,255,255,0.08)', letterSpacing: '3px', padding: '6px 16px', cursor: 'pointer',
+                            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
+                            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', fontWeight: 600,
+                            color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', padding: '10px 28px', cursor: 'pointer',
                         }}>
                         LOGOUT
                     </button>
