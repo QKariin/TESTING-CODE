@@ -84,6 +84,24 @@ if (typeof window !== 'undefined') {
     };
 
     (window as any)._openGlobalLightbox = (url: string, type?: string) => {
+        if (type === 'video') {
+            // Collect all video URLs from the global feed for the circle strip
+            const feedVideos: any[] = [];
+            document.querySelectorAll('[onclick*="_openGlobalLightbox"][onclick*="video"]').forEach((el: any) => {
+                const match = el.getAttribute('onclick')?.match(/_openGlobalLightbox\('([^']+)'/);
+                if (match) {
+                    const vidUrl = match[1].replace(/\\'/g, "'");
+                    if (!feedVideos.some(v => v.media_url === vidUrl)) {
+                        const bg = el.style.backgroundImage;
+                        const thumbMatch = bg?.match(/url\(['"]?([^'"]+)['"]?\)/);
+                        feedVideos.push({ media_url: vidUrl, thumbnail_url: thumbMatch?.[1] || null });
+                    }
+                }
+            });
+            _queenVideosList = feedVideos.length ? feedVideos : [{ media_url: url, thumbnail_url: null }];
+            _playQueenVideo(url);
+            return;
+        }
         let lb = document.getElementById('globalChatLightbox');
         if (!lb) {
             lb = document.createElement('div');
@@ -92,8 +110,6 @@ if (typeof window !== 'undefined') {
             lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
             lb.addEventListener('click', (e) => {
                 if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) {
-                    const vid = lb!.querySelector('video');
-                    if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
                     lb!.style.display = 'none';
                 }
             });
@@ -101,23 +117,7 @@ if (typeof window !== 'undefined') {
         }
         const media = document.getElementById('globalChatLightboxMedia');
         if (media) {
-            media.innerHTML = '';
-            if (type === 'video') {
-                const vid = document.createElement('video');
-                vid.setAttribute('controls', '');
-                vid.setAttribute('playsinline', '');
-                vid.setAttribute('webkit-playsinline', '');
-                vid.setAttribute('preload', 'metadata');
-                vid.muted = true;
-                vid.style.cssText = 'max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;background:#000;';
-                vid.addEventListener('click', (e) => e.stopPropagation());
-                vid.addEventListener('ended', () => { vid.pause(); lb!.style.display = 'none'; });
-                vid.src = url;
-                media.appendChild(vid);
-                vid.play().then(() => { vid.muted = false; }).catch(() => {});
-            } else {
-                media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
-            }
+            media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
         }
         lb.style.display = 'flex';
     };

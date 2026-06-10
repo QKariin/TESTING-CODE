@@ -6978,7 +6978,41 @@ function _playQueenVideo(url: string) {
     if (_queenVideosList.length > 1) overlay.appendChild(strip);
     document.body.appendChild(overlay);
 }
-if (typeof window !== 'undefined') (window as any)._playQueenVideo = _playQueenVideo;
+if (typeof window !== 'undefined') {
+    (window as any)._playQueenVideo = _playQueenVideo;
+    (window as any)._openGlobalLightbox = (url: string, type?: string) => {
+        if (type === 'video') {
+            const feedVideos: any[] = [];
+            document.querySelectorAll('[onclick*="_openGlobalLightbox"][onclick*="video"]').forEach((el: any) => {
+                const match = el.getAttribute('onclick')?.match(/_openGlobalLightbox\('([^']+)'/);
+                if (match) {
+                    const vidUrl = match[1].replace(/\\'/g, "'");
+                    if (!feedVideos.some(v => v.media_url === vidUrl)) {
+                        const bg = el.style.backgroundImage;
+                        const thumbMatch = bg?.match(/url\(['"]?([^'"]+)['"]?\)/);
+                        feedVideos.push({ media_url: vidUrl, thumbnail_url: thumbMatch?.[1] || null });
+                    }
+                }
+            });
+            _queenVideosList = feedVideos.length ? feedVideos : [{ media_url: url, thumbnail_url: null }];
+            _playQueenVideo(url);
+            return;
+        }
+        // Photo lightbox
+        let lb = document.getElementById('globalChatLightbox');
+        if (!lb) {
+            lb = document.createElement('div');
+            lb.id = 'globalChatLightbox';
+            lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10000002;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
+            lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
+            lb.addEventListener('click', (e) => { if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) lb!.style.display = 'none'; });
+            document.body.appendChild(lb);
+        }
+        const media = document.getElementById('globalChatLightboxMedia');
+        if (media) media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+        lb.style.display = 'flex';
+    };
+}
 
 export async function mobJoinChallenge(e: Event, challengeId: string) {
     e.stopPropagation();
