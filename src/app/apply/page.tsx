@@ -33,12 +33,12 @@ function ElegantShape({ className, delay = 0, width = 400, height = 100, rotate 
 function AnimatedBackground() {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.04] via-transparent to-rose-500/[0.04] blur-3xl" />
-            <ElegantShape delay={0.2} width={500} height={120} rotate={12} gradient="from-amber-500/[0.12]" className="left-[-8%] top-[10%]" />
-            <ElegantShape delay={0.4} width={400} height={100} rotate={-15} gradient="from-rose-500/[0.10]" className="right-[-5%] top-[60%]" />
-            <ElegantShape delay={0.3} width={250} height={70} rotate={-8} gradient="from-violet-500/[0.10]" className="left-[5%] bottom-[8%]" />
-            <ElegantShape delay={0.6} width={180} height={50} rotate={20} gradient="from-amber-400/[0.12]" className="right-[10%] top-[8%]" />
-            <ElegantShape delay={0.5} width={130} height={38} rotate={-22} gradient="from-orange-500/[0.10]" className="left-[25%] top-[4%]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/[0.04] via-transparent to-blue-600/[0.04] blur-3xl" />
+            <ElegantShape delay={0.2} width={500} height={120} rotate={12} gradient="from-fuchsia-500/[0.12]" className="left-[-8%] top-[10%]" />
+            <ElegantShape delay={0.4} width={400} height={100} rotate={-15} gradient="from-blue-600/[0.10]" className="right-[-5%] top-[60%]" />
+            <ElegantShape delay={0.3} width={250} height={70} rotate={-8} gradient="from-fuchsia-400/[0.10]" className="left-[5%] bottom-[8%]" />
+            <ElegantShape delay={0.6} width={180} height={50} rotate={20} gradient="from-blue-500/[0.12]" className="right-[10%] top-[8%]" />
+            <ElegantShape delay={0.5} width={130} height={38} rotate={-22} gradient="from-fuchsia-600/[0.10]" className="left-[25%] top-[4%]" />
         </div>
     );
 }
@@ -159,12 +159,12 @@ function shuffle<T>(arr: T[]): T[] {
 // ---- Shared UI ----
 
 function GoldDivider() {
-    return <div className="w-8 h-px bg-gradient-to-r from-amber-500/60 to-transparent mb-8 mt-1" />;
+    return <div className="w-8 h-px bg-gradient-to-r from-fuchsia-500/60 to-transparent mb-8 mt-1" />;
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="font-['Cinzel'] font-normal text-[1.45rem] sm:text-[1.6rem] tracking-widest text-center mb-2 leading-snug bg-gradient-to-r from-amber-300 via-amber-200 to-amber-400/80 bg-clip-text text-transparent">
+        <p className="font-['Cinzel'] font-normal text-[1.45rem] sm:text-[1.6rem] tracking-widest text-center mb-2 leading-snug bg-gradient-to-r from-fuchsia-300 via-fuchsia-200 to-blue-400/80 bg-clip-text text-transparent">
             {children}
         </p>
     );
@@ -172,7 +172,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 function Question({ children }: { children: React.ReactNode }) {
     return (
-        <p className="font-['Cinzel'] font-normal text-[0.88rem] sm:text-[0.95rem] tracking-wider text-center text-amber-400/65 mb-6 leading-relaxed">
+        <p className="font-['Cinzel'] font-normal text-[0.88rem] sm:text-[0.95rem] tracking-wider text-center text-fuchsia-400/65 mb-6 leading-relaxed">
             {children}
         </p>
     );
@@ -185,7 +185,7 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 function PrimaryBtn({ children, onClick, disabled }: any) {
     return (
         <button onClick={onClick} disabled={disabled}
-            className="w-full py-4 border border-amber-500/60 bg-amber-500/[0.09] text-amber-100 font-['Cormorant_Garamond'] font-light text-[1.15rem] tracking-[0.12em] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-400/80 hover:bg-amber-500/[0.15] hover:text-white active:scale-[0.99]"
+            className="w-full py-4 border border-fuchsia-500/60 bg-fuchsia-500/[0.09] text-fuchsia-100 font-['Cormorant_Garamond'] font-light text-[1.15rem] tracking-[0.12em] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed hover:border-fuchsia-400/80 hover:bg-fuchsia-500/[0.15] hover:text-white active:scale-[0.99]"
             style={{ boxShadow: disabled ? 'none' : '0 0 28px rgba(197,160,89,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
             {children}
         </button>
@@ -204,7 +204,7 @@ function GhostBtn({ children, onClick }: any) {
 function LineInput({ placeholder, value, onChange, type = 'text', autoComplete }: any) {
     return (
         <input type={type}
-            className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] font-light py-3 outline-none transition-colors duration-300 placeholder:text-white/15"
+            className="w-full bg-transparent border-b border-white/10 focus:border-fuchsia-500/40 text-white/65 font-['Cormorant_Garamond'] font-light py-3 outline-none transition-colors duration-300 placeholder:text-white/15"
             style={{ fontSize: '1rem' }}
             placeholder={placeholder} value={value} onChange={onChange} autoComplete={autoComplete ?? 'off'}
         />
@@ -214,7 +214,7 @@ function LineInput({ placeholder, value, onChange, type = 'text', autoComplete }
 function TextArea({ placeholder, value, onChange, rows = 4 }: any) {
     return (
         <textarea
-            className="w-full bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] font-light p-0 py-3 resize-none outline-none transition-colors duration-300 placeholder:text-white/15"
+            className="w-full bg-transparent border-b border-white/10 focus:border-fuchsia-500/40 text-white/65 font-['Cormorant_Garamond'] font-light p-0 py-3 resize-none outline-none transition-colors duration-300 placeholder:text-white/15"
             style={{ fontSize: '1rem' }}
             placeholder={placeholder} value={value} onChange={onChange} rows={rows}
         />
@@ -242,7 +242,7 @@ function TagPicker({ options, selected, onChange, label }: {
                     {selected.length > 0 ? `${selected.length} / ${MAX_TAGS} selected` : `pick up to ${MAX_TAGS}`}
                 </p>
                 {atMax && (
-                    <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-amber-400/45">
+                    <p className="font-['Cormorant_Garamond'] italic text-[0.8rem] text-fuchsia-400/45">
                         maximum reached
                     </p>
                 )}
@@ -259,10 +259,10 @@ function TagPicker({ options, selected, onChange, label }: {
                             className={cn(
                                 "px-3 py-3 border transition-all duration-150 font-['Cormorant_Garamond'] font-normal text-[0.95rem] leading-snug text-center",
                                 active
-                                    ? "border-amber-500/55 bg-amber-500/[0.10] text-amber-200/90"
+                                    ? "border-fuchsia-500/55 bg-fuchsia-500/[0.10] text-fuchsia-200/90"
                                     : disabled
                                     ? "border-white/[0.04] text-white/20 cursor-not-allowed"
-                                    : "border-white/[0.09] text-white/45 hover:border-amber-500/25 hover:text-white/65"
+                                    : "border-white/[0.09] text-white/45 hover:border-fuchsia-500/25 hover:text-white/65"
                             )}>
                             {opt}
                         </button>
@@ -278,8 +278,8 @@ function ChoiceBtn({ label, active, onClick }: any) {
         <button onClick={onClick} className={cn(
             "w-full px-5 py-4 text-left border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1.15rem]",
             active
-                ? "border-amber-500/50 bg-amber-500/[0.08] text-amber-200/90"
-                : "border-white/[0.08] bg-transparent text-white/55 hover:border-amber-500/25 hover:text-white/70"
+                ? "border-fuchsia-500/50 bg-fuchsia-500/[0.08] text-fuchsia-200/90"
+                : "border-white/[0.08] bg-transparent text-white/55 hover:border-fuchsia-500/25 hover:text-white/70"
         )}>{label}</button>
     );
 }
@@ -389,7 +389,7 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
                 <motion.div key={q.id} custom={dir} variants={qVariants}
                     initial="enter" animate="center" exit="exit">
                     {/* Letter / card box */}
-                    <div className="border border-amber-500/[0.18] bg-gradient-to-b from-white/[0.025] to-transparent px-6 py-8 sm:px-8 sm:py-9">
+                    <div className="border border-fuchsia-500/[0.18] bg-gradient-to-b from-white/[0.025] to-transparent px-6 py-8 sm:px-8 sm:py-9">
                         {q.node(next)}
                     </div>
                 </motion.div>
@@ -601,15 +601,15 @@ function IntroStep({ onNext }: { onNext: () => void }) {
         <div className="flex flex-col flex-1 justify-between">
             <div className="flex-1 flex flex-col justify-center">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }}>
-                    <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 border border-amber-500/20 bg-amber-500/[0.03] mb-10">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400/70" />
-                        <span className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-amber-400/50">Ownership Application</span>
+                    <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 border border-fuchsia-500/20 bg-fuchsia-500/[0.03] mb-10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400/70" />
+                        <span className="font-['Cormorant_Garamond'] italic text-[0.85rem] text-fuchsia-400/50">Ownership Application</span>
                     </div>
                     <h1 className="font-['Cormorant_Garamond'] font-normal text-[2.4rem] leading-[1.2] text-white mb-2">
                         You are applying
                     </h1>
                     <h1 className="font-['Cormorant_Garamond'] font-normal text-[2.4rem] leading-[1.2] mb-10">
-                        <span className="bg-gradient-to-r from-amber-300 via-amber-100 to-amber-400/80 bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-fuchsia-300 via-fuchsia-100 to-blue-400/80 bg-clip-text text-transparent">
                             for ownership.
                         </span>
                     </h1>
@@ -745,7 +745,7 @@ function AboutStep({ form, set, onNext, onBack, saving }: any) {
                 <div>
                     <FieldLabel>Weekly budget for tribute</FieldLabel>
                     <div className="flex items-center gap-3 mt-2">
-                        <span className="text-amber-400/40 font-['Cormorant_Garamond'] text-xl">€</span>
+                        <span className="text-fuchsia-400/40 font-['Cormorant_Garamond'] text-xl">€</span>
                         <LineInput type="number" placeholder="0" value={form.weekly_budget} onChange={(e: any) => set('weekly_budget', e.target.value)} />
                     </div>
                 </div>
@@ -1065,7 +1065,7 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
             rotate: (Math.random() - 0.5) * 800,
             w: Math.random() * 60 + 10,
             h: Math.random() * 8 + 2,
-            amber: Math.random() > 0.35,
+            pink: Math.random() > 0.35,
         }));
         setParticles(ps);
         setPhase('exploding');
@@ -1102,7 +1102,7 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                             Ready to reveal your kink side to me?
                         </p>
                         <button onClick={handleYes}
-                            className="px-12 py-4 border border-amber-500/40 bg-amber-500/[0.05] text-amber-200/80 font-['Cormorant_Garamond'] text-[1.15rem] font-light tracking-widest hover:border-amber-400/60 hover:bg-amber-500/[0.10] transition-all duration-300 cursor-pointer">
+                            className="px-12 py-4 border border-fuchsia-500/40 bg-fuchsia-500/[0.05] text-fuchsia-200/80 font-['Cormorant_Garamond'] text-[1.15rem] font-light tracking-widest hover:border-fuchsia-400/60 hover:bg-fuchsia-500/[0.10] transition-all duration-300 cursor-pointer">
                             Yes, Queen Karin
                         </button>
                     </div>
@@ -1120,7 +1120,7 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                                     top: '50%', left: '50%',
                                     marginTop: -p.h / 2, marginLeft: -p.w / 2,
                                     borderRadius: 1,
-                                    background: p.amber ? 'rgba(197,160,89,0.80)' : 'rgba(70,45,10,0.90)',
+                                    background: p.pink ? 'rgba(255,0,237,0.80)' : 'rgba(0,10,255,0.70)',
                                 }}
                             />
                         ))}
@@ -1159,11 +1159,11 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.35 }}
-                                        className="mt-8 px-6 py-4 border-l-2 border-amber-500/25 bg-amber-500/[0.025] text-left w-full"
+                                        className="mt-8 px-6 py-4 border-l-2 border-fuchsia-500/25 bg-fuchsia-500/[0.025] text-left w-full"
                                     >
                                         <p className={cn(
                                             "font-['Cormorant_Garamond'] text-[1.05rem] font-light italic leading-relaxed",
-                                            commentHigh ? "text-amber-300/65" : "text-white/38"
+                                            commentHigh ? "text-fuchsia-300/65" : "text-white/38"
                                         )}>
                                             {comment}
                                         </p>
@@ -1424,7 +1424,7 @@ function CheckoutStep({ form, set, onNext, onBack, saving, amount, setAmount }: 
                             className={cn(
                                 "py-4 border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1.1rem]",
                                 amount === v && !showCustom
-                                    ? "border-amber-500/50 bg-amber-500/[0.07] text-amber-200/90"
+                                    ? "border-fuchsia-500/50 bg-fuchsia-500/[0.07] text-fuchsia-200/90"
                                     : "border-white/[0.07] text-white/45 hover:border-white/15"
                             )}>
                             €{v}
@@ -1436,7 +1436,7 @@ function CheckoutStep({ form, set, onNext, onBack, saving, amount, setAmount }: 
                     className={cn(
                         "w-full py-3.5 border transition-all duration-200 font-['Cormorant_Garamond'] font-normal text-[1rem] mb-6",
                         showCustom
-                            ? "border-amber-500/50 bg-amber-500/[0.07] text-amber-200/90"
+                            ? "border-fuchsia-500/50 bg-fuchsia-500/[0.07] text-fuchsia-200/90"
                             : "border-white/[0.07] text-white/45 hover:border-white/15"
                     )}>
                     Other amount
@@ -1447,11 +1447,11 @@ function CheckoutStep({ form, set, onNext, onBack, saving, amount, setAmount }: 
                         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
                             <FieldLabel>Custom amount (min €95)</FieldLabel>
                             <div className="flex items-center gap-3 mt-2 mb-1">
-                                <span className="text-amber-400/40 font-['Cormorant_Garamond'] text-2xl">€</span>
+                                <span className="text-fuchsia-400/40 font-['Cormorant_Garamond'] text-2xl">€</span>
                                 <input type="number" min={95} placeholder="95"
                                     value={customVal}
                                     onChange={e => handleCustomChange(e.target.value)}
-                                    className="bg-transparent border-b border-white/10 focus:border-amber-500/40 text-white/65 font-['Cormorant_Garamond'] text-2xl font-light py-1 outline-none w-full transition-colors"
+                                    className="bg-transparent border-b border-white/10 focus:border-fuchsia-500/40 text-white/65 font-['Cormorant_Garamond'] text-2xl font-light py-1 outline-none w-full transition-colors"
                                     autoFocus
                                 />
                             </div>
