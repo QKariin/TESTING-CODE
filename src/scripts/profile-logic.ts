@@ -3625,7 +3625,24 @@ export async function loadChatHistory(memberId: string) {
             }).join('');
 
             if (displayMessages.length === 0) {
-                html = `<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem;letter-spacing:3px">NO MESSAGES YET</div>`;
+                html = `<div id="_chatWelcomeGate" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;min-height:60vh;text-align:center;">
+                    <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.5);margin-bottom:20px;box-shadow:0 0 20px rgba(197,160,89,0.15);">
+                        <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;" />
+                    </div>
+                    <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#fff;letter-spacing:3px;margin-bottom:8px;">QUEEN KARIN</div>
+                    <div style="width:40px;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent);margin:0 auto 16px;"></div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(255,255,255,0.45);line-height:1.6;max-width:280px;margin-bottom:8px;font-style:italic;">
+                        Remember — you didn't bring any tribute yet. You paid for coins to use around, but don't enter my chat empty-handed.
+                    </div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.25);margin-bottom:28px;">
+                        Make an impression before you speak.
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px;">
+                        <button onclick="window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">HER WISHLIST</button>
+                        <button onclick="window.toggleAiMode&&window.toggleAiMode(true)" style="width:100%;padding:13px 0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">LEARN HOW IT WORKS</button>
+                        <button onclick="document.getElementById('_chatWelcomeGate').remove()" style="width:100%;padding:13px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">ENTER THE CHAT</button>
+                    </div>
+                </div>`;
             }
 
             // 4. Update Queen online status from real presence data
