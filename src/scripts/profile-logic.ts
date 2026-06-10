@@ -3631,16 +3631,16 @@ export async function loadChatHistory(memberId: string) {
                     </div>
                     <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#fff;letter-spacing:3px;margin-bottom:8px;">QUEEN KARIN</div>
                     <div style="width:40px;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent);margin:0 auto 16px;"></div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:rgba(255,255,255,0.45);line-height:1.6;max-width:280px;margin-bottom:8px;font-style:italic;">
-                        Remember — you didn't bring any tribute yet. You paid for coins to use around, but don't enter my chat empty-handed.
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.5);line-height:1.7;max-width:280px;margin-bottom:6px;font-style:italic;">
+                        This is a private audience with the Queen.
                     </div>
-                    <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.25);margin-bottom:28px;">
-                        Make an impression before you speak.
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:0.9rem;color:rgba(255,255,255,0.28);margin-bottom:32px;line-height:1.5;max-width:260px;">
+                        Before you speak, make sure you understand how things work here.
                     </div>
                     <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px;">
-                        <button onclick="window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">HER WISHLIST</button>
                         <button onclick="window.toggleAiMode&&window.toggleAiMode(true)" style="width:100%;padding:13px 0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">LEARN HOW IT WORKS</button>
-                        <button onclick="document.getElementById('_chatWelcomeGate').remove()" style="width:100%;padding:13px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">ENTER THE CHAT</button>
+                        <button onclick="window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">VIEW HER WISHLIST</button>
+                        <button onclick="window._dismissChatGate&&window._dismissChatGate()" style="width:100%;padding:13px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">ENTER THE CHAT</button>
                     </div>
                 </div>`;
             }
@@ -6997,6 +6997,24 @@ function _playQueenVideo(url: string) {
 }
 if (typeof window !== 'undefined') {
     (window as any)._playQueenVideo = _playQueenVideo;
+    (window as any)._dismissChatGate = () => {
+        const gate = document.getElementById('_chatWelcomeGate');
+        if (gate) {
+            gate.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center;min-height:40vh;">
+                <div style="width:40px;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin-bottom:20px;"></div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:280px;font-style:italic;margin-bottom:6px;">
+                    Coins are for the realm — tasks, games, the economy.
+                </div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:280px;font-style:italic;margin-bottom:20px;">
+                    A tribute is how you greet a Queen.
+                </div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.22);max-width:260px;line-height:1.5;margin-bottom:24px;">
+                    Don't confuse spending with devotion. One is earned here. The other you bring.
+                </div>
+                <button onclick="document.getElementById('_chatWelcomeGate').remove()" style="padding:10px 28px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.3);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">UNDERSTOOD</button>
+            </div>`;
+        }
+    };
     (window as any)._openGlobalLightbox = async (url: string, type?: string) => {
         if (type === 'video') {
             // Fetch queen videos from API (same source as NEWS tab)
