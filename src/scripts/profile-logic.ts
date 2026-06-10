@@ -7002,16 +7002,19 @@ if (typeof window !== 'undefined') {
         if (gate) {
             gate.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center;min-height:40vh;">
                 <div style="width:40px;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin-bottom:20px;"></div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:280px;font-style:italic;margin-bottom:6px;">
-                    Coins are for the realm — tasks, games, the economy.
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:290px;font-style:italic;margin-bottom:16px;">
+                    The payment you made was for your access. Those coins are yours — you earned nothing for me yet.
                 </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:280px;font-style:italic;margin-bottom:20px;">
-                    A tribute is how you greet a Queen.
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:290px;font-style:italic;margin-bottom:20px;">
+                    A tribute is something you choose to give. That's how you get my attention.
                 </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.22);max-width:260px;line-height:1.5;margin-bottom:24px;">
-                    Don't confuse spending with devotion. One is earned here. The other you bring.
+                <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.22);max-width:270px;line-height:1.5;margin-bottom:28px;">
+                    Buying your way in doesn't mean you've honored the Queen. That part is still on you.
                 </div>
-                <button onclick="document.getElementById('_chatWelcomeGate').remove()" style="padding:10px 28px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.3);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">UNDERSTOOD</button>
+                <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px;">
+                    <button onclick="document.getElementById('_chatWelcomeGate').remove();window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">SEND A TRIBUTE</button>
+                    <button onclick="document.getElementById('_chatWelcomeGate').remove()" style="width:100%;padding:10px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.2);font-family:Orbitron,sans-serif;font-size:0.38rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">I'LL TAKE MY CHANCES</button>
+                </div>
             </div>`;
         }
     };
