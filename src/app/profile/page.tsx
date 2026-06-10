@@ -278,11 +278,11 @@ export default function ProfilePage() {
             (window as any).togglePushNotifications = togglePushNotifications;
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
-            (window as any).openAltarDrawer = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openAltarDrawer(); };
+            (window as any).openAltarDrawer = () => { setDesktopChallengeOpen(false); setChallengePanelOpen(false); setMobOverlayOpen(true); openAltarDrawer(); };
             (window as any).closeAltarDrawer = () => { setMobOverlayOpen(false); closeAltarDrawer(); };
             (window as any).toggleAltarSection = toggleAltarSection;
-            (window as any).mobNavTo = (t: any) => { setChallengePanelOpen(false); mobNavTo(t); };
-            (window as any).openMobChatOverlay = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobChatOverlay(); };
+            (window as any).mobNavTo = (t: any) => { setDesktopChallengeOpen(false); setChallengePanelOpen(false); mobNavTo(t); };
+            (window as any).openMobChatOverlay = () => { setDesktopChallengeOpen(false); setChallengePanelOpen(false); setMobOverlayOpen(true); openMobChatOverlay(); };
             (window as any).closeMobChatOverlay = () => { setMobOverlayOpen(false); closeMobChatOverlay(); };
             (window as any).switchMobChatTab = switchMobChatTab;
             (window as any).toggleAiMode = toggleAiMode;
@@ -294,14 +294,14 @@ export default function ProfilePage() {
             (window as any).useInventoryItem = useInventoryItem;
             (window as any).useSkipPass = useSkipPass;
             (window as any)._confirmCheckpoint = _confirmCheckpoint;
-            (window as any).openMobQueenWall = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
+            (window as any).openMobQueenWall = () => { setDesktopChallengeOpen(false); setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
             (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
             (window as any).switchMobQwTab = switchMobQwTab;
             (window as any).openGalleryAlbum = openGalleryAlbum;
             (window as any).backToGalleryAlbums = backToGalleryAlbums;
-            (window as any).openMobGlobal = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobGlobal(); };
+            (window as any).openMobGlobal = () => { setDesktopChallengeOpen(false); setChallengePanelOpen(false); setMobOverlayOpen(true); openMobGlobal(); };
             (window as any).closeMobGlobal = () => { setMobOverlayOpen(false); closeMobGlobal(); };
-            (window as any).openMobChallenges = () => { setDesktopChallengeOpen(true); };
+            (window as any).openMobChallenges = () => { setDesktopChallengeOpen(prev => !prev); };
             (window as any).switchMobGlTab = switchMobGlTab;
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
@@ -2262,7 +2262,7 @@ export default function ProfilePage() {
                     <span className="mob-nav-icon">◆</span>
                     <span className="mob-nav-label">PROFILE</span>
                 </button>
-                <button id="mobNavChallenges" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); setDesktopChallengeOpen(true); }}>
+                <button id="mobNavChallenges" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); setDesktopChallengeOpen(prev => !prev); }}>
                     <span className="mob-nav-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                     </span>
@@ -2293,7 +2293,7 @@ export default function ProfilePage() {
 
         {/* ── MOBILE CHALLENGES OVERLAY ── */}
         {isMobile && desktopChallengeOpen && (
-            <div className="mob-overlay mob-overlay-open" style={{ display: 'flex', flexDirection: 'column', zIndex: 10000010 }}>
+            <div className="mob-overlay mob-overlay-open" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div className="mob-overlay-header">
                     <span className="mob-overlay-title">CHALLENGES</span>
                     <button className="mob-overlay-close" onClick={() => setDesktopChallengeOpen(false)}>✕</button>
