@@ -8382,12 +8382,14 @@ export async function renderHistoryAndAltar(profileData: any) {
         }
     });
 
-    const allApproved = raw.filter((t: any) => t.status === 'approve' && t.proofUrl && t.proofUrl !== 'SKIPPED');
-    const routines = allApproved.filter((t: any) => t.isRoutine);
+    const allApproved = raw.filter((t: any) => (t.status === 'approve' || t.status === 'approved') && t.proofUrl && t.proofUrl !== 'SKIPPED');
+    const routines = allApproved.filter((t: any) => t.isRoutine).sort((a: any, b: any) =>
+        new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+    );
     const tasks = allApproved.filter((t: any) => !t.isRoutine).sort((a: any, b: any) =>
         new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
     );
-    const failed = raw.filter((t: any) => t.status === 'fail' || t.status === 'reject');
+    const failed = raw.filter((t: any) => t.status === 'fail' || t.status === 'reject' || t.status === 'rejected');
     const pending = raw.filter((t: any) => t.status === 'pending' && !t.isRoutine);
 
     // Pre-sign all Supabase storage URLs in one batch request

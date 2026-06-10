@@ -101,15 +101,19 @@ async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | nul
 
         for (const entry of userRoutineRow.history) {
             if (existingIds.has(entry.id)) continue;
+            // Normalize status: 'approved' → 'approve' for consistency
+            let status = entry.status;
+            if (status === 'approved') status = 'approve';
+            if (status === 'rejected') status = 'reject';
             taskHistory.push({
                 id: entry.id,
-                timestamp: entry.submitted_at || entry.date,
-                status: entry.status,
-                proofUrl: entry.proof_url || null,
+                timestamp: entry.submitted_at || entry.date || entry.timestamp,
+                status,
+                proofUrl: entry.proof_url || entry.proofUrl || null,
                 thumbnail_url: entry.thumbnail_url || null,
                 isRoutine: true,
-                meritAwarded: entry.points_awarded || 0,
-                text: 'Daily Routine',
+                meritAwarded: entry.points_awarded || entry.meritAwarded || 0,
+                text: entry.text || 'Daily Routine',
             });
         }
 

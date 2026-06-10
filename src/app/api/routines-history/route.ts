@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabaseAdmin
         .from('user_routines')
         .select('history')
-        .eq('member_id', email.toLowerCase())
+        .ilike('member_id', email.toLowerCase())
         .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

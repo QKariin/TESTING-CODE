@@ -12,20 +12,48 @@ export async function GET(req: NextRequest) {
 
     try {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-        const { data, error } = await supabaseAdmin
-            .from('tasks')
-            .select('Taskdom_History')
-            .or(isUUID ? `ID.eq.${memberId}` : `member_id.ilike.${memberId}`)
-            .maybeSingle();
+        const email = memberId.toLowerCase();
 
-        if (error || !data) return NextResponse.json({ top3: [] });
+        const [{ data }, { data: userRoutineRow }] = await Promise.all([
+            supabaseAdmin
+                .from('tasks')
+                .select('Taskdom_History')
+                .or(isUUID ? `ID.eq.${memberId}` : `member_id.ilike.${memberId}`)
+                .maybeSingle(),
+            supabaseAdmin
+                .from('user_routines')
+                .select('history')
+                .ilike('member_id', email)
+                .maybeSingle(),
+        ]);
 
         let history: any[] = [];
-        const raw = data['Taskdom_History'];
+        const raw = data?.['Taskdom_History'];
         if (typeof raw === 'string' && raw) {
             try { history = JSON.parse(raw); } catch { history = []; }
         } else if (Array.isArray(raw)) {
             history = raw;
+        }
+
+        // Merge routine entries from user_routines
+        if (userRoutineRow?.history && Array.isArray(userRoutineRow.history)) {
+            const existingIds = new Set(history.map((e: any) => e.id));
+            for (const entry of userRoutineRow.history) {
+                if (existingIds.has(entry.id)) continue;
+                let status = entry.status;
+                if (status === 'approved') status = 'approve';
+                history.push({
+                    id: entry.id,
+                    timestamp: entry.submitted_at || entry.date || entry.timestamp,
+                    status,
+                    proofUrl: entry.proof_url || entry.proofUrl || null,
+                    proofType: entry.proof_type || 'image',
+                    thumbnail_url: entry.thumbnail_url || null,
+                    isRoutine: true,
+                    meritAwarded: entry.points_awarded || 0,
+                    text: entry.text || 'Daily Routine',
+                });
+            }
         }
 
         // Filter approved tasks with valid proof images
