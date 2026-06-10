@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { DbService } from '@/lib/supabase-service';
 import { checkAndPromote } from '@/lib/promote';
 import { cacheDelete } from '@/lib/api-cache';
 
@@ -78,6 +79,11 @@ export async function GET(req: Request) {
         // Bust routine-status cache so next fetch returns approved
         cacheDelete(`routine:${ur.member_id.toLowerCase()}`);
 
+        // Award points (same as manual approval)
+        try {
+            await DbService.awardPoints(ur.member_id, 50);
+        } catch (_) { }
+
         // Update profiles.parameters for backward compat + notify member
         try {
             const { data: prof } = await supabaseAdmin
@@ -91,6 +97,11 @@ export async function GET(req: Request) {
                 params.routine_streak = newBest;
                 params.taskdom_current_streak = newStreak;
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
+
+                // Send TASK_REVIEW_CARD so it shows in chat + Record tab
+                const thumb = ur.pending_thumbnail_url || ur.pending_proof_url || null;
+                const cardData = { status: 'approve', points: 50, type: 'routine', taskText: ur.routine_name || 'Daily Routine', thumbnail: thumb };
+                try { await DbService.sendMessage(prof.ID, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
 
                 // Broadcast to profile page so UI updates from "SUBMITTED" to "DONE"
                 const ch = supabaseAdmin.channel(`member-notify-${prof.ID}`);

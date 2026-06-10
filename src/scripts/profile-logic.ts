@@ -2967,6 +2967,10 @@ function _showRoutineToast(approved: boolean) {
 
     // Re-fetch routine status so UI updates from "SUBMITTED" to "DONE" / "REJECTED"
     updateRoutineWidget().catch(() => {});
+
+    // Mark gallery as dirty so Record tab refreshes with the new routine entry
+    _galleryDirty = true;
+    flushGalleryIfDirty();
 }
 
 /** Tear down all intervals + realtime channels. Safe to call multiple times. */
