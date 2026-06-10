@@ -2291,19 +2291,26 @@ export default function ProfilePage() {
 
         </div>
 
-        {/* ── MOBILE CHALLENGES MODAL ── */}
+        {/* ── MOBILE CHALLENGES OVERLAY ── */}
         {isMobile && desktopChallengeOpen && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(5,5,5,0.98)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                <DesktopChallengeModal
-                    challenges={allChallenges}
-                    activeChallenge={activeChallenge}
-                    isParticipant={isParticipant}
-                    participantStatus={participantStatus}
-                    memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
-                    onClose={() => setDesktopChallengeOpen(false)}
-                    onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
-                    onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
-                />
+            <div className="mob-overlay mob-overlay-open" style={{ display: 'flex', flexDirection: 'column', zIndex: 10000010 }}>
+                <div className="mob-overlay-header">
+                    <span className="mob-overlay-title">CHALLENGES</span>
+                    <button className="mob-overlay-close" onClick={() => setDesktopChallengeOpen(false)}>✕</button>
+                </div>
+                <div className="mob-gl-scroll" style={{ flex: 1, overflowY: 'auto' }}>
+                    <DesktopChallengeModal
+                        embedded
+                        challenges={allChallenges}
+                        activeChallenge={activeChallenge}
+                        isParticipant={isParticipant}
+                        participantStatus={participantStatus}
+                        memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                        onClose={() => setDesktopChallengeOpen(false)}
+                        onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                    />
+                </div>
             </div>
         )}
 
@@ -3068,7 +3075,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 }
 
 // ─── DESKTOP CHALLENGE MODAL ─────────────────────────────────────────────────
-function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, memberEmail, onClose, onOpenPanel, onJoined }: {
+function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, memberEmail, onClose, onOpenPanel, onJoined, embedded }: {
     challenges: any[];
     activeChallenge: { id: string; name: string; theme: string; status: string } | null;
     isParticipant: boolean;
@@ -3077,6 +3084,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
     onClose: () => void;
     onOpenPanel: () => void;
     onJoined: () => void;
+    embedded?: boolean;
 }) {
     const [joining, setJoining] = useState(false);
     const [joinError, setJoinError] = useState('');
@@ -3122,13 +3130,14 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
     const now = Date.now();
 
     return (
-        <div style={{
+        <div style={embedded ? { display: 'flex', flexDirection: 'column' } : {
             position: 'absolute', inset: 0, zIndex: 50,
             background: '#04040e',
             display: 'flex', flexDirection: 'column',
             overflow: 'hidden',
         }}>
-            {/* Header */}
+            {/* Header — hidden when embedded in mobile overlay */}
+            {!embedded && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.15)', flexShrink: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, background: '#4ade80', borderRadius: 2 }}></div>
@@ -3139,8 +3148,9 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                     CLOSE
                 </button>
             </div>
+            )}
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
+            <div style={{ flex: 1, overflowY: embedded ? undefined : 'auto', padding: embedded ? '20px 16px' : '24px 32px' }}>
 
                 {/* Challenge cards */}
                 {challenges.filter((c: any) => c.status === 'active' || (
