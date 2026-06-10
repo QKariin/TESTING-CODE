@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const CEO_EMAILS = ['ceo@qkarin.com', 'queen@qkarin.com'];
 
 const IS_DEV = process.env.NODE_ENV === 'development';
-const DEV_EMAIL = 'pr.finsko@gmail.com';
+const DEV_EMAIL = 'newuser@throne.test';
 const DEV_ID = 'dev-local-user';
 
 export async function getCallerEmail(): Promise<string | null> {

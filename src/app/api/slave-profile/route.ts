@@ -8,7 +8,7 @@ const ADMIN_EMAILS = ['ceo@qkarin.com'];
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 async function getCaller(): Promise<{ email: string | null; uuid: string | null }> {
-    if (IS_DEV) return { email: 'pr.finsko@gmail.com', uuid: null };
+    if (IS_DEV) return { email: 'newuser@throne.test', uuid: null };
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

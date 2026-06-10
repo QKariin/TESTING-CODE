@@ -412,7 +412,7 @@ export default function ProfilePage() {
                 // Skips login when running on localhost so you can see UI changes instantly.
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
-                    const TEST_EMAIL = 'pr.finsko@gmail.com';
+                    const TEST_EMAIL = 'newuser@throne.test';
                     const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: TEST_EMAIL, full: true }) });
                     const unifiedData = await res.json();
                     console.log('[DEV MODE] Loaded real user:', unifiedData);

@@ -3122,7 +3122,7 @@ export async function initChatSystem() {
 
     // Localhost DEV bypass (same pattern as dashboard)
     if (!email && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        email = 'pr.finsko@gmail.com';
+        email = 'newuser@throne.test';
     }
 
     // For Twitter/Discord users without email, use member_id from profile state
@@ -7026,9 +7026,8 @@ function _showChatWelcomeGate() {
                 Before you speak, make sure you understand how things work here.
             </div>
             <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px;">
-                <button onclick="window.toggleAiMode&&window.toggleAiMode(true)" style="width:100%;padding:13px 0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">LEARN HOW IT WORKS</button>
-                <button onclick="window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">VIEW HER WISHLIST</button>
-                <button onclick="window._dismissChatGate&&window._dismissChatGate()" style="width:100%;padding:13px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);font-family:Orbitron,sans-serif;font-size:0.4rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">ENTER THE CHAT</button>
+                <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window.toggleAiMode&&window.toggleAiMode(true)" style="width:100%;padding:13px 0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">LEARN HOW IT WORKS</button>
+                <button onclick="window._dismissChatGate&&window._dismissChatGate()" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:2px;cursor:pointer;border-radius:6px;transition:all 0.2s;">ENTER THE CHAT</button>
             </div>`;
         parent.appendChild(gate);
     });
@@ -7048,10 +7047,10 @@ if (typeof window !== 'undefined') {
                     A tribute is something you choose to give. That's how you get my attention.
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.22);max-width:270px;line-height:1.5;margin-bottom:28px;">
-                    Buying your way in doesn't mean you've honored the Queen. That part is still on you.
+                    Don't come empty handed.
                 </div>
                 <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px;">
-                    <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">SEND A TRIBUTE</button>
+                    <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">VIEW HER WISHLIST</button>
                     <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove())" style="width:100%;padding:10px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.2);font-family:Orbitron,sans-serif;font-size:0.38rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">I'LL TAKE MY CHANCES</button>
                 </div>
             </div>`;
