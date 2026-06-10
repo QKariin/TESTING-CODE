@@ -223,6 +223,17 @@ export function discordStreamLive() {
     });
 }
 
+export function discordQueenVideo(thumbnailUrl?: string | null) {
+    return sendDiscordEmbed({
+        title: 'NEW VIDEO FROM THE QUEEN',
+        description: `**Queen Karin** just posted a new video\n\n[Watch now](${APP_LINK}/profile)`,
+        color: 16766720,
+        image: thumbnailUrl
+            ? { url: thumbnailUrl }
+            : { url: cardUrl('stream', 'NEW VIDEO', 'Queen Karin posted a new video', 'Watch now on Throne') },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number, itemImage?: string | null) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',

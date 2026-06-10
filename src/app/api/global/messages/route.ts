@@ -117,7 +117,21 @@ export async function POST(req: Request) {
         if (error.message.includes('thumbnail_url')) delete stripped.thumbnail_url;
         const retry = await supabaseAdmin.from('global_messages').insert(stripped).select().single();
         if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
+
+        // Discord notification for queen videos
+        if (isQueenSender && media_type === 'video') {
+            const { discordQueenVideo } = await import('@/lib/discord');
+            discordQueenVideo(thumbnail_url || null).catch(() => {});
+        }
+
         return NextResponse.json({ success: true, message: retry.data });
     }
+
+    // Discord notification for queen videos
+    if (isQueenSender && media_type === 'video') {
+        const { discordQueenVideo } = await import('@/lib/discord');
+        discordQueenVideo(thumbnail_url || null).catch(() => {});
+    }
+
     return NextResponse.json({ success: true, message: data });
 }
