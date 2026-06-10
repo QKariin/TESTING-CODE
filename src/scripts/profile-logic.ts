@@ -7040,17 +7040,17 @@ if (typeof window !== 'undefined') {
         gates.forEach(gate => {
             (gate as HTMLElement).innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center;width:100%;height:100%;">
                 <div style="width:40px;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin-bottom:20px;"></div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:290px;font-style:italic;margin-bottom:16px;">
-                    The payment you made was for your access. Those coins are yours — you earned nothing for me yet.
+                <div style="font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:290px;font-style:italic;margin-bottom:16px;">
+                    Good. You made it in. Not everyone does.
                 </div>
-                <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:290px;font-style:italic;margin-bottom:20px;">
-                    A tribute is something you choose to give. That's how you get my attention.
+                <div style="font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:290px;font-style:italic;margin-bottom:20px;">
+                    I left 5,000 coins in your wallet. A little something from me so you can explore everything this place has to offer. Tributes, private content, rewards. It's all here, and it's all yours to play with.
                 </div>
                 <div style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:rgba(255,255,255,0.22);max-width:270px;line-height:1.5;margin-bottom:28px;">
-                    Don't come empty handed.
+                    Now, before you step into my chat. Would you like to bring me something?
                 </div>
                 <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px;">
-                    <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window._tributeShowWishlist&&window._tributeShowWishlist()" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">VIEW HER WISHLIST</button>
+                    <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window.openStandaloneTribute&&window.openStandaloneTribute('wishlist')" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">VIEW HER WISHLIST</button>
                     <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove())" style="width:100%;padding:10px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.2);font-family:Orbitron,sans-serif;font-size:0.38rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">I'LL TAKE MY CHANCES</button>
                 </div>
             </div>`;

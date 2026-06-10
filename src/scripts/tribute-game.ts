@@ -86,7 +86,7 @@ export function openStandaloneTribute(screen?: string) {
     const o = document.getElementById('mobTributeStandalone');
     if (!o) return;
     o.style.display = 'flex';
-    if (screen === 'risky') { _showRisky(); } else { _showMenu(); }
+    if (screen === 'risky') { _showRisky(); } else if (screen === 'wishlist') { _showWishlist(); } else { _showMenu(); }
 }
 
 export function closeStandaloneTribute() {
