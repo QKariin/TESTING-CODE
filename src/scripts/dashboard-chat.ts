@@ -44,6 +44,9 @@ function isSystemMessage(msg: any): boolean {
     if (raw.startsWith('TASK_REVIEW_CARD::')) return false;
     if (raw.startsWith('INVENTORY_CARD::')) return false;
     if (raw.startsWith('VAULT_UNLOCK_CARD::')) return false;
+    if (raw.startsWith('LEADERBOARD_REWARD_CARD::')) return false;
+    if (raw.startsWith('UPDATE_COINS_CARD::')) return false;
+    if (raw.startsWith('UPDATE_MERIT_CARD::')) return false;
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = raw.toUpperCase();
     return sender === 'system' ||
