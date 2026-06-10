@@ -179,7 +179,7 @@ function Question({ children }: { children: React.ReactNode }) {
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.78rem] text-white/35 text-center mb-4 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.95rem] bg-gradient-to-r from-fuchsia-400/60 to-blue-400/60 bg-clip-text text-transparent text-center mb-4 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
