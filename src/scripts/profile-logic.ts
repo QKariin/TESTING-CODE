@@ -3222,6 +3222,8 @@ export async function initChatSystem() {
                         preview = 'A new item was added to your Vault';
                     } else if (rawContent.startsWith('LEADERBOARD_REWARD_CARD::')) {
                         preview = 'Leaderboard Reward';
+                    } else if (rawContent.startsWith('CERT_APPROVED::')) {
+                        preview = 'Certificate approved';
                     } else if (rawContent.startsWith('PROMOTION_CARD::') || rawContent.startsWith('WELCOME_CARD::') || rawContent.startsWith('TASK_REVIEW_CARD::') || rawContent.startsWith('ROUTINE_CHANGE::') || rawContent.startsWith('TASK_FEEDBACK::') || rawContent.startsWith('WISHLIST::')) {
                         preview = 'New message';
                     } else {
