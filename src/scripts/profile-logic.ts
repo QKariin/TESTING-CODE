@@ -6980,21 +6980,20 @@ function _playQueenVideo(url: string) {
 }
 if (typeof window !== 'undefined') {
     (window as any)._playQueenVideo = _playQueenVideo;
-    (window as any)._openGlobalLightbox = (url: string, type?: string) => {
+    (window as any)._openGlobalLightbox = async (url: string, type?: string) => {
         if (type === 'video') {
-            const feedVideos: any[] = [];
-            document.querySelectorAll('[onclick*="_openGlobalLightbox"][onclick*="video"]').forEach((el: any) => {
-                const match = el.getAttribute('onclick')?.match(/_openGlobalLightbox\('([^']+)'/);
-                if (match) {
-                    const vidUrl = match[1].replace(/\\'/g, "'");
-                    if (!feedVideos.some(v => v.media_url === vidUrl)) {
-                        const bg = el.style.backgroundImage;
-                        const thumbMatch = bg?.match(/url\(['"]?([^'"]+)['"]?\)/);
-                        feedVideos.push({ media_url: vidUrl, thumbnail_url: thumbMatch?.[1] || null });
-                    }
-                }
-            });
-            _queenVideosList = feedVideos.length ? feedVideos : [{ media_url: url, thumbnail_url: null }];
+            // Fetch queen videos from API (same source as NEWS tab)
+            if (!_queenVideosList.length) {
+                try {
+                    const res = await fetch('/api/global/queen-videos', { cache: 'no-store' });
+                    const { videos } = await res.json();
+                    if (videos?.length) _queenVideosList = videos;
+                } catch {}
+            }
+            // Ensure clicked video is in the list
+            if (!_queenVideosList.some((v: any) => v.media_url === url)) {
+                _queenVideosList.unshift({ media_url: url, thumbnail_url: null });
+            }
             _playQueenVideo(url);
             return;
         }
