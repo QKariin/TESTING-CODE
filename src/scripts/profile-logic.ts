@@ -6855,25 +6855,20 @@ async function _loadMobGlChallenges() {
             container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:40px;"><span style="font-size:2rem;opacity:0.2;">&#9654;</span><span style="font-family:'Orbitron';font-size:0.45rem;color:rgba(197,160,89,0.3);letter-spacing:2px;text-align:center;">NO VIDEOS YET</span></div>`;
             return;
         }
-        container.innerHTML = videos.map((v: any) => {
+        container.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:20px;padding:20px 16px;justify-content:center;">` + videos.map((v: any) => {
             const date = new Date(v.created_at);
             const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const thumb = v.thumbnail_url || '/queen-karin.png';
-            const caption = (v.message || '').replace(/<[^>]+>/g, '');
-            return `<div style="margin:8px 12px;border-radius:12px;overflow:hidden;border:1px solid rgba(197,160,89,0.12);background:rgba(255,255,255,0.02);cursor:pointer;" onclick="window._playQueenVideo&&window._playQueenVideo('${v.media_url.replace(/'/g, "\\'")}')">
-                <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
+            return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="window._playQueenVideo&&window._playQueenVideo('${v.media_url.replace(/'/g, "\\'")}')">
+                <div style="width:90px;height:90px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.5);position:relative;box-shadow:0 0 12px rgba(197,160,89,0.15);">
                     <img src="${thumb}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='/queen-karin.png'" />
-                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-                        <div style="width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,0.6);border:2px solid rgba(197,160,89,0.6);display:flex;align-items:center;justify-content:center;">
-                            <div style="width:0;height:0;border-style:solid;border-width:8px 0 8px 14px;border-color:transparent transparent transparent rgba(197,160,89,0.9);margin-left:3px;"></div>
-                        </div>
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);">
+                        <div style="width:0;height:0;border-style:solid;border-width:7px 0 7px 12px;border-color:transparent transparent transparent rgba(255,255,255,0.85);margin-left:2px;"></div>
                     </div>
-                    <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(197,160,89,0.3);border-radius:4px;padding:2px 6px;font-family:Orbitron;font-size:0.32rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">${dateStr}</div>
                 </div>
-                ${caption ? `<div style="padding:10px 12px;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${caption}</div><div style="font-family:Orbitron;font-size:0.35rem;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-top:4px;">${timeStr}</div></div>` : ''}
+                <div style="font-family:Orbitron;font-size:0.42rem;color:rgba(197,160,89,0.7);letter-spacing:1.5px;text-align:center;">${dateStr}</div>
             </div>`;
-        }).join('');
+        }).join('') + `</div>`;
         _mobGlLoaded['challenges'] = true;
     } catch {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem">UNABLE TO LOAD</div>`;
@@ -6889,6 +6884,7 @@ function _playQueenVideo(url: string) {
     overlay.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:90vh;border-radius:8px;"></video>
         <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#10005;</button>`;
     overlay.querySelector('button')!.onclick = () => overlay.remove();
+    overlay.querySelector('video')!.onended = () => overlay.remove();
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
     document.body.appendChild(overlay);
 }

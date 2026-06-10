@@ -1967,6 +1967,7 @@ function _playQueenVideo(url: string) {
     overlay.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:90vh;border-radius:8px;"></video>
         <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#10005;</button>`;
     overlay.querySelector('button')!.onclick = () => overlay.remove();
+    overlay.querySelector('video')!.onended = () => overlay.remove();
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
     document.body.appendChild(overlay);
 }
