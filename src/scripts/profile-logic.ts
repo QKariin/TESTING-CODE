@@ -7050,7 +7050,7 @@ if (typeof window !== 'undefined') {
                     Now, before you step into my chat. Would you like to bring me something?
                 </div>
                 <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px;">
-                    <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window.openStandaloneTribute&&window.openStandaloneTribute('wishlist')" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">VIEW HER WISHLIST</button>
+                    <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove());window.closeMobChatOverlay&&window.closeMobChatOverlay();setTimeout(function(){window.openStandaloneTribute&&window.openStandaloneTribute('wishlist')},100)" style="width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:rgba(197,160,89,0.9);font-family:Orbitron,sans-serif;font-size:0.42rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">VIEW HER WISHLIST</button>
                     <button onclick="document.querySelectorAll('#_chatWelcomeGate').forEach(e=>e.remove())" style="width:100%;padding:10px 0;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.2);font-family:Orbitron,sans-serif;font-size:0.38rem;letter-spacing:2px;cursor:pointer;border-radius:6px;">I'LL TAKE MY CHANCES</button>
                 </div>
             </div>`;
