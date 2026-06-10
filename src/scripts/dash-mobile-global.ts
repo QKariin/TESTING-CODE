@@ -640,10 +640,12 @@ async function _loadMobGlChallenges() {
 
 let _queenVideosList: any[] = [];
 
+function _fmtTime(s: number) { const m = Math.floor(s / 60); return m + ':' + String(Math.floor(s % 60)).padStart(2, '0'); }
+
 function _playQueenVideo(url: string) {
     const existing = document.getElementById('_queenVideoOverlay');
     if (existing) {
-        const vid = existing.querySelector('video');
+        const vid = existing.querySelector('video') as HTMLVideoElement;
         if (vid) { vid.src = url; vid.play().catch(() => {}); }
         existing.querySelectorAll('[data-qv-url]').forEach((el: any) => {
             el.style.border = el.dataset.qvUrl === url ? '2px solid rgba(197,160,89,1)' : '2px solid rgba(255,255,255,0.15)';
@@ -653,21 +655,74 @@ function _playQueenVideo(url: string) {
     }
     const overlay = document.createElement('div');
     overlay.id = '_queenVideoOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;';
-    const videoWrap = document.createElement('div');
-    videoWrap.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden;padding:16px;';
-    const video = document.createElement('video');
-    video.src = url; video.controls = true; video.autoplay = true; video.playsInline = true;
-    video.style.cssText = 'max-width:100%;max-height:100%;border-radius:8px;';
-    video.onended = () => overlay.remove();
-    videoWrap.appendChild(video);
-    videoWrap.onclick = (e) => { if (e.target === videoWrap) overlay.remove(); };
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:#000;display:flex;flex-direction:column;';
+
+    // Close button
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '&#10005;';
-    closeBtn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;';
+    closeBtn.style.cssText = 'position:absolute;top:env(safe-area-inset-top,16px);right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;margin-top:16px;';
     closeBtn.onclick = () => overlay.remove();
+
+    // Video area — no native controls to prevent iOS fullscreen takeover
+    const videoWrap = document.createElement('div');
+    videoWrap.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden;position:relative;';
+    const video = document.createElement('video');
+    video.src = url;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+    video.onended = () => overlay.remove();
+    videoWrap.appendChild(video);
+
+    // Tap video to play/pause
+    const playPauseBtn = document.createElement('div');
+    playPauseBtn.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;';
+    playPauseBtn.innerHTML = '<div id="_qvPlayIcon" style="width:60px;height:60px;border-radius:50%;background:rgba(0,0,0,0.5);border:2px solid rgba(197,160,89,0.5);display:none;align-items:center;justify-content:center;"><div style="width:0;height:0;border-style:solid;border-width:10px 0 10px 18px;border-color:transparent transparent transparent rgba(197,160,89,0.9);margin-left:4px;"></div></div>';
+    playPauseBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (video.paused) { video.play().catch(() => {}); } else { video.pause(); }
+    };
+    videoWrap.appendChild(playPauseBtn);
+
+    video.onpause = () => { const ic = overlay.querySelector('#_qvPlayIcon') as HTMLElement; if (ic) ic.style.display = 'flex'; };
+    video.onplay = () => { const ic = overlay.querySelector('#_qvPlayIcon') as HTMLElement; if (ic) ic.style.display = 'none'; };
+
+    // Custom progress bar
+    const controls = document.createElement('div');
+    controls.style.cssText = 'flex-shrink:0;padding:8px 16px;display:flex;align-items:center;gap:10px;';
+    const timeEl = document.createElement('span');
+    timeEl.style.cssText = 'font-family:Orbitron;font-size:0.38rem;color:rgba(255,255,255,0.5);min-width:32px;';
+    timeEl.textContent = '0:00';
+    const progressWrap = document.createElement('div');
+    progressWrap.style.cssText = 'flex:1;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;position:relative;';
+    const progressFill = document.createElement('div');
+    progressFill.style.cssText = 'height:100%;background:rgba(197,160,89,0.8);border-radius:2px;width:0%;transition:width 0.1s;';
+    progressWrap.appendChild(progressFill);
+    const durEl = document.createElement('span');
+    durEl.style.cssText = 'font-family:Orbitron;font-size:0.38rem;color:rgba(255,255,255,0.5);min-width:32px;text-align:right;';
+    durEl.textContent = '0:00';
+    controls.appendChild(timeEl);
+    controls.appendChild(progressWrap);
+    controls.appendChild(durEl);
+
+    video.ontimeupdate = () => {
+        if (!video.duration) return;
+        const pct = (video.currentTime / video.duration) * 100;
+        progressFill.style.width = pct + '%';
+        timeEl.textContent = _fmtTime(video.currentTime);
+    };
+    video.onloadedmetadata = () => { durEl.textContent = _fmtTime(video.duration); };
+    progressWrap.onclick = (e) => {
+        const rect = progressWrap.getBoundingClientRect();
+        const pct = (e.clientX - rect.left) / rect.width;
+        video.currentTime = pct * video.duration;
+    };
+
+    // Circle strip
     const strip = document.createElement('div');
-    strip.style.cssText = 'flex-shrink:0;display:flex;gap:12px;padding:12px 16px;overflow-x:auto;justify-content:center;border-top:1px solid rgba(255,255,255,0.06);-webkit-overflow-scrolling:touch;';
+    strip.style.cssText = 'flex-shrink:0;display:flex;gap:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));overflow-x:auto;justify-content:center;border-top:1px solid rgba(255,255,255,0.06);-webkit-overflow-scrolling:touch;';
     _queenVideosList.forEach((v: any) => {
         const circle = document.createElement('div');
         circle.dataset.qvUrl = v.media_url;
@@ -678,8 +733,10 @@ function _playQueenVideo(url: string) {
         circle.onclick = (e) => { e.stopPropagation(); (window as any)._playQueenVideo(v.media_url); };
         strip.appendChild(circle);
     });
+
     overlay.appendChild(closeBtn);
     overlay.appendChild(videoWrap);
+    overlay.appendChild(controls);
     if (_queenVideosList.length > 1) overlay.appendChild(strip);
     document.body.appendChild(overlay);
 }
