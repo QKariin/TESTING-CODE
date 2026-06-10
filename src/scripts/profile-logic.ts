@@ -5380,7 +5380,7 @@ export function openMobRoutine() {
 // ─── MOB CHAT OVERLAY ────────────────────────────────────────────────────────
 function _closeAllMobOverlays(except?: string) {
     closeEarnCoinsModal();
-    ['mobChatOverlay', 'mobQueenWallOverlay', 'mobGlobalOverlay'].forEach(id => {
+    ['mobChatOverlay', 'mobQueenWallOverlay', 'mobGlobalOverlay', 'mobChallengesOverlay'].forEach(id => {
         if (id === except) return;
         const el = document.getElementById(id);
         if (!el) return;
@@ -5975,6 +5975,24 @@ export function closeMobGlobal() {
     _setNavActive('profile');
     if (_mobGlRealtimeChannel) { _mobGlRealtimeChannel.unsubscribe(); _mobGlRealtimeChannel = null; }
     _mobGlLoaded['talk'] = false;
+}
+
+export function openMobChallenges() {
+    if (_isOverlayOpen('mobChallengesOverlay')) { closeMobChallenges(); return; }
+    _closeAllMobOverlays('mobChallengesOverlay');
+    const el = document.getElementById('mobChallengesOverlay');
+    if (!el) return;
+    el.style.display = 'flex';
+    requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
+    _setNavActive('challenges');
+}
+
+export function closeMobChallenges() {
+    const el = document.getElementById('mobChallengesOverlay');
+    if (!el) return;
+    el.classList.remove('mob-overlay-open');
+    setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
+    _setNavActive('profile');
 }
 
 export function switchMobGlTab(tab: string) { _switchMobGlTab(tab); }
