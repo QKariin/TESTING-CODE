@@ -1929,6 +1929,7 @@ async function _loadChallengesPreview() {
     try {
         const res = await fetch('/api/global/queen-videos');
         const { videos } = await res.json();
+        _queenVideosList = videos || [];
         if (!videos?.length) {
             el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;"><span style="font-size:1.4rem;opacity:0.2;">&#9654;</span><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.3);letter-spacing:2px;text-align:center;">NO VIDEOS YET</span></div>`;
             return;
@@ -1958,17 +1959,49 @@ async function _loadChallengesPreview() {
     }
 }
 
+let _queenVideosList: any[] = [];
+
 function _playQueenVideo(url: string) {
     const existing = document.getElementById('_queenVideoOverlay');
-    if (existing) existing.remove();
+    if (existing) {
+        const vid = existing.querySelector('video');
+        if (vid) { vid.src = url; vid.play().catch(() => {}); }
+        existing.querySelectorAll('[data-qv-url]').forEach((el: any) => {
+            el.style.border = el.dataset.qvUrl === url ? '2px solid rgba(197,160,89,1)' : '2px solid rgba(255,255,255,0.15)';
+            el.style.boxShadow = el.dataset.qvUrl === url ? '0 0 10px rgba(197,160,89,0.4)' : 'none';
+        });
+        return;
+    }
     const overlay = document.createElement('div');
     overlay.id = '_queenVideoOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:90vh;border-radius:8px;"></video>
-        <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#10005;</button>`;
-    overlay.querySelector('button')!.onclick = () => overlay.remove();
-    overlay.querySelector('video')!.onended = () => overlay.remove();
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;';
+    const videoWrap = document.createElement('div');
+    videoWrap.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden;padding:16px;';
+    const video = document.createElement('video');
+    video.src = url; video.controls = true; video.autoplay = true; video.playsInline = true;
+    video.style.cssText = 'max-width:100%;max-height:100%;border-radius:8px;';
+    video.onended = () => overlay.remove();
+    videoWrap.appendChild(video);
+    videoWrap.onclick = (e) => { if (e.target === videoWrap) overlay.remove(); };
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '&#10005;';
+    closeBtn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;';
+    closeBtn.onclick = () => overlay.remove();
+    const strip = document.createElement('div');
+    strip.style.cssText = 'flex-shrink:0;display:flex;gap:12px;padding:12px 16px;overflow-x:auto;justify-content:center;border-top:1px solid rgba(255,255,255,0.06);-webkit-overflow-scrolling:touch;';
+    _queenVideosList.forEach((v: any) => {
+        const circle = document.createElement('div');
+        circle.dataset.qvUrl = v.media_url;
+        const isActive = v.media_url === url;
+        circle.style.cssText = `width:52px;height:52px;border-radius:50%;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px solid ${isActive ? 'rgba(197,160,89,1)' : 'rgba(255,255,255,0.15)'};box-shadow:${isActive ? '0 0 10px rgba(197,160,89,0.4)' : 'none'};position:relative;`;
+        const thumb = v.thumbnail_url || '/queen-karin.png';
+        circle.innerHTML = `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/queen-karin.png'" /><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);"><div style="width:0;height:0;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent rgba(255,255,255,0.8);margin-left:1px;"></div></div>`;
+        circle.onclick = (e) => { e.stopPropagation(); (window as any)._playQueenVideo(v.media_url); };
+        strip.appendChild(circle);
+    });
+    overlay.appendChild(closeBtn);
+    overlay.appendChild(videoWrap);
+    if (_queenVideosList.length > 1) overlay.appendChild(strip);
     document.body.appendChild(overlay);
 }
 if (typeof window !== 'undefined') (window as any)._playQueenVideo = _playQueenVideo;
