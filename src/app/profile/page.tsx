@@ -301,6 +301,22 @@ export default function ProfilePage() {
             (window as any).backToGalleryAlbums = backToGalleryAlbums;
             (window as any).openMobGlobal = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobGlobal(); };
             (window as any).closeMobGlobal = () => { setMobOverlayOpen(false); closeMobGlobal(); };
+            (window as any).openMobChallenges = () => {
+                setChallengePanelOpen(false); setMobOverlayOpen(true);
+                // Open global overlay to challenges tab
+                const el = document.getElementById('mobGlobalOverlay');
+                if (el && !el.classList.contains('mob-overlay-open')) {
+                    // Close other overlays first
+                    (window as any).closeMobChatOverlay?.();
+                    (window as any).closeMobQueenWall?.();
+                    el.style.display = 'flex';
+                    requestAnimationFrame(() => el.classList.add('mob-overlay-open'));
+                }
+                switchMobGlTab('challenges');
+                // Highlight challenges nav button
+                document.querySelectorAll('.mob-nav-item').forEach(b => b.classList.remove('active'));
+                document.getElementById('mobNavChallenges')?.classList.add('active');
+            };
             (window as any).switchMobGlTab = switchMobGlTab;
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
@@ -2261,9 +2277,9 @@ export default function ProfilePage() {
                     <span className="mob-nav-icon">◆</span>
                     <span className="mob-nav-label">PROFILE</span>
                 </button>
-                <button id="mobNavRecord" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openAltarDrawer(); }}>
-                    <span className="mob-nav-icon">▦</span>
-                    <span className="mob-nav-label">RECORD</span>
+                <button id="mobNavChallenges" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChallenges(); }}>
+                    <span className="mob-nav-icon">⚔</span>
+                    <span className="mob-nav-label">CHALLENGE</span>
                 </button>
                 <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChatOverlay(); }}>
                     <div className="mob-nav-queen-ring">

@@ -3,7 +3,12 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const CEO_EMAILS = ['ceo@qkarin.com', 'queen@qkarin.com'];
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+const DEV_EMAIL = 'pr.finsko@gmail.com';
+const DEV_ID = 'dev-local-user';
+
 export async function getCallerEmail(): Promise<string | null> {
+    if (IS_DEV) return DEV_EMAIL;
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -20,6 +25,7 @@ export async function getCallerEmail(): Promise<string | null> {
 }
 
 export async function getCallerId(): Promise<string | null> {
+    if (IS_DEV) return DEV_ID;
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -30,6 +36,7 @@ export async function getCallerId(): Promise<string | null> {
 }
 
 export async function getCaller(): Promise<{ email: string; id: string } | null> {
+    if (IS_DEV) return { email: DEV_EMAIL, id: DEV_ID };
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
