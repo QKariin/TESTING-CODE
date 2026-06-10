@@ -186,7 +186,7 @@ function PrimaryBtn({ children, onClick, disabled }: any) {
     return (
         <button onClick={onClick} disabled={disabled}
             className="w-full py-4 border border-fuchsia-500/60 bg-fuchsia-500/[0.09] text-fuchsia-100 font-['Cormorant_Garamond'] font-light text-[1.15rem] tracking-[0.12em] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed hover:border-fuchsia-400/80 hover:bg-fuchsia-500/[0.15] hover:text-white active:scale-[0.99]"
-            style={{ boxShadow: disabled ? 'none' : '0 0 28px rgba(197,160,89,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+            style={{ boxShadow: disabled ? 'none' : '0 0 28px rgba(255,0,237,0.18), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
             {children}
         </button>
     );
@@ -378,8 +378,8 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
                 {qs.map((_, i) => (
                     <div key={i} className="h-px flex-1 transition-all duration-500"
                         style={{
-                            background: i < safeIdx ? 'rgba(197,160,89,0.55)'
-                                : i === safeIdx ? 'rgba(197,160,89,0.95)'
+                            background: i < safeIdx ? 'rgba(255,0,237,0.55)'
+                                : i === safeIdx ? 'rgba(255,0,237,0.95)'
                                 : 'rgba(255,255,255,0.07)',
                         }} />
                 ))}
@@ -408,11 +408,49 @@ function QFlow({ n, topic, qs, onDone, onBack }: {
     );
 }
 
+// ---- Transition screens between sections ----
+
+const TRANSITIONS: Record<number, { line: string; next: string }> = {
+    1: {
+        line: "Good. At least you can follow basic instructions.",
+        next: "Now I need to know what actually excites you — your kinks, your limits. Don't be shy, I've heard worse.",
+    },
+    2: {
+        line: "Interesting choices. I'm taking notes.",
+        next: "Let's see if you have any real experience — or if this is all fantasy.",
+    },
+    3: {
+        line: "Honesty looks good on you. Keep it up.",
+        next: "Time to get specific. I want to know exactly how far you're willing to go — slider by slider.",
+    },
+    4: {
+        line: "Now I'm starting to see who you really are.",
+        next: "Let's talk about how you want to be handled — the tone, the energy, the dynamic.",
+    },
+    5: {
+        line: "You're doing better than most. Don't let it go to your head.",
+        next: "One more thing — I need to understand your relationship with pain.",
+    },
+    6: {
+        line: "Almost there. You've been surprisingly tolerable.",
+        next: "Now the real questions — I want to understand how your mind works.",
+    },
+    7: {
+        line: "You've revealed more than you think. That's a good sign.",
+        next: "Final stretch — I need to know why you're really here and what drives you.",
+    },
+    8: {
+        line: "Last step. You've earned this far — don't fumble it now.",
+        next: "Confirm your commitment. This is where intention meets action.",
+    },
+};
+
 // ---- Main page ----
 
 export default function ApplyPage() {
     const [step, setStep] = useState<Step>(0);
     const [direction, setDirection] = useState(1);
+    const [transition, setTransition] = useState<{ line: string; next: string } | null>(null);
     const [saving, setSaving] = useState(false);
     const [applicationId, setApplicationId] = useState<string | null>(null);
     // Ref so handleCheckout always reads the LATEST applicationId without stale closure issues.
@@ -497,8 +535,19 @@ export default function ApplyPage() {
     };
 
     const goTo = async (next: Step, extraData?: Partial<FormData>) => {
-        setDirection(next > step ? 1 : -1);
+        const isForward = next > step;
+        setDirection(isForward ? 1 : -1);
         await saveProgress(next, extraData);
+
+        // Show transition screen when moving forward (not back)
+        const t = isForward ? TRANSITIONS[step] : null;
+        if (t) {
+            setTransition(t);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            await new Promise(r => setTimeout(r, 4000));
+            setTransition(null);
+        }
+
         setStep(next);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -552,8 +601,8 @@ export default function ApplyPage() {
                 *::-webkit-scrollbar { display: none; }
                 * { scrollbar-width: none; -ms-overflow-style: none; }
                 input[type=range] { -webkit-appearance:none; appearance:none; height:2px; background:rgba(255,255,255,0.08); outline:none; width:100%; cursor:pointer; border-radius:2px; }
-                input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; box-shadow:0 0 8px rgba(197,160,89,0.4); }
-                input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#c5a059; border:2px solid rgba(255,255,255,0.15); cursor:pointer; }
+                input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#ff00ed; border:2px solid rgba(255,255,255,0.15); cursor:pointer; box-shadow:0 0 8px rgba(255,0,237,0.4); }
+                input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#ff00ed; border:2px solid rgba(255,255,255,0.15); cursor:pointer; }
                 input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
                 .tag-picker-scroll::-webkit-scrollbar { display:none; }
             `}</style>
@@ -567,12 +616,30 @@ export default function ApplyPage() {
                     <div className="flex gap-2 mb-12">
                         {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                             <div key={i} className="h-px flex-1 transition-all duration-500"
-                                style={{ background: i < step ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.1)' }} />
+                                style={{ background: i < step ? 'rgba(255,0,237,0.5)' : 'rgba(255,255,255,0.1)' }} />
                         ))}
                     </div>
                 )}
 
                 <AnimatePresence mode="wait" custom={direction}>
+                    {transition ? (
+                        <motion.div key="transition" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            transition={{ duration: 0.5 }}
+                            className="flex flex-col flex-1 justify-center items-center text-center px-4">
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
+                                <div className="w-12 h-px bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent mx-auto mb-10" />
+                                <p className="font-['Cormorant_Garamond'] italic text-[1.35rem] text-white/75 leading-relaxed mb-8">
+                                    &ldquo;{transition.line}&rdquo;
+                                </p>
+                                <div className="w-8 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mx-auto mb-8" />
+                                <p className="font-['Cormorant_Garamond'] text-[0.95rem] text-white/35 leading-relaxed">
+                                    {transition.next}
+                                </p>
+                            </motion.div>
+                            <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 3.5, delay: 0.3, ease: 'linear' }}
+                                className="w-32 h-[2px] bg-gradient-to-r from-fuchsia-500/60 to-blue-500/60 mt-12 origin-left rounded-full" />
+                        </motion.div>
+                    ) : (
                     <motion.div key={step} custom={direction} variants={variants}
                         initial="enter" animate="center" exit="exit" className="flex flex-col flex-1">
 
@@ -588,6 +655,7 @@ export default function ApplyPage() {
                         {step === 9 && <CheckoutStep form={form} set={set} onNext={handleCheckout} onBack={() => goTo(8 as Step)} saving={saving} amount={form.amount} setAmount={(v: number) => set('amount', v)} />}
 
                     </motion.div>
+                    )}
                 </AnimatePresence>
             </div>
         </div>
@@ -991,7 +1059,7 @@ function HoldKinkButton({ label, onRelease, disabled }: { label: string; onRelea
                     {(holding || done) && (
                         <motion.div key="val" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-end gap-1">
                             <span className="font-['Cormorant_Garamond'] font-light text-[3.5rem] leading-none"
-                                style={{ color: pct > 50 ? 'rgba(197,160,89,0.85)' : 'rgba(255,255,255,0.35)' }}>
+                                style={{ color: pct > 50 ? 'rgba(255,0,237,0.85)' : 'rgba(255,255,255,0.35)' }}>
                                 {pct}
                             </span>
                             <span className="font-['Cormorant_Garamond'] text-[1.2rem] text-white/25 mb-2">%</span>
@@ -1011,13 +1079,13 @@ function HoldKinkButton({ label, onRelease, disabled }: { label: string; onRelea
                     className="absolute inset-y-0 left-0 transition-none"
                     style={{
                         width: `${pct}%`,
-                        background: pct > 50 ? 'rgba(197,160,89,0.18)' : 'rgba(255,255,255,0.05)',
-                        borderRight: pct > 0 ? '1px solid rgba(197,160,89,0.25)' : 'none',
+                        background: pct > 50 ? 'rgba(255,0,237,0.18)' : 'rgba(255,255,255,0.05)',
+                        borderRight: pct > 0 ? '1px solid rgba(255,0,237,0.25)' : 'none',
                     }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <span className="font-['Cormorant_Garamond'] font-light text-[1rem]"
-                        style={{ color: holding ? 'rgba(197,160,89,0.7)' : done ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
+                        style={{ color: holding ? 'rgba(255,0,237,0.7)' : done ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)' }}>
                         {done ? `${pct}% recorded` : holding ? 'Release when ready...' : 'Hold'}
                     </span>
                 </div>
@@ -1176,8 +1244,8 @@ function SlidersStep({ form, setSlider, onNext, onBack }: any) {
                                     <div key={i} className="rounded-full transition-all duration-300"
                                         style={{
                                             width: i === currentIdx ? 18 : 5, height: 4,
-                                            background: i < currentIdx ? 'rgba(197,160,89,0.45)'
-                                                : i === currentIdx ? 'rgba(197,160,89,0.85)'
+                                            background: i < currentIdx ? 'rgba(255,0,237,0.45)'
+                                                : i === currentIdx ? 'rgba(255,0,237,0.85)'
                                                 : 'rgba(255,255,255,0.08)',
                                         }} />
                                 ))}
