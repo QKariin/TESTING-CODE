@@ -172,14 +172,14 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 function Question({ children }: { children: React.ReactNode }) {
     return (
-        <p className="font-['Cinzel'] font-normal text-[0.88rem] sm:text-[0.95rem] tracking-wider text-center text-fuchsia-400/65 mb-6 leading-relaxed">
+        <p className="font-['Cinzel'] font-normal text-[0.88rem] sm:text-[0.95rem] tracking-wider text-center mb-6 leading-relaxed bg-gradient-to-r from-fuchsia-400/80 to-blue-400/80 bg-clip-text text-transparent">
             {children}
         </p>
     );
 }
 
 function FieldHint({ children }: { children: React.ReactNode }) {
-    return <p className="font-['Cormorant_Garamond'] italic text-[0.95rem] bg-gradient-to-r from-fuchsia-400/60 to-blue-400/60 bg-clip-text text-transparent text-center mb-4 leading-snug">{children}</p>;
+    return <p className="font-['Cormorant_Garamond'] italic text-[0.95rem] text-white/45 text-center mb-4 leading-snug">{children}</p>;
 }
 
 function PrimaryBtn({ children, onClick, disabled }: any) {
