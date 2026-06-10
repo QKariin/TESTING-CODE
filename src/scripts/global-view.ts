@@ -1921,67 +1921,56 @@ function _openVideoThumbnailPicker(file: File, senderEmail: string, raw: any) {
     });
 }
 
-// ─── CHALLENGES PREVIEW ───────────────────────────────────────────────────────
+// ─── NEWS (QUEEN VIDEOS) PREVIEW ──────────────────────────────────────────────
 
 async function _loadChallengesPreview() {
     const el = document.getElementById('globalPreview_challenges');
     if (!el) return;
     try {
-        const res = await fetch('/api/challenges');
-        const { challenges } = await res.json();
-        const active = (challenges || []).filter((c: any) => c.status === 'active');
-        const upcoming = (challenges || []).filter((c: any) => c.status === 'draft' &&
-            c.start_date && new Date(c.start_date).getTime() > Date.now());
-
-        if (!active.length && !upcoming.length) {
-            el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;"><span style="font-size:1.4rem;">⚔</span><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(74,222,128,0.3);letter-spacing:2px;text-align:center;">NO ACTIVE CHALLENGES</span></div>`;
+        const res = await fetch('/api/global/queen-videos');
+        const { videos } = await res.json();
+        if (!videos?.length) {
+            el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;"><span style="font-size:1.4rem;opacity:0.2;">&#9654;</span><span style="font-family:'Orbitron';font-size:0.38rem;color:rgba(197,160,89,0.3);letter-spacing:2px;text-align:center;">NO VIDEOS YET</span></div>`;
             return;
         }
-
-        const renderCard = (c: any, isActive: boolean) => {
-            const startStr = c.start_date ? new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
-            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - Date.now()) / 86400000)) : null;
-            const stats = [
-                { label: 'Days', val: String(c.duration_days) },
-                { label: 'Tasks a day', val: String(c.tasks_per_day) },
-                { label: 'Window', val: `${c.window_minutes} min` },
-                { label: 'Still working', val: String(c.participant_active ?? '-') },
-                ...(daysLeft !== null && isActive ? [{ label: 'Days left', val: String(daysLeft) }] : []),
-                ...(!isActive && startStr ? [{ label: 'Starts', val: startStr }] : []),
-            ];
-            const statsHtml = stats.map(s =>
-                `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.38);">${s.label}</span>
-                    <span style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:rgba(197,160,89,0.9);font-weight:700;">${s.val}</span>
-                </div>`
-            ).join('');
-            const imgBlock = c.image_url
-                ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;" onerror="this.style.display='none'" alt="${c.name}">`
-                : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;opacity:0.15;">★</div>`;
-            return `<div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                <div style="width:140px;flex-shrink:0;position:relative;min-height:190px;background:rgba(197,160,89,0.04);">
-                    ${imgBlock}
-                    <div style="position:absolute;top:8px;left:8px;border-radius:5px;padding:3px 7px;font-family:'Orbitron';font-size:0.3rem;font-weight:700;letter-spacing:1px;${isActive ? 'background:rgba(74,222,128,0.9);color:#000;' : 'background:rgba(251,191,36,0.9);color:#000;'}">${isActive ? 'LIVE' : 'SOON'}</div>
-                </div>
-                <div style="flex:1;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;min-width:0;">
-                    <div>
-                        <div style="font-family:'Orbitron',sans-serif;font-size:0.92rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:4px;">${c.name}</div>
-                        ${c.description ? `<div style="font-family:'Orbitron',sans-serif;font-size:0.56rem;color:rgba(255,255,255,0.32);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
+        el.innerHTML = videos.slice(0, 4).map((v: any) => {
+            const date = new Date(v.created_at);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+            const thumb = v.thumbnail_url || '/queen-karin.png';
+            const caption = (v.message || '').replace(/<[^>]+>/g, '');
+            return `<div style="display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;" onclick="window._playQueenVideo&&window._playQueenVideo('${v.media_url.replace(/'/g, "\\'")}')">
+                <div style="width:80px;height:50px;flex-shrink:0;border-radius:6px;overflow:hidden;position:relative;background:#000;">
+                    <img src="${thumb}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/queen-karin.png'" />
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                        <div style="width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;">
+                            <div style="width:0;height:0;border-style:solid;border-width:4px 0 4px 7px;border-color:transparent transparent transparent rgba(197,160,89,0.9);margin-left:1px;"></div>
+                        </div>
                     </div>
-                    <div>${statsHtml}</div>
-                    <div style="padding:7px 0;border-radius:8px;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.45rem;font-weight:700;letter-spacing:1px;text-align:center;cursor:pointer;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</div>
+                </div>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">
+                    ${caption ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:rgba(255,255,255,0.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${caption}</div>` : ''}
+                    <div style="font-family:Orbitron;font-size:0.32rem;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-top:2px;">${dateStr}</div>
                 </div>
             </div>`;
-        };
-
-        el.innerHTML = [
-            ...active.map((c: any) => renderCard(c, true)),
-            ...upcoming.map((c: any) => renderCard(c, false)),
-        ].join('');
+        }).join('');
     } catch {
         el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.15);">-</div>`;
     }
 }
+
+function _playQueenVideo(url: string) {
+    const existing = document.getElementById('_queenVideoOverlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = '_queenVideoOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:90vh;border-radius:8px;"></video>
+        <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#10005;</button>`;
+    overlay.querySelector('button')!.onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+}
+if (typeof window !== 'undefined') (window as any)._playQueenVideo = _playQueenVideo;
 
 // ─── PHOTO UPLOAD ─────────────────────────────────────────────────────────────
 

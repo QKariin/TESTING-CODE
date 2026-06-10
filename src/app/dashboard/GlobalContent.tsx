@@ -182,13 +182,13 @@ export function GlobalContent({ onClose, userEmail }: { onClose: () => void; use
                     </div>
 
                     {/* CHALLENGES */}
-                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(74,222,128,0.03)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderBottom: '1px solid rgba(74,222,128,0.1)', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.18)', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderBottom: '1px solid rgba(197,160,89,0.1)', flexShrink: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <div style={{ width: '3px', height: '14px', background: '#4ade80', borderRadius: '2px', marginRight: '8px' }}></div>
-                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#4ade80', letterSpacing: '2px', fontWeight: 700 }}>CHALLENGES</span>
+                                <div style={{ width: '3px', height: '14px', background: '#c5a059', borderRadius: '2px', marginRight: '8px' }}></div>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 700 }}>NEWS</span>
                             </div>
-                            <a href="/dashboard/challenges" style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(74,222,128,0.5)', letterSpacing: '1px', textDecoration: 'none' }}>MANAGE</a>
+                            <a href="/dashboard/challenges" style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', textDecoration: 'none' }}>MANAGE</a>
                         </div>
                         <div id="globalPreview_challenges"></div>
                     </div>

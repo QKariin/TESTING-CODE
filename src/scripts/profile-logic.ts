@@ -6849,72 +6849,29 @@ async function _loadMobGlChallenges() {
     if (!container) return;
     container.innerHTML = `<div style="text-align:center;padding:40px;color:#444;font-family:Orbitron;font-size:0.55rem;letter-spacing:2px">LOADING...</div>`;
     try {
-        const [chalRes, partRes] = await Promise.all([
-            fetch('/api/challenges', { cache: 'no-store' }),
-            fetch('/api/challenges/my-status', { cache: 'no-store' }).catch(() => null),
-        ]);
-        const { challenges } = await chalRes.json();
-        const myStatuses: Record<string, string> = {};
-        if (partRes?.ok) {
-            const partJson = await partRes.json();
-            (partJson.participations || []).forEach((p: any) => { myStatuses[p.challenge_id] = p.status; });
-        }
-        const now = Date.now();
-        const active = (challenges || []).filter((c: any) => c.status === 'active');
-        const upcoming = (challenges || []).filter((c: any) =>
-            c.status === 'draft' && c.start_date && new Date(c.start_date).getTime() > now
-        );
-        const all = [...active, ...upcoming];
-        if (!all.length) {
-            container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:40px;"><span style="font-size:2rem;opacity:0.2;">⚔</span><span style="font-family:'Orbitron';font-size:0.45rem;color:rgba(74,222,128,0.3);letter-spacing:2px;text-align:center;">NO ACTIVE CHALLENGES</span></div>`;
+        const res = await fetch('/api/global/queen-videos', { cache: 'no-store' });
+        const { videos } = await res.json();
+        if (!videos?.length) {
+            container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:40px;"><span style="font-size:2rem;opacity:0.2;">&#9654;</span><span style="font-family:'Orbitron';font-size:0.45rem;color:rgba(197,160,89,0.3);letter-spacing:2px;text-align:center;">NO VIDEOS YET</span></div>`;
             return;
         }
-        container.innerHTML = all.map((c: any) => {
-            const isLive = c.status === 'active';
-            const startsSoon = !isLive;
-            const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
-            const startDate = c.start_date ? new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
-            const stats = [
-                { label: 'Days', val: String(c.duration_days) },
-                { label: 'Tasks a day', val: String(c.tasks_per_day) },
-                { label: 'Window', val: `${c.window_minutes} min` },
-                { label: 'Still working', val: String(c.participant_active ?? '-') },
-                ...(daysLeft !== null && isLive ? [{ label: 'Days left', val: String(daysLeft) }] : []),
-                ...(startsSoon && startDate ? [{ label: 'Starts', val: startDate }] : []),
-            ];
-            const statsHtml = stats.map(({ label, val }) =>
-                `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                    <span style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.38);letter-spacing:0.5px;">${label}</span>
-                    <span style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:rgba(197,160,89,0.9);font-weight:700;">${val}</span>
-                </div>`
-            ).join('');
-            const badgeStyle = startsSoon
-                ? 'background:rgba(251,191,36,0.9);color:#000;'
-                : 'background:rgba(74,222,128,0.9);color:#000;';
-            const badgeText = startsSoon ? 'SOON' : 'LIVE';
-            const imgBlock = c.image_url
-                ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'" alt="${c.name}">`
-                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0.2;background:linear-gradient(135deg,rgba(197,160,89,0.1),rgba(197,160,89,0.04));">★</div>`;
-            return `<div style="margin:10px 12px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);">
-                <div style="display:flex;gap:0;">
-                    <!-- Image -->
-                    <div style="width:130px;min-height:180px;flex-shrink:0;position:relative;background:rgba(197,160,89,0.06);">
-                        ${imgBlock}
-                        <div style="position:absolute;top:10px;left:10px;${badgeStyle}border-radius:6px;padding:3px 8px;font-family:'Orbitron',monospace;font-size:0.32rem;font-weight:700;letter-spacing:1px;">${badgeText}</div>
-                    </div>
-                    <!-- Info -->
-                    <div style="flex:1;padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;justify-content:space-between;min-width:0;">
-                        <div>
-                            <div style="font-family:'Orbitron',sans-serif;font-size:0.95rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:5px;">${c.name}</div>
-                            ${c.description ? `<div style="font-family:'Orbitron',sans-serif;font-size:0.58rem;color:rgba(255,255,255,0.35);line-height:1.5;letter-spacing:0.5px;">${c.description}</div>` : ''}
+        container.innerHTML = videos.map((v: any) => {
+            const date = new Date(v.created_at);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const thumb = v.thumbnail_url || '/queen-karin.png';
+            const caption = (v.message || '').replace(/<[^>]+>/g, '');
+            return `<div style="margin:8px 12px;border-radius:12px;overflow:hidden;border:1px solid rgba(197,160,89,0.12);background:rgba(255,255,255,0.02);cursor:pointer;" onclick="window._playQueenVideo&&window._playQueenVideo('${v.media_url.replace(/'/g, "\\'")}')">
+                <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000;">
+                    <img src="${thumb}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='/queen-karin.png'" />
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                        <div style="width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,0.6);border:2px solid rgba(197,160,89,0.6);display:flex;align-items:center;justify-content:center;">
+                            <div style="width:0;height:0;border-style:solid;border-width:8px 0 8px 14px;border-color:transparent transparent transparent rgba(197,160,89,0.9);margin-left:3px;"></div>
                         </div>
-                        <div style="display:flex;flex-direction:column;">${statsHtml}</div>
-                        ${myStatuses[c.id]
-                            ? `<div style="width:100%;padding:9px 0;border-radius:8px;border:1px solid rgba(74,222,128,0.3);text-align:center;background:rgba(74,222,128,0.08);color:#4ade80;font-family:'Orbitron';font-size:0.42rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;" onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();">${myStatuses[c.id] === 'active' ? '✓ ENROLLED' : myStatuses[c.id] === 'eliminated' ? 'ELIMINATED' : myStatuses[c.id].toUpperCase()}</div>`
-                            : `<button onclick="(window._openChallengePanel||function(){})(event,'${c.id}');event.stopPropagation();" style="width:100%;padding:9px 0;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#c5a059 0%,#8b6914 100%);color:#000;font-family:'Orbitron';font-size:0.52rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(197,160,89,0.3);">JOIN CHALLENGE</button>`
-                        }
                     </div>
+                    <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(197,160,89,0.3);border-radius:4px;padding:2px 6px;font-family:Orbitron;font-size:0.32rem;color:rgba(197,160,89,0.8);letter-spacing:1px;">${dateStr}</div>
                 </div>
+                ${caption ? `<div style="padding:10px 12px;"><div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${caption}</div><div style="font-family:Orbitron;font-size:0.35rem;color:rgba(255,255,255,0.2);letter-spacing:1px;margin-top:4px;">${timeStr}</div></div>` : ''}
             </div>`;
         }).join('');
         _mobGlLoaded['challenges'] = true;
@@ -6922,6 +6879,20 @@ async function _loadMobGlChallenges() {
         container.innerHTML = `<div style="text-align:center;padding:40px;color:#333;font-family:Orbitron;font-size:0.75rem">UNABLE TO LOAD</div>`;
     }
 }
+
+function _playQueenVideo(url: string) {
+    const existing = document.getElementById('_queenVideoOverlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = '_queenVideoOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `<video src="${url}" controls autoplay playsinline style="max-width:100%;max-height:90vh;border-radius:8px;"></video>
+        <button style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">&#10005;</button>`;
+    overlay.querySelector('button')!.onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+}
+if (typeof window !== 'undefined') (window as any)._playQueenVideo = _playQueenVideo;
 
 export async function mobJoinChallenge(e: Event, challengeId: string) {
     e.stopPropagation();

@@ -2196,8 +2196,8 @@ export default function ProfilePage() {
                 <div className="mob-gl-tabs">
                     <button id="mobGlTab_rank" className="mob-gl-tab active" onClick={() => (window as any).switchMobGlTab('rank')}>RANK</button>
                     <button id="mobGlTab_talk" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('talk')}>TALK</button>
-                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>CHALLENGES</button>
-                    <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>NEWS</button>
+                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>NEWS</button>
+                    <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>LIVE</button>
                 </div>
 
                 {/* RANK panel */}
