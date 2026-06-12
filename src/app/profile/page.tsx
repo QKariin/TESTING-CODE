@@ -2814,21 +2814,25 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     {/* Not joined → JOIN button (with slot picker for evergreen) */}
                                     {!data.participant && (
                                         <div style={{ background: 'rgba(224,64,251,0.04)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 12, padding: '18px 18px', backdropFilter: 'blur(12px)' }}>
-                                            <div style={{ marginBottom: data.challenge.is_evergreen ? 16 : 0 }}>
+                                            <div style={{ marginBottom: (data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'on_demand') ? 16 : 0 }}>
                                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#e040fb', letterSpacing: '2px', marginBottom: 4 }}>
-                                                    {data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
+                                                    {data.challenge.scheduling_mode === 'on_demand' ? 'ON-DEMAND CHALLENGE' : data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
                                                 </div>
                                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.5)' }}>
-                                                    {data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
+                                                    {data.challenge.scheduling_mode === 'on_demand'
+                                                        ? `${data.challenge.duration_days} tasks · You choose when each task arrives`
+                                                        : data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
                                                 </div>
                                             </div>
-                                            {!data.challenge.is_evergreen && (
+                                            {/* Simple JOIN for classic or on-demand */}
+                                            {(!data.challenge.is_evergreen || data.challenge.scheduling_mode === 'on_demand') && (
                                                 <button onClick={handleJoin} disabled={joining}
                                                     style={{ width: '100%', marginTop: 14, padding: '13px 20px', background: joining ? 'rgba(224,64,251,0.05)' : 'linear-gradient(135deg, rgba(255,0,237,0.2), rgba(0,10,255,0.15))', border: '1px solid rgba(224,64,251,0.4)', borderRadius: 10, color: joining ? '#444' : '#e040fb', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700, backdropFilter: 'blur(8px)' }}>
-                                                    {joining ? '...' : 'JOIN CHALLENGE'}
+                                                    {joining ? '...' : data.challenge.scheduling_mode === 'on_demand' ? 'JOIN · FIRST TASK STARTS NOW' : 'JOIN CHALLENGE'}
                                                 </button>
                                             )}
-                                            {data.challenge.is_evergreen && (
+                                            {/* Slot picker for legacy evergreen */}
+                                            {data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'on_demand' && (
                                                 <>
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 10 }}>
                                                         PICK {data.challenge.tasks_per_day} TIME SLOT{data.challenge.tasks_per_day > 1 ? 'S' : ''}

@@ -77,7 +77,28 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
         if (error) throw error;
 
-        return NextResponse.json({ success: true, completion, response_time_seconds: responseTimeSecs });
+        // For on-demand challenges, include scheduling info
+        let onDemandInfo: any = undefined;
+        const { data: ch } = await supabaseAdmin
+            .from('challenges').select('scheduling_mode, duration_days').eq('id', challengeId).single();
+        if (ch?.scheduling_mode === 'on_demand') {
+            const { count } = await supabaseAdmin
+                .from('challenge_completions')
+                .select('*', { count: 'exact', head: true })
+                .eq('challenge_id', challengeId).eq('member_id', memberId);
+            const totalTasks = ch.duration_days;
+            const tasksDone = count || 0;
+            onDemandInfo = {
+                is_on_demand: true,
+                tasks_done: tasksDone,
+                total_tasks: totalTasks,
+                tasks_remaining: Math.max(0, totalTasks - tasksDone),
+                can_schedule_next: tasksDone < totalTasks,
+                delay_options: [0, 60, 180, 720],
+            };
+        }
+
+        return NextResponse.json({ success: true, completion, response_time_seconds: responseTimeSecs, ...onDemandInfo });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message }, { status: 500 });
     }
@@ -97,7 +118,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         const [{ data: challenge }, { data: myCompletions }, { data: participant }] = await Promise.all([
             supabaseAdmin.from('challenges')
-                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points, task_names, is_evergreen, slot_duration_minutes, daily_task')
+                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points, task_names, is_evergreen, slot_duration_minutes, daily_task, scheduling_mode')
                 .eq('id', challengeId).single(),
             supabaseAdmin.from('challenge_completions')
                 .select('id, window_id, verified, completed_at, response_time_seconds, proof_url')

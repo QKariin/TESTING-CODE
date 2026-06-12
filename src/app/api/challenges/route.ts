@@ -57,6 +57,8 @@ export async function POST(request: Request) {
             difficulty_pricing = null,
             // Badge icon for finisher badge
             badge_icon = null,
+            // On-demand scheduling (no slots — user picks next task timing after each upload)
+            scheduling_mode = 'slots',
         } = body;
 
         // Classic challenges require start_date; evergreen don't
@@ -152,16 +154,20 @@ export async function POST(request: Request) {
             // ── EVERGREEN CHALLENGE ──
             const joinCost = evergreen_join_cost ?? getJoinCost(durationNum);
 
+            const isOnDemand = scheduling_mode === 'on_demand';
             const { data: challenge, error: cErr } = await supabaseAdmin
                 .from('challenges')
                 .insert({
                     name, theme, description, status: 'active', is_template: false,
                     is_evergreen: true,
-                    duration_days: durationNum, tasks_per_day: tpd,
-                    window_minutes: Number(slot_duration_minutes),
-                    slot_duration_minutes: Number(slot_duration_minutes),
+                    // For on_demand: duration_days = total tasks, tasks_per_day = 1
+                    duration_days: durationNum,
+                    tasks_per_day: isOnDemand ? 1 : tpd,
+                    window_minutes: isOnDemand ? Number(window_minutes || 60) : Number(slot_duration_minutes),
+                    slot_duration_minutes: isOnDemand ? Number(window_minutes || 60) : Number(slot_duration_minutes),
                     evergreen_join_cost: joinCost,
                     evergreen_rejoin_cost: Number(evergreen_rejoin_cost),
+                    ...(isOnDemand ? { scheduling_mode: 'on_demand', daily_task: daily_task || null } : {}),
                     ...(difficulty_pricing ? { difficulty_pricing, daily_task: daily_task || 'Morning photo check-in' } : {}),
                     points_per_completion: Number(points_per_completion),
                     first_place_points: Number(first_place_points),

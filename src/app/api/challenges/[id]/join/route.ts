@@ -171,8 +171,104 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             });
         }
 
+        if (challenge.is_evergreen && challenge.scheduling_mode === 'on_demand') {
+            // ── ON-DEMAND EVERGREEN JOIN ──
+            // Create participant + 1 immediate window. No slots needed.
+            const body = await req.json().catch(() => ({}));
+            const timezone: string = body.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+            const joinCost = challenge.evergreen_join_cost || 0;
+            const currentWallet = profile.wallet ?? 0;
+            if (currentWallet < joinCost) {
+                return NextResponse.json({
+                    success: false,
+                    error: `Need ${joinCost} coins to join. You have ${currentWallet}.`
+                }, { status: 400 });
+            }
+            if (joinCost > 0) {
+                await supabaseAdmin.from('profiles')
+                    .update({ wallet: currentWallet - joinCost })
+                    .eq('ID', profile.ID);
+            }
+
+            const now = new Date();
+            const { error: joinErr } = await supabaseAdmin.from('challenge_participants').insert({
+                challenge_id: challengeId,
+                member_id: memberId,
+                status: 'active',
+                joined_at: now.toISOString(),
+                timezone,
+                personal_start: now.toISOString(),
+                coins_paid: joinCost,
+            });
+            if (joinErr) throw joinErr;
+
+            // Create first window — opens immediately
+            const windowMinutes = challenge.window_minutes || 60;
+            const closesAt = new Date(now.getTime() + windowMinutes * 60 * 1000);
+            const taskName = (challenge.task_names || [])[0] || challenge.daily_task || null;
+            const verificationCode = Math.floor(10000 + Math.random() * 90000);
+
+            const { data: firstWindow, error: wErr } = await supabaseAdmin
+                .from('challenge_windows')
+                .insert({
+                    challenge_id: challengeId,
+                    member_id: memberId,
+                    day_number: 1,
+                    window_number: 1,
+                    opens_at: now.toISOString(),
+                    closes_at: closesAt.toISOString(),
+                    verification_code: verificationCode,
+                    task_name: taskName,
+                })
+                .select().single();
+            if (wErr) throw wErr;
+
+            // Save timezone
+            await supabaseAdmin.from('profiles').update({ timezone }).eq('ID', profile.ID);
+
+            // Global feed card
+            try {
+                const { count: activeCount } = await supabaseAdmin
+                    .from('challenge_participants').select('*', { count: 'exact', head: true })
+                    .eq('challenge_id', challengeId).eq('status', 'active');
+                await supabaseAdmin.from('global_messages').insert({
+                    sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,
+                    message: `CHALLENGE_JOIN_CARD::${JSON.stringify({
+                        name: profile.name || memberEmail.split('@')[0],
+                        photo: profile.avatar_url || null,
+                        challengeName: challenge.name,
+                        challengeImage: challenge.image_url || null,
+                        activeCount: (activeCount || 0),
+                    })}`,
+                });
+            } catch (_) {}
+
+            // Participant badge
+            const { data: badge } = await supabaseAdmin.from('badges')
+                .select('id').eq('challenge_id', challengeId).eq('type', 'participant').maybeSingle();
+            if (badge) {
+                await supabaseAdmin.from('user_badges').upsert({
+                    member_id: memberId, badge_id: badge.id, challenge_id: challengeId,
+                    earned_at: now.toISOString(), is_active: true,
+                }, { onConflict: 'member_id,badge_id,challenge_id' });
+            }
+
+            discordChallengeJoin(profile.name || memberEmail.split('@')[0], challenge.name, 0).catch(() => {});
+
+            return NextResponse.json({
+                success: true,
+                already_joined: false,
+                is_evergreen: true,
+                is_on_demand: true,
+                coins_charged: joinCost,
+                windows_created: 1,
+                first_window: firstWindow,
+            });
+        }
+
         if (challenge.is_evergreen) {
-            // ── EVERGREEN JOIN ──
+            // ── EVERGREEN JOIN (slot-based, legacy) ──
             const body = await req.json().catch(() => ({}));
             const timezone: string = body.timezone || 'UTC';
             const chosenSlots: TimeSlot[] = body.chosen_slots || ['morning'];

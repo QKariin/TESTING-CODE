@@ -964,7 +964,7 @@ function CreateTab({ allChallenges, onCreate }: {
         start_date: '', start_time: '08:00',
         image_url: '',
         is_evergreen: false, slot_duration_minutes: 360, evergreen_join_cost: 0, evergreen_rejoin_cost: 1000,
-        is_tiered: false, has_difficulty: false,
+        is_tiered: false, has_difficulty: false, scheduling_mode: 'on_demand' as 'slots' | 'on_demand',
         badge_icon: 'trophy',
     });
 
@@ -1125,7 +1125,16 @@ function CreateTab({ allChallenges, onCreate }: {
                     ...form,
                     start_date: null,
                     is_evergreen: true,
-                    slot_duration_minutes: form.slot_duration_minutes,
+                    scheduling_mode: form.scheduling_mode,
+                    // For on_demand: duration_days = total tasks, tasks_per_day = 1
+                    ...(form.scheduling_mode === 'on_demand' ? {
+                        duration_days: form.duration_days, // = total tasks
+                        tasks_per_day: 1,
+                        window_minutes: form.window_minutes,
+                        daily_task: dailyTask || null,
+                    } : {
+                        slot_duration_minutes: form.slot_duration_minutes,
+                    }),
                     evergreen_join_cost: form.has_difficulty ? diffPricing.cost_soft : (form.evergreen_join_cost || null),
                     evergreen_rejoin_cost: form.evergreen_rejoin_cost,
                     ...(form.has_difficulty ? {
@@ -1545,6 +1554,80 @@ function CreateTab({ allChallenges, onCreate }: {
                 {form.is_evergreen && !form.is_tiered && (
                     <>
                         <Divider label="SCHEDULE" />
+
+                        {/* Scheduling mode toggle */}
+                        <div style={{ marginBottom: 22 }}>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>TASK SCHEDULING</div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                {([
+                                    { key: 'on_demand', label: 'ON DEMAND', sub: 'User picks when next task arrives' },
+                                    { key: 'slots', label: 'TIME SLOTS', sub: 'Fixed morning / afternoon / evening' },
+                                ] as const).map(opt => {
+                                    const active = form.scheduling_mode === opt.key;
+                                    return (
+                                        <button key={opt.key} type="button" onClick={() => set('scheduling_mode', opt.key)} style={{
+                                            flex: 1, padding: '14px 12px', borderRadius: 14, cursor: 'pointer', transition: 'all 0.2s',
+                                            border: `1.5px solid ${active ? PINK : 'rgba(0,0,0,0.06)'}`,
+                                            background: active ? gradSoft : '#faf9f7',
+                                            boxShadow: active ? '0 2px 12px rgba(255,0,237,0.1)' : 'none',
+                                        }}>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 700, color: active ? '#1a1a1a' : '#999', letterSpacing: '2px' }}>{opt.label}</div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: '#bbb', marginTop: 2 }}>{opt.sub}</div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* On-demand config */}
+                        {form.scheduling_mode === 'on_demand' && (
+                            <>
+                                <div style={{ marginBottom: 22 }}>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>TOTAL TASKS</div>
+                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                        {[3, 5, 7, 9, 12, 15, 20].map(d => (
+                                            <button key={d} type="button" onClick={() => handleDurationChange(d)} style={{
+                                                width: 54, height: 54, borderRadius: 14,
+                                                border: `1.5px solid ${form.duration_days === d ? PINK : 'rgba(0,0,0,0.06)'}`,
+                                                background: form.duration_days === d ? gradSoft : '#faf9f7',
+                                                color: form.duration_days === d ? '#1a1a1a' : '#aaa',
+                                                fontFamily: 'Rajdhani, sans-serif', fontSize: '1.1rem', fontWeight: 700,
+                                                cursor: 'pointer', transition: 'all 0.2s',
+                                                boxShadow: form.duration_days === d ? '0 2px 12px rgba(255,0,237,0.1)' : 'none',
+                                            }}>{d}</button>
+                                        ))}
+                                    </div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#bbb', marginTop: 6 }}>{form.duration_days} tasks total</div>
+                                </div>
+                                <div style={{ marginBottom: 22 }}>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>TIME LIMIT PER TASK</div>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        {[30, 60, 120, 180, 360].map(m => (
+                                            <button key={m} type="button" onClick={() => set('window_minutes', m)} style={{
+                                                flex: 1, padding: '12px 0', borderRadius: 10,
+                                                border: `1.5px solid ${form.window_minutes === m ? PINK : 'rgba(0,0,0,0.06)'}`,
+                                                background: form.window_minutes === m ? gradSoft : '#faf9f7',
+                                                color: form.window_minutes === m ? '#1a1a1a' : '#aaa',
+                                                fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', fontWeight: 700,
+                                                cursor: 'pointer', transition: 'all 0.2s',
+                                            }}>{m < 60 ? `${m}m` : `${m / 60}h`}</button>
+                                        ))}
+                                    </div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 6 }}>Once a task opens, user has {form.window_minutes < 60 ? `${form.window_minutes} minutes` : `${form.window_minutes / 60} hours`} to submit</div>
+                                </div>
+                                <div style={{ marginBottom: 22 }}>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 8 }}>DEFAULT TASK NAME</div>
+                                    <input className="forge-input" placeholder="e.g. Photo check-in" value={dailyTask} onChange={e => setDailyTask(e.target.value)} />
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>
+                                        Used when no per-task name is set. After each upload, user picks: NOW / 1h / 3h / 12h for next task.
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Slot-based config */}
+                        {form.scheduling_mode === 'slots' && (
+                        <>
                         {/* Duration presets */}
                         <div style={{ marginBottom: 22 }}>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>DURATION</div>
@@ -1563,8 +1646,12 @@ function CreateTab({ allChallenges, onCreate }: {
                             </div>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#bbb', marginTop: 6 }}>{form.duration_days} days selected</div>
                         </div>
+                        </>
+                        )}
 
-                        {/* Difficulty mode toggle */}
+                        {/* Difficulty mode toggle + grid (slot-based only) */}
+                        {form.scheduling_mode === 'slots' && (
+                        <>
                         <div style={{ marginBottom: 22 }}>
                             <button type="button" onClick={() => set('has_difficulty', !form.has_difficulty)} style={{
                                 width: '100%', padding: '14px 18px', borderRadius: 14,
@@ -1589,7 +1676,6 @@ function CreateTab({ allChallenges, onCreate }: {
                             </button>
                         </div>
 
-                        {/* Difficulty pricing grid */}
                         {form.has_difficulty && (
                             <>
                                 <div style={{ marginBottom: 18 }}>
@@ -1645,9 +1731,11 @@ function CreateTab({ allChallenges, onCreate }: {
                                 </div>
                             </>
                         )}
+                        </>
+                        )}
 
-                        {/* Tasks per day (only when no difficulty mode) */}
-                        {!form.has_difficulty && (
+                        {/* Tasks per day (only for slot-based, non-difficulty mode) */}
+                        {form.scheduling_mode === 'slots' && !form.has_difficulty && (
                         <div style={{ marginBottom: 22 }}>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>TASKS PER DAY</div>
                             <div style={{ display: 'flex', gap: 10 }}>
@@ -1666,7 +1754,8 @@ function CreateTab({ allChallenges, onCreate }: {
                         </div>
                         )}
 
-                        {/* Slot duration */}
+                        {/* Slot duration (only for slot-based) */}
+                        {form.scheduling_mode === 'slots' && (
                         <div style={{ marginBottom: 22 }}>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#999', letterSpacing: '3px', marginBottom: 10 }}>SLOT DURATION</div>
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -1682,6 +1771,7 @@ function CreateTab({ allChallenges, onCreate }: {
                                 ))}
                             </div>
                         </div>
+                        )}
                         {/* Costs */}
                         <div style={{ display: 'flex', gap: 20 }}>
                             {!form.has_difficulty && (
