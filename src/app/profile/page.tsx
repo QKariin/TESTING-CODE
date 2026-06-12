@@ -3213,7 +3213,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                     {/* Card content */}
                                     <div style={{ position: 'relative', padding: '16px 18px' }}>
                                         {/* Title */}
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 10 }}>{c.name}</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 10, textAlign: 'center' }}>{c.name}</div>
 
                                         {/* Stats row: TASKS · DONE · POINTS */}
                                         <div style={{ display: 'flex', gap: 0, marginBottom: 14 }}>
@@ -3303,39 +3303,43 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                         <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 14, paddingLeft: 2 }}>RUNNING CHALLENGES</div>
                         {available.map((c: any) => {
                             const startsSoon = c.status === 'draft';
-                            const isJoining = joining === c.id;
                             return (
                                 <div key={c.id} style={{
-                                    display: 'flex', gap: 12, padding: '14px', marginBottom: 10,
-                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12,
+                                    position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 14,
+                                    border: '1px solid rgba(255,255,255,0.07)',
                                 }}>
-                                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(197,160,89,0.06)' }}>
-                                        {c.image_url ? (
-                                            <img src={c.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', opacity: 0.25 }}>⚔</div>
-                                        )}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                                    {/* Background image */}
+                                    {c.image_url && (
+                                        <img src={c.image_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.12 }} alt="" />
+                                    )}
+                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,8,18,0.75) 0%, rgba(5,8,18,0.95) 100%)' }} />
+
+                                    <div style={{ position: 'relative', padding: '16px 18px' }}>
+                                        {/* Title */}
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'center', marginBottom: 6 }}>{c.name}</div>
+
+                                        {/* Description */}
                                         {c.description && (
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{c.description}</div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.45, textAlign: 'center', marginBottom: 10, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as any }}>{c.description}</div>
                                         )}
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', marginTop: 2 }}>
+
+                                        {/* Stats line */}
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', textAlign: 'center', marginBottom: 14 }}>
                                             {c.duration_days}d · {c.tasks_per_day}×/day · {c.is_evergreen ? 'EVERGREEN' : `${c.window_minutes}min`}
                                             {startsSoon && c.start_date && ` · Starts ${new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                                         </div>
+
+                                        {/* SEE MORE button — opens challenge panel with full info + join */}
+                                        <button onClick={() => onOpenPanel(c.id)} style={{
+                                            display: 'block', margin: '0 auto', padding: '9px 28px', borderRadius: 8,
+                                            border: '1px solid rgba(197,160,89,0.35)', background: 'rgba(197,160,89,0.06)',
+                                            color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700,
+                                            letterSpacing: '2px', cursor: 'pointer',
+                                        }}>SEE MORE</button>
                                     </div>
-                                    <button onClick={() => handleJoin(c.id)} disabled={!!joining} style={{
-                                        alignSelf: 'center', padding: '8px 16px', borderRadius: 8, border: 'none', flexShrink: 0,
-                                        background: isJoining ? 'rgba(197,160,89,0.08)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
-                                        color: isJoining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700,
-                                        letterSpacing: '1px', cursor: isJoining ? 'default' : 'pointer',
-                                    }}>{isJoining ? '...' : 'JOIN'}</button>
                                 </div>
                             );
                         })}
-                        {joinError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.7)', textAlign: 'center', marginTop: 8, letterSpacing: '1px' }}>{joinError}</div>}
                     </div>
                 )}
 
