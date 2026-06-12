@@ -5263,7 +5263,7 @@ if (typeof window !== 'undefined') {
 
 export async function buyRealCoins(amount: number) {
     try {
-        const res = await fetch('/api/dv/coins', {
+        const res = await fetch('/api/stripe/coins', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ coins: amount }),
@@ -5272,7 +5272,7 @@ export async function buyRealCoins(amount: number) {
         if (data.url) {
             window.location.href = data.url;
         } else {
-            console.error('[EXCHEQUER] DV.net error:', data.error);
+            console.error('[EXCHEQUER] Stripe coins error:', data.error);
             alert('Could not initiate payment. Please try again.');
         }
     } catch (err) {
