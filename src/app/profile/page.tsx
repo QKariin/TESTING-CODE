@@ -149,6 +149,7 @@ export default function ProfilePage() {
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
     const dismissedAlertWindowIdRef = useRef<string | null>(null);
     const [dutiesUploadedToday, setDutiesUploadedToday] = useState<boolean | null>(null);
+    const [participationMap, setParticipationMap] = useState<Record<string, { status: string; data?: any }>>({});
     const [installPrompt, setInstallPrompt] = useState<any>(null);
     const [installBannerDismissed, setInstallBannerDismissed] = useState(() =>
         typeof window !== 'undefined' && !!localStorage.getItem('installBannerDismissed')
@@ -604,6 +605,32 @@ export default function ProfilePage() {
                 const challenges = json.challenges || [];
                 setAllChallenges(challenges);
 
+                // Filter to visible challenges (active + upcoming)
+                const visible = challenges.filter((c: any) =>
+                    c.status === 'active' ||
+                    (c.status === 'draft' && c.start_date && new Date(c.start_date).getTime() > now)
+                );
+
+                // Fetch participation data for ALL visible challenges in parallel
+                const pMap: Record<string, { status: string; data?: any }> = {};
+                if (visible.length > 0) {
+                    const results = await Promise.allSettled(
+                        visible.map((c: any) =>
+                            fetch(`/api/challenges/${c.id}/submit`).then(r => r.json()).then(j => ({ id: c.id, json: j }))
+                        )
+                    );
+                    for (const r of results) {
+                        if (r.status === 'fulfilled' && r.value.json.success) {
+                            const { id, json: pJson } = r.value;
+                            if (pJson.participant) {
+                                pMap[id] = { status: pJson.participant.status, data: pJson };
+                            }
+                        }
+                    }
+                }
+                setParticipationMap(pMap);
+
+                // Derive single activeChallenge + isParticipant for backward compat (desktop sidebar)
                 const active = challenges.find((c: any) => c.status === 'active');
                 const upcoming = !active && challenges.find((c: any) =>
                     c.status === 'draft' && c.start_date &&
@@ -612,53 +639,57 @@ export default function ProfilePage() {
                 const found = active || upcoming || null;
                 setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status, start_date: found.start_date, image_url: found.image_url } : null);
 
-                // Check participation for the active/upcoming challenge
                 if (found) {
-                    try {
-                        const pRes = await fetch(`/api/challenges/${found.id}/submit`);
-                        const pJson = await pRes.json();
-                        if (pJson.success) {
-                            const joined = !!pJson.participant;
-                            setIsParticipant(joined);
-                            setParticipantStatus(pJson.participant?.status || null);
-                            const activeChallengeCount = challenges.filter((ch: any) =>
-                                ch.status === 'active' ||
-                                (ch.status === 'draft' && ch.start_date && new Date(ch.start_date).getTime() > now)
-                            ).length;
-                            setChallengeCounts({ pending: activeChallengeCount, yours: joined ? 1 : 0 });
+                    const pEntry = pMap[found.id];
+                    const joined = !!pEntry;
+                    setIsParticipant(joined);
+                    setParticipantStatus(pEntry?.status || null);
 
-                            // Check for open task window - alert active participants
-                            if (joined && pJson.participant?.status === 'active' && pJson.windows) {
-                                const submittedIds = new Set((pJson.completions || []).map((c: any) => c.window_id));
-                                const openWin = (pJson.windows as any[]).find(w =>
-                                    now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
-                                );
-                                // If no open window, clear the dismissal ref
-                                if (!openWin) dismissedAlertWindowIdRef.current = null;
-                                // If new window opened that's different from dismissed, reset dismissal
-                                if (openWin && dismissedAlertWindowIdRef.current && openWin.id !== dismissedAlertWindowIdRef.current) {
-                                    dismissedAlertWindowIdRef.current = null;
-                                }
-                                // Only show alert if not dismissed for this window
-                                const shouldAlert = openWin && openWin.id !== dismissedAlertWindowIdRef.current;
-                                setChallengeWindowAlert(shouldAlert ? { window: openWin, challenge: pJson.challenge } : null);
-                                // Still track open window for banner even when dismissed
-                                setOpenWindowForBanner(openWin || null);
-                                const nextWin = (pJson.windows as any[])
-                                    .filter(w => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
-                                    .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
-                                setNextChallengeWindowTs(nextWin ? new Date(nextWin.opens_at).getTime() : null);
-                            } else {
-                                setChallengeWindowAlert(null);
-                                setOpenWindowForBanner(null);
-                                setNextChallengeWindowTs(null);
+                    const enrolledCount = Object.keys(pMap).length;
+                    setChallengeCounts({ pending: visible.length, yours: enrolledCount });
+
+                    // Check for open task windows — alert for ANY enrolled challenge
+                    let foundAlert: { window: any; challenge: any } | null = null;
+                    let foundOpenWin: any = null;
+                    let foundNextTs: number | null = null;
+
+                    for (const [, entry] of Object.entries(pMap)) {
+                        if (entry.status !== 'active' || !entry.data?.windows) continue;
+                        const pJson = entry.data;
+                        const submittedIds = new Set((pJson.completions || []).map((c: any) => c.window_id));
+                        const openWin = (pJson.windows as any[]).find(w =>
+                            now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
+                        );
+                        if (openWin && !foundOpenWin) {
+                            foundOpenWin = openWin;
+                            if (openWin.id !== dismissedAlertWindowIdRef.current) {
+                                foundAlert = { window: openWin, challenge: pJson.challenge };
                             }
                         }
-                    } catch {}
+                        const nextWin = (pJson.windows as any[])
+                            .filter(w => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
+                            .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
+                        if (nextWin) {
+                            const ts = new Date(nextWin.opens_at).getTime();
+                            if (!foundNextTs || ts < foundNextTs) foundNextTs = ts;
+                        }
+                    }
+
+                    if (!foundOpenWin) dismissedAlertWindowIdRef.current = null;
+                    if (foundOpenWin && dismissedAlertWindowIdRef.current && foundOpenWin.id !== dismissedAlertWindowIdRef.current) {
+                        dismissedAlertWindowIdRef.current = null;
+                    }
+
+                    setChallengeWindowAlert(foundAlert);
+                    setOpenWindowForBanner(foundOpenWin || null);
+                    setNextChallengeWindowTs(foundNextTs);
                 } else {
                     setIsParticipant(false);
                     setParticipantStatus(null);
                     setChallengeCounts({ pending: 0, yours: 0 });
+                    setChallengeWindowAlert(null);
+                    setOpenWindowForBanner(null);
+                    setNextChallengeWindowTs(null);
                 }
             } catch {}
         }
@@ -972,10 +1003,11 @@ export default function ProfilePage() {
                             activeChallenge={activeChallenge}
                             isParticipant={isParticipant}
                             participantStatus={participantStatus}
+                            participationMap={participationMap}
                             memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                             onClose={() => setDesktopChallengeOpen(false)}
-                            onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
-                            onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                            onOpenPanel={(cId: string) => { setDesktopChallengeOpen(false); setChallengePanelId(cId); setChallengePanelOpen(true); }}
+                            onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); }}
                         />
                     </div>
                 )}
@@ -2272,10 +2304,11 @@ export default function ProfilePage() {
                         activeChallenge={activeChallenge}
                         isParticipant={isParticipant}
                         participantStatus={participantStatus}
+                        participationMap={participationMap}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                         onClose={() => (window as any).closeMobChallenges?.()}
-                        onOpenPanel={() => { (window as any).closeMobChallenges?.(); setChallengePanelOpen(true); }}
-                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                        onOpenPanel={(cId: string) => { (window as any).closeMobChallenges?.(); setChallengePanelId(cId); setChallengePanelOpen(true); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); }}
                     />
                 </div>
             </div>
@@ -2323,7 +2356,7 @@ export default function ProfilePage() {
                 {/* Mobile banner - only on mobile, landing page (no overlay open), non-participants */}
                 {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && !challengeBannerDismissed && (
                     <div
-                        onClick={() => { setChallengePanelId(activeChallenge.id); setChallengePanelOpen(true); }}
+                        onClick={() => (window as any).openMobChallenges?.()}
                         style={{
                             position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000002,
                             background: 'rgba(5,8,18,0.97)',
@@ -2375,7 +2408,7 @@ export default function ProfilePage() {
                         challengeName={activeChallenge.name}
                         hasOpenWindow={!!openWindowForBanner}
                         nextWindowTs={openWindowForBanner ? null : nextChallengeWindowTs}
-                        onOpen={() => { setChallengePanelOpen(true); setChallengePanelId(activeChallenge.id); }}
+                        onOpen={() => (window as any).openMobChallenges?.()}
                     />
                 )}
                 {challengePanelOpen && (
@@ -3078,29 +3111,34 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 }
 
 // ─── DESKTOP CHALLENGE MODAL ─────────────────────────────────────────────────
-function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, memberEmail, onClose, onOpenPanel, onJoined, embedded }: {
+function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, participationMap, memberEmail, onClose, onOpenPanel, onJoined, embedded }: {
     challenges: any[];
     activeChallenge: { id: string; name: string; theme: string; status: string } | null;
     isParticipant: boolean;
     participantStatus: string | null;
+    participationMap: Record<string, { status: string; data?: any }>;
     memberEmail: string;
     onClose: () => void;
-    onOpenPanel: () => void;
+    onOpenPanel: (challengeId: string) => void;
     onJoined: () => void;
     embedded?: boolean;
 }) {
-    const [joining, setJoining] = useState(false);
+    const [joining, setJoining] = useState<string | null>(null);
     const [joinError, setJoinError] = useState('');
     const [fullData, setFullData] = useState<{ stats: any; windows: any[] } | null>(null);
+    const overlayFileInputRef = useRef<HTMLInputElement>(null);
+    const [overlayUploading, setOverlayUploading] = useState<string | null>(null);
+    const [overlayUploadDone, setOverlayUploadDone] = useState<string | null>(null);
+    const pendingOverlayUploadRef = useRef<{ challengeId: string; windowId: string } | null>(null);
 
     useEffect(() => {
-        if (activeChallenge) {
+        if (activeChallenge && !embedded) {
             fetch(`/api/challenges/${activeChallenge.id}/submit`)
                 .then(r => r.json())
                 .then(j => { if (j.success) setFullData({ stats: j.stats, windows: j.windows || [] }); })
                 .catch(() => {});
         }
-    }, [activeChallenge]);
+    }, [activeChallenge, embedded]);
 
     const nextWindow = fullData?.windows
         ? fullData.windows
@@ -3111,7 +3149,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
     const nextWindowTs = nextWindow ? new Date(nextWindow.opens_at).getTime() : null;
 
     const handleJoin = async (challengeId: string) => {
-        setJoining(true);
+        setJoining(challengeId);
         setJoinError('');
         try {
             const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
@@ -3125,22 +3163,237 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
         } catch {
             setJoinError('Network error');
         } finally {
-            setJoining(false);
+            setJoining(null);
+        }
+    };
+
+    const handleOverlayUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const pending = pendingOverlayUploadRef.current;
+        if (!file || !pending) return;
+        setOverlayUploading(pending.windowId);
+        if (overlayFileInputRef.current) overlayFileInputRef.current.value = '';
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('bucket', 'media');
+            fd.append('folder', `challenge-proofs/${pending.challengeId}`);
+            fd.append('ext', file.name.split('.').pop() || 'jpg');
+            const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+            const upJson = await upRes.json();
+            if (!upJson.url) return;
+            const subRes = await fetch(`/api/challenges/${pending.challengeId}/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ windowId: pending.windowId, proofUrl: upJson.url }),
+            });
+            const subJson = await subRes.json();
+            if (subJson.success) {
+                setOverlayUploadDone(pending.windowId);
+                setTimeout(() => setOverlayUploadDone(null), 2500);
+                onJoined(); // triggers re-poll
+            }
+        } finally {
+            setOverlayUploading(null);
+            pendingOverlayUploadRef.current = null;
         }
     };
 
     const themeColor = (t: string) => ({ gold: '#c5a059', red: '#ef4444', purple: '#a855f7', blue: '#3b82f6' }[t] || '#c5a059');
     const now = Date.now();
 
+    const visibleChallenges = challenges.filter((c: any) => c.status === 'active' || (
+        c.status === 'draft' && c.start_date &&
+        new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+        new Date(c.start_date).getTime() > now
+    ));
+
+    // ── MOBILE TWO-SECTION LAYOUT ────────────────────────────────────────────
+    if (embedded) {
+        const enrolled = visibleChallenges.filter((c: any) => participationMap[c.id]);
+        const available = visibleChallenges.filter((c: any) => !participationMap[c.id]);
+
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 16px 24px' }}>
+                <input ref={overlayFileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleOverlayUpload} />
+
+                {/* ── MY CHALLENGES SECTION ── */}
+                {enrolled.length > 0 && (
+                    <div style={{ marginBottom: 28 }}>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: 14, paddingLeft: 2 }}>MY CHALLENGES</div>
+                        {enrolled.map((c: any) => {
+                            const entry = participationMap[c.id];
+                            const pData = entry?.data;
+                            const windows = pData?.windows || [];
+                            const completions = pData?.completions || [];
+                            const submittedIds = new Set(completions.map((comp: any) => comp.window_id));
+                            const openWin = windows.find((w: any) =>
+                                now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
+                            );
+                            const nextWinLocal = windows
+                                .filter((w: any) => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
+                                .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
+                            const tasksDone = completions.length;
+                            const totalTasks = (c.duration_days || 1) * (c.tasks_per_day || 1);
+                            const tasksRemaining = Math.max(0, totalTasks - tasksDone);
+                            const tpd = c.tasks_per_day || 1;
+                            const taskIdx = openWin ? (openWin.day_number - 1) * tpd + (openWin.window_number - 1) : -1;
+                            const taskName = taskIdx >= 0 ? (c.task_names || [])[taskIdx] : null;
+                            const isEliminated = entry.status === 'eliminated';
+                            const uploadBusy = overlayUploading === openWin?.id;
+                            const uploadDone = overlayUploadDone === openWin?.id;
+
+                            return (
+                                <div key={c.id} style={{
+                                    background: 'rgba(255,255,255,0.02)',
+                                    border: `1px solid ${isEliminated ? 'rgba(224,48,48,0.25)' : openWin ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                                    borderRadius: 14, overflow: 'hidden', marginBottom: 12,
+                                }}>
+                                    {/* Card header with thumbnail */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px 10px' }}>
+                                        {c.image_url && (
+                                            <img src={c.image_url} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }} alt="" />
+                                        )}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                                            {isEliminated ? (
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#e03030', letterSpacing: '2px', marginTop: 2 }}>ELIMINATED</div>
+                                            ) : openWin ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#4ade80', letterSpacing: '1.5px' }}>DAY {openWin.day_number} · TASK {openWin.window_number}</span>
+                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px' }}>
+                                                        <CountdownText targetTs={new Date(openWin.closes_at).getTime()} prefix="CLOSES IN " />
+                                                    </span>
+                                                </div>
+                                            ) : nextWinLocal ? (
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '1.5px', marginTop: 2 }}>
+                                                    <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="NEXT TASK IN " />
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px', marginTop: 2 }}>ENROLLED</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Inline task panel — only when window is open */}
+                                    {openWin && !isEliminated && (
+                                        <div style={{ padding: '0 16px 14px' }}>
+                                            {taskName && (
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.55, marginBottom: 12, padding: '10px 12px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8 }}>
+                                                    {taskName}
+                                                </div>
+                                            )}
+                                            {openWin.verification_code && (
+                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, textAlign: 'center' }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '1.8rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 16px rgba(197,160,89,0.4)' }}>{openWin.verification_code}</div>
+                                                </div>
+                                            )}
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>
+                                                    {tasksDone} done · {tasksRemaining} to go
+                                                </div>
+                                                <button
+                                                    disabled={uploadBusy || uploadDone}
+                                                    onClick={() => { pendingOverlayUploadRef.current = { challengeId: c.id, windowId: openWin.id }; overlayFileInputRef.current?.click(); }}
+                                                    style={{
+                                                        padding: '9px 18px', borderRadius: 8, border: 'none', cursor: uploadBusy || uploadDone ? 'default' : 'pointer',
+                                                        background: uploadDone ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, rgba(197,160,89,0.2), rgba(139,105,20,0.12))',
+                                                        color: uploadDone ? '#4ade80' : '#c5a059',
+                                                        fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', flexShrink: 0,
+                                                    }}
+                                                >{uploadDone ? '✓ DONE' : uploadBusy ? '...' : '↑ UPLOAD PROOF'}</button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {isEliminated && (
+                                        <div style={{ padding: '0 16px 14px' }}>
+                                            <button onClick={() => onOpenPanel(c.id)} style={{
+                                                width: '100%', padding: '9px 0', borderRadius: 8, border: '1px solid rgba(224,48,48,0.3)',
+                                                background: 'rgba(224,48,48,0.06)', color: '#e03030',
+                                                fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer',
+                                            }}>VIEW DETAILS · REJOIN</button>
+                                        </div>
+                                    )}
+
+                                    {!openWin && !isEliminated && (
+                                        <div style={{ padding: '0 16px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
+                                                {tasksDone} done · {tasksRemaining} to go
+                                            </div>
+                                            <button onClick={() => onOpenPanel(c.id)} style={{
+                                                padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(197,160,89,0.2)',
+                                                background: 'rgba(197,160,89,0.06)', color: 'rgba(197,160,89,0.6)',
+                                                fontFamily: 'Orbitron', fontSize: '0.35rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer', flexShrink: 0,
+                                            }}>VIEW DETAILS</button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* ── RUNNING CHALLENGES SECTION ── */}
+                {available.length > 0 && (
+                    <div>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 14, paddingLeft: 2 }}>RUNNING CHALLENGES</div>
+                        {available.map((c: any) => {
+                            const startsSoon = c.status === 'draft';
+                            const isJoining = joining === c.id;
+                            return (
+                                <div key={c.id} style={{
+                                    display: 'flex', gap: 12, padding: '14px', marginBottom: 10,
+                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12,
+                                }}>
+                                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(197,160,89,0.06)' }}>
+                                        {c.image_url ? (
+                                            <img src={c.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', opacity: 0.25 }}>⚔</div>
+                                        )}
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                                        {c.description && (
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{c.description}</div>
+                                        )}
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', marginTop: 2 }}>
+                                            {c.duration_days}d · {c.tasks_per_day}×/day · {c.is_evergreen ? 'EVERGREEN' : `${c.window_minutes}min`}
+                                            {startsSoon && c.start_date && ` · Starts ${new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handleJoin(c.id)} disabled={!!joining} style={{
+                                        alignSelf: 'center', padding: '8px 16px', borderRadius: 8, border: 'none', flexShrink: 0,
+                                        background: isJoining ? 'rgba(197,160,89,0.08)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
+                                        color: isJoining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700,
+                                        letterSpacing: '1px', cursor: isJoining ? 'default' : 'pointer',
+                                    }}>{isJoining ? '...' : 'JOIN'}</button>
+                                </div>
+                            );
+                        })}
+                        {joinError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.7)', textAlign: 'center', marginTop: 8, letterSpacing: '1px' }}>{joinError}</div>}
+                    </div>
+                )}
+
+                {visibleChallenges.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', letterSpacing: '2px' }}>
+                        No active challenges
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // ── DESKTOP LAYOUT (unchanged) ───────────────────────────────────────────
     return (
-        <div style={embedded ? { display: 'flex', flexDirection: 'column' } : {
+        <div style={{
             position: 'absolute', inset: 0, zIndex: 50,
             background: '#04040e',
             display: 'flex', flexDirection: 'column',
             overflow: 'hidden',
         }}>
-            {/* Header — hidden when embedded in mobile overlay */}
-            {!embedded && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.15)', flexShrink: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, background: '#4ade80', borderRadius: 2 }}></div>
@@ -3151,83 +3404,27 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                     CLOSE
                 </button>
             </div>
-            )}
 
-            <div style={{ flex: 1, overflowY: embedded ? undefined : 'auto', padding: embedded ? '20px 16px' : '24px 32px' }}>
-
-                {/* Challenge cards */}
-                {challenges.filter((c: any) => c.status === 'active' || (
-                    c.status === 'draft' && c.start_date &&
-                    new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
-                    new Date(c.start_date).getTime() > now
-                )).length === 0 ? (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
+                {visibleChallenges.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', letterSpacing: '2px' }}>
                         No active challenges
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {challenges.filter((c: any) => c.status === 'active' || (
-                            c.status === 'draft' && c.start_date &&
-                            new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
-                            new Date(c.start_date).getTime() > now
-                        )).map((c: any) => {
+                        {visibleChallenges.map((c: any) => {
                             const color = themeColor(c.theme);
-                            const isThisJoined = activeChallenge?.id === c.id && isParticipant;
+                            const isThisJoined = !!participationMap[c.id];
                             const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
                             const startsSoon = c.status === 'draft';
+                            const isJoining = joining === c.id;
 
                             return (
-                                <div key={c.id} style={embedded ? {
-                                    background: c.image_url ? undefined : 'rgba(197,160,89,0.04)',
-                                    border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(197,160,89,0.15)'}`,
-                                    borderRadius: 14, padding: 18, position: 'relative', overflow: 'hidden',
-                                } : {
+                                <div key={c.id} style={{
                                     display: 'flex', gap: 0, borderRadius: 16, overflow: 'hidden',
                                     border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.07)'}`,
                                     background: isThisJoined ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)',
                                 }}>
-                                    {embedded ? (
-                                        /* ── MOBILE COMPACT CARD (matches challenge tasks panel) ── */
-                                        <>
-                                            {c.image_url && (
-                                                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${c.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12, zIndex: 0 }} />
-                                            )}
-                                            <div style={{ position: 'relative', zIndex: 1 }}>
-                                                {c.image_url && (
-                                                    <img src={c.image_url} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', float: 'left', marginRight: 12, marginBottom: 4 }} alt="" />
-                                                )}
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{c.name}</div>
-                                                {c.description && (
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: c.image_url ? undefined : 'none' }}>{c.description}</div>
-                                                )}
-                                                <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
-                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.is_evergreen ? 'EVERGREEN' : `${c.window_minutes}min windows`}
-                                                </div>
-
-                                                {isThisJoined ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 8, padding: '6px 12px' }}>
-                                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
-                                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px', fontWeight: 700 }}>ENROLLED - STILL IN</span>
-                                                        </div>
-                                                        <button onClick={onOpenPanel} style={{
-                                                            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                                                            background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
-                                                            color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '1px',
-                                                        }}>VIEW TASKS</button>
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: startsSoon ? 'rgba(251,191,36,0.08)' : 'rgba(74,222,128,0.08)', border: `1px solid ${startsSoon ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.25)'}`, borderRadius: 8, padding: '6px 12px' }}>
-                                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: startsSoon ? '#fbbf24' : '#4ade80' }} />
-                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: startsSoon ? '#fbbf24' : '#4ade80', letterSpacing: '1px', fontWeight: 700 }}>{startsSoon ? 'STARTING SOON' : 'OPEN TO JOIN'}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        /* ── DESKTOP CARD (side-by-side layout) ── */
-                                        <>
-                                    {/* Image / cover */}
                                     <div style={{
                                         width: 200, minHeight: 160, flexShrink: 0, position: 'relative',
                                         background: c.image_url ? 'transparent' : `linear-gradient(135deg, ${color}22, ${color}08)`,
@@ -3237,7 +3434,6 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                         ) : (
                                             <div style={{ width: '100%', height: '100%', minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.3 }}>⚔</div>
                                         )}
-                                        {/* Status pill */}
                                         <div style={{
                                             position: 'absolute', top: 10, left: 10,
                                             background: startsSoon ? 'rgba(251,191,36,0.9)' : 'rgba(74,222,128,0.9)',
@@ -3246,9 +3442,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                         }}>{startsSoon ? 'SOON' : 'LIVE'}</div>
                                     </div>
 
-                                    {/* Info */}
                                     <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'space-between' }}>
-                                        {/* Name + description */}
                                         <div>
                                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '1px', marginBottom: 6 }}>{c.name}</div>
                                             {c.description && (
@@ -3256,7 +3450,6 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             )}
                                         </div>
 
-                                        {/* Challenge details - one per line */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                                             {[
                                                 { label: 'Days', val: String(c.duration_days) },
@@ -3273,8 +3466,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             ))}
                                         </div>
 
-                                        {/* Personal stats (if joined) - one per line */}
-                                        {isThisJoined && fullData?.stats && (
+                                        {isThisJoined && fullData?.stats && activeChallenge?.id === c.id && (
                                             <div style={{ borderTop: '1px solid rgba(197,160,89,0.12)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 7 }}>
                                                 {[
                                                     { label: 'My tasks done', val: String(fullData.stats.tasks_done) },
@@ -3294,9 +3486,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             </div>
                                         )}
 
-                                        {/* Action button */}
                                         {isThisJoined ? (
-                                            <button onClick={onOpenPanel} style={{
+                                            <button onClick={() => onOpenPanel(c.id)} style={{
                                                 width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
                                                 background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
                                                 color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
@@ -3305,19 +3496,17 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             }}>VIEW DETAILS & UPLOAD</button>
                                         ) : (
                                             <div>
-                                                <button onClick={() => handleJoin(c.id)} disabled={joining} style={{
-                                                    width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: joining ? 'default' : 'pointer',
-                                                    background: joining ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
-                                                    color: joining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.55rem',
+                                                <button onClick={() => handleJoin(c.id)} disabled={!!joining} style={{
+                                                    width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: isJoining ? 'default' : 'pointer',
+                                                    background: isJoining ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                                    color: isJoining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.55rem',
                                                     fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
-                                                    boxShadow: joining ? 'none' : '0 4px 15px rgba(197,160,89,0.3)',
-                                                }}>{joining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
+                                                    boxShadow: isJoining ? 'none' : '0 4px 15px rgba(197,160,89,0.3)',
+                                                }}>{isJoining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
                                                 {joinError && <div className="ribbon-label" style={{ fontSize: '0.42rem', color: 'rgba(197,160,89,0.7)', marginTop: 6, textAlign: 'center' }}>{joinError}</div>}
                                             </div>
                                         )}
                                     </div>
-                                        </>
-                                    )}
                                 </div>
                             );
                         })}
