@@ -3187,7 +3187,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                 .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
                             const tasksDone = completions.length;
                             const totalTasks = (c.duration_days || 1) * (c.tasks_per_day || 1);
-                            const tasksRemaining = Math.max(0, totalTasks - tasksDone);
+                            const ppc = pData?.challenge?.points_per_completion || c.points_per_completion || 20;
+                            const pointsEarned = tasksDone * ppc;
                             const tpd = c.tasks_per_day || 1;
                             const taskIdx = openWin ? (openWin.day_number - 1) * tpd + (openWin.window_number - 1) : -1;
                             const taskName = taskIdx >= 0
@@ -3199,90 +3200,97 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
 
                             return (
                                 <div key={c.id} style={{
-                                    background: 'rgba(255,255,255,0.02)',
-                                    border: `1px solid ${isEliminated ? 'rgba(224,48,48,0.25)' : openWin ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                                    borderRadius: 14, overflow: 'hidden', marginBottom: 12,
+                                    position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 14,
+                                    border: `1px solid ${isEliminated ? 'rgba(224,48,48,0.3)' : openWin ? 'rgba(197,160,89,0.4)' : 'rgba(197,160,89,0.15)'}`,
+                                    boxShadow: openWin ? '0 0 24px rgba(197,160,89,0.08)' : 'none',
                                 }}>
-                                    {/* Card header with thumbnail */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px 10px' }}>
-                                        {c.image_url && (
-                                            <img src={c.image_url} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }} alt="" />
+                                    {/* Background image */}
+                                    {c.image_url && (
+                                        <img src={c.image_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} alt="" />
+                                    )}
+                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,8,18,0.7) 0%, rgba(5,8,18,0.92) 100%)' }} />
+
+                                    {/* Card content */}
+                                    <div style={{ position: 'relative', padding: '16px 18px' }}>
+                                        {/* Title */}
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 10 }}>{c.name}</div>
+
+                                        {/* Stats row: TASKS · DONE · POINTS */}
+                                        <div style={{ display: 'flex', gap: 0, marginBottom: 14 }}>
+                                            {[
+                                                { label: 'TASKS', value: totalTasks },
+                                                { label: 'DONE', value: tasksDone },
+                                                { label: 'POINTS', value: pointsEarned },
+                                            ].map((s, i) => (
+                                                <div key={s.label} style={{ flex: 1, textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(197,160,89,0.12)' : 'none' }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '1rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>{s.value}</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.28rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 4 }}>{s.label}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Eliminated state */}
+                                        {isEliminated && (
+                                            <button onClick={() => onOpenPanel(c.id)} style={{
+                                                width: '100%', padding: '10px 0', borderRadius: 8, border: '1px solid rgba(224,48,48,0.3)',
+                                                background: 'rgba(224,48,48,0.08)', color: '#e03030',
+                                                fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer',
+                                            }}>REJOIN CHALLENGE</button>
                                         )}
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                                            {isEliminated ? (
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#e03030', letterSpacing: '2px', marginTop: 2 }}>ELIMINATED</div>
-                                            ) : openWin ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#4ade80', letterSpacing: '1.5px' }}>DAY {openWin.day_number} · TASK {openWin.window_number}</span>
-                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px' }}>
-                                                        <CountdownText targetTs={new Date(openWin.closes_at).getTime()} prefix="CLOSES IN " />
+
+                                        {/* No open window — centered countdown */}
+                                        {!openWin && !isEliminated && (
+                                            <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
+                                                {nextWinLocal ? (
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '2px' }}>
+                                                        <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="NEXT TASK IN " />
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>NO UPCOMING TASKS</div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Open window — task info + upload */}
+                                        {openWin && !isEliminated && (
+                                            <div>
+                                                {/* Task label + countdown */}
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: '#4ade80', letterSpacing: '1.5px', fontWeight: 700 }}>DAY {openWin.day_number} · TASK {openWin.window_number}</span>
+                                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.34rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px' }}>
+                                                        <CountdownText targetTs={new Date(openWin.closes_at).getTime()} prefix="CLOSES " />
                                                     </span>
                                                 </div>
-                                            ) : nextWinLocal ? (
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '1.5px', marginTop: 2 }}>
-                                                    <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="NEXT TASK IN " />
-                                                </div>
-                                            ) : (
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px', marginTop: 2 }}>ENROLLED</div>
-                                            )}
-                                        </div>
-                                    </div>
 
-                                    {/* Inline task panel — only when window is open */}
-                                    {openWin && !isEliminated && (
-                                        <div style={{ padding: '0 16px 14px' }}>
-                                            {taskName && (
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.55, marginBottom: 12, padding: '10px 12px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8 }}>
-                                                    {taskName}
-                                                </div>
-                                            )}
-                                            {openWin.verification_code && (
-                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, textAlign: 'center' }}>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '1.8rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 16px rgba(197,160,89,0.4)' }}>{openWin.verification_code}</div>
-                                                </div>
-                                            )}
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>
-                                                    {tasksDone} done · {tasksRemaining} to go
-                                                </div>
+                                                {/* Task description */}
+                                                {taskName && (
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.74rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 12, padding: '10px 14px', background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 8 }}>
+                                                        {taskName}
+                                                    </div>
+                                                )}
+
+                                                {/* Verification code */}
+                                                {openWin.verification_code && (
+                                                    <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, textAlign: 'center' }}>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.3rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginBottom: 4 }}>SHOW CODE IN PHOTO</div>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.7rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 16px rgba(197,160,89,0.4)' }}>{openWin.verification_code}</div>
+                                                    </div>
+                                                )}
+
+                                                {/* Upload button */}
                                                 <button
                                                     disabled={uploadBusy || uploadDone}
                                                     onClick={() => { pendingOverlayUploadRef.current = { challengeId: c.id, windowId: openWin.id }; overlayFileInputRef.current?.click(); }}
                                                     style={{
-                                                        padding: '9px 18px', borderRadius: 8, border: 'none', cursor: uploadBusy || uploadDone ? 'default' : 'pointer',
-                                                        background: uploadDone ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, rgba(197,160,89,0.2), rgba(139,105,20,0.12))',
+                                                        width: '100%', padding: '11px 0', borderRadius: 8, border: 'none', cursor: uploadBusy || uploadDone ? 'default' : 'pointer',
+                                                        background: uploadDone ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, rgba(197,160,89,0.25), rgba(139,105,20,0.15))',
                                                         color: uploadDone ? '#4ade80' : '#c5a059',
-                                                        fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', flexShrink: 0,
+                                                        fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '2px',
                                                     }}
-                                                >{uploadDone ? '✓ DONE' : uploadBusy ? '...' : '↑ UPLOAD PROOF'}</button>
+                                                >{uploadDone ? '✓ SUBMITTED' : uploadBusy ? 'UPLOADING...' : '↑ UPLOAD PROOF'}</button>
                                             </div>
-                                        </div>
-                                    )}
-
-                                    {isEliminated && (
-                                        <div style={{ padding: '0 16px 14px' }}>
-                                            <button onClick={() => onOpenPanel(c.id)} style={{
-                                                width: '100%', padding: '9px 0', borderRadius: 8, border: '1px solid rgba(224,48,48,0.3)',
-                                                background: 'rgba(224,48,48,0.06)', color: '#e03030',
-                                                fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer',
-                                            }}>VIEW DETAILS · REJOIN</button>
-                                        </div>
-                                    )}
-
-                                    {!openWin && !isEliminated && (
-                                        <div style={{ padding: '0 16px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
-                                                {tasksDone} done · {tasksRemaining} to go
-                                            </div>
-                                            <button onClick={() => onOpenPanel(c.id)} style={{
-                                                padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(197,160,89,0.2)',
-                                                background: 'rgba(197,160,89,0.06)', color: 'rgba(197,160,89,0.6)',
-                                                fontFamily: 'Orbitron', fontSize: '0.35rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer', flexShrink: 0,
-                                            }}>VIEW DETAILS</button>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })}
