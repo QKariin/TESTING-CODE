@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { autoVerifyOldCompletions } from '@/lib/auto-verify';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // Auto-verify completions older than 12h before loading data
+        await autoVerifyOldCompletions(id).catch(() => {});
 
         const { data: challenge, error: cErr } = await supabaseAdmin
             .from('challenges').select('*').eq('id', id).single();

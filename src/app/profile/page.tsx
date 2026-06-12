@@ -3291,10 +3291,12 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                             const nextWinLocal = windows
                                 .filter((w: any) => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
                                 .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
-                            const tasksDone = completions.length;
+                            const tasksDone = completions.length; // all submissions (for scheduling logic)
+                            const verifiedCount = completions.filter((comp: any) => comp.verified).length;
+                            const pendingCount = completions.filter((comp: any) => !comp.verified).length;
                             const totalTasks = (c.duration_days || 1) * (c.tasks_per_day || 1);
                             const ppc = pData?.challenge?.points_per_completion || c.points_per_completion || 20;
-                            const pointsEarned = tasksDone * ppc;
+                            const pointsEarned = verifiedCount * ppc;
                             const tpd = c.tasks_per_day || 1;
                             const taskIdx = openWin ? (openWin.day_number - 1) * tpd + (openWin.window_number - 1) : -1;
                             const taskName = taskIdx >= 0
@@ -3321,19 +3323,24 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                         {/* Title */}
                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 10, textAlign: 'center' }}>{c.name}</div>
 
-                                        {/* Stats row: TASKS · DONE · POINTS */}
-                                        <div style={{ display: 'flex', gap: 0, marginBottom: 14 }}>
+                                        {/* Stats row */}
+                                        <div style={{ display: 'flex', gap: 0, marginBottom: pendingCount > 0 ? 8 : 14 }}>
                                             {[
-                                                { label: 'TASKS', value: totalTasks },
-                                                { label: 'DONE', value: tasksDone },
-                                                { label: 'POINTS', value: pointsEarned },
+                                                { label: 'TASKS', value: totalTasks, color: '#c5a059' },
+                                                { label: 'VERIFIED', value: verifiedCount, color: '#4ade80' },
+                                                { label: pendingCount > 0 ? 'PENDING' : 'POINTS', value: pendingCount > 0 ? pendingCount : pointsEarned, color: pendingCount > 0 ? '#ff8c42' : '#c5a059' },
                                             ].map((s, i) => (
                                                 <div key={s.label} style={{ flex: 1, textAlign: 'center', borderRight: i < 2 ? '1px solid rgba(197,160,89,0.12)' : 'none' }}>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '1rem', color: '#c5a059', fontWeight: 700, lineHeight: 1 }}>{s.value}</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '1rem', color: s.color, fontWeight: 700, lineHeight: 1 }}>{s.value}</div>
                                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.28rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 4 }}>{s.label}</div>
                                                 </div>
                                             ))}
                                         </div>
+                                        {pendingCount > 0 && (
+                                            <div style={{ textAlign: 'center', fontFamily: 'Orbitron', fontSize: '0.3rem', color: '#ff8c42', letterSpacing: '1.5px', marginBottom: 10 }}>
+                                                ⏳ {pendingCount} SUBMISSION{pendingCount !== 1 ? 'S' : ''} AWAITING REVIEW
+                                            </div>
+                                        )}
 
                                         {/* Eliminated state */}
                                         {isEliminated && (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { autoVerifyOldCompletions } from '@/lib/auto-verify';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -111,6 +112,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+        // Auto-verify completions older than 12h
+        await autoVerifyOldCompletions(challengeId).catch(() => {});
 
         // Resolve member_id (email) from profiles — challenge_participants uses email, not UUID
         const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
