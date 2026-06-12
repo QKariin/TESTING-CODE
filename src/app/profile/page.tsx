@@ -2767,18 +2767,18 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 
             {/* Header - only shown on mobile (embedded overlay has its own header) */}
             {!embedded && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(224,64,251,0.12)', flexShrink: 0 }}>
                 <div>
-                    <div className="ribbon-label" style={{ fontSize: '0.5rem', letterSpacing: '3px' }}>⚔ CHALLENGE TASKS</div>
-                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', marginTop: 4 }}>{data.challenge.name}</div>}
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#e040fb', letterSpacing: '3px', marginBottom: 2 }}>⚔ CHALLENGE TASKS</div>
+                    {data?.challenge && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: '#fff', marginTop: 4 }}>{data.challenge.name}</div>}
                 </div>
-                <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, color: 'rgba(197,160,89,0.5)', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px' }}>✕</button>
+                <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'rgba(255,255,255,0.4)', fontSize: '1rem', cursor: 'pointer', padding: '6px 12px', backdropFilter: 'blur(8px)' }}>✕</button>
             </div>
             )}
 
             {/* Toast */}
             {toast && (
-                <div style={{ margin: '10px 20px 0', padding: '10px 16px', borderRadius: 8, background: toast.ok ? 'rgba(74,222,128,0.12)' : 'rgba(224,48,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(74,222,128,0.3)' : 'rgba(224,48,48,0.3)'}`, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: toast.ok ? '#4ade80' : '#e03030', letterSpacing: '1px' }}>
+                <div style={{ margin: '10px 20px 0', padding: '10px 16px', borderRadius: 8, background: toast.ok ? 'rgba(224,64,251,0.1)' : 'rgba(224,48,48,0.12)', border: `1px solid ${toast.ok ? 'rgba(224,64,251,0.3)' : 'rgba(224,48,48,0.3)'}`, fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: toast.ok ? '#e040fb' : '#e03030', letterSpacing: '1px' }}>
                     {toast.msg}
                 </div>
             )}
@@ -2791,19 +2791,20 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                     <>
                         {/* Challenge banner + join */}
                         {data.challenge && (
-                            <div style={{ background: data.challenge.image_url ? undefined : 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 14, padding: '18px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ background: data.challenge.image_url ? undefined : 'rgba(224,64,251,0.03)', border: '1px solid rgba(224,64,251,0.12)', borderRadius: 14, padding: '18px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
                                 {data.challenge.image_url && (
-                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${data.challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12, zIndex: 0 }} />
+                                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${data.challenge.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.15, zIndex: 0 }} />
                                 )}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,8,18,0.6) 0%, rgba(5,8,18,0.9) 100%)', zIndex: 0 }} />
                                 <div style={{ position: 'relative', zIndex: 1 }}>
                                     {data.challenge.image_url && (
-                                        <img src={data.challenge.image_url} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', float: 'left', marginRight: 12, marginBottom: 4 }} alt="" />
+                                        <img src={data.challenge.image_url} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(224,64,251,0.2)', float: 'left', marginRight: 14, marginBottom: 4 }} alt="" />
                                     )}
-                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{data.challenge.name}</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#fff', marginBottom: 6, fontWeight: 700 }}>{data.challenge.name}</div>
                                     {data.challenge.description && (
-                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: data.challenge.image_url ? undefined : 'none' }}>{data.challenge.description}</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.45, marginBottom: 10, clear: data.challenge.image_url ? undefined : 'none' }}>{data.challenge.description}</div>
                                     )}
-                                    <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
+                                    <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1.5px', marginBottom: 14 }}>
                                         {data.challenge.is_evergreen
                                             ? `${data.challenge.duration_days}d · ${data.challenge.tasks_per_day}×/day · EVERGREEN`
                                             : `${data.challenge.duration_days}d · ${data.challenge.tasks_per_day}×/day · ${data.challenge.window_minutes}min windows`
@@ -2812,29 +2813,27 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 
                                     {/* Not joined → JOIN button (with slot picker for evergreen) */}
                                     {!data.participant && (
-                                        <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 10, padding: '14px 16px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: data.challenge.is_evergreen ? 14 : 0 }}>
-                                                <div>
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 3 }}>
-                                                        {data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
-                                                    </div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#777' }}>
-                                                        {data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
-                                                    </div>
+                                        <div style={{ background: 'rgba(224,64,251,0.04)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 12, padding: '18px 18px', backdropFilter: 'blur(12px)' }}>
+                                            <div style={{ marginBottom: data.challenge.is_evergreen ? 16 : 0 }}>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#e040fb', letterSpacing: '2px', marginBottom: 4 }}>
+                                                    {data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
                                                 </div>
-                                                {!data.challenge.is_evergreen && (
-                                                    <button onClick={handleJoin} disabled={joining}
-                                                        style={{ flexShrink: 0, padding: '10px 20px', background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: joining ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700 }}>
-                                                        {joining ? '...' : '⚔ JOIN'}
-                                                    </button>
-                                                )}
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.5)' }}>
+                                                    {data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
+                                                </div>
                                             </div>
+                                            {!data.challenge.is_evergreen && (
+                                                <button onClick={handleJoin} disabled={joining}
+                                                    style={{ width: '100%', marginTop: 14, padding: '13px 20px', background: joining ? 'rgba(224,64,251,0.05)' : 'linear-gradient(135deg, rgba(255,0,237,0.2), rgba(0,10,255,0.15))', border: '1px solid rgba(224,64,251,0.4)', borderRadius: 10, color: joining ? '#444' : '#e040fb', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700, backdropFilter: 'blur(8px)' }}>
+                                                    {joining ? '...' : 'JOIN CHALLENGE'}
+                                                </button>
+                                            )}
                                             {data.challenge.is_evergreen && (
                                                 <>
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 10 }}>
                                                         PICK {data.challenge.tasks_per_day} TIME SLOT{data.challenge.tasks_per_day > 1 ? 'S' : ''}
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                                    <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                                                         {(['morning', 'afternoon', 'evening'] as const).map(slot => {
                                                             const selected = selectedSlots.includes(slot);
                                                             const labels: Record<string, string> = { morning: '☀ MORNING', afternoon: '◐ AFTERNOON', evening: '☽ EVENING' };
@@ -2847,19 +2846,19 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                                                         setSelectedSlots(prev => [...prev, slot]);
                                                                     }
                                                                 }}
-                                                                style={{ flex: 1, padding: '10px 8px', borderRadius: 8, border: `1px solid ${selected ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.06)'}`, background: selected ? 'rgba(197,160,89,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
-                                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: selected ? '#c5a059' : '#555', letterSpacing: '1px', marginBottom: 2 }}>{labels[slot]}</div>
-                                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>{times[slot]}</div>
+                                                                style={{ flex: 1, padding: '12px 8px', borderRadius: 10, border: `1px solid ${selected ? 'rgba(224,64,251,0.5)' : 'rgba(255,255,255,0.08)'}`, background: selected ? 'rgba(224,64,251,0.1)' : 'rgba(255,255,255,0.03)', cursor: 'pointer', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: selected ? '#e040fb' : 'rgba(255,255,255,0.35)', letterSpacing: '1px', marginBottom: 3 }}>{labels[slot]}</div>
+                                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.25)' }}>{times[slot]}</div>
                                                                 </button>
                                                             );
                                                         })}
                                                     </div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: '#555', marginBottom: 12 }}>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', marginBottom: 14 }}>
                                                         Timezone: {detectedTimezone}
                                                     </div>
                                                     <button onClick={handleJoin} disabled={joining || selectedSlots.length !== data.challenge.tasks_per_day}
-                                                        style={{ width: '100%', padding: '12px 20px', background: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'default' : 'pointer', fontWeight: 700 }}>
-                                                        {joining ? '...' : `⚔ JOIN · ${selectedSlots.length}/${data.challenge.tasks_per_day} SLOTS`}
+                                                        style={{ width: '100%', padding: '14px 20px', background: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(255,0,237,0.2), rgba(0,10,255,0.15))', border: `1px solid ${(joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'rgba(255,255,255,0.08)' : 'rgba(224,64,251,0.4)'}`, borderRadius: 10, color: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'rgba(255,255,255,0.2)' : '#e040fb', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', cursor: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'default' : 'pointer', fontWeight: 700, backdropFilter: 'blur(8px)' }}>
+                                                        {joining ? '...' : `JOIN · ${selectedSlots.length}/${data.challenge.tasks_per_day} SLOTS`}
                                                     </button>
                                                 </>
                                             )}
@@ -2868,10 +2867,10 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 
                                     {/* Joined → status pill */}
                                     {data.participant && (
-                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: data.participant.status === 'active' ? 'rgba(74,222,128,0.1)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.1)' : 'rgba(197,160,89,0.1)', border: `1px solid ${data.participant.status === 'active' ? 'rgba(74,222,128,0.3)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.3)' : 'rgba(197,160,89,0.3)'}` }}>
-                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059' }} />
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059', letterSpacing: '1.5px' }}>
-                                                {data.participant.status === 'active' ? 'ENROLLED - STILL IN' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 20, background: data.participant.status === 'active' ? 'rgba(224,64,251,0.08)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.1)' : 'rgba(224,64,251,0.08)', border: `1px solid ${data.participant.status === 'active' ? 'rgba(224,64,251,0.3)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.3)' : 'rgba(224,64,251,0.2)'}`, backdropFilter: 'blur(8px)' }}>
+                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: data.participant.status === 'active' ? '#e040fb' : data.participant.status === 'eliminated' ? '#e03030' : '#e040fb' }} />
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: data.participant.status === 'active' ? '#e040fb' : data.participant.status === 'eliminated' ? '#e03030' : '#e040fb', letterSpacing: '1.5px' }}>
+                                                {data.participant.status === 'active' ? 'ENROLLED' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
                                             </span>
                                         </div>
                                     )}
@@ -2900,9 +2899,9 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                         {/* Open windows - upload NOW (only if participant) */}
                         {data.participant && data.participant.status === 'active' && openWindows.length > 0 && (
                             <div style={{ marginBottom: 28 }}>
-                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
-                                    WINDOW OPEN NOW - SUBMIT PROOF
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: '#e040fb', letterSpacing: '2px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e040fb', boxShadow: '0 0 10px rgba(224,64,251,0.6)', animation: 'pulse 1.5s infinite' }} />
+                                    WINDOW OPEN — SUBMIT PROOF
                                 </div>
                                 {openWindows.map((w: any) => {
                                     const comp = completionByWindowId[w.id];
@@ -2913,27 +2912,27 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     const placeLabels: Record<number, string> = { 1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd' };
                                     const tpd = data.challenge?.tasks_per_day || 1;
                                     const taskIdx = (w.day_number - 1) * tpd + (w.window_number - 1);
-                                    const taskName = (data.challenge?.task_names || [])[taskIdx];
+                                    const taskName = (data.challenge?.task_names || [])[taskIdx] || data.challenge?.daily_task;
                                     return (
-                                        <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.45)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
+                                        <div key={w.id} style={{ background: done ? 'rgba(224,64,251,0.03)' : 'rgba(224,64,251,0.06)', border: `1px solid ${done ? 'rgba(224,64,251,0.15)' : 'rgba(224,64,251,0.3)'}`, borderRadius: 12, padding: '18px 18px', marginBottom: 10, backdropFilter: 'blur(8px)' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && (w.verification_code || taskName)) ? 14 : 0 }}>
                                                 <div>
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.58rem', color: '#e040fb', marginBottom: 4, fontWeight: 700 }}>
                                                         DAY {w.day_number} · TASK {w.window_number}
                                                     </div>
                                                     {done ? (
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: comp.verified ? '#4ade80' : '#888' }}>
+                                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: comp.verified ? '#e040fb' : 'rgba(255,255,255,0.4)' }}>
                                                                 {comp.verified ? '✓ Verified' : '⏳ Awaiting verification'}
                                                             </span>
                                                             {comp.verified && comp.placement && (
-                                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '1px' }}>
+                                                                <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
                                                                     {placeLabels[comp.placement.place] || `#${comp.placement.place}`} · +{comp.placement.points}pts
                                                                 </span>
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#555' }}>
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>
                                                             Closes in {minLeft}m {secsLeft % 60}s
                                                         </div>
                                                     )}
@@ -2942,20 +2941,20 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                                     <button
                                                         disabled={busy}
                                                         onClick={() => { pendingWindowRef.current = w.id; fileInputRef.current?.click(); }}
-                                                        style={{ padding: '10px 18px', background: busy ? 'rgba(74,222,128,0.05)' : 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0 }}>
-                                                        {busy ? '...' : '⬆ UPLOAD'}
+                                                        style={{ padding: '11px 20px', background: busy ? 'rgba(224,64,251,0.05)' : 'linear-gradient(135deg, rgba(255,0,237,0.18), rgba(0,10,255,0.12))', border: '1px solid rgba(224,64,251,0.4)', borderRadius: 10, color: '#e040fb', fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', flexShrink: 0, fontWeight: 700, backdropFilter: 'blur(8px)' }}>
+                                                        {busy ? '...' : '↑ UPLOAD'}
                                                     </button>
                                                 )}
                                             </div>
                                             {!done && taskName && (
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, padding: '10px 14px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, padding: '12px 14px', background: 'rgba(224,64,251,0.04)', border: '1px solid rgba(224,64,251,0.12)', borderRadius: 10 }}>
                                                     {taskName}
                                                 </div>
                                             )}
                                             {!done && w.verification_code && (
-                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center', marginTop: taskName ? 8 : 0 }}>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE - SHOW IN PHOTO</div>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, color: '#4ade80', letterSpacing: '6px', textShadow: '0 0 16px rgba(74,222,128,0.4)' }}>{w.verification_code}</div>
+                                                <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 10, padding: '12px 14px', textAlign: 'center', marginTop: taskName ? 10 : 0, backdropFilter: 'blur(8px)' }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 5 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, color: '#e040fb', letterSpacing: '6px', textShadow: '0 0 20px rgba(224,64,251,0.4)' }}>{w.verification_code}</div>
                                                 </div>
                                             )}
                                         </div>
@@ -2993,7 +2992,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                         style={{ width: '100%', padding: '13px 0', background: rejoining ? 'rgba(255,255,255,0.03)' : 'linear-gradient(135deg, rgba(197,160,89,0.18) 0%, rgba(197,160,89,0.08) 100%)', border: '1px solid rgba(197,160,89,0.5)', borderRadius: 10, color: rejoining ? '#555' : '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.82rem', fontWeight: 700, cursor: rejoining ? 'default' : 'pointer', letterSpacing: '2px' }}>
                                         {rejoining ? 'Processing...' : '↩ Rejoin · 1,000 coins'}
                                     </button>
-                                    {rejoinMsg && <div style={{ marginTop: 10, fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px' }}>{rejoinMsg}</div>}
+                                    {rejoinMsg && <div style={{ marginTop: 10, fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#e040fb', letterSpacing: '1px' }}>{rejoinMsg}</div>}
                                 </div>
                             );
                         })()}
