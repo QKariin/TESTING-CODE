@@ -3178,13 +3178,13 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
 
                             return (
                                 <div key={c.id} style={{
-                                    display: 'flex', gap: 0, borderRadius: 16, overflow: 'hidden',
+                                    display: 'flex', flexDirection: embedded ? 'column' : 'row', gap: 0, borderRadius: 16, overflow: 'hidden',
                                     border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.07)'}`,
                                     background: isThisJoined ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)',
                                 }}>
                                     {/* Image / cover */}
                                     <div style={{
-                                        width: 200, minHeight: 160, flexShrink: 0, position: 'relative',
+                                        width: embedded ? '100%' : 200, minHeight: embedded ? 200 : 160, flexShrink: 0, position: 'relative',
                                         background: c.image_url ? 'transparent' : `linear-gradient(135deg, ${color}22, ${color}08)`,
                                     }}>
                                         {c.image_url ? (
