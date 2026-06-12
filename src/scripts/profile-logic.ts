@@ -5262,45 +5262,8 @@ if (typeof window !== 'undefined') {
 }
 
 export async function buyRealCoins(amount: number) {
-    // Show payment method picker
-    const existing = document.getElementById('_payMethodPicker');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = '_payMethodPicker';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
-
-    const box = document.createElement('div');
-    box.style.cssText = 'background:#0a0a14;border:1px solid rgba(197,160,89,0.25);border-radius:12px;padding:32px 28px;max-width:340px;width:90%;display:flex;flex-direction:column;align-items:center;gap:16px;';
-
-    box.innerHTML = `
-        <div style="font-family:Cinzel;font-size:0.85rem;color:#c5a059;letter-spacing:4px;font-weight:700;">PAYMENT METHOD</div>
-        <div style="font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${amount.toLocaleString()} ROYAL SILVER</div>
-        <button id="_payCard" style="width:100%;padding:16px;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(197,160,89,0.3);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <span style="font-family:Orbitron;font-size:0.75rem;color:#f3e5ab;letter-spacing:3px;">CARD</span>
-        </button>
-        <button id="_payCrypto" style="width:100%;padding:16px;background:linear-gradient(135deg,#1a0828,#0d0420);border:1px solid rgba(224,64,251,0.3);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e040fb" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-            <span style="font-family:Orbitron;font-size:0.75rem;color:#e8b0ff;letter-spacing:3px;">CRYPTO</span>
-        </button>
-        <button id="_payCancel" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;margin-top:4px;">CANCEL</button>
-    `;
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-    box.querySelector('#_payCancel')!.addEventListener('click', () => overlay.remove());
-    box.querySelector('#_payCard')!.addEventListener('click', () => { overlay.remove(); _processPayment(amount, 'card'); });
-    box.querySelector('#_payCrypto')!.addEventListener('click', () => { overlay.remove(); _processPayment(amount, 'crypto'); });
-}
-
-async function _processPayment(amount: number, method: 'card' | 'crypto') {
-    const endpoint = method === 'crypto' ? '/api/dv/coins' : '/api/stripe/coins';
-    const label = method === 'crypto' ? 'CRYPTO' : 'STRIPE';
     try {
-        const res = await fetch(endpoint, {
+        const res = await fetch('/api/dv/coins', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ coins: amount }),
@@ -5309,11 +5272,11 @@ async function _processPayment(amount: number, method: 'card' | 'crypto') {
         if (data.url) {
             window.location.href = data.url;
         } else {
-            console.error(`[EXCHEQUER][${label}] error:`, data.error);
+            console.error('[EXCHEQUER] DV.net error:', data.error);
             alert('Could not initiate payment. Please try again.');
         }
     } catch (err) {
-        console.error(`[EXCHEQUER][${label}] Network error:`, err);
+        console.error('[EXCHEQUER] Network error:', err);
         alert('Could not reach payment service. Please try again.');
     }
 }
