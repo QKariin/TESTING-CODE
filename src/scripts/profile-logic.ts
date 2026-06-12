@@ -5262,8 +5262,11 @@ if (typeof window !== 'undefined') {
 }
 
 export async function buyRealCoins(amount: number) {
+    const useCrypto = (window as any).__exchequerCrypto === true;
+    const endpoint = useCrypto ? '/api/dv/coins' : '/api/stripe/coins';
+    const label = useCrypto ? 'CRYPTO' : 'STRIPE';
     try {
-        const res = await fetch('/api/stripe/coins', {
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ coins: amount }),
@@ -5272,13 +5275,34 @@ export async function buyRealCoins(amount: number) {
         if (data.url) {
             window.location.href = data.url;
         } else {
-            console.error('[EXCHEQUER] Stripe coins error:', data.error);
+            console.error(`[EXCHEQUER][${label}] error:`, data.error);
             alert('Could not initiate payment. Please try again.');
         }
     } catch (err) {
-        console.error('[EXCHEQUER] Network error:', err);
+        console.error(`[EXCHEQUER][${label}] Network error:`, err);
         alert('Could not reach payment service. Please try again.');
     }
+}
+
+export function toggleCryptoPayment(on?: boolean) {
+    const val = on !== undefined ? on : !(window as any).__exchequerCrypto;
+    (window as any).__exchequerCrypto = val;
+    // Update toggle UI
+    const toggleEl = document.getElementById('cryptoToggle');
+    if (toggleEl) {
+        const dot = toggleEl.querySelector('.crypto-toggle-dot') as HTMLElement;
+        if (val) {
+            toggleEl.style.background = 'rgba(224,64,251,0.4)';
+            toggleEl.style.borderColor = '#e040fb';
+            if (dot) dot.style.transform = 'translateX(18px)';
+        } else {
+            toggleEl.style.background = 'rgba(255,255,255,0.08)';
+            toggleEl.style.borderColor = 'rgba(255,255,255,0.15)';
+            if (dot) dot.style.transform = 'translateX(0)';
+        }
+    }
+    const labelEl = document.getElementById('cryptoToggleLabel');
+    if (labelEl) labelEl.textContent = val ? 'CRYPTO' : 'CARD';
 }
 
 export async function handleSubscribe(tierId: string) {

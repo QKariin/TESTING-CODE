@@ -32,6 +32,7 @@ import {
     handleChatKey,
     sendChatMessage,
     buyRealCoins,
+    toggleCryptoPayment,
     handleSubscribe,
     toggleRewardGrid,
     toggleRewardSubMenu,
@@ -259,6 +260,7 @@ export default function ProfilePage() {
             (window as any).handleChatKey = handleChatKey;
             (window as any).sendChatMessage = sendChatMessage;
             (window as any).buyRealCoins = buyRealCoins;
+            (window as any).toggleCryptoPayment = toggleCryptoPayment;
             (window as any).handleSubscribe = handleSubscribe;
             (window as any).toggleRewardGrid = toggleRewardGrid;
             (window as any).toggleRewardSubMenu = toggleRewardSubMenu;
@@ -1519,6 +1521,14 @@ export default function ProfilePage() {
                         {/* ── SECTION 2: BUY COINS ── */}
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 30 }}>
                             <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
+                            {/* Crypto / Card toggle */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CARD</span>
+                                <div id="cryptoToggle" onClick={() => (window as any).toggleCryptoPayment()} style={{ width: 40, height: 22, borderRadius: 11, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative', transition: 'all 0.3s' }}>
+                                    <div className="crypto-toggle-dot" style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: 2, transition: 'transform 0.3s', boxShadow: '0 1px 4px rgba(0,0,0,0.5)' }} />
+                                </div>
+                                <span id="cryptoToggleLabel" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CRYPTO</span>
+                            </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, width: '100%' }}>
                                 {([
                                     { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR', promo: false },
@@ -1817,6 +1827,24 @@ export default function ProfilePage() {
                         <div className="mob-reward-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                             <div className="lobby-header">
                                 <div className="lobby-title">EXCHEQUER</div>
+                            </div>
+                            {/* Crypto / Card toggle — mobile */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '8px 0 12px' }}>
+                                <span style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CARD</span>
+                                <div id="cryptoToggleMob" onClick={() => {
+                                    (window as any).toggleCryptoPayment();
+                                    // Sync mobile toggle visuals
+                                    const on = (window as any).__exchequerCrypto;
+                                    const el = document.getElementById('cryptoToggleMob');
+                                    const dot = el?.querySelector('.crypto-toggle-dot') as HTMLElement;
+                                    if (el) { el.style.background = on ? 'rgba(224,64,251,0.4)' : 'rgba(255,255,255,0.08)'; el.style.borderColor = on ? '#e040fb' : 'rgba(255,255,255,0.15)'; }
+                                    if (dot) dot.style.transform = on ? 'translateX(18px)' : 'translateX(0)';
+                                    const lbl = document.getElementById('cryptoToggleLabelMob');
+                                    if (lbl) lbl.textContent = on ? 'CRYPTO' : 'CARD';
+                                }} style={{ width: 40, height: 22, borderRadius: 11, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', cursor: 'pointer', position: 'relative', transition: 'all 0.3s' }}>
+                                    <div className="crypto-toggle-dot" style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: 2, transition: 'transform 0.3s', boxShadow: '0 1px 4px rgba(0,0,0,0.5)' }} />
+                                </div>
+                                <span id="cryptoToggleLabelMob" style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>CRYPTO</span>
                             </div>
                             <div className="coin-grid">
                                 <div className="coin-tile" onClick={() => (window as any).buyRealCoins(2000)}>
