@@ -1766,8 +1766,8 @@ function CreateTab({ allChallenges, onCreate }: {
                 )}
             </div>
 
-            {/* TASK POOL (tiered or evergreen) */}
-            {(form.is_tiered || form.is_evergreen) && (
+            {/* TASK POOL (tiered only) */}
+            {form.is_tiered && (
                 <div style={card}>
                     <Divider label="TASK POOL" />
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#aaa', marginBottom: 14, textAlign: 'center' }}>
@@ -1824,8 +1824,8 @@ function CreateTab({ allChallenges, onCreate }: {
                 </div>
             )}
 
-            {/* DAILY SCHEDULE (classic) */}
-            {!form.is_evergreen && !form.is_tiered && (
+            {/* DAILY SCHEDULE (classic + evergreen) */}
+            {!form.is_tiered && (
                 <div style={card}>
                     <Divider label="DAILY SCHEDULE" />
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#aaa', marginBottom: 14, textAlign: 'center' }}>
