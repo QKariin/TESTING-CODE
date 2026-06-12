@@ -1007,7 +1007,7 @@ export default function ProfilePage() {
                             memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                             onClose={() => setDesktopChallengeOpen(false)}
                             onOpenPanel={(cId: string) => { setDesktopChallengeOpen(false); setChallengePanelId(cId); setChallengePanelOpen(true); }}
-                            onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); }}
+                            onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); checkChallengeRef.current?.(); }}
                         />
                     </div>
                 )}
@@ -1332,7 +1332,7 @@ export default function ProfilePage() {
                                     memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                                     embedded={true}
                                     onClose={() => setDesktopChallengeOverlayOpen(false)}
-                                    onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: challengeCounts.pending, yours: 1 }); }}
+                                    onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: challengeCounts.pending, yours: 1 }); checkChallengeRef.current?.(); }}
                                 />
                             </div>
                         </div>
@@ -2308,7 +2308,7 @@ export default function ProfilePage() {
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                         onClose={() => (window as any).closeMobChallenges?.()}
                         onOpenPanel={(cId: string) => { (window as any).closeMobChallenges?.(); setChallengePanelId(cId); setChallengePanelOpen(true); }}
-                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); checkChallengeRef.current?.(); }}
                     />
                 </div>
             </div>
@@ -2368,7 +2368,7 @@ export default function ProfilePage() {
                         challengeId={challengePanelId || activeChallenge.id}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
                         onClose={() => { setChallengePanelOpen(false); setChallengePanelId(null); }}
-                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: 1 })); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: 1 })); checkChallengeRef.current?.(); }}
                     />
                 )}
             </>
