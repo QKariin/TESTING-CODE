@@ -3308,35 +3308,35 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                             return (
                                 <div key={c.id} style={{
                                     position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 14,
-                                    border: '1px solid rgba(255,255,255,0.07)',
+                                    border: '1px solid rgba(224,64,251,0.15)', minHeight: c.image_url ? 180 : undefined,
                                 }}>
-                                    {/* Background image */}
+                                    {/* Background image — visible */}
                                     {c.image_url && (
-                                        <img src={c.image_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.12 }} alt="" />
+                                        <img src={c.image_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                                     )}
-                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,8,18,0.75) 0%, rgba(5,8,18,0.95) 100%)' }} />
+                                    <div style={{ position: 'absolute', inset: 0, background: c.image_url ? 'linear-gradient(180deg, rgba(5,8,18,0.45) 0%, rgba(5,8,18,0.88) 60%, rgba(5,8,18,0.97) 100%)' : 'rgba(255,255,255,0.02)' }} />
 
-                                    <div style={{ position: 'relative', padding: '16px 18px' }}>
+                                    <div style={{ position: 'relative', padding: '20px 18px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', minHeight: c.image_url ? 180 : undefined }}>
                                         {/* Title */}
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'center', marginBottom: 6 }}>{c.name}</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'center', marginBottom: 6, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{c.name}</div>
 
                                         {/* Description */}
                                         {c.description && (
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.45, textAlign: 'center', marginBottom: 10, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as any }}>{c.description}</div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45, textAlign: 'center', marginBottom: 10, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as any }}>{c.description}</div>
                                         )}
 
                                         {/* Stats line */}
-                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', textAlign: 'center', marginBottom: 14 }}>
+                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.34rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px', textAlign: 'center', marginBottom: 14 }}>
                                             {c.duration_days}d · {c.tasks_per_day}×/day · {c.is_evergreen ? 'EVERGREEN' : `${c.window_minutes}min`}
                                             {startsSoon && c.start_date && ` · Starts ${new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                                         </div>
 
-                                        {/* SEE MORE button — opens challenge panel with full info + join */}
+                                        {/* SEE MORE button */}
                                         <button onClick={() => onOpenPanel(c.id)} style={{
-                                            display: 'block', margin: '0 auto', padding: '9px 28px', borderRadius: 8,
-                                            border: '1px solid rgba(197,160,89,0.35)', background: 'rgba(197,160,89,0.06)',
-                                            color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700,
-                                            letterSpacing: '2px', cursor: 'pointer',
+                                            display: 'block', margin: '0 auto', padding: '10px 32px', borderRadius: 10,
+                                            border: '1px solid rgba(224,64,251,0.35)', background: 'rgba(224,64,251,0.08)',
+                                            color: '#e040fb', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700,
+                                            letterSpacing: '2px', cursor: 'pointer', backdropFilter: 'blur(12px)',
                                         }}>SEE MORE</button>
                                     </div>
                                 </div>
