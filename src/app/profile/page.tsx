@@ -3396,26 +3396,26 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                         {/* Open window — task info + upload */}
                                         {openWin && !isEliminated && (
                                             <div>
-                                                {/* Task label + countdown */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: '#4ade80', letterSpacing: '1.5px', fontWeight: 700 }}>DAY {openWin.day_number} · TASK {openWin.window_number}</span>
-                                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.34rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px' }}>
-                                                        <CountdownText targetTs={new Date(openWin.closes_at).getTime()} prefix="CLOSES " />
-                                                    </span>
+                                                {/* RUNNING TASK header + timer */}
+                                                <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#e040fb', letterSpacing: '3px', marginBottom: 6 }}>RUNNING TASK</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700, letterSpacing: '2px' }}>
+                                                        <CountdownText targetTs={new Date(openWin.closes_at).getTime()} prefix="" />
+                                                    </div>
                                                 </div>
 
                                                 {/* Task description */}
                                                 {taskName && (
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.74rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 12, padding: '10px 14px', background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 8 }}>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 12, padding: '10px 14px', background: 'rgba(224,64,251,0.04)', border: '1px solid rgba(224,64,251,0.12)', borderRadius: 8, textAlign: 'center' }}>
                                                         {taskName}
                                                     </div>
                                                 )}
 
                                                 {/* Verification code */}
                                                 {openWin.verification_code && (
-                                                    <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, textAlign: 'center' }}>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.3rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginBottom: 4 }}>SHOW CODE IN PHOTO</div>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.7rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 16px rgba(197,160,89,0.4)' }}>{openWin.verification_code}</div>
+                                                    <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 10, padding: '14px 14px', marginBottom: 12, textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(224,64,251,0.6)', letterSpacing: '2.5px', marginBottom: 8 }}>SHOW THIS CODE IN YOUR PHOTO</div>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', fontWeight: 900, color: '#e040fb', letterSpacing: '6px', textShadow: '0 0 20px rgba(224,64,251,0.4)' }}>{openWin.verification_code}</div>
                                                     </div>
                                                 )}
 
@@ -3424,10 +3424,12 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                     disabled={uploadBusy || uploadDone}
                                                     onClick={() => { pendingOverlayUploadRef.current = { challengeId: c.id, windowId: openWin.id }; overlayFileInputRef.current?.click(); }}
                                                     style={{
-                                                        width: '100%', padding: '11px 0', borderRadius: 8, border: 'none', cursor: uploadBusy || uploadDone ? 'default' : 'pointer',
-                                                        background: uploadDone ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, rgba(197,160,89,0.25), rgba(139,105,20,0.15))',
-                                                        color: uploadDone ? '#4ade80' : '#c5a059',
-                                                        fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '2px',
+                                                        width: '100%', padding: '12px 0', borderRadius: 10, cursor: uploadBusy || uploadDone ? 'default' : 'pointer',
+                                                        background: uploadDone ? 'rgba(224,64,251,0.1)' : 'linear-gradient(135deg, rgba(255,0,237,0.18), rgba(0,10,255,0.12))',
+                                                        border: `1px solid ${uploadDone ? 'rgba(74,222,128,0.3)' : 'rgba(224,64,251,0.4)'}`,
+                                                        color: uploadDone ? '#4ade80' : '#e040fb',
+                                                        fontFamily: 'Orbitron', fontSize: '0.44rem', fontWeight: 700, letterSpacing: '2px',
+                                                        backdropFilter: 'blur(8px)',
                                                     }}
                                                 >{uploadDone ? '✓ SUBMITTED' : uploadBusy ? 'UPLOADING...' : '↑ UPLOAD PROOF'}</button>
                                             </div>
