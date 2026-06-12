@@ -3177,14 +3177,59 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                             const startsSoon = c.status === 'draft';
 
                             return (
-                                <div key={c.id} style={{
-                                    display: 'flex', flexDirection: embedded ? 'column' : 'row', gap: 0, borderRadius: 16, overflow: 'hidden',
+                                <div key={c.id} style={embedded ? {
+                                    background: c.image_url ? undefined : 'rgba(197,160,89,0.04)',
+                                    border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(197,160,89,0.15)'}`,
+                                    borderRadius: 14, padding: 18, position: 'relative', overflow: 'hidden',
+                                } : {
+                                    display: 'flex', gap: 0, borderRadius: 16, overflow: 'hidden',
                                     border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.07)'}`,
                                     background: isThisJoined ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)',
                                 }}>
+                                    {embedded ? (
+                                        /* ── MOBILE COMPACT CARD (matches challenge tasks panel) ── */
+                                        <>
+                                            {c.image_url && (
+                                                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${c.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12, zIndex: 0 }} />
+                                            )}
+                                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                                {c.image_url && (
+                                                    <img src={c.image_url} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', float: 'left', marginRight: 12, marginBottom: 4 }} alt="" />
+                                                )}
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{c.name}</div>
+                                                {c.description && (
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: c.image_url ? undefined : 'none' }}>{c.description}</div>
+                                                )}
+                                                <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
+                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.is_evergreen ? 'EVERGREEN' : `${c.window_minutes}min windows`}
+                                                </div>
+
+                                                {isThisJoined ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 8, padding: '6px 12px' }}>
+                                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
+                                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px', fontWeight: 700 }}>ENROLLED - STILL IN</span>
+                                                        </div>
+                                                        <button onClick={onOpenPanel} style={{
+                                                            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                                            background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                                            color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '1px',
+                                                        }}>VIEW TASKS</button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: startsSoon ? 'rgba(251,191,36,0.08)' : 'rgba(74,222,128,0.08)', border: `1px solid ${startsSoon ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.25)'}`, borderRadius: 8, padding: '6px 12px' }}>
+                                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: startsSoon ? '#fbbf24' : '#4ade80' }} />
+                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: startsSoon ? '#fbbf24' : '#4ade80', letterSpacing: '1px', fontWeight: 700 }}>{startsSoon ? 'STARTING SOON' : 'OPEN TO JOIN'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* ── DESKTOP CARD (side-by-side layout) ── */
+                                        <>
                                     {/* Image / cover */}
                                     <div style={{
-                                        width: embedded ? '100%' : 200, minHeight: embedded ? 200 : 160, flexShrink: 0, position: 'relative',
+                                        width: 200, minHeight: 160, flexShrink: 0, position: 'relative',
                                         background: c.image_url ? 'transparent' : `linear-gradient(135deg, ${color}22, ${color}08)`,
                                     }}>
                                         {c.image_url ? (
@@ -3271,6 +3316,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             </div>
                                         )}
                                     </div>
+                                        </>
+                                    )}
                                 </div>
                             );
                         })}
