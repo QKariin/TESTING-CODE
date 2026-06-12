@@ -97,7 +97,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         const [{ data: challenge }, { data: myCompletions }, { data: participant }] = await Promise.all([
             supabaseAdmin.from('challenges')
-                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points, task_names, is_evergreen, slot_duration_minutes')
+                .select('id, name, theme, status, description, image_url, tasks_per_day, window_minutes, duration_days, start_date, end_date, points_per_completion, first_place_points, second_place_points, third_place_points, task_names, is_evergreen, slot_duration_minutes, daily_task')
                 .eq('id', challengeId).single(),
             supabaseAdmin.from('challenge_completions')
                 .select('id, window_id, verified, completed_at, response_time_seconds, proof_url')
