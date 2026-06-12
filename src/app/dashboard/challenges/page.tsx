@@ -1766,8 +1766,8 @@ function CreateTab({ allChallenges, onCreate }: {
                 )}
             </div>
 
-            {/* TASK POOL (tiered or evergreen with difficulty) */}
-            {(form.is_tiered || (form.is_evergreen && form.has_difficulty)) && (
+            {/* TASK POOL (tiered or evergreen) */}
+            {(form.is_tiered || form.is_evergreen) && (
                 <div style={card}>
                     <Divider label="TASK POOL" />
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#aaa', marginBottom: 14, textAlign: 'center' }}>
