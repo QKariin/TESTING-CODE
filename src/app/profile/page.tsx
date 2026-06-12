@@ -3237,15 +3237,18 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             }}>REJOIN CHALLENGE</button>
                                         )}
 
-                                        {/* No open window — centered countdown */}
+                                        {/* No open window — centered countdown, 2 lines */}
                                         {!openWin && !isEliminated && (
-                                            <div style={{ textAlign: 'center', padding: '6px 0 2px' }}>
+                                            <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
                                                 {nextWinLocal ? (
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '2px' }}>
-                                                        <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="NEXT TASK IN " />
-                                                    </div>
+                                                    <>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 6 }}>NEXT TASK:</div>
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#e040fb', letterSpacing: '2px', fontWeight: 700 }}>
+                                                            <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="" />
+                                                        </div>
+                                                    </>
                                                 ) : (
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>NO UPCOMING TASKS</div>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>NO UPCOMING TASKS</div>
                                                 )}
                                             </div>
                                         )}
