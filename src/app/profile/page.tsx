@@ -769,22 +769,33 @@ export default function ProfilePage() {
         if (!file || !challengeWindowAlert) return;
         setAlertUploading(true);
         if (alertFileInputRef.current) alertFileInputRef.current.value = '';
+        const challengeId = challengeWindowAlert.challenge?.id;
+        const windowId = challengeWindowAlert.window.id;
         try {
+            // Upload file first
             const fd = new FormData();
             fd.append('file', file);
-            fd.append('window_id', challengeWindowAlert.window.id);
-            fd.append('member_email', profile?.memberId || profile?.member_id || profile?.email || '');
-            const res = await fetch(`/api/challenges/${challengeWindowAlert.challenge?.id}/submit`, {
+            fd.append('bucket', 'media');
+            fd.append('folder', `challenge-proofs/${challengeId}`);
+            fd.append('ext', file.name.split('.').pop() || 'jpg');
+            const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
+            const upJson = await upRes.json();
+            if (!upJson.url) return;
+
+            // Submit proof
+            const res = await fetch(`/api/challenges/${challengeId}/submit`, {
                 method: 'POST',
-                body: fd,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ windowId, proofUrl: upJson.url }),
             });
             const json = await res.json();
             if (json.success) {
                 setAlertUploadDone(true);
+                checkChallengeRef.current?.();
                 setTimeout(() => {
                     setChallengeWindowAlert(null);
                     setAlertUploadDone(false);
-                }, 2000);
+                }, 1500);
             }
         } catch (_) {}
         finally { setAlertUploading(false); }
@@ -2517,7 +2528,7 @@ export default function ProfilePage() {
                         {(() => {
                             const tpd = challengeWindowAlert.challenge?.tasks_per_day || 1;
                             const idx = (challengeWindowAlert.window.day_number - 1) * tpd + (challengeWindowAlert.window.window_number - 1);
-                            const taskText = (challengeWindowAlert.challenge?.task_names || [])[idx];
+                            const taskText = challengeWindowAlert.window.task_name || (challengeWindowAlert.challenge?.task_names || [])[idx] || challengeWindowAlert.challenge?.daily_task;
                             return taskText ? (
                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, marginBottom: 18, padding: '14px 16px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10 }}>
                                     {taskText}
@@ -3272,9 +3283,11 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                             const windows = pData?.windows || [];
                             const completions = pData?.completions || [];
                             const submittedIds = new Set(completions.map((comp: any) => comp.window_id));
-                            const openWin = windows.find((w: any) =>
+                            const rawOpenWin = windows.find((w: any) =>
                                 now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
                             );
+                            // If schedule picker is showing for this challenge, suppress the open window view
+                            const openWin = overlaySchedulePicker === c.id ? undefined : rawOpenWin;
                             const nextWinLocal = windows
                                 .filter((w: any) => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
                                 .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
