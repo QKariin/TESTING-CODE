@@ -14,6 +14,7 @@ interface Challenge {
     participant_total?: number; participant_active?: number; participant_eliminated?: number;
     is_template?: boolean; image_url?: string | null; task_names?: string[] | null;
     is_evergreen?: boolean; slot_duration_minutes?: number; evergreen_join_cost?: number; evergreen_rejoin_cost?: number;
+    pending_review_count?: number;
 }
 
 interface Window_ {
@@ -127,7 +128,14 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
 
     useEffect(() => { loadAll(); }, [loadAll]);
 
-    // No background polling - detail loads fresh on click
+    // Poll for new submissions every 30s
+    useEffect(() => {
+        const t = setInterval(() => {
+            loadAll();
+            if (detail) loadDetail(detail.challenge.id);
+        }, 30000);
+        return () => clearInterval(t);
+    }, [loadAll, loadDetail, detail]);
 
     // Countdown tick
     useEffect(() => {
@@ -213,6 +221,9 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
                                                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: isSelected ? '#c5a059' : '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
                                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#444', letterSpacing: '1px', marginTop: 1 }}>{c.status.toUpperCase()} · {c.participant_active ?? 0} in</div>
                                             </div>
+                                            {(c.pending_review_count || 0) > 0 && (
+                                                <span style={{ background: '#ff8c42', color: '#000', fontFamily: 'Orbitron', fontSize: '0.32rem', fontWeight: 700, padding: '2px 6px', borderRadius: 10, flexShrink: 0, minWidth: 18, textAlign: 'center' }}>{c.pending_review_count}</span>
+                                            )}
                                         </button>
                                     );
                                 })}

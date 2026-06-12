@@ -14,17 +14,24 @@ export async function GET() {
 
         // Single query for all participants across all challenges - then count in JS
         const challengeIds = (challenges || []).map((c: any) => c.id);
-        const { data: allParticipants } = challengeIds.length
-            ? await supabaseAdmin.from('challenge_participants').select('challenge_id, status').in('challenge_id', challengeIds)
-            : { data: [] };
+        const [{ data: allParticipants }, { data: allPending }] = await Promise.all([
+            challengeIds.length
+                ? supabaseAdmin.from('challenge_participants').select('challenge_id, status').in('challenge_id', challengeIds)
+                : { data: [] as any[] },
+            challengeIds.length
+                ? supabaseAdmin.from('challenge_completions').select('challenge_id').eq('verified', false).not('proof_url', 'is', null).in('challenge_id', challengeIds)
+                : { data: [] as any[] },
+        ]);
 
         const enriched = (challenges || []).map((c: any) => {
             const cp = (allParticipants || []).filter((p: any) => p.challenge_id === c.id);
+            const pendingCount = (allPending || []).filter((p: any) => p.challenge_id === c.id).length;
             return {
                 ...c,
                 participant_total: cp.length,
                 participant_active: cp.filter((p: any) => p.status === 'active').length,
                 participant_eliminated: cp.filter((p: any) => p.status === 'eliminated').length,
+                pending_review_count: pendingCount,
             };
         });
 
