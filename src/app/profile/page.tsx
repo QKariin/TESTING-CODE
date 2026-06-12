@@ -3,14 +3,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
-import { initProfileState, setState } from '@/scripts/profile-state';
+import { initProfileState, getState, setState } from '@/scripts/profile-state';
 import { updateKneelingUI, attachKneelListeners, renderKneelDots } from '@/scripts/kneeling';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
-import { SiteConfig, DEFAULT_CONFIG } from '@/lib/site-config';
 import { toggleSystemLog } from '@/scripts/chat';
-// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED — WIP
+import { GlobalContent } from '@/app/dashboard/GlobalContent';
+// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
+import { bindTributeGame } from '@/scripts/tribute-game';
 import {
     claimKneelReward,
     switchTab,
@@ -19,6 +20,7 @@ import {
     closeLobby,
     openQueenMenu,
     closeQueenMenu,
+    toggleEarnCoins,
     toggleMobileStats,
     toggleMobileChat,
     handleRoutineUpload,
@@ -26,6 +28,7 @@ import {
     handleProfileUpload,
     handleAdminUpload,
     handleMediaPlus,
+    handleChatMediaUpload,
     handleChatKey,
     sendChatMessage,
     buyRealCoins,
@@ -54,19 +57,25 @@ import {
     mobileUploadEvidence,
     initChatSystem,
     loadQueenPosts,
+    initGallery,
     renderHistoryAndAltar,
+    loadAltarTop3,
     openAltarDrawer,
     closeAltarDrawer,
     toggleAltarSection,
     mobNavTo,
-    openMobRoutine,
     openMobChatOverlay,
     closeMobChatOverlay,
     switchMobChatTab,
     openMobQueenWall,
     closeMobQueenWall,
+    switchMobQwTab,
+    openGalleryAlbum,
+    backToGalleryAlbums,
     openMobGlobal,
     closeMobGlobal,
+    openMobChallenges,
+    closeMobChallenges,
     switchMobGlTab,
     switchMobGlPeriod,
     sendMobGlMessage,
@@ -83,209 +92,40 @@ import {
     cancelProfileChatReply,
     _applyPaywall,
     _applySilence,
+    togglePushNotifications,
+    openProfileGifPicker,
+    closeProfileGifPicker,
+    _openMobPostDetail,
+    _closeMobPostDetail,
+    _openMobCreatePost,
+    _closeMobCreatePost,
+    _onMobCreatePostFile,
+    _submitMobPost,
+    handleInstallApp,
+    showCertificate,
+    toggleAiMode,
+    sendAiMessage,
+    handleAiChatKey,
+    openInventoryModal,
+    closeInventoryModal,
+    buyInventoryItem,
+    useInventoryItem,
+    useSkipPass,
+    _confirmCheckpoint,
 } from '@/scripts/profile-logic';
+import { bindInlineRisky } from '@/scripts/inline-risky';
+import { bindStreamPlayer, initStreamPlayer, destroyStreamPlayer } from '@/scripts/stream-player';
 
-// ── Apply site config to the live profile page ────────────────────────────────
-function applySiteConfig(cfg: SiteConfig) {
-    const root    = document.documentElement;
-    const primary = cfg.primary_color    || DEFAULT_CONFIG.primary_color;
-    const qRing   = cfg.queen_ring_color || primary;
-    const hFont   = cfg.font_heading     || DEFAULT_CONFIG.font_heading;
-    const bFont   = cfg.font_body        || DEFAULT_CONFIG.font_body;
-
-    const toRgb = (h: string) => {
-        try { return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`; }
-        catch { return '197,160,89'; }
-    };
-    const pRgb = toRgb(primary);
-    const qRgb = toRgb(qRing);
-
-    // ── CSS variables ──────────────────────────────────────────────────────
-    root.style.setProperty('--gold',     primary);
-    root.style.setProperty('--gold-dim', `rgba(${pRgb},0.2)`);
-    root.style.setProperty('--neon-red', qRing);
-
-    // ── Google Fonts injection ─────────────────────────────────────────────
-    const fontId = 'site-config-fonts';
-    let linkEl = document.getElementById(fontId) as HTMLLinkElement | null;
-    if (!linkEl) { linkEl = document.createElement('link'); linkEl.id = fontId; linkEl.rel = 'stylesheet'; document.head.appendChild(linkEl); }
-    const families = [...new Set([hFont, bFont])].map(f => `${f.replace(/ /g,'+')}:wght@400;700;900`).join('&family=');
-    linkEl.href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`;
-
-    // ── Font overrides via injected <style> ────────────────────────────────
-    let styleEl = document.getElementById('site-config-style') as HTMLStyleElement | null;
-    if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'site-config-style'; document.head.appendChild(styleEl); }
-    styleEl.textContent = `
-        .halo-name-lg,.identity-name,.ribbon-label,.duty-label,.kneel-label,
-        .halo-circle-lg,.lobby-btn,.action-btn,.mob-overlay-title,
-        #heroKneelText,#mob_kneelText,#btnDismissTask,#mobBtnDismissTask { font-family:'${hFont}',Cinzel,serif !important; }
-        .halo-rank-lg,.mob-nav-label,.h-lbl,.h-val,.mob-stats-toggle-btn,
-        .card-t-box,#deskKneelDailyText,#kneelDailyText { font-family:'${bFont}',Orbitron,monospace !important; }
-        .mob-nav-queen-ring { border-color:${qRing} !important; box-shadow:0 0 0 3px rgba(${qRgb},0.15),0 0 18px rgba(${qRgb},0.45) !important; }
-        svg[fill="#c5a059"] { fill:${primary} !important; }
-    `;
-
-    // ── Background image ───────────────────────────────────────────────────
-    if (cfg.bg_image) {
-        document.body.style.backgroundImage    = `url(${cfg.bg_image})`;
-        document.body.style.backgroundSize     = 'cover';
-        document.body.style.backgroundAttachment = 'fixed';
-        document.body.style.backgroundPosition = 'center';
-    }
-
-    // ── window.SITE_CONFIG for vanilla scripts (read by kneeling.ts etc.) ──
-    (window as any).SITE_CONFIG = cfg;
-}
-
-// DOM text/element updates — called AFTER the profile HTML is in the DOM
-function applyDomConfig(cfg: SiteConfig) {
-    const toRgb = (h: string) => {
-        try { return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`; }
-        catch { return '197,160,89'; }
-    };
-    const primary = cfg.primary_color || DEFAULT_CONFIG.primary_color;
-    const qRing   = cfg.queen_ring_color || primary;
-    const qRgb    = toRgb(qRing);
-
-    // Queen ring color (inline style wins over injected CSS)
-    const ringEl = document.querySelector('.mob-nav-queen-ring') as HTMLElement | null;
-    if (ringEl) {
-        ringEl.style.borderColor = qRing;
-        ringEl.style.boxShadow = `0 0 0 3px rgba(${qRgb},0.15), 0 0 18px rgba(${qRgb},0.45)`;
-    }
-
-    // Queen photo
-    if (cfg.domme_photo) {
-        ['navQueenPic','deskChatQueenImg','mobChatQueenImg'].forEach(id => {
-            const el = document.getElementById(id) as HTMLImageElement | null;
-            if (el) el.src = cfg.domme_photo;
-        });
-    }
-
-    // Nav labels + visibility (all 6 non-center tabs)
-    const navItems: Array<[string, keyof SiteConfig['nav']]> = [
-        ['mobNavProfile','serve'],   ['mobNavRecord','record'],
-        ['mobNavQueen','queen'],     ['mobNavGlobal','global'],
-        ['mobNavRoutine','routine'], ['mobNavTributes','tributes'],
-    ];
-    navItems.forEach(([btnId, key]) => {
-        const btn = document.getElementById(btnId) as HTMLElement | null;
-        if (!btn) return;
-        const navVal = cfg.nav[key as keyof typeof cfg.nav];
-        if (!navVal) return;
-        const lbl = btn.querySelector('.mob-nav-label');
-        if (lbl) lbl.textContent = navVal.label;
-        btn.style.display = navVal.visible ? '' : 'none';
-    });
-
-    // Kneel goal — update the "X / 8" goal text (X comes from kneeling.ts at runtime)
-    const goal = cfg.kneel_goal || 8;
-    ['deskKneelDailyText', 'kneelDailyText'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const current = el.textContent?.split('/')[0]?.trim() || '0';
-        el.textContent = `${current} / ${goal}`;
-    });
-
-    // Kneel button — shape, color, icon
-    const knBtn = cfg.kneel_button;
-    if (knBtn) {
-        const btnColor = knBtn.color || primary;
-        const btnRgb = toRgb(btnColor);
-        const radius = knBtn.shape === 'pill' ? '999px' : knBtn.shape === 'squircle' ? '14px' : '6px';
-        const icon = knBtn.icon || '♛';
-
-        // Shape + border color on both buttons
-        (['mobKneelBar', 'heroKneelBtn'] as const).forEach(id => {
-            const el = document.getElementById(id) as HTMLElement | null;
-            if (!el) return;
-            el.style.borderRadius = radius;
-            el.style.borderColor = `rgba(${btnRgb},0.5)`;
-        });
-
-        // Fill gradient color
-        const mobFill = document.getElementById('mob_kneelFill');
-        const heroFill = document.getElementById('heroKneelFill');
-        if (mobFill) mobFill.style.background = `linear-gradient(90deg,${btnColor},${btnColor}bb)`;
-        if (heroFill) heroFill.style.background = `linear-gradient(90deg,${btnColor},${btnColor}bb)`;
-
-        // Icon symbol
-        document.querySelectorAll('.kneel-icon-sm').forEach(el => { el.textContent = icon; });
-    }
-
-    // Features — show/hide sections
-    if (cfg.features) {
-        // Kneeling: hide the entire kneel button section + desktop stat card
-        const mobKneelOuter = document.querySelector('.mob-kneel-outer') as HTMLElement | null;
-        if (mobKneelOuter) mobKneelOuter.style.display = cfg.features.kneeling ? '' : 'none';
-        const deskKneel = document.getElementById('gridStat1');
-        if (deskKneel) deskKneel.style.display = cfg.features.kneeling ? '' : 'none';
-
-        // Routine: hide routine card + hub section
-        const deskRoutine = document.getElementById('gridStat2');
-        if (deskRoutine) deskRoutine.style.display = cfg.features.routine ? '' : 'none';
-
-        // Wishlist/Tribute: hide the nav trigger buttons if feature is off
-        const mobNavTributes = document.getElementById('mobNavTributes');
-        if (mobNavTributes && !cfg.features.wishlist) mobNavTributes.style.display = 'none';
-    }
-
-    // Pricing — update visible cost labels in the lobby hub
-    if (cfg.pricing) {
-        const sym = cfg.currency_symbol || '₡';
-        const pricingMap: Array<[string, number]> = [
-            ['hubCostSkip',    cfg.pricing.skip_penalty],
-            ['hubCostName',    cfg.pricing.name_change],
-            ['hubCostPhoto',   cfg.pricing.photo_change],
-            ['hubCostRoutine', cfg.pricing.routine_set],
-            ['hubCostKinks',   cfg.pricing.kinks_set],
-            ['hubCostLimits',  cfg.pricing.limits_set],
-        ];
-        pricingMap.forEach(([id, val]) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = `${val} ${sym}`;
-        });
-    }
-
-    const setText = (id: string, text: string) => { const el = document.getElementById(id); if (el) el.textContent = text; };
-
-    const domme   = (cfg.domme_name    || 'Your Domme').toUpperCase();
-    const subName = (cfg.sub_name      || 'Slave').toUpperCase();
-    const curName = (cfg.currency_name || 'Coins').toUpperCase();
-
-    setText('idleMessage',       cfg.messages?.idle || `Awaiting direct orders from ${domme}...`);
-    setText('btnDismissTask',    `THANK YOU, ${domme}`);
-    setText('mobBtnDismissTask', `THANK YOU, ${domme}`);
-    setText('deskChatDommeName', domme);
-    setText('mobChatDommeName',  domme);
-
-    const hLbls = document.querySelectorAll('.h-lbl');
-    if (hLbls[1]) hLbls[1].textContent = curName;
-
-    const statsToggle = document.getElementById('mobStatsToggleBtn');
-    if (statsToggle) {
-        statsToggle.innerHTML = `${subName} STATS <span id="mobStatsArrow">▼</span>`;
-    }
-
-    const kneelLabel = cfg.kneel_button?.mode === 'send' ? 'HOLD TO SEND' : 'HOLD TO KNEEL';
-    setText('mob_kneelText', kneelLabel);
-    setText('heroKneelText', kneelLabel);
-
-    const chatInput = document.querySelector('#chatInput, #mobChatInput') as HTMLInputElement | null;
-    if (chatInput && cfg.messages?.chat_placeholder) chatInput.placeholder = cfg.messages.chat_placeholder;
-}
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
-    const [siteConfig, setSiteConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
     const pendingLockRef = useRef<{ silence: boolean; silenceReason: string; paywall: any; memberId: string } | null>(null);
     const [silenceActive, setSilenceActive] = useState(false);
     const [silenceReason, setSilenceReason] = useState('');
     const [benefitsOpen, setBenefitsOpen] = useState(false);
     const [hoveredSub, setHoveredSub] = useState<string | null>(null);
     const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const siteConfigRef = useRef<SiteConfig>(DEFAULT_CONFIG);
     const [challengePanelOpen, setChallengePanelOpen] = useState(false);
     const [challengePanelId, setChallengePanelId] = useState<string | null>(null);
     const [challengeBannerDismissed, setChallengeBannerDismissed] = useState(() =>
@@ -305,10 +145,17 @@ export default function ProfilePage() {
     const [alertUploading, setAlertUploading] = useState(false);
     const [alertUploadDone, setAlertUploadDone] = useState(false);
     const [mobOverlayOpen, setMobOverlayOpen] = useState(false);
+    const [showGlobal, setShowGlobal] = useState(false);
     const [nextChallengeWindowTs, setNextChallengeWindowTs] = useState<number | null>(null);
     const dismissedAlertWindowIdRef = useRef<string | null>(null);
     const [dutiesUploadedToday, setDutiesUploadedToday] = useState<boolean | null>(null);
-    const [participationMap, setParticipationMap] = useState<Record<string, { status: string; data?: any }>>({});
+    const [installPrompt, setInstallPrompt] = useState<any>(null);
+    const [installBannerDismissed, setInstallBannerDismissed] = useState(() =>
+        typeof window !== 'undefined' && !!localStorage.getItem('installBannerDismissed')
+    );
+    const [isStandalone, setIsStandalone] = useState(false);
+    const [showInstallGuide, setShowInstallGuide] = useState(false);
+    const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
     // Track mobile viewport
     useEffect(() => {
@@ -316,6 +163,62 @@ export default function ProfilePage() {
         check();
         window.addEventListener('resize', check);
         return () => window.removeEventListener('resize', check);
+    }, []);
+
+    // Close overlays when returning from bfcache (e.g. back from Stripe)
+    useEffect(() => {
+        const handler = (e: PageTransitionEvent) => {
+            if (e.persisted) {
+                // Page was restored from bfcache — close any open overlays
+                setMobOverlayOpen(false);
+                setChallengePanelOpen(false);
+                document.querySelectorAll('.mob-overlay').forEach(el => {
+                    (el as HTMLElement).classList.remove('mob-overlay-open');
+                    (el as HTMLElement).style.display = 'none';
+                });
+                // Also close inline risky overlay
+                const irOv = document.getElementById('inlineRiskyOverlay');
+                if (irOv) irOv.style.display = 'none';
+                // Reset body scroll lock
+                document.body.style.overflow = '';
+                document.body.style.position = '';
+                document.body.style.width = '';
+                document.body.style.top = '';
+            }
+        };
+        window.addEventListener('pageshow', handler);
+        return () => window.removeEventListener('pageshow', handler);
+    }, []);
+
+    // Lock body scroll when any mobile overlay/modal is open
+    const anyOverlayOpen = mobOverlayOpen || challengePanelOpen;
+    useEffect(() => {
+        if (!isMobile) return;
+        if (anyOverlayOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${window.scrollY}px`;
+        } else {
+            const scrollY = document.body.style.top;
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
+    }, [anyOverlayOpen, isMobile]);
+
+    // PWA install prompt (Android/Chrome)
+    useEffect(() => {
+        setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true);
+        // Pick up prompt captured early in layout.tsx <head> (fires before React hydrates)
+        if ((window as any)._deferredInstallPrompt) {
+            setInstallPrompt((window as any)._deferredInstallPrompt);
+        }
+        const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); (window as any)._deferredInstallPrompt = e; };
+        window.addEventListener('beforeinstallprompt', handler as any);
+        return () => window.removeEventListener('beforeinstallprompt', handler as any);
     }, []);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
@@ -331,10 +234,12 @@ export default function ProfilePage() {
             (window as any).claimKneelReward = claimKneelReward;
             (window as any).switchTab = switchTab;
             (window as any).toggleTributeHunt = toggleTributeHunt;
+            bindTributeGame();
             (window as any).openLobby = openLobby;
             (window as any).closeLobby = closeLobby;
             (window as any).openQueenMenu = openQueenMenu;
             (window as any).closeQueenMenu = closeQueenMenu;
+            (window as any).toggleEarnCoins = toggleEarnCoins;
             (window as any).toggleMobileStats = toggleMobileStats;
             (window as any).toggleMobileChat = toggleMobileChat;
             (window as any).mobileRequestTask = () => { getRandomTask(); };
@@ -366,30 +271,45 @@ export default function ProfilePage() {
             (window as any).confirmLobbyAction = confirmLobbyAction;
             (window as any).backToLobbyMenu = backToLobbyMenu;
             (window as any).selectRoutineItem = selectRoutineItem;
+            (window as any).handleInstallApp = handleInstallApp;
+            (window as any).showCertificate = showCertificate;
             (window as any).getRandomTask = getRandomTask;
             (window as any).skipTask = skipTask;
             (window as any).resetTaskUI = resetTaskUI;
             (window as any).handleLogout = handleLogout;
+            (window as any).togglePushNotifications = togglePushNotifications;
             (window as any).loadQueenPosts = loadQueenPosts;
             (window as any).renderHistoryAndAltar = renderHistoryAndAltar;
-            (window as any).openAltarDrawer = () => { setMobOverlayOpen(true); openAltarDrawer(); };
+            (window as any).openAltarDrawer = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openAltarDrawer(); };
             (window as any).closeAltarDrawer = () => { setMobOverlayOpen(false); closeAltarDrawer(); };
             (window as any).toggleAltarSection = toggleAltarSection;
-            (window as any).mobNavTo = mobNavTo;
-            (window as any).openMobRoutine = () => { setMobOverlayOpen(true); openMobRoutine(); };
-            (window as any).toggleTributeHunt = toggleTributeHunt;
-            (window as any).openMobChatOverlay = () => { setMobOverlayOpen(true); openMobChatOverlay(); };
+            (window as any).mobNavTo = (t: any) => { setChallengePanelOpen(false); mobNavTo(t); };
+            (window as any).openMobChatOverlay = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobChatOverlay(); };
             (window as any).closeMobChatOverlay = () => { setMobOverlayOpen(false); closeMobChatOverlay(); };
             (window as any).switchMobChatTab = switchMobChatTab;
-            (window as any).openMobQueenWall = () => { setMobOverlayOpen(true); openMobQueenWall(); };
+            (window as any).toggleAiMode = toggleAiMode;
+            (window as any).sendAiMessage = sendAiMessage;
+            (window as any).handleAiChatKey = handleAiChatKey;
+            (window as any).openInventoryModal = openInventoryModal;
+            (window as any).closeInventoryModal = closeInventoryModal;
+            (window as any).buyInventoryItem = buyInventoryItem;
+            (window as any).useInventoryItem = useInventoryItem;
+            (window as any).useSkipPass = useSkipPass;
+            (window as any)._confirmCheckpoint = _confirmCheckpoint;
+            (window as any).openMobQueenWall = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobQueenWall(); };
             (window as any).closeMobQueenWall = () => { setMobOverlayOpen(false); closeMobQueenWall(); };
-            (window as any).openMobGlobal = () => { setMobOverlayOpen(true); openMobGlobal(); };
+            (window as any).switchMobQwTab = switchMobQwTab;
+            (window as any).openGalleryAlbum = openGalleryAlbum;
+            (window as any).backToGalleryAlbums = backToGalleryAlbums;
+            (window as any).openMobGlobal = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobGlobal(); };
             (window as any).closeMobGlobal = () => { setMobOverlayOpen(false); closeMobGlobal(); };
+            (window as any).openMobChallenges = () => { setChallengePanelOpen(false); setMobOverlayOpen(true); openMobChallenges(); };
+            (window as any).closeMobChallenges = () => { setMobOverlayOpen(false); closeMobChallenges(); };
             (window as any).switchMobGlTab = switchMobGlTab;
             (window as any).switchMobGlPeriod = switchMobGlPeriod;
             (window as any).sendMobGlMessage = sendMobGlMessage;
             (window as any)._mobJoinChallenge = mobJoinChallenge;
-            (window as any)._openChallengePanel = (_e: Event, id: string) => { setChallengePanelId(id); setChallengePanelOpen(true); };
+            (window as any)._openChallengePanel = (_e: Event, id: string) => { setMobOverlayOpen(false); closeMobGlobal(); setChallengePanelId(id); setChallengePanelOpen(true); };
             (window as any).handleMobGlKey = handleMobGlKey;
             (window as any).toggleSystemLog = toggleSystemLog;
             (window as any).renderKneelDots = renderKneelDots;
@@ -399,41 +319,111 @@ export default function ProfilePage() {
             (window as any).closeQkLightbox = closeQkLightbox;
             (window as any).setMobGlReply = setMobGlReply;
             (window as any).cancelMobGlReply = cancelMobGlReply;
+            // Bind inline risky send (standalone module)
+            bindInlineRisky(
+                () => { const s = getState(); return s?.email || s?.memberId || ''; },
+                () => getState()?.wallet || 0,
+                (nw: number) => {
+                    setState({ wallet: nw });
+                    const s = getState(); if (s?.raw) s.raw.wallet = nw;
+                    ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach((id: string) => {
+                        const e = document.getElementById(id);
+                        if (e) e.textContent = nw.toLocaleString();
+                    });
+                },
+            );
+            // Stream player
+            bindStreamPlayer();
+            initStreamPlayer(
+                () => { const s = getState(); return s?.email || s?.memberId || ''; },
+                () => { const s = getState(); return s?.raw?.name || ''; }
+            );
+            // Global chat lightbox + like
+            if (!(window as any)._openGlobalLightbox) {
+                (window as any)._openGlobalLightbox = (url: string, type?: string) => {
+                    let lb = document.getElementById('globalChatLightbox');
+                    if (!lb) {
+                        lb = document.createElement('div');
+                        lb.id = 'globalChatLightbox';
+                        lb.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10000002;align-items:center;justify-content:center;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);';
+                        lb.innerHTML = '<div id="globalChatLightboxMedia" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;box-sizing:border-box;"></div>';
+                        lb.addEventListener('click', (e) => {
+                            if (e.target === lb || e.target === document.getElementById('globalChatLightboxMedia')) {
+                                const vid = lb!.querySelector('video');
+                                if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
+                                lb!.style.display = 'none';
+                            }
+                        });
+                        document.body.appendChild(lb);
+                    }
+                    const media = document.getElementById('globalChatLightboxMedia');
+                    if (media) {
+                        media.innerHTML = '';
+                        if (type === 'video') {
+                            const vid = document.createElement('video');
+                            vid.setAttribute('controls', '');
+                            vid.setAttribute('playsinline', '');
+                            vid.setAttribute('webkit-playsinline', '');
+                            vid.setAttribute('preload', 'metadata');
+                            vid.muted = true;
+                            vid.style.cssText = 'max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);cursor:default;background:#000;';
+                            vid.addEventListener('click', (e) => e.stopPropagation());
+                            vid.addEventListener('ended', () => { vid.pause(); lb!.style.display = 'none'; });
+                            vid.src = url;
+                            media.appendChild(vid);
+                            vid.play().then(() => { vid.muted = false; }).catch(() => {});
+                        } else {
+                            media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;
+                        }
+                    }
+                    lb.style.display = 'flex';
+                };
+            }
+            if (!(window as any)._toggleGlobalLike) {
+                (window as any)._toggleGlobalLike = (id: string, btn: HTMLElement) => {
+                    const key = 'gl_liked_msgs';
+                    let arr: string[] = []; try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+                    const idx = arr.indexOf(id);
+                    const liked = idx === -1;
+                    if (liked) arr.push(id); else arr.splice(idx, 1);
+                    try { localStorage.setItem(key, JSON.stringify(arr)); } catch {}
+                    const svg = btn.querySelector('svg');
+                    if (svg) { svg.setAttribute('fill', liked ? '#e03050' : 'none'); svg.setAttribute('stroke', liked ? '#e03050' : 'rgba(255,255,255,0.3)'); }
+                    btn.style.transform = 'scale(1.3)';
+                    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+                };
+            }
             (window as any).setProfileChatReply = setProfileChatReply;
             (window as any).cancelProfileChatReply = cancelProfileChatReply;
+            (window as any).openProfileGifPicker = openProfileGifPicker;
+            (window as any).closeProfileGifPicker = closeProfileGifPicker;
+            (window as any)._openMobPostDetail = _openMobPostDetail;
+            (window as any)._closeMobPostDetail = _closeMobPostDetail;
+            (window as any)._openMobCreatePost = _openMobCreatePost;
+            (window as any)._closeMobCreatePost = _closeMobCreatePost;
+            (window as any)._onMobCreatePostFile = _onMobCreatePostFile;
+            (window as any)._submitMobPost = _submitMobPost;
+            // mobGlGifPicker window assignments are handled in profile-logic.ts
         }
 
         async function loadProfile() {
-            // ── Fetch + apply site config (colors, fonts, bg, text) ───────────
-            try {
-                const cfgRes = await fetch('/api/site-config');
-                const cfgData = await cfgRes.json();
-                // Use saved config if it exists, otherwise fall back to DEFAULT_CONFIG
-                // (which already matches the real Queen Karin deployment values)
-                const effectiveCfg: SiteConfig = cfgData.config ?? DEFAULT_CONFIG;
-                setSiteConfig(effectiveCfg);
-                siteConfigRef.current = effectiveCfg;
-                applySiteConfig(effectiveCfg);  // CSS vars + fonts only (DOM not ready yet)
-            } catch {}
-            // ─────────────────────────────────────────────────────────────────
-
             try {
                 // ─── LOCAL DEV BYPASS ────────────────────────────────────────
                 // Skips login when running on localhost so you can see UI changes instantly.
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
-                    const TEST_EMAIL = 'pr.finsko@gmail.com';
+                    const TEST_EMAIL = 'newuser@throne.test';
                     const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: TEST_EMAIL, full: true }) });
                     const unifiedData = await res.json();
                     console.log('[DEV MODE] Loaded real user:', unifiedData);
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
                     setState({ cooldownMinutes: 1 }); // DEV: 1 min cooldown on localhost
+                    loadAltarTop3(TEST_EMAIL); // Fire early — fills altar slots instantly
                     setTimeout(() => {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
                         attachKneelListeners();
-                        applyDomConfig(siteConfigRef.current);  // DOM is ready now
                         const urlParams = new URLSearchParams(window.location.search);
                         if (urlParams.get('exchequer') === 'open') {
                             (window as any).goToExchequer();
@@ -444,16 +434,17 @@ export default function ProfilePage() {
                         }
                         getRandomTask(true);
                         loadQueenPosts();
-                        renderHistoryAndAltar(unifiedData);
+                        initGallery(unifiedData.member_id || unifiedData.email || '');
 
                         // Initialize Chat & Tracking
                         initChatSystem();
-                        trackUserAnalytics(unifiedData.id);
+                        const uid = unifiedData.ID || unifiedData.memberId || unifiedData.id;
+                        trackUserAnalytics(uid);
                         if (!heartbeatRef.current) {
-                            heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
+                            heartbeatRef.current = startPresenceHeartbeat(uid, unifiedData.email || unifiedData.member_id);
                         }
 
-                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
+                        // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
                     }, 150);
                     return;
                 }
@@ -467,33 +458,33 @@ export default function ProfilePage() {
                     return;
                 }
 
-                // ── SILENCE CHECK — runs before anything else ──────────────────
-                // Sets React state directly — no redirect, no race condition on mobile
+                // ── SILENCE CHECK - runs before anything else ──────────────────
+                // Sets React state directly - no redirect, no race condition on mobile
                 try {
                     const silenceRes = await fetch('/api/silence-check', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ memberId: user.email }),
+                        body: JSON.stringify({ memberId: user.id }),
                     });
                     const silenceData = await silenceRes.json();
                     if (silenceData.silence === true) {
                         (window as any)._setSilenceOverlay(true, silenceData.reason || '');
-                        // Do NOT return — continue loading profile so polling can detect unlock
+                        // Do NOT return - continue loading profile so polling can detect unlock
                     }
                 } catch {}
                 // ──────────────────────────────────────────────────────────────
 
-                // Fetch all data via the admin API route (same as dashboard) — bypasses RLS
+                // Fetch all data via the admin API route (same as dashboard) - bypasses RLS
                 // Uses supabaseAdmin internally, returns merged profiles + tasks + crowdfund
-                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email, full: true }) });
+                const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email || user.id, full: true }) });
                 const rawData = await res.json();
 
                 // ── CRITICAL: always inject the auth email as member_id fallback ──
                 // Guarantees memberId is set even if slave-profile strips it or returns 401
                 const unifiedData = {
                     ...(rawData && !rawData.error ? rawData : {}),
-                    member_id: rawData?.member_id || rawData?.memberId || user.email,
-                    memberId: rawData?.memberId || rawData?.member_id || user.email,
+                    member_id: rawData?.member_id || user.email,   // email (display only)
+                    memberId: user.id,                             // auth UUID — always matches tasks.member_id
                     email: user.email,
                 };
 
@@ -502,8 +493,9 @@ export default function ProfilePage() {
 
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
+                    loadAltarTop3(unifiedData.memberId || unifiedData.member_id || user.email || ''); // Fire early — fills altar slots instantly
 
-                    // Store lock state — applied after loading screen clears (DOM not ready yet)
+                    // Store lock state - applied after loading screen clears (DOM not ready yet)
                     pendingLockRef.current = {
                         silence: unifiedData?.silence === true,
                         silenceReason: unifiedData?.parameters?.silence_reason || '',
@@ -515,12 +507,11 @@ export default function ProfilePage() {
                         renderProfileSidebar(unifiedData);
                         updateKneelingUI();
                         attachKneelListeners();
-                        applyDomConfig(siteConfigRef.current);  // DOM is ready now
                         const urlParams = new URLSearchParams(window.location.search);
 
                         // ── Stripe coin purchase fallback ──────────────────────────
                         // When Stripe redirects back with session_id, verify + award coins.
-                        // Idempotent — safe to run even if webhook already fired.
+                        // Idempotent - safe to run even if webhook already fired.
                         if (urlParams.get('exchequer') === 'success' && urlParams.get('session_id')) {
                             const sid = urlParams.get('session_id')!;
                             try {
@@ -548,16 +539,17 @@ export default function ProfilePage() {
                         }
                         getRandomTask(true);
                         loadQueenPosts();
-                        renderHistoryAndAltar(unifiedData);
+                        initGallery(unifiedData.member_id || unifiedData.email || '');
 
                         // Initialize Chat & Tracking
                         initChatSystem();
-                        trackUserAnalytics(unifiedData.id);
+                        const uid = unifiedData.ID || unifiedData.memberId || unifiedData.id;
+                        trackUserAnalytics(uid);
                         if (!heartbeatRef.current) {
-                            heartbeatRef.current = startPresenceHeartbeat(unifiedData.id);
+                            heartbeatRef.current = startPresenceHeartbeat(uid, unifiedData.email || unifiedData.member_id);
                         }
 
-                        // checkAndShowOnboarding(unifiedData); // DISABLED — WIP
+                        // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
                     }, 150);
                 }
             } catch (err) {
@@ -566,8 +558,6 @@ export default function ProfilePage() {
                 setLoading(false);
             }
         }
-
-        loadProfile();
 
         // Handle notification tap when app is already open (visibilitychange)
         const handleVisibility = () => {
@@ -583,16 +573,17 @@ export default function ProfilePage() {
         };
         document.addEventListener('visibilitychange', handleVisibility);
 
+        loadProfile();
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibility);
             if (heartbeatRef.current) {
                 clearInterval(heartbeatRef.current);
                 heartbeatRef.current = null;
             }
-            document.removeEventListener('visibilitychange', handleVisibility);
         };
     }, []);
 
-    // ONBOARDING DISABLED — WIP
+    // ONBOARDING DISABLED - WIP
     // useEffect(() => {
     //     if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
     //         import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
@@ -602,6 +593,7 @@ export default function ProfilePage() {
     // }, []);
 
     // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
+    const checkChallengeRef = useRef<() => Promise<void>>(null);
     useEffect(() => {
         async function checkChallenge() {
             try {
@@ -612,32 +604,6 @@ export default function ProfilePage() {
                 const challenges = json.challenges || [];
                 setAllChallenges(challenges);
 
-                // Filter to visible challenges (active + upcoming within 24h)
-                const visible = challenges.filter((c: any) =>
-                    c.status === 'active' ||
-                    (c.status === 'draft' && c.start_date && new Date(c.start_date).getTime() > now)
-                );
-
-                // Fetch participation data for ALL visible challenges in parallel
-                const pMap: Record<string, { status: string; data?: any }> = {};
-                if (visible.length > 0) {
-                    const results = await Promise.allSettled(
-                        visible.map((c: any) =>
-                            fetch(`/api/challenges/${c.id}/submit`).then(r => r.json()).then(j => ({ id: c.id, json: j }))
-                        )
-                    );
-                    for (const r of results) {
-                        if (r.status === 'fulfilled' && r.value.json.success) {
-                            const { id, json: pJson } = r.value;
-                            if (pJson.participant) {
-                                pMap[id] = { status: pJson.participant.status, data: pJson };
-                            }
-                        }
-                    }
-                }
-                setParticipationMap(pMap);
-
-                // Derive single activeChallenge + isParticipant for backward compat (desktop sidebar)
                 const active = challenges.find((c: any) => c.status === 'active');
                 const upcoming = !active && challenges.find((c: any) =>
                     c.status === 'draft' && c.start_date &&
@@ -646,109 +612,79 @@ export default function ProfilePage() {
                 const found = active || upcoming || null;
                 setActiveChallenge(found ? { id: found.id, name: found.name, theme: found.theme, status: found.status, start_date: found.start_date, image_url: found.image_url } : null);
 
+                // Check participation for the active/upcoming challenge
                 if (found) {
-                    const pEntry = pMap[found.id];
-                    const joined = !!pEntry;
-                    setIsParticipant(joined);
-                    setParticipantStatus(pEntry?.status || null);
+                    try {
+                        const pRes = await fetch(`/api/challenges/${found.id}/submit`);
+                        const pJson = await pRes.json();
+                        if (pJson.success) {
+                            const joined = !!pJson.participant;
+                            setIsParticipant(joined);
+                            setParticipantStatus(pJson.participant?.status || null);
+                            const activeChallengeCount = challenges.filter((ch: any) =>
+                                ch.status === 'active' ||
+                                (ch.status === 'draft' && ch.start_date && new Date(ch.start_date).getTime() > now)
+                            ).length;
+                            setChallengeCounts({ pending: activeChallengeCount, yours: joined ? 1 : 0 });
 
-                    const enrolledCount = Object.keys(pMap).length;
-                    setChallengeCounts({ pending: visible.length, yours: enrolledCount });
-
-                    // Check for open task windows — alert for ANY enrolled challenge
-                    let foundAlert: { window: any; challenge: any } | null = null;
-                    let foundOpenWin: any = null;
-                    let foundNextTs: number | null = null;
-
-                    for (const [cId, entry] of Object.entries(pMap)) {
-                        if (entry.status !== 'active' || !entry.data?.windows) continue;
-                        const pJson = entry.data;
-                        const submittedIds = new Set((pJson.completions || []).map((c: any) => c.window_id));
-                        const openWin = (pJson.windows as any[]).find(w =>
-                            now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
-                        );
-                        if (openWin) {
-                            // Use the first found open window for the alert
-                            if (!foundOpenWin) {
-                                foundOpenWin = openWin;
-                                // Only show alert if not dismissed for this window
-                                if (openWin.id !== dismissedAlertWindowIdRef.current) {
-                                    foundAlert = { window: openWin, challenge: pJson.challenge };
+                            // Check for open task window - alert active participants
+                            if (joined && pJson.participant?.status === 'active' && pJson.windows) {
+                                const submittedIds = new Set((pJson.completions || []).map((c: any) => c.window_id));
+                                const openWin = (pJson.windows as any[]).find(w =>
+                                    now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
+                                );
+                                // If no open window, clear the dismissal ref
+                                if (!openWin) dismissedAlertWindowIdRef.current = null;
+                                // If new window opened that's different from dismissed, reset dismissal
+                                if (openWin && dismissedAlertWindowIdRef.current && openWin.id !== dismissedAlertWindowIdRef.current) {
+                                    dismissedAlertWindowIdRef.current = null;
                                 }
+                                // Only show alert if not dismissed for this window
+                                const shouldAlert = openWin && openWin.id !== dismissedAlertWindowIdRef.current;
+                                setChallengeWindowAlert(shouldAlert ? { window: openWin, challenge: pJson.challenge } : null);
+                                // Still track open window for banner even when dismissed
+                                setOpenWindowForBanner(openWin || null);
+                                const nextWin = (pJson.windows as any[])
+                                    .filter(w => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
+                                    .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
+                                setNextChallengeWindowTs(nextWin ? new Date(nextWin.opens_at).getTime() : null);
+                            } else {
+                                setChallengeWindowAlert(null);
+                                setOpenWindowForBanner(null);
+                                setNextChallengeWindowTs(null);
                             }
                         }
-                        const nextWin = (pJson.windows as any[])
-                            .filter(w => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
-                            .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
-                        if (nextWin) {
-                            const ts = new Date(nextWin.opens_at).getTime();
-                            if (!foundNextTs || ts < foundNextTs) foundNextTs = ts;
-                        }
-                    }
-
-                    // If no open window found, clear dismissal ref
-                    if (!foundOpenWin) dismissedAlertWindowIdRef.current = null;
-                    // If new window different from dismissed, reset dismissal
-                    if (foundOpenWin && dismissedAlertWindowIdRef.current && foundOpenWin.id !== dismissedAlertWindowIdRef.current) {
-                        dismissedAlertWindowIdRef.current = null;
-                        // Re-check if we should alert
-                        if (!foundAlert) {
-                            const cId = Object.entries(pMap).find(([, e]) => e.data?.windows?.some((w: any) => w.id === foundOpenWin.id))?.[0];
-                            if (cId) foundAlert = { window: foundOpenWin, challenge: pMap[cId].data.challenge };
-                        }
-                    }
-
-                    setChallengeWindowAlert(foundAlert);
-                    setOpenWindowForBanner(foundOpenWin || null);
-                    setNextChallengeWindowTs(foundNextTs);
+                    } catch {}
                 } else {
                     setIsParticipant(false);
                     setParticipantStatus(null);
                     setChallengeCounts({ pending: 0, yours: 0 });
-                    setChallengeWindowAlert(null);
-                    setOpenWindowForBanner(null);
-                    setNextChallengeWindowTs(null);
                 }
             } catch {}
         }
+        checkChallengeRef.current = checkChallenge;
         checkChallenge();
-        const t = setInterval(checkChallenge, 5000);
-        return () => clearInterval(t);
     }, []);
 
-    // ─── SILENCE POLL — fires once profile is loaded, uses email from profile state ──
+    // Auto-refresh when a challenge window is about to open
     useEffect(() => {
-        if (!profile) return;
-        const email = profile.memberId || profile.member_id || profile.email;
-        if (!email) return;
-
-        async function pollSilence() {
-            try {
-                const res = await fetch('/api/silence-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId: email }),
-                });
-                const data = await res.json();
-                _applySilence(data.silence === true, data.reason || '');
-            } catch {}
-        }
-
-        pollSilence();
-        const interval = setInterval(pollSilence, 3000);
-        return () => clearInterval(interval);
-    }, [profile]);
+        if (!nextChallengeWindowTs) return;
+        const delay = nextChallengeWindowTs - Date.now() + 2000; // 2s grace for server clock
+        if (delay <= 0) { checkChallengeRef.current?.(); return; }
+        const t = setTimeout(() => checkChallengeRef.current?.(), delay);
+        return () => clearTimeout(t);
+    }, [nextChallengeWindowTs]);
 
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
     useEffect(() => {
         if (!profile) return;
-        const email = profile.memberId || profile.member_id || profile.email;
-        if (!email) return;
+        const memberId = profile.id || profile.memberId;  // UUID
+        if (!memberId) return;
 
         async function checkRoutine() {
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const res = await fetch(`/api/routine-status?email=${encodeURIComponent(email)}&tz=${encodeURIComponent(tz)}`);
+                const res = await fetch(`/api/routine-status?memberId=${encodeURIComponent(memberId)}&tz=${encodeURIComponent(tz)}`);
                 const data = await res.json();
                 setDutiesUploadedToday(!!data.uploadedToday);
             } catch {}
@@ -839,7 +775,7 @@ export default function ProfilePage() {
                 </div>
                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.6)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS REVOKED</div>
                 <div style={{ background: 'rgba(220,60,60,0.04)', border: '1px solid rgba(220,60,60,0.2)', borderRadius: 14, padding: '28px 24px' }}>
-                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12, textTransform: 'uppercase' }}>Message from {siteConfig.domme_name}</div>
+                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(220,60,60,0.4)', letterSpacing: '3px', marginBottom: 12, textTransform: 'uppercase' }}>Message from Queen Karin</div>
                     <div style={{ fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{silenceReason}</div>
                 </div>
             </div>
@@ -849,13 +785,13 @@ export default function ProfilePage() {
     return (
         <>
 
-        {/* ── PAYWALL OVERLAY — outside container so position:fixed works on iOS ── */}
+        {/* ── PAYWALL OVERLAY - outside container so position:fixed works on iOS ── */}
         <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
                 <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM {siteConfig.domme_name.toUpperCase()}</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
                     <div id="paywallReason" style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}></div>
                     <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                     <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
@@ -894,15 +830,18 @@ export default function ProfilePage() {
             <input type="file" id="routineUploadInput" accept="image/*" className="hidden" onChange={(e: any) => handleRoutineUpload(e.target)} />
             <input type="file" id="taskEvidenceInput" accept="image/*,video/*" className="hidden" onChange={(e: any) => handleTaskEvidenceUpload(e.target)} />
             <input type="file" id="evidenceInputMob" accept="image/*,video/*" className="hidden" onChange={(e: any) => mobileUploadEvidence(e.target)} />
-            <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" />
+            <input type="file" id="chatMediaInput" accept="image/*,video/*" className="hidden" onChange={(e: any) => handleChatMediaUpload(e.target)} />
 
             {/* Push notification opt-in banner */}
-            <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,6,2,0.97)', border: '1px solid rgba(197,160,89,0.6)', borderRadius: 12, padding: '14px 20px', flexDirection: 'row', alignItems: 'center', gap: 12, boxShadow: '0 4px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', whiteSpace: 'nowrap' }}>
-                <span style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059' }}>👑 Enable Queen&apos;s notifications</span>
-                <button id="pushAllowBtn" style={{ background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
-                    <span id="pushAllowLabel">ALLOW</span>
+            <div id="pushBanner" style={{ display: 'none', position: 'fixed', bottom: 100, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(10,6,2,0.97)', border: '1px solid rgba(197,160,89,0.6)', borderRadius: 12, padding: '14px 16px', flexDirection: 'column', alignItems: 'stretch', gap: 10, boxShadow: '0 4px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', width: 'calc(100vw - 32px)', maxWidth: 360 }}>
+                <span style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#c5a059', textAlign: 'center' }}>👑 Enable Queen&apos;s notifications</span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button id="pushAllowBtn" style={{ flex: 1, background: 'linear-gradient(135deg, #c5a059, #8b6914)', border: 'none', borderRadius: 8, padding: '8px 14px', color: '#000', fontFamily: 'Orbitron', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
+                    <span id="pushAllowLabel">ALLOW NOTIFS</span>
                 </button>
-                <button id="pushDismissBtn" style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>✕</button>
+                <button id="pwaInstallBtn" style={{ display: 'none' }} />
+                <button id="pushDismissBtn" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#666', cursor: 'pointer', fontSize: '0.9rem', padding: '8px 12px' }}>✕</button>
+                </div>
             </div>
 
             {/* UNIVERSAL DESKTOP APP */}
@@ -911,7 +850,7 @@ export default function ProfilePage() {
                 <div className="v-sidebar" style={{ backgroundColor: 'transparent', backdropFilter: 'blur(25px)' }}>
                     <div style={{ marginBottom: 40, textAlign: 'center', padding: '25px 15px', marginTop: 20, marginRight: 20, position: 'relative' }}>
                         <div className="big-profile-circle" onClick={() => (window as any).handleProfileUpload?.()} style={{ width: 140, height: 200, borderRadius: '70px / 100px', margin: '0 auto 25px', position: 'relative', zIndex: 1, padding: 0, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', overflow: 'hidden' }}>
-                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                            <img id="profilePic" src={profile?.avatar_url || profile?.profile_picture_url || profile?.avatar || profile?.image || "/collar-placeholder.png"} alt="Avatar" className="profile-img" style={{ width: '100%', height: '100%', borderRadius: 'inherit', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                         </div>
 
                         <div onClick={() => (window as any).openManageProfileModal?.()} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 8, position: 'relative', zIndex: 2, backgroundColor: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '10px', border: '1px solid rgba(197,160,89,0.2)', width: 'fit-content', margin: '0 auto', backdropFilter: 'blur(5px)', cursor: 'pointer', userSelect: 'none' }}>
@@ -1018,6 +957,29 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
+                {/* GLOBAL INLINE PANEL - overlays content area when open */}
+                {showGlobal && (
+                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 1000, position: 'relative' }}>
+                        <GlobalContent onClose={() => setShowGlobal(false)} userEmail={profile?.memberId || profile?.member_id || profile?.email || null} />
+                    </div>
+                )}
+
+                {/* CHALLENGES INLINE PANEL - overlays content area when open */}
+                {desktopChallengeOpen && (
+                    <div style={{ gridColumn: '2 / 6', gridRow: '1 / 4', zIndex: 1000, position: 'relative' }}>
+                        <DesktopChallengeModal
+                            challenges={allChallenges}
+                            activeChallenge={activeChallenge}
+                            isParticipant={isParticipant}
+                            participantStatus={participantStatus}
+                            memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                            onClose={() => setDesktopChallengeOpen(false)}
+                            onOpenPanel={() => { setDesktopChallengeOpen(false); setChallengePanelOpen(true); }}
+                            onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                        />
+                    </div>
+                )}
+
                 {/* MAIN CONTENT STAGE */}
                 <div id="viewServingTopDesktop" className="view-wrapper hidden" style={{ position: 'relative' }}>
                     <div id="gridStat1" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
@@ -1031,6 +993,10 @@ export default function ProfilePage() {
                     <div id="gridStat2" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
                         <div className="ribbon-label" style={{ textAlign: 'center' }}>DAILY ROUTINE</div>
                         <div id="deskRoutineDisplay" style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.4, minHeight: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>LOADING...</div>
+                        <div id="deskRoutineDailyCode" style={{ textAlign: 'center', margin: '4px 0' }}>
+                            <span style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>CODE: </span>
+                            <span id="deskRoutineCodeVal" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', fontWeight: 900, color: '#c5a059', letterSpacing: '4px' }}>----</span>
+                        </div>
                         <button
                             id="deskRoutineActionBtn"
                             style={{
@@ -1062,7 +1028,7 @@ export default function ProfilePage() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                                         {openWindowForBanner && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 8px rgba(197,160,89,0.8)', animation: 'pulse 2s infinite' }} />}
                                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: '#c5a059', letterSpacing: '2px' }}>
-                                            {openWindowForBanner ? 'TASK WINDOW OPEN' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
+                                            {openWindowForBanner ? 'LIVE TASK' : participantStatus === 'active' ? 'ENROLLED' : participantStatus?.toUpperCase()}
                                         </div>
                                     </div>
                                     {/* Challenge name */}
@@ -1108,7 +1074,7 @@ export default function ProfilePage() {
                         )}
                     </div>
 
-                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', gap: 6 }} onClick={() => window.location.href = '/global'}>
+                    <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: showGlobal ? 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.06))' : 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.22)'}`, gap: 6 }} onClick={() => setShowGlobal(!showGlobal)}>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
                         <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
@@ -1156,9 +1122,9 @@ export default function ProfilePage() {
                         <div style={{ position: 'relative', zIndex: 10, padding: 10, boxSizing: 'border-box' }}>
                             <p style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'Cinzel', fontSize: '0.8rem', letterSpacing: 2, margin: 0, textTransform: 'uppercase' }}>Welcome back,</p>
                             <h2 id="heroUserName" style={{ fontFamily: 'Orbitron', fontSize: '2rem', margin: '5px 0', color: 'white', letterSpacing: 2, fontWeight: 700 }}>{profile?.name || "LOYAL SUBJECT"}</h2>
-                            <button id="heroKneelBtn" className="mob-kneel-bar" style={{ height: 48, width: 220, cursor: 'pointer', borderRadius: 4, overflow: 'hidden', position: 'relative', background: 'rgba(0,0,0,0.5)', border: '1px solid #c5a059', margin: '20px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, outline: 'none', transition: '0.3s' }}>
-                                <div id="heroKneelFill" className="mob-bar-fill" style={{ width: '0%', background: 'linear-gradient(90deg, #4b0000 0%, #000000 100%)', height: '100%', position: 'absolute', left: 0, top: 0, transition: 'width 0.3s ease', pointerEvents: 'none' }}></div>
-                                <div className="mob-bar-content" style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', pointerEvents: 'none' }}>
+                            <button id="heroKneelBtn" className="mob-kneel-bar" style={{ height: 48, width: 220, margin: '20px 0', padding: 0, outline: 'none' }}>
+                                <div id="heroKneelFill" className="mob-bar-fill" style={{ width: '0%' }}></div>
+                                <div className="mob-bar-content" style={{ pointerEvents: 'none' }}>
                                     <span id="heroKneelText" style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: 'white', textShadow: '0 1px 3px black', letterSpacing: 2 }}>HOLD TO KNEEL</span>
                                 </div>
                             </button>
@@ -1180,6 +1146,11 @@ export default function ProfilePage() {
                             </div>
                             <div id="activeTaskContent" className="hidden" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <h2 id="readyText" style={{ fontFamily: 'Cinzel', fontSize: '1.1rem', textAlign: 'center', margin: 0, lineHeight: 1.4, color: 'white' }}>-</h2>
+                                <div id="deskDailyCode" style={{ display: 'none', textAlign: 'center', margin: '8px 0' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: '4px' }}>DAILY NUMBER</div>
+                                    <div id="deskDailyCodeVal" style={{ fontFamily: 'Orbitron', fontSize: '1.6rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 14px rgba(197,160,89,0.3)' }}>----</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginTop: '4px' }}>INCLUDE IN YOUR PHOTO / VIDEO</div>
+                                </div>
                                 <div id="activeTimerRow" className="card-timer-row">
                                     <div id="timerH" className="card-t-box">00</div>
                                     <div className="t-sep">:</div>
@@ -1203,7 +1174,7 @@ export default function ProfilePage() {
                                     <button id="btnCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#aaa', fontFamily: 'Orbitron', fontSize: '0.7rem', letterSpacing: 1, background: 'none', border: 'none', padding: 5, width: 280, whiteSpace: 'nowrap' }}>NEVERMIND, I WILL SERVE</button>
                                 </div>
                                 <div id="dismissTaskContainer" style={{ display: 'none', flexDirection: 'column', gap: 5, marginTop: 15, alignItems: 'center', width: '100%' }}>
-                                    <button id="btnDismissTask" onClick={() => (window as any).resetTaskUI()} className="action-btn" style={{ width: '70%', background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', border: '2px solid white', padding: '15px', fontSize: '0.75rem', letterSpacing: '1px', whiteSpace: 'nowrap' }}>THANK YOU, {siteConfig.domme_name.toUpperCase()}</button>
+                                    <button id="btnDismissTask" onClick={() => (window as any).resetTaskUI()} className="action-btn" style={{ width: '70%', background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 'bold', border: '2px solid white', padding: '15px', fontSize: '0.75rem', letterSpacing: '1px', whiteSpace: 'nowrap' }}>THANK YOU, QUEEN KARIN</button>
                                 </div>
                             </div>
                         </div>
@@ -1214,15 +1185,15 @@ export default function ProfilePage() {
                             {/* Desktop chat header - shows who you're messaging */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
                                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                                    <img id="deskChatQueenImg" src="/queen-karin.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                    <img src="/queen-nav.png" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" onError={(e) => { e.currentTarget.src = '/queen-nav.png' }} />
                                     <div id="deskChatOnlineDot" style={{ position: 'absolute', bottom: 1, right: 1, width: 9, height: 9, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
                                 </div>
                                 <div>
-                                    <div id="deskChatDommeName" style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
-                                    <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.75rem', color: '#fff', letterSpacing: 2, fontWeight: 700 }}>QUEEN KARIN</div>
+                                    <div id="deskChatStatusText" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>-</div>
                                 </div>
                             </div>
-                            {/* Challenge notice — full-width prominent banner */}
+                            {/* Challenge notice - full-width prominent banner */}
                             {activeChallenge && !isParticipant && !challengeBannerDismissed && (
                                 <div style={{ flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
                                     <div
@@ -1274,8 +1245,8 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             )}
-                            <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 !important' }}>
-                                <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', margin: '0 20px 10px 20px', borderRadius: '0 0 12px 12px', borderLeft: '1px solid rgba(197,160,89,0.2)', borderRight: '1px solid rgba(197,160,89,0.2)', borderBottom: '1px solid rgba(197,160,89,0.2)', width: 'auto' }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
+                            <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
+                            <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 0 }}>
                                 <div id="chatContent" className="chat-area" style={{ padding: '0 20px 20px 20px' }}></div>
                             </div>
 
@@ -1293,6 +1264,7 @@ export default function ProfilePage() {
                                     <button id="btnMediaPlus" className="chat-btn-plus" onClick={() => handleMediaPlus()}>+</button>
                                     <input type="text" id="chatMsgInput" className="chat-input" placeholder="Communicate with Queen Karin..." onKeyPress={(e: any) => handleChatKey(e)} />
                                 </div>
+                                <button onClick={() => (window as any).openProfileGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px' }}>GIF</button>
                                 <button className="chat-btn-send" onClick={() => sendChatMessage()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1321,7 +1293,7 @@ export default function ProfilePage() {
                                 </div>
                                 <button onClick={() => setDesktopChallengeOverlayOpen(false)} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', transition: 'all 0.2s' }} onMouseOver={e => { e.currentTarget.style.color = '#c5a059'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; }} onMouseOut={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.15)'; }}>✕</button>
                             </div>
-                            {/* Panel content — embedded (no position:fixed) */}
+                            {/* Panel content - embedded (no position:fixed) */}
                             <div style={{ flex: 1, overflow: 'hidden', position: 'relative', zIndex: 10 }}>
                                 <ChallengeUploadPanel
                                     challengeId={activeChallenge.id}
@@ -1351,13 +1323,13 @@ export default function ProfilePage() {
                         {/* CENTER COLUMN: two separate boxes stacked vertically */}
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}>
 
-                            {/* TOP BOX — tribute card, unchanged */}
+                            {/* TOP BOX - tribute card, unchanged */}
                             <div className="v-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                <div id="desk_QuickTribute" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden', minHeight: 0, justifyContent: 'center' }}></div>
+                                <div id="desk_QuickTribute" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}></div>
                                 <button className="action-btn" onClick={() => toggleTributeHunt()} style={{ width: '100%', fontSize: '0.6rem', padding: 6, borderRadius: 8, marginTop: 10, background: 'rgba(255,255,255,0.05)', color: '#888', flexShrink: 0 }}>SPOIL ME ♥</button>
                             </div>
 
-                            {/* BOTTOM BOX — link to record / gallery */}
+                            {/* BOTTOM BOX - link to record / gallery */}
                             <div className="v-card" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '22px 16px', cursor: 'pointer' }} onClick={() => (window as any).switchTab('record')}>
                                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
                                 <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>MY RECORD</div>
@@ -1366,7 +1338,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="v-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, cursor: 'pointer', position: 'relative' }} onClick={() => switchTab('news')}>
-                            <div className="ribbon-label" style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, margin: 0 }}>{siteConfig.domme_name.toUpperCase()}</div>
+                            <div className="ribbon-label" style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, margin: 0 }}>QUEEN KARIN</div>
                             <div id="desk_LatestKarinPhoto" style={{ width: '100%', height: '100%', background: '#000', position: 'relative' }}></div>
                         </div>
                     </div>
@@ -1430,7 +1402,7 @@ export default function ProfilePage() {
                         <div style={{ height: 50 }} />
 
 
-                        {/* ── SECTION 1: SUBSCRIPTIONS — 3D TIER FAN ── */}
+                        {/* ── SECTION 1: SUBSCRIPTIONS - 3D TIER FAN ── */}
                         <div style={{ width: '100%', marginBottom: 50, display: 'flex', justifyContent: 'center' }}>
                             <div style={{ perspective: '1000px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 0, width: '100%', paddingBottom: 20 }}>
                                 {([
@@ -1474,7 +1446,7 @@ export default function ProfilePage() {
                                                 <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.5rem, 1.2vw, 0.9rem)', color: '#d4af37', letterSpacing: 'clamp(2px, 0.5vw, 6px)', fontWeight: 'bold', textShadow: '0 2px 8px rgba(0,0,0,0.9)', textAlign: 'center', whiteSpace: 'nowrap' }}>{sub.tier}</div>
                                             </div>
 
-                                            {/* CENTER — PRICE */}
+                                            {/* CENTER - PRICE */}
                                             <div style={{ position: 'absolute', top: '35%', left: '10%', right: '10%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                                                 <span style={{ fontFamily: 'Cinzel', fontSize: 'clamp(1.5rem, 3.5vw, 3rem)', fontWeight: 900, color: '#f3e5ab', textShadow: '0 4px 30px rgba(0,0,0,1), 0 0 20px rgba(212,175,55,0.3)', lineHeight: 1 }}>{sub.price}</span>
                                                 <div style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.35rem, 0.7vw, 0.5rem)', color: '#d4af37', letterSpacing: 4 }}>/ MONTH</div>
@@ -1491,7 +1463,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* TITLE — between subscriptions and coins */}
+                        {/* TITLE - between subscriptions and coins */}
                         <div style={{ width: '100%', display: 'flex', alignItems: 'center', margin: '10px 0 30px' }}>
                             <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.7))' }} />
                             <div style={{ padding: '0 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
@@ -1506,20 +1478,21 @@ export default function ProfilePage() {
                             <div style={{ fontFamily: 'Cinzel', fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', letterSpacing: 6, marginBottom: 10 }}>TREASURY VAULT</div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 18, width: '100%' }}>
                                 {([
-                                    { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR' },
-                                    { amount: '70,000', price: '€500', coins: 70000, badge: 'BEST VALUE' },
-                                    { amount: '30,000', price: '€250', coins: 30000, badge: null },
-                                    { amount: '12,000', price: '€100', coins: 12000, badge: null },
-                                    { amount: '5,500', price: '€50', coins: 5500, badge: null },
-                                ] as { amount: string, price: string, coins: number, badge: string | null }[]).map(pkg => (
+                                    { amount: '150,000', price: '€1,000', coins: 150000, badge: 'EMPEROR', promo: false },
+                                    { amount: '70,000', price: '€500', coins: 70000, badge: 'BEST VALUE', promo: false },
+                                    { amount: '30,000', price: '€250', coins: 30000, badge: null, promo: false },
+                                    { amount: '12,000', price: '€100', coins: 12000, badge: null, promo: false },
+                                    { amount: '5,500', price: '€50', coins: 5500, badge: null, promo: false },
+                                    { amount: '2,000', price: '€20', coins: 2000, badge: null, promo: false },
+                                ] as { amount: string, price: string, coins: number, badge: string | null, promo: boolean }[]).map(pkg => (
                                     <div key={pkg.coins} onClick={() => (window as any).buyRealCoins(pkg.coins)}
                                         style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.25s ease', width: 320, flexShrink: 0 }}
                                         onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)'; }}
                                         onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ''; }}>
-                                        <div style={{ width: '100%', paddingBottom: '120%', background: 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block' }} />
+                                        <div style={{ width: '100%', paddingBottom: '120%', background: pkg.promo ? 'linear-gradient(160deg,#1a0820,#0d040a)' : 'linear-gradient(160deg,#1a1008,#0d0a04)', display: 'block', border: pkg.promo ? '1px solid rgba(220,50,80,0.4)' : undefined, borderRadius: pkg.promo ? 4 : undefined }} />
                                         <div style={{ position: 'absolute', top: '16%', left: '18%', right: '18%', bottom: '20%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                                             {pkg.badge && (
-                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: '#c8960c', letterSpacing: 2, border: '1px solid #c8960c', padding: '2px 6px', borderRadius: 2 }}>{pkg.badge}</div>
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.5rem', color: pkg.promo ? '#e03050' : '#c8960c', letterSpacing: 2, border: `1px solid ${pkg.promo ? '#e03050' : '#c8960c'}`, padding: '2px 6px', borderRadius: 2, animation: pkg.promo ? 'pulse 2s infinite' : undefined }}>{pkg.badge}</div>
                                             )}
                                             <i className="fas fa-coins" style={{ fontSize: '1.6rem', color: '#c5a059', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))' }}></i>
                                             <div style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 1, textShadow: '0 3px 12px rgba(0,0,0,1)', lineHeight: 1 }}>{pkg.amount}</div>
@@ -1542,18 +1515,15 @@ export default function ProfilePage() {
                     <div className="mob-hud-row">
                         <div className="hud-circle-wrap" onClick={() => (window as any).openLobby()}>
                             <div className="hud-circle slave">
-                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || "/queen-karin.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/queen-karin.png' }} />
+                                <img id="hudUserPic" src={getOptimizedUrl(profile?.avatar_url || profile?.profile_picture_url || profile?.avatar || profile?.image || "/collar-placeholder.png", 100)} alt="Your Avatar" onError={(e) => { e.currentTarget.src = '/collar-placeholder.png' }} />
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
                             {dutiesUploadedToday === true ? (
-                                <svg viewBox="0 0 24 24" className="hud-duty-icon">
-                                    <circle cx="12" cy="12" r="9" fill="rgba(0,180,70,0.18)" stroke="rgba(0,210,90,0.75)" strokeWidth="1.5"/>
-                                    <path d="M7.5 12.5l3 3 6-6.5" stroke="#00d45a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                </svg>
+                                <img src="/routine-done.svg" alt="Done" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             ) : (
-                                <span className="hud-duty-alert">!</span>
+                                <img src="/routine-alert-v3.svg" alt="!" className="hud-duty-blink" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             )}
                         </div>
                     </div>
@@ -1579,7 +1549,6 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Update your display name</div>
                                         </div>
                                     </div>
-                                    <span id="hubCostName" className="hub-action-cost">100 ₡</span>
                                 </button>
                                 <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('photo')}>
                                     <div className="hub-action-left">
@@ -1589,37 +1558,48 @@ export default function ProfilePage() {
                                             <div className="hub-action-desc">Replace profile picture</div>
                                         </div>
                                     </div>
-                                    <span id="hubCostPhoto" className="hub-action-cost">500 ₡</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('routine')}>
+                                <button id="hubRoutineRow" className="hub-action-row" onClick={() => (window as any).showLobbyAction('routine')}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">◈</div>
                                         <div>
                                             <div className="hub-action-label">SET ROUTINE</div>
-                                            <div className="hub-action-desc">Select mandatory protocol</div>
+                                            <div className="hub-action-desc" id="hubRoutineDesc">Select mandatory protocol</div>
                                         </div>
                                     </div>
-                                    <span id="hubCostRoutine" className="hub-action-cost">300 ₡</span>
+                                    <span id="hubRoutineLock" className="hub-action-cost" style={{ display: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', letterSpacing: 2 }}>LOCKED</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
+                                <button id="hubKinksRow" className="hub-action-row" onClick={() => (window as any).showLobbyAction('kinks')}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">⬡</div>
                                         <div>
                                             <div className="hub-action-label">KINKS</div>
-                                            <div className="hub-action-desc">Define your preferences</div>
+                                            <div className="hub-action-desc" id="hubKinksDesc">Define your preferences</div>
                                         </div>
                                     </div>
-                                    <span id="hubCostKinks" className="hub-action-cost">50 ₡</span>
+                                    <span id="hubKinksLock" className="hub-action-cost" style={{ display: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', letterSpacing: 2 }}>LOCKED</span>
                                 </button>
-                                <button className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
+                                <button id="hubLimitsRow" className="hub-action-row" onClick={() => (window as any).showLobbyAction('limits')}>
                                     <div className="hub-action-left">
                                         <div className="hub-action-icon-wrap">⊗</div>
                                         <div>
                                             <div className="hub-action-label">LIMITS</div>
-                                            <div className="hub-action-desc">Set your hard boundaries</div>
+                                            <div className="hub-action-desc" id="hubLimitsDesc">Set your hard boundaries</div>
                                         </div>
                                     </div>
-                                    <span id="hubCostLimits" className="hub-action-cost">50 ₡</span>
+                                    <span id="hubLimitsLock" className="hub-action-cost" style={{ display: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '0.5rem', letterSpacing: 2 }}>LOCKED</span>
+                                </button>
+                                <button className="hub-action-row" id="notifToggleRow" onClick={() => (window as any).togglePushNotifications()}>
+                                    <div className="hub-action-left">
+                                        <div className="hub-action-icon-wrap">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#c5a059" stroke="none"><path d="M12 2C10.34 2 9 3.34 9 5v.27C6.64 6.36 5 8.5 5 11v5l-2 2v1h18v-1l-2-2v-5c0-2.5-1.64-4.64-4-5.73V5c0-1.66-1.34-3-3-3zm0 20c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/></svg>
+                                        </div>
+                                        <div>
+                                            <div className="hub-action-label">NOTIFICATIONS</div>
+                                            <div id="notifToggleDesc" className="hub-action-desc">Enable push notifications</div>
+                                        </div>
+                                    </div>
+                                    <span id="notifToggleStatus" className="hub-action-cost" style={{ color: '#555', fontSize: '0.6rem' }}>OFF</span>
                                 </button>
                                 <div className="hub-logout-row">
                                     <button className="hub-logout-btn" onClick={() => (window as any).handleLogout()}>LOGOUT</button>
@@ -1669,19 +1649,18 @@ export default function ProfilePage() {
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginTop: '14px' }}>
                                     <button id="btnRoutineUpload" className="hub-confirm-btn" onClick={() => (window as any).__routineAction?.()}>LOADING...</button>
                                     <div id="routineTimeMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#555', letterSpacing: '1px' }}>WINDOW CLOSED</div>
-                                    <div id="routineDoneMsg" className="hidden" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#00cc66', letterSpacing: '2px', textShadow: '0 0 10px rgba(0,204,102,0.5)' }}>✔ SUBMITTED</div>
                                 </div>
                             </div>
 
                             {/* KNEELING HISTORY */}
                             <div className="hub-section">
                                 <div className="hub-section-label">KNEELING HISTORY</div>
-                                <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px' }}></div>
+                                <div id="queen_kneelDots" className="halo-dots-grid" style={{ margin: '14px 0 10px', width: '100%' }}></div>
                                 <div className="hub-kneel-bar-wrap">
-                                    <div className="mob-kneel-bar" style={{ height: '32px', cursor: 'default', border: '1px solid rgba(197,160,89,0.3)', borderRadius: '4px', background: 'rgba(0,0,0,0.4)' }}>
-                                        <div id="kneelDailyFill" className="mob-bar-fill" style={{ background: 'linear-gradient(90deg,#c5a059,#f0d080)' }}></div>
-                                        <div className="mob-bar-content" style={{ width: '100%', justifyContent: 'center' }}>
-                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>0 / 8</span>
+                                    <div style={{ position: 'relative', height: '32px', borderRadius: '4px', border: '1px solid rgba(197,160,89,0.15)', background: '#000', overflow: 'hidden' }}>
+                                        <div id="kneelDailyFill" style={{ position: 'absolute', top: 0, left: 0, width: '0%', height: '100%', borderRadius: '4px', background: 'linear-gradient(90deg, rgba(197,160,89,0.35), rgba(197,160,89,0.12))', transition: 'width 0.5s ease' }}></div>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+                                            <span id="kneelDailyText" style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: 'rgba(197,160,89,0.85)', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>0 / 8</span>
                                         </div>
                                     </div>
                                     <div className="hub-kneel-legend">
@@ -1708,25 +1687,13 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* SYSTEM DIAGNOSTICS */}
+                            {/* EARN EXTRA COINS — opens full-screen modal */}
                             <div className="hub-section">
-                                <div className="hub-section-label">SYSTEM DIAGNOSTICS</div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span className="hub-diag-text">SUPABASE CONNECTED</span>
-                                </div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span className="hub-diag-text">REALTIME ACTIVE</span>
-                                </div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span id="diagSyncTime" className="hub-diag-text">LAST SYNC: —</span>
-                                </div>
-                                <div className="hub-diag-row">
-                                    <span className="hub-diag-dot ok"></span>
-                                    <span id="diagUserEmail" className="hub-diag-text">SESSION: —</span>
-                                </div>
+                                <button type="button" id="earnCoinsToggle" onClick={() => (window as any).toggleEarnCoins?.()}
+                                    style={{ width: '100%', padding: '14px 0', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 3, fontWeight: 700 }}>EARN EXTRA COINS</div>
+                                    <span style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)' }}>▶</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1804,11 +1771,15 @@ export default function ProfilePage() {
                     </div>
 
                     <div id="mobExchequer" className="mob-reward-overlay hidden" style={{ zIndex: 2147483640, display: 'none' }}>
-                        <div className="mob-reward-card lobby-card" style={{ border: '1px solid #c5a059' }}>
+                        <div className="mob-reward-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                             <div className="lobby-header">
                                 <div className="lobby-title">EXCHEQUER</div>
                             </div>
                             <div className="coin-grid">
+                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(2000)}>
+                                    <div className="coin-amount">2,000</div>
+                                    <div className="coin-price">€20.00</div>
+                                </div>
                                 <div className="coin-tile" onClick={() => (window as any).buyRealCoins(1000)}>
                                     <div className="coin-amount">1,000</div>
                                     <div className="coin-price">€10.00</div>
@@ -1836,6 +1807,11 @@ export default function ProfilePage() {
                             </div>
                             <button className="lobby-btn close" onClick={() => (window as any).closeExchequer()} style={{ marginTop: '20px' }}>CLOSE</button>
                         </div>
+                    </div>
+
+                    {/* STANDALONE TRIBUTE OVERLAY — menu + send + risky game + wishlist */}
+                    <div id="mobTributeStandalone" style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 2147483640, display: 'none', flexDirection: 'column' }}>
+                        <div id="mobTributeContent" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '20px', paddingTop: 'calc(env(safe-area-inset-top) + 20px)', boxSizing: 'border-box' }}></div>
                     </div>
 
                     <div id="mobHomeScroll" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 0, boxSizing: 'border-box' }}>
@@ -1872,18 +1848,18 @@ export default function ProfilePage() {
 
                         {/* SLAVE STATS DRAWER */}
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
-                            <div id="mobStatsToggleBtn" className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>
+                            <div className="mob-stats-toggle-btn" onClick={() => (window as any).toggleMobileStats()}>
                                 SLAVE STATS <span id="mobStatsArrow">▼</span>
                             </div>
                             <div id="mobStatsContent" className="mob-internal-drawer">
                                 <div style={{ width: '100%', textAlign: 'center', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '15px' }}>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.6rem', color: '#666', letterSpacing: '2px' }}>CURRENT CLASSIFICATION</div>
-                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '—'}</div>
+                                    <div id="drawer_CurrentRank" style={{ fontFamily: 'Cinzel', fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{profile?.hierarchy || '-'}</div>
                                     <div id="drawer_CurrentBenefits" style={{ fontFamily: 'Cinzel', fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}></div>
                                 </div>
                                 <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
-                                    <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>—</div>
+                                    <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>-</div>
                                 </div>
                                 <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
                                 <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
@@ -1906,8 +1882,76 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
+                            <button onClick={() => (window as any).openStandaloneTribute?.()} style={{
+                                marginTop: 40, width: 220, height: 44,
+                                background: 'rgba(197,160,89,0.06)',
+                                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(197,160,89,0.35)', borderRadius: 10,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                            }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                    <path d="M12 8v12"></path>
+                                    <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                                </svg>
+                                <span style={{ fontFamily: "'Cinzel', serif", fontSize: '0.7rem', color: '#c5a059', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
+                            </button>
                         </div>
 
+                        {/* INVENTORY */}
+                        <div style={{ width: '100%', marginTop: '20px' }}>
+                            <div className="duty-label">INVENTORY</div>
+                            <div className="inv-grid">
+                                <div className="inv-card" id="invSkipPass">
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>
+                                    <div className="inv-name">SKIP PASS</div>
+                                    <div className="inv-count" id="invSkipCount">{profile?.skippass || 0}</div>
+                                    <div className="inv-tag inv-gift-only">GIFT ONLY</div>
+                                </div>
+                                <div className="inv-card" id="invCumPass" onClick={() => (window as any).openInventoryModal('cumpass')}>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                    <div className="inv-name">CUM PASS</div>
+                                    <div className="inv-count" id="invCumCount">{profile?.cumpass || 0}</div>
+                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
+                                </div>
+                                <div className="inv-card" id="invCheckpoint" onClick={() => (window as any).openInventoryModal('checkpoint')}>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <div className="inv-name">CHECKPOINT</div>
+                                    <div className="inv-count" id="invCheckCount">{profile?.checkpoint || 0}</div>
+                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* THE VAULT */}
+                        <div style={{ width: '100%', marginTop: '20px' }}>
+                            <div className="duty-label">THE VAULT</div>
+                            <div id="vaultGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: 'Rajdhani', fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', padding: 20 }}>Loading...</div>
+                            </div>
+                        </div>
+
+                        {/* VAULT PREVIEW MODAL */}
+                        <div id="vaultPreviewModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+                                <div id="vaultPreviewContent"></div>
+                                <button onClick={() => { const m = document.getElementById('vaultPreviewModal'); if (m) m.style.display = 'none'; }} style={{ marginTop: 20, background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel', fontSize: '0.6rem', letterSpacing: 3, padding: '10px 30px', cursor: 'pointer' }}>CLOSE</button>
+                            </div>
+                        </div>
+
+                        {/* INVENTORY MODAL */}
+                        <div id="inventoryModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ maxWidth: 340, width: '100%', background: 'rgba(10,5,20,0.95)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 16, padding: '30px 24px', textAlign: 'center' }}>
+                                <div id="invModalIcon" style={{ fontSize: '2.5rem', marginBottom: 8 }}></div>
+                                <div id="invModalTitle" style={{ fontFamily: 'Cinzel', fontSize: '1rem', color: '#c5a059', letterSpacing: 3, marginBottom: 6 }}></div>
+                                <div id="invModalDesc" style={{ fontFamily: 'Rajdhani', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 16 }}></div>
+                                <div id="invModalCount" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, marginBottom: 16 }}></div>
+                                <div id="invModalActions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}></div>
+                                <button onClick={() => (window as any).closeInventoryModal()} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron', fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>CLOSE</button>
+                            </div>
+                        </div>
 
                         {/* CURRENT STATUS */}
                         <div style={{ width: '100%', marginTop: '20px' }}>
@@ -1927,6 +1971,11 @@ export default function ProfilePage() {
                                         <span className="working-dot"></span>SERVING
                                     </div>
                                     <div id="mobTaskText" style={{ marginBottom: '10px', minHeight: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.3, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>LOADING ORDER...</div>
+                                    <div id="mobDailyCode" style={{ display: 'none', textAlign: 'center', marginBottom: '12px' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: '3px' }}>DAILY NUMBER</div>
+                                        <div id="mobDailyCodeVal" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 14px rgba(197,160,89,0.3)' }}>----</div>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginTop: '3px' }}>INCLUDE IN YOUR PHOTO / VIDEO</div>
+                                    </div>
                                     <div className="card-timer-row">
                                         <div id="qm_timerH" className="card-t-box">00</div>:
                                         <div id="qm_timerM" className="card-t-box">00</div>:
@@ -1944,11 +1993,16 @@ export default function ProfilePage() {
                                     <div id="mobSkipConfirmContainer" style={{ display: 'none', flexDirection: 'column', gap: 15, marginTop: 15, alignItems: 'center', background: 'rgba(20, 0, 0, 0.6)', border: '1px solid rgba(255, 0, 60, 0.4)', boxShadow: '0 0 20px rgba(255, 0, 60, 0.1)', backdropFilter: 'blur(10px)', padding: '25px', borderRadius: '12px', width: '100%' }}>
                                         <div style={{ color: '#ff003c', fontFamily: 'Cinzel', fontSize: '1rem', textAlign: 'center', fontWeight: 'bold', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,0,0,0.5)' }}>DISOBEDIENCE HAS A PRICE</div>
                                         <div style={{ color: '#ccc', fontFamily: 'Cinzel', fontSize: '0.8rem', textAlign: 'center', marginBottom: 10, lineHeight: 1.5 }}>Is that skip worth of<br /><span style={{ color: '#ff003c', fontWeight: 'bold' }}>300 coins</span>, pet?</div>
+                                        <div id="mobSkipPassOption" style={{ display: 'none', width: '90%', marginBottom: 8 }}>
+                                            <button onClick={() => (window as any).useSkipPass()} style={{ width: '100%', padding: 12, borderRadius: 8, background: 'linear-gradient(90deg, rgba(197,160,89,0.15), rgba(197,160,89,0.08))', border: '1px solid rgba(197,160,89,0.35)', color: '#c5a059', fontFamily: "'Cinzel', serif", fontSize: '0.75rem', letterSpacing: 2, cursor: 'pointer' }}>
+                                                USE SKIP PASS (<span id="mobSkipPassCount">0</span> LEFT)
+                                            </button>
+                                        </div>
                                         <button id="btnMobConfirmSkip" onClick={() => (window as any).executeSkipTask()} className="action-btn" style={{ width: '90%', background: 'linear-gradient(90deg, #ff003c 0%, #8b0000 100%)', color: 'white', fontWeight: 'bold', border: '1px solid #ff003c', boxShadow: '0 0 15px rgba(255,0,60,0.4)', borderRadius: '8px', padding: '12px', fontSize: '0.85rem', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.3s ease' }}>ACCEPT PENALTY</button>
                                         <button id="btnMobCancelSkip" onClick={() => (window as any).cancelSkipTask()} className="text-btn" style={{ color: '#888', fontFamily: 'Orbitron', fontSize: '0.75rem', letterSpacing: '1px', padding: 5, width: '95%', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}>NEVERMIND, I WILL SERVE</button>
                                     </div>
                                     <div id="mobDismissContainer" style={{ display: 'none', flexDirection: 'column', gap: '5px', marginTop: '15px', alignItems: 'center' }}>
-                                        <button id="mobBtnDismissTask" className="btn-upload-sm" style={{ borderColor: 'rgba(255,255,255,0.4)', borderWidth: '2px', color: 'white', padding: '15px 0', fontSize: '0.75rem', whiteSpace: 'nowrap', width: '70%' }} onClick={() => (window as any).resetTaskUI()}>THANK YOU, {siteConfig.domme_name.toUpperCase()}</button>
+                                        <button id="mobBtnDismissTask" className="btn-upload-sm" style={{ borderColor: 'rgba(255,255,255,0.4)', borderWidth: '2px', color: 'white', padding: '15px 0', fontSize: '0.75rem', whiteSpace: 'nowrap', width: '70%' }} onClick={() => (window as any).resetTaskUI()}>THANK YOU, QUEEN KARIN</button>
                                     </div>
                                 </div>
                             </div>
@@ -1982,7 +2036,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* ALTAR BACKDROP + DRAWER — siblings of viewMobileHome so position:fixed is relative to viewport, not transformed scroll container */}
+                {/* ALTAR BACKDROP + DRAWER - siblings of viewMobileHome so position:fixed is relative to viewport, not transformed scroll container */}
                 <div id="altarBackdrop" className="altar-backdrop" onClick={() => (window as any).closeAltarDrawer()}></div>
 
                 <div id="altarDrawer" className="altar-drawer">
@@ -2026,20 +2080,34 @@ export default function ProfilePage() {
 
             </div>
 
-            {/* Global view lives at /global route — not rendered here */}
             <div id="globalViewOverlay" style={{ display: 'none' }}></div>
 
-            {/* ── MOB CHAT OVERLAY — root level, above MOBILE_APP ── */}
+            {/* ── MOB CHAT OVERLAY - root level, above MOBILE_APP ── */}
             <div id="mobChatOverlay" className="mob-overlay" style={{ display: 'none' }}>
-                <div className="mob-overlay-header">
+                {/* QUEEN HEADER (normal mode) */}
+                <div id="mobChatQueenHeader" className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
                         <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
-                            <img id="mobChatQueenImg" src="/queen-karin.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
+                            <img src="/queen-nav.png" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.4)' }} alt="Queen" />
                             <div id="mobChatOnlineDot" style={{ position: 'absolute', bottom: 2, right: 2, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #000', display: 'none' }}></div>
                         </div>
                         <div>
-                            <div id="mobChatDommeName" className="mob-overlay-title">QUEEN KARIN</div>
-                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>—</div>
+                            <div className="mob-overlay-title">QUEEN KARIN</div>
+                            <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>-</div>
+                        </div>
+                    </div>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
+                </div>
+
+                {/* AI HEADER (ai mode) */}
+                <div id="mobChatAiHeader" className="mob-overlay-header ai-header" style={{ display: 'none' }}>
+                    <div className="mob-overlay-title-wrap">
+                        <div className="ai-avatar">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,255,0.9)" strokeWidth="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M12 17v4"/></svg>
+                        </div>
+                        <div>
+                            <div className="mob-overlay-title" style={{ color: 'rgba(160,100,255,0.9)' }}>AI ASSISTANT</div>
+                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(160,100,255,0.4)', letterSpacing: '1px' }}>ALWAYS ONLINE</div>
                         </div>
                     </div>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
@@ -2047,38 +2115,42 @@ export default function ProfilePage() {
 
                 {/* TAB BAR */}
                 <div className="mob-gl-tabs">
-                    <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => (window as any).switchMobChatTab('chat')}>CHAT</button>
-                    <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => (window as any).switchMobChatTab('service')}>SERVICE</button>
+                    <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => { (window as any).toggleAiMode(false); (window as any).switchMobChatTab('chat'); }}>CHAT</button>
+                    <button id="mobChatBtnAi" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(true); (window as any).switchMobChatTab('chat'); }}>AI</button>
+                    <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(false); (window as any).switchMobChatTab('service'); }}>SERVICE</button>
                 </div>
 
                 {/* CHAT TAB */}
-                <div id="mobChatTabChat" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-                    <div id="mob_chatBox" className="chat-body-frame" style={{ flex: 1, minHeight: 0, position: 'relative', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as any}>
-                        <div id="mob_TributeOverlay" className="hidden" style={{ position: 'absolute', inset: 0, background: 'rgba(4,4,16,0.96)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 9999, display: 'none', flexDirection: 'column', padding: '20px' }}>
-                            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', borderBottom: '1px solid rgba(197,160,89,0.12)', paddingBottom: '14px' }}>
-                                <span style={{ fontFamily: "'Cinzel', serif", color: '#c5a059', fontSize: '0.9rem', letterSpacing: '4px', textTransform: 'uppercase' }}>QUEEN<span style={{ margin: '0 6px', opacity: 0.7 }}>✦</span>WISHLIST</span>
-                                <button onClick={() => (window as any).toggleTributeHunt()} style={{ color: 'rgba(197,160,89,0.5)', background: 'transparent', border: '1px solid rgba(197,160,89,0.15)', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', fontSize: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
-                            </div>
-                            <div id="mob_huntStoreGrid" style={{ width: '100%', overflowY: 'auto', paddingBottom: '30px' }}></div>
-                        </div>
+                <div id="mobChatTabChat" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
+                    <div id="mob_chatBox" className="mob-gl-scroll" style={{ flex: 1, position: 'relative' }}>
+                        <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).switchMobChatTab('service')}>SYSTEM ONLINE</div>
                         <div id="mob_chatContent" className="chat-area"></div>
+                        <div id="mob_aiChatContent" className="chat-area" style={{ display: 'none' }}></div>
                     </div>
-                    <div className="chat-footer">
+                    {/* Normal chat footer */}
+                    <div id="mobChatFooterNormal" className="chat-footer">
                         <div className="chat-input-wrapper">
                             <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus()}>+</button>
                             <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey(e)} />
                         </div>
-                        <button className="chat-btn-tribute" onClick={() => (window as any).toggleTributeHunt()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#c5a059' }}>
-                                <rect x="3" y="8" width="18" height="12" rx="1"></rect>
-                                <path d="M12 8v12"></path>
-                                <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
-                            </svg>
-                        </button>
+                        <button onClick={() => (window as any).openProfileGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
                         <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage()}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* AI chat footer */}
+                    <div id="mobChatAiFooter" className="chat-footer ai-footer footer-hidden">
+                        <div className="chat-input-wrapper" style={{ flex: 1 }}>
+                            <input type="text" id="mob_aiMsgInput" className="chat-input ai-input" placeholder="Ask me anything..." onKeyPress={(e: any) => (window as any).handleAiChatKey(e)} />
+                        </div>
+                        <button id="mobAiSendBtn" className="chat-btn-send ai-send-btn" onClick={() => (window as any).sendAiMessage()}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="rgba(160,100,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="rgba(160,100,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </button>
                     </div>
@@ -2093,7 +2165,7 @@ export default function ProfilePage() {
                 <div id="mobSystemLogContainer" style={{ display: 'none' }}></div>
             </div>
 
-            {/* ── MOB QUEEN'S WALL OVERLAY — root level ── */}
+            {/* ── MOB QUEEN'S WALL OVERLAY - root level ── */}
             <div id="mobQueenWallOverlay" className="mob-overlay" style={{ display: 'none' }}>
                 <div className="mob-overlay-header">
                     <div className="mob-overlay-title-wrap">
@@ -2101,8 +2173,19 @@ export default function ProfilePage() {
                     </div>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobQueenWall()}>✕</button>
                 </div>
-                <div className="mob-qwall-scroll">
-                    <div id="mobQWallContent"></div>
+                <div className="mob-qw-tabs">
+                    <button id="mobQwTab_wall" className="mob-qw-tab active" onClick={() => (window as any).switchMobQwTab('wall')}>WALL</button>
+                    <button id="mobQwTab_gallery" className="mob-qw-tab" onClick={() => (window as any).switchMobQwTab('gallery')}>GALLERY</button>
+                </div>
+                <div id="mobQwPanel_wall" className="mob-qw-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div className="mob-qwall-scroll">
+                        <div id="mobQWallContent"></div>
+                    </div>
+                </div>
+                <div id="mobQwPanel_gallery" className="mob-qw-panel" style={{ flex: 1, display: 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div className="mob-gallery-scroll">
+                        <div id="mobGalleryContent"></div>
+                    </div>
                 </div>
             </div>
 
@@ -2117,8 +2200,8 @@ export default function ProfilePage() {
                 <div className="mob-gl-tabs">
                     <button id="mobGlTab_rank" className="mob-gl-tab active" onClick={() => (window as any).switchMobGlTab('rank')}>RANK</button>
                     <button id="mobGlTab_talk" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('talk')}>TALK</button>
-                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>CHALLENGES</button>
-                    <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>NEWS</button>
+                    <button id="mobGlTab_challenges" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('challenges')}>NEWS</button>
+                    <button id="mobGlTab_updates" className="mob-gl-tab" onClick={() => (window as any).switchMobGlTab('updates')}>LIVE</button>
                 </div>
 
                 {/* RANK panel */}
@@ -2136,14 +2219,31 @@ export default function ProfilePage() {
                 <div id="mobGlPanel_talk" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                     <div id="mobGlTalkFeed" className="mob-gl-scroll" style={{ flex: 1 }}></div>
                     <div className="mob-gl-talk-footer">
-                        <input
-                            type="text"
-                            id="mobGlTalkInput"
-                            className="mob-gl-talk-input"
-                            placeholder="speak..."
-                            onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
-                        />
-                        <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>▶</button>
+                        <div className="chat-input-wrapper" style={{ flex: 1, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                            <button className="chat-btn-plus" onClick={() => (window as any).handleGlobalMediaPlus?.()} style={{ position: 'absolute', left: 8, zIndex: 2, background: 'none', border: 'none', color: 'rgba(197,160,89,0.6)', fontSize: '1.3rem', cursor: 'pointer', padding: '0 4px' }}>+</button>
+                            <input
+                                type="text"
+                                id="mobGlTalkInput"
+                                className="mob-gl-talk-input"
+                                placeholder="speak..."
+                                style={{ paddingLeft: 36 }}
+                                onKeyDown={(e) => (window as any).handleMobGlKey(e.nativeEvent)}
+                            />
+                        </div>
+                        <button onClick={() => (window as any).openMobGlGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
+                        <button onClick={() => (window as any).toggleTributeHunt?.()} style={{ background: 'none', border: 'none', outline: 'none', cursor: 'pointer', padding: '0 10px' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#c5a059' }}>
+                                <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                                <path d="M12 8v12"></path>
+                                <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                            </svg>
+                        </button>
+                        <button className="mob-gl-talk-send" onClick={() => (window as any).sendMobGlMessage()}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -2156,21 +2256,45 @@ export default function ProfilePage() {
                 <div id="mobGlPanel_updates" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', display: 'none' }}>
                     <div id="mobGlUpdatesFeed" className="mob-gl-scroll"></div>
                 </div>
+
             </div>
 
-            {/* ── MOBILE BOTTOM NAV — at root level, no stacking context conflicts ── */}
+            {/* ── CHALLENGES OVERLAY ── */}
+            <div id="mobChallengesOverlay" className="mob-overlay" style={{ display: 'none', flexDirection: 'column' }}>
+                <div className="mob-overlay-header">
+                    <span className="mob-overlay-title">CHALLENGES</span>
+                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobChallenges?.()}>✕</button>
+                </div>
+                <div className="mob-gl-scroll" style={{ flex: 1, overflowY: 'auto' }}>
+                    <DesktopChallengeModal
+                        embedded
+                        challenges={allChallenges}
+                        activeChallenge={activeChallenge}
+                        isParticipant={isParticipant}
+                        participantStatus={participantStatus}
+                        memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                        onClose={() => (window as any).closeMobChallenges?.()}
+                        onOpenPanel={() => { (window as any).closeMobChallenges?.(); setChallengePanelOpen(true); }}
+                        onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts({ pending: 0, yours: 1 }); }}
+                    />
+                </div>
+            </div>
+
+            {/* ── MOBILE BOTTOM NAV - at root level, no stacking context conflicts ── */}
             <nav id="mobBottomNav" className="mob-bottom-nav">
-                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => (window as any).mobNavTo('profile')}>
+                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).mobNavTo('profile'); }}>
                     <span className="mob-nav-icon">◆</span>
                     <span className="mob-nav-label">PROFILE</span>
                 </button>
-                <button id="mobNavRecord" className="mob-nav-item" onClick={() => (window as any).openAltarDrawer()}>
-                    <span className="mob-nav-icon">▦</span>
-                    <span className="mob-nav-label">RECORD</span>
+                <button id="mobNavChallenges" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChallenges(); }}>
+                    <span className="mob-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.6rem' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                    </span>
+                    <span className="mob-nav-label">CHALLENGE</span>
                 </button>
-                <button className="mob-nav-queen-btn" onClick={() => (window as any).openMobChatOverlay()}>
+                <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChatOverlay(); }}>
                     <div className="mob-nav-queen-ring">
-                        <img id="navQueenPic" src="/queen-karin.png" className="mob-nav-queen-img" alt="Queen" />
+                        <img id="navQueenPic" src="/queen-nav.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
                     <div id="mobMsgBadge">
                         <svg viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2179,45 +2303,44 @@ export default function ProfilePage() {
                         </svg>
                     </div>
                 </button>
-                <button id="mobNavQueen" className="mob-nav-item" onClick={() => (window as any).openMobQueenWall()}>
+                <button id="mobNavQueen" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobQueenWall(); }}>
                     <span className="mob-nav-icon">♛</span>
                     <span className="mob-nav-label">QUEEN</span>
                 </button>
-                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => (window as any).openMobGlobal()}>
+                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobGlobal(); }}>
                     <span className="mob-nav-icon">◎</span>
                     <span className="mob-nav-label">GLOBAL</span>
-                </button>
-                <button id="mobNavRoutine" className="mob-nav-item" style={{ display: 'none' }} onClick={() => (window as any).openMobRoutine()}>
-                    <span className="mob-nav-icon">◈</span>
-                    <span className="mob-nav-label">ROUTINE</span>
-                </button>
-                <button id="mobNavTributes" className="mob-nav-item" style={{ display: 'none' }} onClick={() => (window as any).toggleTributeHunt()}>
-                    <span className="mob-nav-icon">♦</span>
-                    <span className="mob-nav-label">TRIBUTES</span>
                 </button>
             </nav>
 
         </div>
 
+        {/* ── MOBILE CHALLENGES OVERLAY ── */}
+
         {/* ── CHALLENGE BANNER + PANEL ── */}
         {activeChallenge && (
             <>
-                {/* Mobile banner — only on mobile, landing page (no overlay open), non-participants */}
+                {/* Mobile banner - only on mobile, landing page (no overlay open), non-participants */}
                 {isMobile && !isParticipant && !challengePanelOpen && !mobOverlayOpen && !challengeBannerDismissed && (
                     <div
+                        onClick={() => { setChallengePanelId(activeChallenge.id); setChallengePanelOpen(true); }}
                         style={{
                             position: 'fixed', bottom: 96, left: 12, right: 12, zIndex: 10000002,
                             background: 'rgba(5,8,18,0.97)',
                             border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.4)' : 'rgba(197,160,89,0.35)'}`,
-                            borderRadius: 14, padding: '10px 14px',
-                            display: 'flex', alignItems: 'center', gap: 12,
+                            borderRadius: 14, padding: '14px 16px',
+                            display: 'flex', alignItems: 'center', gap: 14,
                             boxShadow: `0 -2px 24px rgba(0,0,0,0.6), 0 4px 20px ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.1)' : 'rgba(197,160,89,0.08)'}`,
                             backdropFilter: 'blur(16px)',
+                            cursor: 'pointer',
                         }}
                     >
+                        {activeChallenge.image_url && (
+                            <img src={activeChallenge.image_url} style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.25)'}` }} />
+                        )}
                         <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
-                            <div className="ribbon-label" style={{ fontSize: '0.38rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 2 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.92rem', color: '#fff', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
+                            <div className="ribbon-label" style={{ fontSize: '0.42rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', opacity: 0.9, marginTop: 4 }}>
                                 {activeChallenge.status === 'active' ? 'CHALLENGE ACTIVE' : (() => {
                                     if (!activeChallenge.start_date) return 'STARTING SOON';
                                     const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
@@ -2227,33 +2350,32 @@ export default function ProfilePage() {
                                 })()}
                             </div>
                         </div>
-                        <button
-                            onClick={() => setDesktopChallengeOpen(true)}
+                        <div
                             style={{
                                 background: activeChallenge.status === 'active' ? 'linear-gradient(135deg, #4ade80, #16a34a)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
-                                borderRadius: 8, padding: '5px 12px', border: 'none',
-                                fontFamily: 'Orbitron', fontSize: '0.38rem',
-                                color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                                borderRadius: 8, padding: '7px 16px', border: 'none',
+                                fontFamily: 'Orbitron', fontSize: '0.42rem',
+                                color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0,
                             }}
-                        >CHALLENGE</button>
+                        >JOIN</div>
                         <button
-                            onClick={() => { sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
+                            onClick={(e) => { e.stopPropagation(); sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
                             style={{
                                 background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: 8, padding: '5px 10px',
+                                borderRadius: 8, padding: '7px 10px',
                                 fontFamily: 'Orbitron', fontSize: '0.38rem',
                                 color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
                             }}
-                        >DISMISS</button>
+                        >X</button>
                     </div>
                 )}
-                {/* Mobile participant banner — shows for enrolled members with active challenge */}
+                {/* Mobile participant banner - shows for enrolled members with active challenge */}
                 {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && !mobOverlayOpen && (
                     <MobileChallengeBanner
                         challengeName={activeChallenge.name}
                         hasOpenWindow={!!openWindowForBanner}
                         nextWindowTs={openWindowForBanner ? null : nextChallengeWindowTs}
-                        onOpen={() => setDesktopChallengeOpen(true)}
+                        onOpen={() => { setChallengePanelOpen(true); setChallengePanelId(activeChallenge.id); }}
                     />
                 )}
                 {challengePanelOpen && (
@@ -2266,6 +2388,118 @@ export default function ProfilePage() {
                 )}
             </>
         )}
+
+        {/* PWA Install Banner — only on landing profile, hidden when any overlay is open */}
+        {isMobile && !isStandalone && !anyOverlayOpen && (
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000001,
+                background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(5,8,18,0.98))',
+                borderBottom: '1px solid rgba(197,160,89,0.35)',
+                padding: '10px 14px',
+                display: 'flex', alignItems: 'center', gap: 12,
+                boxShadow: '0 2px 24px rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(16px)',
+            }}>
+                <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '1px' }}>Get the App</div>
+                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#c5a059', opacity: 0.9, marginTop: 2, letterSpacing: '1px' }}>FASTER · FULLSCREEN · NOTIFICATIONS</div>
+                </div>
+                <button
+                    onClick={async () => {
+                        if (installPrompt) {
+                            await installPrompt.prompt();
+                            const { outcome } = await installPrompt.userChoice;
+                            if (outcome === 'accepted') { setInstallPrompt(null); }
+                        } else {
+                            setShowInstallGuide(true);
+                        }
+                    }}
+                    style={{
+                        background: 'linear-gradient(135deg, #c5a059, #8b6914)',
+                        borderRadius: 8, padding: '5px 12px', border: 'none',
+                        fontFamily: 'Orbitron', fontSize: '0.38rem',
+                        color: '#000', fontWeight: 700, letterSpacing: '1px', flexShrink: 0, cursor: 'pointer',
+                    }}
+                >{installPrompt ? 'INSTALL' : 'HOW TO'}</button>
+            </div>
+        )}
+        {/* Install guide overlay */}
+        {showInstallGuide && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(12px)' }}
+                onClick={() => setShowInstallGuide(false)}>
+                <div style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(180deg, rgba(12,10,20,0.99), rgba(5,4,12,0.99))', border: '1px solid rgba(197,160,89,0.25)', borderRadius: '20px 20px 0 0', padding: '28px 22px 44px' }}
+                    onClick={e => e.stopPropagation()}>
+                    <div style={{ textAlign: 'center', marginBottom: 22 }}>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', letterSpacing: '1px', marginBottom: 6 }}>Add to Home Screen</div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.95rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>It takes 10 seconds. Then it feels like a real app.</div>
+                    </div>
+
+                    {/* SAFARI */}
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 14, textAlign: 'center' }}>IF YOU USE SAFARI</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>1</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap the Share button at the <span style={{ color: '#c5a059' }}>bottom</span> of your screen</div>
+                        </div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.88rem', color: 'rgba(255,255,255,0.35)', paddingLeft: 36, marginBottom: 12 }}>It's the square with an arrow pointing up</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>2</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Scroll down and tap "Add to Home Screen"</div>
+                        </div>
+                        <div style={{ padding: '10px 0 0 36px' }}>
+                            <img src="/install-safari.png" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                        </div>
+                    </div>
+
+                    <div style={{ width: '50%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 auto 20px' }} />
+
+                    {/* CHROME */}
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 14, textAlign: 'center' }}>IF YOU USE CHROME</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>1</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap the three dots at the <span style={{ color: '#c5a059' }}>top right</span></div>
+                        </div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.88rem', color: 'rgba(255,255,255,0.35)', paddingLeft: 36, marginBottom: 12 }}>That opens the browser menu</div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>2</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Tap "Add to Home Screen"</div>
+                        </div>
+                        <div style={{ padding: '10px 0 0 36px' }}>
+                            <img src="/install-chrome.png" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                        </div>
+                    </div>
+
+                    <div style={{ width: '50%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)', margin: '0 auto 20px' }} />
+
+                    {/* Final step — same for both */}
+                    <div style={{ marginBottom: 22 }}>
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 14, textAlign: 'center' }}>LAST STEP</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059' }}>3</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#fff', fontWeight: 600 }}>Keep "Open as Web App" on and tap Add</div>
+                        </div>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.88rem', color: 'rgba(255,255,255,0.35)', paddingLeft: 36, marginBottom: 12 }}>That's it. Open it from your home screen now.</div>
+                        <div style={{ padding: '0 0 0 36px' }}>
+                            <img src="/install-step3.jpg" style={{ width: '85%', maxWidth: 280, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }} />
+                        </div>
+                    </div>
+
+                    <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, textAlign: 'center' }}>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
+                            No app store needed. It opens fullscreen, loads instantly, and you'll get notifications from your Queen directly on your phone.
+                        </div>
+                    </div>
+
+                    <button onClick={() => setShowInstallGuide(false)} style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', fontWeight: 600, color: '#c5a059', letterSpacing: '1px', cursor: 'pointer' }}>Got it</button>
+                </div>
+            </div>
+        )}
+
         {/* Challenge Window Alert Overlay */}
         {challengeWindowAlert && !challengePanelOpen && (
             <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: 'rgba(2,2,10,0.92)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -2334,21 +2568,7 @@ export default function ProfilePage() {
                 </div>
             </div>
         )}
-        {/* Desktop Challenge Modal */}
-        {desktopChallengeOpen && (
-            <DesktopChallengeModal
-                challenges={allChallenges}
-                activeChallenge={activeChallenge}
-                isParticipant={isParticipant}
-                participantStatus={participantStatus}
-                participationMap={participationMap}
-                embedded={isMobile}
-                memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
-                onClose={() => setDesktopChallengeOpen(false)}
-                onOpenPanel={(cId: string) => { setDesktopChallengeOpen(false); setChallengePanelId(cId); setChallengePanelOpen(true); }}
-                onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); }}
-            />
-        )}
+        {/* Desktop Challenge Modal moved inside DESKTOP_APP grid */}
         </>
     );
 }
@@ -2390,9 +2610,9 @@ function MobileChallengeBanner({ challengeName, hasOpenWindow, nextWindowTs, onO
         >
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: `0 0 ${hasOpenWindow ? '12px rgba(197,160,89,0.9)' : '6px rgba(197,160,89,0.4)'}`, flexShrink: 0, animation: hasOpenWindow ? 'pulse 2s infinite' : 'none' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{challengeName}</div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.78rem', color: '#fff', letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{hasOpenWindow ? 'LIVE TASK' : challengeName}</div>
                 <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', letterSpacing: '1.5px', marginTop: 3, color: hasOpenWindow ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>
-                    {hasOpenWindow ? 'TASK WINDOW OPEN — TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
+                    {hasOpenWindow ? 'TAP TO SUBMIT' : nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="NEXT TASK IN " /> : 'CHALLENGE ACTIVE'}
                 </div>
             </div>
             <div style={{
@@ -2423,6 +2643,8 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const pendingWindowRef = useRef<string | null>(null);
+    const [selectedSlots, setSelectedSlots] = useState<string[]>(['morning']);
+    const [detectedTimezone, setDetectedTimezone] = useState<string>('UTC');
 
     const load = useCallback(async () => {
         try {
@@ -2434,6 +2656,10 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 
     useEffect(() => { load(); }, [load]);
 
+    useEffect(() => {
+        try { setDetectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch {}
+    }, []);
+
     const showToast = (msg: string, ok: boolean) => {
         setToast({ msg, ok });
         setTimeout(() => setToast(null), 3500);
@@ -2442,14 +2668,26 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const handleJoin = async () => {
         setJoining(true);
         try {
-            const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
+            const isEvergreen = data?.challenge?.is_evergreen;
+            const body: any = {};
+            if (isEvergreen) {
+                body.timezone = detectedTimezone;
+                body.chosen_slots = selectedSlots;
+            }
+            const res = await fetch(`/api/challenges/${challengeId}/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
             const json = await res.json();
             if (json.success) {
                 const msg = json.already_joined
                     ? 'Already enrolled'
-                    : json.late_join_fee
-                        ? `✓ Joined! ${json.late_join_fee} coins late fee charged.`
-                        : '✓ Joined! Good luck.';
+                    : json.is_evergreen
+                        ? `✓ Joined! ${json.coins_charged || 0} coins charged. ${json.windows_created} windows created.`
+                        : json.late_join_fee
+                            ? `✓ Joined! ${json.late_join_fee} coins late fee charged.`
+                            : '✓ Joined! Good luck.';
                 showToast(msg, true);
                 load();
                 if (!json.already_joined && onJoined) onJoined();
@@ -2462,17 +2700,24 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const handleRejoin = async () => {
         setRejoining(true);
         try {
+            const isEvergreen = data?.challenge?.is_evergreen;
+            const body: any = { member_email: memberEmail };
+            if (isEvergreen) {
+                body.timezone = detectedTimezone;
+                body.chosen_slots = selectedSlots;
+            }
             const res = await fetch(`/api/challenges/${challengeId}/rejoin`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ member_email: memberEmail }),
+                body: JSON.stringify(body),
             });
             const json = await res.json();
             if (json.success) {
-                setRejoinMsg(`✓ Back in! ${json.coins_charged} coins charged.`);
+                setRejoinMsg(json.is_evergreen
+                    ? `✓ Back in! ${json.coins_charged} coins. Day 1 restarted.`
+                    : `✓ Back in! ${json.coins_charged} coins charged.`);
                 load();
             } else {
-                // Insufficient coins — send to wallet boost
                 if (json.error?.toLowerCase().includes('need') || json.error?.toLowerCase().includes('coin')) {
                     if ((window as any).goToExchequer) (window as any).goToExchequer();
                 } else {
@@ -2532,10 +2777,10 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
         .slice(0, 3);
 
     return (
-        <div style={embedded ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'transparent' } : { position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
+        <div style={embedded ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'transparent' } : { position: 'fixed', top: 0, left: 0, right: 0, bottom: 'calc(60px + env(safe-area-inset-bottom))', zIndex: 1000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column', padding: '0' }}>
             <input ref={fileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleUpload} />
 
-            {/* Header — only shown on mobile (embedded overlay has its own header) */}
+            {/* Header - only shown on mobile (embedded overlay has its own header) */}
             {!embedded && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
                 <div>
@@ -2574,20 +2819,65 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: data.challenge.image_url ? undefined : 'none' }}>{data.challenge.description}</div>
                                     )}
                                     <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
-                                        {data.challenge.duration_days}d · {data.challenge.tasks_per_day}×/day · {data.challenge.window_minutes}min windows
+                                        {data.challenge.is_evergreen
+                                            ? `${data.challenge.duration_days}d · ${data.challenge.tasks_per_day}×/day · EVERGREEN`
+                                            : `${data.challenge.duration_days}d · ${data.challenge.tasks_per_day}×/day · ${data.challenge.window_minutes}min windows`
+                                        }
                                     </div>
 
-                                    {/* Not joined → JOIN button */}
+                                    {/* Not joined → JOIN button (with slot picker for evergreen) */}
                                     {!data.participant && (
-                                        <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                            <div>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 3 }}>CHALLENGE ACTIVE</div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#777' }}>Do you want to participate?</div>
+                                        <div style={{ background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 10, padding: '14px 16px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: data.challenge.is_evergreen ? 14 : 0 }}>
+                                                <div>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 3 }}>
+                                                        {data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#777' }}>
+                                                        {data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
+                                                    </div>
+                                                </div>
+                                                {!data.challenge.is_evergreen && (
+                                                    <button onClick={handleJoin} disabled={joining}
+                                                        style={{ flexShrink: 0, padding: '10px 20px', background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: joining ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700 }}>
+                                                        {joining ? '...' : '⚔ JOIN'}
+                                                    </button>
+                                                )}
                                             </div>
-                                            <button onClick={handleJoin} disabled={joining}
-                                                style={{ flexShrink: 0, padding: '10px 20px', background: joining ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: joining ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700 }}>
-                                                {joining ? '...' : '⚔ JOIN'}
-                                            </button>
+                                            {data.challenge.is_evergreen && (
+                                                <>
+                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '2px', marginBottom: 8 }}>
+                                                        PICK {data.challenge.tasks_per_day} TIME SLOT{data.challenge.tasks_per_day > 1 ? 'S' : ''}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                                        {(['morning', 'afternoon', 'evening'] as const).map(slot => {
+                                                            const selected = selectedSlots.includes(slot);
+                                                            const labels: Record<string, string> = { morning: '☀ MORNING', afternoon: '◐ AFTERNOON', evening: '☽ EVENING' };
+                                                            const times: Record<string, string> = { morning: '6AM-12PM', afternoon: '12PM-6PM', evening: '6PM-12AM' };
+                                                            return (
+                                                                <button key={slot} onClick={() => {
+                                                                    if (selected) {
+                                                                        setSelectedSlots(prev => prev.filter(s => s !== slot));
+                                                                    } else if (selectedSlots.length < data.challenge.tasks_per_day) {
+                                                                        setSelectedSlots(prev => [...prev, slot]);
+                                                                    }
+                                                                }}
+                                                                style={{ flex: 1, padding: '10px 8px', borderRadius: 8, border: `1px solid ${selected ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.06)'}`, background: selected ? 'rgba(197,160,89,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center' }}>
+                                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: selected ? '#c5a059' : '#555', letterSpacing: '1px', marginBottom: 2 }}>{labels[slot]}</div>
+                                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#444' }}>{times[slot]}</div>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: '#555', marginBottom: 12 }}>
+                                                        Timezone: {detectedTimezone}
+                                                    </div>
+                                                    <button onClick={handleJoin} disabled={joining || selectedSlots.length !== data.challenge.tasks_per_day}
+                                                        style={{ width: '100%', padding: '12px 20px', background: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'rgba(74,222,128,0.05)' : 'linear-gradient(135deg,rgba(74,222,128,0.2),rgba(74,222,128,0.08))', border: '1px solid rgba(74,222,128,0.4)', borderRadius: 8, color: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? '#444' : '#4ade80', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: (joining || selectedSlots.length !== data.challenge.tasks_per_day) ? 'default' : 'pointer', fontWeight: 700 }}>
+                                                        {joining ? '...' : `⚔ JOIN · ${selectedSlots.length}/${data.challenge.tasks_per_day} SLOTS`}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     )}
 
@@ -2596,7 +2886,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: data.participant.status === 'active' ? 'rgba(74,222,128,0.1)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.1)' : 'rgba(197,160,89,0.1)', border: `1px solid ${data.participant.status === 'active' ? 'rgba(74,222,128,0.3)' : data.participant.status === 'eliminated' ? 'rgba(224,48,48,0.3)' : 'rgba(197,160,89,0.3)'}` }}>
                                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059' }} />
                                             <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: data.participant.status === 'active' ? '#4ade80' : data.participant.status === 'eliminated' ? '#e03030' : '#c5a059', letterSpacing: '1.5px' }}>
-                                                {data.participant.status === 'active' ? 'ENROLLED — STILL IN' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
+                                                {data.participant.status === 'active' ? 'ENROLLED - STILL IN' : data.participant.status === 'eliminated' ? 'ELIMINATED' : data.participant.status.toUpperCase()}
                                             </span>
                                         </div>
                                     )}
@@ -2622,12 +2912,12 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                             </div>
                         )}
 
-                        {/* Open windows — upload NOW (only if participant) */}
+                        {/* Open windows - upload NOW (only if participant) */}
                         {data.participant && data.participant.status === 'active' && openWindows.length > 0 && (
                             <div style={{ marginBottom: 28 }}>
                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#4ade80', letterSpacing: '2px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', animation: 'pulse 1.5s infinite' }} />
-                                    WINDOW OPEN NOW — SUBMIT PROOF
+                                    WINDOW OPEN NOW - SUBMIT PROOF
                                 </div>
                                 {openWindows.map((w: any) => {
                                     const comp = completionByWindowId[w.id];
@@ -2636,9 +2926,12 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     const secsLeft = Math.floor((new Date(w.closes_at).getTime() - now) / 1000);
                                     const minLeft = Math.floor(secsLeft / 60);
                                     const placeLabels: Record<number, string> = { 1: '🥇 1st', 2: '🥈 2nd', 3: '🥉 3rd' };
+                                    const tpd = data.challenge?.tasks_per_day || 1;
+                                    const taskIdx = (w.day_number - 1) * tpd + (w.window_number - 1);
+                                    const taskName = (data.challenge?.task_names || [])[taskIdx];
                                     return (
                                         <div key={w.id} style={{ background: done ? 'rgba(74,222,128,0.04)' : 'rgba(74,222,128,0.08)', border: `1px solid ${done ? 'rgba(74,222,128,0.2)' : 'rgba(74,222,128,0.45)'}`, borderRadius: 12, padding: '16px 18px', marginBottom: 10 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && w.verification_code) ? 14 : 0 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: (!done && (w.verification_code || taskName)) ? 14 : 0 }}>
                                                 <div>
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.55rem', color: '#4ade80', marginBottom: 4 }}>
                                                         DAY {w.day_number} · TASK {w.window_number}
@@ -2669,9 +2962,14 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                                     </button>
                                                 )}
                                             </div>
+                                            {!done && taskName && (
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, padding: '10px 14px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
+                                                    {taskName}
+                                                </div>
+                                            )}
                                             {!done && w.verification_code && (
-                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center' }}>
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
+                                                <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 8, padding: '10px 14px', textAlign: 'center', marginTop: taskName ? 8 : 0 }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.35rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE - SHOW IN PHOTO</div>
                                                     <div style={{ fontFamily: 'Orbitron', fontSize: '2rem', fontWeight: 900, color: '#4ade80', letterSpacing: '6px', textShadow: '0 0 16px rgba(74,222,128,0.4)' }}>{w.verification_code}</div>
                                                 </div>
                                             )}
@@ -2681,7 +2979,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                             </div>
                         )}
 
-                        {/* Eliminated — rejoin option */}
+                        {/* Eliminated - rejoin option */}
                         {data.participant?.status === 'eliminated' && (() => {
                             const elimWindow = data.windows?.find((w: any) => w.id === data.participant.eliminated_on_window_id);
                             return (
@@ -2780,34 +3078,29 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 }
 
 // ─── DESKTOP CHALLENGE MODAL ─────────────────────────────────────────────────
-function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, participationMap, embedded, memberEmail, onClose, onOpenPanel, onJoined }: {
+function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, memberEmail, onClose, onOpenPanel, onJoined, embedded }: {
     challenges: any[];
     activeChallenge: { id: string; name: string; theme: string; status: string } | null;
     isParticipant: boolean;
     participantStatus: string | null;
-    participationMap: Record<string, { status: string; data?: any }>;
-    embedded?: boolean;
     memberEmail: string;
     onClose: () => void;
-    onOpenPanel: (challengeId: string) => void;
+    onOpenPanel: () => void;
     onJoined: () => void;
+    embedded?: boolean;
 }) {
-    const [joining, setJoining] = useState<string | null>(null);
+    const [joining, setJoining] = useState(false);
     const [joinError, setJoinError] = useState('');
     const [fullData, setFullData] = useState<{ stats: any; windows: any[] } | null>(null);
-    const overlayFileInputRef = useRef<HTMLInputElement>(null);
-    const [overlayUploading, setOverlayUploading] = useState<string | null>(null);
-    const [overlayUploadDone, setOverlayUploadDone] = useState<string | null>(null);
-    const pendingOverlayUploadRef = useRef<{ challengeId: string; windowId: string } | null>(null);
 
     useEffect(() => {
-        if (activeChallenge && !embedded) {
+        if (activeChallenge) {
             fetch(`/api/challenges/${activeChallenge.id}/submit`)
                 .then(r => r.json())
                 .then(j => { if (j.success) setFullData({ stats: j.stats, windows: j.windows || [] }); })
                 .catch(() => {});
         }
-    }, [activeChallenge, embedded]);
+    }, [activeChallenge]);
 
     const nextWindow = fullData?.windows
         ? fullData.windows
@@ -2818,7 +3111,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
     const nextWindowTs = nextWindow ? new Date(nextWindow.opens_at).getTime() : null;
 
     const handleJoin = async (challengeId: string) => {
-        setJoining(challengeId);
+        setJoining(true);
         setJoinError('');
         try {
             const res = await fetch(`/api/challenges/${challengeId}/join`, { method: 'POST' });
@@ -2832,291 +3125,108 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
         } catch {
             setJoinError('Network error');
         } finally {
-            setJoining(null);
-        }
-    };
-
-    const handleOverlayUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        const pending = pendingOverlayUploadRef.current;
-        if (!file || !pending) return;
-        setOverlayUploading(pending.windowId);
-        if (overlayFileInputRef.current) overlayFileInputRef.current.value = '';
-        try {
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('bucket', 'media');
-            fd.append('folder', `challenge-proofs/${pending.challengeId}`);
-            fd.append('ext', file.name.split('.').pop() || 'jpg');
-            const upRes = await fetch('/api/upload', { method: 'POST', body: fd });
-            const upJson = await upRes.json();
-            if (!upJson.url) return;
-            const subRes = await fetch(`/api/challenges/${pending.challengeId}/submit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ windowId: pending.windowId, proofUrl: upJson.url }),
-            });
-            const subJson = await subRes.json();
-            if (subJson.success) {
-                setOverlayUploadDone(pending.windowId);
-                setTimeout(() => setOverlayUploadDone(null), 2500);
-                onJoined(); // triggers re-poll
-            }
-        } finally {
-            setOverlayUploading(null);
-            pendingOverlayUploadRef.current = null;
+            setJoining(false);
         }
     };
 
     const themeColor = (t: string) => ({ gold: '#c5a059', red: '#ef4444', purple: '#a855f7', blue: '#3b82f6' }[t] || '#c5a059');
     const now = Date.now();
 
-    const visibleChallenges = challenges.filter((c: any) => c.status === 'active' || (
-        c.status === 'draft' && c.start_date &&
-        new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
-        new Date(c.start_date).getTime() > now
-    ));
-
-    // ── MOBILE TWO-SECTION LAYOUT ────────────────────────────────────────────
-    if (embedded) {
-        const enrolled = visibleChallenges.filter((c: any) => participationMap[c.id]);
-        const available = visibleChallenges.filter((c: any) => !participationMap[c.id]);
-
-        return (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 10000001, background: 'rgba(5,8,18,1)', display: 'flex', flexDirection: 'column' }}>
-                <input ref={overlayFileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleOverlayUpload} />
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 14px', borderBottom: '1px solid rgba(197,160,89,0.18)', flexShrink: 0 }}>
-                    <div className="ribbon-label" style={{ fontSize: '0.6rem', letterSpacing: '4px' }}>CHALLENGES</div>
-                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 32, height: 32, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-                </div>
-
-                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 100px' }}>
-                    {/* ── MY CHALLENGES SECTION ── */}
-                    {enrolled.length > 0 && (
-                        <div style={{ marginBottom: 28 }}>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px', marginBottom: 14, paddingLeft: 2 }}>MY CHALLENGES</div>
-                            {enrolled.map((c: any) => {
-                                const entry = participationMap[c.id];
-                                const pData = entry?.data;
-                                const windows = pData?.windows || [];
-                                const completions = pData?.completions || [];
-                                const submittedIds = new Set(completions.map((comp: any) => comp.window_id));
-                                const openWin = windows.find((w: any) =>
-                                    now >= new Date(w.opens_at).getTime() && now < new Date(w.closes_at).getTime() && !submittedIds.has(w.id)
-                                );
-                                const nextWin = windows
-                                    .filter((w: any) => new Date(w.opens_at).getTime() > now && !submittedIds.has(w.id))
-                                    .sort((a: any, b: any) => new Date(a.opens_at).getTime() - new Date(b.opens_at).getTime())[0];
-                                const tasksDone = completions.length;
-                                const totalTasks = (c.duration_days || 1) * (c.tasks_per_day || 1);
-                                const tasksRemaining = Math.max(0, totalTasks - tasksDone);
-
-                                // Get task name for open window
-                                const tpd = c.tasks_per_day || 1;
-                                const taskIdx = openWin ? (openWin.day_number - 1) * tpd + (openWin.window_number - 1) : -1;
-                                const taskName = taskIdx >= 0 ? (c.task_names || [])[taskIdx] : null;
-
-                                const isEliminated = entry.status === 'eliminated';
-                                const uploadBusy = overlayUploading === openWin?.id;
-                                const uploadDone = overlayUploadDone === openWin?.id;
-
-                                return (
-                                    <div key={c.id} style={{
-                                        background: 'rgba(255,255,255,0.02)',
-                                        border: `1px solid ${isEliminated ? 'rgba(224,48,48,0.25)' : openWin ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                                        borderRadius: 14, overflow: 'hidden', marginBottom: 12,
-                                    }}>
-                                        {/* Card header with thumbnail */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px 10px' }}>
-                                            {c.image_url && (
-                                                <img src={c.image_url} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(197,160,89,0.2)', flexShrink: 0 }} alt="" />
-                                            )}
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.88rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                                                {isEliminated ? (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#e03030', letterSpacing: '2px', marginTop: 2 }}>ELIMINATED</div>
-                                                ) : openWin ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: '#4ade80', letterSpacing: '1.5px' }}>DAY {openWin.day_number} · TASK {openWin.window_number}</span>
-                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px' }}>
-                                                            <CountdownText targetTs={new Date(openWin.closes_at).getTime()} prefix="CLOSES IN " />
-                                                        </span>
-                                                    </div>
-                                                ) : nextWin ? (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '1.5px', marginTop: 2 }}>
-                                                        <CountdownText targetTs={new Date(nextWin.opens_at).getTime()} prefix="NEXT TASK IN " />
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px', marginTop: 2 }}>ENROLLED</div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Inline task panel — only when window is open */}
-                                        {openWin && !isEliminated && (
-                                            <div style={{ padding: '0 16px 14px' }}>
-                                                {/* Task name */}
-                                                {taskName && (
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.55, marginBottom: 12, padding: '10px 12px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8 }}>
-                                                        {taskName}
-                                                    </div>
-                                                )}
-
-                                                {/* Verification code */}
-                                                {openWin.verification_code && (
-                                                    <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, textAlign: 'center' }}>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.32rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 4 }}>VERIFICATION CODE — SHOW IN PHOTO</div>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '1.8rem', fontWeight: 900, color: '#c5a059', letterSpacing: '6px', textShadow: '0 0 16px rgba(197,160,89,0.4)' }}>{openWin.verification_code}</div>
-                                                    </div>
-                                                )}
-
-                                                {/* Progress + upload */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>
-                                                        {tasksDone} done · {tasksRemaining} to go
-                                                    </div>
-                                                    <button
-                                                        disabled={uploadBusy || uploadDone}
-                                                        onClick={() => { pendingOverlayUploadRef.current = { challengeId: c.id, windowId: openWin.id }; overlayFileInputRef.current?.click(); }}
-                                                        style={{
-                                                            padding: '9px 18px', borderRadius: 8, border: 'none', cursor: uploadBusy || uploadDone ? 'default' : 'pointer',
-                                                            background: uploadDone ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, rgba(197,160,89,0.2), rgba(139,105,20,0.12))',
-                                                            color: uploadDone ? '#4ade80' : '#c5a059',
-                                                            fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', flexShrink: 0,
-                                                        }}
-                                                    >{uploadDone ? '✓ DONE' : uploadBusy ? '...' : '↑ UPLOAD PROOF'}</button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Eliminated — tap to view details */}
-                                        {isEliminated && (
-                                            <div style={{ padding: '0 16px 14px' }}>
-                                                <button onClick={() => onOpenPanel(c.id)} style={{
-                                                    width: '100%', padding: '9px 0', borderRadius: 8, border: '1px solid rgba(224,48,48,0.3)',
-                                                    background: 'rgba(224,48,48,0.06)', color: '#e03030',
-                                                    fontFamily: 'Orbitron', fontSize: '0.4rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer',
-                                                }}>VIEW DETAILS · REJOIN</button>
-                                            </div>
-                                        )}
-
-                                        {/* No window open, not eliminated — compact view with tap to open panel */}
-                                        {!openWin && !isEliminated && (
-                                            <div style={{ padding: '0 16px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
-                                                    {tasksDone} done · {tasksRemaining} to go
-                                                </div>
-                                                <button onClick={() => onOpenPanel(c.id)} style={{
-                                                    padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(197,160,89,0.2)',
-                                                    background: 'rgba(197,160,89,0.06)', color: 'rgba(197,160,89,0.6)',
-                                                    fontFamily: 'Orbitron', fontSize: '0.35rem', fontWeight: 700, letterSpacing: '1.5px', cursor: 'pointer', flexShrink: 0,
-                                                }}>VIEW DETAILS</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    {/* ── RUNNING CHALLENGES SECTION ── */}
-                    {available.length > 0 && (
-                        <div>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 14, paddingLeft: 2 }}>RUNNING CHALLENGES</div>
-                            {available.map((c: any) => {
-                                const startsSoon = c.status === 'draft';
-                                const isJoining = joining === c.id;
-                                return (
-                                    <div key={c.id} style={{
-                                        display: 'flex', gap: 12, padding: '14px', marginBottom: 10,
-                                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12,
-                                    }}>
-                                        {/* Thumbnail */}
-                                        <div style={{ width: 56, height: 56, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'rgba(197,160,89,0.06)' }}>
-                                            {c.image_url ? (
-                                                <img src={c.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                                            ) : (
-                                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', opacity: 0.25 }}>⚔</div>
-                                            )}
-                                        </div>
-                                        {/* Info */}
-                                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
-                                            {c.description && (
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{c.description}</div>
-                                            )}
-                                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', marginTop: 2 }}>
-                                                {c.duration_days}d · {c.tasks_per_day}×/day · {c.window_minutes}min
-                                                {startsSoon && c.start_date && ` · Starts ${new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                                            </div>
-                                        </div>
-                                        {/* Join button */}
-                                        <button onClick={() => handleJoin(c.id)} disabled={!!joining} style={{
-                                            alignSelf: 'center', padding: '8px 16px', borderRadius: 8, border: 'none', flexShrink: 0,
-                                            background: isJoining ? 'rgba(197,160,89,0.08)' : 'linear-gradient(135deg, #c5a059, #8b6914)',
-                                            color: isJoining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700,
-                                            letterSpacing: '1px', cursor: isJoining ? 'default' : 'pointer',
-                                        }}>{isJoining ? '...' : 'JOIN'}</button>
-                                    </div>
-                                );
-                            })}
-                            {joinError && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: 'rgba(197,160,89,0.7)', textAlign: 'center', marginTop: 8, letterSpacing: '1px' }}>{joinError}</div>}
-                        </div>
-                    )}
-
-                    {/* No challenges at all */}
-                    {visibleChallenges.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', letterSpacing: '2px' }}>
-                            No active challenges
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
-    // ── DESKTOP LAYOUT (unchanged) ───────────────────────────────────────────
     return (
-        <div style={{
-            position: 'fixed', inset: 0, zIndex: 10000,
-            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '24px',
-        }} onClick={onClose}>
-            <div style={{
-                background: 'rgba(5,8,18,0.99)',
-                border: '1px solid rgba(197,160,89,0.18)',
-                borderRadius: 16, padding: '28px 32px',
-                maxWidth: 700, width: '100%', maxHeight: '82vh',
-                overflowY: 'auto',
-            }} onClick={e => e.stopPropagation()}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                    <div className="ribbon-label" style={{ fontSize: '0.7rem', letterSpacing: '4px' }}>CHALLENGES</div>
-                    <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#555', width: 32, height: 32, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        <div style={embedded ? { display: 'flex', flexDirection: 'column' } : {
+            position: 'absolute', inset: 0, zIndex: 50,
+            background: '#04040e',
+            display: 'flex', flexDirection: 'column',
+            overflow: 'hidden',
+        }}>
+            {/* Header — hidden when embedded in mobile overlay */}
+            {!embedded && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.15)', flexShrink: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, background: '#4ade80', borderRadius: 2 }}></div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.85rem', color: '#4ade80', letterSpacing: '4px', fontWeight: 700 }}>CHALLENGES</div>
                 </div>
+                <button onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)', fontFamily: 'Orbitron', fontSize: '0.45rem', padding: '5px 14px', cursor: 'pointer', borderRadius: 4, letterSpacing: '1px' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 5 5 12 12 19"/></svg>
+                    CLOSE
+                </button>
+            </div>
+            )}
+
+            <div style={{ flex: 1, overflowY: embedded ? undefined : 'auto', padding: embedded ? '20px 16px' : '24px 32px' }}>
 
                 {/* Challenge cards */}
-                {visibleChallenges.length === 0 ? (
+                {challenges.filter((c: any) => c.status === 'active' || (
+                    c.status === 'draft' && c.start_date &&
+                    new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                    new Date(c.start_date).getTime() > now
+                )).length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '48px 24px', color: '#333', fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', letterSpacing: '2px' }}>
                         No active challenges
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {visibleChallenges.map((c: any) => {
+                        {challenges.filter((c: any) => c.status === 'active' || (
+                            c.status === 'draft' && c.start_date &&
+                            new Date(c.start_date).getTime() - now <= 24 * 60 * 60 * 1000 &&
+                            new Date(c.start_date).getTime() > now
+                        )).map((c: any) => {
                             const color = themeColor(c.theme);
-                            const isThisJoined = !!participationMap[c.id];
+                            const isThisJoined = activeChallenge?.id === c.id && isParticipant;
                             const daysLeft = c.end_date ? Math.max(0, Math.ceil((new Date(c.end_date).getTime() - now) / 86400000)) : null;
                             const startsSoon = c.status === 'draft';
-                            const isJoining = joining === c.id;
 
                             return (
-                                <div key={c.id} style={{
+                                <div key={c.id} style={embedded ? {
+                                    background: c.image_url ? undefined : 'rgba(197,160,89,0.04)',
+                                    border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(197,160,89,0.15)'}`,
+                                    borderRadius: 14, padding: 18, position: 'relative', overflow: 'hidden',
+                                } : {
                                     display: 'flex', gap: 0, borderRadius: 16, overflow: 'hidden',
                                     border: `1px solid ${isThisJoined ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.07)'}`,
                                     background: isThisJoined ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)',
                                 }}>
+                                    {embedded ? (
+                                        /* ── MOBILE COMPACT CARD (matches challenge tasks panel) ── */
+                                        <>
+                                            {c.image_url && (
+                                                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${c.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12, zIndex: 0 }} />
+                                            )}
+                                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                                {c.image_url && (
+                                                    <img src={c.image_url} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(197,160,89,0.3)', float: 'left', marginRight: 12, marginBottom: 4 }} alt="" />
+                                                )}
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', marginBottom: 4 }}>{c.name}</div>
+                                                {c.description && (
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: '#666', marginBottom: 10, clear: c.image_url ? undefined : 'none' }}>{c.description}</div>
+                                                )}
+                                                <div style={{ clear: 'both', fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#555', letterSpacing: '1px', marginBottom: 14 }}>
+                                                    {c.duration_days}d · {c.tasks_per_day}×/day · {c.is_evergreen ? 'EVERGREEN' : `${c.window_minutes}min windows`}
+                                                </div>
+
+                                                {isThisJoined ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: 8, padding: '6px 12px' }}>
+                                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
+                                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: '#4ade80', letterSpacing: '1px', fontWeight: 700 }}>ENROLLED - STILL IN</span>
+                                                        </div>
+                                                        <button onClick={onOpenPanel} style={{
+                                                            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                                            background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                                            color: '#000', fontFamily: 'Orbitron', fontSize: '0.42rem', fontWeight: 700, letterSpacing: '1px',
+                                                        }}>VIEW TASKS</button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: startsSoon ? 'rgba(251,191,36,0.08)' : 'rgba(74,222,128,0.08)', border: `1px solid ${startsSoon ? 'rgba(251,191,36,0.25)' : 'rgba(74,222,128,0.25)'}`, borderRadius: 8, padding: '6px 12px' }}>
+                                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: startsSoon ? '#fbbf24' : '#4ade80' }} />
+                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: startsSoon ? '#fbbf24' : '#4ade80', letterSpacing: '1px', fontWeight: 700 }}>{startsSoon ? 'STARTING SOON' : 'OPEN TO JOIN'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* ── DESKTOP CARD (side-by-side layout) ── */
+                                        <>
                                     {/* Image / cover */}
                                     <div style={{
                                         width: 200, minHeight: 160, flexShrink: 0, position: 'relative',
@@ -3146,13 +3256,13 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             )}
                                         </div>
 
-                                        {/* Challenge details — one per line */}
+                                        {/* Challenge details - one per line */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                                             {[
                                                 { label: 'Days', val: String(c.duration_days) },
                                                 { label: 'Tasks a day', val: String(c.tasks_per_day) },
                                                 { label: 'Window', val: `${c.window_minutes} min` },
-                                                { label: 'Still working', val: String(c.participant_active ?? '—') },
+                                                { label: 'Still working', val: String(c.participant_active ?? '-') },
                                                 ...(daysLeft !== null && !startsSoon ? [{ label: 'Days left', val: String(daysLeft) }] : []),
                                                 ...(startsSoon && c.start_date ? [{ label: 'Starts', val: new Date(c.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }] : []),
                                             ].map(({ label, val }) => (
@@ -3163,8 +3273,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             ))}
                                         </div>
 
-                                        {/* Personal stats (if joined) — one per line */}
-                                        {isThisJoined && fullData?.stats && activeChallenge?.id === c.id && (
+                                        {/* Personal stats (if joined) - one per line */}
+                                        {isThisJoined && fullData?.stats && (
                                             <div style={{ borderTop: '1px solid rgba(197,160,89,0.12)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 7 }}>
                                                 {[
                                                     { label: 'My tasks done', val: String(fullData.stats.tasks_done) },
@@ -3178,7 +3288,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.5px' }}>Next task in</span>
                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#c5a059', fontWeight: 700 }}>
-                                                        {nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="" /> : '—'}
+                                                        {nextWindowTs ? <CountdownText targetTs={nextWindowTs} prefix="" /> : '-'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -3186,7 +3296,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
 
                                         {/* Action button */}
                                         {isThisJoined ? (
-                                            <button onClick={() => onOpenPanel(c.id)} style={{
+                                            <button onClick={onOpenPanel} style={{
                                                 width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
                                                 background: 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
                                                 color: '#000', fontFamily: 'Orbitron', fontSize: '0.55rem', fontWeight: 700,
@@ -3195,17 +3305,19 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             }}>VIEW DETAILS & UPLOAD</button>
                                         ) : (
                                             <div>
-                                                <button onClick={() => handleJoin(c.id)} disabled={!!joining} style={{
-                                                    width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: isJoining ? 'default' : 'pointer',
-                                                    background: isJoining ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
-                                                    color: isJoining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.55rem',
+                                                <button onClick={() => handleJoin(c.id)} disabled={joining} style={{
+                                                    width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: joining ? 'default' : 'pointer',
+                                                    background: joining ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg, #c5a059 0%, #8b6914 100%)',
+                                                    color: joining ? '#555' : '#000', fontFamily: 'Orbitron', fontSize: '0.55rem',
                                                     fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
-                                                    boxShadow: isJoining ? 'none' : '0 4px 15px rgba(197,160,89,0.3)',
-                                                }}>{isJoining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
+                                                    boxShadow: joining ? 'none' : '0 4px 15px rgba(197,160,89,0.3)',
+                                                }}>{joining ? 'JOINING...' : 'JOIN CHALLENGE'}</button>
                                                 {joinError && <div className="ribbon-label" style={{ fontSize: '0.42rem', color: 'rgba(197,160,89,0.7)', marginTop: 6, textAlign: 'center' }}>{joinError}</div>}
                                             </div>
                                         )}
                                     </div>
+                                        </>
+                                    )}
                                 </div>
                             );
                         })}
