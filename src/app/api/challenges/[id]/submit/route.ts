@@ -80,8 +80,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         // For on-demand challenges, include scheduling info
         let onDemandInfo: any = undefined;
         const { data: ch } = await supabaseAdmin
-            .from('challenges').select('scheduling_mode, duration_days').eq('id', challengeId).single();
-        if (ch?.scheduling_mode === 'on_demand') {
+            .from('challenges').select('scheduling_mode, duration_days, is_evergreen').eq('id', challengeId).single();
+        if (ch?.is_evergreen && ch?.scheduling_mode !== 'slots') {
             const { count } = await supabaseAdmin
                 .from('challenge_completions')
                 .select('*', { count: 'exact', head: true })

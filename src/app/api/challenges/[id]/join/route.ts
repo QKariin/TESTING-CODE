@@ -171,7 +171,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             });
         }
 
-        if (challenge.is_evergreen && challenge.scheduling_mode === 'on_demand') {
+        if (challenge.is_evergreen && challenge.scheduling_mode !== 'slots') {
             // ── ON-DEMAND EVERGREEN JOIN ──
             // Create participant + 1 immediate window. No slots needed.
             const body = await req.json().catch(() => ({}));

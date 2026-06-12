@@ -2630,6 +2630,8 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
     const pendingWindowRef = useRef<string | null>(null);
     const [selectedSlots, setSelectedSlots] = useState<string[]>(['morning']);
     const [detectedTimezone, setDetectedTimezone] = useState<string>('UTC');
+    const [showSchedulePicker, setShowSchedulePicker] = useState(false);
+    const [schedulingDelay, setSchedulingDelay] = useState<number | null>(null);
 
     const load = useCallback(async () => {
         try {
@@ -2741,12 +2743,37 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
             if (subJson.success) {
                 showToast(`✓ Submitted! Speed: ${subJson.response_time_seconds}s`, true);
                 load();
+                if (subJson.is_on_demand && subJson.can_schedule_next) {
+                    setShowSchedulePicker(true);
+                }
             } else {
                 showToast(subJson.error || 'Submit failed', false);
             }
         } finally {
             setUploading(null);
             pendingWindowRef.current = null;
+        }
+    };
+
+    const handleScheduleNext = async (delayMinutes: number) => {
+        setSchedulingDelay(delayMinutes);
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/schedule-next`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delay_minutes: delayMinutes }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                const labels: Record<number, string> = { 0: 'now', 60: '1 hour', 180: '3 hours', 720: '12 hours' };
+                showToast(`✓ Next task scheduled ${delayMinutes === 0 ? 'now' : 'in ' + labels[delayMinutes]}!`, true);
+                setShowSchedulePicker(false);
+                load();
+            } else {
+                showToast(json.error || 'Could not schedule', false);
+            }
+        } finally {
+            setSchedulingDelay(null);
         }
     };
 
@@ -2814,25 +2841,25 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                                     {/* Not joined → JOIN button (with slot picker for evergreen) */}
                                     {!data.participant && (
                                         <div style={{ background: 'rgba(224,64,251,0.04)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 12, padding: '18px 18px', backdropFilter: 'blur(12px)' }}>
-                                            <div style={{ marginBottom: (data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'on_demand') ? 16 : 0 }}>
+                                            <div style={{ marginBottom: (data.challenge.is_evergreen && data.challenge.scheduling_mode === 'slots') ? 16 : 0 }}>
                                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', color: '#e040fb', letterSpacing: '2px', marginBottom: 4 }}>
-                                                    {data.challenge.scheduling_mode === 'on_demand' ? 'ON-DEMAND CHALLENGE' : data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
+                                                    {(data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'slots') ? 'ON-DEMAND CHALLENGE' : data.challenge.is_evergreen ? 'EVERGREEN CHALLENGE' : 'CHALLENGE ACTIVE'}
                                                 </div>
                                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.5)' }}>
-                                                    {data.challenge.scheduling_mode === 'on_demand'
+                                                    {(data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'slots')
                                                         ? `${data.challenge.duration_days} tasks · You choose when each task arrives`
                                                         : data.challenge.is_evergreen ? `${data.challenge.duration_days} days · Pick your time slots` : 'Do you want to participate?'}
                                                 </div>
                                             </div>
-                                            {/* Simple JOIN for classic or on-demand */}
-                                            {(!data.challenge.is_evergreen || data.challenge.scheduling_mode === 'on_demand') && (
+                                            {/* Simple JOIN for classic or on-demand (evergreen with scheduling_mode != 'slots') */}
+                                            {(!data.challenge.is_evergreen || data.challenge.scheduling_mode !== 'slots') && (
                                                 <button onClick={handleJoin} disabled={joining}
                                                     style={{ width: '100%', marginTop: 14, padding: '13px 20px', background: joining ? 'rgba(224,64,251,0.05)' : 'linear-gradient(135deg, rgba(255,0,237,0.2), rgba(0,10,255,0.15))', border: '1px solid rgba(224,64,251,0.4)', borderRadius: 10, color: joining ? '#444' : '#e040fb', fontFamily: 'Orbitron, monospace', fontSize: '0.5rem', letterSpacing: '2px', cursor: joining ? 'default' : 'pointer', fontWeight: 700, backdropFilter: 'blur(8px)' }}>
-                                                    {joining ? '...' : data.challenge.scheduling_mode === 'on_demand' ? 'JOIN · FIRST TASK STARTS NOW' : 'JOIN CHALLENGE'}
+                                                    {joining ? '...' : (data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'slots') ? 'JOIN · FIRST TASK STARTS NOW' : 'JOIN CHALLENGE'}
                                                 </button>
                                             )}
-                                            {/* Slot picker for legacy evergreen */}
-                                            {data.challenge.is_evergreen && data.challenge.scheduling_mode !== 'on_demand' && (
+                                            {/* Slot picker for legacy evergreen (only if explicitly 'slots') */}
+                                            {data.challenge.is_evergreen && data.challenge.scheduling_mode === 'slots' && (
                                                 <>
                                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginBottom: 10 }}>
                                                         PICK {data.challenge.tasks_per_day} TIME SLOT{data.challenge.tasks_per_day > 1 ? 'S' : ''}
@@ -3001,8 +3028,48 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
                             );
                         })()}
 
-                        {/* No open windows (only show if participant) */}
-                        {data.participant && data.participant.status === 'active' && openWindows.length === 0 && (
+                        {/* On-demand schedule picker (shown after upload or when waiting to schedule) */}
+                        {data.participant && data.participant.status === 'active' && data.challenge?.is_evergreen && data.challenge?.scheduling_mode !== 'slots' && openWindows.length === 0 && upcomingWindows.length === 0 && (() => {
+                            const tasksDone = (data.completions || []).length;
+                            const totalTasks = data.challenge.duration_days || 0;
+                            const canSchedule = tasksDone > 0 && tasksDone < totalTasks;
+                            if (!canSchedule && !showSchedulePicker) return null;
+                            const delayOptions = [
+                                { minutes: 0, label: 'NOW', sub: 'Start immediately' },
+                                { minutes: 60, label: '1 HOUR', sub: 'Short break' },
+                                { minutes: 180, label: '3 HOURS', sub: 'Half day' },
+                                { minutes: 720, label: '12 HOURS', sub: 'Tomorrow' },
+                            ];
+                            return (
+                                <div style={{ marginBottom: 24, background: 'rgba(224,64,251,0.04)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 14, padding: '22px 18px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#e040fb', letterSpacing: '3px', marginBottom: 6 }}>TASK {tasksDone} COMPLETE</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#fff', fontWeight: 700, marginBottom: 4 }}>When do you want your next task?</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>{totalTasks - tasksDone} task{totalTasks - tasksDone !== 1 ? 's' : ''} remaining</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                        {delayOptions.map(opt => {
+                                            const busy = schedulingDelay === opt.minutes;
+                                            return (
+                                                <button key={opt.minutes} onClick={() => handleScheduleNext(opt.minutes)} disabled={schedulingDelay !== null}
+                                                    style={{
+                                                        padding: '16px 10px', borderRadius: 12, cursor: schedulingDelay !== null ? 'default' : 'pointer',
+                                                        background: busy ? 'rgba(224,64,251,0.15)' : 'linear-gradient(135deg, rgba(255,0,237,0.1), rgba(0,10,255,0.08))',
+                                                        border: `1px solid ${busy ? 'rgba(224,64,251,0.5)' : 'rgba(224,64,251,0.25)'}`,
+                                                        backdropFilter: 'blur(8px)',
+                                                    }}>
+                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: busy ? '#fff' : '#e040fb', fontWeight: 700, letterSpacing: '2px', marginBottom: 4 }}>
+                                                        {busy ? '...' : opt.label}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>{opt.sub}</div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* No open windows (only show if participant, and not on_demand awaiting schedule) */}
+                        {data.participant && data.participant.status === 'active' && openWindows.length === 0 && !(data.challenge?.is_evergreen && data.challenge?.scheduling_mode !== 'slots' && upcomingWindows.length === 0 && (data.completions || []).length > 0 && (data.completions || []).length < (data.challenge.duration_days || 0)) && (
                             <div style={{ textAlign: 'center', padding: '24px 0 16px', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: '#333', letterSpacing: '2px' }}>
                                 NO WINDOW OPEN RIGHT NOW
                             </div>
@@ -3084,6 +3151,8 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
     const overlayFileInputRef = useRef<HTMLInputElement>(null);
     const [overlayUploading, setOverlayUploading] = useState<string | null>(null);
     const [overlayUploadDone, setOverlayUploadDone] = useState<string | null>(null);
+    const [overlaySchedulePicker, setOverlaySchedulePicker] = useState<string | null>(null); // challengeId showing picker
+    const [overlayScheduling, setOverlayScheduling] = useState<number | null>(null); // delay being submitted
     const pendingOverlayUploadRef = useRef<{ challengeId: string; windowId: string } | null>(null);
 
     useEffect(() => {
@@ -3147,10 +3216,31 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                 setOverlayUploadDone(pending.windowId);
                 setTimeout(() => setOverlayUploadDone(null), 2500);
                 onJoined(); // triggers re-poll
+                if (subJson.is_on_demand && subJson.can_schedule_next) {
+                    setOverlaySchedulePicker(pending.challengeId);
+                }
             }
         } finally {
             setOverlayUploading(null);
             pendingOverlayUploadRef.current = null;
+        }
+    };
+
+    const handleOverlaySchedule = async (challengeId: string, delayMinutes: number) => {
+        setOverlayScheduling(delayMinutes);
+        try {
+            const res = await fetch(`/api/challenges/${challengeId}/schedule-next`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delay_minutes: delayMinutes }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setOverlaySchedulePicker(null);
+                onJoined(); // triggers re-poll to refresh windows
+            }
+        } finally {
+            setOverlayScheduling(null);
         }
     };
 
@@ -3241,21 +3331,67 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                                             }}>REJOIN CHALLENGE</button>
                                         )}
 
-                                        {/* No open window — centered countdown, 2 lines */}
-                                        {!openWin && !isEliminated && (
-                                            <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
-                                                {nextWinLocal ? (
-                                                    <>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 6 }}>NEXT TASK:</div>
-                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#e040fb', letterSpacing: '2px', fontWeight: 700 }}>
-                                                            <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="" />
+                                        {/* No open window — countdown or on-demand picker */}
+                                        {!openWin && !isEliminated && (() => {
+                                            const schedMode = pData?.challenge?.scheduling_mode || c.scheduling_mode;
+                                            const isOnDemand = (pData?.challenge?.is_evergreen || c.is_evergreen) && schedMode !== 'slots';
+                                            const needsSchedule = isOnDemand && !nextWinLocal && tasksDone > 0 && tasksDone < totalTasks;
+                                            const showPicker = overlaySchedulePicker === c.id || needsSchedule;
+
+                                            if (showPicker) {
+                                                const delayOpts = [
+                                                    { m: 0, label: 'NOW', sub: 'Immediately' },
+                                                    { m: 60, label: '1 HOUR', sub: 'Short break' },
+                                                    { m: 180, label: '3 HOURS', sub: 'Half day' },
+                                                    { m: 720, label: '12 HOURS', sub: 'Tomorrow' },
+                                                ];
+                                                return (
+                                                    <div style={{ padding: '8px 0 4px' }}>
+                                                        <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.36rem', color: '#e040fb', letterSpacing: '2.5px', marginBottom: 4 }}>TASK {tasksDone} DONE</div>
+                                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: '#fff', fontWeight: 700 }}>Next task when?</div>
+                                                            <div style={{ fontFamily: 'Rajdhani', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{totalTasks - tasksDone} remaining</div>
                                                         </div>
-                                                    </>
-                                                ) : (
-                                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>NO UPCOMING TASKS</div>
-                                                )}
-                                            </div>
-                                        )}
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                                            {delayOpts.map(opt => {
+                                                                const busy = overlayScheduling === opt.m;
+                                                                return (
+                                                                    <button key={opt.m} onClick={() => handleOverlaySchedule(c.id, opt.m)} disabled={overlayScheduling !== null}
+                                                                        style={{
+                                                                            padding: '12px 8px', borderRadius: 10, cursor: overlayScheduling !== null ? 'default' : 'pointer',
+                                                                            background: busy ? 'rgba(224,64,251,0.15)' : 'linear-gradient(135deg, rgba(255,0,237,0.08), rgba(0,10,255,0.06))',
+                                                                            border: `1px solid ${busy ? 'rgba(224,64,251,0.5)' : 'rgba(224,64,251,0.2)'}`,
+                                                                            backdropFilter: 'blur(8px)',
+                                                                        }}>
+                                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.44rem', color: busy ? '#fff' : '#e040fb', fontWeight: 700, letterSpacing: '1.5px', marginBottom: 2 }}>
+                                                                            {busy ? '...' : opt.label}
+                                                                        </div>
+                                                                        <div style={{ fontFamily: 'Rajdhani', fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)' }}>{opt.sub}</div>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+
+                                            return (
+                                                <div style={{ textAlign: 'center', padding: '10px 0 4px' }}>
+                                                    {nextWinLocal ? (
+                                                        <>
+                                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '3px', marginBottom: 6 }}>NEXT TASK:</div>
+                                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#e040fb', letterSpacing: '2px', fontWeight: 700 }}>
+                                                                <CountdownText targetTs={new Date(nextWinLocal.opens_at).getTime()} prefix="" />
+                                                            </div>
+                                                        </>
+                                                    ) : tasksDone >= totalTasks ? (
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#e040fb', letterSpacing: '2px' }}>ALL TASKS COMPLETE</div>
+                                                    ) : (
+                                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>NO UPCOMING TASKS</div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Open window — task info + upload */}
                                         {openWin && !isEliminated && (

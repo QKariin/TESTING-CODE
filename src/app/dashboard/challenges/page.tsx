@@ -191,10 +191,39 @@ export default function ChallengesPage({ _onClose }: { _onClose?: () => void } =
                         </button>
                     ))}
 
+                    {/* ALL CHALLENGES LIST */}
+                    {challenges.length > 0 && (
+                        <>
+                            <div className="ch-sidebar-divider" />
+                            <div className="ch-sidebar-label">ALL CHALLENGES</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 8px' }}>
+                                {challenges.map(c => {
+                                    const isSelected = detail?.challenge.id === c.id;
+                                    const statusColor = c.status === 'active' ? '#4ade80' : c.status === 'draft' ? '#fbbf24' : '#555';
+                                    return (
+                                        <button key={c.id} onClick={() => { loadDetail(c.id); setTab('active'); }}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+                                                background: isSelected ? 'rgba(197,160,89,0.08)' : 'transparent',
+                                                border: isSelected ? '1px solid rgba(197,160,89,0.2)' : '1px solid transparent',
+                                                borderRadius: 8, cursor: 'pointer', textAlign: 'left', width: '100%',
+                                            }}>
+                                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor, flexShrink: 0, boxShadow: c.status === 'active' ? '0 0 6px rgba(74,222,128,0.6)' : 'none' }} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: isSelected ? '#c5a059' : '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.3rem', color: '#444', letterSpacing: '1px', marginTop: 1 }}>{c.status.toUpperCase()} · {c.participant_active ?? 0} in</div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
+
                     {detail && (
                         <>
                             <div className="ch-sidebar-divider" />
-                            <div className="ch-sidebar-label">CHALLENGE</div>
+                            <div className="ch-sidebar-label">SELECTED</div>
                             <div style={{ padding: '8px 20px' }}>
                                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: themeColor(detail.challenge.theme), marginBottom: 4 }}>
                                     {detail.challenge.name}

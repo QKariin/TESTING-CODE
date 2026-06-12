@@ -32,7 +32,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         const { data: challenge } = await supabaseAdmin
             .from('challenges').select('*').eq('id', challengeId).single();
         if (!challenge) return NextResponse.json({ success: false, error: 'Challenge not found' }, { status: 404 });
-        if (challenge.scheduling_mode !== 'on_demand') {
+        if (!challenge.is_evergreen || challenge.scheduling_mode === 'slots') {
             return NextResponse.json({ success: false, error: 'Not an on-demand challenge' }, { status: 400 });
         }
 
