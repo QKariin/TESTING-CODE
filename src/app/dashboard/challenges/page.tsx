@@ -965,6 +965,7 @@ function CreateTab({ allChallenges, onCreate }: {
         image_url: '',
         is_evergreen: false, slot_duration_minutes: 360, evergreen_join_cost: 0, evergreen_rejoin_cost: 1000,
         is_tiered: false, has_difficulty: false,
+        badge_icon: 'trophy',
     });
 
     const [dailyTask, setDailyTask] = useState('Morning photo check-in');
@@ -1880,6 +1881,30 @@ function CreateTab({ allChallenges, onCreate }: {
                                     </div>
                                 )}
                             </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* BADGE (classic + evergreen) */}
+            {!form.is_tiered && (
+                <div style={card}>
+                    <Divider label="FINISHER BADGE" />
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: '#aaa', marginBottom: 14, textAlign: 'center' }}>
+                        Awarded to everyone who completes this challenge
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                        {BADGE_ICONS.map(b => (
+                            <button key={b.id} type="button" onClick={() => set('badge_icon', b.id)}
+                                style={{
+                                    width: 52, height: 52, borderRadius: 12,
+                                    border: form.badge_icon === b.id ? `2px solid ${PINK}` : '1px solid rgba(0,0,0,0.08)',
+                                    background: form.badge_icon === b.id ? 'rgba(255,0,237,0.04)' : '#fff',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.15s',
+                                }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: form.badge_icon === b.id ? PINK : '#999' }} dangerouslySetInnerHTML={{ __html: b.svg }} />
+                            </button>
                         ))}
                     </div>
                 </div>

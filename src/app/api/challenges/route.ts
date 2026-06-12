@@ -55,6 +55,8 @@ export async function POST(request: Request) {
             daily_task = null,
             // Difficulty pricing (for evergreen with difficulty mode)
             difficulty_pricing = null,
+            // Badge icon for finisher badge
+            badge_icon = null,
         } = body;
 
         // Classic challenges require start_date; evergreen don't
@@ -187,10 +189,11 @@ export async function POST(request: Request) {
             }
 
             // Auto-create badge definitions
+            const badgeImg = badge_icon ? `icon:${badge_icon}` : null;
             await supabaseAdmin.from('badges').insert([
-                { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common' },
-                { challenge_id: challenge.id, type: 'finisher', name: `${name} - Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare' },
-                { challenge_id: challenge.id, type: 'champion', name: `${name} - Champion`, description: `Won the ${name} challenge`, rarity: 'legendary' },
+                { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common', image_url: badgeImg },
+                { challenge_id: challenge.id, type: 'finisher', name: `${name} - Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare', image_url: badgeImg },
+                { challenge_id: challenge.id, type: 'champion', name: `${name} - Champion`, description: `Won the ${name} challenge`, rarity: 'legendary', image_url: badgeImg },
             ]);
 
             return NextResponse.json({ success: true, challenge, windows_created: 0, is_evergreen: true });
@@ -256,10 +259,11 @@ export async function POST(request: Request) {
         if (wErr) throw wErr;
 
         // Auto-create 3 badge definitions
+        const badgeImg = badge_icon ? `icon:${badge_icon}` : null;
         await supabaseAdmin.from('badges').insert([
-            { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common' },
-            { challenge_id: challenge.id, type: 'finisher', name: `${name} - Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare' },
-            { challenge_id: challenge.id, type: 'champion', name: `${name} - Champion`, description: `Won the ${name} challenge`, rarity: 'legendary' },
+            { challenge_id: challenge.id, type: 'participant', name: `${name} - Participant`, description: `Joined the ${name} challenge`, rarity: 'common', image_url: badgeImg },
+            { challenge_id: challenge.id, type: 'finisher', name: `${name} - Finisher`, description: `Completed the ${name} challenge`, rarity: 'rare', image_url: badgeImg },
+            { challenge_id: challenge.id, type: 'champion', name: `${name} - Champion`, description: `Won the ${name} challenge`, rarity: 'legendary', image_url: badgeImg },
         ]);
 
         return NextResponse.json({ success: true, challenge, windows_created: windows.length });

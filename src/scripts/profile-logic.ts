@@ -7858,7 +7858,9 @@ export function renderProfileSidebar(u: any) {
         document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
         document.querySelectorAll('#points, #mobPoints').forEach(el => { (el as HTMLElement).innerText = pStr; });
     }
+
 }
+
 // ─── QUEEN KARIN POSTS ───────────────────────────────────────────────────────
 export async function loadQueenPosts() {
     const newsGrid = document.getElementById('newsGrid');
