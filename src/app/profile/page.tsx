@@ -420,6 +420,7 @@ export default function ProfilePage() {
         }
 
         async function loadProfile() {
+            const _splashStart = Date.now();
             try {
                 // ─── LOCAL DEV BYPASS ────────────────────────────────────────
                 // Skips login when running on localhost so you can see UI changes instantly.
@@ -576,7 +577,13 @@ export default function ProfilePage() {
             } catch (err) {
                 console.error("Critical Load Error:", err);
             } finally {
-                setLoading(false);
+                const elapsed = Date.now() - _splashStart;
+                const remaining = Math.max(0, 3000 - elapsed);
+                if (remaining > 0) {
+                    setTimeout(() => setLoading(false), remaining);
+                } else {
+                    setLoading(false);
+                }
             }
         }
 
