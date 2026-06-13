@@ -5286,10 +5286,6 @@ if (typeof window !== 'undefined') {
 }
 
 export async function buyRealCoins(amount: number) {
-    // Close exchequer immediately so it doesn't flash behind the modal
-    const exchequer = document.getElementById('mobExchequer');
-    if (exchequer) { exchequer.classList.add('hidden'); exchequer.style.display = 'none'; }
-
     const existing = document.getElementById('_payMethodPicker');
     if (existing) existing.remove();
 
