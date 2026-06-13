@@ -831,30 +831,39 @@ export default function ProfilePage() {
     if (loading) {
         const _cachedName = typeof window !== 'undefined' ? (localStorage.getItem('_qk_name') || '') : '';
         const _cachedAvatar = typeof window !== 'undefined' ? (localStorage.getItem('_qk_avatar') || '') : '';
-        const _firstName = _cachedName.split(' ')[0];
         return (
             <div id="loading" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#000', gap: 0 }}>
+                <link href="https://fonts.googleapis.com/css2?family=Italianno&display=swap" rel="stylesheet" />
                 <style>{`
                     @keyframes _splashPulse { 0%,100% { transform: scale(1); opacity: 0.85; box-shadow: 0 0 0 0 rgba(197,160,89,0.25); } 50% { transform: scale(1.06); opacity: 1; box-shadow: 0 0 40px 8px rgba(197,160,89,0.12); } }
                     @keyframes _splashFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 `}</style>
+                {/* Welcome home, */}
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', fontWeight: 500, animation: '_splashFade 0.5s ease-out both', marginBottom: 20 }}>
+                    WELCOME HOME
+                </div>
+                {/* Avatar */}
                 {_cachedAvatar ? (
                     <img
                         src={_cachedAvatar}
                         alt=""
-                        style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.35)', animation: '_splashPulse 2.4s ease-in-out infinite', marginBottom: 28 }}
+                        style={{ width: 110, height: 110, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)', animation: '_splashPulse 2.4s ease-in-out infinite', marginBottom: 22 }}
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                 ) : (
-                    <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'radial-gradient(circle, rgba(197,160,89,0.12) 0%, rgba(197,160,89,0.03) 100%)', border: '2px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: '_splashPulse 2.4s ease-in-out infinite', marginBottom: 28 }}>
-                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: 'rgba(197,160,89,0.5)' }}>{_firstName ? _firstName[0].toUpperCase() : ''}</span>
+                    <div style={{ width: 110, height: 110, borderRadius: '50%', background: 'radial-gradient(circle, rgba(197,160,89,0.1) 0%, rgba(197,160,89,0.02) 100%)', border: '2px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: '_splashPulse 2.4s ease-in-out infinite', marginBottom: 22 }}>
+                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2.2rem', color: 'rgba(197,160,89,0.4)' }}>{_cachedName ? _cachedName[0].toUpperCase() : ''}</span>
                     </div>
                 )}
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, animation: '_splashFade 0.6s ease-out both', marginBottom: 8 }}>
-                    {_firstName ? `Welcome home, ${_firstName}` : 'Welcome home'}
-                </div>
-                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', fontWeight: 500, animation: '_splashFade 0.6s ease-out 0.3s both' }}>
-                    CHECKING YOUR SLAVE STATS
+                {/* Full name */}
+                {_cachedName && (
+                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: '#fff', letterSpacing: '2px', fontWeight: 700, animation: '_splashFade 0.6s ease-out 0.2s both', marginBottom: 14 }}>
+                        {_cachedName}
+                    </div>
+                )}
+                {/* Handwritten subtitle */}
+                <div style={{ fontFamily: 'Italianno, cursive', fontSize: '1.6rem', color: 'rgba(197,160,89,0.45)', animation: '_splashFade 0.6s ease-out 0.5s both' }}>
+                    checking your slave stats...
                 </div>
             </div>
         );
