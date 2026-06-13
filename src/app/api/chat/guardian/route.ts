@@ -127,7 +127,13 @@ export async function POST(req: Request) {
             }
         }
 
-        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + userContext;
+        // Detect if Guardian is already part of this conversation
+        const guardianMsgCount = recentMsgs?.filter((m: any) => (m.sender_email || '').toLowerCase() === 'guardian').length || 0;
+        const continuationHint = guardianMsgCount > 0
+            ? `\n\nIMPORTANT: You are ALREADY in this conversation — you have ${guardianMsgCount} recent message(s) above. Do NOT act like you just got summoned. Do NOT do the "dragged into this" opener. You are mid-conversation. Just respond naturally like someone who is already here and chatting. Be yourself (dry, ironic) but skip the entrance.`
+            : '';
+
+        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + userContext + continuationHint;
 
         let userContent = '';
         if (chatHistory) {
