@@ -431,6 +431,7 @@ export default function ProfilePage() {
                     console.log('[DEV MODE] Loaded real user:', unifiedData);
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
+                    try { if (unifiedData.name) localStorage.setItem('_qk_name', unifiedData.name); if (unifiedData.avatar_url) localStorage.setItem('_qk_avatar', unifiedData.avatar_url); } catch {}
                     setState({ cooldownMinutes: 1 }); // DEV: 1 min cooldown on localhost
                     loadAltarTop3(TEST_EMAIL); // Fire early — fills altar slots instantly
                     setTimeout(() => {
@@ -506,6 +507,13 @@ export default function ProfilePage() {
 
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
+                    // Cache name + avatar for personalized loading screen on next visit
+                    try {
+                        const _n = unifiedData.name || user.user_metadata?.full_name || user.user_metadata?.user_name || '';
+                        const _a = unifiedData.avatar_url || unifiedData.profile_picture_url || '';
+                        if (_n) localStorage.setItem('_qk_name', _n);
+                        if (_a) localStorage.setItem('_qk_avatar', _a);
+                    } catch {}
                     loadAltarTop3(unifiedData.memberId || unifiedData.member_id || user.email || ''); // Fire early — fills altar slots instantly
 
                     // Store lock state - applied after loading screen clears (DOM not ready yet)
@@ -813,11 +821,37 @@ export default function ProfilePage() {
         finally { setAlertUploading(false); }
     };
 
-    if (loading) return (
-        <div id="loading" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', color: 'var(--gold)', fontFamily: 'Cinzel' }}>
-            LOADING COMMAND CONSOLE...
-        </div>
-    );
+    if (loading) {
+        const _cachedName = typeof window !== 'undefined' ? (localStorage.getItem('_qk_name') || '') : '';
+        const _cachedAvatar = typeof window !== 'undefined' ? (localStorage.getItem('_qk_avatar') || '') : '';
+        const _firstName = _cachedName.split(' ')[0];
+        return (
+            <div id="loading" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#000', gap: 0 }}>
+                <style>{`
+                    @keyframes _splashPulse { 0%,100% { transform: scale(1); opacity: 0.85; box-shadow: 0 0 0 0 rgba(197,160,89,0.25); } 50% { transform: scale(1.06); opacity: 1; box-shadow: 0 0 40px 8px rgba(197,160,89,0.12); } }
+                    @keyframes _splashFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                `}</style>
+                {_cachedAvatar ? (
+                    <img
+                        src={_cachedAvatar}
+                        alt=""
+                        style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.35)', animation: '_splashPulse 2.4s ease-in-out infinite', marginBottom: 28 }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                ) : (
+                    <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'radial-gradient(circle, rgba(197,160,89,0.12) 0%, rgba(197,160,89,0.03) 100%)', border: '2px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: '_splashPulse 2.4s ease-in-out infinite', marginBottom: 28 }}>
+                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: 'rgba(197,160,89,0.5)' }}>{_firstName ? _firstName[0].toUpperCase() : ''}</span>
+                    </div>
+                )}
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, animation: '_splashFade 0.6s ease-out both', marginBottom: 8 }}>
+                    {_firstName ? `Welcome home, ${_firstName}` : 'Welcome home'}
+                </div>
+                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', fontWeight: 500, animation: '_splashFade 0.6s ease-out 0.3s both' }}>
+                    PREPARING YOUR QUARTERS
+                </div>
+            </div>
+        );
+    }
 
     if (silenceActive) return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', background: 'rgba(8,2,2,0.97)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2147483647, padding: '24px', boxSizing: 'border-box', fontFamily: 'Cinzel, serif' }}>
