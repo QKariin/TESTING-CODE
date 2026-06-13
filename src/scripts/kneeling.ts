@@ -277,7 +277,10 @@ async function completeKneelAction() {
         lastWorshipTime: Date.now()
     });
 
-    // Sound
+    // Sound — set discreet metadata so phone/car shows "Good Boy Radio"
+    if ('mediaSession' in navigator) {
+        try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Good Boy Radio', artist: 'Live', album: '' }); } catch (_) {}
+    }
     const snd = document.getElementById('msgSound') as HTMLAudioElement;
     if (snd) snd.play().catch(e => console.log(e));
 

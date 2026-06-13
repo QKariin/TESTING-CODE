@@ -87,7 +87,10 @@ export async function claimKneelReward(type: 'coins' | 'points') {
 
     if (type === 'coins') triggerCoinShower();
 
-    // 4. Play sound (overlay already hidden at top of function)
+    // 4. Play sound (overlay already hidden at top of function) — discreet metadata for phone/car
+    if ('mediaSession' in navigator) {
+        try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Good Boy Radio', artist: 'Live', album: '' }); } catch (_) {}
+    }
     const snd = document.getElementById('coinSound') as HTMLAudioElement;
     if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log(e)); }
 
@@ -3203,7 +3206,10 @@ export async function initChatSystem() {
                     if (badge) badge.classList.add('active');
                     const ring = document.querySelector('.mob-nav-queen-ring');
                     if (ring) ring.classList.add('has-new-msg');
-                    try { const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play(); } catch (_) {}
+                    try {
+                        if ('mediaSession' in navigator) { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Good Boy Radio', artist: 'Live', album: '' }); }
+                        const snd = new Audio('/audio/message.mp3'); snd.volume = 0.5; snd.play();
+                    } catch (_) {}
                     // Show in-app message banner
                     const rawContent = typeof msg.content === 'string' ? msg.content : '';
                     const isGifMsg = msg.type === 'gif' || (rawContent === '[GIF]' && msg.metadata?.gifUrl);

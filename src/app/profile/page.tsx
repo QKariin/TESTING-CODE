@@ -166,6 +166,17 @@ export default function ProfilePage() {
         return () => window.removeEventListener('resize', check);
     }, []);
 
+    // Discreet MediaSession — override what shows on CarPlay/Bluetooth/lock screen for ALL audio/video
+    useEffect(() => {
+        const handler = () => {
+            if ('mediaSession' in navigator) {
+                try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Good Boy Radio', artist: 'Live', album: '' }); } catch (_) {}
+            }
+        };
+        document.addEventListener('play', handler, true);
+        return () => document.removeEventListener('play', handler, true);
+    }, []);
+
     // Close overlays when returning from bfcache (e.g. back from Stripe)
     useEffect(() => {
         const handler = (e: PageTransitionEvent) => {
@@ -372,6 +383,7 @@ export default function ProfilePage() {
                             vid.addEventListener('ended', () => { vid.pause(); lb!.style.display = 'none'; });
                             vid.src = url;
                             media.appendChild(vid);
+                            if ('mediaSession' in navigator) { try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Good Boy Radio', artist: 'Live', album: '' }); } catch (_) {} }
                             vid.play().then(() => { vid.muted = false; }).catch(() => {});
                         } else {
                             media.innerHTML = `<img src="${url}" style="max-width:94vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,0.8);" />`;

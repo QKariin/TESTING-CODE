@@ -21,9 +21,22 @@ export const SafeStorage = {
     }
 };
 
+export function setDiscreetMediaSession(): void {
+    if ('mediaSession' in navigator) {
+        try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'Good Boy Radio',
+                artist: 'Live',
+                album: '',
+            });
+        } catch (_) {}
+    }
+}
+
 export function triggerSound(id: string): void {
     const el = document.getElementById(id) as HTMLAudioElement | null;
     if (el && typeof el.play === 'function') {
+        setDiscreetMediaSession();
         el.pause();
         el.currentTime = 0;
         const playPromise = el.play();
