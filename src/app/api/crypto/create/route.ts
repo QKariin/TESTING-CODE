@@ -14,7 +14,20 @@ const COIN_PACKAGES: Record<number, { amountCents: number; label: string }> = {
 };
 
 const CRYPTAPI_BASE = 'https://api.cryptapi.io';
-const TICKER = 'trc20/usdt';
+
+const ALLOWED_TICKERS: Record<string, string> = {
+    'trc20/usdt': 'USDT (TRC20)',
+    'btc': 'BTC',
+    'eth': 'ETH',
+    'ltc': 'LTC',
+};
+
+const WALLET_ENV_MAP: Record<string, string> = {
+    'trc20/usdt': 'CRYPTO_WALLET_ADDRESS',
+    'btc': 'CRYPTO_WALLET_BTC',
+    'eth': 'CRYPTO_WALLET_ETH',
+    'ltc': 'CRYPTO_WALLET_LTC',
+};
 
 export async function POST(req: Request) {
     try {
@@ -22,13 +35,16 @@ export async function POST(req: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { coins } = await req.json();
+        const { coins, ticker: requestedTicker } = await req.json();
+        const ticker = requestedTicker && ALLOWED_TICKERS[requestedTicker] ? requestedTicker : 'trc20/usdt';
+        const currencyLabel = ALLOWED_TICKERS[ticker];
         const pkg = COIN_PACKAGES[coins];
         if (!pkg) return NextResponse.json({ error: 'Invalid coin package' }, { status: 400 });
 
-        const walletAddress = process.env.CRYPTO_WALLET_ADDRESS;
+        const walletEnvKey = WALLET_ENV_MAP[ticker] || 'CRYPTO_WALLET_ADDRESS';
+        const walletAddress = process.env[walletEnvKey] || process.env.CRYPTO_WALLET_ADDRESS;
         if (!walletAddress) {
-            return NextResponse.json({ error: 'Crypto payments not configured' }, { status: 500 });
+            return NextResponse.json({ error: 'Crypto payments not configured for this coin' }, { status: 500 });
         }
 
         const identifier = user.email
@@ -37,9 +53,9 @@ export async function POST(req: Request) {
         const orderId = crypto.randomUUID();
         const amountEur = pkg.amountCents / 100;
 
-        // Convert EUR to USDT amount
+        // Convert EUR to crypto amount
         const convertRes = await fetch(
-            `${CRYPTAPI_BASE}/${TICKER}/convert/?value=${amountEur}&from=eur`
+            `${CRYPTAPI_BASE}/${ticker}/convert/?value=${amountEur}&from=eur`
         );
         const convertData = await convertRes.json();
         if (convertData.status !== 'success') {
@@ -67,7 +83,7 @@ export async function POST(req: Request) {
             convert: '1',
         });
         const createRes = await fetch(
-            `${CRYPTAPI_BASE}/${TICKER}/create/?${createParams.toString()}`
+            `${CRYPTAPI_BASE}/${ticker}/create/?${createParams.toString()}`
         );
         const createData = await createRes.json();
         if (createData.status !== 'success') {
@@ -83,7 +99,7 @@ export async function POST(req: Request) {
             value: String(amountCrypto),
             size: '300',
         });
-        const qrUrl = `${CRYPTAPI_BASE}/${TICKER}/qrcode/?${qrParams.toString()}`;
+        const qrUrl = `${CRYPTAPI_BASE}/${ticker}/qrcode/?${qrParams.toString()}`;
 
         // Store order
         await supabaseAdmin.from('crypto_orders').insert({
@@ -104,7 +120,7 @@ export async function POST(req: Request) {
             address: addressIn,
             amount: amountCrypto,
             amount_eur: amountEur,
-            currency: 'USDT (TRC20)',
+            currency: currencyLabel,
             qr_url: qrUrl,
         });
     } catch (error: any) {

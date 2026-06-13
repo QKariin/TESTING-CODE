@@ -5341,12 +5341,71 @@ async function _processPayment(amount: number, method: 'card' | 'crypto') {
         return;
     }
 
-    // Crypto — CryptAPI flow: show in-app payment overlay
+    // Crypto — show coin picker first
+    _showCryptoCoinPicker(amount);
+}
+
+const CRYPTO_OPTIONS = [
+    { ticker: 'trc20/usdt', label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮' },
+    { ticker: 'btc', label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿' },
+    { ticker: 'eth', label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ' },
+    { ticker: 'ltc', label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł' },
+];
+
+function _showCryptoCoinPicker(amount: number) {
+    const existing = document.getElementById('_cryptoCoinPicker');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_cryptoCoinPicker';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#0a0a14;border:1px solid rgba(224,64,251,0.25);border-radius:12px;padding:32px 28px;max-width:360px;width:90%;display:flex;flex-direction:column;align-items:center;gap:12px;';
+
+    let buttonsHtml = '';
+    CRYPTO_OPTIONS.forEach((opt, i) => {
+        buttonsHtml += `
+            <button class="_coinBtn" data-idx="${i}" style="width:100%;padding:14px 16px;background:linear-gradient(135deg,rgba(${opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187'},0.08),#0a0a14);border:1px solid ${opt.color}33;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s;">
+                <span style="font-size:1.4rem;width:32px;text-align:center;color:${opt.color};">${opt.icon}</span>
+                <div style="text-align:left;">
+                    <div style="font-family:Orbitron;font-size:0.7rem;color:#f3e5ab;letter-spacing:2px;">${opt.label}</div>
+                    <div style="font-family:Orbitron;font-size:0.45rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-top:2px;">${opt.sub}</div>
+                </div>
+            </button>`;
+    });
+
+    box.innerHTML = `
+        <div style="font-family:Cinzel;font-size:0.8rem;color:#e040fb;letter-spacing:4px;font-weight:700;">SELECT CRYPTO</div>
+        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${amount.toLocaleString()} ROYAL SILVER</div>
+        <div style="width:100%;margin-top:4px;display:flex;flex-direction:column;gap:10px;">
+            ${buttonsHtml}
+        </div>
+        <button id="_coinPickerCancel" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;margin-top:4px;">BACK</button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    box.querySelector('#_coinPickerCancel')!.addEventListener('click', () => overlay.remove());
+
+    box.querySelectorAll('._coinBtn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt((btn as HTMLElement).dataset.idx || '0', 10);
+            const selected = CRYPTO_OPTIONS[idx];
+            overlay.remove();
+            _createCryptoPayment(amount, selected.ticker, selected.label);
+        });
+    });
+}
+
+async function _createCryptoPayment(amount: number, ticker: string, label: string) {
     try {
         const res = await fetch('/api/crypto/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ coins: amount }),
+            body: JSON.stringify({ coins: amount, ticker }),
         });
         const data = await res.json();
         if (!data.success) {
