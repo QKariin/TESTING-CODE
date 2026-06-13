@@ -1223,54 +1223,73 @@ export default function TributePage() {
         />
         {/* ══ PAYMENT METHOD PICKER ══ */}
         {showPayPicker && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onClick={(e) => { if (e.target === e.currentTarget) setShowPayPicker(false); }}>
-                <div style={{ background: '#0a0a14', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 12, padding: '32px 28px', maxWidth: 340, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.85rem', color: '#c5a059', letterSpacing: 4, fontWeight: 700 }}>PAYMENT METHOD</div>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>€55 ACCESS FEE</div>
-                    <button onClick={handleStripe} style={{ width: '100%', padding: 16, background: 'linear-gradient(135deg,#1a1a2e,#16213e)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#f3e5ab', letterSpacing: 3 }}>STRIPE</span>
-                    </button>
-                    <button onClick={handleCryptoSelect} style={{ width: '100%', padding: 16, background: 'linear-gradient(135deg,#1a0828,#0d0420)', border: '1px solid rgba(224,64,251,0.3)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e040fb" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#e8b0ff', letterSpacing: 3 }}>CRYPTO</span>
-                    </button>
-                    <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4, marginTop: 4 }}>CANCEL</button>
+                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 18, padding: '48px 52px', maxWidth: 440, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, boxShadow: '0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(197,160,89,0.15)' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#c5a059', letterSpacing: 5, fontWeight: 700 }}>PAYMENT METHOD</div>
+                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent)' }} />
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>€55 ENTRANCE TRIBUTE</div>
+                    <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <button onClick={handleStripe} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#12122a,#161630)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(197,160,89,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.6)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            </div>
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#f3e5ab', letterSpacing: 3, fontWeight: 600 }}>CARD</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Visa, Mastercard via Stripe</div>
+                            </div>
+                        </button>
+                        <button onClick={handleCryptoSelect} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.2)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(160,100,220,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                            </div>
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#d4b0f0', letterSpacing: 3, fontWeight: 600 }}>CRYPTO</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Bitcoin, Ethereum, USDT, Litecoin</div>
+                            </div>
+                        </button>
+                    </div>
+                    <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>CANCEL</button>
                 </div>
             </div>
         )}
 
         {/* ══ CRYPTO COIN PICKER ══ */}
         {showCryptoPicker && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onClick={(e) => { if (e.target === e.currentTarget) setShowCryptoPicker(false); }}>
-                <div style={{ background: '#0a0a14', border: '1px solid rgba(224,64,251,0.25)', borderRadius: 12, padding: '32px 28px', maxWidth: 360, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#e040fb', letterSpacing: 4, fontWeight: 700 }}>SELECT CRYPTO</div>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>€55 ACCESS FEE</div>
-                    <div style={{ width: '100%', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {CRYPTO_OPTIONS.map((opt) => (
+                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(160,100,220,0.15)', borderRadius: 18, padding: '48px 52px', maxWidth: 480, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(160,100,220,0.15)' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#d4b0f0', letterSpacing: 5, fontWeight: 700 }}>SELECT CURRENCY</div>
+                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent)' }} />
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>€55 ENTRANCE TRIBUTE</div>
+                    <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {CRYPTO_OPTIONS.map((opt) => {
+                            const rgb = opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187';
+                            return (
                             <button key={opt.ticker} onClick={() => handleCryptoPay(opt.ticker, opt.label)}
-                                style={{ width: '100%', padding: '14px 16px', background: `linear-gradient(135deg,${opt.color}14,#0a0a14)`, border: `1px solid ${opt.color}33`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-                                <span style={{ fontSize: '1.4rem', width: 32, textAlign: 'center', color: opt.color }}>{opt.icon}</span>
-                                <div style={{ textAlign: 'left' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#f3e5ab', letterSpacing: 2 }}>{opt.label}</div>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 1, marginTop: 2 }}>{opt.sub}</div>
+                                style={{ width: '100%', padding: '18px 22px', background: `linear-gradient(135deg,rgba(${rgb},0.05),rgba(${rgb},0.02))`, border: `1px solid rgba(${rgb},0.15)`, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: `rgba(${rgb},0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <span style={{ fontSize: '1.3rem', color: opt.color }}>{opt.icon}</span>
                                 </div>
+                                <div style={{ textAlign: 'left', flex: 1 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#f3e5ab', letterSpacing: 2, fontWeight: 600 }}>{opt.label}</div>
+                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>{opt.sub}</div>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
                             </button>
-                        ))}
+                        );})}
                     </div>
-                    <button onClick={() => setShowCryptoPicker(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4, marginTop: 4 }}>BACK</button>
+                    <button onClick={() => setShowCryptoPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>BACK</button>
                 </div>
             </div>
         )}
 
         {/* ══ CRYPTO LOADING ══ */}
         {cryptoLoading && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
-                    <div style={{ width: 36, height: 36, border: '3px solid rgba(224,64,251,0.2)', borderTopColor: '#e040fb', borderRadius: '50%', animation: '_tributeSpin 0.8s linear infinite' }} />
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 3 }}>PREPARING PAYMENT...</div>
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+                    <div style={{ width: 40, height: 40, border: '2px solid rgba(160,100,220,0.15)', borderTopColor: 'rgba(160,100,220,0.6)', borderRadius: '50%', animation: '_tributeSpin 0.8s linear infinite' }} />
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, fontWeight: 500 }}>PREPARING PAYMENT...</div>
                 </div>
                 <style>{`@keyframes _tributeSpin{to{transform:rotate(360deg)}}`}</style>
             </div>
@@ -1278,48 +1297,53 @@ export default function TributePage() {
 
         {/* ══ CRYPTO PAYMENT OVERLAY ══ */}
         {cryptoData && !cryptoLoading && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: 20 }}>
-                <div style={{ background: '#0a0a14', border: '1px solid rgba(224,64,251,0.25)', borderRadius: 14, padding: '28px 24px', maxWidth: 380, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#e040fb', letterSpacing: 4, fontWeight: 700 }}>CRYPTO PAYMENT</div>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>ENTRANCE TRIBUTE</div>
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: 20 }}>
+                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(160,100,220,0.12)', borderRadius: 20, padding: '44px 48px', maxWidth: 520, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 40px 100px rgba(0,0,0,0.7),0 0 1px rgba(160,100,220,0.15)' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#d4b0f0', letterSpacing: 6, fontWeight: 700 }}>CRYPTO PAYMENT</div>
+                    <div style={{ width: 50, height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent)' }} />
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>ENTRANCE TRIBUTE</div>
 
-                    <div style={{ background: '#fff', borderRadius: 10, padding: 12, border: '1px solid rgba(224,64,251,0.15)' }}>
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(cryptoData.address)}`} alt="QR Code" style={{ width: 220, height: 220, borderRadius: 6, display: 'block' }} />
+                    <div style={{ background: '#fff', borderRadius: 14, padding: 16, marginTop: 6 }}>
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(cryptoData.address)}`} alt="QR Code" style={{ width: 240, height: 240, borderRadius: 6, display: 'block' }} />
                     </div>
 
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>SEND EXACTLY</div>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', color: '#f3e5ab', letterSpacing: 1, fontWeight: 700 }}>
-                        {cryptoData.amount} <span style={{ fontSize: '0.65rem', color: '#e040fb' }}>{cryptoData.currency}</span>
+                    <div style={{ textAlign: 'center', marginTop: 4 }}>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2, fontWeight: 500, marginBottom: 6 }}>SEND EXACTLY</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.6rem', color: '#f3e5ab', letterSpacing: 1, fontWeight: 700 }}>
+                            {cryptoData.amount} <span style={{ fontSize: '0.75rem', color: 'rgba(160,100,220,0.7)', fontWeight: 500, letterSpacing: 2 }}>{cryptoData.currency}</span>
+                        </div>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>(€{cryptoData.amount_eur?.toFixed(2)})</div>
                     </div>
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>(€{cryptoData.amount_eur?.toFixed(2)})</div>
 
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, marginTop: 4 }}>TO ADDRESS</div>
-                    <div onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
-                        style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#e8b0ff', background: 'rgba(224,64,251,0.08)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 6, padding: '10px 14px', wordBreak: 'break-all', textAlign: 'center', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }} title="Click to copy">
-                        {cryptoData.address}
+                    <div style={{ width: '100%', marginTop: 4 }}>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, fontWeight: 500, textAlign: 'center', marginBottom: 6 }}>WALLET ADDRESS</div>
+                        <div onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
+                            style={{ fontFamily: "'SF Mono',Menlo,Consolas,monospace", fontSize: '0.75rem', color: '#d4b0f0', background: 'rgba(160,100,220,0.05)', border: '1px solid rgba(160,100,220,0.12)', borderRadius: 8, padding: '14px 18px', wordBreak: 'break-all', textAlign: 'center', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }} title="Click to copy">
+                            {cryptoData.address}
+                        </div>
                     </div>
                     <button onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
-                        style={{ background: 'rgba(224,64,251,0.12)', border: '1px solid rgba(224,64,251,0.3)', color: '#e8b0ff', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4 }}>
+                        style={{ background: 'rgba(160,100,220,0.08)', border: '1px solid rgba(160,100,220,0.2)', color: '#d4b0f0', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', letterSpacing: 3, fontWeight: 600, padding: '10px 28px', cursor: 'pointer', borderRadius: 6 }}>
                         COPY ADDRESS
                     </button>
 
-                    <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', margin: '6px 0' }} />
+                    <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.1),transparent)', margin: '4px 0' }} />
 
                     {cryptoConfirmed ? (
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#4caf50', letterSpacing: 2, fontWeight: 700 }}>✓ PAYMENT CONFIRMED — ENTERING...</div>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: '#4caf50', letterSpacing: 3, fontWeight: 700 }}>✓ PAYMENT CONFIRMED — ENTERING...</div>
                     ) : (
-                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#e040fb', animation: '_tributePulse 1.5s infinite' }} />
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 3, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#a064dc', animation: '_tributePulse 1.5s infinite' }} />
                             WAITING FOR PAYMENT...
                         </div>
                     )}
 
-                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', lineHeight: 1.6, maxWidth: 300 }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.18)', textAlign: 'center', lineHeight: 1.7, maxWidth: 400 }}>
                         Send the exact amount shown above. Your profile will be created automatically once the transaction is confirmed.
                     </div>
 
                     <button onClick={() => { setCryptoData(null); if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); }}
-                        style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4, marginTop: 4 }}>CLOSE</button>
+                        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>CLOSE</button>
                 </div>
                 <style>{`@keyframes _tributePulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
             </div>
