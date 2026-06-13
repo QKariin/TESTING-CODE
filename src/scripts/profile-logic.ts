@@ -5380,8 +5380,8 @@ function _showCryptoPaymentOverlay(data: { address: string; amount: number; amou
         <div style="font-family:Cinzel;font-size:0.8rem;color:#e040fb;letter-spacing:4px;font-weight:700;">CRYPTO PAYMENT</div>
         <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${coins.toLocaleString()} ROYAL SILVER</div>
 
-        <div style="background:#000;border-radius:10px;padding:12px;border:1px solid rgba(224,64,251,0.15);">
-            <img src="${data.qr_url}" alt="QR Code" style="width:220px;height:220px;border-radius:6px;" />
+        <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid rgba(224,64,251,0.15);">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(data.address)}" alt="QR Code" style="width:220px;height:220px;border-radius:6px;display:block;" />
         </div>
 
         <div style="font-family:Orbitron;font-size:0.6rem;color:rgba(255,255,255,0.5);letter-spacing:1px;">SEND EXACTLY</div>
