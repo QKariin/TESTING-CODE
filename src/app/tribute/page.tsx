@@ -33,6 +33,12 @@ export default function TributePage() {
     const iframeFullRef = useRef(false);
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
+    const [showPayPicker, setShowPayPicker] = useState(false);
+    const [showCryptoPicker, setShowCryptoPicker] = useState(false);
+    const [cryptoLoading, setCryptoLoading] = useState(false);
+    const [cryptoData, setCryptoData] = useState<any>(null);
+    const [cryptoConfirmed, setCryptoConfirmed] = useState(false);
+    const cryptoPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         const storedRedirect = localStorage.getItem('post_login_redirect');
@@ -248,7 +254,12 @@ export default function TributePage() {
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    const handleTribute = async () => {
+    const handleTribute = () => {
+        setShowPayPicker(true);
+    };
+
+    const handleStripe = async () => {
+        setShowPayPicker(false);
         setLoading(true); setStatus(null);
         try {
             const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'entrance_tribute' }) });
@@ -258,6 +269,66 @@ export default function TributePage() {
         } catch { setStatus('Connection error. Try again.'); }
         finally { setLoading(false); }
     };
+
+    const handleCryptoSelect = () => {
+        setShowPayPicker(false);
+        setShowCryptoPicker(true);
+    };
+
+    const CRYPTO_OPTIONS = [
+        { ticker: 'trc20/usdt', label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮' },
+        { ticker: 'btc', label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿' },
+        { ticker: 'eth', label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ' },
+        { ticker: 'ltc', label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł' },
+    ];
+
+    const handleCryptoPay = async (ticker: string, label: string) => {
+        setShowCryptoPicker(false);
+        setCryptoLoading(true);
+        try {
+            const res = await fetch('/api/tribute/crypto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticker }),
+            });
+            const data = await res.json();
+            if (!data.success) {
+                setStatus('Could not create crypto payment. Try again.');
+                setCryptoLoading(false);
+                return;
+            }
+            setCryptoData(data);
+            setCryptoLoading(false);
+
+            // Start polling
+            if (cryptoPollRef.current) clearInterval(cryptoPollRef.current);
+            let polls = 0;
+            cryptoPollRef.current = setInterval(async () => {
+                polls++;
+                if (polls > 120) { if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); return; }
+                try {
+                    const r = await fetch('/api/tribute/crypto-verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: data.order_id }),
+                    });
+                    const d = await r.json();
+                    if (d.status === 'completed') {
+                        if (cryptoPollRef.current) clearInterval(cryptoPollRef.current);
+                        setCryptoConfirmed(true);
+                        setTimeout(() => { window.location.href = '/onboarding'; }, 2500);
+                    }
+                } catch { }
+            }, 15000);
+        } catch {
+            setStatus('Connection error. Try again.');
+            setCryptoLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        return () => { if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); };
+    }, []);
 
     const handleLogout = async () => { const s = createClient(); await s.auth.signOut(); window.location.href = '/login'; };
 
@@ -1150,5 +1221,108 @@ export default function TributePage() {
                     : { top: 'auto', bottom: 0, height: 'calc(140px + env(safe-area-inset-bottom))' }),
             }}
         />
+        {/* ══ PAYMENT METHOD PICKER ══ */}
+        {showPayPicker && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={(e) => { if (e.target === e.currentTarget) setShowPayPicker(false); }}>
+                <div style={{ background: '#0a0a14', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 12, padding: '32px 28px', maxWidth: 340, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.85rem', color: '#c5a059', letterSpacing: 4, fontWeight: 700 }}>PAYMENT METHOD</div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>€55 ACCESS FEE</div>
+                    <button onClick={handleStripe} style={{ width: '100%', padding: 16, background: 'linear-gradient(135deg,#1a1a2e,#16213e)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#f3e5ab', letterSpacing: 3 }}>STRIPE</span>
+                    </button>
+                    <button onClick={handleCryptoSelect} style={{ width: '100%', padding: 16, background: 'linear-gradient(135deg,#1a0828,#0d0420)', border: '1px solid rgba(224,64,251,0.3)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e040fb" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        <span style={{ fontFamily: 'Orbitron', fontSize: '0.75rem', color: '#e8b0ff', letterSpacing: 3 }}>CRYPTO</span>
+                    </button>
+                    <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4, marginTop: 4 }}>CANCEL</button>
+                </div>
+            </div>
+        )}
+
+        {/* ══ CRYPTO COIN PICKER ══ */}
+        {showCryptoPicker && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={(e) => { if (e.target === e.currentTarget) setShowCryptoPicker(false); }}>
+                <div style={{ background: '#0a0a14', border: '1px solid rgba(224,64,251,0.25)', borderRadius: 12, padding: '32px 28px', maxWidth: 360, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#e040fb', letterSpacing: 4, fontWeight: 700 }}>SELECT CRYPTO</div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>€55 ACCESS FEE</div>
+                    <div style={{ width: '100%', marginTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {CRYPTO_OPTIONS.map((opt) => (
+                            <button key={opt.ticker} onClick={() => handleCryptoPay(opt.ticker, opt.label)}
+                                style={{ width: '100%', padding: '14px 16px', background: `linear-gradient(135deg,${opt.color}14,#0a0a14)`, border: `1px solid ${opt.color}33`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <span style={{ fontSize: '1.4rem', width: 32, textAlign: 'center', color: opt.color }}>{opt.icon}</span>
+                                <div style={{ textAlign: 'left' }}>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: '#f3e5ab', letterSpacing: 2 }}>{opt.label}</div>
+                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 1, marginTop: 2 }}>{opt.sub}</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                    <button onClick={() => setShowCryptoPicker(false)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4, marginTop: 4 }}>BACK</button>
+                </div>
+            </div>
+        )}
+
+        {/* ══ CRYPTO LOADING ══ */}
+        {cryptoLoading && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+                    <div style={{ width: 36, height: 36, border: '3px solid rgba(224,64,251,0.2)', borderTopColor: '#e040fb', borderRadius: '50%', animation: '_tributeSpin 0.8s linear infinite' }} />
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 3 }}>PREPARING PAYMENT...</div>
+                </div>
+                <style>{`@keyframes _tributeSpin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+        )}
+
+        {/* ══ CRYPTO PAYMENT OVERLAY ══ */}
+        {cryptoData && !cryptoLoading && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: 20 }}>
+                <div style={{ background: '#0a0a14', border: '1px solid rgba(224,64,251,0.25)', borderRadius: 14, padding: '28px 24px', maxWidth: 380, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.8rem', color: '#e040fb', letterSpacing: 4, fontWeight: 700 }}>CRYPTO PAYMENT</div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>ENTRANCE TRIBUTE</div>
+
+                    <div style={{ background: '#fff', borderRadius: 10, padding: 12, border: '1px solid rgba(224,64,251,0.15)' }}>
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(cryptoData.address)}`} alt="QR Code" style={{ width: 220, height: 220, borderRadius: 6, display: 'block' }} />
+                    </div>
+
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>SEND EXACTLY</div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', color: '#f3e5ab', letterSpacing: 1, fontWeight: 700 }}>
+                        {cryptoData.amount} <span style={{ fontSize: '0.65rem', color: '#e040fb' }}>{cryptoData.currency}</span>
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>(€{cryptoData.amount_eur?.toFixed(2)})</div>
+
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, marginTop: 4 }}>TO ADDRESS</div>
+                    <div onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
+                        style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: '#e8b0ff', background: 'rgba(224,64,251,0.08)', border: '1px solid rgba(224,64,251,0.2)', borderRadius: 6, padding: '10px 14px', wordBreak: 'break-all', textAlign: 'center', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }} title="Click to copy">
+                        {cryptoData.address}
+                    </div>
+                    <button onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
+                        style={{ background: 'rgba(224,64,251,0.12)', border: '1px solid rgba(224,64,251,0.3)', color: '#e8b0ff', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4 }}>
+                        COPY ADDRESS
+                    </button>
+
+                    <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.06)', margin: '6px 0' }} />
+
+                    {cryptoConfirmed ? (
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: '#4caf50', letterSpacing: 2, fontWeight: 700 }}>✓ PAYMENT CONFIRMED — ENTERING...</div>
+                    ) : (
+                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#e040fb', animation: '_tributePulse 1.5s infinite' }} />
+                            WAITING FOR PAYMENT...
+                        </div>
+                    )}
+
+                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', lineHeight: 1.6, maxWidth: 300 }}>
+                        Send the exact amount shown above. Your profile will be created automatically once the transaction is confirmed.
+                    </div>
+
+                    <button onClick={() => { setCryptoData(null); if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); }}
+                        style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron', fontSize: '0.5rem', letterSpacing: 2, padding: '8px 20px', cursor: 'pointer', borderRadius: 4, marginTop: 4 }}>CLOSE</button>
+                </div>
+                <style>{`@keyframes _tributePulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+            </div>
+        )}
     </>);
 }
