@@ -213,8 +213,8 @@ function _showFloatingPlayer() {
     // Set discreet media session so CarPlay/Bluetooth doesn't show the page title
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: 'Live Session',
-            artist: 'QK',
+            title: 'Good Boy Radio',
+            artist: 'Live',
             album: '',
         });
     }
