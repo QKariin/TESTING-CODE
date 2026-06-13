@@ -1237,56 +1237,8 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                             {/* Challenge notice - full-width prominent banner */}
-                            {activeChallenge && !isParticipant && !challengeBannerDismissed && (
-                                <div style={{ flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
-                                    <div
-                                        style={{
-                                            padding: '16px 20px',
-                                            background: activeChallenge.status === 'active'
-                                                ? 'linear-gradient(135deg, rgba(74,222,128,0.13), rgba(0,0,0,0.5))'
-                                                : 'linear-gradient(135deg, rgba(197,160,89,0.13), rgba(0,0,0,0.5))',
-                                            borderBottom: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.3)' : 'rgba(197,160,89,0.3)'}`,
-                                            borderTop: `2px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.5)'}`,
-                                            display: 'flex', alignItems: 'center', gap: 14,
-                                            boxShadow: activeChallenge.status === 'active' ? '0 4px 24px rgba(74,222,128,0.08)' : '0 4px 24px rgba(197,160,89,0.08)',
-                                        }}
-                                    >
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059', letterSpacing: '2.5px', marginBottom: 4 }}>
-                                                {activeChallenge.status === 'active' ? '⬤ CHALLENGE LIVE' : (() => {
-                                                    if (!activeChallenge.start_date) return '◎ STARTING SOON';
-                                                    const diff = Math.max(0, Math.floor((new Date(activeChallenge.start_date).getTime() - Date.now()) / 1000));
-                                                    const h = Math.floor(diff / 3600);
-                                                    const m = Math.floor((diff % 3600) / 60);
-                                                    return `◎ STARTS IN ${h}h ${m}m`;
-                                                })()}
-                                            </div>
-                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: '#fff', letterSpacing: '1px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeChallenge.name}</div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                                            <button
-                                                onClick={() => setDesktopChallengeOpen(true)}
-                                                style={{
-                                                    fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 18px', borderRadius: 8,
-                                                    background: activeChallenge.status === 'active' ? 'rgba(74,222,128,0.15)' : 'rgba(197,160,89,0.12)',
-                                                    border: `1px solid ${activeChallenge.status === 'active' ? 'rgba(74,222,128,0.5)' : 'rgba(197,160,89,0.4)'}`,
-                                                    color: activeChallenge.status === 'active' ? '#4ade80' : '#c5a059',
-                                                    letterSpacing: '1.5px', fontWeight: 700, cursor: 'pointer',
-                                                }}
-                                            >JOIN</button>
-                                            <button
-                                                onClick={() => { sessionStorage.setItem('challengeBannerDismissed', '1'); setChallengeBannerDismissed(true); }}
-                                                style={{
-                                                    fontFamily: 'Orbitron', fontSize: '0.42rem', padding: '8px 14px', borderRadius: 8,
-                                                    background: 'rgba(255,255,255,0.05)',
-                                                    border: '1px solid rgba(255,255,255,0.15)',
-                                                    color: 'rgba(255,255,255,0.4)',
-                                                    letterSpacing: '1.5px', fontWeight: 700, cursor: 'pointer',
-                                                }}
-                                            >DISMISS</button>
-                                        </div>
-                                    </div>
-                                </div>
+                            {false && (
+                                <div></div>
                             )}
                             <div id="systemTicker" className="system-ticker" style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => (window as any).toggleSystemLog()}>SYSTEM ONLINE</div>
                             <div id="chatBox" className="chat-body-frame" style={{ background: 'transparent', flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 0 }}>
@@ -2366,7 +2318,7 @@ export default function ProfilePage() {
             <>
                 {/* Non-participant banner removed — challenges are discoverable via CHALLENGE nav tab */}
                 {/* Mobile participant banner - shows for enrolled members with active challenge */}
-                {isMobile && isParticipant && participantStatus === 'active' && !challengePanelOpen && !mobOverlayOpen && (
+                {isMobile && isParticipant && participantStatus === 'active' && !!openWindowForBanner && !challengePanelOpen && !mobOverlayOpen && (
                     <MobileChallengeBanner
                         challengeName={activeChallenge.name}
                         hasOpenWindow={!!openWindowForBanner}
