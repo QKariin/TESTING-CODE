@@ -5320,24 +5320,136 @@ export async function buyRealCoins(amount: number) {
 }
 
 async function _processPayment(amount: number, method: 'card' | 'crypto') {
-    const endpoint = method === 'crypto' ? '/api/dv/coins' : '/api/stripe/coins';
+    if (method === 'card') {
+        try {
+            const res = await fetch('/api/stripe/coins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ coins: amount }),
+            });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                console.error('[EXCHEQUER] Stripe error:', data.error);
+                alert('Could not initiate payment. Please try again.');
+            }
+        } catch (err) {
+            console.error('[EXCHEQUER] Network error:', err);
+            alert('Could not reach payment service. Please try again.');
+        }
+        return;
+    }
+
+    // Crypto — CryptAPI flow: show in-app payment overlay
     try {
-        const res = await fetch(endpoint, {
+        const res = await fetch('/api/crypto/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ coins: amount }),
         });
         const data = await res.json();
-        if (data.url) {
-            window.location.href = data.url;
-        } else {
-            console.error('[EXCHEQUER] Payment error:', data.error);
-            alert('Could not initiate payment. Please try again.');
+        if (!data.success) {
+            console.error('[EXCHEQUER] Crypto error:', data.error);
+            alert('Could not create crypto payment. Please try again.');
+            return;
         }
+        _showCryptoPaymentOverlay(data, amount);
     } catch (err) {
-        console.error('[EXCHEQUER] Network error:', err);
+        console.error('[EXCHEQUER] Crypto network error:', err);
         alert('Could not reach payment service. Please try again.');
     }
+}
+
+function _showCryptoPaymentOverlay(data: { address: string; amount: number; amount_eur: number; currency: string; qr_url: string; order_id: string }, coins: number) {
+    const existing = document.getElementById('_cryptoPayOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_cryptoPayOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#0a0a14;border:1px solid rgba(224,64,251,0.25);border-radius:14px;padding:28px 24px;max-width:380px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;';
+
+    const truncAddr = data.address.length > 20
+        ? data.address.slice(0, 12) + '...' + data.address.slice(-8)
+        : data.address;
+
+    box.innerHTML = `
+        <div style="font-family:Cinzel;font-size:0.8rem;color:#e040fb;letter-spacing:4px;font-weight:700;">CRYPTO PAYMENT</div>
+        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${coins.toLocaleString()} ROYAL SILVER</div>
+
+        <div style="background:#000;border-radius:10px;padding:12px;border:1px solid rgba(224,64,251,0.15);">
+            <img src="${data.qr_url}" alt="QR Code" style="width:220px;height:220px;border-radius:6px;" />
+        </div>
+
+        <div style="font-family:Orbitron;font-size:0.6rem;color:rgba(255,255,255,0.5);letter-spacing:1px;">SEND EXACTLY</div>
+        <div style="font-family:Orbitron;font-size:1.3rem;color:#f3e5ab;letter-spacing:1px;font-weight:700;">${data.amount} <span style="font-size:0.65rem;color:#e040fb;">${data.currency}</span></div>
+        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.25);">(€${data.amount_eur.toFixed(2)})</div>
+
+        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-top:4px;">TO ADDRESS</div>
+        <div id="_cryptoAddr" style="font-family:monospace;font-size:0.7rem;color:#e8b0ff;background:rgba(224,64,251,0.08);border:1px solid rgba(224,64,251,0.2);border-radius:6px;padding:10px 14px;word-break:break-all;text-align:center;cursor:pointer;width:100%;box-sizing:border-box;" title="Click to copy">${data.address}</div>
+        <button id="_cryptoCopy" style="background:rgba(224,64,251,0.12);border:1px solid rgba(224,64,251,0.3);color:#e8b0ff;font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;transition:all 0.2s;">COPY ADDRESS</button>
+
+        <div style="width:100%;border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+
+        <div id="_cryptoStatus" style="font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.4);letter-spacing:2px;display:flex;align-items:center;gap:8px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e040fb;animation:_cryptoPulse 1.5s infinite;"></span>
+            WAITING FOR PAYMENT...
+        </div>
+
+        <div style="font-family:Orbitron;font-size:0.4rem;color:rgba(255,255,255,0.2);text-align:center;line-height:1.6;max-width:300px;">
+            Send the exact amount shown above. Your coins will be credited automatically once the transaction is confirmed on the blockchain.
+        </div>
+
+        <button id="_cryptoClose" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;margin-top:4px;">CLOSE</button>
+    `;
+
+    // Pulse animation
+    const style = document.createElement('style');
+    style.textContent = '@keyframes _cryptoPulse{0%,100%{opacity:1}50%{opacity:0.3}}';
+    box.appendChild(style);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // Copy address
+    const copyFn = () => {
+        navigator.clipboard.writeText(data.address).then(() => {
+            const btn = document.getElementById('_cryptoCopy');
+            if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY ADDRESS'; }, 2000); }
+        });
+    };
+    box.querySelector('#_cryptoCopy')!.addEventListener('click', copyFn);
+    box.querySelector('#_cryptoAddr')!.addEventListener('click', copyFn);
+
+    // Close
+    box.querySelector('#_cryptoClose')!.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    // Poll order status every 15s
+    let pollCount = 0;
+    const maxPolls = 120; // 30 min
+    const pollInterval = setInterval(async () => {
+        pollCount++;
+        if (pollCount > maxPolls || !document.getElementById('_cryptoPayOverlay')) {
+            clearInterval(pollInterval);
+            return;
+        }
+        try {
+            const pollRes = await fetch(`/api/crypto/status?order_id=${data.order_id}`);
+            const pollData = await pollRes.json();
+            if (pollData.status === 'completed') {
+                clearInterval(pollInterval);
+                const statusEl = document.getElementById('_cryptoStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = '<span style="color:#4caf50;font-weight:700;">&#10003; PAYMENT CONFIRMED</span>';
+                }
+                setTimeout(() => { overlay.remove(); window.location.reload(); }, 2500);
+            }
+        } catch { /* ignore poll errors */ }
+    }, 15000);
 }
 
 export async function handleSubscribe(tierId: string) {
