@@ -209,6 +209,15 @@ function _showFloatingPlayer() {
     _initDrag();
     window.addEventListener('resize', _clampToViewport);
     document.addEventListener('visibilitychange', _handleVisibility);
+
+    // Set discreet media session so CarPlay/Bluetooth doesn't show the page title
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: 'Live Session',
+            artist: 'QK',
+            album: '',
+        });
+    }
 }
 
 function _handleVisibility() {
