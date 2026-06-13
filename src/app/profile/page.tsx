@@ -1848,7 +1848,7 @@ export default function ProfilePage() {
                                     <div className="coin-price">€1000.00</div>
                                 </div>
                             </div>
-                            <button className="lobby-btn close" onClick={() => (window as any).closeExchequer()} style={{ marginTop: '20px' }}>CLOSE</button>
+                            <button onClick={() => (window as any).closeExchequer()} style={{ marginTop: '24px', background: 'none', border: '1px solid rgba(197,160,89,0.2)', color: 'rgba(197,160,89,0.5)', fontFamily: 'Cinzel', fontSize: '0.65rem', letterSpacing: '4px', padding: '12px 36px', cursor: 'pointer', borderRadius: '2px', transition: 'all 0.2s', WebkitTapHighlightColor: 'transparent' }}>CLOSE</button>
                         </div>
                     </div>
 
