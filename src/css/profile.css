@@ -4343,11 +4343,9 @@
 
 /* EXCHEQUER SPECIFIC BACKGROUND FIX */
 #mobExchequer {
-    background-image: url('/assets/throne_bg_fresh.jpg') !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-color: transparent !important;
+    background: rgba(2, 5, 18, 0.97) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
 }
 /* =========================================
    POST LOCK OVERLAY & LIKE BAR
