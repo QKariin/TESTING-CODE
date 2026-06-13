@@ -526,54 +526,7 @@ export default function ProfilePage() {
                         memberId: unifiedData.member_id || unifiedData.memberId || '',
                     };
 
-                    setTimeout(async () => {
-                        renderProfileSidebar(unifiedData);
-                        updateKneelingUI();
-                        attachKneelListeners();
-                        const urlParams = new URLSearchParams(window.location.search);
-
-                        // ── Stripe coin purchase fallback ──────────────────────────
-                        // When Stripe redirects back with session_id, verify + award coins.
-                        // Idempotent - safe to run even if webhook already fired.
-                        if (urlParams.get('exchequer') === 'success' && urlParams.get('session_id')) {
-                            const sid = urlParams.get('session_id')!;
-                            try {
-                                const vRes = await fetch(`/api/stripe/verify-purchase?session_id=${encodeURIComponent(sid)}`);
-                                const vData = await vRes.json();
-                                if (vData.success && !vData.alreadyAwarded) {
-                                    const { setState: setPS } = await import('@/scripts/profile-state');
-                                    setPS({ wallet: vData.wallet });
-                                    const { updateWalletDisplay } = await import('@/scripts/profile-logic');
-                                    updateWalletDisplay();
-                                    console.log(`✅ Coins awarded via fallback: +${vData.coinsAwarded}`);
-                                }
-                            } catch (e) {
-                                console.error('[verify-purchase] fallback error:', e);
-                            }
-                            (window as any).goToExchequer?.();
-                        } else if (urlParams.get('exchequer') === 'open') {
-                            (window as any).goToExchequer();
-                        } else if (urlParams.get('tab') === 'chat') {
-                            setTimeout(() => (window as any).openMobChatOverlay?.(), 800);
-                        } else if (urlParams.get('tab') === 'record') {
-                            switchTab('record');
-                        } else {
-                            switchTab('serve');
-                        }
-                        getRandomTask(true);
-                        loadQueenPosts();
-                        initGallery(unifiedData.member_id || unifiedData.email || '');
-
-                        // Initialize Chat & Tracking
-                        initChatSystem();
-                        const uid = unifiedData.ID || unifiedData.memberId || unifiedData.id;
-                        trackUserAnalytics(uid);
-                        if (!heartbeatRef.current) {
-                            heartbeatRef.current = startPresenceHeartbeat(uid, unifiedData.email || unifiedData.member_id);
-                        }
-
-                        // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
-                    }, 150);
+                    // Init deferred to after splash — see finish() in finally block
                 }
             } catch (err) {
                 console.error("Critical Load Error:", err);
@@ -582,9 +535,51 @@ export default function ProfilePage() {
                 const remaining = Math.max(0, 5000 - elapsed);
                 const finish = () => {
                     setLoading(false);
-                    // Re-render sidebar after splash unmounts so DOM elements exist
+                    // Run ALL initialization after splash unmounts so DOM elements exist
                     if (_loadedData) {
-                        setTimeout(() => renderProfileSidebar(_loadedData), 150);
+                        const d = _loadedData;
+                        setTimeout(async () => {
+                            renderProfileSidebar(d);
+                            updateKneelingUI();
+                            attachKneelListeners();
+                            const urlParams = new URLSearchParams(window.location.search);
+
+                            if (urlParams.get('exchequer') === 'success' && urlParams.get('session_id')) {
+                                const sid = urlParams.get('session_id')!;
+                                try {
+                                    const vRes = await fetch(`/api/stripe/verify-purchase?session_id=${encodeURIComponent(sid)}`);
+                                    const vData = await vRes.json();
+                                    if (vData.success && !vData.alreadyAwarded) {
+                                        const { setState: setPS } = await import('@/scripts/profile-state');
+                                        setPS({ wallet: vData.wallet });
+                                        const { updateWalletDisplay } = await import('@/scripts/profile-logic');
+                                        updateWalletDisplay();
+                                        console.log(`✅ Coins awarded via fallback: +${vData.coinsAwarded}`);
+                                    }
+                                } catch (e) {
+                                    console.error('[verify-purchase] fallback error:', e);
+                                }
+                                (window as any).goToExchequer?.();
+                            } else if (urlParams.get('exchequer') === 'open') {
+                                (window as any).goToExchequer();
+                            } else if (urlParams.get('tab') === 'chat') {
+                                setTimeout(() => (window as any).openMobChatOverlay?.(), 800);
+                            } else if (urlParams.get('tab') === 'record') {
+                                switchTab('record');
+                            } else {
+                                switchTab('serve');
+                            }
+                            getRandomTask(true);
+                            loadQueenPosts();
+                            initGallery(d.member_id || d.email || '');
+
+                            initChatSystem();
+                            const uid = d.ID || d.memberId || d.id;
+                            trackUserAnalytics(uid);
+                            if (!heartbeatRef.current) {
+                                heartbeatRef.current = startPresenceHeartbeat(uid, d.email || d.member_id);
+                            }
+                        }, 150);
                     }
                 };
                 if (remaining > 0) {
