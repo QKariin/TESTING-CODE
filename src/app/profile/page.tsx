@@ -516,8 +516,6 @@ export default function ProfilePage() {
                         if (_n) localStorage.setItem('_qk_name', _n);
                         if (_a) localStorage.setItem('_qk_avatar', _a);
                     } catch {}
-                    loadAltarTop3(unifiedData.memberId || unifiedData.member_id || user.email || ''); // Fire early — fills altar slots instantly
-
                     // Store lock state - applied after loading screen clears (DOM not ready yet)
                     pendingLockRef.current = {
                         silence: unifiedData?.silence === true,
@@ -572,6 +570,7 @@ export default function ProfilePage() {
                             getRandomTask(true);
                             loadQueenPosts();
                             initGallery(d.member_id || d.email || '');
+                            loadAltarTop3(d.memberId || d.member_id || d.email || '');
 
                             initChatSystem();
                             const uid = d.ID || d.memberId || d.id;
