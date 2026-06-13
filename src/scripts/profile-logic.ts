@@ -5401,6 +5401,22 @@ function _showCryptoCoinPicker(amount: number) {
 }
 
 async function _createCryptoPayment(amount: number, ticker: string, label: string) {
+    // Show loading overlay immediately
+    const existing = document.getElementById('_cryptoPayOverlay');
+    if (existing) existing.remove();
+
+    const loader = document.createElement('div');
+    loader.id = '_cryptoPayOverlay';
+    loader.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
+    loader.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+            <div style="width:36px;height:36px;border:3px solid rgba(224,64,251,0.2);border-top-color:#e040fb;border-radius:50%;animation:_cryptoSpin 0.8s linear infinite;"></div>
+            <div style="font-family:Orbitron;font-size:0.6rem;color:rgba(255,255,255,0.4);letter-spacing:3px;">PREPARING ${label} PAYMENT...</div>
+        </div>
+        <style>@keyframes _cryptoSpin{to{transform:rotate(360deg)}}</style>
+    `;
+    document.body.appendChild(loader);
+
     try {
         const res = await fetch('/api/crypto/create', {
             method: 'POST',
@@ -5409,12 +5425,15 @@ async function _createCryptoPayment(amount: number, ticker: string, label: strin
         });
         const data = await res.json();
         if (!data.success) {
+            loader.remove();
             console.error('[EXCHEQUER] Crypto error:', data.error);
             alert('Could not create crypto payment. Please try again.');
             return;
         }
+        loader.remove();
         _showCryptoPaymentOverlay(data, amount);
     } catch (err) {
+        loader.remove();
         console.error('[EXCHEQUER] Crypto network error:', err);
         alert('Could not reach payment service. Please try again.');
     }
