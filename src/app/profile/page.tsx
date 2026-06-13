@@ -421,6 +421,7 @@ export default function ProfilePage() {
 
         async function loadProfile() {
             const _splashStart = Date.now();
+            let _loadedData: any = null;
             try {
                 // ─── LOCAL DEV BYPASS ────────────────────────────────────────
                 // Skips login when running on localhost so you can see UI changes instantly.
@@ -505,7 +506,7 @@ export default function ProfilePage() {
 
                 if (unifiedData) {
                     console.log("[PROFILE] Loaded Data. member_id:", unifiedData.member_id, "memberId:", unifiedData.memberId);
-
+                    _loadedData = unifiedData;
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
                     // Cache name + avatar for personalized loading screen on next visit
@@ -579,10 +580,17 @@ export default function ProfilePage() {
             } finally {
                 const elapsed = Date.now() - _splashStart;
                 const remaining = Math.max(0, 5000 - elapsed);
-                if (remaining > 0) {
-                    setTimeout(() => setLoading(false), remaining);
-                } else {
+                const finish = () => {
                     setLoading(false);
+                    // Re-render sidebar after splash unmounts so DOM elements exist
+                    if (_loadedData) {
+                        setTimeout(() => renderProfileSidebar(_loadedData), 150);
+                    }
+                };
+                if (remaining > 0) {
+                    setTimeout(finish, remaining);
+                } else {
+                    finish();
                 }
             }
         }
