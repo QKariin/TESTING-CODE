@@ -5289,25 +5289,39 @@ export async function buyRealCoins(amount: number) {
     const existing = document.getElementById('_payMethodPicker');
     if (existing) existing.remove();
 
+    const isMob = window.innerWidth < 768;
     const overlay = document.createElement('div');
     overlay.id = '_payMethodPicker';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#0a0a14;border:1px solid rgba(197,160,89,0.25);border-radius:12px;padding:32px 28px;max-width:340px;width:90%;display:flex;flex-direction:column;align-items:center;gap:16px;';
+    box.style.cssText = `background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(197,160,89,0.15);border-radius:${isMob ? '14px' : '18px'};padding:${isMob ? '32px 28px' : '48px 52px'};max-width:${isMob ? '340px' : '440px'};width:90%;display:flex;flex-direction:column;align-items:center;gap:${isMob ? '16px' : '22px'};box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(197,160,89,0.15);`;
 
     box.innerHTML = `
-        <div style="font-family:Cinzel;font-size:0.85rem;color:#c5a059;letter-spacing:4px;font-weight:700;">PAYMENT METHOD</div>
-        <div style="font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${amount.toLocaleString()} ROYAL SILVER</div>
-        <button id="_payCard" style="width:100%;padding:16px;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(197,160,89,0.3);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c5a059" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            <span style="font-family:Orbitron;font-size:0.75rem;color:#f3e5ab;letter-spacing:3px;">STRIPE</span>
-        </button>
-        <button id="_payCrypto" style="width:100%;padding:16px;background:linear-gradient(135deg,#1a0828,#0d0420);border:1px solid rgba(224,64,251,0.3);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e040fb" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-            <span style="font-family:Orbitron;font-size:0.75rem;color:#e8b0ff;letter-spacing:3px;">CRYPTO</span>
-        </button>
-        <button id="_payCancel" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;margin-top:4px;">CANCEL</button>
+        <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.85rem' : '1rem'};color:#c5a059;letter-spacing:5px;font-weight:700;">PAYMENT METHOD</div>
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent);"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.7rem' : '0.8rem'};color:rgba(255,255,255,0.3);letter-spacing:3px;font-weight:500;">${amount.toLocaleString()} ROYAL SILVER</div>
+        <div style="width:100%;margin-top:8px;display:flex;flex-direction:column;gap:12px;">
+            <button id="_payCard" style="width:100%;padding:${isMob ? '16px' : '20px 24px'};background:linear-gradient(135deg,#12122a,#161630);border:1px solid rgba(197,160,89,0.2);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
+                <div style="width:42px;height:42px;border-radius:50%;background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
+                <div style="text-align:left;">
+                    <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.75rem' : '0.85rem'};color:#f3e5ab;letter-spacing:3px;font-weight:600;">CARD</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:2px;">Visa, Mastercard via Stripe</div>
+                </div>
+            </button>
+            <button id="_payCrypto" style="width:100%;padding:${isMob ? '16px' : '20px 24px'};background:linear-gradient(135deg,#14081e,#0e0618);border:1px solid rgba(160,100,220,0.2);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
+                <div style="width:42px;height:42px;border-radius:50%;background:rgba(160,100,220,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.6)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                </div>
+                <div style="text-align:left;">
+                    <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.75rem' : '0.85rem'};color:#d4b0f0;letter-spacing:3px;font-weight:600;">CRYPTO</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:2px;">Bitcoin, Ethereum, USDT, Litecoin</div>
+                </div>
+            </button>
+        </div>
+        <button id="_payCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:8px 20px;cursor:pointer;margin-top:4px;transition:color 0.2s;">CANCEL</button>
     `;
 
     overlay.appendChild(box);
@@ -5356,32 +5370,38 @@ function _showCryptoCoinPicker(amount: number) {
     const existing = document.getElementById('_cryptoCoinPicker');
     if (existing) existing.remove();
 
+    const isMob = window.innerWidth < 768;
     const overlay = document.createElement('div');
     overlay.id = '_cryptoCoinPicker';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#0a0a14;border:1px solid rgba(224,64,251,0.25);border-radius:12px;padding:32px 28px;max-width:360px;width:90%;display:flex;flex-direction:column;align-items:center;gap:12px;';
+    box.style.cssText = `background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(160,100,220,0.15);border-radius:${isMob ? '14px' : '18px'};padding:${isMob ? '32px 28px' : '48px 52px'};max-width:${isMob ? '360px' : '480px'};width:90%;display:flex;flex-direction:column;align-items:center;gap:${isMob ? '12px' : '18px'};box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(160,100,220,0.15);`;
 
     let buttonsHtml = '';
     CRYPTO_OPTIONS.forEach((opt, i) => {
+        const rgb = opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187';
         buttonsHtml += `
-            <button class="_coinBtn" data-idx="${i}" style="width:100%;padding:14px 16px;background:linear-gradient(135deg,rgba(${opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187'},0.08),#0a0a14);border:1px solid ${opt.color}33;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s;">
-                <span style="font-size:1.4rem;width:32px;text-align:center;color:${opt.color};">${opt.icon}</span>
-                <div style="text-align:left;">
-                    <div style="font-family:Orbitron;font-size:0.7rem;color:#f3e5ab;letter-spacing:2px;">${opt.label}</div>
-                    <div style="font-family:Orbitron;font-size:0.45rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-top:2px;">${opt.sub}</div>
+            <button class="_coinBtn" data-idx="${i}" style="width:100%;padding:${isMob ? '14px 16px' : '18px 22px'};background:linear-gradient(135deg,rgba(${rgb},0.05),rgba(${rgb},0.02));border:1px solid rgba(${rgb},0.15);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
+                <div style="width:${isMob ? '36px' : '44px'};height:${isMob ? '36px' : '44px'};border-radius:50%;background:rgba(${rgb},0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span style="font-size:${isMob ? '1.1rem' : '1.3rem'};color:${opt.color};">${opt.icon}</span>
                 </div>
+                <div style="text-align:left;flex:1;">
+                    <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.7rem' : '0.8rem'};color:#f3e5ab;letter-spacing:2px;font-weight:600;">${opt.label}</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:2px;">${opt.sub}</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
             </button>`;
     });
 
     box.innerHTML = `
-        <div style="font-family:Cinzel;font-size:0.8rem;color:#e040fb;letter-spacing:4px;font-weight:700;">SELECT CRYPTO</div>
-        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${amount.toLocaleString()} ROYAL SILVER</div>
-        <div style="width:100%;margin-top:4px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.8rem' : '1rem'};color:#d4b0f0;letter-spacing:5px;font-weight:700;">SELECT CURRENCY</div>
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent);"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.7rem' : '0.8rem'};color:rgba(255,255,255,0.3);letter-spacing:3px;font-weight:500;">${amount.toLocaleString()} ROYAL SILVER</div>
+        <div style="width:100%;margin-top:8px;display:flex;flex-direction:column;gap:10px;">
             ${buttonsHtml}
         </div>
-        <button id="_coinPickerCancel" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;margin-top:4px;">BACK</button>
+        <button id="_coinPickerCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:8px 20px;cursor:pointer;margin-top:4px;transition:color 0.2s;">BACK</button>
     `;
 
     overlay.appendChild(box);
@@ -5407,11 +5427,11 @@ async function _createCryptoPayment(amount: number, ticker: string, label: strin
 
     const loader = document.createElement('div');
     loader.id = '_cryptoPayOverlay';
-    loader.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
+    loader.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
     loader.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
-            <div style="width:36px;height:36px;border:3px solid rgba(224,64,251,0.2);border-top-color:#e040fb;border-radius:50%;animation:_cryptoSpin 0.8s linear infinite;"></div>
-            <div style="font-family:Orbitron;font-size:0.6rem;color:rgba(255,255,255,0.4);letter-spacing:3px;">PREPARING ${label} PAYMENT...</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:22px;">
+            <div style="width:40px;height:40px;border:2px solid rgba(160,100,220,0.15);border-top-color:rgba(160,100,220,0.6);border-radius:50%;animation:_cryptoSpin 0.8s linear infinite;"></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:4px;font-weight:500;">PREPARING ${label} PAYMENT...</div>
         </div>
         <style>@keyframes _cryptoSpin{to{transform:rotate(360deg)}}</style>
     `;
@@ -5443,45 +5463,50 @@ function _showCryptoPaymentOverlay(data: { address: string; amount: number; amou
     const existing = document.getElementById('_cryptoPayOverlay');
     if (existing) existing.remove();
 
+    const isMob = window.innerWidth < 768;
     const overlay = document.createElement('div');
     overlay.id = '_cryptoPayOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:2147483647;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px;';
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#0a0a14;border:1px solid rgba(224,64,251,0.25);border-radius:14px;padding:28px 24px;max-width:380px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px;';
+    box.style.cssText = `background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(160,100,220,0.12);border-radius:${isMob ? '14px' : '20px'};padding:${isMob ? '28px 24px' : '44px 48px'};max-width:${isMob ? '380px' : '520px'};width:100%;display:flex;flex-direction:column;align-items:center;gap:${isMob ? '14px' : '18px'};box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 1px rgba(160,100,220,0.15);`;
 
-    const truncAddr = data.address.length > 20
-        ? data.address.slice(0, 12) + '...' + data.address.slice(-8)
-        : data.address;
+    const qrSize = isMob ? 200 : 240;
 
     box.innerHTML = `
-        <div style="font-family:Cinzel;font-size:0.8rem;color:#e040fb;letter-spacing:4px;font-weight:700;">CRYPTO PAYMENT</div>
-        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.35);letter-spacing:2px;">${coins.toLocaleString()} ROYAL SILVER</div>
+        <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.8rem' : '1.05rem'};color:#d4b0f0;letter-spacing:${isMob ? '4px' : '6px'};font-weight:700;">CRYPTO PAYMENT</div>
+        <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent);"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.7rem' : '0.8rem'};color:rgba(255,255,255,0.3);letter-spacing:3px;font-weight:500;">${coins.toLocaleString()} ROYAL SILVER</div>
 
-        <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid rgba(224,64,251,0.15);">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(data.address)}" alt="QR Code" style="width:220px;height:220px;border-radius:6px;display:block;" />
+        <div style="background:#fff;border-radius:${isMob ? '10px' : '14px'};padding:${isMob ? '12px' : '16px'};margin-top:6px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(data.address)}" alt="QR Code" style="width:${qrSize}px;height:${qrSize}px;border-radius:6px;display:block;" />
         </div>
 
-        <div style="font-family:Orbitron;font-size:0.6rem;color:rgba(255,255,255,0.5);letter-spacing:1px;">SEND EXACTLY</div>
-        <div style="font-family:Orbitron;font-size:1.3rem;color:#f3e5ab;letter-spacing:1px;font-weight:700;">${data.amount} <span style="font-size:0.65rem;color:#e040fb;">${data.currency}</span></div>
-        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.25);">(€${data.amount_eur.toFixed(2)})</div>
+        <div style="text-align:center;margin-top:4px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.6rem' : '0.7rem'};color:rgba(255,255,255,0.35);letter-spacing:2px;font-weight:500;margin-bottom:6px;">SEND EXACTLY</div>
+            <div style="font-family:Cinzel,serif;font-size:${isMob ? '1.3rem' : '1.6rem'};color:#f3e5ab;letter-spacing:1px;font-weight:700;">${data.amount} <span style="font-size:${isMob ? '0.6rem' : '0.75rem'};color:rgba(160,100,220,0.7);font-weight:500;letter-spacing:2px;">${data.currency}</span></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.6rem' : '0.7rem'};color:rgba(255,255,255,0.2);margin-top:2px;">(€${data.amount_eur.toFixed(2)})</div>
+        </div>
 
-        <div style="font-family:Orbitron;font-size:0.5rem;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-top:4px;">TO ADDRESS</div>
-        <div id="_cryptoAddr" style="font-family:monospace;font-size:0.7rem;color:#e8b0ff;background:rgba(224,64,251,0.08);border:1px solid rgba(224,64,251,0.2);border-radius:6px;padding:10px 14px;word-break:break-all;text-align:center;cursor:pointer;width:100%;box-sizing:border-box;" title="Click to copy">${data.address}</div>
-        <button id="_cryptoCopy" style="background:rgba(224,64,251,0.12);border:1px solid rgba(224,64,251,0.3);color:#e8b0ff;font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;transition:all 0.2s;">COPY ADDRESS</button>
+        <div style="width:100%;margin-top:4px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:2px;font-weight:500;text-align:center;margin-bottom:6px;">WALLET ADDRESS</div>
+            <div id="_cryptoAddr" style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:${isMob ? '0.65rem' : '0.75rem'};color:#d4b0f0;background:rgba(160,100,220,0.05);border:1px solid rgba(160,100,220,0.12);border-radius:8px;padding:${isMob ? '10px 14px' : '14px 18px'};word-break:break-all;text-align:center;cursor:pointer;width:100%;box-sizing:border-box;transition:border-color 0.2s;" title="Click to copy">${data.address}</div>
+        </div>
 
-        <div style="width:100%;border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+        <button id="_cryptoCopy" style="background:rgba(160,100,220,0.08);border:1px solid rgba(160,100,220,0.2);color:#d4b0f0;font-family:Cinzel,serif;font-size:${isMob ? '0.5rem' : '0.6rem'};letter-spacing:3px;font-weight:600;padding:${isMob ? '8px 20px' : '10px 28px'};cursor:pointer;border-radius:6px;transition:all 0.2s;">COPY ADDRESS</button>
 
-        <div id="_cryptoStatus" style="font-family:Orbitron;font-size:0.55rem;color:rgba(255,255,255,0.4);letter-spacing:2px;display:flex;align-items:center;gap:8px;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e040fb;animation:_cryptoPulse 1.5s infinite;"></span>
+        <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(160,100,220,0.1),transparent);margin:4px 0;"></div>
+
+        <div id="_cryptoStatus" style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.65rem' : '0.75rem'};color:rgba(255,255,255,0.4);letter-spacing:3px;font-weight:500;display:flex;align-items:center;gap:10px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a064dc;animation:_cryptoPulse 1.5s infinite;"></span>
             WAITING FOR PAYMENT...
         </div>
 
-        <div style="font-family:Orbitron;font-size:0.4rem;color:rgba(255,255,255,0.2);text-align:center;line-height:1.6;max-width:300px;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:${isMob ? '0.6rem' : '0.7rem'};color:rgba(255,255,255,0.18);text-align:center;line-height:1.7;max-width:${isMob ? '300px' : '400px'};">
             Send the exact amount shown above. Your coins will be credited automatically once the transaction is confirmed on the blockchain.
         </div>
 
-        <button id="_cryptoClose" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-family:Orbitron;font-size:0.5rem;letter-spacing:2px;padding:8px 20px;cursor:pointer;border-radius:4px;margin-top:4px;">CLOSE</button>
+        <button id="_cryptoClose" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:8px 20px;cursor:pointer;margin-top:4px;transition:color 0.2s;">CLOSE</button>
     `;
 
     // Pulse animation
