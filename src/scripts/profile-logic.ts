@@ -6160,6 +6160,8 @@ let _mobGlActivePeriod = 'today';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _mobGlRealtimeChannel: any = null;
 const _mobGlPendingSent = new Set<string>();
+let _mobGlPollInterval: ReturnType<typeof setInterval> | null = null;
+let _mobGlLastMsgId: string | null = null;
 
 // ─── REPLY STATE ──────────────────────────────────────────────────────────────
 let _mobGlReply: { id: string; name: string; text: string } | null = null;
@@ -6254,6 +6256,7 @@ export function closeMobGlobal() {
     setTimeout(() => { if (!el.classList.contains('mob-overlay-open')) el.style.display = 'none'; }, 360);
     _setNavActive('profile');
     if (_mobGlRealtimeChannel) { _mobGlRealtimeChannel.unsubscribe(); _mobGlRealtimeChannel = null; }
+    if (_mobGlPollInterval) { clearInterval(_mobGlPollInterval); _mobGlPollInterval = null; }
     _mobGlLoaded['talk'] = false;
 }
 
@@ -6380,6 +6383,7 @@ async function _loadMobGlTalk() {
             return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::');
         });
         _renderMobGlTalk(msgs);
+        if (msgs.length) _mobGlLastMsgId = String(msgs[msgs.length - 1].id || '');
         _mobGlLoaded['talk'] = true;
         _initMobGlRealtime();
     } catch {
@@ -6402,10 +6406,35 @@ function _initMobGlRealtime() {
                     _mobGlPendingSent.delete(dedupKey);
                     return;
                 }
+                if (msg.id) _mobGlLastMsgId = String(msg.id);
                 _appendMobGlMessage(msg);
             }
         )
         .subscribe();
+
+    // Safety-net poll every 30s — catches dead channels, missed events, network switches
+    if (_mobGlPollInterval) clearInterval(_mobGlPollInterval);
+    _mobGlPollInterval = setInterval(_pollMobGlMessages, 30000);
+}
+
+async function _pollMobGlMessages() {
+    const container = document.getElementById('mobGlTalkFeed');
+    if (!container) return;
+    try {
+        const res = await fetch('/api/global/messages', { cache: 'no-store' });
+        const data = await res.json();
+        const msgs: any[] = (data.messages || []).filter((m: any) => {
+            const c = m.message || '';
+            return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::');
+        });
+        if (!msgs.length) return;
+        const latestId = String(msgs[msgs.length - 1].id || '');
+        if (latestId && latestId !== _mobGlLastMsgId) {
+            // New messages exist that we haven't rendered — re-render the full list
+            _mobGlLastMsgId = latestId;
+            _renderMobGlTalk(msgs);
+        }
+    } catch {}
 }
 
 const MOB_QUEEN_EMAILS = ['ceo@qkarin.com'];
