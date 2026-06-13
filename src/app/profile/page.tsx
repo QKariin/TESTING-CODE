@@ -854,7 +854,7 @@ export default function ProfilePage() {
                     {_firstName ? `Welcome home, ${_firstName}` : 'Welcome home'}
                 </div>
                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', fontWeight: 500, animation: '_splashFade 0.6s ease-out 0.3s both' }}>
-                    PREPARING YOUR QUARTERS
+                    CHECKING YOUR SLAVE STATS
                 </div>
             </div>
         );
