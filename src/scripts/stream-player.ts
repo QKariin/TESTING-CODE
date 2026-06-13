@@ -210,7 +210,7 @@ function _showFloatingPlayer() {
     window.addEventListener('resize', _clampToViewport);
     document.addEventListener('visibilitychange', _handleVisibility);
 
-    // Set discreet media session so CarPlay/Bluetooth doesn't show the page title
+    // Set discreet media session + page title so CarPlay/Bluetooth/lock screen shows "Good Boy Radio"
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: 'Good Boy Radio',
@@ -218,6 +218,8 @@ function _showFloatingPlayer() {
             album: '',
         });
     }
+    (window as any)._origTitle = document.title;
+    document.title = 'Good Boy Radio';
 }
 
 function _handleVisibility() {
@@ -333,6 +335,10 @@ function _hideFloatingPlayer() {
     _leaveViewerPresence();
     document.getElementById('streamFloat')?.remove();
     _closeStreamChat();
+    // Restore original page title
+    if ((window as any)._origTitle) {
+        document.title = (window as any)._origTitle;
+    }
 }
 
 function _streamExpand() {
