@@ -1552,13 +1552,13 @@ async function _rejectCertProof(memberId: string, cardId: string) {
     } catch (e) { alert('Error rejecting proof.'); }
 }
 
-async function _callGuardian(userMessage: string, memberId: string) {
+async function _callGuardian(userMessage: string, memberId: string, callerRole: string = 'queen') {
     if (!userMessage || !memberId) return;
     try {
         const res = await fetch('/api/chat/guardian', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userMessage, memberId }),
+            body: JSON.stringify({ userMessage, memberId, callerRole }),
         });
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));

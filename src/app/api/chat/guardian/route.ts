@@ -93,7 +93,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { userMessage, memberId } = await req.json();
+        const { userMessage, memberId, callerRole } = await req.json();
         if (!userMessage || !memberId) {
             return NextResponse.json({ error: 'Missing userMessage or memberId' }, { status: 400 });
         }
@@ -203,7 +203,12 @@ export async function POST(req: Request) {
         if (chatHistory) {
             userContent += chatHistory + '\n\n';
         }
-        userContent += `THE USER JUST SAID: "${userMessage}"\n\nRespond to this in context of the conversation above. Your answer MUST directly relate to what they said and what was discussed. Do NOT make up topics.`;
+        const isQueen = callerRole === 'queen';
+        if (isQueen) {
+            userContent += `QUEEN KARIN JUST SAID TO YOU: "${userMessage}"\n\nThis is your QUEEN talking to you directly. Be humble, respectful, and loyal. You can be witty but NEVER cocky or sarcastic toward her. She is your boss. Respond to what she said in context of the conversation above.`;
+        } else {
+            userContent += `THE SUB JUST SAID: "${userMessage}"\n\nThis is a submissive talking to you. You can be your full self here — warm if the vibe is warm, sarcastic if they are being dumb. Respond in context of the conversation above. Do NOT make up topics.`;
+        }
 
         const messages = [
             { role: 'system', content: systemPrompt },

@@ -4449,7 +4449,7 @@ export async function sendChatMessage() {
                 fetch('/api/chat/guardian', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userMessage: msg, memberId }),
+                    body: JSON.stringify({ userMessage: msg, memberId, callerRole: 'sub' }),
                 }).catch(e => console.warn('[Guardian] auto-summon failed:', e));
             }
         } else {
