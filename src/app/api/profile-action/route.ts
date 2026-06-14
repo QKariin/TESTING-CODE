@@ -61,22 +61,23 @@ export async function POST(req: Request) {
                     if (existingRoutine) {
                         const now0 = new Date();
                         const todayStr0 = now0.toLocaleDateString('en-CA', { timeZone: routineTz });
-                        // Check pending submission
+                        // Check pending submission (still waiting for approval)
                         if (existingRoutine.pending_submitted_at) {
                             const pendingDate = new Date(existingRoutine.pending_submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
                             if (pendingDate === todayStr0) {
                                 return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
                             }
                         }
-                        // Check approved/completed in history
+                        // Check ALL history entries for today (approved, rejected, or any status)
+                        // This catches the case where pending_submitted_at was cleared after approval
                         if (existingRoutine.history && Array.isArray(existingRoutine.history)) {
-                            for (let i = existingRoutine.history.length - 1; i >= 0; i--) {
-                                const entry = existingRoutine.history[i];
-                                const entryDate = entry.date || new Date(entry.submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
-                                if (entryDate === todayStr0) {
-                                    return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
-                                }
-                                break; // only check latest
+                            for (const entry of existingRoutine.history) {
+                                try {
+                                    const entryDate = entry.date || new Date(entry.submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
+                                    if (entryDate === todayStr0) {
+                                        return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
+                                    }
+                                } catch {}
                             }
                         }
                     }
