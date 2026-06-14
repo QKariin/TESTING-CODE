@@ -2430,7 +2430,17 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
             const res = await fetch('/api/chat/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderEmail: adminEmail, conversationId: user.memberId, content: txt, type: 'text' }) });
             const json = await res.json();
             if (!res.ok || !json.success) setSendError(json.error || 'Send failed');
-            else { setInput(''); await fetchMessages(); }
+            else {
+                setInput('');
+                await fetchMessages();
+                // Auto-summon Guardian when @vlad is tagged
+                if (/@vlad/i.test(txt)) {
+                    try {
+                        const gRes = await fetch('/api/chat/guardian', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userMessage: txt, memberId: user.memberId, callerRole: 'queen' }) });
+                        if (gRes.ok) setTimeout(() => fetchMessages(), 1500);
+                    } catch (e) { console.warn('[Guardian] auto-summon failed:', e); }
+                }
+            }
         } catch (e: any) { setSendError(e?.message || 'Network error'); }
         setSending(false);
     };
