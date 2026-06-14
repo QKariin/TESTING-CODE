@@ -1036,6 +1036,10 @@ export async function sendMsg() {
             if (data.data) {
                 appendChatMessage(data.data);
             }
+            // Auto-summon Guardian when @vlad is tagged
+            if (/@vlad/i.test(text)) {
+                _callGuardian(text, conversationUUID);
+            }
         } else {
             console.error(`[DASHBOARD-CHAT] Message send API error:`, data.error);
             alert(`Error: ${data.error}`);
