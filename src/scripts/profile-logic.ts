@@ -4443,6 +4443,15 @@ export async function sendChatMessage() {
                     _scrollChatDelayed();
                 }
             }
+
+            // Auto-summon Guardian when sub tags .vlad
+            if (/\.vlad/i.test(msg)) {
+                fetch('/api/chat/guardian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userMessage: msg, memberId }),
+                }).catch(e => console.warn('[Guardian] auto-summon failed:', e));
+            }
         } else {
             alert(data.error || "Failed to send message.");
         }
