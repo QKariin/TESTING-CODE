@@ -203,6 +203,11 @@ export async function POST(req: Request) {
             userContext += `\nTREAT THIS PERSON ACCORDINGLY. A loyal member deserves warmth and respect. A brand new member gets a friendlier welcome. Only roast someone you know can take it.`;
         }
 
+        // Pass real Helsinki time so Vlad never makes up times
+        const helsinkiTime = new Date().toLocaleString('en-GB', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', hour12: false });
+        const helsinkiDay = new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/Helsinki', weekday: 'long' });
+        userContext += `\n\nCURRENT TIME IN HELSINKI (your time): ${helsinkiTime} on ${helsinkiDay}. If you mention time, use THIS. Do NOT guess or make up times.`;
+
         // Fetch last 10 messages — query both UUID and email
         let chatQuery = adminClient.from('chats')
             .select('sender_email, content, type')
