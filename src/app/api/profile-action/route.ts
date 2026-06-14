@@ -1,6 +1,7 @@
 // src/app/api/profile-action/route.ts
 import { NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
+import { supabaseAdmin } from '@/lib/supabase';
 import { cacheDelete } from '@/lib/api-cache';
 import { discordRoutineSubmitted } from '@/lib/discord';
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
                 break;
 
             case 'SUBMIT_TASK':
-                // Enforce routine window (6-10 AM local time)
+                // Enforce routine window (6-10 AM local time) + once-per-day
                 if (payload.isRoutine) {
                     const routineTz = payload.tz || 'UTC';
                     const localHour = parseInt(
@@ -47,6 +48,37 @@ export async function POST(req: Request) {
                     );
                     if (localHour < 6 || localHour >= 10) {
                         return NextResponse.json({ error: 'Routine upload window is 6:00 - 10:00 AM', success: false }, { status: 400 });
+                    }
+
+                    // Block duplicate routine submission for today
+                    const profile0 = await DbService.getProfile(memberId);
+                    const email0 = (profile0?.member_id || memberId).toLowerCase();
+                    const { data: existingRoutine } = await supabaseAdmin
+                        .from('user_routines')
+                        .select('pending_submitted_at, history')
+                        .eq('member_id', email0)
+                        .maybeSingle();
+                    if (existingRoutine) {
+                        const now0 = new Date();
+                        const todayStr0 = now0.toLocaleDateString('en-CA', { timeZone: routineTz });
+                        // Check pending submission
+                        if (existingRoutine.pending_submitted_at) {
+                            const pendingDate = new Date(existingRoutine.pending_submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
+                            if (pendingDate === todayStr0) {
+                                return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
+                            }
+                        }
+                        // Check approved/completed in history
+                        if (existingRoutine.history && Array.isArray(existingRoutine.history)) {
+                            for (let i = existingRoutine.history.length - 1; i >= 0; i--) {
+                                const entry = existingRoutine.history[i];
+                                const entryDate = entry.date || new Date(entry.submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
+                                if (entryDate === todayStr0) {
+                                    return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
+                                }
+                                break; // only check latest
+                            }
+                        }
                     }
                 }
                 result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl, payload.tz || 'UTC');

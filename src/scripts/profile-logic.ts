@@ -2427,6 +2427,7 @@ export async function updateRoutineWidget() {
         // iOS-safe routine upload: create input dynamically so .click() fires
         // synchronously within the user gesture (same fix as profile photo)
         const triggerRoutineFilePick = () => {
+            if ((window as any).__routineSubmittedToday) return;
             const inp = document.createElement('input');
             inp.type = 'file';
             inp.accept = 'image/*,video/*';
@@ -2470,6 +2471,7 @@ export async function updateRoutineWidget() {
             if (timeMsg) { timeMsg.classList.add('hidden'); }
         } else if (data.uploadedToday && data.todayStatus === 'pending') {
             // ── State 3a: Uploaded today, Pending Approval ──────────────────
+            (window as any).__routineSubmittedToday = true;
             if (display) display.textContent = 'PENDING APPROVAL';
             if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
@@ -2485,6 +2487,7 @@ export async function updateRoutineWidget() {
             if (mobTime) mobTime.classList.add('hidden');
         } else if (data.uploadedToday && data.todayStatus === 'approved') {
             // ── State 3b: Uploaded today, Approved ───────────────────────────
+            (window as any).__routineSubmittedToday = true;
             if (display) display.textContent = data.routine;
             if (mobDisplay) mobDisplay.textContent = data.routine;
             if (btn) {
@@ -2580,6 +2583,7 @@ export function handleRoutineUpload(input: HTMLInputElement) {
     if (input.files && input.files[0]) {
         submitTaskEvidence(input.files[0], true).then((success) => {
             if (!success) return;  // Don't lock UI if upload failed
+            (window as any).__routineSubmittedToday = true;
             const display = document.getElementById('deskRoutineDisplay');
             const mobDisplay = document.getElementById('mobRoutineDisplay');
             const btn = document.getElementById('deskRoutineActionBtn') as HTMLButtonElement | null;
