@@ -4444,8 +4444,8 @@ export async function sendChatMessage() {
                 }
             }
 
-            // Auto-summon Guardian when sub tags .vlad
-            if (/\.vlad/i.test(msg)) {
+            // Auto-summon Guardian when sub tags @vlad
+            if (/@vlad/i.test(msg)) {
                 fetch('/api/chat/guardian', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
