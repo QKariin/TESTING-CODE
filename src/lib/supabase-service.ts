@@ -525,7 +525,7 @@ export const DbService = {
             const pType = (proofType || '').startsWith('video') ? 'video' : 'image';
             const newEntry = {
                 id: taskId,
-                date: new Date().toISOString().split('T')[0],
+                date: new Date().toLocaleDateString('en-CA', { timeZone: tz }),
                 submitted_at: now,
                 status: 'pending',
                 proof_url: proofUrl,
