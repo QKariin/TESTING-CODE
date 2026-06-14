@@ -51,10 +51,17 @@ export async function POST(req: Request) {
                     }
 
                     // Block duplicate routine submission for today
+                    // memberId can be UUID or email — resolve to email for user_routines lookup
+                    const isUuid0 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
+                    let routineEmail = memberId.toLowerCase();
+                    if (isUuid0) {
+                        const { data: p0 } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
+                        if (p0?.member_id) routineEmail = p0.member_id.toLowerCase();
+                    }
                     const { data: existingRoutine } = await supabaseAdmin
                         .from('user_routines')
                         .select('pending_submitted_at, history')
-                        .ilike('member_id', memberId)
+                        .eq('member_id', routineEmail)
                         .maybeSingle();
                     if (existingRoutine) {
                         // Compare using BOTH UTC date and sub's local date to catch all cases
