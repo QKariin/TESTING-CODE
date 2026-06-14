@@ -51,12 +51,10 @@ export async function POST(req: Request) {
                     }
 
                     // Block duplicate routine submission for today
-                    const profile0 = await DbService.getProfile(memberId);
-                    const email0 = (profile0?.member_id || memberId).toLowerCase();
                     const { data: existingRoutine } = await supabaseAdmin
                         .from('user_routines')
                         .select('pending_submitted_at, history')
-                        .eq('member_id', email0)
+                        .ilike('member_id', memberId)
                         .maybeSingle();
                     if (existingRoutine) {
                         // Compare using BOTH UTC date and sub's local date to catch all cases
