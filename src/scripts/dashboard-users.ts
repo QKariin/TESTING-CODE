@@ -1113,10 +1113,20 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
         btn.innerText = '...';
         const { adminApproveTaskAction } = await import('@/actions/velo-actions');
         await adminApproveTaskAction(taskId, memberId, 50, null);
+        // Immediate visual: update all status badges + remove action buttons
+        const card = btn.closest('.dp-routine-card') as HTMLElement;
+        if (card) {
+            card.querySelectorAll('.dp-routine-badge').forEach(b => {
+                (b as HTMLElement).textContent = '✦ APPROVED';
+                (b as HTMLElement).style.color = '#c5a059';
+                b.classList.add('dp-routine-badge-gold');
+            });
+            // Remove action button rows
+            card.querySelectorAll('div[style*="position:absolute"][style*="bottom:0"]').forEach(r => {
+                (r as HTMLElement).innerHTML = `<div style="text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#4ade80;letter-spacing:2px;">✓ APPROVED</div>`;
+            });
+        }
         _notifyMember(memberId, 'routine_approved');
-        // Re-render the routine section so status badge updates to APPROVED
-        const u = (window as any)._currentDetailUser;
-        if (u) updateChatterRoutine(u);
     } catch (err) {
         console.error('approveRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
@@ -1131,10 +1141,18 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
         btn.innerText = '...';
         const { adminRejectTaskAction } = await import('@/actions/velo-actions');
         await adminRejectTaskAction(taskId, memberId);
+        // Immediate visual: update all status badges + remove action buttons
+        const card = btn.closest('.dp-routine-card') as HTMLElement;
+        if (card) {
+            card.querySelectorAll('.dp-routine-badge').forEach(b => {
+                (b as HTMLElement).textContent = 'REJECTED';
+                (b as HTMLElement).style.color = '#ff4444';
+            });
+            card.querySelectorAll('div[style*="position:absolute"][style*="bottom:0"]').forEach(r => {
+                (r as HTMLElement).innerHTML = `<div style="text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#ff4444;letter-spacing:2px;">✗ REJECTED</div>`;
+            });
+        }
         _notifyMember(memberId, 'routine_rejected');
-        // Re-render the routine section so status badge updates to REJECTED
-        const u = (window as any)._currentDetailUser;
-        if (u) updateChatterRoutine(u);
     } catch (err) {
         console.error('rejectRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
