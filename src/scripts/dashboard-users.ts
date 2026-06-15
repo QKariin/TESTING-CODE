@@ -141,6 +141,7 @@ export async function updateDetail(u: any) {
     // Expose for routine change button in the chatter panel
     (window as any)._currChatterId = uid;
     (window as any)._currRoutineName = u.routine || '';
+    (window as any)._currentDetailUser = u;
 
     // When switching users, invalidate per-object caches so shared DOM containers re-render
     if (_lastDetailUserId !== uid) {
@@ -1112,9 +1113,10 @@ async function approveRoutineFromPanel(taskId: string, memberId: string, btn: HT
         btn.innerText = '...';
         const { adminApproveTaskAction } = await import('@/actions/velo-actions');
         await adminApproveTaskAction(taskId, memberId, 50, null);
-        const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
-        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#00ff00;letter-spacing:2px;border-radius:0 0 4px 4px;">✓ APPROVED</div>`;
         _notifyMember(memberId, 'routine_approved');
+        // Re-render the routine section so status badge updates to APPROVED
+        const u = (window as any)._currentDetailUser;
+        if (u) updateChatterRoutine(u);
     } catch (err) {
         console.error('approveRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
@@ -1129,9 +1131,10 @@ async function rejectRoutineFromPanel(taskId: string, memberId: string, btn: HTM
         btn.innerText = '...';
         const { adminRejectTaskAction } = await import('@/actions/velo-actions');
         await adminRejectTaskAction(taskId, memberId);
-        const row = btn.closest('div[style*="position:absolute"]') as HTMLElement;
-        if (row) row.outerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);text-align:center;padding:6px;font-size:0.55rem;font-family:'Rajdhani',sans-serif;color:#ff4444;letter-spacing:2px;border-radius:0 0 4px 4px;">✗ REJECTED</div>`;
         _notifyMember(memberId, 'routine_rejected');
+        // Re-render the routine section so status badge updates to REJECTED
+        const u = (window as any)._currentDetailUser;
+        if (u) updateChatterRoutine(u);
     } catch (err) {
         console.error('rejectRoutineFromPanel failed:', err);
         btn.removeAttribute('disabled');
