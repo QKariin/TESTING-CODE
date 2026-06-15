@@ -15,6 +15,8 @@
     --blue-accent: #0075ff;
     --bg-deep: #020512;
     --bg-card: rgba(15, 21, 56, 0.6);
+    /* Responsive scale factor for right-side content panels */
+    --rs: 1;
 }
 
 .hidden {
@@ -89,10 +91,13 @@
         color: white;
     }
 
+    /* --- RESPONSIVE SCALE: shrink right-panel content on smaller screens --- */
+    /* Scale sidebar + grid proportionally based on viewport width */
+
     /* --- DESKTOP GRID LAYOUT (5x3 FULL BROWSER FIT) --- */
     #DESKTOP_APP {
         display: grid !important;
-        grid-template-columns: 450px repeat(4, 1fr) !important;
+        grid-template-columns: min(450px, 24vw) repeat(4, 1fr) !important;
         grid-template-rows: 20% 30% 50% !important;
         width: 100vw !important;
         height: 100vh !important;
@@ -174,6 +179,216 @@
     #gridRightSection {
         grid-column: 3 / 5 !important;
         grid-row: 3 / 4 !important;
+    }
+
+    /* ── PROPORTIONAL SCALING FOR RIGHT-SIDE CONTENT ──
+       Uses container font-size trick: set a fluid base on each grid cell,
+       then every child with inline font-size gets overridden via !important. */
+
+    /* ─── Universal grid-cell scaler ─── */
+    /* Set fluid font-size on the 4 stat cards + task + right section.
+       Children that need specific sizes override below. */
+    #gridStat1, #gridStat2, #gridStat3, #gridStat4,
+    #gridTask, #gridRightSection, #gridHero {
+        font-size: clamp(0.55rem, 0.7vw, 0.85rem);
+    }
+
+    /* Every element inside the right-column cards: scale proportionally.
+       This is the nuclear override for ALL inline fontSize values. */
+    #gridStat1 *, #gridStat2 *, #gridStat3 *, #gridStat4 *,
+    #gridTask *, #gridRightSection *, #gridHero * {
+        font-size: clamp(0.35rem, 0.6vw, 0.85rem) !important;
+        letter-spacing: clamp(0.5px, 0.12vw, 3px) !important;
+    }
+
+    /* ─── Padding & gap scaling ─── */
+    #gridStat1, #gridStat2, #gridStat3, #gridStat4 {
+        padding: clamp(8px, 1.1vw, 20px) !important;
+        gap: clamp(3px, 0.4vw, 10px) !important;
+    }
+
+    #gridTask {
+        padding: clamp(10px, 1.2vw, 20px) !important;
+        gap: clamp(5px, 0.6vw, 10px) !important;
+    }
+
+    #gridRightSection {
+        gap: clamp(8px, 1.2vw, 25px) !important;
+        padding: clamp(6px, 0.8vw, 10px) !important;
+    }
+
+    #gridStat4 {
+        gap: clamp(2px, 0.3vw, 6px) !important;
+    }
+
+    .serve-grid-item {
+        margin: clamp(4px, 0.5vw, 10px) !important;
+        min-height: clamp(80px, 10vh, 150px) !important;
+    }
+
+    /* ─── Specific element overrides (larger or smaller than the universal) ─── */
+
+    /* Ribbon labels — smallest text */
+    .ribbon-label {
+        font-size: clamp(0.3rem, 0.45vw, 0.55rem) !important;
+    }
+
+    /* Task order text — larger */
+    #readyText {
+        font-size: clamp(0.6rem, 0.85vw, 1.1rem) !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Daily code number — prominent */
+    #deskDailyCodeVal {
+        font-size: clamp(0.85rem, 1.2vw, 1.6rem) !important;
+        letter-spacing: clamp(2px, 0.4vw, 6px) !important;
+    }
+
+    /* Timer boxes */
+    .card-timer-row {
+        gap: clamp(3px, 0.4vw, 8px) !important;
+    }
+
+    .card-t-box {
+        font-size: clamp(0.7rem, 1vw, 1.5rem) !important;
+        padding: clamp(4px, 0.5vw, 10px) clamp(6px, 0.7vw, 16px) !important;
+        min-width: clamp(28px, 3.2vw, 55px) !important;
+        width: clamp(28px, 3.2vw, 55px) !important;
+    }
+
+    .t-sep {
+        font-size: clamp(0.7rem, 1vw, 1.5rem) !important;
+    }
+
+    /* Task panel buttons */
+    #gridTask .action-btn,
+    #gridTask .text-btn {
+        font-size: clamp(0.42rem, 0.55vw, 0.8rem) !important;
+        padding: clamp(6px, 0.7vw, 15px) !important;
+        max-width: 100% !important;
+        width: auto !important;
+    }
+
+    #uploadBtn, #btnSkip, #btnConfirmSkip, #btnCancelSkip, #btnDismissTask {
+        width: clamp(120px, 14vw, 280px) !important;
+    }
+
+    #newTaskBtn {
+        padding: clamp(6px, 0.8vw, 15px) !important;
+        font-size: clamp(0.45rem, 0.6vw, 0.85rem) !important;
+    }
+
+    #idleMessage {
+        font-size: clamp(0.42rem, 0.55vw, 0.8rem) !important;
+    }
+
+    /* Kneeling progress bar */
+    #gridStat1 .prog-bg {
+        height: clamp(14px, 1.3vw, 25px) !important;
+    }
+
+    #deskKneelDailyText {
+        font-size: clamp(0.38rem, 0.5vw, 0.8rem) !important;
+    }
+
+    /* Routine display */
+    #deskRoutineDisplay {
+        font-size: clamp(0.38rem, 0.5vw, 0.7rem) !important;
+    }
+
+    #deskRoutineActionBtn {
+        font-size: clamp(0.32rem, 0.4vw, 0.55rem) !important;
+        padding: clamp(3px, 0.4vw, 7px) 0 !important;
+    }
+
+    #deskRoutineCodeVal {
+        font-size: clamp(0.35rem, 0.48vw, 0.7rem) !important;
+    }
+
+    /* Challenge card numbers (1.5rem inline) — scale down */
+    #gridStat3 div[style*="font-size"] {
+        font-size: clamp(0.35rem, 0.6vw, 0.85rem) !important;
+    }
+
+    /* Challenge name inside stat card — slightly bigger */
+    #gridStat3 div[style*="Cinzel"] {
+        font-size: clamp(0.5rem, 0.7vw, 0.9rem) !important;
+    }
+
+    /* Challenge stat card button */
+    #gridStat3 button {
+        font-size: clamp(0.32rem, 0.42vw, 0.55rem) !important;
+        padding: clamp(4px, 0.5vw, 7px) 0 !important;
+    }
+
+    /* GLOBAL card text */
+    #gridStat4 div {
+        font-size: clamp(0.3rem, 0.42vw, 0.65rem) !important;
+    }
+
+    /* GLOBAL card title (larger) */
+    #gridStat4 div[style*="Cinzel"] {
+        font-size: clamp(0.6rem, 0.8vw, 1.05rem) !important;
+        letter-spacing: clamp(1px, 0.2vw, 3px) !important;
+    }
+
+    /* Right section — MY RECORD & SPOIL ME cards */
+    #gridRightSection .v-card {
+        padding: clamp(8px, 1vw, 22px) !important;
+        gap: clamp(4px, 0.5vw, 8px) !important;
+    }
+
+    #gridRightSection .v-card div {
+        font-size: clamp(0.3rem, 0.42vw, 0.65rem) !important;
+    }
+
+    #gridRightSection .v-card div[style*="Cinzel"] {
+        font-size: clamp(0.55rem, 0.75vw, 1.05rem) !important;
+        letter-spacing: clamp(1px, 0.2vw, 3px) !important;
+    }
+
+    #gridRightSection .action-btn {
+        font-size: clamp(0.32rem, 0.42vw, 0.6rem) !important;
+        padding: clamp(3px, 0.4vw, 6px) !important;
+    }
+
+    /* Hero card — specific text sizes */
+    #gridHero p {
+        font-size: clamp(0.45rem, 0.6vw, 0.8rem) !important;
+    }
+
+    #gridHero h2 {
+        font-size: clamp(0.9rem, 1.4vw, 2rem) !important;
+    }
+
+    #gridHero .mob-kneel-bar {
+        height: clamp(30px, 3.5vw, 48px) !important;
+        width: clamp(140px, 15vw, 220px) !important;
+    }
+
+    #gridHero .mob-kneel-bar span {
+        font-size: clamp(0.42rem, 0.6vw, 0.8rem) !important;
+    }
+
+    /* Kneeling reward overlay inside hero */
+    #kneelRewardOverlay h2 {
+        font-size: clamp(0.6rem, 0.85vw, 1.15rem) !important;
+    }
+
+    #kneelRewardOverlay button {
+        padding: clamp(6px, 0.8vw, 14px) clamp(4px, 0.5vw, 8px) !important;
+    }
+
+    /* Chat area */
+    #viewServingTop .chat-footer {
+        padding: clamp(8px, 0.8vw, 15px) !important;
+    }
+
+    /* Chat header text */
+    #viewServingTop .chat-footer *,
+    #viewServingTop .chat-input {
+        font-size: clamp(0.42rem, 0.6vw, 0.85rem) !important;
     }
 
     /* ALT VIEWS (Records, etc.) - Occupy Right 4 Columns */
