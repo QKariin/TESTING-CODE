@@ -68,17 +68,17 @@ export function discordRiskyTribute(
     let color: number;
 
     if (isJackpot) {
-        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** and hit **JACKPOT**!\n\n[Try your luck](${APP_LINK})`;
+        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** and hit **JACKPOT!**\n\n[Try your luck](${APP_LINK}/profile)`;
         color = 52326;
     } else if (isNoLoss) {
-        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — drew **${cardName}**, lost nothing\n\n[Try your luck](${APP_LINK})`;
+        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — drew **${cardName}**, lost nothing\n\n[Try your luck](${APP_LINK}/profile)`;
         color = 16766720;
     } else {
-        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — Queen took **${lossAmount.toLocaleString()}**\n\n[Try your luck](${APP_LINK})`;
+        description = `**${senderName}** gambled **${stake.toLocaleString()} coins** — Queen took **${lossAmount.toLocaleString()}**\n\n[Try your luck](${APP_LINK}/profile)`;
         color = 13369344;
     }
 
-    // Build risky card OG image URL
+    // Build risky card OG image URL (no external font deps — pure edge render)
     const p = new URLSearchParams({
         name: senderName,
         stake: stake.toString(),
@@ -87,7 +87,6 @@ export function discordRiskyTribute(
         cardName,
     });
     if (hierarchy) p.set('hierarchy', hierarchy);
-    if (cardIcon) p.set('cardIcon', cardIcon);
     if (isJackpot) p.set('isWin', '1');
     if (isNoLoss) p.set('noLoss', '1');
     const imageUrl = `${BASE}/api/og/risky-card?${p.toString()}`;
@@ -96,11 +95,6 @@ export function discordRiskyTribute(
         title: isJackpot ? 'JACKPOT!' : 'RISKY TRIBUTE',
         description,
         color,
-        fields: [
-            { name: 'Staked', value: stake.toLocaleString(), inline: true },
-            { name: isJackpot ? 'Won' : 'Lost', value: (isJackpot ? bonusAmount : lossAmount).toLocaleString(), inline: true },
-            { name: 'Card', value: cardName, inline: true },
-        ],
         image: { url: imageUrl },
     });
 }
