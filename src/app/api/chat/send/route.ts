@@ -121,8 +121,8 @@ export async function POST(req: Request) {
         const userRank = profile.hierarchy || 'Hall Boy';
         const rankRule = HIERARCHY_RULES.find(r => r.name.toLowerCase() === userRank.toLowerCase()) || HIERARCHY_RULES[HIERARCHY_RULES.length - 1];
 
-        if (!isQueen && type === 'photo' && !rankMeetsRequirement(userRank, 'Silverman')) return NextResponse.json({ success: false, error: `Rank error` }, { status: 403 });
-        if (!isQueen && type === 'video' && !rankMeetsRequirement(userRank, 'Butler')) return NextResponse.json({ success: false, error: `Rank error` }, { status: 403 });
+        if (!isQueen && type === 'photo' && !rankMeetsRequirement(userRank, 'Silverman')) return NextResponse.json({ success: false, error: `Photos unlock at Silverman rank. Keep climbing.` }, { status: 403 });
+        if (!isQueen && type === 'video' && !rankMeetsRequirement(userRank, 'Butler')) return NextResponse.json({ success: false, error: `Videos unlock at Butler rank. Keep climbing.` }, { status: 403 });
 
         let newWallet = profile.wallet;
         if (!isQueen && type !== 'wishlist' && type !== 'system') {
