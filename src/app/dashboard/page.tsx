@@ -590,15 +590,27 @@ function GlobalChatPanel({ userEmail }: { userEmail: string | null }) {
 
     async function send() {
         if (!text.trim() || !userEmail || sending) return;
+        const msg = text.trim();
         setSending(true);
         try {
             await fetch('/api/global/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senderEmail: userEmail, message: text.trim() }),
+                body: JSON.stringify({ senderEmail: userEmail, message: msg }),
             });
             setText('');
             await load();
+            // Auto-summon Guardian when @vlad is tagged
+            if (/@vlad/i.test(msg)) {
+                try {
+                    await fetch('/api/global/guardian', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userMessage: msg, senderName: 'QUEEN KARIN', senderEmail: userEmail }),
+                    });
+                    await load();
+                } catch {}
+            }
         } catch {}
         setSending(false);
     }
