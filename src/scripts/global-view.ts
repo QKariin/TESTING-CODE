@@ -506,6 +506,14 @@ export async function sendGlobalQuickMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message, senderEmail }),
         });
+        // Auto-summon Guardian when @vlad is tagged
+        if (/@vlad/i.test(message)) {
+            fetch('/api/global/guardian', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userMessage: message, senderName: raw?.name || senderEmail.split('@')[0], senderEmail }),
+            }).catch(e => console.warn('[Global Guardian] auto-summon failed:', e));
+        }
         await _loadTalkPreview();
     } finally {
         input.placeholder = 'Quick message...';
@@ -1139,6 +1147,24 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
         </div>`;
     }
 
+    // ── Guardian (Vlad) bubble ──
+    const isGuardian = (msg.sender_email || '').toLowerCase() === 'guardian';
+    if (isGuardian) {
+        return `<div class="gl-msg-row" style="margin-bottom:8px;">
+            <div style="padding:10px 14px 12px;background:linear-gradient(135deg,rgba(255,0,237,0.10),rgba(0,10,255,0.10));border:1px solid rgba(255,0,237,0.3);border-radius:10px;box-shadow:inset 0 0 20px rgba(0,10,255,0.05);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,rgba(255,0,237,0.3),rgba(0,10,255,0.3));border:1px solid rgba(255,0,237,0.5);display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.38rem;color:#fff;flex-shrink:0;">V</div>
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.45rem;color:rgba(255,0,237,0.7);letter-spacing:1px;">VLAD</span>
+                        <span style="font-family:'Orbitron';font-size:0.35rem;color:rgba(255,255,255,0.3);white-space:nowrap;flex-shrink:0;"> &middot; ${time}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:4px;">${replyBtn}</div>
+                </div>
+                ${quoteHtml}<div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.85);line-height:1.45;">${content}</div>
+            </div>
+        </div>`;
+    }
+
     // ── Regular user bubble ──
     const initial = (name[0] || 'S').toUpperCase();
     const userAv = av
@@ -1254,6 +1280,21 @@ export async function sendGlobalMessage() {
         });
         // Realtime will NOT duplicate - the optimistic bubble already shows it.
         // On next poll/open the real record loads with correct name/avatar.
+
+        // Auto-summon Guardian when @vlad is tagged in global chat
+        if (/@vlad/i.test(message)) {
+            try {
+                const gRes = await fetch('/api/global/guardian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userMessage: message, senderName: senderName, senderEmail }),
+                });
+                if (gRes.ok) {
+                    const gData = await gRes.json();
+                    if (gData.message) _appendMessage(gData.message);
+                }
+            } catch (e) { console.warn('[Global Guardian] auto-summon failed:', e); }
+        }
     } catch {}
 }
 

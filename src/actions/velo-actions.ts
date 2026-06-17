@@ -185,14 +185,16 @@ export async function updateScoreAction(memberId: string, amount: number) {
     try {
         const profile = await getProfile(memberId);
         if (profile) {
-            const newScore = (profile.score || 0) + amount;
+            // Use centralized awardPoints so Daily/Weekly/Monthly scores update for leaderboard
+            await DbService.awardPoints(profile.member_id || memberId, amount);
+
+            const newScore = Math.max(0, (profile.score || 0) + amount);
 
             // Convert Supabase profile to SlaveRecord for logic check
             const slaveRecord: SlaveRecord = { ...profile, score: newScore };
             const report = getHierarchyReport(slaveRecord);
 
             await updateProfile(profile.ID, {
-                score: newScore,
                 hierarchy: report.currentRank
             });
 

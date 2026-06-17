@@ -436,6 +436,22 @@ function _buildMobGlBubble(msg: any): string {
         return `<div class="mob-gl-talk-msg"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">${avatarHtml}<span class="mob-gl-talk-name">${name}</span><span class="mob-gl-talk-time"> \u00B7 ${time}</span></div>${replyBtn}</div><div style="max-width:240px;width:60vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid rgba(197,160,89,0.35);box-shadow:0 8px 30px rgba(0,0,0,0.7);"><img src="${gifUrl}" style="width:100%;display:block;max-height:200px;object-fit:contain;" onerror="this.style.display='none'" /></div></div>`;
     }
 
+    // Guardian (Vlad) bubble
+    const isGuardian = senderEmail === 'guardian';
+    if (isGuardian) {
+        return `<div class="mob-gl-talk-msg" style="background:linear-gradient(135deg,rgba(255,0,237,0.10),rgba(0,10,255,0.10));border:1px solid rgba(255,0,237,0.3);box-shadow:inset 0 0 20px rgba(0,10,255,0.05);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;">
+                    <div style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,rgba(255,0,237,0.3),rgba(0,10,255,0.3));border:1px solid rgba(255,0,237,0.5);display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:0.35rem;color:#fff;flex-shrink:0;">V</div>
+                    <span style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(255,0,237,0.7);letter-spacing:1px;">VLAD</span>
+                    <span class="mob-gl-talk-time"> \u00B7 ${time}</span>
+                </div>
+                ${replyBtn}
+            </div>
+            ${quoteHtml}<span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.85);line-height:1.45;">${content}</span>
+        </div>`;
+    }
+
     // Default message bubble
     const isMediaLabel = (content === '[GIF]' || content === '[VIDEO]' || content === '[PHOTO]') && mediaHtml;
     const contentEl = isMediaLabel ? '' : `<span class="mob-gl-talk-content">${content}</span>`;
@@ -488,6 +504,20 @@ async function sendMobGlMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: content, senderEmail: user.email, reply_to: replyTo })
         });
+        // Auto-summon Guardian when @vlad is tagged in global chat
+        if (/@vlad/i.test(content)) {
+            try {
+                const gRes = await fetch('/api/global/guardian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userMessage: content, senderName: user.name, senderEmail: user.email }),
+                });
+                if (gRes.ok) {
+                    const gData = await gRes.json();
+                    if (gData.message) _appendMobGlMessage(gData.message);
+                }
+            } catch (e) { console.warn('[Global Guardian] auto-summon failed:', e); }
+        }
     } catch {}
 }
 
