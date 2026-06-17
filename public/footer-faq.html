@@ -133,12 +133,6 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     text-align: center; width: 80%; box-sizing: border-box;
     opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
 }
-.faq-q-bubble.highlight {
-    background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(255,215,0,0.08));
-    border: 1px solid rgba(197,160,89,0.5);
-    color: rgba(255,215,0,0.95);
-    box-shadow: 0 0 12px rgba(197,160,89,0.15), inset 0 0 8px rgba(197,160,89,0.05);
-}
 .faq-q-bubble:active { background: rgba(197,160,89,0.1); border-color: rgba(197,160,89,0.3); }
 .faq-a-bubble {
     background: #000; border: 1px solid rgba(255,0,199,0.3);
@@ -663,7 +657,7 @@ var faqData = [
         questions: [
             { q: 'What am I paying for?', a: '<p>The entry tribute is $55. That gets you full access to the kingdom. Your profile, over 1,000 tasks, kneeling hours, the global chat, the hierarchy, everything. That alone is more than any domme has ever offered for an entry fee. Every price range will find something inside. I\'m not here to ruin your bank account. But I\'m not here to be used for free either. Serving costs something. How much is between you and your devotion.</p>' },
             { q: 'Who handles my payment?', a: '<p>Stripe. The same payment system used by Amazon, Google, and Shopify. I never see your card number, your bank details, or your billing address. Every transaction is encrypted. Your financial information never touches my servers.</p>' },
-            { q: 'Do you accept crypto?', a: '<p>Yes. I accept cryptocurrency payments. If you prefer to pay with crypto, that option is available to you inside the app. Complete privacy, no bank statements, no traces. Just you and your devotion.</p>', highlight: true },
+            { q: 'Do you accept crypto?', a: '<p>Yes. I accept cryptocurrency payments. If you prefer to pay with crypto, that option is available to you inside the app. Complete privacy, no bank statements, no traces. Just you and your devotion.</p>' },
             { q: 'Will my wife see this on our statement?', a: '<p>The charge shows up as a discreet description. Nothing that screams femdom, nothing that raises questions. Your privacy extends to your finances. And if even that feels like too much, crypto payments leave no trace on any bank statement at all.</p>' },
             { q: 'Can I get a refund?', a: '<p>All payments are final. No refunds will be processed.</p>' },
             { q: "I'm not rich. Is this for me?", a: '<p>You don\'t need to be. The entry fee is $55. After that, the tasks are free, the kneeling is free, the hierarchy is free. The most devoted subjects in this kingdom aren\'t the ones who spend the most. They\'re the ones who show up every day. Your wallet doesn\'t determine your rank here. Your discipline does.</p>' },
@@ -837,7 +831,7 @@ function showQuestionBubbles(catIndex, questions) {
                 var wrap = document.createElement('div');
                 wrap.className = 'faq-q-wrap';
                 var bubble = document.createElement('div');
-                bubble.className = 'faq-q-bubble' + (questions[idx].highlight ? ' highlight' : '');
+                bubble.className = 'faq-q-bubble';
                 bubble.textContent = questions[idx].q;
                 bubble.setAttribute('data-cat', catIndex);
                 bubble.setAttribute('data-q', idx);
