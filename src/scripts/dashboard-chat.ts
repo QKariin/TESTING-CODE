@@ -23,6 +23,7 @@ let lastChatMsgTimestamp: string | null = null;
 let activeChatEmail: string | null = null;
 let _chatGen = 0; // increments on every user switch — stale callbacks check this
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+function _msgId(m: any): string | null { const v = m?.id || m?.ID; return v ? String(v) : null; }
 
 // ── Chat cache — stores rendered HTML + state per user so switching back is instant ──
 interface ChatCacheEntry {
@@ -248,7 +249,7 @@ async function pollNewMessages(memberId: string, gen: number) {
         if (gen !== _chatGen) return;
         if (!data.success) return;
         const newMsgs = (data.messages || []).filter((m: any) => {
-            const id = m.id ? String(m.id) : null;
+            const id = _msgId(m);
             if (id && _renderedMsgIds.has(id)) return false;
             const dk = `${(m.sender_email || '')}::${(m.content || '').slice(0, 80)}::${m.created_at || ''}`;
             if (dk.length > 10 && _renderedMsgIds.has(dk)) return false;
@@ -305,7 +306,7 @@ async function loadDashboardChatHistory(memberId: string, gen: number, _retryCou
         if (sysMsgs.length > 0) updateSystemTicker(sysMsgs[sysMsgs.length - 1]);
 
         msgs.forEach((m: any) => {
-            if (m.id) _renderedMsgIds.add(String(m.id));
+            const mid = _msgId(m); if (mid) _renderedMsgIds.add(mid);
             const dk = `${(m.sender_email || '')}::${(m.content || '').slice(0, 80)}::${m.created_at || ''}`;
             if (dk.length > 10) _renderedMsgIds.add(dk);
         });
@@ -362,7 +363,7 @@ export function appendChatMessage(msg: any) {
     }
 
     // Prevent duplicates — use real DB id (now returned by send API)
-    const msgId = msg.id ? String(msg.id) : null;
+    const msgId = _msgId(msg);
     if (msgId && _renderedMsgIds.has(msgId)) return;
     if (msgId) _renderedMsgIds.add(msgId);
     // Fallback dedup by content+sender+timestamp — catches duplicates when id is
@@ -370,7 +371,7 @@ export function appendChatMessage(msg: any) {
     const _dedupKey = `${(msg.sender_email || '')}::${(msg.content || '').slice(0, 80)}::${msg.created_at || ''}`;
     if (_dedupKey.length > 10 && _renderedMsgIds.has(_dedupKey)) return;
     if (_dedupKey.length > 10) _renderedMsgIds.add(_dedupKey);
-    lastChatMsgId = msg.id;
+    lastChatMsgId = _msgId(msg);
     if (msg.created_at) lastChatMsgTimestamp = msg.created_at;
 
     // Update sidebar card for this conversation — shows unread dot instantly

@@ -2830,7 +2830,7 @@ export async function handleChatMediaUpload(input: HTMLInputElement) {
 
             // Render sent media immediately so it doesn't depend on realtime
             if (data.data) {
-                const sentId = data.data.id ? String(data.data.id) : null;
+                const sentId = _msgId(data.data);
                 if (sentId && !_renderedMsgIds.has(sentId)) {
                     _renderedMsgIds.add(sentId);
                     _lastChatMsgId = sentId;
@@ -2931,6 +2931,7 @@ let _lastChatMsgId: string | null = null;
 let _lastChatMsgTimestamp: string | null = null;
 let chatSubscribed = false;
 const _renderedMsgIds = new Set<string>(); // dedup guard across realtime + polling
+function _msgId(m: any): string | null { const v = m?.id || m?.ID; return v ? String(v) : null; }
 let _chatSafetyPollInterval: ReturnType<typeof setInterval> | null = null;
 let _chatHealthInterval: ReturnType<typeof setInterval> | null = null;
 let _lastRealtimeEvent = 0; // timestamp of last realtime event received
@@ -3071,13 +3072,13 @@ async function _pollMissedMessages() {
         const data = await res.json();
         if (!data.success) return;
         const newMsgs = (data.messages || []).filter((m: any) => {
-            const id = m.id ? String(m.id) : null;
+            const id = _msgId(m);
             return !id || !_renderedMsgIds.has(id);
         });
         if (newMsgs.length === 0) return;
         const wasAtBottom = _isScrolledToBottom();
         newMsgs.forEach((m: any) => {
-            const msgId = m.id ? String(m.id) : null;
+            const msgId = _msgId(m);
             if (msgId && _renderedMsgIds.has(msgId)) return;
             if (msgId) _renderedMsgIds.add(msgId);
             _lastChatMsgId = msgId;
@@ -3243,7 +3244,7 @@ export async function initChatSystem() {
                 }
             }
 
-            const msgId = msg.id ? String(msg.id) : null;
+            const msgId = _msgId(msg);
             if (msgId && _renderedMsgIds.has(msgId)) return; // already rendered
             if (msgId) _renderedMsgIds.add(msgId);
             _lastChatMsgId = msgId;
@@ -3427,15 +3428,15 @@ async function _pollNewChatMessages(memberId: string) {
         const data = await res.json();
         if (!data.success) return;
         const newMsgs = (data.messages || []).filter((m: any) => {
-            const id = m.id ? String(m.id) : null;
+            const id = _msgId(m);
             return id && !_renderedMsgIds.has(id);
         });
         if (newMsgs.length === 0) return;
         const wasAtBottom = _isScrolledToBottom();
         newMsgs.forEach((m: any) => {
-            const id = m.id ? String(m.id) : null;
+            const id = _msgId(m);
             if (id) _renderedMsgIds.add(id);
-            _lastChatMsgId = m.id;
+            _lastChatMsgId = _msgId(m);
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
             if (isSystemMessage(m)) {
                 appendSystemLog(m);
@@ -3609,10 +3610,10 @@ export async function loadChatHistory(memberId: string) {
 
             // Seed dedup set + track timestamps for polling
             _renderedMsgIds.clear();
-            messages.forEach((m: any) => { if (m.id) _renderedMsgIds.add(String(m.id)); });
+            messages.forEach((m: any) => { const id = _msgId(m); if (id) _renderedMsgIds.add(id); });
             if (messages.length > 0) {
                 const last = messages[messages.length - 1];
-                _lastChatMsgId = last.id;
+                _lastChatMsgId = _msgId(last);
                 _lastChatMsgTimestamp = last.created_at || new Date().toISOString();
             } else {
                 _lastChatMsgTimestamp = new Date().toISOString();
@@ -4434,7 +4435,7 @@ export async function sendChatMessage() {
             // Render the sent message immediately so it doesn't depend on realtime
             const sentRow = data.data;
             if (sentRow) {
-                const sentId = sentRow.id ? String(sentRow.id) : null;
+                const sentId = _msgId(sentRow);
                 if (sentId && !_renderedMsgIds.has(sentId)) {
                     _renderedMsgIds.add(sentId);
                     _lastChatMsgId = sentId;
@@ -5181,7 +5182,7 @@ async function _sendProfileGif(gifUrl: string) {
         });
         const data = await res.json();
         if (data.success && data.data) {
-            const sentId = data.data.id ? String(data.data.id) : null;
+            const sentId = _msgId(data.data);
             if (sentId && !_renderedMsgIds.has(sentId)) {
                 _renderedMsgIds.add(sentId);
                 _lastChatMsgId = sentId;
