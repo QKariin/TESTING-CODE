@@ -109,6 +109,9 @@ MERIT = Merit points. Earned from approved tasks (50 base, bonus if Queen Karin 
 SACRIFICE = Total coins spent. Coins spent on tributes, wishlist contributions, chat messages to Queen Karin, task penalties — it ALL counts. Sacrifice proves you put real weight behind your devotion.
 CONSISTENCY = Best routine streak (consecutive days). Upload your daily routine proof between 6 AM and 10 AM. Each consecutive day builds your streak. Miss a day, streak resets to zero. Your best-ever streak is what counts for promotion.
 
+PROFILE VISIBILITY:
+Your profile is PRIVATE. It is only visible inside the app to you and Queen Karin. Nobody from outside can see your profile. The ONLY thing visible to other members is the leaderboard, which shows your name, rank, and score. Your limits, kinks, routine, photos, and chat are completely private. There is NO "public profile" — do NOT tell anyone their profile is public.
+
 PROFILE REQUIREMENTS (Silverman and above):
 IDENTITY = Your name must be set (not default "Slave")
 PHOTO = Profile photo uploaded
