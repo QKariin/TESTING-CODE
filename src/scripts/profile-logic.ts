@@ -7937,12 +7937,25 @@ export function openManageProfileModal(u: any) {
     </div>`;
 
     const btnStyle = `width:100%;padding:12px;margin-bottom:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Orbitron';font-size:0.8rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;`;
+    const lockedStyle = `width:100%;padding:12px;margin-bottom:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.2);border-radius:6px;font-family:'Orbitron';font-size:0.8rem;cursor:not-allowed;text-align:left;display:flex;justify-content:space-between;align-items:center;`;
+    const rank0 = ((u.hierarchy || u.rank || 'Hall Boy') as string).toLowerCase().trim();
+    const canEditLimitsKinks = rank0 !== 'hall boy' && rank0 !== 'footman';
+    const canEditRoutine = rank0 !== 'hall boy';
 
     inner += `<button class="_manageBtn" data-action="photo" style="${btnStyle}"><span>UPDATE PHOTO</span> <span>&#9998;</span></button>`;
     inner += `<button class="_manageBtn" data-action="field" data-field="name" data-label="IDENTITY" data-val="${getRaw('name').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT IDENTITY</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="limits" data-label="LIMITS" data-val="${getRaw('limits').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT LIMITS</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="kinks" data-label="KINKS" data-val="${getRaw('kinks').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT KINKS</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="routine" data-label="ROUTINE" data-val="${getRaw('routine').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT ROUTINE</span> <span>&#9998;</span></button>`;
+    if (canEditLimitsKinks) {
+        inner += `<button class="_manageBtn" data-action="field" data-field="limits" data-label="LIMITS" data-val="${getRaw('limits').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT LIMITS</span> <span>&#9998;</span></button>`;
+        inner += `<button class="_manageBtn" data-action="field" data-field="kinks" data-label="KINKS" data-val="${getRaw('kinks').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT KINKS</span> <span>&#9998;</span></button>`;
+    } else {
+        inner += `<div style="${lockedStyle}"><span>LIMITS</span> <span style="font-size:0.55rem;">SILVERMAN+</span></div>`;
+        inner += `<div style="${lockedStyle}"><span>KINKS</span> <span style="font-size:0.55rem;">SILVERMAN+</span></div>`;
+    }
+    if (canEditRoutine) {
+        inner += `<button class="_manageBtn" data-action="field" data-field="routine" data-label="ROUTINE" data-val="${getRaw('routine').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT ROUTINE</span> <span>&#9998;</span></button>`;
+    } else {
+        inner += `<div style="${lockedStyle}"><span>ROUTINE</span> <span style="font-size:0.55rem;">FOOTMAN+</span></div>`;
+    }
 
     box.innerHTML = inner;
     overlay.appendChild(box);
