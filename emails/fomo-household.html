@@ -508,25 +508,76 @@
 
     <tr><td style="height:28px; background:#0a1a3d;"></td></tr>
 
-    <!-- Real activity feed -->
+    <!-- Real activity feed — styled cards -->
     <tr>
         <td style="padding:0 40px; background:#0a1a3d;" class="mobile-padding">
-            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:rgba(0,0,0,0.3); border:1px solid rgba(90,160,255,0.08); border-radius:10px;">
-                <tr><td style="padding:20px 24px;">
-                    <p style="margin:0 0 14px; font-family:'Rajdhani', sans-serif; font-size:9px; font-weight:600; color:rgba(120,180,255,0.4); letter-spacing:4px;">REAL MEMBER STATS</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr><td style="padding-bottom:14px;">
+                    <p style="margin:0; font-family:'Rajdhani', sans-serif; font-size:9px; font-weight:600; color:rgba(120,180,255,0.4); letter-spacing:4px; text-align:center;">REAL MEMBER STATS</p>
+                </td></tr>
 
-                    <p style="margin:0 0 10px; font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.6;">
-                        <span style="color:rgba(140,190,255,0.6);">&#9670;</span>&nbsp; <strong style="color:rgba(255,255,255,0.55);">your pet</strong> reached Silverman in 7 days, 25 tasks done
-                    </p>
-                    <p style="margin:0 0 10px; font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.6;">
-                        <span style="color:rgba(180,120,220,0.6);">&#9670;</span>&nbsp; <strong style="color:rgba(255,255,255,0.55);">Billie</strong> joined 3 days ago, already Footman
-                    </p>
-                    <p style="margin:0 0 10px; font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.6;">
-                        <span style="color:rgba(220,100,180,0.6);">&#9670;</span>&nbsp; <strong style="color:rgba(255,255,255,0.55);">Shackleton</strong> has 138 tasks completed, 119,744 merit
-                    </p>
-                    <p style="margin:0; font-family:'Plus Jakarta Sans', sans-serif; font-size:13px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.6;">
-                        <span style="color:rgba(140,190,255,0.6);">&#9670;</span>&nbsp; <strong style="color:rgba(255,255,255,0.55);">Jax</strong> hit Silverman in 1 month, 38 tasks
-                    </p>
+                <!-- Card 1: your pet -->
+                <tr><td style="padding-bottom:10px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg, rgba(90,160,255,0.08), rgba(180,90,200,0.06)); border:1px solid rgba(90,160,255,0.12); border-radius:12px;">
+                        <tr>
+                            <td width="48" style="padding:16px 0 16px 18px;" valign="top">
+                                <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/65b96096-bd75-4220-a4b5-11579d8653ac_1781928710629.jpeg" alt="your pet" width="42" height="42" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1px solid rgba(90,160,255,0.25);" />
+                            </td>
+                            <td style="padding:14px 18px 14px 14px;">
+                                <p style="margin:0 0 2px; font-family:'Cinzel', Georgia, serif; font-size:14px; font-weight:600; color:#fff; letter-spacing:1px;">your pet</p>
+                                <p style="margin:0 0 4px; font-family:'Rajdhani', sans-serif; font-size:9px; font-weight:600; color:rgba(140,190,255,0.6); letter-spacing:2px;">SILVERMAN &bull; 5,660 MERIT</p>
+                                <p style="margin:0; font-family:'Plus Jakarta Sans', sans-serif; font-size:12px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.5;">Reached Silverman in <strong style="color:rgba(255,255,255,0.65);">7 days</strong>. 25 tasks done.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td></tr>
+
+                <!-- Card 2: Billie -->
+                <tr><td style="padding-bottom:10px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg, rgba(180,90,200,0.08), rgba(220,100,180,0.06)); border:1px solid rgba(180,90,200,0.12); border-radius:12px;">
+                        <tr>
+                            <td width="48" style="padding:16px 0 16px 18px;" valign="top">
+                                <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/b33c4b53-c23c-40a4-902d-d0731d29f696_1781885122114.jpg" alt="Billie" width="42" height="42" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1px solid rgba(180,90,200,0.25);" />
+                            </td>
+                            <td style="padding:14px 18px 14px 14px;">
+                                <p style="margin:0 0 2px; font-family:'Cinzel', Georgia, serif; font-size:14px; font-weight:600; color:#fff; letter-spacing:1px;">Billie</p>
+                                <p style="margin:0 0 4px; font-family:'Rajdhani', sans-serif; font-size:9px; font-weight:600; color:rgba(200,120,220,0.6); letter-spacing:2px;">FOOTMAN &bull; 12,960 MERIT</p>
+                                <p style="margin:0; font-family:'Plus Jakarta Sans', sans-serif; font-size:12px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.5;">Joined <strong style="color:rgba(255,255,255,0.65);">3 days ago</strong>. Already climbing.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td></tr>
+
+                <!-- Card 3: Shackleton -->
+                <tr><td style="padding-bottom:10px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg, rgba(220,100,180,0.08), rgba(90,160,255,0.06)); border:1px solid rgba(220,100,180,0.12); border-radius:12px;">
+                        <tr>
+                            <td width="48" style="padding:16px 0 16px 18px;" valign="top">
+                                <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/avatars/9e465afb-a87c-4d85-8a23-53f255833acb_1781689116848.jpeg" alt="Shackleton" width="42" height="42" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1px solid rgba(220,100,180,0.25);" />
+                            </td>
+                            <td style="padding:14px 18px 14px 14px;">
+                                <p style="margin:0 0 2px; font-family:'Cinzel', Georgia, serif; font-size:14px; font-weight:600; color:#fff; letter-spacing:1px;">Shackleton</p>
+                                <p style="margin:0 0 4px; font-family:'Rajdhani', sans-serif; font-size:9px; font-weight:600; color:rgba(230,120,190,0.6); letter-spacing:2px;">SILVERMAN &bull; 119,744 MERIT</p>
+                                <p style="margin:0; font-family:'Plus Jakarta Sans', sans-serif; font-size:12px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.5;"><strong style="color:rgba(255,255,255,0.65);">138 tasks</strong> completed in 4 months.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td></tr>
+
+                <!-- Card 4: Jax -->
+                <tr><td>
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(135deg, rgba(90,160,255,0.08), rgba(180,90,200,0.06)); border:1px solid rgba(90,160,255,0.12); border-radius:12px;">
+                        <tr>
+                            <td width="48" style="padding:16px 0 16px 18px;" valign="top">
+                                <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/13b6da81-6e52-46cf-85a2-06036a40bab4_1777966179620.jpg" alt="Jax" width="42" height="42" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1px solid rgba(90,160,255,0.25);" />
+                            </td>
+                            <td style="padding:14px 18px 14px 14px;">
+                                <p style="margin:0 0 2px; font-family:'Cinzel', Georgia, serif; font-size:14px; font-weight:600; color:#fff; letter-spacing:1px;">Jax</p>
+                                <p style="margin:0 0 4px; font-family:'Rajdhani', sans-serif; font-size:9px; font-weight:600; color:rgba(140,190,255,0.6); letter-spacing:2px;">SILVERMAN &bull; 25,263 MERIT</p>
+                                <p style="margin:0; font-family:'Plus Jakarta Sans', sans-serif; font-size:12px; font-weight:300; color:rgba(255,255,255,0.4); line-height:1.5;">Hit Silverman in <strong style="color:rgba(255,255,255,0.65);">1 month</strong>. 38 tasks.</p>
+                            </td>
+                        </tr>
+                    </table>
                 </td></tr>
             </table>
         </td>
