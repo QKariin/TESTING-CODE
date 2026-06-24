@@ -10,6 +10,7 @@ import {
 import { bindDashMobGlobal } from '@/scripts/dash-mobile-global';
 import { setAdminEmail } from '@/scripts/dashboard-state';
 import '@/css/profile-mobile.css';
+import { getHierarchyReport, HIERARCHY_RULES } from '@/lib/hierarchyRules';
 
 type Tab = 'home' | 'subjects' | 'posts' | 'challenges' | 'queen' | 'global';
 
@@ -255,6 +256,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         ...prev,
                         wallet: typeof data.wallet === 'number' ? data.wallet : prev.wallet,
                         score: typeof data.score === 'number' ? data.score : (typeof data.points === 'number' ? data.points : prev.score),
+                        hasActiveTask: !!data.activeTask,
                         parameters: {
                             ...prev.parameters,
                             ...data.parameters,
@@ -266,6 +268,18 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                             totalKneelMinutes: data.parameters?.totalKneelMinutes,
                             kneelCount: data.kneelCount,
                             routine: data.routine || data.parameters?.routine || '',
+                            skippass: data.skippass ?? 0,
+                            cumpass: data.cumpass ?? 0,
+                            checkpoint: data.checkpoint ?? 0,
+                            activeTask: data.activeTask || null,
+                            endTime: data.endTime || null,
+                            taskdom_completed_tasks: data.taskdom_completed_tasks ?? 0,
+                            total_coins_spent: data.total_coins_spent ?? 0,
+                            consistency: data.consistency ?? 0,
+                            bestRoutinestreak: data.bestRoutinestreak ?? 0,
+                            routinestreak: data.routinestreak ?? 0,
+                            routineHistory: data.routineHistory || [],
+                            cert_approved_for: data.cert_approved_for || data.parameters?.cert_approved_for || '',
                         },
                     };
                 });
@@ -1914,6 +1928,41 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
         return kneelHours.includes(i);
     });
 
+    // Hierarchy report for progress bars + benefits
+    const hierarchyData = {
+        hierarchy: user.rank,
+        taskdom_completed_tasks: user.parameters?.taskdom_completed_tasks || 0,
+        kneelCount: kneelCount,
+        score: user.score,
+        total_coins_spent: user.parameters?.total_coins_spent || 0,
+        consistency: user.parameters?.consistency || 0,
+        bestRoutinestreak: user.parameters?.bestRoutinestreak || 0,
+        routinestreak: user.parameters?.routinestreak || 0,
+        routineHistory: user.parameters?.routineHistory || [],
+        routinehistory: user.parameters?.routineHistory || [],
+        image: user.avatar,
+        title: user.name,
+        limits: user.parameters?.limits || '',
+        kinks: user.parameters?.kinks || '',
+        routine: user.parameters?.routine || '',
+        cert_approved_for: user.parameters?.cert_approved_for || '',
+    };
+    const hReport = getHierarchyReport(hierarchyData);
+
+    // Active task details
+    const activeTask = user.parameters?.activeTask;
+    const activeTaskText = activeTask?.text || activeTask?.taskName || '';
+    const taskEndTime = user.parameters?.endTime || activeTask?.endTime || null;
+
+    // Inventory counts
+    const skippass = user.parameters?.skippass ?? 0;
+    const cumpass = user.parameters?.cumpass ?? 0;
+    const checkpoint = user.parameters?.checkpoint ?? 0;
+
+    // Limits/kinks/routine counts
+    const limitsArr = (user.parameters?.limits || '').split(',').filter((s: string) => s.trim());
+    const kinksArr = (user.parameters?.kinks || '').split(',').filter((s: string) => s.trim());
+
     // Section label component matching /profile .duty-label
     const DutyLabel = ({ children }: { children: string }) => (
         <div style={{ textAlign: 'center', margin: '20px 0 16px', position: 'relative' }}>
@@ -2044,67 +2093,63 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                             <div style={{ paddingBottom: 40 }}>
 
                                 {/* ── HALO HERO SECTION ── */}
-                                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px 28px' }}>
-                                    {/* Large halo circle */}
+                                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px 28px' }}>
+                                    {/* Large halo circle — 340px matches /profile .halo-circle-lg */}
                                     <div style={{
-                                        width: 280, height: 280, borderRadius: '50%',
+                                        width: 340, height: 340, borderRadius: '50%',
                                         border: `2px solid ${GOLD}`,
                                         boxShadow: `0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.2)`,
                                         background: 'rgba(0,0,0,0.55)',
                                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0,
                                         position: 'relative', overflow: 'hidden',
                                     }}>
-                                        {/* Avatar behind */}
+                                        {/* Avatar behind — same as /profile */}
                                         <img src={user.avatar} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15, filter: 'blur(2px)' }} onError={(e) => { (e.target as any).style.display = 'none'; }} alt="" />
                                         {/* Name */}
-                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: '1.6rem', color: '#fff', textTransform: 'uppercase', letterSpacing: 2, textShadow: '0 0 20px rgba(255,255,255,0.4)', maxWidth: '85%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative', zIndex: 1, textAlign: 'center' }}>{user.name}</div>
+                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: '1.8rem', color: '#fff', textTransform: 'uppercase', letterSpacing: 2, textShadow: '0 0 20px rgba(255,255,255,0.4)', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative', zIndex: 1, textAlign: 'center', fontWeight: 400, lineHeight: 1, marginBottom: 5 }}>{user.name}</div>
                                         {/* Rank */}
-                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: GOLD, letterSpacing: 4, textTransform: 'uppercase', position: 'relative', zIndex: 1, marginTop: 2 }}>{user.rank}</div>
-                                        {/* Online status */}
-                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: isOnline ? '#6bcb77' : '#444', letterSpacing: 3, position: 'relative', zIndex: 1, marginTop: 8 }}>
-                                            {isOnline ? '● ONLINE' : timeAgo(user.lastSeen) ? `LAST SEEN ${timeAgo(user.lastSeen).toUpperCase()}` : 'OFFLINE'}
-                                        </div>
+                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: GOLD, letterSpacing: 4, textTransform: 'uppercase', position: 'relative', zIndex: 1, fontWeight: 400 }}>{user.rank}</div>
                                         {/* Kneeling dots label */}
-                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: '#666', letterSpacing: 2, position: 'relative', zIndex: 1, marginTop: 12, marginBottom: 5 }}>DAILY PROGRESS</div>
+                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: '#666', letterSpacing: 2, position: 'relative', zIndex: 1, marginTop: 15, marginBottom: 5 }}>DAILY PROGRESS</div>
                                         {/* Kneeling dots grid — 12 columns × 2 rows = 24 hours */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, width: '70%', position: 'relative', zIndex: 1 }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, width: '70%', position: 'relative', zIndex: 1, marginBottom: 10 }}>
                                             {kneelDots.map((lit, i) => (
                                                 <div key={i} style={{
                                                     height: 6, borderRadius: 1,
                                                     background: lit ? GOLD : 'rgba(255,255,255,0.12)',
-                                                    border: `1px solid ${lit ? GOLD : 'rgba(255,255,255,0.15)'}`,
+                                                    border: `1px solid ${lit ? '#f0d080' : 'rgba(255,255,255,0.15)'}`,
                                                     boxShadow: lit ? `0 0 10px rgba(197,160,89,0.5)` : 'none',
                                                 }} />
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Stats pill — overlaps circle */}
+                                    {/* Stats pill — overlaps circle, matches /profile .halo-stats-pill */}
                                     <div style={{
-                                        display: 'flex', width: '94%', marginTop: -50, position: 'relative', zIndex: 3,
+                                        display: 'flex', width: '94%', marginTop: -65, position: 'relative', zIndex: 3,
                                         background: 'rgba(10,10,10,0.85)', border: `1px solid rgba(197,160,89,0.2)`, borderRadius: 12,
                                         padding: '14px 10px', justifyContent: 'space-around', alignItems: 'center',
-                                        boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
+                                        boxShadow: '0 10px 40px rgba(0,0,0,0.8)', marginBottom: 30,
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 'clamp(1.2rem,5vw,1.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1 }}>{user.score}</span>
-                                                <svg width="20" height="20" viewBox="0 0 512 512" fill={GOLD} style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0z" /></svg>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 'clamp(1.2rem,5vw,1.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1, textAlign: 'center', wordBreak: 'break-all' as any }}>{user.score.toLocaleString()}</span>
+                                                <svg width="24" height="24" viewBox="0 0 512 512" fill={GOLD} style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
                                             </div>
                                             <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2 }}>MERIT</span>
                                         </div>
                                         <div style={{ width: 1, height: 50, background: 'rgba(255,255,255,0.1)' }} />
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 'clamp(1.2rem,5vw,1.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1 }}>{user.wallet.toLocaleString()}</span>
-                                                <svg width="20" height="20" viewBox="0 0 512 512" fill={GOLD}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80z" /></svg>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 'clamp(1.2rem,5vw,1.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1, textAlign: 'center', wordBreak: 'break-all' as any }}>{user.wallet.toLocaleString()}</span>
+                                                <svg width="24" height="24" viewBox="0 0 512 512" fill={GOLD}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9zM512 192c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 167.6 448 183.3 512 192zM512 304c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 279.6 448 295.3 512 304zM512 416c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 391.6 448 407.3 512 416zM320 388c0 30.6-55.8 56-128 56S64 418.6 64 388v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM320 276c0 30.6-55.8 56-128 56S64 306.6 64 276v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM192 128c-72.2 0-128 25.4-128 56s55.8 56 128 56s128-25.4 128-56s-55.8-56-128-56z" /></svg>
                                             </div>
                                             <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2 }}>COINS</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ── SLAVE STATS (collapsible) ── */}
+                                {/* ── SLAVE STATS (collapsible) — matches /profile drawer ── */}
                                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
                                     <button onClick={() => setStatsOpen(!statsOpen)} style={{
                                         width: 'fit-content', margin: '0 auto 4px', background: 'rgba(4,3,14,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
@@ -2119,59 +2164,93 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                             border: `1px solid rgba(197,160,89,0.15)`, background: 'rgba(4,4,12,0.95)',
                                             borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.85)',
                                         }}>
-                                            {/* Current rank */}
+                                            {/* Current classification + benefits */}
                                             <div style={{ textAlign: 'center', paddingBottom: 15, borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: 15 }}>
                                                 <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.6rem', color: '#666', letterSpacing: 2 }}>CURRENT CLASSIFICATION</div>
                                                 <div style={{ fontFamily: "'Cinzel',serif", fontSize: '1.2rem', color: '#fff', margin: '5px 0', textTransform: 'uppercase' }}>{user.rank}</div>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: '#888', fontStyle: 'italic', padding: '0 10px', lineHeight: 1.4 }}>
+                                                    {hReport.currentBenefits.map((b, i) => <div key={i}>• {b}</div>)}
+                                                </div>
                                             </div>
-                                            {/* Devotion progress */}
+
+                                            {/* Working on promotion to */}
+                                            <div style={{ textAlign: 'center', marginBottom: 15 }}>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.6rem', color: GOLD, letterSpacing: 2 }}>WORKING ON PROMOTION TO</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.4rem', color: GOLD, fontWeight: 900, letterSpacing: 1, marginTop: 5, textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>
+                                                    {hReport.isMax ? 'MAXIMUM RANK' : hReport.nextRank}
+                                                </div>
+                                            </div>
+
+                                            {/* Limits / Kinks / Routine rows with counts */}
                                             <div style={{ marginBottom: 15 }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', fontFamily: "'Rajdhani',sans-serif", marginBottom: 4, color: '#888', letterSpacing: 1 }}>
-                                                    <span>DEVOTION</span>
-                                                    <span style={{ color: GOLD }}>{devotion} / 1000</span>
-                                                </div>
-                                                <div style={{ width: '100%', height: 8, background: '#000', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                                                    <div style={{ width: `${devPct}%`, height: '100%', background: GOLD, boxShadow: `0 0 10px rgba(197,160,89,0.35)` }} />
-                                                </div>
-                                            </div>
-                                            {/* Kneeling stats */}
-                                            <div style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: 15 }}>
-                                                <div style={{ fontSize: '0.55rem', color: '#666', fontFamily: "'Rajdhani',sans-serif", letterSpacing: 1, marginBottom: 10 }}>KNEELING STATS</div>
                                                 {[
-                                                    { label: 'TOTAL SESSIONS', val: String(kneelCount) },
-                                                    { label: 'HOURS KNELT', val: `${kneelHrs}h` },
-                                                    { label: 'KNEEL MINUTES', val: String(user.parameters?.totalKneelMinutes || 0) },
-                                                ].map((r, i) => (
-                                                    <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', fontFamily: "'Rajdhani',sans-serif", marginBottom: i < 2 ? 8 : 0 }}>
-                                                        <span style={{ color: '#888' }}>{r.label}</span>
-                                                        <span style={{ color: GOLD }}>{r.val}</span>
+                                                    { label: 'LIMITS', count: limitsArr.length, color: '#6bcb77' },
+                                                    { label: 'KINKS', count: kinksArr.length, color: GOLD },
+                                                    { label: 'ROUTINE', count: user.parameters?.routine && user.parameters.routine !== 'None' ? 1 : 0, color: '#ff8c42' },
+                                                ].map(row => (
+                                                    <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 5px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                                        <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.65rem', color: row.color, letterSpacing: 2 }}>● {row.label}</span>
+                                                        <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.65rem', color: '#ccc' }}>[{row.count}]</span>
                                                     </div>
                                                 ))}
                                             </div>
+
+                                            {/* Progress bars — matches /profile sidebar */}
+                                            <div style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: 15, marginBottom: 15 }}>
+                                                {hReport.requirements.filter(r => r.type === 'bar').map(req => {
+                                                    const pct = Math.min(((req.current || 0) / (req.target || 1)) * 100, 100);
+                                                    const overflow = (req.current || 0) >= (req.target || 1);
+                                                    return (
+                                                        <div key={req.id} style={{ marginBottom: 12 }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: '#888', letterSpacing: 1 }}>{req.label}</span>
+                                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: overflow ? '#6bcb77' : GOLD }}>{(req.current || 0).toLocaleString()} / {(req.target || 0).toLocaleString()}</span>
+                                                            </div>
+                                                            <div style={{ width: '100%', height: 8, background: '#000', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                                                                <div style={{ width: `${pct}%`, height: '100%', background: overflow ? '#6bcb77' : GOLD, boxShadow: overflow ? '0 0 10px rgba(107,203,119,0.35)' : `0 0 10px rgba(197,160,89,0.35)`, transition: 'width 0.4s ease' }} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {/* Certificate row */}
+                                            {hReport.requirements.filter(r => r.id === 'cert').map(req => (
+                                                <div key="cert" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 5px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.65rem', color: '#888' }}>🔒 CERTIFICATE</span>
+                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.55rem', color: req.status === 'VERIFIED' ? '#6bcb77' : '#555', padding: '4px 10px', border: `1px solid ${req.status === 'VERIFIED' ? 'rgba(107,203,119,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 4 }}>
+                                                        {req.status === 'VERIFIED' ? 'VERIFIED' : 'PENDING'}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
 
-                                {/* ── INVENTORY ── */}
+                                {/* ── INVENTORY — matches /profile .inv-grid ── */}
                                 <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
                                     <DutyLabel>INVENTORY</DutyLabel>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                                         {[
-                                            { name: 'SKIP PASS', count: user.parameters?.skippass || 0, tag: 'GIFT ONLY', icon: '⏭' },
-                                            { name: 'CUM PASS', count: user.parameters?.cumpass || 0, tag: 'INVENTORY', icon: '♥' },
-                                            { name: 'CHECKPOINT', count: user.parameters?.checkpoint || 0, tag: 'INVENTORY', icon: '✓' },
-                                        ].map(item => (
-                                            <div key={item.name} style={{ background: '#111', border: '1px solid #333', borderRadius: 4, padding: 12, textAlign: 'center' }}>
-                                                <div style={{ fontSize: '1.2rem', marginBottom: 4, opacity: 0.6 }}>{item.icon}</div>
-                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: '#fff', marginBottom: 4 }}>{item.name}</div>
-                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: GOLD }}>{item.count}</div>
-                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: '#888', marginTop: 4, textTransform: 'uppercase' }}>{item.tag}</div>
+                                            { name: 'SKIP PASS', count: skippass, tag: 'GIFT ONLY', tagClass: 'gift' },
+                                            { name: 'CUM PASS', count: cumpass, tag: cumpass > 0 ? 'TAP TO VIEW' : 'INVENTORY', tagClass: cumpass > 0 ? 'buy' : 'inv' },
+                                            { name: 'CHECKPOINT', count: checkpoint, tag: checkpoint > 0 ? 'TAP TO VIEW' : 'INVENTORY', tagClass: checkpoint > 0 ? 'buy' : 'inv' },
+                                        ].map((item, idx) => (
+                                            <div key={item.name} style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))', border: `1px solid ${borderThin}`, borderRadius: 4, padding: '14px 8px', textAlign: 'center' }}>
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 6, opacity: 0.8 }}>
+                                                    {idx === 0 && <><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></>}
+                                                    {idx === 1 && <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>}
+                                                    {idx === 2 && <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>}
+                                                </svg>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: '#fff', marginBottom: 6 }}>{item.name}</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.1rem', color: GOLD, fontWeight: 800, marginBottom: 6 }}>{item.count}</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: item.tagClass === 'gift' ? '#888' : GOLD, letterSpacing: 1, textTransform: 'uppercase' }}>{item.tag}</div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* ── CURRENT STATUS ── */}
+                                {/* ── CURRENT STATUS — matches /profile .luxury-card ── */}
                                 <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
                                     <DutyLabel>CURRENT STATUS</DutyLabel>
                                     <div style={{
@@ -2183,7 +2262,12 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                         {user.hasActiveTask ? (
                                             <>
                                                 <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(74,222,128,0.7)', letterSpacing: 8 }}>● SERVING</div>
-                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', margin: '12px 0', lineHeight: 1.5 }}>Active task assigned</div>
+                                                {activeTaskText && (
+                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', margin: '12px 0', lineHeight: 1.5, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 10 }}>{activeTaskText}</div>
+                                                )}
+                                                {!activeTaskText && (
+                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', margin: '12px 0', lineHeight: 1.5 }}>Active task assigned</div>
+                                                )}
                                             </>
                                         ) : (
                                             <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.28)', letterSpacing: 8 }}>AWAITING ORDERS</div>
@@ -2238,7 +2322,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                         {[
                                             { label: 'EMAIL', val: user.memberId },
                                             { label: 'RANK', val: user.rank, c: color },
-                                            { label: 'MERIT', val: String(user.score) },
+                                            { label: 'MERIT', val: user.score.toLocaleString() },
                                             { label: 'CAPITAL', val: user.wallet.toLocaleString() + ' ₡' },
                                             { label: 'SESSIONS', val: String(kneelCount) },
                                             { label: 'KNEEL HOURS', val: `${kneelHrs}h` },
