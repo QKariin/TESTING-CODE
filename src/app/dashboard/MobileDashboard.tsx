@@ -280,6 +280,8 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                             routinestreak: data.routinestreak ?? 0,
                             routineHistory: data.routineHistory || [],
                             cert_approved_for: data.cert_approved_for || data.parameters?.cert_approved_for || '',
+                            kneelHistory: data.kneelHistory || data.kneel_history || [],
+                            today_kneeling: data['today kneeling'] || '0',
                         },
                     };
                 });
@@ -1922,11 +1924,24 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     const borderThin = 'rgba(197,160,89,0.18)';
     const cardBg = 'rgba(4,4,14,0.95)';
 
-    // Kneeling dots — 24 hour grid
-    const kneelDots = Array.from({ length: 24 }, (_, i) => {
-        const kneelHours: number[] = user.parameters?.kneelHours || [];
-        return kneelHours.includes(i);
-    });
+    // Kneeling dots — compute from kneel_history timestamps (same logic as /api/kneel-status)
+    const computedKneelHours = (() => {
+        const raw = user.parameters?.kneelHistory || [];
+        if (!Array.isArray(raw) || raw.length === 0) return new Set<number>();
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const hours = new Set<number>();
+        for (const ts of raw) {
+            try {
+                const d = new Date(ts);
+                if (d.toLocaleDateString('en-CA') === todayStr) {
+                    const h = d.getHours();
+                    hours.add(h === 24 ? 0 : h);
+                }
+            } catch {}
+        }
+        return hours;
+    })();
+    const currentHour = new Date().getHours();
 
     // Hierarchy report for progress bars + benefits
     const hierarchyData = {
@@ -1963,12 +1978,9 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     const limitsArr = (user.parameters?.limits || '').split(',').filter((s: string) => s.trim());
     const kinksArr = (user.parameters?.kinks || '').split(',').filter((s: string) => s.trim());
 
-    // Section label component matching /profile .duty-label
+    // Uses actual .duty-label CSS class from profile-mobile.css (with ::before/::after gradient lines)
     const DutyLabel = ({ children }: { children: string }) => (
-        <div style={{ textAlign: 'center', margin: '20px 0 16px', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '50%', left: '10%', right: '10%', height: 1, background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2), transparent)' }} />
-            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 5, textTransform: 'uppercase', position: 'relative', background: '#020512', padding: '0 12px' }}>{children}</span>
-        </div>
+        <div className="duty-label" style={{ marginTop: 20 }}>{children}</div>
     );
 
     return (
@@ -2052,16 +2064,39 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                         ) : overlayTab === 'tasks' ? (
                             /* ── TASKS TAB ── */
                             <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {/* Active task (what user is currently doing) */}
+                                {user.hasActiveTask && (
+                                    <div style={{ marginBottom: 6 }}>
+                                        <div className="duty-label">ACTIVE TASK</div>
+                                        <div className="luxury-card" style={{ textAlign: 'center' }}>
+                                            <div className="txt-status-green"><span className="working-dot"></span>SERVING</div>
+                                            {activeTaskText && (
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{activeTaskText}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {!user.hasActiveTask && (
+                                    <div style={{ marginBottom: 6 }}>
+                                        <div className="duty-label">ACTIVE TASK</div>
+                                        <div className="luxury-card" style={{ textAlign: 'center' }}>
+                                            <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.28)', letterSpacing: 8 }}>AWAITING ORDERS</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Pending reviews */}
+                                <div className="duty-label">PENDING REVIEWS</div>
                                 {queue.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '50px 0' }}>
-                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.28)', letterSpacing: '8px' }}>NO PENDING TASKS</div>
+                                    <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.28)', letterSpacing: 8 }}>NO PENDING TASKS</div>
                                     </div>
                                 ) : queue.map((task: any, i: number) => {
                                     const taskId = task.id || task.taskId;
                                     const routine = isRoutine(task);
                                     const busy = reviewing === taskId;
                                     return (
-                                        <div key={i} style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))', border: `1px solid ${borderThin}`, borderTop: `2px solid rgba(197,160,89,0.35)`, borderRadius: 3, padding: 16 }}>
+                                        <div key={i} className="luxury-card" style={{ padding: 16 }}>
                                             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
                                                 {(task.proofUrl || task.proof_url) && (
                                                     <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: `1px solid ${borderThin}`, cursor: 'pointer' }} onClick={() => onOpenReview(task)} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(task.proofUrl || task.proof_url))}`; else t.style.display = 'none'; }} alt="" />
@@ -2089,75 +2124,53 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                 })}
                             </div>
                         ) : (
-                            /* ══ PROFILE TAB — mirrors /profile mobile layout ══ */
+                            /* ══ PROFILE TAB — uses same CSS classes as /profile mobile ══ */
                             <div style={{ paddingBottom: 40 }}>
 
-                                {/* ── HALO HERO SECTION ── */}
-                                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px 28px' }}>
-                                    {/* Large halo circle — 340px matches /profile .halo-circle-lg */}
-                                    <div style={{
-                                        width: 340, height: 340, borderRadius: '50%',
-                                        border: `2px solid ${GOLD}`,
-                                        boxShadow: `0 0 40px rgba(197,160,89,0.4), inset 0 0 20px rgba(197,160,89,0.2)`,
-                                        background: 'rgba(0,0,0,0.55)',
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0,
-                                        position: 'relative', overflow: 'hidden',
-                                    }}>
-                                        {/* Avatar behind — same as /profile */}
-                                        <img src={user.avatar} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15, filter: 'blur(2px)' }} onError={(e) => { (e.target as any).style.display = 'none'; }} alt="" />
-                                        {/* Name */}
-                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: '1.8rem', color: '#fff', textTransform: 'uppercase', letterSpacing: 2, textShadow: '0 0 20px rgba(255,255,255,0.4)', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative', zIndex: 1, textAlign: 'center', fontWeight: 400, lineHeight: 1, marginBottom: 5 }}>{user.name}</div>
-                                        {/* Rank */}
-                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: GOLD, letterSpacing: 4, textTransform: 'uppercase', position: 'relative', zIndex: 1, fontWeight: 400 }}>{user.rank}</div>
-                                        {/* Kneeling dots label */}
-                                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: '#666', letterSpacing: 2, position: 'relative', zIndex: 1, marginTop: 15, marginBottom: 5 }}>DAILY PROGRESS</div>
-                                        {/* Kneeling dots grid — 12 columns × 2 rows = 24 hours */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, width: '70%', position: 'relative', zIndex: 1, marginBottom: 10 }}>
-                                            {kneelDots.map((lit, i) => (
-                                                <div key={i} style={{
-                                                    height: 6, borderRadius: 1,
-                                                    background: lit ? GOLD : 'rgba(255,255,255,0.12)',
-                                                    border: `1px solid ${lit ? '#f0d080' : 'rgba(255,255,255,0.15)'}`,
-                                                    boxShadow: lit ? `0 0 10px rgba(197,160,89,0.5)` : 'none',
-                                                }} />
-                                            ))}
+                                {/* ── HALO HERO — uses .halo-hero, .halo-circle-lg, etc. ── */}
+                                <div className="halo-hero">
+                                    <div className="halo-circle-lg">
+                                        {/* Avatar behind */}
+                                        <img src={user.avatar} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15, filter: 'blur(2px)', zIndex: 0 }} onError={(e) => { (e.target as any).style.display = 'none'; }} alt="" />
+                                        <div className="halo-name-lg">{user.name}</div>
+                                        <div className="halo-rank-lg">{user.rank}</div>
+                                        <div className="halo-progress-label">DAILY PROGRESS</div>
+                                        <div className="halo-dots-grid">
+                                            {Array.from({ length: 24 }, (_, h) => {
+                                                const lit = computedKneelHours.has(h);
+                                                const past = h < currentHour;
+                                                const cls = lit ? 'kdot kdot-lit' : past ? 'kdot kdot-dim' : 'kdot kdot-off';
+                                                return <div key={h} className={cls} title={`${h}:00`} />;
+                                            })}
                                         </div>
                                     </div>
 
-                                    {/* Stats pill — overlaps circle, matches /profile .halo-stats-pill */}
-                                    <div style={{
-                                        display: 'flex', width: '94%', marginTop: -65, position: 'relative', zIndex: 3,
-                                        background: 'rgba(10,10,10,0.85)', border: `1px solid rgba(197,160,89,0.2)`, borderRadius: 12,
-                                        padding: '14px 10px', justifyContent: 'space-around', alignItems: 'center',
-                                        boxShadow: '0 10px 40px rgba(0,0,0,0.8)', marginBottom: 30,
-                                    }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
+                                    {/* Stats pill — uses .halo-stats-pill */}
+                                    <div className="halo-stats-pill">
+                                        <div className="h-stat">
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 'clamp(1.2rem,5vw,1.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1, textAlign: 'center', wordBreak: 'break-all' as any }}>{user.score.toLocaleString()}</span>
-                                                <svg width="24" height="24" viewBox="0 0 512 512" fill={GOLD} style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
+                                                <span className="h-val">{user.score.toLocaleString()}</span>
+                                                <svg width="24" height="24" viewBox="0 0 512 512" fill="#c5a059" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
                                             </div>
-                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2 }}>MERIT</span>
+                                            <span className="h-lbl">MERIT</span>
                                         </div>
-                                        <div style={{ width: 1, height: 50, background: 'rgba(255,255,255,0.1)' }} />
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
+                                        <div className="h-divider"></div>
+                                        <div className="h-stat">
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: 'clamp(1.2rem,5vw,1.5rem)', fontWeight: 800, color: '#fff', lineHeight: 1, textAlign: 'center', wordBreak: 'break-all' as any }}>{user.wallet.toLocaleString()}</span>
-                                                <svg width="24" height="24" viewBox="0 0 512 512" fill={GOLD}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9zM512 192c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 167.6 448 183.3 512 192zM512 304c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 279.6 448 295.3 512 304zM512 416c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 391.6 448 407.3 512 416zM320 388c0 30.6-55.8 56-128 56S64 418.6 64 388v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM320 276c0 30.6-55.8 56-128 56S64 306.6 64 276v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM192 128c-72.2 0-128 25.4-128 56s55.8 56 128 56s128-25.4 128-56s-55.8-56-128-56z" /></svg>
+                                                <span className="h-val">{user.wallet.toLocaleString()}</span>
+                                                <svg width="24" height="24" viewBox="0 0 512 512" fill="#c5a059"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9zM512 192c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 167.6 448 183.3 512 192zM512 304c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 279.6 448 295.3 512 304zM512 416c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5c27.6-11 48-28.7 54.1-49.3c5-16.7-2.6-33.8-19.1-44.9c-10-6.7-22.9-12-38.2-16.2c-5.8-1.6-11.8-3-18.1-4.2C384 391.6 448 407.3 512 416zM320 388c0 30.6-55.8 56-128 56S64 418.6 64 388v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM320 276c0 30.6-55.8 56-128 56S64 306.6 64 276v-43c30.2 18 73.1 29 128 29s97.8-11 128-29v43zM192 128c-72.2 0-128 25.4-128 56s55.8 56 128 56s128-25.4 128-56s-55.8-56-128-56z" /></svg>
                                             </div>
-                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2 }}>COINS</span>
+                                            <span className="h-lbl">COINS</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* ── SLAVE STATS (collapsible) — matches /profile drawer ── */}
+                                {/* ── SLAVE STATS — uses .mob-stats-toggle-btn ── */}
                                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 16px', boxSizing: 'border-box' }}>
-                                    <button onClick={() => setStatsOpen(!statsOpen)} style={{
-                                        width: 'fit-content', margin: '0 auto 4px', background: 'rgba(4,3,14,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
-                                        border: `1px solid rgba(197,160,89,${statsOpen ? '0.3' : '0.15'})`, color: 'rgba(197,160,89,0.5)',
-                                        fontFamily: "'Orbitron',sans-serif", fontSize: '0.6rem', fontWeight: 500, padding: '9px 22px', letterSpacing: '3.5px', borderRadius: 6,
-                                        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                                        ...(statsOpen ? { background: 'rgba(197,160,89,0.08)' } : {}),
-                                    }}>SLAVE STATS {statsOpen ? '▲' : '▼'}</button>
+                                    <button className="mob-stats-toggle-btn" onClick={() => setStatsOpen(!statsOpen)}
+                                        style={statsOpen ? { background: 'rgba(197,160,89,0.08)', borderColor: 'rgba(197,160,89,0.3)' } : undefined}>
+                                        SLAVE STATS {statsOpen ? '▲' : '▼'}
+                                    </button>
                                     {statsOpen && (
                                         <div style={{
                                             width: '100%', marginTop: 10, padding: '18px 14px',
@@ -2227,65 +2240,59 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                     )}
                                 </div>
 
-                                {/* ── INVENTORY — matches /profile .inv-grid ── */}
-                                <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
+                                {/* ── INVENTORY — uses .inv-grid .inv-card from profile CSS ── */}
+                                <div style={{ width: '100%', marginTop: 20 }}>
                                     <DutyLabel>INVENTORY</DutyLabel>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                                        {[
-                                            { name: 'SKIP PASS', count: skippass, tag: 'GIFT ONLY', tagClass: 'gift' },
-                                            { name: 'CUM PASS', count: cumpass, tag: cumpass > 0 ? 'TAP TO VIEW' : 'INVENTORY', tagClass: cumpass > 0 ? 'buy' : 'inv' },
-                                            { name: 'CHECKPOINT', count: checkpoint, tag: checkpoint > 0 ? 'TAP TO VIEW' : 'INVENTORY', tagClass: checkpoint > 0 ? 'buy' : 'inv' },
-                                        ].map((item, idx) => (
-                                            <div key={item.name} style={{ background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))', border: `1px solid ${borderThin}`, borderRadius: 4, padding: '14px 8px', textAlign: 'center' }}>
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 6, opacity: 0.8 }}>
-                                                    {idx === 0 && <><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></>}
-                                                    {idx === 1 && <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>}
-                                                    {idx === 2 && <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>}
-                                                </svg>
-                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: '#fff', marginBottom: 6 }}>{item.name}</div>
-                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.1rem', color: GOLD, fontWeight: 800, marginBottom: 6 }}>{item.count}</div>
-                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: item.tagClass === 'gift' ? '#888' : GOLD, letterSpacing: 1, textTransform: 'uppercase' }}>{item.tag}</div>
-                                            </div>
-                                        ))}
+                                    <div className="inv-grid">
+                                        <div className="inv-card">
+                                            <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>
+                                            <div className="inv-name">SKIP PASS</div>
+                                            <div className="inv-count">{skippass}</div>
+                                            <div className="inv-tag inv-gift-only">GIFT ONLY</div>
+                                        </div>
+                                        <div className="inv-card">
+                                            <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                            <div className="inv-name">CUM PASS</div>
+                                            <div className="inv-count">{cumpass}</div>
+                                            <div className={`inv-tag ${cumpass > 0 ? 'inv-buyable' : 'inv-gift-only'}`}>{cumpass > 0 ? 'TAP TO VIEW' : 'INVENTORY'}</div>
+                                        </div>
+                                        <div className="inv-card">
+                                            <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                            <div className="inv-name">CHECKPOINT</div>
+                                            <div className="inv-count">{checkpoint}</div>
+                                            <div className={`inv-tag ${checkpoint > 0 ? 'inv-buyable' : 'inv-gift-only'}`}>{checkpoint > 0 ? 'TAP TO VIEW' : 'INVENTORY'}</div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* ── CURRENT STATUS — matches /profile .luxury-card ── */}
-                                <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
+                                {/* ── CURRENT STATUS — uses .luxury-card ── */}
+                                <div style={{ width: '100%', marginTop: 20 }}>
                                     <DutyLabel>CURRENT STATUS</DutyLabel>
-                                    <div style={{
-                                        background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))',
-                                        border: `1px solid ${borderThin}`, borderTop: `2px solid rgba(197,160,89,0.35)`,
-                                        boxShadow: '0 24px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(197,160,89,0.06)',
-                                        borderRadius: 3, padding: '24px 20px', textAlign: 'center',
-                                    }}>
+                                    <div className="luxury-card" style={{ textAlign: 'center' }}>
                                         {user.hasActiveTask ? (
                                             <>
-                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(74,222,128,0.7)', letterSpacing: 8 }}>● SERVING</div>
+                                                <div className="txt-status-green"><span className="working-dot"></span>SERVING</div>
                                                 {activeTaskText && (
-                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', margin: '12px 0', lineHeight: 1.5, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 10 }}>{activeTaskText}</div>
+                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, padding: '18px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{activeTaskText}</div>
                                                 )}
                                                 {!activeTaskText && (
                                                     <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', margin: '12px 0', lineHeight: 1.5 }}>Active task assigned</div>
                                                 )}
                                             </>
                                         ) : (
-                                            <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.28)', letterSpacing: 8 }}>AWAITING ORDERS</div>
+                                            <div className="txt-status-red">AWAITING ORDERS</div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* ── KINKS & LIMITS ── */}
                                 {(user.parameters?.kinks || user.parameters?.limits) && (
-                                    <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
+                                    <div style={{ width: '100%', marginTop: 20 }}>
                                         <DutyLabel>KINKS & LIMITS</DutyLabel>
-                                        <div style={{
-                                            background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))',
-                                            border: `1px solid ${borderThin}`, borderRadius: 3, padding: '20px 16px',
-                                        }}>
+                                        <div className="luxury-card">
                                             {user.parameters?.kinks && (
                                                 <div style={{ marginBottom: user.parameters?.limits ? 16 : 0 }}>
-                                                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: GOLD, letterSpacing: 3, marginBottom: 6 }}>KINKS</div>
+                                                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, marginBottom: 6 }}>KINKS</div>
                                                     <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{user.parameters.kinks}</div>
                                                 </div>
                                             )}
@@ -2301,24 +2308,18 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
 
                                 {/* ── ROUTINE ── */}
                                 {user.parameters?.routine && (
-                                    <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
+                                    <div style={{ width: '100%', marginTop: 20 }}>
                                         <DutyLabel>ASSIGNED ROUTINE</DutyLabel>
-                                        <div style={{
-                                            background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))',
-                                            border: `1px solid ${borderThin}`, borderRadius: 3, padding: '20px 16px',
-                                        }}>
+                                        <div className="luxury-card">
                                             <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{user.parameters.routine}</div>
                                         </div>
                                     </div>
                                 )}
 
                                 {/* ── INTEL ── */}
-                                <div style={{ width: '100%', marginTop: 20, padding: '0 16px', boxSizing: 'border-box' }}>
+                                <div style={{ width: '100%', marginTop: 20 }}>
                                     <DutyLabel>INTEL</DutyLabel>
-                                    <div style={{
-                                        background: 'linear-gradient(160deg, rgba(6,4,18,0.97), rgba(3,2,12,0.99))',
-                                        border: `1px solid ${borderThin}`, borderRadius: 3, padding: '12px 16px',
-                                    }}>
+                                    <div className="luxury-card" style={{ padding: '12px 20px' }}>
                                         {[
                                             { label: 'EMAIL', val: user.memberId },
                                             { label: 'RANK', val: user.rank, c: color },
