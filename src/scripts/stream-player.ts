@@ -638,6 +638,8 @@ export async function initDashStreamChat(emailFn: () => string) {
 
 function _showDashGoLiveBtn() {
     if (document.getElementById('dashStreamBtn')) return;
+    // Hide on mobile — the button blocks touch interactions
+    if (window.innerWidth < 900) return;
     const btn = document.createElement('button');
     btn.id = 'dashStreamBtn';
     btn.onclick = _handleDashStreamBtn;
