@@ -11,9 +11,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        // For Twitter users without email, use twitter_{provider_id} as identifier
+        // Build fake email for OAuth providers (Discord, X) that don't supply an email
         const userEmail = user.email?.trim().toLowerCase()
-            || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : null);
+            || `${user.app_metadata?.provider || 'oauth'}_${user.user_metadata?.provider_id || user.id}@${user.app_metadata?.provider || 'oauth'}.com`;
 
         if (!userEmail) {
             return NextResponse.json({ success: false, error: 'User has no identifier' }, { status: 400 });

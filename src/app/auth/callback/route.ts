@@ -43,7 +43,14 @@ export async function GET(request: NextRequest) {
     }
 
     const user = data.user;
-    const email = (user.email || '').trim().toLowerCase();
+    // Build fake email for OAuth providers (Discord, X) that don't supply an email.
+    // Format: discord_{provider_id}@discord.com — keeps member_id always populated.
+    let email = (user.email || '').trim().toLowerCase();
+    if (!email) {
+        const provider = user.app_metadata?.provider || 'oauth';
+        const providerId = user.user_metadata?.provider_id || user.id;
+        email = `${provider}_${providerId}@${provider}.com`;
+    }
 
     if (CEO_EMAILS.includes(email)) {
         return NextResponse.redirect(`${origin}/dashboard`);

@@ -47,8 +47,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Crypto payments not configured for this coin' }, { status: 500 });
         }
 
-        const identifier = user.email
-            || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
+        // Build fake email for OAuth providers (Discord, X) that don't supply an email
+        const identifier = user.email?.trim().toLowerCase()
+            || `${user.app_metadata?.provider || 'oauth'}_${user.user_metadata?.provider_id || user.id}@${user.app_metadata?.provider || 'oauth'}.com`;
 
         const orderId = crypto.randomUUID();
         const amountEur = pkg.amountCents / 100;
