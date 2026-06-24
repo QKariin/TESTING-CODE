@@ -1888,10 +1888,27 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
         if (dx > 80 && dy < 60) onBack();
     };
 
-    const tabs: { key: ProfileTab; label: string; badge?: number }[] = [
-        { key: 'chat', label: 'CHAT' },
+    const [drawer, setDrawer] = useState(false);
+    const drawerTab = profileTab === 'chat' ? 'info' : profileTab;
+
+    const onlineStatus = getOnlineStatus(user.lastSeen);
+    const onlineDot = statusColor(onlineStatus);
+    const isOnline = onlineStatus === 'online';
+    const isSilenced = !!(user.parameters?.silence?.active);
+    const isPaywalled = !!(user.parameters?.paywall?.active);
+    const devotion = user.parameters?.devotion || 0;
+    const devPct = Math.min(100, (devotion / 1000) * 100);
+
+    // Accent colors — pink-blue gradient system
+    const PINK = '#ff00ed';
+    const BLUE = '#000aff';
+    const accent = 'rgba(180,80,255,0.7)';
+    const accentDim = 'rgba(180,80,255,0.15)';
+    const borderThin = 'rgba(255,0,237,0.1)';
+
+    const drawerTabs: { key: ProfileTab; label: string; badge?: number }[] = [
+        { key: 'info', label: 'INTEL' },
         { key: 'tasks', label: 'TASKS', badge: queue.length || undefined },
-        { key: 'info', label: 'PROFILE' },
         { key: 'controls', label: 'CONTROLS' },
     ];
 
@@ -1899,164 +1916,168 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#040404' }}
             onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
 
-            {/* Header */}
-            <div style={{ padding: '12px 14px 16px', background: 'rgba(6,6,6,0.97)', borderBottom: `1px solid ${color}33`, display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                <button onClick={onBack} style={S.backBtn}>← BACK</button>
-                <img src={user.avatar} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${color}55`, marginBottom: 8 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
-                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', letterSpacing: '2px', padding: '2px 12px', borderRadius: 100, background: color + '22', color, border: `1px solid ${color}44`, marginBottom: 6 }}>{user.rank}</span>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.2rem', color: '#fff', letterSpacing: '2px', textAlign: 'center' }}>{user.name}</div>
-                {/* Stats row */}
-                <div style={{ display: 'flex', width: '100%', marginTop: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 10, padding: '8px 0' }}>
-                    {[
-                        { label: 'MERIT', val: user.score, c: '#c5a059' },
-                        { label: 'COINS', val: user.wallet.toLocaleString(), c: '#4ecdc4' },
-                        { label: 'PENDING', val: queue.length, c: queue.length > 0 ? '#ff8c42' : '#555' },
-                    ].map((s, i) => (
-                        <div key={s.label} style={{ flex: 1, textAlign: 'center', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', fontWeight: 700, color: s.c }}>{s.val}</div>
-                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#444', letterSpacing: '1.5px', marginTop: 2 }}>{s.label}</div>
+            {/* ── Compact Header ── */}
+            <div style={{ flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                {/* Gradient bar */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${PINK}, ${BLUE})` }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px 8px' }}>
+                    <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '1.3rem', cursor: 'pointer', padding: '0 4px', lineHeight: 1, WebkitTapHighlightColor: 'transparent' }}>‹</button>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img src={user.avatar} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${borderThin}` }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
+                        <div style={{ position: 'absolute', bottom: 0, right: 0, width: 9, height: 9, background: onlineDot, borderRadius: '50%', border: '1.5px solid #040404', boxShadow: isOnline ? `0 0 6px ${onlineDot}` : 'none' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#eee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{user.name}</span>
+                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.72rem', color: color, opacity: 0.7, letterSpacing: '1px', flexShrink: 0 }}>{user.rank}</span>
                         </div>
-                    ))}
+                        {(isSilenced || isPaywalled) && (
+                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: '2px', color: isSilenced ? '#dc3c3c' : '#c5a059' }}>{isSilenced ? '🔇 SILENCED' : '🔒 PAYWALLED'}</span>
+                        )}
+                    </div>
+                    {/* Compact stats */}
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        <div style={{ textAlign: 'center', padding: '2px 8px', background: 'rgba(255,0,237,0.04)', border: '1px solid rgba(255,0,237,0.1)', borderRadius: 6 }}>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', fontWeight: 700, color: '#b050ff' }}>{user.score}</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', color: '#555', letterSpacing: '1px' }}>MERIT</div>
+                        </div>
+                        <div style={{ textAlign: 'center', padding: '2px 8px', background: 'rgba(0,10,255,0.04)', border: '1px solid rgba(0,10,255,0.12)', borderRadius: 6 }}>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', fontWeight: 700, color: '#4ecdc4' }}>{user.wallet.toLocaleString()}</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', color: '#555', letterSpacing: '1px' }}>COINS</div>
+                        </div>
+                    </div>
+                </div>
+                {/* Devotion micro-bar */}
+                <div style={{ height: 2, background: 'rgba(255,255,255,0.03)', margin: '0 12px 6px' }}>
+                    <div style={{ height: '100%', width: `${devPct}%`, background: `linear-gradient(90deg, ${PINK}88, ${BLUE}88)`, borderRadius: 1 }} />
                 </div>
             </div>
 
-            {/* Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid rgba(197,160,89,0.1)', background: 'rgba(6,6,6,0.97)', flexShrink: 0, overflowX: 'auto' }}>
-                {tabs.map(t => (
-                    <button key={t.key} onClick={() => setProfileTab(t.key)} style={{ flex: 1, minWidth: 70, padding: '11px 4px', background: 'none', border: 'none', borderBottom: profileTab === t.key ? '2px solid #c5a059' : '2px solid transparent', color: profileTab === t.key ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', letterSpacing: '1.5px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
-                        {t.label}
-                        {t.badge ? <span style={{ position: 'absolute', top: 6, right: 4, background: '#ff4444', color: '#fff', borderRadius: 100, minWidth: 14, height: 14, fontSize: '0.88rem', fontFamily: 'Orbitron,monospace', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px' }}>{t.badge}</span> : null}
-                    </button>
-                ))}
-            </div>
+            {/* ── Chat (full height) ── */}
+            <ChatView key={user.memberId} user={user} adminEmail={adminEmail} />
 
-            {/* Tab content */}
-            {profileTab === 'chat' ? (
-                <ChatView key={user.memberId} user={user} adminEmail={adminEmail} />
-            ) : profileTab === 'controls' ? (
-                <ControlsView user={user} onUserUpdated={onUserUpdated} />
-            ) : (
-                <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 12, WebkitOverflowScrolling: 'touch' as any }}>
-                    {profileTab === 'info' && (
-                        <>
-                            {/* Devotion */}
-                            <div style={S.card}>
-                                <div style={S.cardTitle}>DEVOTION PROGRESS</div>
-                                {(() => {
-                                    const devotion = user.parameters?.devotion || 0;
-                                    const devPct = Math.min(100, (devotion / 1000) * 100);
-                                    return <>
-                                        <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 100, overflow: 'hidden', marginBottom: 6 }}>
-                                            <div style={{ height: '100%', width: `${devPct}%`, background: color, borderRadius: 100 }} />
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', color: '#444' }}>{devotion} / 1000</span>
-                                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', color }}>{devPct.toFixed(0)}%</span>
-                                        </div>
-                                    </>;
-                                })()}
-                            </div>
+            {/* ── Drawer Handle ── */}
+            <button onClick={() => setDrawer(!drawer)} style={{ flexShrink: 0, width: '100%', padding: '6px 0', background: 'rgba(6,6,6,0.98)', border: 'none', borderTop: `1px solid ${borderThin}`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, WebkitTapHighlightColor: 'transparent' }}>
+                <div style={{ width: 32, height: 3, borderRadius: 2, background: drawer ? `linear-gradient(90deg, ${PINK}88, ${BLUE}88)` : 'rgba(255,255,255,0.1)' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: drawer ? '#999' : '#333', letterSpacing: '2px' }}>{drawer ? '▼ CLOSE' : '▲ INTEL · TASKS · CONTROLS'}</span>
+                    {queue.length > 0 && !drawer && <span style={{ background: '#ff4444', color: '#fff', borderRadius: 100, minWidth: 14, height: 14, fontSize: '0.75rem', fontFamily: 'Rajdhani,sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', fontWeight: 700 }}>{queue.length}</span>}
+                </div>
+            </button>
 
-                            {/* Intel */}
-                            <div style={S.card}>
-                                <div style={S.cardTitle}>INTEL</div>
-                                {[
-                                    { label: 'EMAIL', val: user.memberId },
-                                    { label: 'RANK', val: user.rank, c: color },
-                                    { label: 'MERIT', val: String(user.score) },
-                                    { label: 'CAPITAL', val: user.wallet.toLocaleString() + ' ₡' },
-                                    { label: 'KNEEL MIN', val: String(user.parameters?.totalKneelMinutes || 0) },
-                                    { label: 'SESSIONS', val: String(user.parameters?.kneelCount || 0) },
-                                ].map((row, i) => (
-                                    <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.74rem', color: '#444', letterSpacing: '1.5px' }}>{row.label}</span>
-                                        <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.96rem', color: (row as any).c || '#aaa', maxWidth: '58%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{row.val}</span>
-                                    </div>
-                                ))}
-                            </div>
+            {/* ── Slide-up Drawer ── */}
+            {drawer && (
+                <div style={{ flexShrink: 0, maxHeight: '55vh', display: 'flex', flexDirection: 'column', background: 'rgba(4,4,4,0.99)', borderTop: `1px solid ${borderThin}`, overflow: 'hidden' }}>
+                    {/* Drawer tabs */}
+                    <div style={{ display: 'flex', borderBottom: `1px solid ${borderThin}`, flexShrink: 0 }}>
+                        {drawerTabs.map(t => (
+                            <button key={t.key} onClick={() => setProfileTab(t.key)} style={{ flex: 1, padding: '9px 4px', background: 'none', border: 'none', borderBottom: drawerTab === t.key ? `2px solid ${PINK}` : '2px solid transparent', color: drawerTab === t.key ? '#ddd' : '#333', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', letterSpacing: '2px', cursor: 'pointer', position: 'relative', WebkitTapHighlightColor: 'transparent' }}>
+                                {t.label}
+                                {t.badge ? <span style={{ position: 'absolute', top: 4, right: 8, background: '#ff4444', color: '#fff', borderRadius: 100, minWidth: 14, height: 14, fontSize: '0.75rem', fontFamily: 'Rajdhani,sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', fontWeight: 700 }}>{t.badge}</span> : null}
+                            </button>
+                        ))}
+                    </div>
 
-                            {/* Kinks & limits */}
-                            {(user.parameters?.kinks || user.parameters?.limits) && (
-                                <div style={S.card}>
-                                    <div style={S.cardTitle}>KINKS & LIMITS</div>
-                                    {user.parameters?.kinks && (
-                                        <div style={{ marginBottom: 10 }}>
-                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 6 }}>KINKS</div>
-                                            <div style={{ fontSize: '0.96rem', color: '#888', lineHeight: 1.6 }}>{user.parameters.kinks}</div>
-                                        </div>
-                                    )}
-                                    {user.parameters?.limits && (
-                                        <div>
-                                            <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.70rem', color: '#ff8c42', letterSpacing: '2px', marginBottom: 6 }}>LIMITS</div>
-                                            <div style={{ fontSize: '0.96rem', color: '#888', lineHeight: 1.6 }}>{user.parameters.limits}</div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Routine */}
-                            {user.parameters?.routine && (
-                                <div style={S.card}>
-                                    <div style={S.cardTitle}>ASSIGNED ROUTINE</div>
-                                    <div style={{ fontSize: '0.96rem', color: '#888', lineHeight: 1.6 }}>{user.parameters.routine}</div>
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {profileTab === 'tasks' && (
-                        <>
-                            {queue.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '50px 0', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', color: '#2a2a2a', letterSpacing: '2px' }}>NO PENDING TASKS</div>
-                            ) : queue.map((task: any, i: number) => {
-                                const taskId = task.id || task.taskId;
-                                const routine = isRoutine(task);
-                                const busy = reviewing === taskId;
-                                return (
-                                    <div key={i} style={{ background: 'rgba(12,12,12,0.9)', border: `1px solid ${routine ? 'rgba(197,160,89,0.2)' : 'rgba(255,140,66,0.15)'}`, borderRadius: 10, padding: '14px' }}>
-                                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                            {(task.proofUrl || task.proof_url) && (
-                                                <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #222', cursor: 'pointer' }} onClick={() => onOpenReview(task)} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(task.proofUrl || task.proof_url))}`; else t.style.display = 'none'; }} alt="" />
-                                            )}
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.85rem', color: '#fff', marginBottom: 5, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
-                                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                                                    {routine && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#c5a059', background: 'rgba(197,160,89,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.3)' }}>ROUTINE</span>}
-                                                    {(task.timestamp || task.submitted_at) && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#444' }}>{new Date(task.timestamp || task.submitted_at).toLocaleDateString()}</span>}
+                    {/* Drawer content */}
+                    <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
+                        {drawerTab === 'controls' ? (
+                            <ControlsView user={user} onUserUpdated={onUserUpdated} />
+                        ) : drawerTab === 'tasks' ? (
+                            <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {queue.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '30px 0', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: '#222', letterSpacing: '3px' }}>NO PENDING TASKS</div>
+                                ) : queue.map((task: any, i: number) => {
+                                    const taskId = task.id || task.taskId;
+                                    const routine = isRoutine(task);
+                                    const busy = reviewing === taskId;
+                                    return (
+                                        <div key={i} style={{ background: 'rgba(10,10,10,0.95)', border: `1px solid ${routine ? 'rgba(180,80,255,0.15)' : 'rgba(255,140,66,0.1)'}`, borderRadius: 8, padding: 12 }}>
+                                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
+                                                {(task.proofUrl || task.proof_url) && (
+                                                    <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid #1a1a1a', cursor: 'pointer' }} onClick={() => onOpenReview(task)} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(task.proofUrl || task.proof_url))}`; else t.style.display = 'none'; }} alt="" />
+                                                )}
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#ccc', marginBottom: 4, lineHeight: 1.3 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
+                                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                        {routine && <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.68rem', color: '#b050ff', background: 'rgba(180,80,255,0.08)', padding: '1px 6px', borderRadius: 20, border: '1px solid rgba(180,80,255,0.2)' }}>ROUTINE</span>}
+                                                        {(task.timestamp || task.submitted_at) && <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.68rem', color: '#333' }}>{new Date(task.timestamp || task.submitted_at).toLocaleDateString()}</span>}
+                                                    </div>
                                                 </div>
-                                                {task.notes && <div style={{ fontSize: '0.76rem', color: '#666', marginTop: 6, lineHeight: 1.5 }}>{task.notes}</div>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <button disabled={busy} onClick={() => onOpenReview(task)}
+                                                    style={{ flex: 2, padding: '9px 0', background: busy ? '#111' : `linear-gradient(135deg, ${PINK}18, ${BLUE}18)`, color: '#b050ff', border: `1px solid rgba(180,80,255,0.2)`, borderRadius: 6, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : routine ? '✓ REVIEW' : '✓ APPROVE'}
+                                                </button>
+                                                <button disabled={busy} onClick={() => handleReject(task)}
+                                                    style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.05)', color: '#ff4444', border: '1px solid rgba(255,51,51,0.15)', borderRadius: 6, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
+                                                    {busy ? '...' : '✕'}
+                                                </button>
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                            {routine ? (
-                                                <>
-                                                    <button disabled={busy} onClick={() => onOpenReview(task)}
-                                                        style={{ flex: 2, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✓ REVIEW PROOF'}
-                                                    </button>
-                                                    <button disabled={busy} onClick={() => handleReject(task)}
-                                                        style={{ flex: 1, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff4444', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✕ REJECT'}
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <button disabled={busy} onClick={() => onOpenReview(task)}
-                                                        style={{ flex: 2, padding: '11px 0', background: busy ? '#111' : 'rgba(197,160,89,0.1)', color: '#c5a059', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✓ APPROVE'}
-                                                    </button>
-                                                    <button disabled={busy} onClick={() => handleReject(task)}
-                                                        style={{ flex: 1, padding: '11px 0', background: 'rgba(255,51,51,0.07)', color: '#ff4444', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                        {busy ? '...' : '✕ REJECT'}
-                                                    </button>
-                                                </>
-                                            )}
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            /* INFO / INTEL tab */
+                            <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {/* Quick stats row */}
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                    {[
+                                        { label: 'DEVOTION', val: `${devPct.toFixed(0)}%` },
+                                        { label: 'SESSIONS', val: String(user.parameters?.kneelCount || 0) },
+                                        { label: 'KNEEL', val: `${((user.parameters?.kneelCount || 0) * 0.25).toFixed(1)}h` },
+                                    ].map(s => (
+                                        <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: 'rgba(255,0,237,0.02)', border: `1px solid ${borderThin}`, borderRadius: 6 }}>
+                                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', fontWeight: 700, color: '#999' }}>{s.val}</div>
+                                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: '#333', letterSpacing: '1.5px' }}>{s.label}</div>
                                         </div>
+                                    ))}
+                                </div>
+
+                                {/* Intel rows */}
+                                <div style={{ background: 'rgba(8,8,8,0.95)', border: `1px solid ${borderThin}`, borderRadius: 8, padding: '6px 12px' }}>
+                                    {[
+                                        { label: 'EMAIL', val: user.memberId },
+                                        { label: 'RANK', val: user.rank, c: color },
+                                        { label: 'MERIT', val: String(user.score) },
+                                        { label: 'CAPITAL', val: user.wallet.toLocaleString() + ' ₡' },
+                                    ].map((row, i) => (
+                                        <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.72rem', color: '#333', letterSpacing: '2px' }}>{row.label}</span>
+                                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', color: (row as any).c || '#777', maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{row.val}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Kinks & Limits */}
+                                {(user.parameters?.kinks || user.parameters?.limits) && (
+                                    <div style={{ background: 'rgba(8,8,8,0.95)', border: `1px solid ${borderThin}`, borderRadius: 8, padding: '10px 12px' }}>
+                                        {user.parameters?.kinks && (
+                                            <div style={{ marginBottom: user.parameters?.limits ? 8 : 0 }}>
+                                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: '#b050ff', letterSpacing: '2px', marginBottom: 4 }}>KINKS</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.5 }}>{user.parameters.kinks}</div>
+                                            </div>
+                                        )}
+                                        {user.parameters?.limits && (
+                                            <div>
+                                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: '#ff8c42', letterSpacing: '2px', marginBottom: 4 }}>LIMITS</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.5 }}>{user.parameters.limits}</div>
+                                            </div>
+                                        )}
                                     </div>
-                                );
-                            })}
-                        </>
-                    )}
+                                )}
+
+                                {/* Routine */}
+                                {user.parameters?.routine && (
+                                    <div style={{ background: 'rgba(8,8,8,0.95)', border: `1px solid ${borderThin}`, borderRadius: 8, padding: '10px 12px' }}>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: '#555', letterSpacing: '2px', marginBottom: 4 }}>ROUTINE</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.5 }}>{user.parameters.routine}</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
