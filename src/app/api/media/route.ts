@@ -48,19 +48,34 @@ export async function GET(req: NextRequest) {
 
         console.log(`[media proxy] bucket=${bucket} path=${filePath.slice(0, 80)}`);
 
-        // Try signed URL first, then fetch the content directly (no redirect — avoids CORS issues)
+        // Create a signed URL for the file
         const { data: signed, error: signErr } = await supabaseAdmin.storage
             .from(bucket)
             .createSignedUrl(filePath, 3600);
 
         if (signed?.signedUrl) {
             try {
-                const signedRes = await fetch(signed.signedUrl);
-                if (signedRes.ok && signedRes.body) {
+                // Forward Range header for video streaming (Mobile Safari requires 206 + range support)
+                const fetchHeaders: Record<string, string> = {};
+                const rangeHeader = req.headers.get('range');
+                if (rangeHeader) fetchHeaders['Range'] = rangeHeader;
+
+                const signedRes = await fetch(signed.signedUrl, { headers: fetchHeaders });
+                if ((signedRes.status === 200 || signedRes.status === 206) && signedRes.body) {
                     const ct = signedRes.headers.get('content-type') || guessContentType(filePath);
+                    const resHeaders: Record<string, string> = {
+                        'Content-Type': ct,
+                        'Cache-Control': 'public, max-age=3600',
+                        'Accept-Ranges': 'bytes',
+                    };
+                    // Forward range/length headers for video seeking
+                    for (const h of ['Content-Range', 'Content-Length']) {
+                        const v = signedRes.headers.get(h);
+                        if (v) resHeaders[h] = v;
+                    }
                     return new NextResponse(signedRes.body, {
-                        status: 200,
-                        headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=3600' },
+                        status: signedRes.status,
+                        headers: resHeaders,
                     });
                 }
             } catch {}
@@ -81,6 +96,8 @@ export async function GET(req: NextRequest) {
             status: 200,
             headers: {
                 'Content-Type': contentType,
+                'Content-Length': String(buffer.byteLength),
+                'Accept-Ranges': 'bytes',
                 'Cache-Control': 'public, max-age=3600',
             },
         });

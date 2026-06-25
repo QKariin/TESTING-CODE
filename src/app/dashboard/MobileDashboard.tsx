@@ -1781,8 +1781,10 @@ function TaskReviewModal({ proofUrl, isVideo, thumbnailUrl, name, avatar, rank, 
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
-    // Use proof URL as-is — already signed by signQueueItems during data load
-    const displayUrl = proofUrl || '';
+    // For videos, use same-origin proxy to avoid Mobile Safari CORS issues with signed URLs.
+    // For images, use the signed URL directly (images don't have CORS restrictions).
+    const rawUrl = proofUrl || '';
+    const displayUrl = isVideo && rawUrl ? `/api/media?url=${encodeURIComponent(rawUrl)}` : rawUrl;
     const posterUrl = thumbnailUrl || '';
     const tiers = [50, 70, 100];
     const touchStartX = useRef(0);
@@ -1817,7 +1819,7 @@ function TaskReviewModal({ proofUrl, isVideo, thumbnailUrl, name, avatar, rank, 
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {displayUrl ? (
                     isVideo ? (
-                        <video src={displayUrl} controls playsInline preload="metadata" poster={posterUrl || undefined} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} onError={(e) => { const t = e.target as HTMLVideoElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} />
+                        <video src={displayUrl} controls playsInline preload="metadata" poster={posterUrl || undefined} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
                     ) : (
                         <img src={displayUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
                     )
