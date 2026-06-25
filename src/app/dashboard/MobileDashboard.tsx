@@ -1813,7 +1813,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
         if (dx > 80 && dy < 60) onClose();
     };
     return (
-        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 99999, display: 'flex', flexDirection: 'column' }}
+        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 20000000, display: 'flex', flexDirection: 'column' }}
             onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             {/* Top bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: '#050505', flexShrink: 0 }}>
