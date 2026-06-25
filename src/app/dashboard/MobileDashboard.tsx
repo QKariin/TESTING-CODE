@@ -393,7 +393,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
 
             {/* TOP BAR */}
             <div style={S.topBar}>
-                <span style={S.topBrand}>⚔ COMMAND CENTER</span>
+                <span style={{ ...S.topBrand, fontFamily: "'Cinzel',serif", fontSize: '0.78rem', fontWeight: 600 }}>♛ ROYAL COURT</span>
                 <span style={S.topCode}>{dailyCode}</span>
             </div>
 
@@ -553,28 +553,26 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
             </div>
 
             {/* BOTTOM NAV */}
-            {!selectedUser && (
-                <nav style={S.nav}>
-                    {([
-                        { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: undefined as number | undefined, bc: '#ff8c42' },
-                        { key: 'subjects' as Tab, icon: '◉', label: 'SUBS', badge: unreadCount > 0 ? unreadCount : (onlineCount > 0 ? onlineCount : undefined), bc: unreadCount > 0 ? '#4a9eff' : '#6bcb77' },
-                        { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, bc: '#c5a059' },
-                        { key: 'challenges' as Tab, icon: '⚔', label: 'WAR', badge: undefined as number | undefined, bc: '#c5a059' },
-                        { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
-                        { key: 'global' as Tab, icon: '◎', label: 'GLOBAL', badge: undefined as number | undefined, bc: '#c5a059' },
-                    ]).map(({ key, icon, label, badge, bc }) => (
-                        <button key={key} style={{ ...S.navBtn, ...(tab === key ? S.navActive : {}) }} onClick={() => { (window as any).closeMobGlobal?.(); if (key === 'global') (window as any).openMobGlobal?.(); else setTab(key); }}>
-                            <div style={{ position: 'relative' }}>
-                                <span style={{ fontSize: '1.3rem', lineHeight: 1, color: tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
-                                {badge !== undefined && (
-                                    <div style={{ position: 'absolute', top: -4, right: -8, minWidth: 14, height: 14, background: bc, borderRadius: 7, fontSize: '0.88rem', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, padding: '0 3px' }}>{badge}</div>
-                                )}
-                            </div>
-                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', letterSpacing: '1.5px', color: tab === key ? '#c5a059' : '#2e2e2e', textTransform: 'uppercase' }}>{label}</span>
-                        </button>
-                    ))}
-                </nav>
-            )}
+            <nav style={S.nav}>
+                {([
+                    { key: 'home' as Tab, icon: '⌂', label: 'HOME', badge: undefined as number | undefined, bc: '#ff8c42' },
+                    { key: 'subjects' as Tab, icon: '◉', label: 'SUBS', badge: unreadCount > 0 ? unreadCount : (onlineCount > 0 ? onlineCount : undefined), bc: unreadCount > 0 ? '#4a9eff' : '#6bcb77' },
+                    { key: 'posts' as Tab, icon: '✦', label: 'POSTS', badge: undefined as number | undefined, bc: '#c5a059' },
+                    { key: 'challenges' as Tab, icon: '⚔', label: 'WAR', badge: undefined as number | undefined, bc: '#c5a059' },
+                    { key: 'queen' as Tab, icon: '♛', label: 'QUEEN', badge: undefined as number | undefined, bc: '#c5a059' },
+                    { key: 'global' as Tab, icon: '◎', label: 'GLOBAL', badge: undefined as number | undefined, bc: '#c5a059' },
+                ]).map(({ key, icon, label, badge, bc }) => (
+                    <button key={key} style={{ ...S.navBtn, ...(!selectedUser && tab === key ? S.navActive : {}) }} onClick={() => { if (selectedUser) { markPendingRead(); setSelectedUser(null); setProfileTab('chat'); loadData(); } (window as any).closeMobGlobal?.(); if (key === 'global') (window as any).openMobGlobal?.(); else setTab(key); }}>
+                        <div style={{ position: 'relative' }}>
+                            <span style={{ fontSize: '1.3rem', lineHeight: 1, color: !selectedUser && tab === key ? '#c5a059' : '#2e2e2e' }}>{icon}</span>
+                            {badge !== undefined && (
+                                <div style={{ position: 'absolute', top: -4, right: -8, minWidth: 14, height: 14, background: bc, borderRadius: 7, fontSize: '0.88rem', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,monospace', fontWeight: 700, padding: '0 3px' }}>{badge}</div>
+                            )}
+                        </div>
+                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', letterSpacing: '1.5px', color: !selectedUser && tab === key ? '#c5a059' : '#2e2e2e', textTransform: 'uppercase' }}>{label}</span>
+                    </button>
+                ))}
+            </nav>
 
             {/* ROOT-LEVEL TASK REVIEW MODAL - rendered after nav, always on top */}
             {rootReviewTask && (() => {
@@ -736,8 +734,8 @@ function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUs
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 4 }}>{greeting}</div>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.64rem', color: '#333', letterSpacing: '2px', marginTop: 5 }}>COMMAND CENTER</div>
+                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, letterSpacing: '3px', lineHeight: 1.1 }}>QUEEN KARIN</div>
+                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.64rem', color: '#333', letterSpacing: '2px', marginTop: 5 }}>ROYAL COURT</div>
                 </div>
                 {/* Daily code - tucked top-right */}
                 <div style={{ flexShrink: 0, textAlign: 'center' }}>
@@ -1875,6 +1873,9 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     const [overlay, setOverlay] = useState(false);
     const [overlayTab, setOverlayTab] = useState<'profile' | 'tasks' | 'controls'>('profile');
     const [statsOpen, setStatsOpen] = useState(false);
+    const overlayTouchY = useRef(0);
+    const [overlayDragY, setOverlayDragY] = useState(0);
+    const overlayDragging = useRef(false);
 
     const isRoutine = (task: any) => !!(task.isRoutine || task.category === 'Routine' || task.text === 'Daily Routine');
 
@@ -1965,8 +1966,8 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     const hReport = getHierarchyReport(hierarchyData);
 
     // Active task details
-    const activeTask = user.parameters?.activeTask;
-    const activeTaskText = activeTask?.text || activeTask?.taskName || '';
+    const activeTask = user.parameters?.activeTask || user.parameters?.taskdom_active_task;
+    const activeTaskText = activeTask?.text || activeTask?.TaskText || activeTask?.tasktext || activeTask?.taskName || '';
     const taskEndTime = user.parameters?.endTime || activeTask?.endTime || null;
 
     // Inventory counts
@@ -2001,8 +2002,14 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                             <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#eee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{user.name}</span>
                             <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.6rem', color: GOLD, opacity: 0.7, letterSpacing: '1px', flexShrink: 0 }}>{user.rank}</span>
                         </div>
-                        {(isSilenced || isPaywalled) && (
+                        {(isSilenced || isPaywalled) ? (
                             <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', letterSpacing: '2px', color: isSilenced ? '#dc3c3c' : GOLD }}>{isSilenced ? '🔇 SILENCED' : '🔒 PAYWALLED'}</span>
+                        ) : activeTaskText ? (
+                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+                                <span style={{ color: '#6bcb77', fontSize: '0.65rem', fontFamily: "'Orbitron',sans-serif", letterSpacing: '1px', marginRight: 4 }}>TASK:</span>{activeTaskText}
+                            </div>
+                        ) : (
+                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.15)' }}>AWAITING ORDERS</span>
                         )}
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -2037,12 +2044,19 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                 FULL-SCREEN PROFILE OVERLAY — mirrors /profile mobile layout
                ══════════════════════════════════════════════════════════════════ */}
             {overlay && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 10000000, background: '#020512', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    {/* Overlay header — gradient bar + close */}
-                    <div style={{ flexShrink: 0, position: 'relative' }}>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 10000000, background: '#020512', display: 'flex', flexDirection: 'column', overflow: 'hidden', transform: overlayDragY > 0 ? `translateY(${overlayDragY}px)` : undefined, transition: overlayDragging.current ? 'none' : 'transform 0.3s ease-out' }}>
+                    {/* Swipe-down handle + header */}
+                    <div style={{ flexShrink: 0, position: 'relative' }}
+                        onTouchStart={(e) => { overlayTouchY.current = e.touches[0].clientY; overlayDragging.current = true; }}
+                        onTouchMove={(e) => { const dy = e.touches[0].clientY - overlayTouchY.current; if (dy > 0) { setOverlayDragY(dy); } }}
+                        onTouchEnd={() => { overlayDragging.current = false; if (overlayDragY > 120) { setOverlay(false); } setOverlayDragY(0); }}>
+                        {/* Drag handle pill */}
+                        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 4 }}>
+                            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(197,160,89,0.25)' }} />
+                        </div>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${PINK}, ${BLUE})` }} />
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px' }}>
-                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px' }}>▦ SUBJECT FILE</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 16px 10px' }}>
+                            <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.72rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', fontWeight: 600 }}>SUBJECT DOSSIER</span>
                             <button onClick={() => setOverlay(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '1.2rem', cursor: 'pointer', padding: '4px 8px', WebkitTapHighlightColor: 'transparent' }}>✕</button>
                         </div>
                         {/* Overlay tabs */}
@@ -2130,8 +2144,6 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                 {/* ── HALO HERO — uses .halo-hero, .halo-circle-lg, etc. ── */}
                                 <div className="halo-hero">
                                     <div className="halo-circle-lg">
-                                        {/* Avatar behind */}
-                                        <img src={user.avatar} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.15, filter: 'blur(2px)', zIndex: 0 }} onError={(e) => { (e.target as any).style.display = 'none'; }} alt="" />
                                         <div className="halo-name-lg">{user.name}</div>
                                         <div className="halo-rank-lg">{user.rank}</div>
                                         <div className="halo-progress-label">DAILY PROGRESS</div>
@@ -2505,152 +2517,172 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
     const actionBtn = (active: boolean): React.CSSProperties => ({ flex: 1, padding: '12px 0', background: active ? 'rgba(255,51,51,0.12)' : 'rgba(197,160,89,0.08)', border: `1px solid ${active ? 'rgba(255,51,51,0.4)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, color: active ? '#ff6666' : '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', fontWeight: 700, letterSpacing: '1px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 });
 
     return (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: 14, WebkitOverflowScrolling: 'touch' as any }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 20, WebkitOverflowScrolling: 'touch' as any, paddingBottom: 40 }}>
             {/* Status flash */}
             {status && (
-                <div style={{ background: status.startsWith('✓') ? 'rgba(107,203,119,0.12)' : 'rgba(255,51,51,0.12)', border: `1px solid ${status.startsWith('✓') ? 'rgba(107,203,119,0.3)' : 'rgba(255,51,51,0.3)'}`, borderRadius: 8, padding: '12px 14px', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', color: status.startsWith('✓') ? '#6bcb77' : '#ff6666', letterSpacing: '1px', textAlign: 'center' }}>
-                    {status}
+                <div className="luxury-card" style={{ textAlign: 'center', padding: '12px 14px', borderTopColor: status.startsWith('✓') ? 'rgba(107,203,119,0.5)' : 'rgba(255,51,51,0.5)' }}>
+                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.76rem', color: status.startsWith('✓') ? '#6bcb77' : '#ff6666', letterSpacing: '1px' }}>{status}</div>
                 </div>
             )}
 
             {/* Lock status pills */}
             {(paywallActive || silenceActive) && (
                 <div style={{ display: 'flex', gap: 8 }}>
-                    {paywallActive && <div style={{ flex: 1, textAlign: 'center', padding: '8px 10px', background: 'rgba(255,51,51,0.08)', border: '1px solid rgba(255,51,51,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#ff6666', letterSpacing: '1px' }}>PAYWALL ACTIVE<br /><span style={{ fontSize: '0.62rem', color: '#ff9999', marginTop: 2, display: 'block', fontFamily: 'Rajdhani,sans-serif', fontWeight: 400, letterSpacing: 0 }}>{user.parameters?.paywall?.reason}</span></div>}
-                    {silenceActive && <div style={{ flex: 1, textAlign: 'center', padding: '8px 10px', background: 'rgba(255,140,66,0.08)', border: '1px solid rgba(255,140,66,0.3)', borderRadius: 8, fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#ff8c42', letterSpacing: '1px' }}>SILENCED<br /><span style={{ fontSize: '0.62rem', color: '#ffaa77', marginTop: 2, display: 'block', fontFamily: 'Rajdhani,sans-serif', fontWeight: 400, letterSpacing: 0 }}>{user.parameters?.silence?.reason}</span></div>}
+                    {paywallActive && <div className="luxury-card" style={{ flex: 1, textAlign: 'center', borderTopColor: 'rgba(255,51,51,0.5)' }}>
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.68rem', color: '#ff6666', letterSpacing: '1px' }}>PAYWALL ACTIVE</div>
+                        <div style={{ fontSize: '0.78rem', color: '#ff9999', marginTop: 4, fontFamily: "'Rajdhani',sans-serif" }}>{user.parameters?.paywall?.reason}</div>
+                    </div>}
+                    {silenceActive && <div className="luxury-card" style={{ flex: 1, textAlign: 'center', borderTopColor: 'rgba(255,140,66,0.5)' }}>
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.68rem', color: '#ff8c42', letterSpacing: '1px' }}>SILENCED</div>
+                        <div style={{ fontSize: '0.78rem', color: '#ffaa77', marginTop: 4, fontFamily: "'Rajdhani',sans-serif" }}>{user.parameters?.silence?.reason}</div>
+                    </div>}
                 </div>
             )}
 
             {/* PAYWALL */}
-            <div style={S.card}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div style={S.cardTitle}>PAYWALL</div>
-                    {paywallActive && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#ff6666', background: 'rgba(255,51,51,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(255,51,51,0.25)' }}>ACTIVE</span>}
+            <div>
+                <div className="duty-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>PAYWALL</span>
+                    {paywallActive && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', color: '#ff6666', background: 'rgba(255,51,51,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(255,51,51,0.25)' }}>ACTIVE</span>}
                 </div>
-                {!paywallActive && (
-                    <>
-                        <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
-                            <button onClick={() => setShowPaywallPresets(v => !v)} style={{ background: showPaywallPresets ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#888', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px' }}>
-                                PRESETS {showPaywallPresets ? '▲' : '▼'}
-                            </button>
-                        </div>
-                        {showPaywallPresets && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-                                {PAYWALL_PRESETS.map((p, i) => (
-                                    <button key={i} onClick={() => { setLockReason(p); setShowPaywallPresets(false); }}
-                                        style={{ textAlign: 'left', background: lockReason === p ? 'rgba(255,51,51,0.08)' : 'rgba(255,255,255,0.02)', border: `1px solid ${lockReason === p ? 'rgba(255,51,51,0.3)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, padding: '8px 10px', color: lockReason === p ? '#ff9999' : '#666', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.84rem', cursor: 'pointer', lineHeight: 1.3 }}>
-                                        {p}
-                                    </button>
-                                ))}
+                <div className="luxury-card">
+                    {!paywallActive && (
+                        <>
+                            <div style={{ marginBottom: 8 }}>
+                                <button onClick={() => setShowPaywallPresets(v => !v)} style={{ background: showPaywallPresets ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#888', fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px' }}>
+                                    PRESETS {showPaywallPresets ? '▲' : '▼'}
+                                </button>
                             </div>
-                        )}
-                        <input style={inp} placeholder="Reason (required)..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-                            <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>AMOUNT ₡</span>
-                            <input style={{ ...smInp, flex: 1 }} value={paywallAmt} onChange={e => setPaywallAmt(e.target.value)} placeholder="500" />
-                        </div>
-                    </>
-                )}
-                <button disabled={busy} onClick={togglePaywall} style={{ width: '100%', marginTop: 12, padding: '12px', background: paywallActive ? 'rgba(107,203,119,0.1)' : 'rgba(255,51,51,0.1)', border: `1px solid ${paywallActive ? 'rgba(107,203,119,0.3)' : 'rgba(255,51,51,0.3)'}`, borderRadius: 8, color: paywallActive ? '#6bcb77' : '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
-                    {paywallActive ? 'UNLOCK PAYWALL' : 'ACTIVATE PAYWALL'}
-                </button>
+                            {showPaywallPresets && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
+                                    {PAYWALL_PRESETS.map((p, i) => (
+                                        <button key={i} onClick={() => { setLockReason(p); setShowPaywallPresets(false); }}
+                                            style={{ textAlign: 'left', background: lockReason === p ? 'rgba(255,51,51,0.08)' : 'rgba(255,255,255,0.02)', border: `1px solid ${lockReason === p ? 'rgba(255,51,51,0.3)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, padding: '8px 10px', color: lockReason === p ? '#ff9999' : '#666', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.84rem', cursor: 'pointer', lineHeight: 1.3 }}>
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            <input style={inp} placeholder="Reason (required)..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.62rem', color: '#555', letterSpacing: '1px', flexShrink: 0 }}>AMOUNT ₡</span>
+                                <input style={{ ...smInp, flex: 1 }} value={paywallAmt} onChange={e => setPaywallAmt(e.target.value)} placeholder="500" />
+                            </div>
+                        </>
+                    )}
+                    <button disabled={busy} onClick={togglePaywall} style={{ width: '100%', marginTop: 12, padding: '12px', background: paywallActive ? 'rgba(107,203,119,0.06)' : 'rgba(255,51,51,0.06)', border: `1px solid ${paywallActive ? 'rgba(107,203,119,0.3)' : 'rgba(255,51,51,0.3)'}`, borderRadius: 6, color: paywallActive ? '#6bcb77' : '#ff6666', fontFamily: "'Cinzel',serif", fontSize: '0.78rem', fontWeight: 700, letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                        {paywallActive ? 'UNLOCK PAYWALL' : 'ACTIVATE PAYWALL'}
+                    </button>
+                </div>
             </div>
 
             {/* SILENCE */}
-            <div style={S.card}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div style={S.cardTitle}>SILENCE</div>
-                    {silenceActive && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#ff8c42', background: 'rgba(255,140,66,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(255,140,66,0.25)' }}>ACTIVE</span>}
+            <div>
+                <div className="duty-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>SILENCE</span>
+                    {silenceActive && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', color: '#ff8c42', background: 'rgba(255,140,66,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(255,140,66,0.25)' }}>ACTIVE</span>}
                 </div>
-                {!silenceActive && (
-                    <>
-                        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                            <button onClick={() => setShowSilencePresets(v => !v)} style={{ background: showSilencePresets ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#888', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px' }}>
-                                PRESETS {showSilencePresets ? '▲' : '▼'}
-                            </button>
-                        </div>
-                        {showSilencePresets && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-                                {SILENCE_PRESETS.map((p, i) => (
-                                    <button key={i} onClick={() => { setLockReason(p); setShowSilencePresets(false); }}
-                                        style={{ textAlign: 'left', background: lockReason === p ? 'rgba(255,140,66,0.08)' : 'rgba(255,255,255,0.02)', border: `1px solid ${lockReason === p ? 'rgba(255,140,66,0.3)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, padding: '8px 10px', color: lockReason === p ? '#ffaa77' : '#666', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.84rem', cursor: 'pointer', lineHeight: 1.3 }}>
-                                        {p}
-                                    </button>
-                                ))}
+                <div className="luxury-card">
+                    {!silenceActive && (
+                        <>
+                            <div style={{ marginBottom: 8 }}>
+                                <button onClick={() => setShowSilencePresets(v => !v)} style={{ background: showSilencePresets ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#888', fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', padding: '5px 10px', cursor: 'pointer', letterSpacing: '1px' }}>
+                                    PRESETS {showSilencePresets ? '▲' : '▼'}
+                                </button>
                             </div>
-                        )}
-                        <input style={inp} placeholder="Reason (required)..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
-                    </>
-                )}
-                <button disabled={busy} onClick={toggleSilence} style={{ width: '100%', marginTop: 12, padding: '12px', background: silenceActive ? 'rgba(107,203,119,0.1)' : 'rgba(255,140,66,0.1)', border: `1px solid ${silenceActive ? 'rgba(107,203,119,0.3)' : 'rgba(255,140,66,0.3)'}`, borderRadius: 8, color: silenceActive ? '#6bcb77' : '#ff8c42', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '1.5px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
-                    {silenceActive ? 'LIFT SILENCE' : 'SILENCE SUBJECT'}
-                </button>
+                            {showSilencePresets && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
+                                    {SILENCE_PRESETS.map((p, i) => (
+                                        <button key={i} onClick={() => { setLockReason(p); setShowSilencePresets(false); }}
+                                            style={{ textAlign: 'left', background: lockReason === p ? 'rgba(255,140,66,0.08)' : 'rgba(255,255,255,0.02)', border: `1px solid ${lockReason === p ? 'rgba(255,140,66,0.3)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, padding: '8px 10px', color: lockReason === p ? '#ffaa77' : '#666', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.84rem', cursor: 'pointer', lineHeight: 1.3 }}>
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            <input style={inp} placeholder="Reason (required)..." value={lockReason} onChange={e => setLockReason(e.target.value)} />
+                        </>
+                    )}
+                    <button disabled={busy} onClick={toggleSilence} style={{ width: '100%', marginTop: 12, padding: '12px', background: silenceActive ? 'rgba(107,203,119,0.06)' : 'rgba(255,140,66,0.06)', border: `1px solid ${silenceActive ? 'rgba(107,203,119,0.3)' : 'rgba(255,140,66,0.3)'}`, borderRadius: 6, color: silenceActive ? '#6bcb77' : '#ff8c42', fontFamily: "'Cinzel',serif", fontSize: '0.78rem', fontWeight: 700, letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                        {silenceActive ? 'LIFT SILENCE' : 'SILENCE SUBJECT'}
+                    </button>
+                </div>
             </div>
 
             {/* Wallet + Merit row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div style={S.card}>
-                    <div style={S.cardTitle}>WALLET</div>
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#4ecdc4', fontWeight: 700, marginBottom: 10 }}>{user.wallet.toLocaleString()} ₡</div>
-                    <input style={{ ...inp, marginBottom: 8, padding: '8px 10px' }} value={walletAmt} onChange={e => setWalletAmt(e.target.value)} placeholder="100" />
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        <button disabled={busy} onClick={() => adjustWallet(1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(107,203,119,0.1)', border: '1px solid rgba(107,203,119,0.25)', borderRadius: 7, color: '#6bcb77', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>+ADD</button>
-                        <button disabled={busy} onClick={() => adjustWallet(-1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.07)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 7, color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>-TAKE</button>
+                <div>
+                    <div className="duty-label">WALLET</div>
+                    <div className="luxury-card">
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.1rem', color: '#4ecdc4', fontWeight: 700, marginBottom: 10, textAlign: 'center' }}>{user.wallet.toLocaleString()} ₡</div>
+                        <input style={{ ...inp, marginBottom: 8, padding: '8px 10px' }} value={walletAmt} onChange={e => setWalletAmt(e.target.value)} placeholder="100" />
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            <button disabled={busy} onClick={() => adjustWallet(1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(107,203,119,0.06)', border: '1px solid rgba(107,203,119,0.25)', borderRadius: 6, color: '#6bcb77', fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>+ADD</button>
+                            <button disabled={busy} onClick={() => adjustWallet(-1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.04)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 6, color: '#ff6666', fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>-TAKE</button>
+                        </div>
                     </div>
                 </div>
-                <div style={S.card}>
-                    <div style={S.cardTitle}>MERIT</div>
-                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '1.1rem', color: '#c5a059', fontWeight: 700, marginBottom: 10 }}>{user.score}</div>
-                    <input style={{ ...inp, marginBottom: 8, padding: '8px 10px' }} value={meritAmt} onChange={e => setMeritAmt(e.target.value)} placeholder="50" />
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        <button disabled={busy} onClick={() => adjustMerit(1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 7, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>+ADD</button>
-                        <button disabled={busy} onClick={() => adjustMerit(-1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.07)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 7, color: '#ff6666', fontFamily: 'Orbitron,monospace', fontSize: '0.78rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>-TAKE</button>
+                <div>
+                    <div className="duty-label">MERIT</div>
+                    <div className="luxury-card">
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.1rem', color: '#c5a059', fontWeight: 700, marginBottom: 10, textAlign: 'center' }}>{user.score}</div>
+                        <input style={{ ...inp, marginBottom: 8, padding: '8px 10px' }} value={meritAmt} onChange={e => setMeritAmt(e.target.value)} placeholder="50" />
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            <button disabled={busy} onClick={() => adjustMerit(1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 6, color: '#c5a059', fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>+ADD</button>
+                            <button disabled={busy} onClick={() => adjustMerit(-1)} style={{ flex: 1, padding: '9px 0', background: 'rgba(255,51,51,0.04)', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 6, color: '#ff6666', fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>-TAKE</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Rank */}
-            <div style={S.card}>
-                <div style={S.cardTitle}>RANK — {user.rank}</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <select value={newRank} onChange={e => setNewRank(e.target.value)}
-                        style={{ flex: 1, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', padding: '11px 10px', outline: 'none', cursor: 'pointer' }}>
-                        {RANKS.map(r => <option key={r} value={r} style={{ background: '#111', color: '#c5a059' }}>{r}</option>)}
-                    </select>
-                    <button disabled={busy} onClick={changeRank}
-                        style={{ padding: '11px 14px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
-                        SET
-                    </button>
-                    <button disabled={busy} onClick={promoteNext}
-                        style={{ padding: '11px 10px', background: 'linear-gradient(135deg,rgba(197,160,89,0.18),rgba(197,160,89,0.06))', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,monospace', fontSize: '0.76rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0, fontWeight: 700 }}>
-                        ↑ UP
-                    </button>
+            <div>
+                <div className="duty-label">RANK — {user.rank}</div>
+                <div className="luxury-card">
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <select value={newRank} onChange={e => setNewRank(e.target.value)}
+                            style={{ flex: 1, background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 6, color: '#c5a059', fontFamily: "'Cinzel',serif", fontSize: '0.76rem', padding: '11px 10px', outline: 'none', cursor: 'pointer' }}>
+                            {RANKS.map(r => <option key={r} value={r} style={{ background: '#111', color: '#c5a059' }}>{r}</option>)}
+                        </select>
+                        <button disabled={busy} onClick={changeRank}
+                            style={{ padding: '11px 14px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 6, color: '#c5a059', fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
+                            SET
+                        </button>
+                        <button disabled={busy} onClick={promoteNext}
+                            style={{ padding: '11px 10px', background: 'linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04))', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 6, color: '#c5a059', fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1, flexShrink: 0 }}>
+                            ↑ UP
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Routine */}
-            <div style={S.card}>
-                <div style={S.cardTitle}>ASSIGNED ROUTINE</div>
-                <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.68rem', color: '#444', marginBottom: 8, letterSpacing: '1px' }}>
-                    {user.parameters?.routine && user.parameters.routine !== 'None' ? 'CURRENT: ' + user.parameters.routine.slice(0, 60) + (user.parameters.routine.length > 60 ? '...' : '') : 'NO ROUTINE ASSIGNED'}
+            <div>
+                <div className="duty-label">ASSIGNED ROUTINE</div>
+                <div className="luxury-card">
+                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.62rem', color: '#444', marginBottom: 8, letterSpacing: '1px' }}>
+                        {user.parameters?.routine && user.parameters.routine !== 'None' ? 'CURRENT: ' + user.parameters.routine.slice(0, 60) + (user.parameters.routine.length > 60 ? '...' : '') : 'NO ROUTINE ASSIGNED'}
+                    </div>
+                    <textarea value={routineText} onChange={e => setRoutineText(e.target.value)} placeholder="Describe the daily routine for this subject..." rows={3}
+                        style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
+                    <button disabled={savingRoutine} onClick={saveRoutine}
+                        style={{ width: '100%', padding: '11px', background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 6, color: '#a78bfa', fontFamily: "'Cinzel',serif", fontSize: '0.78rem', fontWeight: 700, letterSpacing: '2px', cursor: savingRoutine ? 'default' : 'pointer', opacity: savingRoutine ? 0.5 : 1 }}>
+                        {savingRoutine ? 'SAVING...' : 'SAVE ROUTINE'}
+                    </button>
                 </div>
-                <textarea value={routineText} onChange={e => setRoutineText(e.target.value)} placeholder="Describe the daily routine for this subject..." rows={3}
-                    style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
-                <button disabled={savingRoutine} onClick={saveRoutine}
-                    style={{ width: '100%', padding: '11px', background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 8, color: '#a78bfa', fontFamily: 'Orbitron,monospace', fontSize: '0.80rem', fontWeight: 700, letterSpacing: '1.5px', cursor: savingRoutine ? 'default' : 'pointer', opacity: savingRoutine ? 0.5 : 1 }}>
-                    {savingRoutine ? 'SAVING...' : 'SAVE ROUTINE'}
-                </button>
             </div>
 
             {/* Issue task */}
-            <div style={S.card}>
-                <div style={S.cardTitle}>ISSUE TASK</div>
-                <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
-                    style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
-                <button disabled={busy || !taskText.trim()} onClick={issueTask}
-                    style={{ width: '100%', padding: '12px', background: taskText.trim() ? 'rgba(197,160,89,0.12)' : '#111', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.35)' : '#222'}`, borderRadius: 8, color: taskText.trim() ? '#c5a059' : '#444', fontFamily: 'Orbitron,monospace', fontSize: '0.94rem', fontWeight: 700, letterSpacing: '1.5px', cursor: taskText.trim() && !busy ? 'pointer' : 'default', opacity: busy ? 0.4 : 1 }}>
-                    {busy ? 'SENDING...' : 'ISSUE COMMAND'}
-                </button>
+            <div>
+                <div className="duty-label">ISSUE COMMAND</div>
+                <div className="luxury-card">
+                    <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe the task for this subject..." rows={3}
+                        style={{ ...inp, resize: 'none', lineHeight: 1.5, marginBottom: 10 } as React.CSSProperties} />
+                    <button disabled={busy || !taskText.trim()} onClick={issueTask}
+                        style={{ width: '100%', padding: '12px', background: taskText.trim() ? 'rgba(197,160,89,0.08)' : 'rgba(0,0,0,0.3)', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.35)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 6, color: taskText.trim() ? '#c5a059' : '#444', fontFamily: "'Cinzel',serif", fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', cursor: taskText.trim() && !busy ? 'pointer' : 'default', opacity: busy ? 0.4 : 1 }}>
+                        {busy ? 'SENDING...' : 'ISSUE COMMAND'}
+                    </button>
+                </div>
             </div>
         </div>
     );
