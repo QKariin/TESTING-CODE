@@ -1891,6 +1891,10 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
     const overlayTouchY = useRef(0);
     const [overlayDragY, setOverlayDragY] = useState(0);
     const overlayDragging = useRef(false);
+    // Proof viewer — opens inside the overlay so z-index is never an issue
+    const [viewingTask, setViewingTask] = useState<any | null>(null);
+    const [viewTier, setViewTier] = useState(50);
+    const [viewNote, setViewNote] = useState('');
 
     const isRoutine = (task: any) => !!(task.isRoutine || task.category === 'Routine' || task.text === 'Daily Routine');
 
@@ -1900,6 +1904,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
         try {
             await adminApproveTaskAction(taskId, user.memberId, tier, note || null);
             setQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            setViewingTask(null);
             onReviewed?.();
         } catch (e) { console.error(e); }
         setReviewing(null);
@@ -1911,6 +1916,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
         try {
             await adminRejectTaskAction(taskId, user.memberId);
             setQueue(q => q.filter(t => (t.id || t.taskId) !== taskId));
+            setViewingTask(null);
             onReviewed?.();
         } catch (e) { console.error(e); }
         setReviewing(null);
@@ -2124,11 +2130,13 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                     const taskId = task.id || task.taskId;
                                     const routine = isRoutine(task);
                                     const busy = reviewing === taskId;
+                                    const proof = task.proofUrl || task.proof_url;
                                     return (
-                                        <div key={i} className="luxury-card" style={{ padding: 16 }}>
-                                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                                                {(task.proofUrl || task.proof_url) && (
-                                                    <img src={toPublicUrl(task.proofUrl || task.proof_url)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: `1px solid ${borderThin}`, cursor: 'pointer' }} onClick={() => onOpenReview(task)} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(task.proofUrl || task.proof_url))}`; else t.style.display = 'none'; }} alt="" />
+                                        <button key={i} className="luxury-card" onClick={() => { setViewingTask(task); setViewTier(50); setViewNote(''); }}
+                                            style={{ padding: 16, width: '100%', cursor: 'pointer', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}>
+                                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                                {proof && (
+                                                    <img src={toPublicUrl(proof)} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: `1px solid ${borderThin}` }} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(toPublicUrl(proof))}`; else t.style.display = 'none'; }} alt="" />
                                                 )}
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', marginBottom: 5, lineHeight: 1.4 }}>{stripHtml(task.taskName || task.task_name || task.text || 'Task')}</div>
@@ -2136,21 +2144,80 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                                                         {routine && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: GOLD, letterSpacing: '2px' }}>ROUTINE</span>}
                                                         {(task.timestamp || task.submitted_at) && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: '#444' }}>{new Date(task.timestamp || task.submitted_at).toLocaleDateString()}</span>}
                                                     </div>
+                                                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '2px', marginTop: 8 }}>TAP TO VIEW PROOF →</div>
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', gap: 8 }}>
-                                                <button disabled={busy} onClick={() => onOpenReview(task)}
-                                                    style={{ flex: 2, padding: '12px 0', background: 'rgba(197,160,89,0.04)', color: GOLD, border: `1px solid rgba(197,160,89,0.45)`, borderRadius: 3, fontFamily: "'Cinzel',serif", fontSize: '0.72rem', fontWeight: 700, letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : routine ? '✓ REVIEW' : '✓ APPROVE'}
+                                        </button>
+                                    );
+                                })}
+                                {/* ═══ PROOF VIEWER MODAL — renders inside the overlay ═══ */}
+                                {viewingTask && (() => {
+                                const vt = viewingTask;
+                                const vtProof = vt.proofUrl || vt.proof_url;
+                                const vtVideo = !!(vtProof && ((vt.proofType && (vt.proofType === 'video' || vt.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(vtProof)));
+                                const vtText = stripHtml(vt.taskName || vt.task_name || vt.text || 'Task');
+                                const vtRoutine = isRoutine(vt);
+                                const vtId = vt.id || vt.taskId;
+                                const vtBusy = reviewing === vtId;
+                                const vtDisplayUrl = toPublicUrl(vtProof || '');
+                                return (
+                                    <div style={{ position: 'fixed', inset: 0, zIndex: 30000000, background: '#000', display: 'flex', flexDirection: 'column' }}>
+                                        {/* Header */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', background: '#050505', flexShrink: 0 }}>
+                                            <button onClick={() => setViewingTask(null)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', fontSize: '1.1rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' }}>←</button>
+                                            <img src={user.avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', color: color, letterSpacing: '1px' }}>{user.rank}</div>
+                                            </div>
+                                            {vtRoutine && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', color: GOLD, background: 'rgba(197,160,89,0.08)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }}>ROUTINE</span>}
+                                        </div>
+
+                                        {/* Proof media */}
+                                        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                            {vtDisplayUrl ? (
+                                                vtVideo ? (
+                                                    <video src={vtDisplayUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} onError={(e) => { const t = e.target as HTMLVideoElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(vtDisplayUrl)}`; }} />
+                                                ) : (
+                                                    <img src={vtDisplayUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(vtDisplayUrl)}`; }} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
+                                                )
+                                            ) : (
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222', fontFamily: "'Orbitron',sans-serif", fontSize: '0.70rem', letterSpacing: '2px', minHeight: 120 }}>NO MEDIA ATTACHED</div>
+                                            )}
+                                            <div style={{ padding: '14px 16px', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.95rem', color: '#999', lineHeight: 1.5 }}>{vtText}</div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div style={{ background: '#080808', borderTop: '1px solid rgba(197,160,89,0.1)', padding: '14px 16px', paddingBottom: 'max(32px, env(safe-area-inset-bottom, 16px))', flexShrink: 0 }}>
+                                            {!vtRoutine && (
+                                                <>
+                                                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.62rem', color: '#444', letterSpacing: '2px', marginBottom: 8 }}>MERIT REWARD</div>
+                                                    <div style={{ display: 'flex', gap: 7, marginBottom: 12 }}>
+                                                        {[50, 70, 100].map(t => (
+                                                            <button key={t} onClick={() => setViewTier(t)}
+                                                                style={{ flex: 1, padding: '10px 0', background: viewTier === t ? '#c5a059' : 'rgba(197,160,89,0.05)', border: `1px solid ${viewTier === t ? '#c5a059' : 'rgba(197,160,89,0.15)'}`, borderRadius: 8, color: viewTier === t ? '#000' : '#c5a059', fontFamily: "'Orbitron',sans-serif", fontSize: '0.88rem', fontWeight: viewTier === t ? 700 : 400, cursor: 'pointer' }}>
+                                                                {t}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <textarea value={viewNote} onChange={e => setViewNote(e.target.value)} placeholder="Note (optional)..." rows={2}
+                                                        style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.85rem', padding: '8px 12px', resize: 'none', outline: 'none', marginBottom: 12, lineHeight: 1.5, boxSizing: 'border-box' }} />
+                                                </>
+                                            )}
+                                            <div style={{ display: 'flex', gap: 10 }}>
+                                                <button disabled={vtBusy} onClick={() => handleReject(vt)}
+                                                    style={{ flex: 1, padding: '14px 0', background: 'rgba(255,51,51,0.07)', color: vtBusy ? '#333' : '#ff5555', border: '1px solid rgba(255,51,51,0.2)', borderRadius: 10, fontFamily: "'Cinzel',serif", fontSize: '0.76rem', fontWeight: 700, cursor: vtBusy ? 'default' : 'pointer' }}>
+                                                    {vtBusy ? '...' : '✕ REJECT'}
                                                 </button>
-                                                <button disabled={busy} onClick={() => handleReject(task)}
-                                                    style={{ flex: 1, padding: '12px 0', background: 'rgba(255,0,60,0.04)', color: '#ff003c', border: '1px solid rgba(255,0,60,0.3)', borderRadius: 3, fontFamily: "'Cinzel',serif", fontSize: '0.72rem', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.4 : 1 }}>
-                                                    {busy ? '...' : '✕ REJECT'}
+                                                <button disabled={vtBusy} onClick={() => handleApprove(vt, viewTier, viewNote)}
+                                                    style={{ flex: 2, padding: '14px 0', background: vtBusy ? '#111' : 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.06))', color: vtBusy ? '#333' : '#c5a059', border: `1px solid ${vtBusy ? '#222' : 'rgba(197,160,89,0.4)'}`, borderRadius: 10, fontFamily: "'Cinzel',serif", fontSize: '0.76rem', fontWeight: 700, letterSpacing: '2px', cursor: vtBusy ? 'default' : 'pointer' }}>
+                                                    {vtBusy ? 'PROCESSING...' : '✓ APPROVE'}
                                                 </button>
                                             </div>
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                );
+                                })()}
                             </div>
                         ) : (
                             /* ══ PROFILE TAB — uses same CSS classes as /profile mobile ══ */
