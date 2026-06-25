@@ -430,17 +430,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         onBack={() => { markPendingRead(); setSelectedUser(null); setProfileTab('chat'); loadData(); }}
                         adminEmail={userEmail}
                         onReviewed={() => loadData()}
-                        onOpenReview={(task) => {
-                            // iOS proxy trick: focus a hidden input synchronously within the gesture
-                            // so iOS shows the keyboard; modal's useEffect transfers focus to textarea
-                            const proxy = document.createElement('input');
-                            proxy.type = 'text';
-                            proxy.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;';
-                            document.body.appendChild(proxy);
-                            proxy.focus();
-                            (window as any).__reviewFocusProxy = proxy;
-                            setRootReviewTask(task);
-                        }}
+                        onOpenReview={(task) => setRootReviewTask(task)}
                         onUserUpdated={(updated) => {
                             setSelectedUser(updated);
                             setUsers(prev => prev.map(u => u.memberId === updated.memberId ? updated : u));
@@ -451,15 +441,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         stats={stats}
                         onSelectUser={(u) => { setSelectedUser(u); setProfileTab('tasks'); }}
                         onRefresh={loadData}
-                        onOpenReview={(task) => {
-                            const proxy = document.createElement('input');
-                            proxy.type = 'text';
-                            proxy.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;';
-                            document.body.appendChild(proxy);
-                            proxy.focus();
-                            (window as any).__reviewFocusProxy = proxy;
-                            setRootReviewTask(task);
-                        }}
+                        onOpenReview={(task) => setRootReviewTask(task)}
                         onGoToReviews={() => setTab('home')} />
                 ) : tab === 'subjects' ? (
                     <SubjectsView
@@ -603,6 +585,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 const rtMid = (rt.member_id || '').toLowerCase();
                 const rtUser = users.find(u => u.memberId.toLowerCase() === rtMid);
                 const rtProof = rt.proofUrl || rt.proof_url;
+                const rtThumb = rt.thumbnail_url || rt.thumbnailUrl || '';
                 const rtVideo = !!(rtProof && ((rt.proofType && (rt.proofType === 'video' || rt.proofType.startsWith('video/'))) || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(rtProof)));
                 const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
                 const rtRoutine = !!(rt.isRoutine || rt.category === 'Routine' || rt.text === 'Daily Routine');
@@ -649,6 +632,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     <TaskReviewModal
                         proofUrl={rtProof}
                         isVideo={rtVideo}
+                        thumbnailUrl={rtThumb}
                         name={rt.memberName || rtUser?.name || 'Unknown'}
                         avatar={rt.avatarUrl || rtUser?.avatar || '/collar-placeholder.png'}
                         rank={rtUser?.rank}
@@ -1790,30 +1774,25 @@ function DailyCodeBadge() {
     );
 }
 
-function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
-    proofUrl?: string; isVideo: boolean; name: string; avatar: string; rank?: string;
+function TaskReviewModal({ proofUrl, isVideo, thumbnailUrl, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
+    proofUrl?: string; isVideo: boolean; thumbnailUrl?: string; name: string; avatar: string; rank?: string;
     text: string; isRoutine: boolean; busy: boolean;
     onClose: () => void; onApprove: (tier: number, note: string) => void; onReject: (note: string) => void;
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
-    // Use proof URL as-is — it's already signed by signQueueItems during data load
-    const [displayUrl] = useState(() => proofUrl || '');
+    // Use proof URL as-is — already signed by signQueueItems during data load
+    const displayUrl = proofUrl || '';
+    const posterUrl = thumbnailUrl || '';
     const tiers = [50, 70, 100];
-    const noteRef = useRef<HTMLTextAreaElement>(null);
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
 
-    // Auto-focus note field when modal opens (skip for routine — no note shown)
-    // iOS trick: proxy input was focused synchronously in the tap handler to capture the keyboard.
-    // useEffect fires after DOM commit — noteRef is populated, proxy is still focused (keyboard open).
-    // Calling focus() here transfers keyboard from proxy to textarea without dismissing it.
+    // Clean up any proxy input left by caller (don't auto-focus — user wants to see proof first)
     useEffect(() => {
-        if (isRoutine) return;
-        noteRef.current?.focus();
         const proxy = (window as any).__reviewFocusProxy;
         if (proxy) { proxy.remove(); delete (window as any).__reviewFocusProxy; }
-    }, [isRoutine]);
+    }, []);
     const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; };
     const handleTouchEnd = (e: React.TouchEvent) => {
         const dx = e.changedTouches[0].clientX - touchStartX.current;
@@ -1838,7 +1817,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                 {displayUrl ? (
                     isVideo ? (
-                        <video src={displayUrl} controls autoPlay playsInline style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} onError={(e) => { const t = e.target as HTMLVideoElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} />
+                        <video src={displayUrl} controls playsInline preload="metadata" poster={posterUrl || undefined} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} onError={(e) => { const t = e.target as HTMLVideoElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} />
                     ) : (
                         <img src={displayUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
                     )
@@ -1862,7 +1841,7 @@ function TaskReviewModal({ proofUrl, isVideo, name, avatar, rank, text, isRoutin
                                 </button>
                             ))}
                         </div>
-                        <textarea ref={noteRef} value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)..." rows={2}
+                        <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Note (optional)..." rows={2}
                             style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', padding: '8px 12px', resize: 'none', outline: 'none', marginBottom: 12, lineHeight: 1.5, boxSizing: 'border-box' }} />
                     </>
                 )}
