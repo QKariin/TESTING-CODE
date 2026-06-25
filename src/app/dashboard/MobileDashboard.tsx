@@ -183,7 +183,13 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     reviewQueue: u.reviewQueue || [],
                     lastMessageTime: unread[(u.memberId || '').toLowerCase()] || null,
                     lastSeen: u.lastSeen || null,
-                    hasActiveTask: !!u.activeTask,
+                    hasActiveTask: (() => {
+                        if (!u.activeTask) return false;
+                        let et = u.endTime || u.activeTask?.endTime || null;
+                        if (!et && u.activeTask?.assigned_at) et = new Date(u.activeTask.assigned_at).getTime() + (24 * 60 * 60 * 1000);
+                        const isPending = u.pendingState === 'PENDING' || u.taskdom_pending_state === 'PENDING';
+                        return !et || et > Date.now() || isPending;
+                    })(),
                 }));
                 setUsers(mapped);
             }
@@ -256,7 +262,16 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                         ...prev,
                         wallet: typeof data.wallet === 'number' ? data.wallet : prev.wallet,
                         score: typeof data.score === 'number' ? data.score : (typeof data.points === 'number' ? data.points : prev.score),
-                        hasActiveTask: !!data.activeTask,
+                        hasActiveTask: (() => {
+                            if (!data.activeTask) return false;
+                            // Match desktop logic: check if endTime has expired
+                            let et = data.endTime || data.activeTask?.endTime || null;
+                            if (!et && data.activeTask?.assigned_at) {
+                                et = new Date(data.activeTask.assigned_at).getTime() + (24 * 60 * 60 * 1000);
+                            }
+                            const isPending = data.pendingState === 'PENDING' || data.taskdom_pending_state === 'PENDING';
+                            return !et || et > Date.now() || isPending;
+                        })(),
                         parameters: {
                             ...prev.parameters,
                             ...data.parameters,
@@ -656,7 +671,7 @@ function dedupeQueue(queue: any[]): any[] {
 }
 
 function stripHtml(s: string): string {
-    return (s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+    return (s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function HomeView({ users, globalQueue, dailyCode, challenges, stats, onSelectUser, onRefresh, onOpenReview, onGoToReviews }: {
@@ -1967,7 +1982,7 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
 
     // Active task details
     const activeTask = user.parameters?.activeTask || user.parameters?.taskdom_active_task;
-    const activeTaskText = activeTask?.text || activeTask?.TaskText || activeTask?.tasktext || activeTask?.taskName || '';
+    const activeTaskText = stripHtml(activeTask?.text || activeTask?.TaskText || activeTask?.tasktext || activeTask?.taskName || '');
     const taskEndTime = user.parameters?.endTime || activeTask?.endTime || null;
 
     // Inventory counts
