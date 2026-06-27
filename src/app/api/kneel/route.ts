@@ -10,9 +10,11 @@ export const dynamic = "force-dynamic";
 
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000; // 1 min dev / 60 min prod
 
-const TASK_FIELDS = '"ID", lastWorship, kneelCount, "today kneeling", kneel_history, member_id';
+const TASK_FIELDS = '"ID", lastWorship, kneelCount, "today kneeling", kneel_history, member_id, "Score", "Daily Score", "Weekly Score", "Monthly Score", "Yearly Score"';
 
 // Resolve the tasks row. Returns { task, taskId (UUID), taskEmail }.
+// When found by email fallback, auto-fixes the task ID to match the profile UUID
+// so we never create duplicate rows with NULL scores.
 async function getTaskRow(memberId: string): Promise<{ task: any; taskId: string; taskEmail: string }> {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
 
@@ -25,7 +27,16 @@ async function getTaskRow(memberId: string): Promise<{ task: any; taskId: string
         const { data: profile } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
         if (profile?.member_id) {
             const { data: row } = await supabaseAdmin.from('tasks').select(TASK_FIELDS).ilike('member_id', profile.member_id).maybeSingle();
-            if (row) return { task: row, taskId: memberId, taskEmail: profile.member_id };
+            if (row) {
+                // FIX ID MISMATCH: update the task row's ID to match the profile UUID
+                // so future lookups find it directly and we never create duplicates
+                if (row.ID !== memberId) {
+                    console.log(`[kneel] Fixing tasks ID mismatch: ${row.ID} → ${memberId} for ${profile.member_id}`);
+                    await supabaseAdmin.from('tasks').update({ ID: memberId }).eq('ID', row.ID);
+                    row.ID = memberId;
+                }
+                return { task: row, taskId: memberId, taskEmail: profile.member_id };
+            }
         }
         return { task: null, taskId: memberId, taskEmail: profile?.member_id || '' };
     } else {
@@ -86,12 +97,18 @@ export async function POST(req: Request) {
         kneelHistory.push(now.toISOString());
 
         // Upsert by ID (UUID primary key)
+        // IMPORTANT: include score columns from existing row so INSERT never creates NULL scores
         const upsertPayload: any = {
             ID: taskId,
             member_id: taskEmail,
             lastWorship: now.toISOString(),
             kneelCount: String(newKneelCount),
             'today kneeling': String(newTodayKneeling),
+            'Score': task?.['Score'] ?? 0,
+            'Daily Score': task?.['Daily Score'] ?? 0,
+            'Weekly Score': task?.['Weekly Score'] ?? 0,
+            'Monthly Score': task?.['Monthly Score'] ?? 0,
+            'Yearly Score': task?.['Yearly Score'] ?? 0,
         };
 
         if (kneelHistory.length > 0) upsertPayload.kneel_history = kneelHistory;
@@ -108,6 +125,11 @@ export async function POST(req: Request) {
                 lastWorship: now.toISOString(),
                 kneelCount: String(newKneelCount),
                 'today kneeling': String(newTodayKneeling),
+                'Score': task?.['Score'] ?? 0,
+                'Daily Score': task?.['Daily Score'] ?? 0,
+                'Weekly Score': task?.['Weekly Score'] ?? 0,
+                'Monthly Score': task?.['Monthly Score'] ?? 0,
+                'Yearly Score': task?.['Yearly Score'] ?? 0,
             }, { onConflict: '"ID"' });
             if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
         }

@@ -88,6 +88,8 @@ export async function POST(req: Request) {
                 console.error(`- UPDATE ERROR:`, uError);
                 return NextResponse.json({ success: false, error: 'Failed to update profile ID' }, { status: 500 });
             }
+            // Also sync tasks table ID so kneeling/scores don't create duplicate rows
+            await supabaseAdmin.from('tasks').update({ ID: user.id }).eq('ID', legacy.ID);
             return NextResponse.json({ success: true, linked: true });
         }
 
@@ -109,6 +111,7 @@ export async function POST(req: Request) {
                 if (prof) {
                     console.log(`- Strategy C FINAL MATCH in profiles: ${prof.ID}. Linking to ${user.id}`);
                     await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', prof.ID);
+                    await supabaseAdmin.from('tasks').update({ ID: user.id }).eq('ID', prof.ID);
                     return NextResponse.json({ success: true, linked: true });
                 } else if (cError && cError.code !== 'PGRST116') {
                     console.error(`- Strategy C PROFILE_ERROR:`, cError);

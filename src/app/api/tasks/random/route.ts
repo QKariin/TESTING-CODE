@@ -78,15 +78,29 @@ export async function GET(req: NextRequest) {
 
         const randomTask = tasks?.[0];
 
-        // 4. Assign it efficiently reusing our profile fetch
+        // 4. Assign it — use UPDATE if row exists, INSERT only as fallback
         const activeTaskPayload = { ...randomTask, assigned_at: new Date().toISOString() };
+        const taskUpdate = { taskdom_active_task: JSON.stringify(activeTaskPayload) };
+        const profileId = profile?.ID || memberEmail;
 
-        await supabaseAdmin.from('tasks').upsert({
-            ID: profile?.ID || memberEmail,
-            member_id: profile?.member_id || memberEmail,
-            Name: profile?.name || memberEmail,
-            taskdom_active_task: JSON.stringify(activeTaskPayload)
-        }, { onConflict: '"ID"' });
+        // Try UPDATE first (preserves all existing columns including scores)
+        const { data: updated } = await supabaseAdmin.from('tasks')
+            .update(taskUpdate).eq('ID', profileId).select('ID').maybeSingle();
+        if (!updated) {
+            // No row with this ID — try by email
+            const { data: updated2 } = await supabaseAdmin.from('tasks')
+                .update(taskUpdate).ilike('member_id', profile?.member_id || memberEmail).select('ID').maybeSingle();
+            if (!updated2) {
+                // Truly new — INSERT (scores will be 0, not NULL)
+                await supabaseAdmin.from('tasks').insert({
+                    ID: profileId,
+                    member_id: profile?.member_id || memberEmail,
+                    Name: profile?.name || memberEmail,
+                    ...taskUpdate,
+                    'Score': 0, 'Daily Score': 0, 'Weekly Score': 0, 'Monthly Score': 0, 'Yearly Score': 0,
+                });
+            }
+        }
 
         return NextResponse.json({
             success: true,
