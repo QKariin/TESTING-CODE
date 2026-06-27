@@ -36,10 +36,6 @@ export async function GET(req: Request) {
     }
 
     const now = new Date().toISOString();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     for (const ur of stale) {
         const history: any[] = ur.history || [];
@@ -52,11 +48,21 @@ export async function GET(req: Request) {
             history[pendingIdx].points_awarded = 50;
         }
 
-        // Calculate streak
+        // Use the entry's date (stored in user's timezone at submission time)
+        // This ensures streaks work regardless of cron timing or user timezone
+        const entryDate = pendingIdx > -1 ? history[pendingIdx].date : null;
+        const approvedDate = entryDate || new Date().toISOString().split('T')[0];
+
+        // Calculate streak using user-tz dates (entry.date + last_approved_date are both in user's tz)
         const lastApproved = ur.last_approved_date;
         let newStreak = 1;
-        if (lastApproved === yesterdayStr || lastApproved === todayStr) {
-            newStreak = (ur.current_streak || 0) + 1;
+        if (lastApproved && approvedDate) {
+            const last = new Date(lastApproved + 'T12:00:00');
+            const current = new Date(approvedDate + 'T12:00:00');
+            const diffDays = Math.round((current.getTime() - last.getTime()) / (86400000));
+            if (diffDays === 0 || diffDays === 1) {
+                newStreak = (ur.current_streak || 0) + 1;
+            }
         }
         const newBest = Math.max(newStreak, ur.best_streak || 0);
 
@@ -66,7 +72,7 @@ export async function GET(req: Request) {
                 history,
                 current_streak: newStreak,
                 best_streak: newBest,
-                last_approved_date: todayStr,
+                last_approved_date: approvedDate,
                 pending_id: null,
                 pending_proof_url: null,
                 pending_proof_type: null,

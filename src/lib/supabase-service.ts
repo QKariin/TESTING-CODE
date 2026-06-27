@@ -342,7 +342,6 @@ export const DbService = {
         if (userRoutine) {
             // ── ROUTINE APPROVAL ──
             const now = new Date().toISOString();
-            const todayStr = new Date().toISOString().split('T')[0];
             const history: any[] = userRoutine.history || [];
 
             // Update the pending entry in history to approved
@@ -353,15 +352,21 @@ export const DbService = {
                 history[pendingIdx].points_awarded = bonus;
             }
 
-            // Calculate new streak
-            const lastApproved = userRoutine.last_approved_date;
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            // Use the entry's date (stored in user's timezone at submission time)
+            // This ensures streaks work regardless of when/where approval happens
+            const entryDate = pendingIdx > -1 ? history[pendingIdx].date : null;
+            const approvedDate = entryDate || new Date().toISOString().split('T')[0];
 
+            // Calculate new streak using user-tz dates (entry.date + last_approved_date are both in user's tz)
+            const lastApproved = userRoutine.last_approved_date;
             let newStreak = 1;
-            if (lastApproved === yesterdayStr || lastApproved === todayStr) {
-                newStreak = (userRoutine.current_streak || 0) + 1;
+            if (lastApproved && approvedDate) {
+                const last = new Date(lastApproved + 'T12:00:00');
+                const current = new Date(approvedDate + 'T12:00:00');
+                const diffDays = Math.round((current.getTime() - last.getTime()) / (86400000));
+                if (diffDays === 0 || diffDays === 1) {
+                    newStreak = (userRoutine.current_streak || 0) + 1;
+                }
             }
             const newBest = Math.max(newStreak, userRoutine.best_streak || 0);
 
@@ -371,7 +376,7 @@ export const DbService = {
                     history,
                     current_streak: newStreak,
                     best_streak: newBest,
-                    last_approved_date: todayStr,
+                    last_approved_date: approvedDate,
                     pending_id: null,
                     pending_proof_url: null,
                     pending_proof_type: null,

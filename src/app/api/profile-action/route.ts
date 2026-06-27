@@ -64,15 +64,13 @@ export async function POST(req: Request) {
                         .eq('member_id', routineEmail)
                         .maybeSingle();
                     if (existingRoutine) {
-                        // Compare using BOTH UTC date and sub's local date to catch all cases
+                        // Compare using user's LOCAL timezone only — UTC comparisons break for users ahead/behind
                         const now0 = new Date();
                         const todayLocal = now0.toLocaleDateString('en-CA', { timeZone: routineTz });
-                        const todayUTC = now0.toISOString().split('T')[0];
                         // Check pending submission (still waiting for approval)
                         if (existingRoutine.pending_submitted_at) {
                             const pendingLocal = new Date(existingRoutine.pending_submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
-                            const pendingUTC = new Date(existingRoutine.pending_submitted_at).toISOString().split('T')[0];
-                            if (pendingLocal === todayLocal || pendingUTC === todayUTC) {
+                            if (pendingLocal === todayLocal) {
                                 return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
                             }
                         }
@@ -80,10 +78,9 @@ export async function POST(req: Request) {
                         if (existingRoutine.history && Array.isArray(existingRoutine.history)) {
                             for (const entry of existingRoutine.history) {
                                 try {
-                                    // entry.date is stored in UTC, submitted_at is ISO string
-                                    const entryDateUTC = entry.date || new Date(entry.submitted_at).toISOString().split('T')[0];
-                                    const entryDateLocal = new Date(entry.submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
-                                    if (entryDateUTC === todayUTC || entryDateLocal === todayLocal) {
+                                    // entry.date is stored in user's timezone at submission time
+                                    const entryDateLocal = entry.date || new Date(entry.submitted_at).toLocaleDateString('en-CA', { timeZone: routineTz });
+                                    if (entryDateLocal === todayLocal) {
                                         return NextResponse.json({ error: 'Routine already submitted today', success: false }, { status: 400 });
                                     }
                                 } catch {}
