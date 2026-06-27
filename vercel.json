@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/auto-approve-routines",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/video-challenge-windows",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
