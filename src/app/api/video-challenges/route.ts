@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { discordVideoChallengeCreated } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,11 @@ export async function POST(req: Request) {
 
         const { error: tErr } = await supabaseAdmin.from('video_challenge_tasks').insert(taskRows);
         if (tErr) throw tErr;
+
+        // Discord notification with banner image
+        try {
+            await discordVideoChallengeCreated(name, taskRows.length, Number(window_minutes), image_url || null);
+        } catch (_) {}
 
         return NextResponse.json({ success: true, challenge, task_count: taskRows.length });
     } catch (err: any) {

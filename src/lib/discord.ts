@@ -228,6 +228,21 @@ export function discordQueenVideo(thumbnailUrl?: string | null) {
     });
 }
 
+export function discordVideoChallengeCreated(name: string, taskCount: number, windowMinutes: number, imageUrl?: string | null) {
+    return sendDiscordEmbed({
+        title: 'NEW VIDEO CHALLENGE',
+        description: `A new video challenge has been created: **${name}**\n\n${taskCount} video tasks · ${windowMinutes}min windows\n\n[Join now](${APP_LINK}/profile)`,
+        color: 11163391, // purple
+        fields: [
+            { name: 'Tasks', value: `${taskCount}`, inline: true },
+            { name: 'Window', value: `${windowMinutes}min`, inline: true },
+        ],
+        image: imageUrl
+            ? { url: imageUrl }
+            : { url: cardUrl('challenge', 'NEW VIDEO CHALLENGE', name, `${taskCount} tasks · ${windowMinutes}min windows`) },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number, itemImage?: string | null) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',
