@@ -428,22 +428,92 @@ function ReviewQueue({ challenges, showToast, onRefresh }: { challenges: any[]; 
     );
 }
 
+// ─── FILE UPLOAD HELPER ──────────────────────────────────────────────────────
+async function uploadFile(file: File, folder: string): Promise<string> {
+    const ext = file.name.split('.').pop() || 'mp4';
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const res = await fetch('/api/upload/signed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bucket: 'media', path }),
+    });
+    const json = await res.json();
+    if (!json.signedUrl) throw new Error(json.error || 'Failed to get upload URL');
+    const up = await fetch(json.signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+    if (!up.ok) throw new Error('Upload failed');
+    return json.publicUrl;
+}
+
+// ─── UPLOAD BUTTON COMPONENT ────────────────────────────────────────────────
+function UploadButton({ label, accept, value, onChange, uploading, setUploading, showToast }: {
+    label: string; accept: string; value: string;
+    onChange: (url: string) => void; uploading: boolean; setUploading: (v: boolean) => void;
+    showToast: (m: string, t: 'success' | 'error') => void;
+}) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const isVideo = accept.includes('video');
+    const fileName = value ? decodeURIComponent(value.split('/').pop()?.split('?')[0] || '').slice(14) : '';
+
+    const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const url = await uploadFile(file, isVideo ? 'video-challenges' : 'video-challenge-images');
+            onChange(url);
+        } catch (err: any) { showToast(err.message || 'Upload failed', 'error'); }
+        finally { setUploading(false); if (inputRef.current) inputRef.current.value = ''; }
+    };
+
+    return (
+        <div>
+            <input ref={inputRef} type="file" accept={accept} style={{ display: 'none' }} onChange={handleFile} />
+            {value ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ flex: 1, padding: '10px 16px', background: 'rgba(22,163,74,0.04)', border: '1px solid rgba(22,163,74,0.15)', borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <span style={{ color: '#16a34a', fontSize: '0.9rem' }}>{isVideo ? '▶' : '◻'}</span>
+                        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.85rem', color: '#16a34a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName || 'Uploaded'}</span>
+                    </div>
+                    <button onClick={() => onChange('')} style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)', borderRadius: 10, padding: '8px 14px', color: '#dc2626', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '1px', flexShrink: 0 }}>REMOVE</button>
+                </div>
+            ) : (
+                <button onClick={() => inputRef.current?.click()} disabled={uploading}
+                    style={{ width: '100%', padding: '18px 16px', background: uploading ? '#f0efed' : '#faf9f7', border: '2px dashed rgba(168,85,247,0.2)', borderRadius: 14, color: uploading ? '#aaa' : '#a855f7', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '2px', cursor: uploading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.25s' }}
+                    onMouseEnter={e => { if (!uploading) { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)'; e.currentTarget.style.background = 'rgba(168,85,247,0.03)'; } }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; e.currentTarget.style.background = '#faf9f7'; }}>
+                    {uploading ? 'UPLOADING...' : label}
+                </button>
+            )}
+        </div>
+    );
+}
+
 // ─── CREATE FORM ─────────────────────────────────────────────────────────────
 function CreateForm({ showToast, onCreated }: { showToast: (m: string, t: 'success' | 'error') => void; onCreated: () => void }) {
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [form, setForm] = useState({
-        name: '', topic: '', items_needed: '',
+        name: '', topic: '',
         tier_video_url: '', image_url: '',
         scheduling_mode: 'on_request',
         duration_days: 7, window_minutes: 60,
         min_tier: '', join_cost: 0, rejoin_cost: 0,
         points_per_task: 100, theme: 'default',
     });
+    const [items, setItems] = useState<string[]>([]);
+    const [itemInput, setItemInput] = useState('');
     const [tasks, setTasks] = useState<{ video_url: string; title: string; description: string }[]>([
         { video_url: '', title: '', description: '' },
     ]);
+    const imageInputRef = useRef<HTMLInputElement>(null);
 
     const set = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }));
+
+    const addItem = () => {
+        const trimmed = itemInput.trim();
+        if (trimmed && !items.includes(trimmed)) { setItems(i => [...i, trimmed]); setItemInput(''); }
+    };
+    const removeItem = (idx: number) => setItems(i => i.filter((_, j) => j !== idx));
 
     const addTask = () => setTasks(t => [...t, { video_url: '', title: '', description: '' }]);
     const removeTask = (i: number) => setTasks(t => t.filter((_, idx) => idx !== i));
@@ -451,10 +521,21 @@ function CreateForm({ showToast, onCreated }: { showToast: (m: string, t: 'succe
         setTasks(t => t.map((task, idx) => idx === i ? { ...task, [key]: val } : task));
     };
 
+    const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const url = await uploadFile(file, 'video-challenge-images');
+            set('image_url', url);
+        } catch (err: any) { showToast(err.message || 'Upload failed', 'error'); }
+        finally { setUploading(false); if (imageInputRef.current) imageInputRef.current.value = ''; }
+    };
+
     const handleCreate = async () => {
         if (!form.name) return showToast('Name is required', 'error');
         const validTasks = tasks.filter(t => t.video_url.trim());
-        if (validTasks.length === 0) return showToast('At least one task with a video URL is required', 'error');
+        if (validTasks.length === 0) return showToast('At least one task with a video is required', 'error');
 
         setSaving(true);
         try {
@@ -463,6 +544,7 @@ function CreateForm({ showToast, onCreated }: { showToast: (m: string, t: 'succe
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...form,
+                    items_needed: items.length > 0 ? items.join('|||') : '',
                     duration_days: Number(form.duration_days),
                     window_minutes: Number(form.window_minutes),
                     join_cost: Number(form.join_cost),
@@ -478,129 +560,210 @@ function CreateForm({ showToast, onCreated }: { showToast: (m: string, t: 'succe
         } finally { setSaving(false); }
     };
 
+    const PINK = '#a855f7';
+    const gradMain = `linear-gradient(135deg, #a855f7, #6d28d9)`;
+    const card: React.CSSProperties = { background: '#fff', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 20, padding: 28, marginBottom: 14, boxShadow: '0 2px 16px rgba(0,0,0,0.04)' };
+
+    const Divider = ({ label }: { label: string }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+            <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.15))' }} />
+            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(168,85,247,0.5)', letterSpacing: '4px' }}>{label}</div>
+            <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(109,40,217,0.15), transparent)' }} />
+        </div>
+    );
+
+    const themes = [
+        { key: 'default', label: 'GOLD' }, { key: 'red', label: 'RED' },
+        { key: 'purple', label: 'PURPLE' }, { key: 'blue', label: 'BLUE' },
+    ];
+
     return (
-        <div style={{ padding: 24, maxWidth: 700 }}>
-            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#c5a059', letterSpacing: '2px', marginBottom: 20 }}>CREATE VIDEO CHALLENGE</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, position: 'relative', background: '#f8f7f5', borderRadius: 24, padding: '32px 24px', margin: '-12px -12px 0', overflowY: 'auto', maxHeight: '100%' }}>
+            <style>{`
+                .vc-input { background: #f0efed; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; color: #1a1a1a; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; padding: 14px 18px; width: 100%; outline: none; transition: all 0.25s; box-sizing: border-box; }
+                .vc-input:focus { border-color: rgba(168,85,247,0.35); box-shadow: 0 0 0 3px rgba(168,85,247,0.06); background: #fff; }
+                .vc-input::placeholder { color: rgba(0,0,0,0.25); }
+                .vc-select { background: #f0efed; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; color: #1a1a1a; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; padding: 14px 18px; width: 100%; outline: none; transition: all 0.25s; box-sizing: border-box; appearance: auto; }
+                .vc-num::-webkit-inner-spin-button, .vc-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+                .vc-num[type=number] { -moz-appearance: textfield; }
+                .vc-num { background: transparent; border: none; border-bottom: 2px solid rgba(0,0,0,0.08); color: #1a1a1a; font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; text-align: center; padding: 6px 4px; width: 100%; outline: none; transition: border-color 0.2s; }
+                .vc-num:focus { border-bottom-color: rgba(168,85,247,0.5); }
+            `}</style>
 
-            {/* Basic fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div className="ch-field">
-                    <label className="ch-label">NAME</label>
-                    <input className="ch-input" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Edge Training 101" />
-                </div>
-                <div className="ch-field">
-                    <label className="ch-label">TOPIC / DESCRIPTION</label>
-                    <textarea className="ch-input" value={form.topic} onChange={e => set('topic', e.target.value)} placeholder="What this challenge is about..." rows={2} style={{ resize: 'vertical' }} />
-                </div>
-                <div className="ch-field">
-                    <label className="ch-label">ITEMS NEEDED</label>
-                    <textarea className="ch-input" value={form.items_needed} onChange={e => set('items_needed', e.target.value)} placeholder="What users need to prepare..." rows={2} style={{ resize: 'vertical' }} />
-                </div>
+            {/* HEADER */}
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: 'clamp(1.6rem, 4.5vw, 2.2rem)', background: gradMain, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '8px', fontWeight: 600 }}>FORGE</div>
+                <div style={{ width: 80, height: 2, background: gradMain, margin: '10px auto 0', borderRadius: 1, boxShadow: '0 0 12px rgba(168,85,247,0.3)' }} />
+                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', fontWeight: 500, color: '#999', marginTop: 8, letterSpacing: '3px' }}>CREATE A VIDEO CHALLENGE</div>
+            </div>
 
-                <div className="ch-form-grid">
-                    <div className="ch-field">
-                        <label className="ch-label">TIER VIDEO URL (preview)</label>
-                        <input className="ch-input" value={form.tier_video_url} onChange={e => set('tier_video_url', e.target.value)} placeholder="https://..." />
+            {/* IDENTITY */}
+            <div style={card}>
+                <Divider label="IDENTITY" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 24, alignItems: 'start' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <input className="vc-input" placeholder="Challenge name..." value={form.name} onChange={e => set('name', e.target.value)} style={{ fontSize: '1.15rem', fontFamily: "'Cinzel', serif", letterSpacing: '2px' }} />
+                        <textarea className="vc-input" placeholder="Topic / description..." value={form.topic} onChange={e => set('topic', e.target.value)} rows={3} style={{ resize: 'none' }} />
                     </div>
-                    <div className="ch-field">
-                        <label className="ch-label">BANNER IMAGE URL</label>
-                        <input className="ch-input" value={form.image_url} onChange={e => set('image_url', e.target.value)} placeholder="https://..." />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+                        <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
+                        <div onClick={() => !uploading && imageInputRef.current?.click()} style={{ width: 120, height: 120, borderRadius: 18, border: form.image_url ? 'none' : '2px dashed rgba(168,85,247,0.2)', background: form.image_url ? 'transparent' : '#f0efed', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', transition: 'all 0.3s' }}>
+                            {form.image_url ? (
+                                <>
+                                    <img src={form.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                    <button type="button" onClick={e => { e.stopPropagation(); set('image_url', ''); }} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>x</button>
+                                </>
+                            ) : (
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '1.6rem', background: gradMain, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 4 }}>+</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#bbb', letterSpacing: '2px' }}>COVER</div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-
-                {/* Config */}
-                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '2px', marginTop: 8 }}>CONFIGURATION</div>
-
-                <div className="ch-field">
-                    <label className="ch-label">SCHEDULING MODE</label>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                        {(['scheduled', 'on_request'] as const).map(mode => (
-                            <button key={mode} onClick={() => set('scheduling_mode', mode)}
-                                style={{ padding: '8px 20px', background: form.scheduling_mode === mode ? 'rgba(197,160,89,0.15)' : 'rgba(0,0,0,0.3)', border: `1px solid ${form.scheduling_mode === mode ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, color: form.scheduling_mode === mode ? '#c5a059' : '#666', fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', letterSpacing: '1px', cursor: 'pointer' }}>
-                                {mode === 'scheduled' ? 'SCHEDULED' : 'ON REQUEST'}
+                {/* Theme colors */}
+                <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'center' }}>
+                    {themes.map(t => {
+                        const active = form.theme === t.key;
+                        const c = themeColor(t.key);
+                        return (
+                            <button key={t.key} type="button" onClick={() => set('theme', t.key)} style={{ width: 34, height: 34, borderRadius: '50%', padding: 0, cursor: 'pointer', border: `2.5px solid ${active ? c : 'rgba(0,0,0,0.08)'}`, background: active ? `radial-gradient(circle, ${c}25, transparent)` : '#f5f4f2', transition: 'all 0.25s', boxShadow: active ? `0 0 12px ${c}40` : 'none' }}>
+                                <div style={{ width: 12, height: 12, borderRadius: '50%', background: c, margin: 'auto' }} />
                             </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* ITEMS NEEDED */}
+            <div style={card}>
+                <Divider label="ITEMS NEEDED" />
+                {items.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                        {items.map((item, idx) => (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'linear-gradient(135deg, rgba(168,85,247,0.06), rgba(109,40,217,0.04))', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 24, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.88rem', color: '#555' }}>
+                                {item}
+                                <button onClick={() => removeItem(idx)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '0.75rem', padding: 0, lineHeight: 1, opacity: 0.6 }}>x</button>
+                            </div>
                         ))}
                     </div>
+                )}
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <input className="vc-input" value={itemInput} onChange={e => setItemInput(e.target.value)} placeholder="e.g. Rope, blindfold, ice cubes..." style={{ flex: 1 }}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } }} />
+                    <button onClick={addItem} disabled={!itemInput.trim()}
+                        style={{ padding: '12px 22px', background: itemInput.trim() ? gradMain : '#e8e7e5', border: 'none', borderRadius: 14, color: itemInput.trim() ? '#fff' : '#aaa', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', fontWeight: 700, cursor: itemInput.trim() ? 'pointer' : 'default', letterSpacing: '2px', flexShrink: 0, transition: 'all 0.25s' }}>
+                        ADD
+                    </button>
+                </div>
+            </div>
+
+            {/* TIER VIDEO */}
+            <div style={card}>
+                <Divider label="TIER VIDEO" />
+                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: '#aaa', marginBottom: 12 }}>Preview video shown to all users before they join</div>
+                <UploadButton label="UPLOAD TIER VIDEO" accept="video/*" value={form.tier_video_url}
+                    onChange={url => set('tier_video_url', url)} uploading={uploading} setUploading={setUploading} showToast={showToast} />
+            </div>
+
+            {/* SCHEDULING */}
+            <div style={card}>
+                <Divider label="SCHEDULING" />
+                <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+                    {(['scheduled', 'on_request'] as const).map(mode => {
+                        const active = form.scheduling_mode === mode;
+                        return (
+                            <button key={mode} onClick={() => set('scheduling_mode', mode)}
+                                style={{ flex: 1, padding: '18px 14px', borderRadius: 16, border: `2px solid ${active ? PINK : 'rgba(0,0,0,0.05)'}`, background: active ? 'linear-gradient(135deg, rgba(168,85,247,0.05), rgba(109,40,217,0.05))' : '#faf9f7', cursor: 'pointer', textAlign: 'center', transition: 'all 0.3s', boxShadow: active ? '0 4px 20px rgba(168,85,247,0.1)' : 'none' }}>
+                                <div style={{ fontSize: '1.2rem', color: active ? PINK : '#ccc', marginBottom: 6 }}>{mode === 'scheduled' ? '📅' : '🎯'}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', fontWeight: 700, color: active ? '#1a1a1a' : '#999', letterSpacing: '3px' }}>{mode === 'scheduled' ? 'SCHEDULED' : 'ON REQUEST'}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.68rem', color: '#aaa', lineHeight: 1.4, marginTop: 4 }}>{mode === 'scheduled' ? 'Fixed timeline, auto windows' : 'User requests next task'}</div>
+                            </button>
+                        );
+                    })}
                 </div>
 
-                <div className="ch-form-grid">
+                <div style={{ display: 'grid', gridTemplateColumns: form.scheduling_mode === 'scheduled' ? '1fr 1fr 1fr' : '1fr 1fr', gap: 20 }}>
                     {form.scheduling_mode === 'scheduled' && (
-                        <div className="ch-field">
-                            <label className="ch-label">DURATION (DAYS)</label>
-                            <input type="number" className="ch-input" min={1} value={form.duration_days} onChange={e => set('duration_days', e.target.value)} />
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#aaa', letterSpacing: '3px', marginBottom: 10 }}>DURATION</div>
+                            <input type="number" className="vc-num" min={1} value={form.duration_days} onChange={e => set('duration_days', e.target.value)} />
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>days</div>
                         </div>
                     )}
-                    <div className="ch-field">
-                        <label className="ch-label">WINDOW (MINUTES)</label>
-                        <input type="number" className="ch-input" min={1} value={form.window_minutes} onChange={e => set('window_minutes', e.target.value)} />
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#aaa', letterSpacing: '3px', marginBottom: 10 }}>WINDOW</div>
+                        <input type="number" className="vc-num" min={1} value={form.window_minutes} onChange={e => set('window_minutes', e.target.value)} />
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>minutes</div>
                     </div>
-                    <div className="ch-field">
-                        <label className="ch-label">POINTS PER TASK</label>
-                        <input type="number" className="ch-input" min={0} value={form.points_per_task} onChange={e => set('points_per_task', e.target.value)} />
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#aaa', letterSpacing: '3px', marginBottom: 10 }}>POINTS</div>
+                        <input type="number" className="vc-num" min={0} value={form.points_per_task} onChange={e => set('points_per_task', e.target.value)} />
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>per task</div>
                     </div>
                 </div>
+            </div>
 
-                <div className="ch-form-grid">
-                    <div className="ch-field">
-                        <label className="ch-label">MIN TIER REQUIRED</label>
-                        <select className="ch-input" value={form.min_tier} onChange={e => set('min_tier', e.target.value)}>
+            {/* ACCESS */}
+            <div style={card}>
+                <Divider label="ACCESS" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+                    <div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#aaa', letterSpacing: '3px', marginBottom: 8 }}>MIN TIER</div>
+                        <select className="vc-select" value={form.min_tier} onChange={e => set('min_tier', e.target.value)}>
                             <option value="">All Tiers</option>
                             {TIERS.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                     </div>
-                    <div className="ch-field">
-                        <label className="ch-label">THEME</label>
-                        <select className="ch-input" value={form.theme} onChange={e => set('theme', e.target.value)}>
-                            {['default', 'red', 'purple', 'blue'].map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
-                        </select>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#aaa', letterSpacing: '3px', marginBottom: 8 }}>JOIN COST</div>
+                        <input type="number" className="vc-num" min={0} value={form.join_cost} onChange={e => set('join_cost', e.target.value)} />
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>coins</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: '#aaa', letterSpacing: '3px', marginBottom: 8 }}>REJOIN COST</div>
+                        <input type="number" className="vc-num" min={0} value={form.rejoin_cost} onChange={e => set('rejoin_cost', e.target.value)} />
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#bbb', marginTop: 4 }}>coins</div>
                     </div>
                 </div>
+            </div>
 
-                <div className="ch-form-grid">
-                    <div className="ch-field">
-                        <label className="ch-label">JOIN COST (COINS)</label>
-                        <input type="number" className="ch-input" min={0} value={form.join_cost} onChange={e => set('join_cost', e.target.value)} />
-                    </div>
-                    <div className="ch-field">
-                        <label className="ch-label">REJOIN COST (COINS)</label>
-                        <input type="number" className="ch-input" min={0} value={form.rejoin_cost} onChange={e => set('rejoin_cost', e.target.value)} />
-                    </div>
-                </div>
-
-                {/* Tasks */}
-                <div style={{ marginTop: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#555', letterSpacing: '2px' }}>VIDEO TASKS ({tasks.length})</div>
-                        <button onClick={addTask} style={{ padding: '6px 16px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron', fontSize: '0.4rem', cursor: 'pointer', letterSpacing: '1px' }}>+ ADD TASK</button>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {tasks.map((task, i) => (
-                            <div key={i} className="ch-card" style={{ padding: '14px 16px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                    <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                                    <div style={{ flex: 1, fontFamily: 'Orbitron, monospace', fontSize: '0.36rem', color: '#666', letterSpacing: '1px' }}>TASK {i + 1}</div>
-                                    {tasks.length > 1 && (
-                                        <button onClick={() => removeTask(i)} style={{ background: 'none', border: '1px solid rgba(224,48,48,0.2)', borderRadius: 6, padding: '4px 10px', color: '#e03030', fontFamily: 'Orbitron', fontSize: '0.35rem', cursor: 'pointer' }}>REMOVE</button>
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    <input className="ch-input" placeholder="Video URL (Supabase Storage URL)" value={task.video_url} onChange={e => updateTask(i, 'video_url', e.target.value)} />
-                                    <input className="ch-input" placeholder="Task title (optional)" value={task.title} onChange={e => updateTask(i, 'title', e.target.value)} />
-                                    <input className="ch-input" placeholder="Description (optional)" value={task.description} onChange={e => updateTask(i, 'description', e.target.value)} />
-                                </div>
+            {/* VIDEO TASKS */}
+            <div style={card}>
+                <Divider label="VIDEO TASKS" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {tasks.map((task, i) => (
+                        <div key={i} style={{ background: '#faf9f7', border: '1px solid rgba(0,0,0,0.04)', borderRadius: 16, padding: '18px 20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 10, background: gradMain, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '1rem', color: '#fff', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                                <div style={{ flex: 1, fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', fontWeight: 600, color: '#999', letterSpacing: '2px' }}>TASK {i + 1}</div>
+                                {tasks.length > 1 && (
+                                    <button onClick={() => removeTask(i)} style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)', borderRadius: 10, padding: '6px 14px', color: '#dc2626', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '1px' }}>REMOVE</button>
+                                )}
                             </div>
-                        ))}
-                    </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                <UploadButton label="UPLOAD TASK VIDEO" accept="video/*" value={task.video_url}
+                                    onChange={url => updateTask(i, 'video_url', url)} uploading={uploading} setUploading={setUploading} showToast={showToast} />
+                                <input className="vc-input" placeholder="Task title (optional)" value={task.title} onChange={e => updateTask(i, 'title', e.target.value)} />
+                                <input className="vc-input" placeholder="Description (optional)" value={task.description} onChange={e => updateTask(i, 'description', e.target.value)} />
+                            </div>
+                        </div>
+                    ))}
                 </div>
+                <button onClick={addTask} style={{ width: '100%', marginTop: 14, padding: '16px', background: '#faf9f7', border: '2px dashed rgba(168,85,247,0.2)', borderRadius: 16, color: PINK, fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '3px', transition: 'all 0.25s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)'; e.currentTarget.style.background = 'rgba(168,85,247,0.03)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.2)'; e.currentTarget.style.background = '#faf9f7'; }}>
+                    + ADD TASK
+                </button>
+            </div>
 
-                {/* Submit */}
-                <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
-                    <button onClick={handleCreate} disabled={saving || !form.name}
-                        style={{ padding: '12px 32px', background: saving ? 'rgba(197,160,89,0.1)' : 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 8, color: saving ? '#555' : '#000', fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', letterSpacing: '2px', cursor: saving ? 'default' : 'pointer', fontWeight: 700 }}>
-                        {saving ? 'CREATING...' : 'CREATE CHALLENGE'}
-                    </button>
-                </div>
+            {/* SUBMIT */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8, marginBottom: 32 }}>
+                <button onClick={handleCreate} disabled={saving || uploading || !form.name}
+                    style={{ padding: '16px 48px', background: (saving || uploading) ? '#e8e7e5' : gradMain, border: 'none', borderRadius: 16, color: (saving || uploading) ? '#aaa' : '#fff', fontFamily: "'Cinzel', serif", fontSize: '1rem', letterSpacing: '4px', cursor: (saving || uploading) ? 'default' : 'pointer', fontWeight: 600, boxShadow: (saving || uploading) ? 'none' : '0 4px 24px rgba(168,85,247,0.3)', transition: 'all 0.3s' }}>
+                    {saving ? 'FORGING...' : uploading ? 'UPLOADING...' : 'FORGE'}
+                </button>
             </div>
         </div>
     );
