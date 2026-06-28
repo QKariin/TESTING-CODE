@@ -9,6 +9,7 @@ import '../../css/dashboard-mobile.css';
 import '../../css/profile-mobile.css';
 import MobileDashboard from './MobileDashboard';
 import { ChallengesContent } from './challenges/page';
+import { VideoChallengesContent } from './video-challenges/page';
 import { GlobalContent } from './GlobalContent';
 
 // Scripts
@@ -760,6 +761,7 @@ export default function DashboardPage() {
     const [challengeWidget, setChallengeWidget] = useState<{ name: string; theme: string; activeCount: number; totalCount: number; leader: string | null; isUpcoming?: boolean; startDate?: string; image_url?: string | null; description?: string; duration_days?: number; tasks_per_day?: number; window_minutes?: number; start_date_raw?: string } | null>(null);
     const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
     const [showChallenges, setShowChallenges] = useState(false);
+    const [showVideoChallenges, setShowVideoChallenges] = useState(false);
     const [showGlobal, setShowGlobal] = useState(false);
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const roleRef = useRef<'queen' | 'chatter'>('queen');
@@ -909,6 +911,7 @@ export default function DashboardPage() {
             // Wrapped with mobile nav sync
             (window as any).showHome = () => {
                 setShowChallenges(false);
+                setShowVideoChallenges(false);
                 setShowGlobal(false);
                 markPendingRead(); // leaving a chat - mark it as read now
                 showHome();
@@ -918,6 +921,7 @@ export default function DashboardPage() {
             };
             (window as any).showProfile = (id?: string) => {
                 setShowChallenges(false);
+                setShowVideoChallenges(false);
                 setShowGlobal(false);
                 if (!id) markPendingRead(); // navigating to Queen view - leaving chat
                 (showProfile as any)(id);
@@ -960,6 +964,7 @@ export default function DashboardPage() {
             (window as any).openProfileUpload = openProfileUpload;
             (window as any).showPosts = () => {
                 setShowChallenges(false);
+                setShowVideoChallenges(false);
                 setShowGlobal(false);
                 markPendingRead(); // leaving a chat - mark it as read now
                 showPosts();
@@ -1057,6 +1062,7 @@ export default function DashboardPage() {
                 (window as any).closeMobGlobal?.();
                 setShowGlobal(false);
                 setShowChallenges(false);
+                setShowVideoChallenges(false);
             };
         }
 
@@ -1427,11 +1433,11 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: "'Rajdhani', sans-serif", fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
                 </div>
-                <div onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showHome(); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
+                <div onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); (window as any).showHome(); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', flex: 1 }}>DASHBOARD</span>
                     <span style={{ fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }}>⌂</span>
                 </div>
-                <div onClick={() => { (window as any).showHome(); setShowChallenges(false); setShowGlobal(true); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: showGlobal ? 'rgba(197,160,89,0.08)' : 'transparent' }}>
+                <div onClick={() => { (window as any).showHome(); setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: showGlobal ? 'rgba(197,160,89,0.08)' : 'transparent' }}>
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.4)', letterSpacing: '3px', flex: 1 }}>GLOBAL</span>
                     <span style={{ fontSize: '0.8rem', color: showGlobal ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.2)' }}>⊕</span>
                 </div>
@@ -1446,6 +1452,13 @@ export default function DashboardPage() {
                 {showChallenges && (
                     <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
                         <ChallengesContent onClose={() => setShowChallenges(false)} />
+                    </div>
+                )}
+
+                {/* VIDEO CHALLENGES INLINE PANEL */}
+                {showVideoChallenges && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#04040e' }}>
+                        <VideoChallengesContent onClose={() => setShowVideoChallenges(false)} />
                     </div>
                 )}
 
@@ -1470,20 +1483,26 @@ export default function DashboardPage() {
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⌂</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: '#c5a059' }}>POSTS</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>✦</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(true); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showChallenges ? '#4ade80' : '#4ade8099' }}>CHALLENGES</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(74,222,128,0.12)', fontSize: '1.1rem' }}>⚔</div>
                             {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
+                            <div className="vs-info">
+                                <div className="vs-label" style={{ color: showVideoChallenges ? '#a855f7' : '#a855f799' }}>VIDEO</div>
+                            </div>
+                            <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.12)', fontSize: '1.1rem' }}>▶</div>
+                        </div>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.45)' }}>GLOBAL</div>
                             </div>
@@ -1592,7 +1611,7 @@ export default function DashboardPage() {
                                 </div>
 
                                 {/* ENTER GLOBAL — original card (chat route) */}
-                                <div className="v-best-sub glass-card span-1" onClick={() => { setShowChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
+                                <div className="v-best-sub glass-card span-1" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))', border: '1px solid rgba(197,160,89,0.22)', transition: 'border-color 0.2s' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(197,160,89,0.22)')}>
                                     <div className="vb-header">
                                         <div className="vb-title" style={{ fontFamily: "'Rajdhani', sans-serif", color: '#c5a059', letterSpacing: '2px' }}>GLOBAL</div>
                                         <div className="vb-sub">Community Hub</div>
@@ -2222,7 +2241,7 @@ export default function DashboardPage() {
                     <span className="mob-nav-icon">{'\u266B'}</span>
                     <span className="mob-nav-label">QUEEN</span>
                 </button>
-                <button className="mob-nav-btn" id="mobNavGlobal" onClick={() => { (window as any).openMobGlobal?.(); setShowChallenges(false); }}>
+                <button className="mob-nav-btn" id="mobNavGlobal" onClick={() => { (window as any).openMobGlobal?.(); setShowChallenges(false); setShowVideoChallenges(false); }}>
                     <span className="mob-nav-icon">{'\u25CE'}</span>
                     <span className="mob-nav-label">GLOBAL</span>
                 </button>
