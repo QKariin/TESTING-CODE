@@ -219,6 +219,19 @@ export async function POST(req: Request) {
             const bestStreak = Number(params.routine_streak || params.taskdom_current_streak || p.bestRoutinestreak || 0);
             const wallet = Number(p.wallet || 0);
 
+            // Today's kneeling data
+            const todayKneeling = Number(t?.['today kneeling'] || 0);
+            const lastWorship = t?.lastWorship ? new Date(t.lastWorship) : null;
+            const lastWorshipStr = lastWorship ? lastWorship.toLocaleString('en-GB', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', hour12: false, day: 'numeric', month: 'short' }) : 'never';
+            // Check if lastWorship is today
+            const now = new Date();
+            const isToday = lastWorship && lastWorship.toDateString() === now.toDateString();
+            const todayKneelDisplay = isToday ? todayKneeling : 0;
+
+            // Streak and routine
+            const currentStreak = Number(t?.Taskdom_Streak || 0);
+            const strikeCount = Number(t?.strikeCount || 0);
+
             // Determine loyalty level based on activity
             const totalActivity = completedTasks + kneels + merit;
             let loyalty = 'new member';
@@ -230,8 +243,11 @@ export async function POST(req: Request) {
             userContext = `\n\nYOU ARE TALKING TO: ${p.name || 'Unknown'}`;
             userContext += `\nCURRENT RANK: ${rank}`;
             userContext += `\nLOYALTY: ${loyalty}`;
-            userContext += `\nSTATS — LABOR: ${completedTasks} | ENDURANCE: ${kneels} | MERIT: ${merit} | SACRIFICE: ${coinsSpent} | CONSISTENCY: ${bestStreak} days`;
+            userContext += `\nSTATS — LABOR: ${completedTasks} tasks | ENDURANCE: ${kneels} total kneels | MERIT: ${merit} | SACRIFICE: ${coinsSpent} coins spent | CONSISTENCY: ${bestStreak} day best streak`;
+            userContext += `\nTODAY'S KNEELING: ${todayKneelDisplay} sessions today (goal is 8, max tracked is 24). Last kneel: ${lastWorshipStr}`;
+            userContext += `\nCURRENT STREAK: ${currentStreak} days | STRIKES: ${strikeCount}`;
             userContext += `\nWALLET: ${wallet} coins`;
+            userContext += `\nIMPORTANT: When asked about kneeling "today" or "right now", use the TODAY'S KNEELING data above. When asked about total kneeling, use ENDURANCE. Do NOT confuse today's count with the total count. If today's count is 0 and lastWorship is from a previous day, they have NOT knelt today yet.`;
             userContext += `\nTREAT THIS PERSON ACCORDINGLY. A loyal member deserves warmth and respect. A brand new member gets a friendlier welcome. Only roast someone you know can take it.`;
         }
 
