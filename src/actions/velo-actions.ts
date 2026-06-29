@@ -1283,6 +1283,9 @@ export async function checkExpiredTasks() {
 
             if (!activeTask?.endTime || activeTask.endTime >= now) continue;
 
+            // Admin-forced Directive tasks are never auto-expired — only admin can clear them
+            if (activeTask.category === 'Directive') continue;
+
             // Task has expired
             const memberId = taskRow.member_id;
             const taskText = activeTask.text || activeTask.TaskText || activeTask.tasktext || 'Unknown Task';

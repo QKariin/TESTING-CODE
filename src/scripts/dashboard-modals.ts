@@ -807,8 +807,8 @@ export function openTaskDetail(idx: number, source: 'queue' | 'directive', initi
                 <div class="gdm-item"><strong>LIMITS:</strong> ${limits}</div>
             </div>
             <div class="glass-detail-actions">
-                <button class="btn-glass enforce" onclick="window.showEnforceOptions('${encodeURIComponent(fullText)}')">ENFORCE</button>
-                <button class="btn-glass force" onclick="window.showForceOptions('${encodeURIComponent(fullText)}', ${source === 'queue' ? idx : -1})">FORCE NOW</button>
+                <button class="btn-glass enforce" onclick="window.showEnforceOptions('${encodeURIComponent(fullText).replace(/'/g, '%27')}')">ENFORCE</button>
+                <button class="btn-glass force" onclick="window.showForceOptions('${encodeURIComponent(fullText).replace(/'/g, '%27')}', ${source === 'queue' ? idx : -1})">FORCE NOW</button>
             </div>
         </div>
     `;
@@ -816,9 +816,9 @@ export function openTaskDetail(idx: number, source: 'queue' | 'directive', initi
     modal.classList.remove('hidden');
 
     if (initialView === 'enforce') {
-        showEnforceOptions(encodeURIComponent(fullText));
+        showEnforceOptions(encodeURIComponent(fullText).replace(/'/g, '%27'));
     } else if (initialView === 'force') {
-        showForceOptions(encodeURIComponent(fullText));
+        showForceOptions(encodeURIComponent(fullText).replace(/'/g, '%27'));
     }
 }
 
@@ -835,11 +835,13 @@ export function closeTaskGallery() {
 export function showEnforceOptions(taskText: string) {
     const container = document.getElementById('directiveActionContent');
     if (!container) return;
+    // Escape single quotes so task text doesn't break onclick JS strings
+    const safe = taskText.replace(/'/g, '%27');
 
     container.innerHTML = `
         <div style="font-family:Rajdhani,sans-serif; font-size:0.8rem; color:#888; text-align:center; margin:20px 0; letter-spacing:2px;">SELECT QUEUE POSITION</div>
         <div class="q-pos-grid">
-            ${Array.from({ length: 10 }).map((_, i) => `<button class="q-pos-btn" onclick="window.enforceTask('${taskText}', ${i}); window.closeTaskDetail();">${i + 1}</button>`).join('')}
+            ${Array.from({ length: 10 }).map((_, i) => `<button class="q-pos-btn" onclick="window.enforceTask('${safe}', ${i}); window.closeTaskDetail();">${i + 1}</button>`).join('')}
         </div>
         <button class="btn-glass" style="width:100%; margin-top:10px;" onclick="window.closeTaskDetail(); window.openTaskGallery();">BACK</button>
     `;
@@ -848,11 +850,13 @@ export function showEnforceOptions(taskText: string) {
 export function showForceOptions(taskText: string, queueIdx: number = -1) {
     const container = document.getElementById('directiveActionContent');
     if (!container) return;
+    // Escape single quotes so task text doesn't break onclick JS strings
+    const safe = taskText.replace(/'/g, '%27');
 
     container.innerHTML = `
         <div class="directive-sub-actions">
-            <button class="btn-directive-sub" onclick="window.enforceTask('${taskText}', 0); window.closeTaskDetail();">TOP OF THE LIST!</button>
-            <button class="btn-directive-sub force-active" onclick="window.forceActiveTask('${taskText}', ${queueIdx}); window.closeTaskDetail();">FORCE NOW</button>
+            <button class="btn-directive-sub" onclick="window.enforceTask('${safe}', 0); window.closeTaskDetail();">TOP OF THE LIST!</button>
+            <button class="btn-directive-sub force-active" onclick="window.forceActiveTask('${safe}', ${queueIdx}); window.closeTaskDetail();">FORCE NOW</button>
             <button class="btn-glass" style="width:100%; margin-top:20px;" onclick="window.closeTaskDetail(); window.openTaskGallery();">BACK</button>
         </div>
     `;
