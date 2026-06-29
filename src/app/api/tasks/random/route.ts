@@ -36,13 +36,18 @@ export async function GET(req: NextRequest) {
             const now = new Date().getTime();
             const hoursPassed = (now - assignedAt) / (1000 * 60 * 60);
 
-            // Return active task if within 24h, or if no assigned_at (forced tasks may lack it)
-            if (!activeTask.assigned_at || hoursPassed < 24) {
+            // Admin-forced tasks (category "Directive") are NEVER overwritten by random picks.
+            // They stay until the subject completes/submits them or admin changes them.
+            const isAdminForced = activeTask.category === 'Directive';
+
+            if (isAdminForced || !activeTask.assigned_at || hoursPassed < 24) {
                 return NextResponse.json({
                     success: true,
                     task: activeTask,
                     isReassigned: false,
-                    timeLeftMs: (24 * 60 * 60 * 1000) - (now - assignedAt)
+                    timeLeftMs: isAdminForced
+                        ? (activeTask.endTime ? activeTask.endTime - now : 24 * 60 * 60 * 1000)
+                        : (24 * 60 * 60 * 1000) - (now - assignedAt)
                 });
             }
         }
