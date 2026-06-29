@@ -1794,17 +1794,25 @@ function DailyCodeBadge() {
 }
 
 function TaskReviewModal({ proofUrl, isVideo, thumbnailUrl, name, avatar, rank, text, isRoutine, busy, onClose, onApprove, onReject }: {
-    proofUrl?: string; isVideo: boolean; thumbnailUrl?: string; name: string; avatar: string; rank?: string;
+    proofUrl?: string; isVideo: boolean; thumbnailUrl?: string | null; name: string; avatar: string; rank?: string;
     text: string; isRoutine: boolean; busy: boolean;
     onClose: () => void; onApprove: (tier: number, note: string) => void; onReject: (note: string) => void;
 }) {
     const [tier, setTier] = useState(50);
     const [note, setNote] = useState('');
-    // For videos, use same-origin proxy to avoid Mobile Safari CORS issues with signed URLs.
-    // For images, use the signed URL directly (images don't have CORS restrictions).
     const rawUrl = proofUrl || '';
-    const displayUrl = isVideo && rawUrl ? `/api/media?url=${encodeURIComponent(rawUrl)}` : rawUrl;
     const posterUrl = thumbnailUrl || '';
+    // For videos, fetch a signed URL so Mobile Safari can load directly from storage
+    // with proper Range/206 support (streaming through Vercel proxy breaks Safari).
+    const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
+    useEffect(() => {
+        if (!isVideo || !rawUrl) return;
+        fetch(`/api/media/url?url=${encodeURIComponent(rawUrl)}`)
+            .then(r => r.json())
+            .then(j => { if (j.url) setSignedVideoUrl(j.url); })
+            .catch(() => {});
+    }, [isVideo, rawUrl]);
+    const displayUrl = isVideo ? (signedVideoUrl || '') : rawUrl;
     const tiers = [50, 70, 100];
     const touchStartX = useRef(0);
     const touchStartY = useRef(0);
@@ -1836,9 +1844,13 @@ function TaskReviewModal({ proofUrl, isVideo, thumbnailUrl, name, avatar, rank, 
 
             {/* Media area - scrollable if needed */}
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                {displayUrl ? (
+                {isVideo && !signedVideoUrl && rawUrl ? (
+                    <div style={{ width: '100%', height: '55vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.7rem', color: '#444', letterSpacing: '2px' }}>LOADING VIDEO...</div>
+                    </div>
+                ) : displayUrl ? (
                     isVideo ? (
-                        <video src={displayUrl} controls playsInline preload="metadata" poster={posterUrl || undefined} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
+                        <video src={displayUrl} controls autoPlay playsInline preload="auto" poster={posterUrl || undefined} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} />
                     ) : (
                         <img src={displayUrl} onError={(e) => { const t = e.target as HTMLImageElement; if (!t.src.includes('/api/media')) t.src = `/api/media?url=${encodeURIComponent(displayUrl)}`; }} style={{ width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#000', flexShrink: 0 }} alt="" />
                     )
