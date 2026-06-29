@@ -5,6 +5,24 @@ import '../challenges/challenges.css';
 
 const TIERS = ['Hall Boy', 'Footman', 'Silverman', 'Butler', 'Chamberlain', 'Secretary', "Queen's Champion"];
 
+// ─── VIDEO PLAYER MODAL ────────────────────────────────────────────────────
+function VideoModal({ url, onClose }: { url: string; onClose: () => void }) {
+    return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div onClick={e => e.stopPropagation()} style={{ maxWidth: 500, width: '100%', position: 'relative' }}>
+                <video
+                    src={url}
+                    controls
+                    autoPlay
+                    playsInline
+                    style={{ width: '100%', maxHeight: '80vh', borderRadius: 12, background: '#000' }}
+                />
+                <button onClick={onClose} style={{ position: 'absolute', top: -40, right: 0, background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer', fontFamily: 'sans-serif' }}>✕</button>
+            </div>
+        </div>
+    );
+}
+
 function themeColor(theme: string) {
     if (theme === 'red') return '#e03030';
     if (theme === 'purple') return '#a855f7';
@@ -312,9 +330,11 @@ function DetailView({ detail, onRefresh, showToast, onBack }: { detail: any; onR
 function SubmissionCard({ submission, participants, onReview, reviewing }: { submission: any; participants: any[]; onReview: (id: string, action: 'approve' | 'reject') => void; reviewing: string | null }) {
     const participant = participants?.find((p: any) => p.member_id === submission.member_id);
     const isVideo = submission.proof_type === 'video' || /\.(mp4|mov|webm|ogg)(\?|$)/i.test(submission.proof_url || '');
+    const [playUrl, setPlayUrl] = useState<string | null>(null);
 
     return (
         <div className="ch-card" style={{ padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'flex-start', borderColor: 'rgba(255,140,66,0.25)' }}>
+            {playUrl && <VideoModal url={playUrl} onClose={() => setPlayUrl(null)} />}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0, width: 72 }}>
                 <img src={participant?.avatar_url || '/queen-karin.png'} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(197,160,89,0.3)' }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} alt="" />
                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: '#ddd', textAlign: 'center' }}>{participant?.name || submission.member_id?.split('@')[0]}</div>
@@ -328,14 +348,15 @@ function SubmissionCard({ submission, participants, onReview, reviewing }: { sub
                 </div>
             </div>
             {submission.proof_url && (
-                <div style={{ flexShrink: 0 }}>
-                    <a href={submission.proof_url} target="_blank" rel="noreferrer">
-                        {isVideo ? (
-                            <video src={submission.proof_url} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)' }} muted />
-                        ) : (
-                            <img src={submission.thumbnail_url || submission.proof_url} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', display: 'block' }} alt="proof" />
-                        )}
-                    </a>
+                <div style={{ flexShrink: 0, cursor: 'pointer', position: 'relative' }} onClick={() => isVideo ? setPlayUrl(submission.proof_url) : window.open(submission.proof_url, '_blank')}>
+                    <img src={submission.thumbnail_url || submission.proof_url} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', display: 'block' }} alt="proof" />
+                    {isVideo && (
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: 10 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ width: 0, height: 0, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '14px solid #000', marginLeft: 3 }} />
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
@@ -357,6 +378,7 @@ function ReviewQueue({ challenges, showToast, onRefresh }: { challenges: any[]; 
     const [submissions, setSubmissions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [reviewing, setReviewing] = useState<string | null>(null);
+    const [playUrl, setPlayUrl] = useState<string | null>(null);
 
     const loadQueue = useCallback(async () => {
         const activeChallenges = challenges.filter(c => c.status === 'active' || c.pending_review_count > 0);
@@ -393,12 +415,17 @@ function ReviewQueue({ challenges, showToast, onRefresh }: { challenges: any[]; 
     if (loading) return <div className="ch-empty">LOADING...</div>;
     if (submissions.length === 0) return <div className="ch-empty">NO PENDING SUBMISSIONS</div>;
 
+    const isVideoUrl = (url: string) => /\.(mp4|mov|webm|ogg)(\?|$)/i.test(url);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 24 }}>
+            {playUrl && <VideoModal url={playUrl} onClose={() => setPlayUrl(null)} />}
             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: '#ff8c42', letterSpacing: '2px', marginBottom: 8 }}>
                 {submissions.length} PENDING REVIEW{submissions.length !== 1 ? 'S' : ''}
             </div>
-            {submissions.map((s: any) => (
+            {submissions.map((s: any) => {
+                const isVid = s.proof_type === 'video' || isVideoUrl(s.proof_url || '');
+                return (
                 <div key={s.id} className="ch-card" style={{ padding: '16px 20px', display: 'flex', gap: 16, alignItems: 'center', borderColor: 'rgba(255,140,66,0.2)' }}>
                     <img src={s.member_avatar || '/queen-karin.png'} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} onError={(e: any) => { e.target.src = '/queen-karin.png'; }} alt="" />
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -408,9 +435,16 @@ function ReviewQueue({ challenges, showToast, onRefresh }: { challenges: any[]; 
                         </div>
                     </div>
                     {s.proof_url && (
-                        <a href={s.proof_url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                        <div style={{ flexShrink: 0, cursor: 'pointer', position: 'relative' }} onClick={() => isVid ? setPlayUrl(s.proof_url) : window.open(s.proof_url, '_blank')}>
                             <img src={s.thumbnail_url || s.proof_url} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} alt="" />
-                        </a>
+                            {isVid && (
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: 8 }}>
+                                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '9px solid #000', marginLeft: 2 }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                         <button disabled={reviewing === s.id} onClick={() => handleReview(s.challenge_id, s.id, 'approve')}
@@ -423,7 +457,8 @@ function ReviewQueue({ challenges, showToast, onRefresh }: { challenges: any[]; 
                         </button>
                     </div>
                 </div>
-            ))}
+                );
+            })}
         </div>
     );
 }

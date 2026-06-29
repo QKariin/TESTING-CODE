@@ -1332,13 +1332,25 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
                                         )}
                                     </div>
                                     {/* Proof image */}
-                                    {pv.proof_url && (
+                                    {pv.proof_url && (() => {
+                                        const isVid = /\.(mp4|mov|webm|ogg)(\?|$)/i.test(pv.proof_url!);
+                                        return (
                                         <button onClick={() => setProofPreview(pv.proof_url!)}
-                                            style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}>
-                                            <img src={toPublicUrl(pv.proof_url)} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />
-                                            <div style={{ background: 'rgba(0,0,0,0.55)', padding: '4px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#666', letterSpacing: '1px', textAlign: 'center' }}>TAP TO ENLARGE</div>
+                                            style={{ display: 'block', width: '100%', padding: 0, background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+                                            {isVid ? (
+                                                <>
+                                                    <video src={toPublicUrl(pv.proof_url!)} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} muted playsInline preload="metadata" />
+                                                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <div style={{ width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '18px solid #000', marginLeft: 4 }} />
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <img src={toPublicUrl(pv.proof_url!)} style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} alt="proof" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                                            )}
+                                            <div style={{ background: 'rgba(0,0,0,0.55)', padding: '4px', fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: '#666', letterSpacing: '1px', textAlign: 'center' }}>{isVid ? 'TAP TO PLAY' : 'TAP TO ENLARGE'}</div>
                                         </button>
-                                    )}
+                                        );
+                                    })()}
                                     {/* Actions */}
                                     <div style={{ display: 'flex', gap: 8, padding: '10px 14px' }}>
                                         <button disabled={isBusy} onClick={async () => { setVerifying(pv.id); await onVerify(pv.id, true); setVerifying(null); }}
@@ -1425,12 +1437,19 @@ function ChLiveTab({ activeChallenge, draftChallenges, detail, loading, tick, on
             )}
 
             {/* Proof preview full-screen */}
-            {proofPreview && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column' }} onClick={() => setProofPreview(null)}>
+            {proofPreview && (() => {
+                const isVid = /\.(mp4|mov|webm|ogg)(\?|$)/i.test(proofPreview);
+                return (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }} onClick={() => setProofPreview(null)}>
                     <button onClick={() => setProofPreview(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '1.2rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', zIndex: 1 }}>✕</button>
-                    <img src={toPublicUrl(proofPreview)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />
+                    {isVid ? (
+                        <video src={toPublicUrl(proofPreview)} controls autoPlay playsInline style={{ width: '100%', maxHeight: '85vh', objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
+                    ) : (
+                        <img src={toPublicUrl(proofPreview)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="proof" />
+                    )}
                 </div>
-            )}
+                );
+            })()}
         </div>
     );
 }
