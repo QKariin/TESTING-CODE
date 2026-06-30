@@ -367,6 +367,7 @@ function _showStep() {
 
     // Intro steps with no target — fullscreen Vlad splash
     if (!target && !step.desktop && !step.mobile) {
+        if (!_tooltip) return;
         if (_spotlight) Object.assign(_spotlight.style, { top: '0', left: '0', width: '0', height: '0', boxShadow: 'none' });
 
         // Both intro slides: fullscreen Vlad background, no flicker between them
