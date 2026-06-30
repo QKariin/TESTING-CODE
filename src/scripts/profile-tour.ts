@@ -1,513 +1,663 @@
 // ─── GUIDED TOUR ─────────────────────────────────────────────────────────────
-// Interactive walkthrough that highlights real UI elements with tooltip bubbles.
+// Modal-based walkthrough. User taps elements to learn about them.
+// Clones the element into a modal where Vlad explains it.
 
-interface TourStep {
-    desktop?: string;   // CSS selector for desktop
-    mobile?: string;    // CSS selector for mobile
+interface TourItem {
+    desktop?: string;
+    mobile?: string;
     title: string;
     text: string;
-    pos?: 'top' | 'bottom' | 'left' | 'right';
-    interactive?: boolean;  // allow user to interact with the highlighted element
-    pad?: number;           // custom spotlight padding (default 4)
-    beforeShow?: () => void;
+    action?: string;            // special behavior instead of modal (e.g. 'openStats')
+    dotPos?: { top: string; right: string };  // dot corner position override
+    cloneSelector?: string;     // override which element to show when explaining
 }
 
-const STEPS: TourStep[] = [
-    {
-        title: 'MEET VLAD',
-        text: '',
-        pos: 'bottom',
-    },
-    {
-        title: '',
-        text: 'I handle the boring stuff so Queen Karin does not have to. Questions, explanations, anything you need help with. She deals with the important things. Like you. Let me show you around.',
-        pos: 'bottom',
-    },
+const TOUR_ITEMS: TourItem[] = [
     {
         desktop: '#profilePic',
         mobile: '#hudUserPic',
         title: 'YOUR IDENTITY',
-        text: 'Tap your photo to open your identity hub. You can set your name and upload a photo. I will wait, or you can come back later.',
-        pos: 'bottom',
-        interactive: true,
-        pad: 2,
-        beforeShow: () => {
-            // When the identity hub opens, move tooltip to the bottom so user can interact
-            const observer = new MutationObserver(() => {
-                const lobby = document.getElementById('lobbyOverlay');
-                if (lobby && !lobby.classList.contains('hidden')) {
-                    observer.disconnect();
-                    // Hide spotlight, move tooltip above the footer
-                    const spot = document.getElementById('tourSpotlight');
-                    if (spot) spot.style.boxShadow = 'none';
-                    const tip = document.getElementById('tourTooltip');
-                    if (tip) {
-                        // Update text for when hub is open
-                        const textEl = tip.querySelector('div[style*="margin-bottom:16px"]') as HTMLElement;
-                        if (textEl) {
-                            textEl.textContent = 'Right now you can set your name and the photo. I will wait, or you can come here later. Remember, the profile picture is public so everyone in the household can see it. Choose wisely what you want to use as your profile picture.';
-                        }
-                        Object.assign(tip.style, {
-                            top: 'auto',
-                            bottom: '60px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            opacity: '1',
-                        });
-                    }
-                }
-            });
-            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-            (window as any)._tourIdentityObserver = observer;
-        },
+        text: 'This is your identity hub. You can set your name and upload a profile picture. Remember, the profile picture is public so everyone in the household can see it. As you climb ranks, more unlocks here.',
     },
     {
         desktop: '#desk_DashboardRank',
         mobile: '#mob_rankStamp',
         title: 'YOUR RANK',
         text: 'This is your rank. You start at the bottom like everyone else. Every rank you climb gets you closer to Queen Karin and unlocks new privileges.',
-        pos: 'bottom',
+        dotPos: { top: '-6px', right: '30%' },
     },
     {
         desktop: '#desk_ProgressContainer',
-        mobile: '#mobStatsContent',
-        title: 'PROMOTION PROGRESS',
-        text: 'These are your promotion requirements. Every single one has to be completed for you to move up. I will help you track what is left.',
-        pos: 'bottom',
-        beforeShow: () => {
-            const content = document.getElementById('mobStatsContent');
-            if (content && !content.classList.contains('open')) {
-                (window as any).toggleMobileStats?.();
-            }
-        },
+        mobile: '.mob-stats-toggle-btn',
+        title: 'SLAVE STATS',
+        text: 'Your full stats, current rank, promotion requirements, and privileges. Tap to open and explore everything about your progress.',
+        action: 'openStats',
     },
     {
         desktop: '#heroKneelBtn',
-        mobile: '#mobKneelBar',
+        mobile: '#mobKneelSection',
         title: 'HOLD TO KNEEL',
-        text: 'Press and hold for a few seconds. You can do this once per hour. The goal is 8 times a day, but you have 24 hours so anything above that is impressive. Go ahead, try it.',
-        pos: 'top',
-        interactive: true,
-        pad: 2,
-        beforeShow: () => {
-            // Close stats drawer if it was opened by previous step
-            const content = document.getElementById('mobStatsContent');
-            if (content && content.classList.contains('open')) {
-                (window as any).toggleMobileStats?.();
-            }
-            // Watch for the reward overlay to appear, then auto-advance
-            const observer = new MutationObserver(() => {
-                const reward = document.getElementById('mobKneelReward') || document.getElementById('kneelRewardOverlay');
-                if (reward && !reward.classList.contains('hidden')) {
-                    observer.disconnect();
-                    // Auto-advance to the reward step
-                    setTimeout(() => {
-                        (window as any)._tourNextStep?.();
-                    }, 600);
-                }
-            });
-            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-            // Store observer so we can clean up if tour ends
-            (window as any)._tourKneelObserver = observer;
-        },
-    },
-    {
-        desktop: '#kneelRewardOverlay',
-        mobile: '#mobKneelReward',
-        title: 'CHOOSE YOUR REWARD',
-        text: 'Choose your reward now. Coins go to your wallet, merit moves you toward promotion. Both are valuable, it is up to you.',
-        pos: 'bottom',
-        pad: 4,
-        interactive: true,
-        beforeShow: () => {
-            // Position tooltip right under the devotion card, not at viewport bottom
-            setTimeout(() => {
-                const tip = document.getElementById('tourTooltip');
-                const spot = document.getElementById('tourSpotlight');
-                if (spot) spot.style.boxShadow = 'none';
-                if (tip) {
-                    Object.assign(tip.style, {
-                        top: '52%',
-                        bottom: 'auto',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                    });
-                }
-            }, 450);
-
-            // Watch for the reward overlay to close (user picked a reward), then auto-advance
-            const observer = new MutationObserver(() => {
-                const reward = document.getElementById('mobKneelReward') || document.getElementById('kneelRewardOverlay');
-                if (!reward || reward.classList.contains('hidden') || window.getComputedStyle(reward).display === 'none') {
-                    observer.disconnect();
-                    setTimeout(() => {
-                        (window as any)._tourNextStep?.();
-                    }, 500);
-                }
-            });
-            observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style'], childList: true });
-            (window as any)._tourRewardObserver = observer;
-        },
+        text: 'Press and hold for a few seconds. You can do this once per hour. The goal is 8 times a day, but you have 24 hours so anything above that is impressive.',
+        dotPos: { top: '20px', right: '6%' },
+        cloneSelector: '#mobKneelBar',
     },
     {
         desktop: '#gridStat1',
         mobile: '#mob_kneelDots',
         title: 'KNEELING TRACKER',
         text: 'Each dot is one completed kneel. The goal is 8 per day. Keep showing up.',
-        pos: 'bottom',
     },
     {
         desktop: '#gridTask',
         mobile: '#mobCurrentStatus .luxury-card',
         title: 'TASKS',
         text: 'Tap request and Queen Karin gives you an order. Do it, upload photo or video proof. She reviews every submission personally. Approved tasks earn you merit.',
-        pos: 'bottom',
-        pad: 4,
     },
     {
         desktop: '#coins',
-        mobile: '#mobCoins',
-        title: 'COINS',
-        text: 'Your currency. You earn coins from kneeling and spend them on tributes, messages to Queen Karin, and Her wishlist. Every coin spent counts toward your Sacrifice score.',
-        pos: 'bottom',
-    },
-    {
-        desktop: '#points',
-        mobile: '#mobPoints',
-        title: 'MERIT',
-        text: 'Your growth score. Approved tasks and kneeling rewards build it up. The more merit you earn, the closer you are to your next rank.',
-        pos: 'bottom',
+        mobile: '.halo-stats-pill',
+        title: 'YOUR STATS',
+        text: 'Merit is your growth score, it moves you toward promotion. Coins are your currency, you spend them on tributes, messages to Queen Karin, and Her wishlist.',
     },
     {
         desktop: '#chatCard',
         mobile: '.mob-nav-queen-btn',
         title: 'MY CIRCLE',
         text: 'Direct line to Queen Karin. Each message costs coins. Got questions about the app? Talk to me instead, I am always here and it is free.',
-        pos: 'top',
-        pad: 4,
-        beforeShow: () => {
-            const mob = document.getElementById('MOBILE_APP');
-            if (mob && window.getComputedStyle(mob).display !== 'none') {
-                const nav = document.getElementById('mobBottomNav');
-                if (nav) nav.scrollIntoView({ behavior: 'smooth' });
-            }
-        },
+        dotPos: { top: '-14px', right: '50%' },
+        action: 'openChat',
     },
     {
         desktop: '#gridStat4',
         mobile: '#mobNavGlobal',
         title: 'LEADERBOARD',
         text: 'See how you compare to the rest of the household. Top performers earn rewards from Queen Karin. Weekly, monthly, and all-time rankings.',
-        pos: 'top',
+        dotPos: { top: '-14px', right: '50%' },
+        action: 'openGlobal',
     },
 ];
 
-let _overlay: HTMLDivElement | null = null;
-let _spotlight: HTMLDivElement | null = null;
-let _tooltip: HTMLDivElement | null = null;
-let _currentStep = 0;
+let _modal: HTMLDivElement | null = null;
 let _isMobile = false;
-let _scrollHandler: (() => void) | null = null;
-let _scrollContainer: HTMLElement | null = null;
+let _clickHandlers: { el: HTMLElement; handler: (e: Event) => void }[] = [];
+let _explored: Set<string> = new Set();
+let _hiddenEls: { el: HTMLElement; visibility: string }[] = [];
 
-function _getTarget(step: TourStep): HTMLElement | null {
-    const sel = _isMobile ? (step.mobile || step.desktop) : (step.desktop || step.mobile);
+function _getSelector(item: TourItem): string | undefined {
+    return _isMobile ? (item.mobile || item.desktop) : (item.desktop || item.mobile);
+}
+
+function _getTarget(item: TourItem): HTMLElement | null {
+    const sel = _getSelector(item);
     if (!sel) return null;
     return document.querySelector(sel);
 }
 
-function _createOverlay() {
-    // On mobile, #MOBILE_APP has z-index:999999 so we must go above it
-    const Z_OVERLAY = '9999997';
-    const Z_SPOT    = '9999998';
-    const Z_TIP     = '9999999';
+// Isolate a single element: hide all siblings at every level up to #viewMobileHome
+function _isolateElement(target: HTMLElement) {
+    _hiddenEls = [];
+    const root = document.getElementById('viewMobileHome');
+    // Hide the ::before background image
+    if (root) root.classList.add('tour-isolate');
+    let current: HTMLElement | null = target;
 
-    // Overlay
-    _overlay = document.createElement('div');
-    _overlay.id = 'tourOverlay';
-    Object.assign(_overlay.style, {
-        position: 'fixed', inset: '0', zIndex: Z_OVERLAY,
-        background: 'transparent', pointerEvents: 'none',
-    });
-    document.body.appendChild(_overlay);
-
-    // Spotlight (hole)
-    _spotlight = document.createElement('div');
-    _spotlight.id = 'tourSpotlight';
-    Object.assign(_spotlight.style, {
-        position: 'fixed', zIndex: Z_SPOT,
-        borderRadius: '12px',
-        boxShadow: '0 0 0 9999px rgba(0,0,0,0.88)',
-        transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
-        pointerEvents: 'none',
-    });
-    document.body.appendChild(_spotlight);
-
-    // Tooltip
-    _tooltip = document.createElement('div');
-    _tooltip.id = 'tourTooltip';
-    Object.assign(_tooltip.style, {
-        position: 'fixed', zIndex: Z_TIP,
-        background: '#0a0a0a',
-        border: '1px solid rgba(197,160,89,0.3)',
-        borderRadius: '14px',
-        padding: '20px 22px 16px',
-        maxWidth: '320px', width: '90vw',
-        fontFamily: 'Rajdhani, sans-serif',
-        color: '#ccc', fontSize: '0.88rem', lineHeight: '1.5',
-        transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
-        opacity: '0',
-        pointerEvents: 'auto',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-    });
-    document.body.appendChild(_tooltip);
+    while (current && current !== root && current !== document.body) {
+        const parent: HTMLElement | null = current.parentElement;
+        if (!parent) break;
+        // Hide all siblings of current
+        for (let i = 0; i < parent.children.length; i++) {
+            const sibling = parent.children[i] as HTMLElement;
+            if (sibling === current) continue;
+            if (sibling.id === 'tourDarkOverlay') continue;
+            if (sibling.id === 'tourExplainPanel') continue;
+            if (!sibling.style) continue;
+            _hiddenEls.push({ el: sibling, visibility: sibling.style.visibility });
+            sibling.style.visibility = 'hidden';
+        }
+        current = parent;
+    }
 }
 
-function _positionTooltip(target: HTMLElement, step: TourStep) {
-    if (!_spotlight || !_tooltip) return;
+// Restore all hidden elements
+function _restoreElements() {
+    for (const h of _hiddenEls) {
+        h.el.style.visibility = h.visibility;
+    }
+    _hiddenEls = [];
+}
 
-    const rect = target.getBoundingClientRect();
-    const pad = step.pad ?? 4;
+// Show explanation panel next to the actual element (no cloning, no modal)
+function _showExplainModal(item: TourItem, target: HTMLElement) {
+    const sel = _getSelector(item);
+    if (sel) _explored.add(sel);
 
-    // Let pointer events pass through the spotlight so user can interact with the element
-    _spotlight.style.pointerEvents = 'none';
+    // Remove dots
+    _removeIndicators();
 
-    // Match the element's actual border-radius
-    const computedRadius = window.getComputedStyle(target).borderRadius || '8px';
+    // For HOLD TO KNEEL, use the actual kneel bar as the visible element
+    const visibleTarget = item.cloneSelector
+        ? (document.querySelector(item.cloneSelector) as HTMLElement || target)
+        : target;
 
-    // Position spotlight
-    Object.assign(_spotlight.style, {
-        top: (rect.top - pad) + 'px',
-        left: (rect.left - pad) + 'px',
-        width: (rect.width + pad * 2) + 'px',
-        height: (rect.height + pad * 2) + 'px',
-        borderRadius: computedRadius,
-    });
-
-    // Determine tooltip position
-    const pos = step.pos || 'bottom';
-    const tooltipW = Math.min(320, window.innerWidth * 0.9);
-    let top = 0, left = 0;
-
-    if (pos === 'bottom') {
-        top = rect.bottom + pad + 12;
-        left = rect.left + rect.width / 2 - tooltipW / 2;
-    } else if (pos === 'top') {
-        top = rect.top - pad - 12;
-        left = rect.left + rect.width / 2 - tooltipW / 2;
-    } else if (pos === 'right') {
-        top = rect.top + rect.height / 2 - 60;
-        left = rect.right + pad + 12;
-    } else {
-        top = rect.top + rect.height / 2 - 60;
-        left = rect.left - pad - tooltipW - 12;
+    // Keep dark overlay but isolate just this element
+    if (!_darkOverlay) {
+        _darkOverlay = document.createElement('div');
+        _darkOverlay.id = 'tourDarkOverlay';
+        Object.assign(_darkOverlay.style, {
+            position: 'fixed', inset: '0',
+            background: 'rgba(0,0,0,0.88)',
+            pointerEvents: 'none',
+            zIndex: '0',
+        });
+        const view = document.getElementById('viewMobileHome');
+        if (view) {
+            view.insertBefore(_darkOverlay, view.firstChild);
+        }
     }
 
-    // Clamp to viewport
-    left = Math.max(10, Math.min(left, window.innerWidth - tooltipW - 10));
-    if (pos === 'top') {
-        // Measure tooltip height and position above
-        _tooltip.style.visibility = 'hidden';
-        _tooltip.style.opacity = '1';
-        const h = _tooltip.offsetHeight;
-        _tooltip.style.visibility = '';
-        _tooltip.style.opacity = '0';
-        top = rect.top - pad - 12 - h;
-        if (top < 10) top = rect.bottom + pad + 12; // flip to bottom if no room
-    }
-    if (top < 10) top = 10;
-    if (top + 200 > window.innerHeight) top = window.innerHeight - 220;
+    // Hide everything except the target element
+    _isolateElement(visibleTarget);
 
-    Object.assign(_tooltip.style, {
-        top: top + 'px',
-        left: left + 'px',
-        width: tooltipW + 'px',
+    // Scroll target into view (upper area, leave room for explanation below)
+    visibleTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Create the explanation panel (fixed at bottom)
+    _modal = document.createElement('div');
+    _modal.id = 'tourExplainPanel';
+    Object.assign(_modal.style, {
+        position: 'fixed', bottom: '0', left: '0', right: '0',
+        zIndex: '10000001',
+        background: 'linear-gradient(to top, #000 70%, rgba(0,0,0,0.95) 90%, transparent 100%)',
+        padding: '30px 24px calc(20px + env(safe-area-inset-bottom))',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        pointerEvents: 'auto',
     });
 
-    // Build tooltip content
-    const total = STEPS.length;
-    const cur = _currentStep + 1;
-    const isLast = _currentStep === total - 1;
-
-    _tooltip.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <img src="/vlad-avatar.png" alt="Vlad" style="width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:center 20%;border:1px solid rgba(255,0,237,0.4);flex-shrink:0;box-shadow:0 0 12px rgba(255,0,237,0.15);" />
-            <div style="display:flex;flex-direction:column;gap:2px;">
-                <span style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(255,0,237,0.7);letter-spacing:2px;">VLAD</span>
-                <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:#c5a059;letter-spacing:1px;">${step.title}</span>
+    _modal.innerHTML = `
+        <div style="max-width:360px;width:100%;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                <img src="/vlad-avatar.png" alt="Vlad" style="width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:center 20%;border:1px solid rgba(255,0,237,0.4);flex-shrink:0;box-shadow:0 0 12px rgba(255,0,237,0.15);" />
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(255,0,237,0.7);letter-spacing:2px;">VLAD</span>
+                    <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:#c5a059;letter-spacing:1px;">${item.title}</span>
+                </div>
             </div>
-            <span style="margin-left:auto;font-family:'Cinzel',serif;font-size:0.5rem;color:rgba(197,160,89,0.4);letter-spacing:1px;">${cur}/${total}</span>
-        </div>
-        <div style="margin-bottom:16px;">${step.text}</div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-            <button id="tourSkip" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#555;padding:8px 16px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;cursor:pointer;letter-spacing:1px;">SKIP</button>
-            <button id="tourNext" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:8px 20px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;font-weight:700;cursor:pointer;letter-spacing:1px;">${isLast ? 'DONE' : 'NEXT'}</button>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.88rem;color:#ccc;line-height:1.6;margin-bottom:20px;">
+                ${item.text}
+            </div>
+            <button id="tourGotIt" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:12px 40px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.7rem;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%;">GOT IT</button>
         </div>
     `;
 
-    // Bind buttons
-    _tooltip.querySelector('#tourSkip')?.addEventListener('click', endTour);
-    _tooltip.querySelector('#tourNext')?.addEventListener('click', isLast ? endTour : nextStep);
+    // Hide footer nav while panel is visible
+    const nav = document.getElementById('mobBottomNav');
+    if (nav) {
+        _hiddenEls.push({ el: nav, visibility: nav.style.visibility });
+        nav.style.visibility = 'hidden';
+    }
 
-    // Fade in
-    requestAnimationFrame(() => {
-        if (_tooltip) _tooltip.style.opacity = '1';
+    document.body.appendChild(_modal);
+
+    _modal.querySelector('#tourGotIt')?.addEventListener('click', () => {
+        if (_modal) { _modal.remove(); _modal = null; }
+        _restoreElements();
+        if (_darkOverlay) { _darkOverlay.remove(); _darkOverlay = null; }
+        _addIndicators();
     });
 }
 
-function _showStep() {
-    if (_currentStep >= STEPS.length) { endTour(); return; }
+// Inject pulsing animation CSS once
+function _injectPulseCSS() {
+    if (document.getElementById('tourPulseCSS')) return;
+    const style = document.createElement('style');
+    style.id = 'tourPulseCSS';
+    style.textContent = `
+        #viewMobileHome.tour-isolate::before { opacity: 0 !important; }
+        @keyframes tourPulse {
+            0% { box-shadow: 0 0 16px rgba(197,160,89,0.6), 0 0 32px rgba(197,160,89,0.3); opacity: 1; }
+            50% { box-shadow: 0 0 24px rgba(197,160,89,0.9), 0 0 48px rgba(197,160,89,0.5); opacity: 0.7; }
+            100% { box-shadow: 0 0 16px rgba(197,160,89,0.6), 0 0 32px rgba(197,160,89,0.3); opacity: 1; }
+        }
+        .tour-dot {
+            position: absolute; width: 28px; height: 28px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(197,160,89,0.95) 0%, rgba(197,160,89,0.4) 60%, transparent 70%);
+            border: 2px solid rgba(197,160,89,0.8);
+            box-shadow: 0 0 16px rgba(197,160,89,0.6), 0 0 32px rgba(197,160,89,0.3);
+            z-index: 99999; cursor: pointer; pointer-events: auto;
+            animation: tourPulse 1.8s ease-in-out infinite;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tour-dot::after {
+            content: '?'; font-family: 'Cinzel', serif; font-size: 0.65rem;
+            color: #000; font-weight: bold;
+        }
+        .tour-dot-done {
+            background: radial-gradient(circle, rgba(80,180,80,0.7) 0%, rgba(80,180,80,0.2) 60%, transparent 70%);
+            border-color: rgba(80,180,80,0.5);
+            box-shadow: 0 0 12px rgba(80,180,80,0.4);
+            animation: none; width: 22px; height: 22px;
+        }
+        .tour-dot-done::after {
+            content: '\\2713'; color: rgba(80,180,80,0.9); font-size: 0.55rem;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
-    const step = STEPS[_currentStep];
+let _dots: HTMLDivElement[] = [];
+let _savedPositions: { el: HTMLElement; position: string; overflow: string }[] = [];
+let _darkOverlay: HTMLDivElement | null = null;
+let _statsCloseHandler: ((e: MouseEvent) => void) | null = null;
 
-    // Run beforeShow hook
-    if (step.beforeShow) step.beforeShow();
+// Create pulsing dots directly on each explainable element
+function _addIndicators() {
+    _injectPulseCSS();
+    _removeDots();
 
-    const target = _getTarget(step);
+    // Add dark overlay for contrast — inserted as FIRST child so content paints above it
+    if (!_darkOverlay) {
+        _darkOverlay = document.createElement('div');
+        _darkOverlay.id = 'tourDarkOverlay';
+        Object.assign(_darkOverlay.style, {
+            position: 'fixed', inset: '0',
+            background: 'rgba(0,0,0,0.88)',
+            pointerEvents: 'none',
+            zIndex: '0',
+        });
+        const view = document.getElementById('viewMobileHome');
+        if (view) {
+            view.insertBefore(_darkOverlay, view.firstChild);
+        } else {
+            document.body.appendChild(_darkOverlay);
+        }
+    }
 
-    // Intro steps with no target — fullscreen Vlad splash
-    if (!target && !step.desktop && !step.mobile) {
-        if (!_tooltip) return;
-        if (_spotlight) Object.assign(_spotlight.style, { top: '0', left: '0', width: '0', height: '0', boxShadow: 'none' });
+    for (let i = 0; i < TOUR_ITEMS.length; i++) {
+        const item = TOUR_ITEMS[i];
+        const target = _getTarget(item);
+        if (!target) continue;
+        const sel = _getSelector(item);
+        const isDone = sel ? _explored.has(sel) : false;
 
-        // Both intro slides: fullscreen Vlad background, no flicker between them
-        const isFirst = _currentStep === 0;
+        // Ensure the target has position so absolute dot is relative to it
+        // Also force overflow visible so dot can poke out like a sticker
+        const computedStyle = window.getComputedStyle(target);
+        _savedPositions.push({
+            el: target,
+            position: target.style.position,
+            overflow: target.style.overflow,
+        });
+        if (computedStyle.position === 'static') {
+            target.style.position = 'relative';
+        }
+        target.style.overflow = 'visible';
 
-        // Only rebuild the fullscreen container on first slide; on second just swap content
-        if (isFirst) {
-            Object.assign(_tooltip.style, {
-                top: '0', left: '0', width: '100vw', height: '100dvh', maxWidth: '100vw',
-                borderRadius: '0', border: 'none', padding: '0',
-                background: '#000', transform: 'none', opacity: '1',
-            });
-            _tooltip.innerHTML = `
-                <div id="tourVladBg" style="width:100%;height:100%;background:url(/vlad-avatar.png) center 15% / cover no-repeat;position:relative;">
-                    <div style="position:absolute;inset:0;background:linear-gradient(to top, #000 0%, rgba(0,0,0,0.9) 22%, rgba(0,0,0,0.4) 50%, transparent 65%);"></div>
-                    <div id="tourVladContent" style="position:absolute;bottom:0;left:0;right:0;text-align:center;padding:0 24px 24px;z-index:1;">
-                        <div style="font-family:Orbitron,sans-serif;font-size:1.3rem;color:#c5a059;letter-spacing:6px;text-shadow:0 0 30px rgba(197,160,89,0.4);margin-bottom:20px;">MEET VLAD</div>
-                        <div style="display:flex;gap:10px;justify-content:center;">
-                            <button id="tourSkip" style="background:none;border:1px solid rgba(255,255,255,0.15);color:#555;padding:10px 20px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;cursor:pointer;letter-spacing:1px;">SKIP</button>
-                            <button id="tourNext" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:10px 24px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;font-weight:700;cursor:pointer;letter-spacing:1px;">NEXT</button>
-                        </div>
+        // Also force overflow on parent (e.g. footer nav bar clips its children)
+        const parent = target.parentElement;
+        if (parent) {
+            const parentOverflow = window.getComputedStyle(parent).overflow;
+            if (parentOverflow === 'hidden' || parentOverflow === 'clip') {
+                _savedPositions.push({ el: parent, position: parent.style.position, overflow: parent.style.overflow });
+                parent.style.overflow = 'visible';
+            }
+        }
+
+        const dot = document.createElement('div');
+        dot.className = isDone ? 'tour-dot tour-dot-done' : 'tour-dot';
+
+        // Position dot — custom or default top-right corner
+        if (item.dotPos) {
+            dot.style.top = item.dotPos.top;
+            dot.style.right = item.dotPos.right;
+            // If centered (right: 50%), shift left by half dot width
+            if (item.dotPos.right === '50%') {
+                dot.style.transform = 'translateX(50%)';
+            }
+        } else {
+            dot.style.top = '-6px';
+            dot.style.right = '-6px';
+        }
+
+        dot.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (item.action === 'openStats') {
+                _openStatsDrawer(item);
+            } else if (item.action === 'openChat') {
+                _openOverlayWithExplanation(item, 'openMobChatOverlay');
+            } else if (item.action === 'openGlobal') {
+                _openOverlayWithExplanation(item, 'openMobGlobal');
+            } else {
+                _showExplainModal(item, target);
+            }
+        });
+
+        target.appendChild(dot);
+        _dots.push(dot);
+    }
+
+    // Show explore prompt
+    if (!document.getElementById('tourExplorePrompt')) {
+        const prompt = document.createElement('div');
+        prompt.id = 'tourExplorePrompt';
+        Object.assign(prompt.style, {
+            position: 'fixed', top: '10px', left: '50%', transform: 'translateX(-50%)',
+            zIndex: '10000001', background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(197,160,89,0.3)', borderRadius: '12px',
+            padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '12px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        });
+        prompt.innerHTML = `
+            <img src="/vlad-avatar.png" alt="Vlad" style="width:28px;height:28px;border-radius:50%;object-fit:cover;object-position:center 20%;border:1px solid rgba(255,0,237,0.3);" />
+            <span style="font-family:Rajdhani,sans-serif;font-size:0.78rem;color:#ccc;">Tap a <span style="color:#c5a059;">?</span> to learn about it</span>
+            <button id="tourEndBtn" style="background:none;border:1px solid rgba(255,255,255,0.15);color:#666;padding:5px 12px;border-radius:6px;font-family:Orbitron,monospace;font-size:0.5rem;cursor:pointer;letter-spacing:1px;margin-left:4px;">END</button>
+        `;
+        document.body.appendChild(prompt);
+        prompt.querySelector('#tourEndBtn')?.addEventListener('click', endTour);
+    }
+}
+
+// Open a chat/global overlay and show explanation panel on top
+function _openOverlayWithExplanation(item: TourItem, fnName: string) {
+    const sel = _getSelector(item);
+    if (sel) _explored.add(sel);
+
+    // Remove dots
+    _removeIndicators();
+
+    // Open the overlay via the global function
+    const fn = (window as any)[fnName];
+    if (fn) fn();
+
+    // Create explanation panel INSIDE the overlay, below the header
+    setTimeout(() => {
+        // Find the overlay container
+        const overlayId = fnName === 'openMobChatOverlay' ? 'mobChatOverlay' : 'mobGlobalOverlay';
+        const overlay = document.getElementById(overlayId);
+        if (!overlay) return;
+
+        _modal = document.createElement('div');
+        _modal.id = 'tourExplainPanel';
+        Object.assign(_modal.style, {
+            flex: '1',
+            background: '#000',
+            padding: '24px 24px 40px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'auto',
+            zIndex: '10',
+            overflow: 'hidden',
+        });
+
+        _modal.innerHTML = `
+            <div style="max-width:360px;width:100%;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                    <img src="/vlad-avatar.png" alt="Vlad" style="width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:center 20%;border:1px solid rgba(255,0,237,0.4);flex-shrink:0;box-shadow:0 0 12px rgba(255,0,237,0.15);" />
+                    <div style="display:flex;flex-direction:column;gap:2px;">
+                        <span style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(255,0,237,0.7);letter-spacing:2px;">VLAD</span>
+                        <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:#c5a059;letter-spacing:1px;">${item.title}</span>
                     </div>
                 </div>
-            `;
-        } else {
-            // Second slide: keep the background, restore tooltip visibility, fade in new text
-            _tooltip.style.opacity = '1';
-            const content = _tooltip.querySelector('#tourVladContent');
-            if (content) {
-                (content as HTMLElement).style.opacity = '0';
-                (content as HTMLElement).style.transition = 'opacity 0.3s ease';
-                setTimeout(() => {
-                    content.innerHTML = `
-                        <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:#ccc;line-height:1.6;margin-bottom:18px;">${step.text}</div>
-                        <div style="display:flex;gap:10px;justify-content:center;">
-                            <button id="tourSkip" style="background:none;border:1px solid rgba(255,255,255,0.15);color:#555;padding:10px 20px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;cursor:pointer;letter-spacing:1px;">SKIP</button>
-                            <button id="tourNext" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:10px 24px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;font-weight:700;cursor:pointer;letter-spacing:1px;">NEXT</button>
-                        </div>
-                    `;
-                    _tooltip!.querySelector('#tourSkip')?.addEventListener('click', endTour);
-                    _tooltip!.querySelector('#tourNext')?.addEventListener('click', nextStep);
-                    (content as HTMLElement).style.opacity = '1';
-                }, 50);
-            }
-            return;
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.88rem;color:#ccc;line-height:1.6;margin-bottom:16px;">
+                    ${item.text}
+                </div>
+                <button id="tourGotIt" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:12px 40px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.7rem;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%;">GOT IT</button>
+            </div>
+        `;
+
+        // Hide all overlay children that are NOT headers, so the panel fills below headers
+        const _overlayHidden: { el: HTMLElement; display: string }[] = [];
+        for (let i = 0; i < overlay.children.length; i++) {
+            const child = overlay.children[i] as HTMLElement;
+            if (child.classList.contains('mob-overlay-header')) continue;
+            if (child.id === 'tourExplainPanel') continue;
+            _overlayHidden.push({ el: child, display: child.style.display });
+            child.style.display = 'none';
         }
-        _tooltip.querySelector('#tourSkip')?.addEventListener('click', endTour);
-        _tooltip.querySelector('#tourNext')?.addEventListener('click', nextStep);
-        requestAnimationFrame(() => { if (_tooltip) _tooltip.style.opacity = '1'; });
-        return;
-    }
 
-    if (!target) {
-        // Skip steps where the element doesn't exist in current layout
-        _currentStep++;
-        _showStep();
-        return;
-    }
+        overlay.appendChild(_modal);
 
-    // Close any open overlays from previous interactive steps
-    const lobby = document.getElementById('lobbyOverlay');
-    if (lobby && !lobby.classList.contains('hidden')) {
-        (window as any).closeLobby?.();
-    }
-
-    // Reset tooltip styles if coming from fullscreen intro or bottom-positioned
-    if (_tooltip) {
-        Object.assign(_tooltip.style, {
-            transform: '', height: 'auto', maxWidth: '320px',
-            borderRadius: '14px', border: '1px solid rgba(197,160,89,0.3)',
-            padding: '20px 22px 16px', background: '#0a0a0a',
-            bottom: '',
+        _modal.querySelector('#tourGotIt')?.addEventListener('click', () => {
+            // Restore hidden overlay children
+            for (const h of _overlayHidden) h.el.style.display = h.display;
+            if (_modal) { _modal.remove(); _modal = null; }
+            // Close the overlay
+            if (fnName === 'openMobChatOverlay') {
+                (window as any).closeMobChatOverlay?.();
+            } else if (fnName === 'openMobGlobal') {
+                (window as any).closeMobGlobal?.();
+            }
+            _addIndicators();
         });
+    }, 350);
+}
+
+// Open the slave stats drawer and show explanation
+function _openStatsDrawer(item: TourItem) {
+    const sel = _getSelector(item);
+    if (sel) _explored.add(sel);
+
+    // Remove dots
+    _removeIndicators();
+
+    // Open the drawer
+    const content = document.getElementById('mobStatsContent');
+    const arrow = document.getElementById('mobStatsArrow');
+    if (content && !content.classList.contains('open')) {
+        content.classList.add('open');
+        if (arrow) arrow.innerText = '▲';
     }
-    // Restore spotlight
-    if (_spotlight) _spotlight.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.88)';
 
-    // Temporarily unlock scroll so we can scroll to the target
-    if (_scrollContainer) _scrollContainer.style.overflow = 'auto';
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Keep dark overlay
+    if (!_darkOverlay) {
+        _darkOverlay = document.createElement('div');
+        _darkOverlay.id = 'tourDarkOverlay';
+        Object.assign(_darkOverlay.style, {
+            position: 'fixed', inset: '0',
+            background: 'rgba(0,0,0,0.88)',
+            pointerEvents: 'none',
+            zIndex: '0',
+        });
+        const view = document.getElementById('viewMobileHome');
+        if (view) view.insertBefore(_darkOverlay, view.firstChild);
+    }
 
-    // After scroll completes, reposition and re-lock
-    setTimeout(() => {
-        if (_scrollContainer) _scrollContainer.style.overflow = 'hidden';
-        _positionTooltip(target, step);
-    }, 400);
+    // Isolate the stats WRAPPER (contains both toggle button and drawer)
+    const toggle = document.querySelector('.mob-stats-toggle-btn') as HTMLElement;
+    const statsWrapper = toggle?.parentElement;
+    if (statsWrapper) {
+        _isolateElement(statsWrapper);
+        statsWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Hide footer nav
+    const nav = document.getElementById('mobBottomNav');
+    if (nav) {
+        _hiddenEls.push({ el: nav, visibility: nav.style.visibility });
+        nav.style.visibility = 'hidden';
+    }
+
+    // Show explanation panel at bottom
+    _modal = document.createElement('div');
+    _modal.id = 'tourExplainPanel';
+    Object.assign(_modal.style, {
+        position: 'fixed', bottom: '0', left: '0', right: '0',
+        zIndex: '10000001',
+        background: 'linear-gradient(to top, #000 70%, rgba(0,0,0,0.95) 90%, transparent 100%)',
+        padding: '30px 24px calc(20px + env(safe-area-inset-bottom))',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        pointerEvents: 'auto',
+    });
+
+    _modal.innerHTML = `
+        <div style="max-width:360px;width:100%;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                <img src="/vlad-avatar.png" alt="Vlad" style="width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:center 20%;border:1px solid rgba(255,0,237,0.4);flex-shrink:0;box-shadow:0 0 12px rgba(255,0,237,0.15);" />
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(255,0,237,0.7);letter-spacing:2px;">VLAD</span>
+                    <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:#c5a059;letter-spacing:1px;">${item.title}</span>
+                </div>
+            </div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.88rem;color:#ccc;line-height:1.6;margin-bottom:20px;">
+                ${item.text}
+            </div>
+            <button id="tourGotIt" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:12px 40px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.7rem;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%;">GOT IT</button>
+        </div>
+    `;
+
+    document.body.appendChild(_modal);
+
+    _modal.querySelector('#tourGotIt')?.addEventListener('click', () => {
+        if (_modal) { _modal.remove(); _modal = null; }
+        // Close the drawer
+        if (content?.classList.contains('open')) {
+            content.classList.remove('open');
+            if (arrow) arrow.innerText = '▼';
+        }
+        _restoreElements();
+        if (_darkOverlay) { _darkOverlay.remove(); _darkOverlay = null; }
+        _addIndicators();
+    });
 }
 
-function nextStep() {
-    const nextIsIntro = (_currentStep + 1) < STEPS.length && !STEPS[_currentStep + 1].desktop && !STEPS[_currentStep + 1].mobile;
-    // Don't fade out tooltip between intro slides — keeps background stable
-    if (!nextIsIntro && _tooltip) _tooltip.style.opacity = '0';
-    _currentStep++;
-    setTimeout(_showStep, nextIsIntro ? 50 : 200);
+function _removeDots() {
+    for (const dot of _dots) dot.remove();
+    _dots = [];
+    for (const saved of _savedPositions) {
+        saved.el.style.position = saved.position;
+        saved.el.style.overflow = saved.overflow;
+    }
+    _savedPositions = [];
+    if (_darkOverlay) { _darkOverlay.remove(); _darkOverlay = null; }
+    if (_statsCloseHandler) {
+        document.removeEventListener('click', _statsCloseHandler);
+        _statsCloseHandler = null;
+    }
 }
+
+function _removeIndicators() {
+    _removeDots();
+    _clickHandlers = [];
+}
+
+// ─── INTRO SLIDES ──────────────────────────────────────────────────────────
+
+let _introOverlay: HTMLDivElement | null = null;
+let _introStep = 0;
+
+function _showIntro() {
+    _introOverlay = document.createElement('div');
+    _introOverlay.id = 'tourIntro';
+    Object.assign(_introOverlay.style, {
+        position: 'fixed', inset: '0', zIndex: '10000001',
+        background: '#000', opacity: '0', transition: 'opacity 0.3s ease',
+    });
+
+    _introOverlay.innerHTML = `
+        <div style="width:100%;height:100%;background:url(/vlad-avatar.png) center 15% / cover no-repeat;position:relative;">
+            <div style="position:absolute;inset:0;background:linear-gradient(to top, #000 0%, rgba(0,0,0,0.9) 22%, rgba(0,0,0,0.4) 50%, transparent 65%);"></div>
+            <div id="tourIntroContent" style="position:absolute;bottom:0;left:0;right:0;text-align:center;padding:0 24px 24px;z-index:1;">
+                <div style="font-family:Orbitron,sans-serif;font-size:1.3rem;color:#c5a059;letter-spacing:6px;text-shadow:0 0 30px rgba(197,160,89,0.4);margin-bottom:20px;">MEET VLAD</div>
+                <div style="display:flex;gap:10px;justify-content:center;">
+                    <button id="introSkip" style="background:none;border:1px solid rgba(255,255,255,0.15);color:#555;padding:10px 20px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;cursor:pointer;letter-spacing:1px;">SKIP</button>
+                    <button id="introNext" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:10px 24px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;font-weight:700;cursor:pointer;letter-spacing:1px;">NEXT</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(_introOverlay);
+
+    _introOverlay.querySelector('#introSkip')?.addEventListener('click', _finishIntro);
+    _introOverlay.querySelector('#introNext')?.addEventListener('click', _introNextSlide);
+
+    requestAnimationFrame(() => {
+        if (_introOverlay) _introOverlay.style.opacity = '1';
+    });
+}
+
+function _introNextSlide() {
+    _introStep++;
+    if (_introStep === 1) {
+        // Second slide — Vlad's intro text
+        const content = _introOverlay?.querySelector('#tourIntroContent');
+        if (content) {
+            (content as HTMLElement).style.opacity = '0';
+            (content as HTMLElement).style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:#ccc;line-height:1.6;margin-bottom:18px;">I handle the boring stuff so Queen Karin does not have to. Questions, explanations, anything you need help with. She deals with the important things. Like you. Let me show you around.</div>
+                    <div style="display:flex;gap:10px;justify-content:center;">
+                        <button id="introSkip" style="background:none;border:1px solid rgba(255,255,255,0.15);color:#555;padding:10px 20px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;cursor:pointer;letter-spacing:1px;">SKIP</button>
+                        <button id="introNext" style="background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;padding:10px 24px;border-radius:8px;font-family:Orbitron,monospace;font-size:0.65rem;font-weight:700;cursor:pointer;letter-spacing:1px;">LET'S GO</button>
+                    </div>
+                `;
+                content.querySelector('#introSkip')?.addEventListener('click', _finishIntro);
+                content.querySelector('#introNext')?.addEventListener('click', _finishIntro);
+                (content as HTMLElement).style.opacity = '1';
+            }, 50);
+        }
+    } else {
+        _finishIntro();
+    }
+}
+
+function _finishIntro() {
+    if (_introOverlay) {
+        _introOverlay.style.opacity = '0';
+        setTimeout(() => {
+            _introOverlay?.remove();
+            _introOverlay = null;
+            // Enter explore mode
+            _addIndicators();
+        }, 300);
+    }
+}
+
+// ─── PUBLIC API ─────────────────────────────────────────────────────────────
 
 export function startTour() {
-    // Detect mobile using computed style (inline style says 'none' but CSS !important overrides it)
     const mob = document.getElementById('MOBILE_APP');
     _isMobile = !!(mob && window.getComputedStyle(mob).display !== 'none');
+    _explored = new Set();
+    _introStep = 0;
 
-    _currentStep = 0;
-    _createOverlay();
-
-    // Close any open modals/overlays that might interfere
+    // Close chat overlay
+    const chatOverlay = document.getElementById('mobChatOverlay');
+    if (chatOverlay) chatOverlay.style.display = 'none';
     const aiPanel = document.getElementById('mob_aiChatContent');
     if (aiPanel) aiPanel.style.display = 'none';
 
-    // Lock scrolling on the scroll container
-    _scrollContainer = document.getElementById('viewMobileHome') || document.documentElement;
-    if (_scrollContainer) {
-        _scrollContainer.dataset.tourOldOverflow = _scrollContainer.style.overflow;
-        _scrollContainer.style.overflow = 'hidden';
-    }
-
-    // Small delay for setup
-    setTimeout(_showStep, 300);
+    // Start with Vlad intro
+    setTimeout(_showIntro, 300);
 }
 
 export function endTour() {
-    if (_overlay) { _overlay.remove(); _overlay = null; }
-    if (_spotlight) { _spotlight.remove(); _spotlight = null; }
-    if (_tooltip) { _tooltip.remove(); _tooltip = null; }
-    _currentStep = 0;
-    // Restore scrolling
-    if (_scrollContainer) {
-        _scrollContainer.style.overflow = _scrollContainer.dataset.tourOldOverflow || '';
-        delete _scrollContainer.dataset.tourOldOverflow;
-        _scrollContainer = null;
+    _removeIndicators();
+    _restoreElements();
+    if (_modal) { _modal.remove(); _modal = null; }
+    if (_introOverlay) { _introOverlay.remove(); _introOverlay = null; }
+    if (_darkOverlay) { _darkOverlay.remove(); _darkOverlay = null; }
+    // Close stats drawer if left open
+    const statsContent = document.getElementById('mobStatsContent');
+    const statsArrow = document.getElementById('mobStatsArrow');
+    if (statsContent?.classList.contains('open')) {
+        statsContent.classList.remove('open');
+        if (statsArrow) statsArrow.innerText = '▼';
     }
-    // Clean up observers
-    ['_tourKneelObserver', '_tourIdentityObserver', '_tourRewardObserver'].forEach(k => {
-        if ((window as any)[k]) { (window as any)[k].disconnect(); (window as any)[k] = null; }
-    });
+    // Close overlays if left open
+    (window as any).closeMobChatOverlay?.();
+    (window as any).closeMobGlobal?.();
+    const prompt = document.getElementById('tourExplorePrompt');
+    if (prompt) prompt.remove();
+    const css = document.getElementById('tourPulseCSS');
+    if (css) css.remove();
+    _explored = new Set();
 }
 
 // Expose globally
 if (typeof window !== 'undefined') {
     (window as any).startProfileTour = startTour;
     (window as any).endProfileTour = endTour;
-    (window as any)._tourNextStep = nextStep;
-
 }

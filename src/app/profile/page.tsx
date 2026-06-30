@@ -1938,7 +1938,7 @@ export default function ProfilePage() {
                         </div>
 
                         {/* MOBILE KNEELING BUTTON */}
-                        <div style={{ width: '100%', padding: '28px 0 38px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div id="mobKneelSection" style={{ width: '100%', padding: '28px 0 38px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div className="mob-kneel-outer">
                                 <div id="mobKneelBar" className="mob-kneel-bar mob-kneel-zone"
                                     onContextMenu={(e) => e.preventDefault()}
