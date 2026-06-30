@@ -12,6 +12,7 @@ import { GlobalContent } from '@/app/dashboard/GlobalContent';
 // import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import { bindTributeGame } from '@/scripts/tribute-game';
+import { startTour, endTour } from '@/scripts/profile-tour';
 import {
     claimKneelReward,
     switchTab,
@@ -254,6 +255,8 @@ export default function ProfilePage() {
             (window as any).toggleEarnCoins = toggleEarnCoins;
             (window as any).toggleMobileStats = toggleMobileStats;
             (window as any).toggleMobileChat = toggleMobileChat;
+            (window as any).startProfileTour = startTour;
+            (window as any).endProfileTour = endTour;
             (window as any).mobileRequestTask = () => { getRandomTask(); };
             (window as any).mobileSkipTask = () => { skipTask(); };
             (window as any).executeSkipTask = executeSkipTask;
@@ -427,7 +430,7 @@ export default function ProfilePage() {
                 // Skips login when running on localhost so you can see UI changes instantly.
                 const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
                 if (isLocal) {
-                    const TEST_EMAIL = 'newuser@throne.test';
+                    const TEST_EMAIL = 'pr.finsko@gmail.com';
                     const res = await fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: TEST_EMAIL, full: true }) });
                     const unifiedData = await res.json();
                     console.log('[DEV MODE] Loaded real user:', unifiedData);
@@ -1965,61 +1968,8 @@ export default function ProfilePage() {
                             </button>
                         </div>
 
-                        {/* INVENTORY */}
-                        <div style={{ width: '100%', marginTop: '20px' }}>
-                            <div className="duty-label">INVENTORY</div>
-                            <div className="inv-grid">
-                                <div className="inv-card" id="invSkipPass">
-                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>
-                                    <div className="inv-name">SKIP PASS</div>
-                                    <div className="inv-count" id="invSkipCount">{profile?.skippass || 0}</div>
-                                    <div className="inv-tag inv-gift-only">GIFT ONLY</div>
-                                </div>
-                                <div className="inv-card" id="invCumPass" onClick={() => (window as any).openInventoryModal('cumpass')}>
-                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                                    <div className="inv-name">CUM PASS</div>
-                                    <div className="inv-count" id="invCumCount">{profile?.cumpass || 0}</div>
-                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
-                                </div>
-                                <div className="inv-card" id="invCheckpoint" onClick={() => (window as any).openInventoryModal('checkpoint')}>
-                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                    <div className="inv-name">CHECKPOINT</div>
-                                    <div className="inv-count" id="invCheckCount">{profile?.checkpoint || 0}</div>
-                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* THE VAULT */}
-                        <div style={{ width: '100%', marginTop: '20px' }}>
-                            <div className="duty-label">THE VAULT</div>
-                            <div id="vaultGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: 'Rajdhani', fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', padding: 20 }}>Loading...</div>
-                            </div>
-                        </div>
-
-                        {/* VAULT PREVIEW MODAL */}
-                        <div id="vaultPreviewModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                            <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-                                <div id="vaultPreviewContent"></div>
-                                <button onClick={() => { const m = document.getElementById('vaultPreviewModal'); if (m) m.style.display = 'none'; }} style={{ marginTop: 20, background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel', fontSize: '0.6rem', letterSpacing: 3, padding: '10px 30px', cursor: 'pointer' }}>CLOSE</button>
-                            </div>
-                        </div>
-
-                        {/* INVENTORY MODAL */}
-                        <div id="inventoryModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                            <div style={{ maxWidth: 340, width: '100%', background: 'rgba(10,5,20,0.95)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 16, padding: '30px 24px', textAlign: 'center' }}>
-                                <div id="invModalIcon" style={{ fontSize: '2.5rem', marginBottom: 8 }}></div>
-                                <div id="invModalTitle" style={{ fontFamily: 'Cinzel', fontSize: '1rem', color: '#c5a059', letterSpacing: 3, marginBottom: 6 }}></div>
-                                <div id="invModalDesc" style={{ fontFamily: 'Rajdhani', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 16 }}></div>
-                                <div id="invModalCount" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, marginBottom: 16 }}></div>
-                                <div id="invModalActions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}></div>
-                                <button onClick={() => (window as any).closeInventoryModal()} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron', fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>CLOSE</button>
-                            </div>
-                        </div>
-
                         {/* CURRENT STATUS */}
-                        <div style={{ width: '100%', marginTop: '20px' }}>
+                        <div id="mobCurrentStatus" style={{ width: '100%', marginTop: '20px' }}>
                             <div className="duty-label">CURRENT STATUS</div>
                             <div className="luxury-card">
                                 <div id="qm_TaskIdle" className="hidden" style={{ textAlign: 'center' }}>
@@ -2070,6 +2020,59 @@ export default function ProfilePage() {
                                         <button id="mobBtnDismissTask" className="btn-upload-sm" style={{ borderColor: 'rgba(255,255,255,0.4)', borderWidth: '2px', color: 'white', padding: '15px 0', fontSize: '0.75rem', whiteSpace: 'nowrap', width: '70%' }} onClick={() => (window as any).resetTaskUI()}>THANK YOU, QUEEN KARIN</button>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* INVENTORY */}
+                        <div style={{ width: '100%', marginTop: '20px' }}>
+                            <div className="duty-label">INVENTORY</div>
+                            <div className="inv-grid">
+                                <div className="inv-card" id="invSkipPass">
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 5H2"/><path d="M13 9H2"/><path d="M13 13H6"/><path d="M17 17l4-4-4-4"/><path d="M21 13H8"/></svg>
+                                    <div className="inv-name">SKIP PASS</div>
+                                    <div className="inv-count" id="invSkipCount">{profile?.skippass || 0}</div>
+                                    <div className="inv-tag inv-gift-only">GIFT ONLY</div>
+                                </div>
+                                <div className="inv-card" id="invCumPass" onClick={() => (window as any).openInventoryModal('cumpass')}>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                    <div className="inv-name">CUM PASS</div>
+                                    <div className="inv-count" id="invCumCount">{profile?.cumpass || 0}</div>
+                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
+                                </div>
+                                <div className="inv-card" id="invCheckpoint" onClick={() => (window as any).openInventoryModal('checkpoint')}>
+                                    <svg className="inv-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <div className="inv-name">CHECKPOINT</div>
+                                    <div className="inv-count" id="invCheckCount">{profile?.checkpoint || 0}</div>
+                                    <div className="inv-tag inv-buyable">TAP TO VIEW</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* THE VAULT */}
+                        <div style={{ width: '100%', marginTop: '20px' }}>
+                            <div className="duty-label">THE VAULT</div>
+                            <div id="vaultGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: 'Rajdhani', fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', padding: 20 }}>Loading...</div>
+                            </div>
+                        </div>
+
+                        {/* VAULT PREVIEW MODAL */}
+                        <div id="vaultPreviewModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+                                <div id="vaultPreviewContent"></div>
+                                <button onClick={() => { const m = document.getElementById('vaultPreviewModal'); if (m) m.style.display = 'none'; }} style={{ marginTop: 20, background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel', fontSize: '0.6rem', letterSpacing: 3, padding: '10px 30px', cursor: 'pointer' }}>CLOSE</button>
+                            </div>
+                        </div>
+
+                        {/* INVENTORY MODAL */}
+                        <div id="inventoryModal" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 2147483645, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ maxWidth: 340, width: '100%', background: 'rgba(10,5,20,0.95)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 16, padding: '30px 24px', textAlign: 'center' }}>
+                                <div id="invModalIcon" style={{ fontSize: '2.5rem', marginBottom: 8 }}></div>
+                                <div id="invModalTitle" style={{ fontFamily: 'Cinzel', fontSize: '1rem', color: '#c5a059', letterSpacing: 3, marginBottom: 6 }}></div>
+                                <div id="invModalDesc" style={{ fontFamily: 'Rajdhani', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 16 }}></div>
+                                <div id="invModalCount" style={{ fontFamily: 'Orbitron', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2, marginBottom: 16 }}></div>
+                                <div id="invModalActions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}></div>
+                                <button onClick={() => (window as any).closeInventoryModal()} style={{ marginTop: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron', fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>CLOSE</button>
                             </div>
                         </div>
 

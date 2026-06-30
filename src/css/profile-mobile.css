@@ -3037,13 +3037,15 @@
 }
 
 .ai-topic-btn {
-    background: rgba(255, 0, 237, 0.08);
-    border: 1px solid rgba(255, 0, 237, 0.25);
-    color: rgba(255, 200, 250, 0.85);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 0, 237, 0.3);
+    color: rgba(255, 200, 250, 0.9);
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.5rem;
+    font-size: 0.6rem;
     letter-spacing: 1px;
-    padding: 8px 14px;
+    padding: 10px 18px;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s;
@@ -3051,7 +3053,9 @@
 }
 
 .ai-topic-btn:active {
-    background: rgba(255, 0, 237, 0.2);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-color: rgba(255, 0, 237, 0.5);
     transform: scale(0.95);
 }
