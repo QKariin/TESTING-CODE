@@ -12,6 +12,7 @@ import { GlobalContent } from '@/app/dashboard/GlobalContent';
 // import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import { bindTributeGame } from '@/scripts/tribute-game';
+import '@/scripts/profile-tour';
 import {
     claimKneelReward,
     switchTab,

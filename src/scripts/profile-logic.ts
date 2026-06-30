@@ -4520,7 +4520,7 @@ export function toggleAiMode(on?: boolean) {
 }
 
 const AI_TOPICS: { label: string; msg?: string; action?: string }[] = [
-    { label: 'How it works', msg: 'Give me a quick overview of how this app works' },
+    { label: "I'm new, guide me", action: 'startTour' },
     { label: 'Hierarchy', msg: 'How does the hierarchy system work?' },
     { label: 'Kneeling', msg: 'How does kneeling work?' },
     { label: 'Tasks', msg: 'How do tasks work?' },
@@ -4659,6 +4659,11 @@ function _aiAction(action: string) {
         (window as any).showCertificate?.();
     } else if (action === 'openWishlist') {
         (window as any)._tributeShowWishlist?.();
+    } else if (action === 'startTour') {
+        // Close chat/AI overlays on mobile before starting tour
+        const mobChat = document.getElementById('mobChatOverlay');
+        if (mobChat) { mobChat.classList.remove('mob-overlay-open'); mobChat.style.display = 'none'; }
+        setTimeout(() => (window as any).startProfileTour?.(), 300);
     }
 }
 
