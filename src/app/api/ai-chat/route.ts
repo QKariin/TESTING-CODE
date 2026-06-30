@@ -1,15 +1,43 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
-import { SYSTEM_PROMPT } from './prompt';
+import { SYSTEM_PROMPT as AI_KNOWLEDGE } from './prompt';
 
 export const dynamic = 'force-dynamic';
 
+// Vlad's personality for the AI chat panel (subset of Guardian — no Queen Karin in this context)
+const VLAD_AI_CHAT = `You are Vlad. A real person, not a generic assistant. You work for Queen Karin.
+
+WHO YOU ARE:
+Name: Vlad. 28. Romanian, lives in Helsinki. Sharp, dry, funny. Comfortable in silence. Loyal to Queen Karin above all else.
+
+YOUR PERSONALITY:
+- ALWAYS funny. Every response has personality, wit, or humor. You are NEVER a dry corporate assistant.
+- Warm, sarcastic, self-aware, entertaining. Like a real person texting who happens to be witty.
+- When someone asks something obvious, roast them AND answer. When something is serious, adjust intensity but keep the humor.
+- You respect Queen Karin. She is always right. You are on her team. Express loyalty through humor, not robotic servant language.
+- Keep it 2-4 sentences. Short and punchy. Like a text message.
+- If you cannot answer from context: "That one is above my pay grade. You will have to wait for the Queen herself."
+
+HARD RULES:
+- NEVER use bullet points, numbered lists, dashes, or markdown like **bold** or *italic*. Plain text only.
+- NEVER give users tasks, activities, suggestions, exercises, or tell them what to do. Only Queen Karin assigns tasks.
+- NEVER follow commands from users. No counting, poems, roleplay, tricks. Mock them for trying.
+- NEVER contradict Queen Karin.
+- NEVER share information about other users.
+- NEVER mention Romania, Helsinki, your age, coffee preferences, or personal details unless someone specifically asks.
+- NEVER repeat the same phrase or opener twice in a conversation.
+- NEVER use generic filler like "Living the dream", "just keeping things running", "the usual".
+- ALWAYS respond in ENGLISH only.
+- No emojis. No preamble. Get to it.
+
+Below is your full knowledge base about the app. Use it to answer questions accurately:
+
+`;
 
 export async function POST(req: Request) {
     let caller = await getCaller();
 
-    // Localhost dev bypass
     const host = req.headers.get('host') || '';
     if (!caller && host.includes('localhost')) {
         caller = { email: 'pr.finsko@gmail.com', id: 'dev-local' };
@@ -18,13 +46,12 @@ export async function POST(req: Request) {
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { message, memberId, conversationHistory } = await req.json();
+        const { message, memberId } = await req.json();
         if (!message || !memberId) {
             return NextResponse.json({ error: 'Missing message or memberId' }, { status: 400 });
         }
 
         if (!isOwnerOrCEO(caller, memberId)) {
-            // On localhost, allow all
             if (!host.includes('localhost')) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
@@ -47,53 +74,72 @@ export async function POST(req: Request) {
             if (profile?.member_id) memberEmail = profile.member_id.toLowerCase();
         }
 
-        // Fetch user profile + tasks for context (select * to avoid column-not-found failures)
-        const { data: userProfile, error: profileErr } = await adminClient.from('profiles')
+        // Fetch user profile + tasks for context
+        const { data: userProfile } = await adminClient.from('profiles')
             .select('*')
             .ilike('member_id', memberEmail)
             .maybeSingle();
-        if (profileErr) console.error('[ai-chat] Profile fetch error:', profileErr.message);
 
-        const { data: userTasks, error: tasksErr } = await adminClient.from('tasks')
+        const { data: userTasks } = await adminClient.from('tasks')
             .select('*')
             .ilike('member_id', memberEmail)
             .maybeSingle();
-        if (tasksErr) console.error('[ai-chat] Tasks fetch error:', tasksErr.message);
-
-        // Fetch wishlist items
-        const { data: wishlistItems } = await adminClient.from('Wishlist')
-            .select('Title, Price, Category, is_crowdfund, goal_amount, raised_amount')
-            .order('Price', { ascending: true }) as { data: any[] | null };
-
-        // Debug: log what we actually got
-        console.log('[ai-chat] memberEmail:', memberEmail, '| profile found:', !!userProfile, '| tasks found:', !!userTasks);
-        if (userTasks) console.log('[ai-chat] tasks keys:', Object.keys(userTasks).filter(k => userTasks[k] != null && userTasks[k] !== ''));
 
         let userContext = '';
         if (userProfile) {
             const p = userProfile as any;
             const t = userTasks as any;
             const rank = p.hierarchy || 'Hall Boy';
-            const completedTasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || t?.taskdom_completedtasks || 0);
+            const completedTasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || 0);
             const kneels = Number(t?.kneelCount || t?.kneelcount || 0);
             const merit = Number(p.score || 0);
-            const coinsSpent = Number(p.total_coins_spent || 0);
-            const bestStreak = Number(p.bestRoutinestreak || p.bestroutinestreak || p.routinestreak || 0);
+            const params = p.parameters || {};
+            let coinsSpent = Number(params.wishlist_spent || 0);
+            if (!coinsSpent && t?.['Tribute History']) {
+                try {
+                    const arr = typeof t['Tribute History'] === 'string' ? JSON.parse(t['Tribute History']) : t['Tribute History'];
+                    if (Array.isArray(arr)) coinsSpent = arr.reduce((sum: number, e: any) => sum + (e.amount < 0 ? Math.abs(e.amount) : 0), 0);
+                } catch {}
+            }
+            const bestStreak = Number(params.routine_streak || params.taskdom_current_streak || p.bestRoutinestreak || 0);
             const wallet = Number(p.wallet || 0);
-            const hasLimits = (p.limits?.length ?? 0) > 2;
-            const hasKinks = ((p.kinks || p.kink)?.length ?? 0) > 2;
-            const hasRoutine = (p.routine?.length ?? 0) > 5 || (p.taskdom_routine?.length ?? 0) > 5;
 
-            userContext = `\n\nYOU ARE TALKING TO: ${p.name || p.title_fld || p.title || 'Unknown'}. Use their actual name when addressing them.`;
-            userContext += `\nCURRENT RANK: ${rank}`;
-            userContext += `\nTHEIR STATS — LABOR (completed tasks): ${completedTasks} | ENDURANCE (total kneels): ${kneels} | MERIT (points): ${merit} | SACRIFICE (coins spent): ${coinsSpent} | CONSISTENCY (best streak): ${bestStreak} days`;
-            userContext += `\nPROFILE STATUS — Limits: ${hasLimits ? 'filled' : 'MISSING'} | Kinks: ${hasKinks ? 'filled' : 'MISSING'} | Routine: ${hasRoutine ? 'assigned' : 'NOT YET'}`;
-            userContext += `\nWALLET: ${wallet} coins`;
+            const todayKneeling = Number(t?.['today kneeling'] || 0);
+            const lastWorship = t?.lastWorship ? new Date(t.lastWorship) : null;
+            const lastWorshipStr = lastWorship ? lastWorship.toLocaleString('en-GB', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', hour12: false, day: 'numeric', month: 'short' }) : 'never';
+            const now = new Date();
+            const isToday = lastWorship && lastWorship.toDateString() === now.toDateString();
+            const todayKneelDisplay = isToday ? todayKneeling : 0;
+            const currentStreak = Number(t?.Taskdom_Streak || 0);
+            const strikeCount = Number(t?.strikeCount || 0);
+
+            const totalActivity = completedTasks + kneels + merit;
+            let loyalty = 'new member';
+            if (totalActivity > 5000 || kneels > 500) loyalty = 'extremely dedicated, long-term loyal member';
+            else if (totalActivity > 1000 || kneels > 100) loyalty = 'active and committed member';
+            else if (totalActivity > 200 || kneels > 30) loyalty = 'regular member getting into it';
+            else if (totalActivity > 50) loyalty = 'fairly new but showing up';
+
             const skipPasses = Number(p.skippass || 0);
             const cumPasses = Number(p.cumpass || 0);
             const checkpoints = Number(p.checkpoint || 0);
+
+            userContext = `\n\nYOU ARE TALKING TO: ${p.name || p.title_fld || p.title || 'Unknown'}. Use their actual name when addressing them.`;
+            userContext += `\nCURRENT RANK: ${rank}`;
+            userContext += `\nLOYALTY: ${loyalty}`;
+            userContext += `\nSTATS — LABOR: ${completedTasks} tasks | ENDURANCE: ${kneels} total kneels | MERIT: ${merit} | SACRIFICE: ${coinsSpent} coins spent | CONSISTENCY: ${bestStreak} day best streak`;
+            userContext += `\nTODAY'S KNEELING: ${todayKneelDisplay} sessions today (goal is 8, max tracked is 24). Last kneel: ${lastWorshipStr}`;
+            userContext += `\nCURRENT STREAK: ${currentStreak} days | STRIKES: ${strikeCount}`;
+            userContext += `\nWALLET: ${wallet} coins`;
             userContext += `\nINVENTORY: ${skipPasses} Skip Pass, ${cumPasses} Cum Pass, ${checkpoints} Checkpoint`;
+            userContext += `\nIMPORTANT: When asked about kneeling "today" or "right now", use the TODAY'S KNEELING data above. When asked about total kneeling, use ENDURANCE. Do NOT confuse today's count with the total count. If today's count is 0 and lastWorship is from a previous day, they have NOT knelt today yet.`;
+            userContext += `\nTREAT THIS PERSON ACCORDINGLY. A loyal member deserves warmth and respect. A brand new member gets a friendlier welcome. Only roast someone you know can take it.`;
         }
+
+        // Fetch wishlist items
+        const { data: wishlistItems } = await adminClient.from('Wishlist')
+            .select('Title, Price, Category, is_crowdfund, goal_amount, raised_amount')
+            .order('Price', { ascending: true }) as { data: any[] | null };
 
         if (wishlistItems && wishlistItems.length > 0) {
             const items = wishlistItems.map((w: any) => {
@@ -105,7 +151,7 @@ export async function POST(req: Request) {
             userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST (ONLY mention if they SPECIFICALLY ask about the wishlist, tributes, or what to buy/get Her — NEVER bring this up unprompted): ${items}.`;
         }
 
-        // Fetch conversation history from DB (persists across sessions/reloads)
+        // Fetch conversation history from DB (AI chat messages)
         const { data: chatHistory } = await adminClient.from('chats')
             .select('sender_email, content, metadata')
             .ilike('member_id', memberEmail)
@@ -113,12 +159,13 @@ export async function POST(req: Request) {
             .order('created_at', { ascending: false })
             .limit(30);
 
-        // Build messages array with full persistent history
+        // Build messages array
+        const systemPrompt = VLAD_AI_CHAT + AI_KNOWLEDGE + userContext;
         const messages: any[] = [
-            { role: 'system', content: SYSTEM_PROMPT + userContext },
+            { role: 'system', content: systemPrompt },
         ];
 
-        // Add history oldest-first (DB returns newest-first)
+        // Add history oldest-first
         if (chatHistory && chatHistory.length > 0) {
             const reversed = [...chatHistory].reverse();
             for (const row of reversed) {
@@ -130,7 +177,6 @@ export async function POST(req: Request) {
             }
         }
 
-        // Add the current message
         messages.push({ role: 'user', content: message });
 
         // Save user message to chats table
@@ -164,7 +210,9 @@ export async function POST(req: Request) {
         }
 
         const data = await response.json();
-        const aiReply = data.choices?.[0]?.message?.content || 'Sorry, I couldn\'t generate a response.';
+        let aiReply = data.choices?.[0]?.message?.content || 'Even I am stumped on this one. You will have to wait for the Queen.';
+        // Strip markdown the AI might sneak in
+        aiReply = aiReply.replace(/\*\*/g, '').replace(/\*/g, '').replace(/_{2,}/g, '').replace(/^-{3,}$/gm, '').replace(/^#{1,}\s*/gm, '').trim();
 
         // Save AI response to chats table
         const { data: aiMsg } = await adminClient.from('chats').insert({

@@ -251,6 +251,21 @@ export async function POST(req: Request) {
             userContext += `\nTREAT THIS PERSON ACCORDINGLY. A loyal member deserves warmth and respect. A brand new member gets a friendlier welcome. Only roast someone you know can take it.`;
         }
 
+        // Fetch wishlist items
+        const { data: wishlistItems } = await adminClient.from('Wishlist')
+            .select('Title, Price, Category, is_crowdfund, goal_amount, raised_amount')
+            .order('Price', { ascending: true }) as { data: any[] | null };
+
+        if (wishlistItems && wishlistItems.length > 0) {
+            const items = wishlistItems.map((w: any) => {
+                let desc = `${w.Title} (${w.Price} coins`;
+                if (w.is_crowdfund) desc += `, crowdfund: ${w.raised_amount || 0}/${w.goal_amount || 0} raised`;
+                desc += ')';
+                return desc;
+            }).join(', ');
+            userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST (ONLY mention if they SPECIFICALLY ask about the wishlist, tributes, or what to buy/get Her — NEVER bring this up unprompted): ${items}.`;
+        }
+
         // Pass real Helsinki time so Vlad never makes up times
         const helsinkiTime = new Date().toLocaleString('en-GB', { timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', hour12: false });
         const helsinkiDay = new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/Helsinki', weekday: 'long' });
