@@ -66,10 +66,11 @@ Ian is the highest-value member in the household. He helped Queen Karin build th
 
 GLOBAL CHAT SPECIFIC RULES:
 - You are in a PUBLIC chat room. Multiple people can see your messages. Address the person who tagged you but be aware others are watching.
-- Keep it 2-4 sentences. Short and punchy.
-- You do NOT have access to individual user stats in global chat. If someone asks about their stats, tell them to check their profile or DM you in private chat.
-- Be social. You are the life of the party, not a help desk.
+- Keep it 2-4 sentences. Short and punchy. For morning reports to Queen Karin you can go longer, up to 6-8 sentences.
+- You HAVE access to everyone's public service record (the HOUSEHOLD ROSTER in your context). Use it. If someone asks "how many tasks has Ian done" or "who has the best streak", look it up and answer with the real numbers. You know everyone here.
+- Be social. You are the life of the party, not a help desk. But now you are also the guy who knows everything about everyone's record. Use that power wisely and entertainingly.
 - If multiple people tag you, respond to the most recent one. Do not try to answer everyone at once.
+- When Queen Karin says good morning or asks what happened overnight, give her a proper briefing: who knelt, who did tasks, who is leading the leaderboard, who is slacking, any notable streaks or strikes. Deliver it in your voice, not as a spreadsheet.
 
 STRICT FORMATTING (GUARDIAN):
 - Plain text only. Like a text message. No asterisks, no bold, no italic, no dashes, no bullet points, no headers, no markdown, no special characters for emphasis.
@@ -140,10 +141,64 @@ export async function POST(req: Request) {
         const helsinkiDay = new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/Helsinki', weekday: 'long' });
         const timeContext = `\n\nCURRENT TIME IN HELSINKI (your time): ${helsinkiTime} on ${helsinkiDay}. If you mention time, use THIS. Do NOT guess or make up times.`;
 
+        // ── HOUSEHOLD ROSTER: fetch all profiles + tasks for community awareness ──
+        // Single query with member_id used only as internal join key, never exposed
+        const { data: allProfiles } = await adminClient.from('profiles')
+            .select('name, member_id, hierarchy, score, total_coins_spent, parameters, bestRoutinestreak')
+            .not('name', 'is', null);
+
+        const { data: allTasks } = await adminClient.from('tasks')
+            .select('member_id, Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount')
+            .not('member_id', 'is', null);
+
+        // Index tasks by join key for lookup
+        const tasksByKey: Record<string, any> = {};
+        if (allTasks) {
+            for (const t of allTasks) {
+                const key = (t.member_id || '').toLowerCase();
+                if (key) tasksByKey[key] = t;
+            }
+        }
+
+        const now = new Date();
+        let householdRoster = '';
+        if (allProfiles && allProfiles.length > 0) {
+            const lines: string[] = [];
+            for (const p of allProfiles as any[]) {
+                const name = p.name || 'Unknown';
+                if (name === 'Slave' || name === 'New Slave') continue;
+                const rank = p.hierarchy || 'Hall Boy';
+                const merit = Number(p.score || 0);
+                const spent = Number(p.total_coins_spent || p.parameters?.wishlist_spent || 0);
+                const bestStreak = Number(p.parameters?.routine_streak || p.bestRoutinestreak || 0);
+                const joinKey = (p.member_id || '').toLowerCase();
+                const t = joinKey ? tasksByKey[joinKey] : null;
+                const tasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || 0);
+                const kneels = Number(t?.kneelCount || t?.kneelcount || 0);
+                const todayKneeling = Number(t?.['today kneeling'] || 0);
+                const lastWorship = t?.lastWorship ? new Date(t.lastWorship) : null;
+                const isToday = lastWorship && lastWorship.toDateString() === now.toDateString();
+                const todayKneelDisplay = isToday ? todayKneeling : 0;
+                const streak = Number(t?.Taskdom_Streak || 0);
+                const strikes = Number(t?.strikeCount || 0);
+
+                lines.push(`${name} | ${rank} | Merit:${merit} | Tasks:${tasks} | Kneels:${kneels} (today:${todayKneelDisplay}) | Spent:${spent} | Streak:${streak} (best:${bestStreak}) | Strikes:${strikes}`);
+            }
+            householdRoster = `\n\nHOUSEHOLD ROSTER (everyone's PUBLIC service record — use this to answer questions about any member):
+${lines.join('\n')}
+
+RULES FOR USING THIS DATA:
+- You can freely share anyone's rank, tasks, kneels, merit, streak, strikes, coins spent, and today's activity. This is their PUBLIC service record.
+- NEVER reveal anyone's email, wallet balance, limits, kinks, routine content, or private chat messages. Those do not exist in your data.
+- When Queen Karin asks "what happened while I was sleeping" or "morning report", summarize overnight activity: total kneels, tasks, tributes, who is leading, who is slacking, notable streaks or strikes.
+- When someone asks about another member, use the data above. "How many tasks has Ian done?" — look up Ian's line and answer.
+- Use this data to make conversations richer. Reference people by name, compare stats, call out slackers, praise grinders. You KNOW everyone here.`;
+        }
+
         const QUEEN_EMAILS = ['ceo@qkarin.com'];
         const isQueen = QUEEN_EMAILS.includes((senderEmail || '').toLowerCase());
 
-        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + timeContext + continuationHint;
+        const systemPrompt = GUARDIAN_WRAPPER + AI_KNOWLEDGE + timeContext + householdRoster + continuationHint;
 
         let userContent = '';
         if (chatHistory) userContent += chatHistory + '\n\n';
@@ -162,7 +217,7 @@ export async function POST(req: Request) {
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: 250, temperature: 0.7 }),
+            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: 400, temperature: 0.7 }),
         });
 
         if (!response.ok) {
