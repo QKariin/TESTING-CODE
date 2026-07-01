@@ -2379,6 +2379,16 @@ export function toggleMobileStats() {
     }
 }
 
+export function toggleNextRankBenefits() {
+    const wrap = document.getElementById('drawer_NextBenefitsWrap');
+    if (!wrap) return;
+    if (wrap.style.maxHeight && wrap.style.maxHeight !== '0px') {
+        wrap.style.maxHeight = '0';
+    } else {
+        wrap.style.maxHeight = wrap.scrollHeight + 'px';
+    }
+}
+
 export function toggleMobileChat(show: boolean) {
     if (show) {
         document.getElementById('inlineChatPanel')?.classList.remove('hidden');

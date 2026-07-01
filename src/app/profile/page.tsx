@@ -23,6 +23,7 @@ import {
     closeQueenMenu,
     toggleEarnCoins,
     toggleMobileStats,
+    toggleNextRankBenefits,
     toggleMobileChat,
     handleRoutineUpload,
     handleTaskEvidenceUpload,
@@ -254,6 +255,7 @@ export default function ProfilePage() {
             (window as any).closeQueenMenu = closeQueenMenu;
             (window as any).toggleEarnCoins = toggleEarnCoins;
             (window as any).toggleMobileStats = toggleMobileStats;
+            (window as any).toggleNextRankBenefits = toggleNextRankBenefits;
             (window as any).toggleMobileChat = toggleMobileChat;
             (window as any).startProfileTour = startTour;
             (window as any).endProfileTour = endTour;
@@ -1927,13 +1929,13 @@ export default function ProfilePage() {
                                 </div>
                                 <div style={{ width: '100%', textAlign: 'center', marginBottom: '15px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', letterSpacing: '2px' }}>WORKING ON PROMOTION TO</div>
-                                    <div id="drawer_NextRank" style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase' }}>-</div>
+                                    <div id="drawer_NextRank" onClick={() => (window as any).toggleNextRankBenefits?.()} style={{ fontFamily: 'Orbitron', fontSize: '1.4rem', color: '#c5a059', fontWeight: 900, letterSpacing: '1px', marginTop: '5px', textShadow: '0 0 15px rgba(197,160,89,0.3)', textTransform: 'uppercase', cursor: 'pointer' }}>-</div>
+                                    <div id="drawer_NextBenefitsWrap" style={{ maxHeight: '0', overflow: 'hidden', transition: 'max-height 0.35s ease', width: '100%', textAlign: 'center' }}>
+                                        <div style={{ fontFamily: 'Orbitron', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px', marginTop: '12px', marginBottom: '6px' }}>UNLOCKS AT THIS RANK</div>
+                                        <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: '0', lineHeight: 1.6, margin: 0, listStyle: 'none', fontStyle: 'italic' }}></ul>
+                                    </div>
                                 </div>
                                 <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
-                                <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
-                                    <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
-                                    <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '0', lineHeight: 1.6, margin: 0, listStyle: 'none' }}></ul>
-                                </div>
                             </div>
                         </div>
 
