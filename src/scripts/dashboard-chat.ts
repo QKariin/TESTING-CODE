@@ -568,16 +568,35 @@ function renderToHtml(m: any) {
             const checked = (d.explored || []).length;
             const total = d.totalItems || 0;
             const time = d.timeFormatted || '0s';
-            const items = (d.explored || []).map((t: string) => purifier.sanitize(t)).join(', ') || 'Nothing';
+            const exploredList = (d.explored || []).map((t: string) => purifier.sanitize(t));
+            const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+            const barColor = pct >= 70 ? '#4ade80' : pct >= 40 ? '#c5a059' : '#ff4444';
+
+            const itemDots = exploredList.map((t: string) =>
+                `<div style="display:flex;align-items:center;gap:6px;margin:3px 0;"><div style="width:6px;height:6px;border-radius:50%;background:${barColor};flex-shrink:0;"></div><span style="font-size:0.65rem;color:rgba(255,255,255,0.5);font-family:Rajdhani,sans-serif;">${t}</span></div>`
+            ).join('');
+
             return `
                 <div class="chat-gift-wrap">
-                    <div style="max-width:280px;width:65vw;border-radius:12px;background:rgba(255,0,237,0.03);border:1px solid rgba(255,0,237,0.2);padding:14px 18px;text-align:center;">
-                        <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:rgba(255,0,237,0.5);letter-spacing:3px;margin-bottom:6px;">TOUR REPORT</div>
-                        <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:8px;">${name}</div>
-                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.5;">
-                            Checked <span style="color:#c5a059;">${checked}/${total}</span> sections in <span style="color:#c5a059;">${time}</span>
+                    <div style="max-width:300px;width:70vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0c080f 0%,#120c18 50%,#0c080f 100%);border:1px solid rgba(160,100,255,0.25);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 20px rgba(160,100,255,0.06);">
+                        <div style="padding:16px 18px 12px;text-align:center;border-bottom:1px solid rgba(160,100,255,0.1);">
+                            <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,255,0.7)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                <span style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(160,100,255,0.6);letter-spacing:4px;">GUIDED TOUR</span>
+                            </div>
+                            <div style="font-family:Cinzel,serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:4px;">${name}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);">spent ${time} exploring</div>
                         </div>
-                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">${items}</div>
+                        <div style="padding:14px 18px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span style="font-family:Orbitron,sans-serif;font-size:0.4rem;color:rgba(160,100,255,0.5);letter-spacing:2px;">PROGRESS</span>
+                                <span style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:${barColor};font-weight:700;">${checked}/${total}</span>
+                            </div>
+                            <div style="width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:14px;">
+                                <div style="width:${pct}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.3s;"></div>
+                            </div>
+                            ${checked > 0 ? `<div style="margin-top:4px;">${itemDots}</div>` : '<div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);text-align:center;">Did not explore any sections</div>'}
+                        </div>
                     </div>
                     ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
                 </div>`;

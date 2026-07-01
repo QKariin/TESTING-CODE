@@ -27,10 +27,10 @@ export async function POST(req: Request) {
 
         await adminClient.from('chats').insert({
             member_id: memberId,
-            sender_email: 'system',
+            sender_email: 'ceo@qkarin.com',
             content: `TOUR_REPORT::${JSON.stringify(payload)}`,
-            type: 'system',
-            metadata: { isTourReport: true },
+            type: 'chat',
+            metadata: { isTourReport: true, isQueen: true },
         });
 
         return NextResponse.json({ success: true });
