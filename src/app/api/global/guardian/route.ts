@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller } from '@/lib/api-auth';
 import { SYSTEM_PROMPT as AI_KNOWLEDGE } from '../../ai-chat/prompt';
 
@@ -142,13 +143,19 @@ export async function POST(req: Request) {
         const timeContext = `\n\nCURRENT TIME IN HELSINKI (your time): ${helsinkiTime} on ${helsinkiDay}. If you mention time, use THIS. Do NOT guess or make up times.`;
 
         // ── HOUSEHOLD ROSTER: fetch all profiles + tasks for community awareness ──
-        // Mirror the leaderboard API's join logic exactly: iterate tasks, look up profiles with 3 fallback strategies
-        const [{ data: allProfiles }, { data: allTasks }] = await Promise.all([
-            adminClient.from('profiles')
+        // Use supabaseAdmin (same as leaderboard API) with error logging
+        const [profilesResult, tasksResult] = await Promise.all([
+            supabaseAdmin.from('profiles')
                 .select('name, member_id, "ID", hierarchy, score, total_coins_spent, parameters, bestRoutinestreak'),
-            adminClient.from('tasks')
+            supabaseAdmin.from('tasks')
                 .select('member_id, "ID", "Name", Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score", "Taskdom_History", "Tribute History"')
         ]);
+
+        const allProfiles = profilesResult.data;
+        const allTasks = tasksResult.data;
+        if (profilesResult.error) console.error('[guardian] profiles query error:', profilesResult.error);
+        if (tasksResult.error) console.error('[guardian] tasks query error:', tasksResult.error);
+        console.error(`[guardian] Data loaded: ${allProfiles?.length || 0} profiles, ${allTasks?.length || 0} tasks`);
 
         // Index profiles by BOTH email (member_id) AND UUID (ID) — same as leaderboard API
         const profileByEmail = new Map<string, any>();
@@ -234,6 +241,8 @@ export async function POST(req: Request) {
                     daily, weekly, monthly, alltime, todayKneels: todayKneelDisplay,
                 });
             }
+
+            console.error(`[guardian] Roster built: ${rosterEntries.length} entries. Sample:`, rosterEntries.slice(0, 2).map(e => e.line));
 
             // Build leaderboard rankings (top 5 per period)
             const makeBoard = (key: 'daily' | 'weekly' | 'monthly' | 'alltime', label: string) => {
