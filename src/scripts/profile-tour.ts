@@ -2,6 +2,8 @@
 // Modal-based walkthrough. User taps elements to learn about them.
 // Clones the element into a modal where Vlad explains it.
 
+import { getState } from './profile-state';
+
 interface TourItem {
     desktop?: string;
     mobile?: string;
@@ -83,6 +85,7 @@ let _clickHandlers: { el: HTMLElement; handler: (e: Event) => void }[] = [];
 let _explored: Set<string> = new Set();
 let _exploredTitles: string[] = [];
 let _tourStartTime: number = 0;
+let _tourReportSent: boolean = false;
 let _hiddenEls: { el: HTMLElement; visibility: string }[] = [];
 
 function _getSelector(item: TourItem): string | undefined {
@@ -571,6 +574,7 @@ function _showIntro() {
 
 function _introNextSlide() {
     _introStep++;
+    if (!_exploredTitles.includes('INTRO: MEET VLAD')) _exploredTitles.push('INTRO: MEET VLAD');
     if (_introStep === 1) {
         // Second slide — Vlad's intro text
         const content = _introOverlay?.querySelector('#tourIntroContent');
@@ -596,6 +600,10 @@ function _introNextSlide() {
 }
 
 function _finishIntro() {
+    // Track if they skipped vs completed the intro
+    if (_introStep === 0 && !_exploredTitles.includes('INTRO: SKIPPED')) {
+        _exploredTitles.push('INTRO: SKIPPED');
+    }
     if (_introOverlay) {
         _introOverlay.style.opacity = '0';
         setTimeout(() => {
@@ -615,6 +623,7 @@ export function startTour() {
     _explored = new Set();
     _exploredTitles = [];
     _tourStartTime = Date.now();
+    _tourReportSent = false;
     _introStep = 0;
 
     // Close chat overlay
@@ -655,15 +664,22 @@ export function endTour() {
 }
 
 function _sendTourReport() {
-    if (!_tourStartTime) return;
+    if (!_tourStartTime || _tourReportSent) return;
+    _tourReportSent = true;
+
     const durationSeconds = Math.round((Date.now() - _tourStartTime) / 1000);
-    // Only report if they spent at least 3 seconds (not accidental open/close)
-    if (durationSeconds < 3) return;
+    if (durationSeconds < 2) return;
 
     const raw = (window as any).__currentProfileRaw || {};
-    const memberId = raw.member_id || '';
-    const memberName = raw.name || 'Unknown';
-    if (!memberId) return;
+    const state = getState();
+    const memberId = raw.member_id || state.email || (state as any).memberId || '';
+    const memberName = raw.name || (state as any).name || 'Unknown';
+
+    console.log('[TOUR REPORT]', { memberId, memberName, explored: _exploredTitles, durationSeconds });
+    if (!memberId) {
+        console.error('[TOUR REPORT] No memberId found — raw:', raw.member_id, 'state.email:', state.email);
+        return;
+    }
 
     fetch('/api/tour-report', {
         method: 'POST',
@@ -675,11 +691,18 @@ function _sendTourReport() {
             totalItems: TOUR_ITEMS.length,
             durationSeconds,
         }),
-    }).catch(() => {});
+    }).then(r => {
+        if (!r.ok) console.error('[TOUR REPORT] API error:', r.status);
+    }).catch(e => console.error('[TOUR REPORT] fetch failed:', e));
 }
 
 // Expose globally
 if (typeof window !== 'undefined') {
     (window as any).startProfileTour = startTour;
     (window as any).endProfileTour = endTour;
+
+    // Send report if user navigates away mid-tour
+    window.addEventListener('beforeunload', () => {
+        if (_tourStartTime && !_tourReportSent) _sendTourReport();
+    });
 }
