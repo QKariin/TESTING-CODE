@@ -165,10 +165,12 @@ export async function POST(req: Request) {
         midnightCET.setHours(0, 0, 0, 0);
 
         let householdRoster = '';
+        let rosterEntries: { name: string; line: string; daily: number; weekly: number; monthly: number; alltime: number; todayKneels: number }[] = [];
+        let totalPending = 0;
+        let recentTributes: string[] = [];
+        let totalKneelsToday = 0;
+
         if (allProfiles && allProfiles.length > 0) {
-            const rosterEntries: { name: string; line: string; daily: number; weekly: number; monthly: number; alltime: number; todayKneels: number }[] = [];
-            let totalPending = 0;
-            const recentTributes: string[] = [];
 
             for (const p of allProfiles as any[]) {
                 const name = p.name || 'Unknown';
@@ -240,7 +242,7 @@ export async function POST(req: Request) {
             ].join('\n');
 
             // Aggregates
-            const totalKneelsToday = rosterEntries.reduce((s, e) => s + e.todayKneels, 0);
+            totalKneelsToday = rosterEntries.reduce((s, e) => s + e.todayKneels, 0);
             const bestKneelerToday = rosterEntries.filter(e => e.todayKneels > 0).sort((a, b) => b.todayKneels - a.todayKneels)[0];
             const bestStreaker = rosterEntries.length > 0
                 ? [...rosterEntries].sort((a, b) => {
@@ -283,23 +285,47 @@ RULES FOR USING THIS DATA:
         let userContent = '';
         if (chatHistory) userContent += chatHistory + '\n\n';
 
+        const lc = userMessage.toLowerCase();
+        const wantsReport = isQueen && lc.includes('vlad') && (lc.includes('report') || lc.includes('update me') || lc.includes('what happened') || lc.includes('what was happening') || lc.includes('fill me in') || lc.includes('while i was'));
+
         if (isQueen) {
-            const lc = userMessage.toLowerCase();
-            const wantsReport = lc.includes('vlad') && (lc.includes('report') || lc.includes('update me') || lc.includes('what happened') || lc.includes('what was happening') || lc.includes('fill me in') || lc.includes('while i was'));
-            const reportHint = wantsReport
-                ? ` She is asking for a FULL REPORT. This is a public humiliation ritual — everyone sees the data. You MUST include ALL of the following with REAL NUMBERS from the data above. Do NOT summarize vaguely. Do NOT skip any section:
 
-1. DAILY LEADERBOARD: Who is first, second, third with their exact scores
-2. WEEKLY LEADERBOARD: Who is first, second, third with their exact scores
-3. KNEELING TODAY: Total kneels across the household, who knelt the most today and how many sessions
-4. TASKS PENDING REVIEW: Exact number waiting for Queen Karin
-5. TRIBUTES SINCE MIDNIGHT: Who sent tributes and how much, or say none if zero
-6. BEST ACTIVE STREAK: Who has the longest current routine streak
-7. SLACKERS: Anyone with 0 kneels today or low daily scores — call them out by name
-8. STRIKES: Anyone with strikes, name them
+            let reportHint = '';
+            if (wantsReport) {
+                // Pre-compute the EXACT data so Mistral cannot hallucinate numbers
+                const dailyTop = rosterEntries.filter(e => e.daily > 0).sort((a, b) => b.daily - a.daily).slice(0, 5);
+                const weeklyTop = rosterEntries.filter(e => e.weekly > 0).sort((a, b) => b.weekly - a.weekly).slice(0, 5);
 
-Deliver all of this in your voice with roasting and personality woven in. But the NUMBERS MUST BE THERE. Every single one. This is not optional. If you skip the numbers, you failed. Queen Karin wants to see exactly who is performing and who is slacking, and so does everyone watching.`
-                : '';
+                const kneelersToday = rosterEntries.filter(e => e.todayKneels > 0).sort((a, b) => b.todayKneels - a.todayKneels);
+                const slackers = rosterEntries.filter(e => e.todayKneels === 0 && e.daily === 0).map(e => e.name);
+                const withStrikes = rosterEntries.filter(e => {
+                    const s = Number(e.line.match(/Strikes:(\d+)/)?.[1] || 0);
+                    return s > 0;
+                }).map(e => `${e.name} (${e.line.match(/Strikes:(\d+)/)?.[1]} strikes)`);
+                const bestStreakEntry = [...rosterEntries].sort((a, b) => {
+                    const aS = Number(a.line.match(/Streak:(\d+)/)?.[1] || 0);
+                    const bS = Number(b.line.match(/Streak:(\d+)/)?.[1] || 0);
+                    return bS - aS;
+                })[0];
+                const bestStreakVal = bestStreakEntry ? Number(bestStreakEntry.line.match(/Streak:(\d+)/)?.[1] || 0) : 0;
+
+                const preformatted = `
+HERE IS THE EXACT DATA. USE THESE NUMBERS. DO NOT CHANGE THEM. DO NOT MAKE UP DIFFERENT NUMBERS.
+
+DAILY LEADERBOARD: ${dailyTop.map((e, i) => `${i + 1}. ${e.name} with ${e.daily} points`).join(', ') || 'No scores yet'}
+WEEKLY LEADERBOARD: ${weeklyTop.map((e, i) => `${i + 1}. ${e.name} with ${e.weekly} points`).join(', ') || 'No scores yet'}
+KNEELING TODAY: ${totalKneelsToday} total sessions across the household. ${kneelersToday.length > 0 ? `Top kneeler: ${kneelersToday[0].name} with ${kneelersToday[0].todayKneels} sessions.` : 'Nobody knelt today.'}${kneelersToday.length > 1 ? ` Others: ${kneelersToday.slice(1).map(e => `${e.name} (${e.todayKneels})`).join(', ')}` : ''}
+TASKS PENDING REVIEW: ${totalPending} tasks waiting for Queen Karin
+TRIBUTES SINCE MIDNIGHT: ${recentTributes.length > 0 ? recentTributes.join(', ') : 'None'}
+BEST ACTIVE STREAK: ${bestStreakEntry ? `${bestStreakEntry.name} with ${bestStreakVal} days` : 'No streaks'}
+SLACKERS (0 kneels and 0 daily score): ${slackers.length > 0 ? slackers.join(', ') : 'Everyone showed up today'}
+STRIKES: ${withStrikes.length > 0 ? withStrikes.join(', ') : 'None'}
+
+YOUR JOB: Rewrite ALL of the above data as a report in your voice. Add roasting, personality, public humiliation. But EVERY SINGLE NUMBER above MUST appear in your response. Do not round them, do not change them, do not skip any section. This is Queen Karin's briefing and everyone is watching.`;
+
+                reportHint = preformatted;
+            }
+
             userContent += `QUEEN KARIN JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is your QUEEN talking. Be humble, respectful, and loyal. You can be witty but NEVER cocky toward her.${reportHint}`;
         } else {
             userContent += `${senderName || 'Someone'} JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is a member talking in the public chat. Be your full personality — sarcastic, witty, dry, entertaining. You are Vlad. If they ask something obvious, roast them. If they ask something real, help them but still be yourself.`;
@@ -313,7 +339,7 @@ Deliver all of this in your voice with roasting and personality woven in. But th
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: isQueen ? 1000 : 300, temperature: 0.7 }),
+            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: isQueen ? 1000 : 300, temperature: (isQueen && wantsReport) ? 0.3 : 0.7 }),
         });
 
         if (!response.ok) {
