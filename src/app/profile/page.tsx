@@ -9,7 +9,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl } from '@/scripts/media';
 import { toggleSystemLog } from '@/scripts/chat';
 import { GlobalContent } from '@/app/dashboard/GlobalContent';
-// import { checkAndShowOnboarding } from '@/scripts/onboarding'; // DISABLED - WIP
+import { checkAndShowOnboarding } from '@/scripts/onboarding';
 import { trackUserAnalytics, startPresenceHeartbeat } from '@/scripts/telemetry';
 import { bindTributeGame } from '@/scripts/tribute-game';
 import { startTour, endTour } from '@/scripts/profile-tour';
@@ -465,7 +465,7 @@ export default function ProfilePage() {
                             heartbeatRef.current = startPresenceHeartbeat(uid, unifiedData.email || unifiedData.member_id);
                         }
 
-                        // checkAndShowOnboarding(unifiedData); // DISABLED - WIP
+                        checkAndShowOnboarding(unifiedData);
                     }, 150);
                     return;
                 }
@@ -583,6 +583,7 @@ export default function ProfilePage() {
                             if (!heartbeatRef.current) {
                                 heartbeatRef.current = startPresenceHeartbeat(uid, d.email || d.member_id);
                             }
+                            checkAndShowOnboarding(d);
                         }, 150);
                     }
                 };
@@ -618,14 +619,13 @@ export default function ProfilePage() {
         };
     }, []);
 
-    // ONBOARDING DISABLED - WIP
-    // useEffect(() => {
-    //     if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
-    //         import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
-    //             checkAndShowOnboarding({});
-    //         });
-    //     }
-    // }, []);
+    useEffect(() => {
+        if (new URLSearchParams(window.location.search).get('onboarding') === '1') {
+            import('@/scripts/onboarding').then(({ checkAndShowOnboarding }) => {
+                checkAndShowOnboarding({});
+            });
+        }
+    }, []);
 
     // ─── ACTIVE CHALLENGE POLL ───────────────────────────────────────────────────
     const checkChallengeRef = useRef<() => Promise<void>>(null);

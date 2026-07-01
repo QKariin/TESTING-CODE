@@ -1,5 +1,5 @@
 // src/scripts/onboarding.ts
-// First-visit onboarding - mobile only, new users only
+// First-visit onboarding - new users set name + photo before entering
 
 import { createClient } from '@/utils/supabase/client';
 import { uploadToSupabase } from './mediaSupabase';
@@ -50,7 +50,6 @@ interface OBState {
 
 export async function checkAndShowOnboarding(raw: any): Promise<void> {
     const forceShow = new URLSearchParams(window.location.search).get('onboarding') === '1';
-    if (!forceShow && window.innerWidth >= 768) return;
     if (!forceShow && raw?.parameters?.onboarding_seen === true) return;
     if (!forceShow && ((raw?.score || 0) > 0 || (raw?.kneelCount || 0) > 0)) {
         const mid = raw?.member_id || raw?.memberId;
