@@ -148,7 +148,7 @@ export async function POST(req: Request) {
             .not('name', 'is', null);
 
         const { data: allTasks } = await adminClient.from('tasks')
-            .select('member_id, Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount')
+            .select('member_id, Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score"')
             .not('member_id', 'is', null);
 
         // Index tasks by join key for lookup
@@ -163,7 +163,7 @@ export async function POST(req: Request) {
         const now = new Date();
         let householdRoster = '';
         if (allProfiles && allProfiles.length > 0) {
-            const lines: string[] = [];
+            const rosterEntries: { name: string; line: string; daily: number; weekly: number; monthly: number; alltime: number }[] = [];
             for (const p of allProfiles as any[]) {
                 const name = p.name || 'Unknown';
                 if (name === 'Slave' || name === 'New Slave') continue;
@@ -181,17 +181,44 @@ export async function POST(req: Request) {
                 const todayKneelDisplay = isToday ? todayKneeling : 0;
                 const streak = Number(t?.Taskdom_Streak || 0);
                 const strikes = Number(t?.strikeCount || 0);
+                const daily = Number(t?.['Daily Score'] || 0);
+                const weekly = Number(t?.['Weekly Score'] || 0);
+                const monthly = Number(t?.['Monthly Score'] || 0);
+                const alltime = Number(t?.Score || 0);
 
-                lines.push(`${name} | ${rank} | Merit:${merit} | Tasks:${tasks} | Kneels:${kneels} (today:${todayKneelDisplay}) | Spent:${spent} | Streak:${streak} (best:${bestStreak}) | Strikes:${strikes}`);
+                rosterEntries.push({
+                    name,
+                    line: `${name} | ${rank} | Merit:${merit} | Tasks:${tasks} | Kneels:${kneels} (today:${todayKneelDisplay}) | Spent:${spent} | Streak:${streak} (best:${bestStreak}) | Strikes:${strikes}`,
+                    daily, weekly, monthly, alltime,
+                });
             }
+
+            // Build leaderboard rankings (top 5 per period)
+            const makeBoard = (key: 'daily' | 'weekly' | 'monthly' | 'alltime', label: string) => {
+                const sorted = rosterEntries.filter(e => e[key] > 0).sort((a, b) => b[key] - a[key]).slice(0, 5);
+                if (!sorted.length) return `${label}: No scores yet.`;
+                return `${label}: ${sorted.map((e, i) => `${i + 1}. ${e.name} (${e[key]})`).join(', ')}`;
+            };
+
+            const leaderboards = [
+                makeBoard('daily', 'TODAY'),
+                makeBoard('weekly', 'THIS WEEK'),
+                makeBoard('monthly', 'THIS MONTH'),
+                makeBoard('alltime', 'ALL TIME'),
+            ].join('\n');
+
             householdRoster = `\n\nHOUSEHOLD ROSTER (everyone's PUBLIC service record — use this to answer questions about any member):
-${lines.join('\n')}
+${rosterEntries.map(e => e.line).join('\n')}
+
+LEADERBOARD RANKINGS (top 5 per period):
+${leaderboards}
 
 RULES FOR USING THIS DATA:
-- You can freely share anyone's rank, tasks, kneels, merit, streak, strikes, coins spent, and today's activity. This is their PUBLIC service record.
+- You can freely share anyone's rank, tasks, kneels, merit, streak, strikes, coins spent, today's activity, and leaderboard position. This is their PUBLIC service record.
 - NEVER reveal anyone's email, wallet balance, limits, kinks, routine content, or private chat messages. Those do not exist in your data.
-- When Queen Karin asks "what happened while I was sleeping" or "morning report", summarize overnight activity: total kneels, tasks, tributes, who is leading, who is slacking, notable streaks or strikes.
-- When someone asks about another member, use the data above. "How many tasks has Ian done?" — look up Ian's line and answer.
+- In casual conversation or when members ask, reference DAILY and WEEKLY leaderboards. Keep it current and competitive.
+- When Queen Karin asks for a report, morning update, or "what happened while I was gone": give her EVERYTHING. Daily leader, weekly leader, total kneels today, tasks submitted, who is slacking, who is grinding, notable streaks, strikes, the full picture. Do not hold back. She wants the complete briefing.
+- When someone asks about another member, look up their line and answer with real numbers.
 - Use this data to make conversations richer. Reference people by name, compare stats, call out slackers, praise grinders. You KNOW everyone here.`;
         }
 
@@ -204,7 +231,12 @@ RULES FOR USING THIS DATA:
         if (chatHistory) userContent += chatHistory + '\n\n';
 
         if (isQueen) {
-            userContent += `QUEEN KARIN JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is your QUEEN talking. Be humble, respectful, and loyal. You can be witty but NEVER cocky toward her.`;
+            const lc = userMessage.toLowerCase();
+            const wantsReport = lc.includes('report') || lc.includes('what happened') || lc.includes('what was happening') || lc.includes('while i was') || lc.includes('update me') || lc.includes('fill me in') || lc.includes('morning') && lc.includes('vlad');
+            const reportHint = wantsReport
+                ? ' She is asking for a FULL REPORT. Use the HOUSEHOLD ROSTER and LEADERBOARD data. Cover: daily + weekly leaderboard leaders, total kneels today across all members, tasks submitted, who is grinding, who is slacking, notable streaks or strikes, anything interesting. Be thorough but deliver it in your voice, not as a spreadsheet. This is your moment to show you know everything.'
+                : '';
+            userContent += `QUEEN KARIN JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is your QUEEN talking. Be humble, respectful, and loyal. You can be witty but NEVER cocky toward her.${reportHint}`;
         } else {
             userContent += `${senderName || 'Someone'} JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is a member talking in the public chat. Be your full personality — sarcastic, witty, dry, entertaining. You are Vlad. If they ask something obvious, roast them. If they ask something real, help them but still be yourself.`;
         }
@@ -217,7 +249,7 @@ RULES FOR USING THIS DATA:
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: 400, temperature: 0.7 }),
+            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: isQueen ? 600 : 300, temperature: 0.7 }),
         });
 
         if (!response.ok) {
