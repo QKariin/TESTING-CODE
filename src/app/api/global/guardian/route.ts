@@ -232,7 +232,7 @@ RULES FOR USING THIS DATA:
 
         if (isQueen) {
             const lc = userMessage.toLowerCase();
-            const wantsReport = lc.includes('report') || lc.includes('what happened') || lc.includes('what was happening') || lc.includes('while i was') || lc.includes('update me') || lc.includes('fill me in') || lc.includes('morning') && lc.includes('vlad');
+            const wantsReport = lc.includes('vlad') && lc.includes('report') && lc.includes('while');
             const reportHint = wantsReport
                 ? ' She is asking for a FULL REPORT. Use the HOUSEHOLD ROSTER and LEADERBOARD data. Cover: daily + weekly leaderboard leaders, total kneels today across all members, tasks submitted, who is grinding, who is slacking, notable streaks or strikes, anything interesting. Be thorough but deliver it in your voice, not as a spreadsheet. This is your moment to show you know everything.'
                 : '';
