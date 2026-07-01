@@ -2919,6 +2919,25 @@
     background: linear-gradient(135deg, #ff00ed, #000aff) !important;
 }
 
+#mobChatOverlay.ai-mode .mob-gl-scroll {
+    background: url('/vlad-avatar.png') center 15% / cover no-repeat fixed;
+    position: relative;
+}
+#mobChatOverlay.ai-mode .mob-gl-scroll::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(10, 0, 20, 0.88) 0%,
+        rgba(10, 0, 20, 0.75) 30%,
+        rgba(10, 0, 20, 0.85) 70%,
+        rgba(10, 0, 20, 0.95) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
 #mobChatOverlay.ai-mode .mob-gl-tabs {
     border-bottom-color: rgba(255, 0, 237, 0.15);
 }
