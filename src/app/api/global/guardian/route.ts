@@ -143,19 +143,17 @@ export async function POST(req: Request) {
         const timeContext = `\n\nCURRENT TIME IN HELSINKI (your time): ${helsinkiTime} on ${helsinkiDay}. If you mention time, use THIS. Do NOT guess or make up times.`;
 
         // ── HOUSEHOLD ROSTER: fetch all profiles + tasks for community awareness ──
-        // Use supabaseAdmin (same as leaderboard API) with error logging
+        // Use exact same query pattern as the working leaderboard API
         const [profilesResult, tasksResult] = await Promise.all([
-            supabaseAdmin.from('profiles')
-                .select('name, member_id, "ID", hierarchy, score, total_coins_spent, parameters, bestRoutinestreak'),
-            supabaseAdmin.from('tasks')
-                .select('member_id, "ID", "Name", Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score", "Taskdom_History", "Tribute History"')
+            adminClient.from('profiles').select('*'),
+            adminClient.from('tasks').select('*')
         ]);
 
         const allProfiles = profilesResult.data;
         const allTasks = tasksResult.data;
-        if (profilesResult.error) console.error('[guardian] profiles query error:', profilesResult.error);
-        if (tasksResult.error) console.error('[guardian] tasks query error:', tasksResult.error);
-        console.error(`[guardian] Data loaded: ${allProfiles?.length || 0} profiles, ${allTasks?.length || 0} tasks`);
+        if (profilesResult.error) console.error('[guardian] profiles error:', JSON.stringify(profilesResult.error));
+        if (tasksResult.error) console.error('[guardian] tasks error:', JSON.stringify(tasksResult.error));
+        console.error(`[guardian] Data loaded: ${allProfiles?.length ?? 'null'} profiles, ${allTasks?.length ?? 'null'} tasks`);
 
         // Index profiles by BOTH email (member_id) AND UUID (ID) — same as leaderboard API
         const profileByEmail = new Map<string, any>();
