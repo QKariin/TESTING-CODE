@@ -142,21 +142,21 @@ export async function POST(req: Request) {
         const timeContext = `\n\nCURRENT TIME IN HELSINKI (your time): ${helsinkiTime} on ${helsinkiDay}. If you mention time, use THIS. Do NOT guess or make up times.`;
 
         // ── HOUSEHOLD ROSTER: fetch all profiles + tasks for community awareness ──
-        // Single query with member_id used only as internal join key, never exposed
-        const { data: allProfiles } = await adminClient.from('profiles')
-            .select('name, member_id, hierarchy, score, total_coins_spent, parameters, bestRoutinestreak')
-            .not('name', 'is', null);
+        // Mirror the leaderboard API's join logic exactly: iterate tasks, look up profiles with 3 fallback strategies
+        const [{ data: allProfiles }, { data: allTasks }] = await Promise.all([
+            adminClient.from('profiles')
+                .select('name, member_id, "ID", hierarchy, score, total_coins_spent, parameters, bestRoutinestreak'),
+            adminClient.from('tasks')
+                .select('member_id, "ID", "Name", Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score", "Taskdom_History", "Tribute History"')
+        ]);
 
-        const { data: allTasks } = await adminClient.from('tasks')
-            .select('member_id, Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score", "Taskdom_History", "Tribute History"')
-            .not('member_id', 'is', null);
-
-        // Index tasks by join key for lookup
-        const tasksByKey: Record<string, any> = {};
-        if (allTasks) {
-            for (const t of allTasks) {
-                const key = (t.member_id || '').toLowerCase();
-                if (key) tasksByKey[key] = t;
+        // Index profiles by BOTH email (member_id) AND UUID (ID) — same as leaderboard API
+        const profileByEmail = new Map<string, any>();
+        const profileByUuid = new Map<string, any>();
+        if (allProfiles) {
+            for (const p of allProfiles as any[]) {
+                if (p.member_id) profileByEmail.set(p.member_id.toLowerCase(), p);
+                if (p.ID) profileByUuid.set((p.ID as string).toLowerCase(), p);
             }
         }
 
@@ -170,32 +170,40 @@ export async function POST(req: Request) {
         let recentTributes: string[] = [];
         let totalKneelsToday = 0;
 
-        if (allProfiles && allProfiles.length > 0) {
+        if (allTasks && allTasks.length > 0) {
+            const seen = new Set<string>();
 
-            for (const p of allProfiles as any[]) {
-                const name = p.name || 'Unknown';
-                if (name === 'Slave' || name === 'New Slave') continue;
+            for (const t of allTasks as any[]) {
+                // Join to profiles using 3 strategies — same as leaderboard API
+                const key = (t.member_id || '').toLowerCase();
+                const taskUuid = (t.ID || '').toLowerCase();
+                const p: any = profileByEmail.get(key) || profileByUuid.get(taskUuid) || profileByUuid.get(key) || {};
+
+                const name = p.name || t.Name || 'Unknown';
+                if (name === 'Slave' || name === 'New Slave' || name === 'Unknown') continue;
+                if (seen.has(name.toLowerCase())) continue;
+                seen.add(name.toLowerCase());
+
                 const rank = p.hierarchy || 'Hall Boy';
-                const merit = Number(p.score || 0);
-                const spent = Number(p.total_coins_spent || p.parameters?.wishlist_spent || 0);
-                const bestStreak = Number(p.parameters?.routine_streak || p.bestRoutinestreak || 0);
-                const joinKey = (p.member_id || '').toLowerCase();
-                const t = joinKey ? tasksByKey[joinKey] : null;
-                const tasks = Number(t?.Taskdom_CompletedTasks || t?.taskdom_completed_tasks || 0);
-                const kneels = Number(t?.kneelCount || t?.kneelcount || 0);
-                const todayKneeling = Number(t?.['today kneeling'] || 0);
-                const lastWorship = t?.lastWorship ? new Date(t.lastWorship) : null;
+                const merit = Math.max(Number(p.score || 0), Number(t.Score || 0));
+                const params = p.parameters || {};
+                const spent = Number(p.total_coins_spent || params.wishlist_spent || 0);
+                const bestStreak = Number(params.routine_streak || p.bestRoutinestreak || 0);
+                const tasks = Number(t.Taskdom_CompletedTasks || t.taskdom_completed_tasks || 0);
+                const kneels = Number(t.kneelCount || t.kneelcount || 0);
+                const todayKneeling = Number(t['today kneeling'] || 0);
+                const lastWorship = t.lastWorship ? new Date(t.lastWorship) : null;
                 const isToday = lastWorship && lastWorship.toDateString() === now.toDateString();
                 const todayKneelDisplay = isToday ? todayKneeling : 0;
-                const streak = Number(t?.Taskdom_Streak || 0);
-                const strikes = Number(t?.strikeCount || 0);
-                const daily = Number(t?.['Daily Score'] || 0);
-                const weekly = Number(t?.['Weekly Score'] || 0);
-                const monthly = Number(t?.['Monthly Score'] || 0);
-                const alltime = Number(t?.Score || 0);
+                const streak = Number(t.Taskdom_Streak || 0);
+                const strikes = Number(t.strikeCount || 0);
+                const daily = Number(t['Daily Score'] || 0);
+                const weekly = Number(t['Weekly Score'] || 0);
+                const monthly = Number(t['Monthly Score'] || 0);
+                const alltime = Number(t.Score || 0);
 
                 // Count pending tasks from Taskdom_History
-                if (t?.Taskdom_History) {
+                if (t.Taskdom_History) {
                     try {
                         const hist = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History;
                         if (Array.isArray(hist)) {
@@ -205,7 +213,7 @@ export async function POST(req: Request) {
                 }
 
                 // Extract recent tributes (since midnight)
-                if (t?.['Tribute History']) {
+                if (t['Tribute History']) {
                     try {
                         const tributes = typeof t['Tribute History'] === 'string' ? JSON.parse(t['Tribute History']) : t['Tribute History'];
                         if (Array.isArray(tributes)) {
