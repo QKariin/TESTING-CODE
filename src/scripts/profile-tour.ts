@@ -81,6 +81,8 @@ let _modal: HTMLDivElement | null = null;
 let _isMobile = false;
 let _clickHandlers: { el: HTMLElement; handler: (e: Event) => void }[] = [];
 let _explored: Set<string> = new Set();
+let _exploredTitles: string[] = [];
+let _tourStartTime: number = 0;
 let _hiddenEls: { el: HTMLElement; visibility: string }[] = [];
 
 function _getSelector(item: TourItem): string | undefined {
@@ -132,6 +134,7 @@ function _restoreElements() {
 function _showExplainModal(item: TourItem, target: HTMLElement) {
     const sel = _getSelector(item);
     if (sel) _explored.add(sel);
+    if (!_exploredTitles.includes(item.title)) _exploredTitles.push(item.title);
 
     // Remove dots
     _removeIndicators();
@@ -364,6 +367,7 @@ function _addIndicators() {
 function _openOverlayWithExplanation(item: TourItem, fnName: string) {
     const sel = _getSelector(item);
     if (sel) _explored.add(sel);
+    if (!_exploredTitles.includes(item.title)) _exploredTitles.push(item.title);
 
     // Remove dots
     _removeIndicators();
@@ -424,6 +428,7 @@ function _openOverlayWithExplanation(item: TourItem, fnName: string) {
 function _openStatsDrawer(item: TourItem) {
     const sel = _getSelector(item);
     if (sel) _explored.add(sel);
+    if (!_exploredTitles.includes(item.title)) _exploredTitles.push(item.title);
 
     // Remove dots
     _removeIndicators();
@@ -608,6 +613,8 @@ export function startTour() {
     const mob = document.getElementById('MOBILE_APP');
     _isMobile = !!(mob && window.getComputedStyle(mob).display !== 'none');
     _explored = new Set();
+    _exploredTitles = [];
+    _tourStartTime = Date.now();
     _introStep = 0;
 
     // Close chat overlay
@@ -621,6 +628,9 @@ export function startTour() {
 }
 
 export function endTour() {
+    // Send tour report before cleanup
+    _sendTourReport();
+
     _removeIndicators();
     _restoreElements();
     if (_modal) { _modal.remove(); _modal = null; }
@@ -641,6 +651,31 @@ export function endTour() {
     const css = document.getElementById('tourPulseCSS');
     if (css) css.remove();
     _explored = new Set();
+    _exploredTitles = [];
+}
+
+function _sendTourReport() {
+    if (!_tourStartTime) return;
+    const durationSeconds = Math.round((Date.now() - _tourStartTime) / 1000);
+    // Only report if they spent at least 3 seconds (not accidental open/close)
+    if (durationSeconds < 3) return;
+
+    const raw = (window as any).__currentProfileRaw || {};
+    const memberId = raw.member_id || '';
+    const memberName = raw.name || 'Unknown';
+    if (!memberId) return;
+
+    fetch('/api/tour-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            memberId,
+            memberName,
+            explored: _exploredTitles,
+            totalItems: TOUR_ITEMS.length,
+            durationSeconds,
+        }),
+    }).catch(() => {});
 }
 
 // Expose globally

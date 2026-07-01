@@ -33,7 +33,7 @@ export async function renderChat(messages: any[]) {
     const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::') || txt.startsWith('INVENTORY_CARD::') || txt.startsWith('VAULT_UNLOCK_CARD::') || txt.startsWith('LEADERBOARD_REWARD_CARD::')) return false;
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::') || txt.startsWith('INVENTORY_CARD::') || txt.startsWith('VAULT_UNLOCK_CARD::') || txt.startsWith('LEADERBOARD_REWARD_CARD::') || txt.startsWith('TOUR_REPORT::')) return false;
         if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
         const up = txt.toUpperCase();
         return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||

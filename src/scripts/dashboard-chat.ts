@@ -560,6 +560,30 @@ function renderToHtml(m: any) {
         return `<div class="chat-gift-wrap"><div style="max-width:260px;width:60vw;border-radius:12px;background:rgba(255,60,60,0.04);border:1px solid rgba(255,60,60,0.15);padding:14px 18px;text-align:center;"><div style="font-family:'Cinzel',serif;font-size:0.45rem;color:rgba(255,60,60,0.5);letter-spacing:3px;">CERTIFICATE REJECTED</div></div>${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
     }
 
+    // ── Tour Report Card (Queen eyes only) ──
+    if (content.startsWith('TOUR_REPORT::')) {
+        try {
+            const d = JSON.parse(content.replace('TOUR_REPORT::', ''));
+            const name = purifier.sanitize(d.userName || 'Unknown');
+            const checked = (d.explored || []).length;
+            const total = d.totalItems || 0;
+            const time = d.timeFormatted || '0s';
+            const items = (d.explored || []).map((t: string) => purifier.sanitize(t)).join(', ') || 'Nothing';
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:280px;width:65vw;border-radius:12px;background:rgba(255,0,237,0.03);border:1px solid rgba(255,0,237,0.2);padding:14px 18px;text-align:center;">
+                        <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:rgba(255,0,237,0.5);letter-spacing:3px;margin-bottom:6px;">TOUR REPORT</div>
+                        <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:1px;margin-bottom:8px;">${name}</div>
+                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.5;">
+                            Checked <span style="color:#c5a059;">${checked}/${total}</span> sections in <span style="color:#c5a059;">${time}</span>
+                        </div>
+                        <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:6px;line-height:1.4;">${items}</div>
+                    </div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+                </div>`;
+        } catch (_) { /* fall through */ }
+    }
+
     // ── Routine Change Card ──
     if (content.startsWith('ROUTINE_CHANGE::')) {
         try {
