@@ -37,10 +37,7 @@ export async function POST(req: Request) {
         const downloaded = params.certs_downloaded || {};
         const rankKey = rank.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-        if (downloaded[rankKey]) {
-            return NextResponse.json({ error: 'Already downloaded', alreadyDownloaded: true }, { status: 400 });
-        }
-
+        // Track download but never block re-downloads
         downloaded[rankKey] = new Date().toISOString();
         params.certs_downloaded = downloaded;
 

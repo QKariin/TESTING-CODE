@@ -1186,33 +1186,20 @@ export function showCertificate() {
     shareBtn.id = 'certShareBtn';
     shareBtn.style.cssText = 'width:100%;padding:15px;border-radius:4px;border:1px solid rgba(197,160,89,0.25);background:rgba(197,160,89,0.04);color:rgba(197,160,89,0.8);font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:4px;cursor:pointer;font-weight:600;';
 
-    if (alreadyDownloaded) {
-        shareBtn.textContent = 'DOWNLOADED ✓';
-        shareBtn.disabled = true;
-        shareBtn.style.opacity = '0.35';
-        shareBtn.style.cursor = 'not-allowed';
-    } else {
-        shareBtn.textContent = 'SAVE & SHARE';
-        shareBtn.onclick = async () => {
-            await _saveCertificate();
-            // Mark as downloaded (one-time per rank)
-            const { memberId, id } = getState();
-            const userId = memberId || id;
-            if (userId) {
-                try {
-                    await fetch('/api/cert-proof', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'download', memberId: userId, rank }),
-                    });
-                    shareBtn.textContent = 'DOWNLOADED ✓';
-                    shareBtn.disabled = true;
-                    shareBtn.style.opacity = '0.35';
-                    shareBtn.style.cursor = 'not-allowed';
-                } catch (_) {}
-            }
-        };
-    }
+    shareBtn.textContent = 'SAVE & SHARE';
+    shareBtn.onclick = async () => {
+        await _saveCertificate();
+        // Track download (but never block re-downloads)
+        const { memberId, id } = getState();
+        const userId = memberId || id;
+        if (userId) {
+            fetch('/api/cert-proof', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'download', memberId: userId, rank }),
+            }).catch(() => {});
+        }
+    };
 
     const uploadBtn = document.createElement('button');
     uploadBtn.id = 'certUploadBtn';
