@@ -1932,7 +1932,7 @@ export default function ProfilePage() {
                                 <div id="drawer_ProgressContainer" style={{ width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px', padding: '15px', marginBottom: '20px' }}></div>
                                 <div style={{ width: '100%', textAlign: 'left', padding: '0 5px' }}>
                                     <div style={{ fontFamily: 'Orbitron', fontSize: '0.6rem', color: '#c5a059', marginBottom: '8px' }}>PRIVILEGES GRANTED</div>
-                                    <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '20px', lineHeight: 1.6, margin: 0 }}></ul>
+                                    <ul id="drawer_NextBenefits" style={{ color: '#ccc', fontSize: '0.75rem', fontFamily: 'Cinzel', paddingLeft: '0', lineHeight: 1.6, margin: 0, listStyle: 'none' }}></ul>
                                 </div>
                             </div>
                         </div>

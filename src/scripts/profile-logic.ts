@@ -8082,7 +8082,7 @@ export function renderProfileSidebar(u: any) {
 
     const elDrawerCurBen = document.getElementById('drawer_CurrentBenefits');
     if (elDrawerCurBen) {
-        elDrawerCurBen.innerHTML = currentBenefits.map(b => `<li>${b}</li>`).join('');
+        elDrawerCurBen.innerHTML = currentBenefits.map(b => `<div>${b}</div>`).join('');
     }
 
     const elDrawerNextBen = document.getElementById('drawer_NextBenefits');
