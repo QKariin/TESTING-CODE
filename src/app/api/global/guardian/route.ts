@@ -148,7 +148,7 @@ export async function POST(req: Request) {
             .not('name', 'is', null);
 
         const { data: allTasks } = await adminClient.from('tasks')
-            .select('member_id, Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score"')
+            .select('member_id, Taskdom_CompletedTasks, taskdom_completed_tasks, kneelCount, kneelcount, "today kneeling", lastWorship, Taskdom_Streak, strikeCount, "Daily Score", "Weekly Score", "Monthly Score", "Score", "Taskdom_History", "Tribute History"')
             .not('member_id', 'is', null);
 
         // Index tasks by join key for lookup
@@ -161,9 +161,15 @@ export async function POST(req: Request) {
         }
 
         const now = new Date();
+        const midnightCET = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Helsinki' }));
+        midnightCET.setHours(0, 0, 0, 0);
+
         let householdRoster = '';
         if (allProfiles && allProfiles.length > 0) {
-            const rosterEntries: { name: string; line: string; daily: number; weekly: number; monthly: number; alltime: number }[] = [];
+            const rosterEntries: { name: string; line: string; daily: number; weekly: number; monthly: number; alltime: number; todayKneels: number }[] = [];
+            let totalPending = 0;
+            const recentTributes: string[] = [];
+
             for (const p of allProfiles as any[]) {
                 const name = p.name || 'Unknown';
                 if (name === 'Slave' || name === 'New Slave') continue;
@@ -186,10 +192,36 @@ export async function POST(req: Request) {
                 const monthly = Number(t?.['Monthly Score'] || 0);
                 const alltime = Number(t?.Score || 0);
 
+                // Count pending tasks from Taskdom_History
+                if (t?.Taskdom_History) {
+                    try {
+                        const hist = typeof t.Taskdom_History === 'string' ? JSON.parse(t.Taskdom_History) : t.Taskdom_History;
+                        if (Array.isArray(hist)) {
+                            totalPending += hist.filter((h: any) => h.status === 'pending').length;
+                        }
+                    } catch {}
+                }
+
+                // Extract recent tributes (since midnight)
+                if (t?.['Tribute History']) {
+                    try {
+                        const tributes = typeof t['Tribute History'] === 'string' ? JSON.parse(t['Tribute History']) : t['Tribute History'];
+                        if (Array.isArray(tributes)) {
+                            for (const tr of tributes) {
+                                const trTime = tr.timestamp ? new Date(tr.timestamp) : null;
+                                if (trTime && trTime >= midnightCET && tr.amount) {
+                                    const amt = Math.abs(Number(tr.amount));
+                                    if (amt > 0) recentTributes.push(`${name}: ${amt} coins`);
+                                }
+                            }
+                        }
+                    } catch {}
+                }
+
                 rosterEntries.push({
                     name,
-                    line: `${name} | ${rank} | Merit:${merit} | Tasks:${tasks} | Kneels:${kneels} (today:${todayKneelDisplay}) | Spent:${spent} | Streak:${streak} (best:${bestStreak}) | Strikes:${strikes}`,
-                    daily, weekly, monthly, alltime,
+                    line: `${name} | ${rank} | Merit:${merit} | Tasks:${tasks} | Kneels:${kneels} (today:${todayKneelDisplay}) | Spent:${spent} | Streak:${streak} (best:${bestStreak}) | Strikes:${strikes} | Daily:${daily} | Weekly:${weekly}`,
+                    daily, weekly, monthly, alltime, todayKneels: todayKneelDisplay,
                 });
             }
 
@@ -207,17 +239,38 @@ export async function POST(req: Request) {
                 makeBoard('alltime', 'ALL TIME'),
             ].join('\n');
 
-            householdRoster = `\n\nHOUSEHOLD ROSTER (everyone's PUBLIC service record — use this to answer questions about any member):
+            // Aggregates
+            const totalKneelsToday = rosterEntries.reduce((s, e) => s + e.todayKneels, 0);
+            const bestKneelerToday = rosterEntries.filter(e => e.todayKneels > 0).sort((a, b) => b.todayKneels - a.todayKneels)[0];
+            const bestStreaker = rosterEntries.length > 0
+                ? [...rosterEntries].sort((a, b) => {
+                    const aStreak = Number(a.line.match(/Streak:(\d+)/)?.[1] || 0);
+                    const bStreak = Number(b.line.match(/Streak:(\d+)/)?.[1] || 0);
+                    return bStreak - aStreak;
+                })[0]
+                : null;
+
+            const summaryLines = [
+                `Total kneels today across household: ${totalKneelsToday}`,
+                bestKneelerToday ? `Best kneeler today: ${bestKneelerToday.name} (${bestKneelerToday.todayKneels} sessions)` : '',
+                `Tasks waiting for Queen Karin's review: ${totalPending}`,
+                recentTributes.length > 0 ? `Tributes since midnight: ${recentTributes.join(', ')}` : 'Tributes since midnight: none',
+                `Total members: ${rosterEntries.length}`,
+            ].filter(Boolean).join('\n');
+
+            householdRoster = `\n\nHOUSEHOLD ROSTER (everyone's PUBLIC service record):
 ${rosterEntries.map(e => e.line).join('\n')}
 
 LEADERBOARD RANKINGS (top 5 per period):
 ${leaderboards}
 
+TODAY'S SUMMARY:
+${summaryLines}
+
 RULES FOR USING THIS DATA:
 - You can freely share anyone's rank, tasks, kneels, merit, streak, strikes, coins spent, today's activity, and leaderboard position. This is their PUBLIC service record.
-- NEVER reveal anyone's email, wallet balance, limits, kinks, routine content, or private chat messages. Those do not exist in your data.
+- NEVER reveal anyone's email, wallet balance, limits, kinks, routine content, or private chat messages.
 - In casual conversation or when members ask, reference DAILY and WEEKLY leaderboards. Keep it current and competitive.
-- When Queen Karin asks for a report, morning update, or "what happened while I was gone": give her EVERYTHING. Daily leader, weekly leader, total kneels today, tasks submitted, who is slacking, who is grinding, notable streaks, strikes, the full picture. Do not hold back. She wants the complete briefing.
 - When someone asks about another member, look up their line and answer with real numbers.
 - Use this data to make conversations richer. Reference people by name, compare stats, call out slackers, praise grinders. You KNOW everyone here.`;
         }
@@ -232,9 +285,20 @@ RULES FOR USING THIS DATA:
 
         if (isQueen) {
             const lc = userMessage.toLowerCase();
-            const wantsReport = lc.includes('vlad') && lc.includes('report') && lc.includes('while');
+            const wantsReport = lc.includes('vlad') && (lc.includes('report') || lc.includes('update me') || lc.includes('what happened') || lc.includes('what was happening') || lc.includes('fill me in') || lc.includes('while i was'));
             const reportHint = wantsReport
-                ? ' She is asking for a FULL REPORT. Use the HOUSEHOLD ROSTER and LEADERBOARD data. Cover: daily + weekly leaderboard leaders, total kneels today across all members, tasks submitted, who is grinding, who is slacking, notable streaks or strikes, anything interesting. Be thorough but deliver it in your voice, not as a spreadsheet. This is your moment to show you know everything.'
+                ? ` She is asking for a FULL REPORT. This is a public humiliation ritual — everyone sees the data. You MUST include ALL of the following with REAL NUMBERS from the data above. Do NOT summarize vaguely. Do NOT skip any section:
+
+1. DAILY LEADERBOARD: Who is first, second, third with their exact scores
+2. WEEKLY LEADERBOARD: Who is first, second, third with their exact scores
+3. KNEELING TODAY: Total kneels across the household, who knelt the most today and how many sessions
+4. TASKS PENDING REVIEW: Exact number waiting for Queen Karin
+5. TRIBUTES SINCE MIDNIGHT: Who sent tributes and how much, or say none if zero
+6. BEST ACTIVE STREAK: Who has the longest current routine streak
+7. SLACKERS: Anyone with 0 kneels today or low daily scores — call them out by name
+8. STRIKES: Anyone with strikes, name them
+
+Deliver all of this in your voice with roasting and personality woven in. But the NUMBERS MUST BE THERE. Every single one. This is not optional. If you skip the numbers, you failed. Queen Karin wants to see exactly who is performing and who is slacking, and so does everyone watching.`
                 : '';
             userContent += `QUEEN KARIN JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is your QUEEN talking. Be humble, respectful, and loyal. You can be witty but NEVER cocky toward her.${reportHint}`;
         } else {
@@ -249,7 +313,7 @@ RULES FOR USING THIS DATA:
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: isQueen ? 600 : 300, temperature: 0.7 }),
+            body: JSON.stringify({ model: 'mistral-medium-latest', messages, max_tokens: isQueen ? 1000 : 300, temperature: 0.7 }),
         });
 
         if (!response.ok) {
