@@ -310,10 +310,9 @@ RULES FOR USING THIS DATA:
 
             let reportHint = '';
             if (wantsReport) {
-                // Pre-compute the EXACT data so Mistral cannot hallucinate numbers
+                // Pre-compute data so Mistral uses real numbers, not hallucinated ones
                 const dailyTop = rosterEntries.filter(e => e.daily > 0).sort((a, b) => b.daily - a.daily).slice(0, 5);
                 const weeklyTop = rosterEntries.filter(e => e.weekly > 0).sort((a, b) => b.weekly - a.weekly).slice(0, 5);
-
                 const kneelersToday = rosterEntries.filter(e => e.todayKneels > 0).sort((a, b) => b.todayKneels - a.todayKneels);
                 const slackers = rosterEntries.filter(e => e.todayKneels === 0 && e.daily === 0).map(e => e.name);
                 const withStrikes = rosterEntries.filter(e => {
@@ -327,21 +326,24 @@ RULES FOR USING THIS DATA:
                 })[0];
                 const bestStreakVal = bestStreakEntry ? Number(bestStreakEntry.line.match(/Streak:(\d+)/)?.[1] || 0) : 0;
 
-                const preformatted = `
-HERE IS THE EXACT DATA. USE THESE NUMBERS. DO NOT CHANGE THEM. DO NOT MAKE UP DIFFERENT NUMBERS.
+                // Build data facts — only include sections that have actual data
+                const facts: string[] = [];
+                if (dailyTop.length > 0) facts.push(`Daily leader: ${dailyTop.map((e, i) => `${e.name} (${e.daily})`).join(', ')}`);
+                if (weeklyTop.length > 0) facts.push(`Weekly leader: ${weeklyTop.map((e, i) => `${e.name} (${e.weekly})`).join(', ')}`);
+                if (kneelersToday.length > 0) facts.push(`Knelt today: ${kneelersToday.map(e => `${e.name} (${e.todayKneels}x)`).join(', ')} — ${totalKneelsToday} total`);
+                if (totalPending > 0) facts.push(`${totalPending} tasks pending Your review`);
+                if (recentTributes.length > 0) facts.push(`Tributes: ${recentTributes.join(', ')}`);
+                if (bestStreakVal > 0) facts.push(`Best streak: ${bestStreakEntry!.name} at ${bestStreakVal} days`);
+                if (slackers.length > 0) facts.push(`Did nothing today: ${slackers.join(', ')}`);
+                if (withStrikes.length > 0) facts.push(`Strikes: ${withStrikes.join(', ')}`);
 
-DAILY LEADERBOARD: ${dailyTop.map((e, i) => `${i + 1}. ${e.name} with ${e.daily} points`).join(', ') || 'No scores yet'}
-WEEKLY LEADERBOARD: ${weeklyTop.map((e, i) => `${i + 1}. ${e.name} with ${e.weekly} points`).join(', ') || 'No scores yet'}
-KNEELING TODAY: ${totalKneelsToday} total sessions across the household. ${kneelersToday.length > 0 ? `Top kneeler: ${kneelersToday[0].name} with ${kneelersToday[0].todayKneels} sessions.` : 'Nobody knelt today.'}${kneelersToday.length > 1 ? ` Others: ${kneelersToday.slice(1).map(e => `${e.name} (${e.todayKneels})`).join(', ')}` : ''}
-TASKS PENDING REVIEW: ${totalPending} tasks waiting for Queen Karin
-TRIBUTES SINCE MIDNIGHT: ${recentTributes.length > 0 ? recentTributes.join(', ') : 'None'}
-BEST ACTIVE STREAK: ${bestStreakEntry ? `${bestStreakEntry.name} with ${bestStreakVal} days` : 'No streaks'}
-SLACKERS (0 kneels and 0 daily score): ${slackers.length > 0 ? slackers.join(', ') : 'Everyone showed up today'}
-STRIKES: ${withStrikes.length > 0 ? withStrikes.join(', ') : 'None'}
+                const dataBlock = facts.length > 0
+                    ? `RAW DATA (use these exact numbers, do not invent different ones):\n${facts.join('\n')}`
+                    : `RAW DATA: It is early morning and the daily scores just reset. Nobody has done anything yet today.`;
 
-YOUR JOB: Rewrite ALL of the above data as a report in your voice. Add roasting, personality, public humiliation. But EVERY SINGLE NUMBER above MUST appear in your response. Do not round them, do not change them, do not skip any section. This is Queen Karin's briefing and everyone is watching.`;
+                reportHint = `\n\n${dataBlock}
 
-                reportHint = preformatted;
+YOUR JOB: Deliver a funny, entertaining morning report. This is a roast, not a spreadsheet. You are the household gossip columnist. Talk about WHO is grinding and WHO is slacking like you are hosting a reality TV show recap. Name names. Mock the lazy ones. Hype the grinders. If someone has strikes, publicly shame them. If nobody did anything, roast the entire household for being useless. Weave the numbers INTO the roasting naturally — do not list them as bullet points or sections. Keep it 4-8 sentences, flowing and fun. Think morning radio host who happens to have everyone's data.`;
             }
 
             userContent += `QUEEN KARIN JUST SAID IN GLOBAL CHAT: "${userMessage}"\n\nThis is your QUEEN talking. Be humble, respectful, and loyal. You can be witty but NEVER cocky toward her.${reportHint}`;
