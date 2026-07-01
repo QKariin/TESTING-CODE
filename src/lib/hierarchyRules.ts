@@ -86,25 +86,25 @@ export const HIERARCHY_RULES: HierarchyRule[] = [
     {
         name: "Butler",
         req: { tasks: 100, kneels: 250, points: 10000, spent: 50000, streak: 30, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
-        benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Speak Cost: 5 Coins."],
+        benefits: ["Chat Upgrade: Permission to send Videos.", "Voice: Access to Audio Sessions.", "Evidence: Video Upload up to 2 Minutes.", "Speak Cost: 5 Coins."],
         speakCost: 5
     },
     {
         name: "Silverman",
         req: { tasks: 25, kneels: 65, points: 5000, spent: 5000, streak: 5, prefs: true, limits: true, kinks: true, routine: true, name: true, photo: true },
-        benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Speak Cost: 10 Coins."],
+        benefits: ["Chat Upgrade: Permission to send Photos.", "Devotion: Tasks tailored to your Desires.", "Booking: Permission to request Sessions.", "Evidence: Video Upload up to 1 Minute.", "Speak Cost: 10 Coins."],
         speakCost: 10
     },
     {
         name: "Footman",
         req: { tasks: 5, kneels: 10, points: 2000, spent: 0, streak: 0, name: true, photo: true },
-        benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Speak Cost: 15 Coins."],
+        benefits: ["Presence: Your Face may be revealed.", "Order: Access to the Daily Routine.", "Evidence: Video Upload up to 45 Seconds.", "Speak Cost: 15 Coins."],
         speakCost: 15
     },
     {
         name: "Hall Boy",
         req: { tasks: 0, kneels: 0, points: 0, spent: 0, streak: 0 },
-        benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Speak Cost: 20 Coins."],
+        benefits: ["Identity: You are granted a Name.", "Labor: Permission to begin Basic Tasks.", "Evidence: Video Upload up to 30 Seconds.", "Speak Cost: 20 Coins."],
         speakCost: 20
     }
 ];

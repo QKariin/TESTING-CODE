@@ -124,6 +124,8 @@ function _restoreElements() {
         h.el.style.visibility = h.visibility;
     }
     _hiddenEls = [];
+    const root = document.getElementById('viewMobileHome');
+    if (root) root.classList.remove('tour-isolate');
 }
 
 // Show explanation panel next to the actual element (no cloning, no modal)
@@ -370,9 +372,8 @@ function _openOverlayWithExplanation(item: TourItem, fnName: string) {
     const fn = (window as any)[fnName];
     if (fn) fn();
 
-    // Create explanation panel INSIDE the overlay, below the header
+    // Create explanation panel INSIDE the overlay, absolutely positioned to cover messages but stay below header (z-index: 2)
     setTimeout(() => {
-        // Find the overlay container
         const overlayId = fnName === 'openMobChatOverlay' ? 'mobChatOverlay' : 'mobGlobalOverlay';
         const overlay = document.getElementById(overlayId);
         if (!overlay) return;
@@ -380,14 +381,13 @@ function _openOverlayWithExplanation(item: TourItem, fnName: string) {
         _modal = document.createElement('div');
         _modal.id = 'tourExplainPanel';
         Object.assign(_modal.style, {
-            flex: '1',
+            position: 'absolute', top: '0', left: '0', right: '0', bottom: '0',
             background: '#000',
-            padding: '24px 24px 40px',
+            zIndex: '1',   // header is z-index: 2, so header stays visible above this
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             justifyContent: 'center',
             pointerEvents: 'auto',
-            zIndex: '10',
-            overflow: 'hidden',
+            padding: '24px',
         });
 
         _modal.innerHTML = `
@@ -406,23 +406,10 @@ function _openOverlayWithExplanation(item: TourItem, fnName: string) {
             </div>
         `;
 
-        // Hide all overlay children that are NOT headers, so the panel fills below headers
-        const _overlayHidden: { el: HTMLElement; display: string }[] = [];
-        for (let i = 0; i < overlay.children.length; i++) {
-            const child = overlay.children[i] as HTMLElement;
-            if (child.classList.contains('mob-overlay-header')) continue;
-            if (child.id === 'tourExplainPanel') continue;
-            _overlayHidden.push({ el: child, display: child.style.display });
-            child.style.display = 'none';
-        }
-
         overlay.appendChild(_modal);
 
         _modal.querySelector('#tourGotIt')?.addEventListener('click', () => {
-            // Restore hidden overlay children
-            for (const h of _overlayHidden) h.el.style.display = h.display;
             if (_modal) { _modal.remove(); _modal = null; }
-            // Close the overlay
             if (fnName === 'openMobChatOverlay') {
                 (window as any).closeMobChatOverlay?.();
             } else if (fnName === 'openMobGlobal') {

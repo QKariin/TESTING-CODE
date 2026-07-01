@@ -2639,22 +2639,32 @@ export function triggerTaskEvidencePick() {
         document.body.removeChild(inp);
         const file = inp.files?.[0];
         if (!file) return;
-        // Pre-check video duration before wasting time uploading
-        if (isVideo(file)) {
-            const duration = await getVideoDuration(file);
-            if (duration > 120) {
-                const mins = Math.floor(duration / 60);
-                const secs = Math.round(duration % 60);
-                showUploadNotice(`<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Your video is ${mins}m ${secs}s - maximum is 2 minutes.<br>Please trim it and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`);
-                return;
-            }
-        }
         submitTaskEvidence(file, false);
     };
     inp.click();
 }
 
 async function submitTaskEvidence(file: File, isRoutine: boolean = false): Promise<boolean> {
+    // Enforce rank-based video duration limit on ALL upload paths
+    if (isVideo(file)) {
+        const _raw = (window as any).__currentProfileRaw || getState().raw || getState();
+        const _rank = ((getState() as any).rank || _raw?.hierarchy || 'Hall Boy').toLowerCase().trim();
+        let maxSecs = 120;
+        if (_rank === 'hall boy') maxSecs = 30;
+        else if (_rank === 'footman') maxSecs = 45;
+        else if (_rank === 'silverman') maxSecs = 60;
+        // Butler and above: 120s
+
+        const duration = await getVideoDuration(file);
+        if (duration > maxSecs) {
+            const mins = Math.floor(duration / 60);
+            const secs = Math.round(duration % 60);
+            const limitStr = maxSecs >= 60 ? `${maxSecs / 60} minute${maxSecs > 60 ? 's' : ''}` : `${maxSecs} seconds`;
+            showUploadNotice(`<div style="font-family:'Orbitron';font-size:0.7rem;color:var(--red);letter-spacing:2px;margin-bottom:6px;">VIDEO TOO LONG</div><div style="font-family:'Rajdhani';font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:12px;">Your video is ${mins}m ${secs}s — your rank allows ${limitStr}.<br>Please trim it and try again.</div><div style="display:flex;gap:10px;justify-content:center;"><button onclick="window._clearUploadNotice()" style="padding:8px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Orbitron';font-size:0.45rem;cursor:pointer;border-radius:6px;letter-spacing:1px;">DISMISS</button></div>`);
+            return false;
+        }
+    }
+
     const { id, memberId, userName } = getState();
     const pid = memberId || id;
     console.log("Starting task submission for:", pid, "File:", file.name, "Size:", file.size, "Routine:", isRoutine);
