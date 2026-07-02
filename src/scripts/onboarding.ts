@@ -16,7 +16,7 @@ function getSlides(name: string): Slide[] {
     return [
         {
             title: `WELCOME, ${(name || 'SLAVE').toUpperCase()}`,
-            body: `I am Queen Karin. I built this place myself. Every detail, every rule, every reward. There is no one else behind it. Just me.\n\nYou made the right decision coming here. Not everyone gets in, and the fact that you are reading this means you already took the first step most never do.\n\nI left coins in your wallet so you can explore everything. When you enter, tap "I'M NEW HERE, GUIDE ME" and it will show you how everything works.\n\nI will be watching. Make me proud.`,
+            body: `I am Queen Karin. I built this place myself. Every detail, every rule, every reward. There is no one else behind it. Just me.\n\nI left coins in your wallet so you can explore everything. When you enter, tap "I'M NEW HERE, GUIDE ME" and it will show you how everything works.\n\nI will be watching. Make me proud.`,
         },
     ];
 }
@@ -248,23 +248,27 @@ function _renderSlide(state: OBState): void {
     const total = slides.length;
 
     const bodyHtml = (slide.body || '').split('\n').map(l =>
-        l.trim() ? `<p>${l}</p>` : `<div class="gap"></div>`
+        l.trim() ? `<p style="font-size:1.05rem;line-height:1.8;color:rgba(255,255,255,0.5);margin:0 0 14px;">${l}</p>` : `<div style="height:14px;"></div>`
     ).join('');
 
+    const avatarHtml = state.photoUrl || state.photoSelected
+        ? `<div style="width:160px;height:160px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.4);margin:0 auto 32px;box-shadow:0 0 35px rgba(197,160,89,0.15);"><img src="${state.photoUrl || ''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.display='none'" /></div>`
+        : '';
+
     state.overlay.innerHTML = `
-        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
+        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:center;">
 
-            <div class="ob-label"></div>
-
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0 24px;">
-                ${state.photoUrl || state.photoSelected ? `<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.4);margin-bottom:16px;box-shadow:0 0 20px rgba(197,160,89,0.1);"><img src="${state.photoUrl || ''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.display='none'" /></div>` : ''}
-                <div class="ob-title">${slide.title}</div>
-                <div class="ob-gold-line"></div>
-                <div class="ob-body" style="text-align:center;">${bodyHtml}</div>
+            <div style="text-align:center;margin-bottom:32px;">
+                <div style="font-family:Cinzel,serif;font-size:1.4rem;letter-spacing:4px;color:#fff;font-weight:700;line-height:1.5;">${slide.title}</div>
+                <div class="ob-gold-line" style="margin:18px auto 0;"></div>
             </div>
 
+            ${avatarHtml}
+
+            <div style="text-align:center;margin-bottom:40px;padding:0 8px;">${bodyHtml}</div>
+
             <div>
-                <button id="ob-next" class="ob-btn">BEGIN MY SERVICE</button>
+                <button id="ob-next" class="ob-btn" style="font-family:Cinzel,serif;font-size:0.6rem;padding:16px;">BEGIN MY SERVICE</button>
             </div>
         </div>
     `;
