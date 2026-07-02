@@ -79,7 +79,7 @@ export async function POST(req: Request) {
                         hierarchy: 'Hall Boy',
                         score: 0,
                         wallet: 4999,
-                        parameters: { devotion: 100, promo72h: true }
+                        parameters: { devotion: 100, promo72h: true, welcome_pending: true }
                     });
 
                 // Create tasks row so task assignment works immediately
@@ -97,22 +97,8 @@ export async function POST(req: Request) {
 
                 console.log(`[TRIBUTE] Account Created as Hall Boy.`);
 
-                // ── Welcome Card in Global Chat ──
-                try {
-                    await supabaseAdmin.from('global_messages').insert({
-                        sender_email: 'system@qkarin.com',
-                        sender_name: 'System',
-                        sender_avatar: null,
-                        message: `WELCOME_CARD::${JSON.stringify({
-                            name: userName,
-                            rank: 'Hall Boy',
-                            coins: 4999,
-                        })}`,
-                    });
-                    console.log(`[TRIBUTE] Welcome card posted for ${userName}`);
-                } catch (e: any) {
-                    console.error('[TRIBUTE] Welcome card error:', e.message);
-                }
+                // Welcome card + Discord deferred until onboarding completes
+                // (user picks their display name first, then /api/welcome-announce fires)
 
                 // ── Push Notification to Queen ──
                 try {
@@ -130,9 +116,6 @@ export async function POST(req: Request) {
                 } catch (e: any) {
                     console.error('[TRIBUTE] Push notification error:', e.message);
                 }
-
-                // Discord notification
-                discordNewMember(userName).catch(() => {});
 
             } else if (metadata.coinsToAdd) {
                 const coins = parseInt(metadata.coinsToAdd, 10);

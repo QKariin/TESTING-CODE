@@ -360,5 +360,14 @@ async function _complete(state: OBState): Promise<void> {
             const { renderProfileSidebar } = await import('./profile-logic');
             renderProfileSidebar(getState().raw);
         } catch {}
+
+        // Announce to global chat + Discord now that they've chosen their name
+        try {
+            await fetch('/api/welcome-announce', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: state.memberId, name: state.name }),
+            });
+        } catch {}
     }
 }
