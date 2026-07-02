@@ -122,22 +122,24 @@ function _renderWelcome(state: OBState): void {
 
             <div class="ob-label" style="margin-bottom:0;">PRIVATE ACCESS</div>
 
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0 32px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0 32px;text-align:center;">
 
-                <div class="ob-label" style="margin-bottom:14px;color:rgba(197,160,89,0.8);">QUEEN KARIN</div>
-                <div class="ob-title" style="font-size:1rem;margin-bottom:10px;">YOU HAVE JUST ENTERED<br>MY PRIVATE SPACE.</div>
+                <div style="width:70px;height:70px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.4);margin-bottom:20px;box-shadow:0 0 25px rgba(197,160,89,0.1);">
+                    <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+
+                <div class="ob-title" style="font-size:1rem;margin-bottom:10px;">ANOTHER LOST SOUL<br>FOUND ITS WAY TO ME.</div>
                 <div class="ob-gold-line"></div>
 
                 <div class="ob-body">
-                    <p>This is not a public platform. There is no team behind it, no support line, and no other Mistress. I built this. I run this. I am the only Dominant here.</p>
-                    <p>What you are looking at is a high-precision system built specifically to track and manage submission - your kneeling, your tasks, your tributes, your obedience. All of it is logged and visible to me in real time.</p>
-                    <p>You paid to be here. That does not mean you have earned anything yet. It means you were allowed through the door. What happens next is entirely up to how well you behave.</p>
-                    <p style="color:rgba(255,255,255,0.6);">I expect full obedience. No exceptions. No negotiations.</p>
+                    <p>Good. You made it. Not everyone does, and most who think about it never go through with it.</p>
+                    <p>But you did. And that tells me something about you already.</p>
+                    <p style="color:rgba(255,255,255,0.55);">Before we begin, I need to know who you are.</p>
                 </div>
             </div>
 
             <div>
-                <button id="ob-enter" class="ob-btn">I UNDERSTAND - ENTER</button>
+                <button id="ob-enter" class="ob-btn">I'M READY, QUEEN KARIN</button>
             </div>
         </div>
     `;
