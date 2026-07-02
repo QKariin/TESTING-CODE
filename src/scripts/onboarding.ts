@@ -118,28 +118,20 @@ function _showModal(raw: any): void {
 
 function _renderWelcome(state: OBState): void {
     state.overlay.innerHTML = `
-        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
+        <div style="position:absolute;inset:0;background:url('/queen-bg-mobile.jpg') center 15% / cover no-repeat;opacity:0.18;pointer-events:none;"></div>
+        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;position:relative;">
 
             <div class="ob-label" style="margin-bottom:0;">PRIVATE ACCESS</div>
 
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0 32px;text-align:center;">
 
-                <div style="width:70px;height:70px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.4);margin-bottom:20px;box-shadow:0 0 25px rgba(197,160,89,0.1);">
-                    <img src="/queen-karin.png" style="width:100%;height:100%;object-fit:cover;" />
-                </div>
+                <div style="font-family:Cinzel,serif;font-size:1.3rem;color:#fff;font-weight:700;letter-spacing:4px;line-height:1.6;">LOST SUBMISSIVE SOUL<br>ONBOARDING</div>
+                <div class="ob-gold-line" style="margin-top:22px;"></div>
 
-                <div class="ob-title" style="font-size:1rem;margin-bottom:10px;">ANOTHER LOST SOUL<br>FOUND ITS WAY TO ME.</div>
-                <div class="ob-gold-line"></div>
-
-                <div class="ob-body">
-                    <p>Good. You made it. Not everyone does, and most who think about it never go through with it.</p>
-                    <p>But you did. And that tells me something about you already.</p>
-                    <p style="color:rgba(255,255,255,0.55);">Before we begin, I need to know who you are.</p>
-                </div>
             </div>
 
             <div>
-                <button id="ob-enter" class="ob-btn">I'M READY, QUEEN KARIN</button>
+                <button id="ob-enter" style="width:100%;padding:16px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:Cinzel,serif;font-size:0.7rem;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:6px;">I'M READY, QUEEN KARIN</button>
             </div>
         </div>
     `;
