@@ -3,7 +3,6 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { uploadToSupabase } from './mediaSupabase';
-import { HIERARCHY_RULES } from '../lib/hierarchyRules';
 
 if (typeof window !== 'undefined') {
     (window as any)._testOnboarding = () => _showModal({});
@@ -16,20 +15,8 @@ interface Slide { title: string; body: string | null; }
 function getSlides(name: string): Slide[] {
     return [
         {
-            title: 'THE RITUAL',
-            body: `Kneeling is your core act of submission. You will complete 8 sessions per day.\n\nEach session earns you coins - the only currency that lets you speak to me. If you go silent, you kneel. That is the only way back.`,
-        },
-        {
-            title: 'YOUR DAILY DUTY',
-            body: `Each day you are assigned a task. Complete it. Submit proof.\n\nNo extensions. No excuses. Your record is permanent and visible to me at all times.`,
-        },
-        {
-            title: 'YOUR PLACE IN THE ORDER',
-            body: null,
-        },
-        {
-            title: `DO NOT DISAPPOINT ME, ${(name || 'SLAVE').toUpperCase()}`,
-            body: `Your rank. Your wallet. Your first task.\nEverything is already waiting.\n\nI will be watching.`,
+            title: `WELCOME, ${(name || 'SLAVE').toUpperCase()}`,
+            body: `I am Queen Karin. I built this place myself — every detail, every rule, every reward. There is no one else behind it. Just me.\n\nYou made the right decision coming here. Not everyone gets in, and the fact that you are reading this means you already took the first step most never do.\n\nI left coins in your wallet so you can explore everything. When you enter, tap "I'M NEW HERE — GUIDE ME" — it will show you how everything works.\n\nI will be watching. Make me proud.`,
         },
     ];
 }
@@ -106,7 +93,7 @@ function _showModal(raw: any): void {
     overlay.id = 'onboardingOverlay';
     overlay.style.cssText = `
         position:fixed;inset:0;z-index:2147483646;
-        background:rgba(4,3,2,0.97);
+        background:#030201;
         display:flex;align-items:flex-start;justify-content:center;
         overflow-y:auto;
         font-family:'Rajdhani',sans-serif;
@@ -131,7 +118,7 @@ function _showModal(raw: any): void {
 
 function _renderWelcome(state: OBState): void {
     state.overlay.innerHTML = `
-        <div style="width:100%;max-width:420px;padding:52px 28px 40px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
+        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
 
             <div class="ob-label" style="margin-bottom:0;">PRIVATE ACCESS</div>
 
@@ -165,69 +152,34 @@ function _renderWelcome(state: OBState): void {
 
 function _renderSetup(state: OBState): void {
     state.overlay.innerHTML = `
-        <div style="width:100%;max-width:420px;padding:52px 28px 40px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
+        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
 
             <div class="ob-label">IDENTIFY YOURSELF</div>
 
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 0 24px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0 24px;">
 
-                <div class="ob-title">BEFORE YOU GO FURTHER</div>
-                <div class="ob-gold-line"></div>
-                <div class="ob-body" style="margin-bottom:28px;">
-                    <p>Your name and photo identify you in the Global presence feed, the leaderboard, and throughout this space. Choose a name you use in your private world - not your legal name.</p>
+                <!-- Photo — large, centered, face first -->
+                <div id="ob-photo" style="width:120px;height:120px;border-radius:50%;border:2px solid rgba(197,160,89,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:rgba(197,160,89,0.03);margin-bottom:12px;box-shadow:0 0 30px rgba(197,160,89,0.08);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.3)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
                 </div>
-
-                <!-- Photo -->
-                <div style="margin-bottom:26px;">
-                    <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">
-                        <span class="ob-label" style="letter-spacing:2px;">PHOTO</span>
-                        <span style="color:#e05252;font-size:0.65rem;">required</span>
-                        <span id="ob-photo-q" style="width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:inline-flex;align-items:center;justify-content:center;font-size:0.58rem;color:rgba(255,255,255,0.3);cursor:pointer;">?</span>
-                    </div>
-                    <div id="ob-photo-tip" style="display:none;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.15);border-radius:6px;padding:10px 12px;font-size:0.8rem;color:rgba(255,255,255,0.4);line-height:1.55;margin-bottom:12px;">
-                        Your photo is shown next to your name in the Global strip and leaderboard. Other members in this community will see it. Use something from your private world.
-                    </div>
-                    <div style="display:flex;align-items:center;gap:16px;">
-                        <div id="ob-photo" style="width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:rgba(197,160,89,0.03);flex-shrink:0;">
-                            <i class="fas fa-camera" style="color:rgba(197,160,89,0.35);font-size:1rem;"></i>
-                        </div>
-                        <div>
-                            <div id="ob-photo-status" style="font-size:0.82rem;color:rgba(255,255,255,0.25);margin-bottom:4px;">No photo selected</div>
-                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.15);">Tap the circle to upload</div>
-                        </div>
-                    </div>
-                </div>
+                <div id="ob-photo-status" style="font-size:0.75rem;color:rgba(255,255,255,0.2);margin-bottom:6px;">Tap to upload your photo</div>
+                <div class="ob-label" style="font-size:0.35rem;margin-bottom:32px;color:rgba(255,255,255,0.12);">This is how others will see you</div>
 
                 <!-- Name -->
-                <div>
-                    <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">
-                        <span class="ob-label" style="letter-spacing:2px;">YOUR NAME</span>
-                        <span style="color:#e05252;font-size:0.65rem;">required</span>
-                        <span id="ob-name-q" style="width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:inline-flex;align-items:center;justify-content:center;font-size:0.58rem;color:rgba(255,255,255,0.3);cursor:pointer;">?</span>
-                    </div>
-                    <div id="ob-name-tip" style="display:none;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.15);border-radius:6px;padding:10px 12px;font-size:0.8rem;color:rgba(255,255,255,0.4);line-height:1.55;margin-bottom:12px;">
-                        This is how the Queen and other members will know you. It appears in the leaderboard and when you speak. Do not use your real name.
-                    </div>
-                    <input id="ob-name" type="text" placeholder="Enter a name..." maxlength="30" autocomplete="off" spellcheck="false"
-                        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:1.05rem;padding:11px 14px;border-radius:6px;"
+                <div style="width:100%;">
+                    <div class="ob-label" style="letter-spacing:2px;margin-bottom:10px;text-align:center;">CHOOSE A NAME</div>
+                    <input id="ob-name" type="text" placeholder="Not your real name..." maxlength="30" autocomplete="off" spellcheck="false"
+                        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#fff;font-family:'Rajdhani',sans-serif;font-size:1.05rem;padding:11px 14px;border-radius:6px;text-align:center;"
                     />
                 </div>
             </div>
 
             <div>
                 <button id="ob-continue" class="ob-btn" disabled>CONTINUE</button>
-                <div style="font-size:0.7rem;color:rgba(255,255,255,0.12);text-align:center;margin-top:12px;">Both fields are required to proceed.</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.1);text-align:center;margin-top:12px;">Both are required.</div>
             </div>
         </div>
     `;
-
-    // Tooltips
-    ['photo', 'name'].forEach(key => {
-        state.overlay.querySelector(`#ob-${key}-q`)?.addEventListener('click', () => {
-            const tip = state.overlay.querySelector(`#ob-${key}-tip`) as HTMLElement;
-            if (tip) tip.style.display = tip.style.display === 'none' ? 'block' : 'none';
-        });
-    });
 
     // Photo
     const photoEl = state.overlay.querySelector('#ob-photo') as HTMLElement;
@@ -301,35 +253,14 @@ function _renderSlide(state: OBState): void {
     const isLast = state.slideIndex === slides.length - 1;
     const total = slides.length;
 
-    const dots = slides.map((_, i) => `
-        <div style="width:${i === state.slideIndex ? '20' : '6'}px;height:6px;border-radius:3px;background:${i === state.slideIndex ? '#c5a059' : 'rgba(255,255,255,0.12)'};transition:all .3s;"></div>
-    `).join('');
-
-    let bodyHtml = '';
-    if (slide.body) {
-        bodyHtml = slide.body.split('\n').map(l =>
-            l.trim() ? `<p>${l}</p>` : `<div class="gap"></div>`
-        ).join('');
-    } else {
-        const hallBoy = HIERARCHY_RULES.find(r => r.name === 'Hall Boy');
-        const footman  = HIERARCHY_RULES.find(r => r.name === 'Footman');
-        bodyHtml = `
-            <div style="border:1px solid rgba(197,160,89,0.18);border-radius:6px;padding:16px;margin-bottom:12px;">
-                <div class="ob-label" style="margin-bottom:12px;color:#c5a059;">CURRENT - HALL BOY</div>
-                ${(hallBoy?.benefits || []).map(b => `<div style="font-size:0.85rem;color:rgba(255,255,255,0.42);margin-bottom:7px;padding-left:10px;border-left:1px solid rgba(197,160,89,0.2);">${b}</div>`).join('')}
-            </div>
-            <div style="border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:16px;">
-                <div class="ob-label" style="margin-bottom:12px;color:rgba(255,255,255,0.22);">NEXT - FOOTMAN</div>
-                ${(footman?.benefits || []).map(b => `<div style="font-size:0.85rem;color:rgba(255,255,255,0.22);margin-bottom:7px;padding-left:10px;border-left:1px solid rgba(255,255,255,0.07);">${b}</div>`).join('')}
-                <div style="font-size:0.7rem;color:rgba(255,255,255,0.15);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">5 tasks &nbsp;·&nbsp; 10 kneels &nbsp;·&nbsp; 2,000 merit points</div>
-            </div>
-        `;
-    }
+    const bodyHtml = (slide.body || '').split('\n').map(l =>
+        l.trim() ? `<p>${l}</p>` : `<div class="gap"></div>`
+    ).join('');
 
     state.overlay.innerHTML = `
-        <div style="width:100%;max-width:420px;padding:52px 28px 40px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
+        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;">
 
-            <div class="ob-label">${state.slideIndex + 1} / ${total}</div>
+            <div class="ob-label"></div>
 
             <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 0 24px;">
                 <div class="ob-title">${slide.title}</div>
@@ -338,15 +269,13 @@ function _renderSlide(state: OBState): void {
             </div>
 
             <div>
-                <div style="display:flex;gap:6px;margin-bottom:18px;">${dots}</div>
-                <button id="ob-next" class="ob-btn">${isLast ? 'BEGIN MY SERVICE' : 'NEXT'}</button>
+                <button id="ob-next" class="ob-btn">BEGIN MY SERVICE</button>
             </div>
         </div>
     `;
 
     state.overlay.querySelector('#ob-next')?.addEventListener('click', () => {
-        if (isLast) _complete(state);
-        else { state.slideIndex++; _renderSlide(state); }
+        _complete(state);
     });
 }
 
