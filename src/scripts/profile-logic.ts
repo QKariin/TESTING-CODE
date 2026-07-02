@@ -4544,7 +4544,7 @@ const AI_TOPICS: { label: string; msg?: string; action?: string }[] = [
 function _aiTopicBtns(): string {
     const tour = AI_TOPICS[0]; // "I'm new, guide me" — always first, alone on its line
     const rest = AI_TOPICS.slice(1);
-    return `<div class="ai-topics" style="flex-direction:column;align-items:center;gap:12px;">
+    return `<div class="ai-topics" style="flex-direction:column;align-items:center;gap:8px;">
         <div>${tour.action
             ? `<button class="ai-topic-btn" onclick="window._aiAction('${tour.action}')">${tour.label}</button>`
             : `<button class="ai-topic-btn" onclick="window._sendAiTopic('${tour.msg!.replace(/'/g, "\\'")}')">${tour.label}</button>`
@@ -4656,11 +4656,11 @@ function _showAiChat() {
     const existingAiMsgs = content.querySelectorAll('.cb-row-ai-in, .cb-row-ai-out');
     if (existingAiMsgs.length === 0 && !content.querySelector('.ai-welcome')) {
         const welcomeHtml = `
-            <div class="ai-welcome" style="text-align:center;padding:30px 20px;">
+            <div class="ai-welcome" style="text-align:center;padding:20px 16px;">
                 <img src="/vlad-avatar.png" alt="Vlad" style="width:70px;height:70px;border-radius:50%;object-fit:cover;object-position:center 20%;border:2px solid rgba(255,0,237,0.3);margin:0 auto 14px;display:block;box-shadow:0 0 20px rgba(255,0,237,0.15);" />
                 <div style="font-family:Cinzel,serif;font-size:0.95rem;color:rgba(255,0,237,0.8);letter-spacing:3px;margin-bottom:4px;">VLAD</div>
-                <div style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:rgba(160,100,255,0.5);letter-spacing:2px;margin-bottom:8px;">AI ASSISTANT</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.45);line-height:1.5;max-width:280px;margin:0 auto 20px;">
+                <div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(160,100,255,0.6);letter-spacing:2px;margin-bottom:12px;">AI ASSISTANT</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(255,255,255,0.65);line-height:1.6;max-width:300px;margin:0 auto 24px;">
                     Hey! Pick a topic or ask me anything.
                 </div>
                 ${_aiTopicBtns()}
