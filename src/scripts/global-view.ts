@@ -191,7 +191,7 @@ export function openGlobalSection(section: 'leaderboard' | 'talk' | 'updates' | 
     if (main) main.style.display = 'none';
     _hidePanels();
     const labels: Record<string, string> = { leaderboard: 'LEADERBOARD', talk: 'COMMUNITY TALK', updates: 'UPDATES', spenders: 'BEST SPENDERS', queen: 'QUEEN KARIN', exchequer: 'ROYAL EXCHEQUER' };
-    _setHeader(`GLOBAL  ›  ${labels[section] || section.toUpperCase()}`, true);
+    _setHeader(`SUBS TRADE UNION  ›  ${labels[section] || section.toUpperCase()}`, true);
     const panel = document.getElementById(`gPanel_${section}`);
     if (panel) panel.style.display = 'flex';
     if (section === 'leaderboard') loadLeaderboard(currentPeriod);

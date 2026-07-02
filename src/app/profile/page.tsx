@@ -1194,7 +1194,7 @@ export default function ProfilePage() {
 
                     <div id="gridStat4" className="v-card v-stat-card serve-grid-item" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: showGlobal ? 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.06))' : 'linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02))', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.22)'}`, gap: 6 }} onClick={() => setShowGlobal(!showGlobal)}>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '3px' }}>TAP TO OPEN</div>
-                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>GLOBAL</div>
+                        <div style={{ fontFamily: 'Cinzel', fontSize: '1.05rem', color: '#fff', fontWeight: 700, letterSpacing: '3px' }}>SUBS TRADE UNION</div>
                         <div style={{ fontFamily: 'Orbitron', fontSize: '0.4rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.8 }}>LEADERBOARD · TALK · UPDATES</div>
                     </div>
 
@@ -2262,7 +2262,7 @@ export default function ProfilePage() {
             {/* ── GLOBAL OVERLAY ── */}
             <div id="mobGlobalOverlay" className="mob-overlay" style={{ display: 'none', flexDirection: 'column' }}>
                 <div className="mob-overlay-header">
-                    <span className="mob-overlay-title">◎ GLOBAL</span>
+                    <span className="mob-overlay-title">◎ SUBS TRADE UNION</span>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobGlobal()}>✕</button>
                 </div>
 
@@ -2380,7 +2380,7 @@ export default function ProfilePage() {
                 </button>
                 <button id="mobNavGlobal" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobGlobal(); }}>
                     <span className="mob-nav-icon">◎</span>
-                    <span className="mob-nav-label">GLOBAL</span>
+                    <span className="mob-nav-label">UNION</span>
                 </button>
             </nav>
 
