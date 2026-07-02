@@ -16,7 +16,7 @@ function getSlides(name: string): Slide[] {
     return [
         {
             title: `WELCOME, ${(name || 'SLAVE').toUpperCase()}`,
-            body: `I am Queen Karin. I built this place myself — every detail, every rule, every reward. There is no one else behind it. Just me.\n\nYou made the right decision coming here. Not everyone gets in, and the fact that you are reading this means you already took the first step most never do.\n\nI left coins in your wallet so you can explore everything. When you enter, tap "I'M NEW HERE — GUIDE ME" — it will show you how everything works.\n\nI will be watching. Make me proud.`,
+            body: `I am Queen Karin. I built this place myself. Every detail, every rule, every reward. There is no one else behind it. Just me.\n\nYou made the right decision coming here. Not everyone gets in, and the fact that you are reading this means you already took the first step most never do.\n\nI left coins in your wallet so you can explore everything. When you enter, tap "I'M NEW HERE, GUIDE ME" and it will show you how everything works.\n\nI will be watching. Make me proud.`,
         },
     ];
 }
@@ -262,10 +262,11 @@ function _renderSlide(state: OBState): void {
 
             <div class="ob-label"></div>
 
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 0 24px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0 24px;">
+                ${state.photoUrl || state.photoSelected ? `<div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:2px solid rgba(197,160,89,0.4);margin-bottom:16px;box-shadow:0 0 20px rgba(197,160,89,0.1);"><img src="${state.photoUrl || ''}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.display='none'" /></div>` : ''}
                 <div class="ob-title">${slide.title}</div>
                 <div class="ob-gold-line"></div>
-                <div class="ob-body">${bodyHtml}</div>
+                <div class="ob-body" style="text-align:center;">${bodyHtml}</div>
             </div>
 
             <div>
