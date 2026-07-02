@@ -34,6 +34,9 @@ function getSlides(name: string): Slide[] {
     ];
 }
 
+// Guard against React strict mode double-mount calling _showModal twice
+let _onboardingActive = false;
+
 // ─── State ────────────────────────────────────────────────────────────────────
 
 interface OBState {
@@ -49,6 +52,7 @@ interface OBState {
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
 export async function checkAndShowOnboarding(raw: any): Promise<void> {
+    if (_onboardingActive) return; // already showing (React strict mode guard)
     const forceShow = new URLSearchParams(window.location.search).get('onboarding') === '1';
     if (!forceShow && raw?.parameters?.onboarding_seen === true) return;
     if (!forceShow && ((raw?.score || 0) > 0 || (raw?.kneelCount || 0) > 0)) {
@@ -56,6 +60,7 @@ export async function checkAndShowOnboarding(raw: any): Promise<void> {
         if (mid) _markSeen(mid, raw?.parameters || {}).catch(() => {});
         return;
     }
+    _onboardingActive = true;
     _showModal(raw);
 }
 
@@ -100,7 +105,7 @@ function _showModal(raw: any): void {
     const overlay = document.createElement('div');
     overlay.id = 'onboardingOverlay';
     overlay.style.cssText = `
-        position:fixed;inset:0;z-index:9999;
+        position:fixed;inset:0;z-index:2147483646;
         background:rgba(4,3,2,0.97);
         display:flex;align-items:flex-start;justify-content:center;
         overflow-y:auto;
@@ -348,6 +353,7 @@ function _renderSlide(state: OBState): void {
 // ─── Complete ─────────────────────────────────────────────────────────────────
 
 async function _complete(state: OBState): Promise<void> {
+    _onboardingActive = false;
     state.overlay.style.transition = 'opacity 0.4s';
     state.overlay.style.opacity = '0';
     setTimeout(() => state.overlay.remove(), 420);
