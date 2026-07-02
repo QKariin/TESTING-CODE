@@ -73,11 +73,11 @@ function _injectStyles(): void {
         #onboardingOverlay button { transition: opacity .15s; }
         #onboardingOverlay button:not(:disabled):active { opacity: .8; }
         .ob-gold-line { width:36px;height:1px;background:#c5a059;opacity:.35;margin-bottom:22px; }
-        .ob-label { font-family:'Orbitron',sans-serif;font-size:0.42rem;letter-spacing:3px;color:rgba(197,160,89,0.55); }
-        .ob-title { font-family:'Orbitron',sans-serif;font-size:0.78rem;letter-spacing:2px;color:#ffffff;line-height:1.5;margin-bottom:8px; }
+        .ob-label { font-family:Cinzel,serif;font-size:0.42rem;letter-spacing:3px;color:rgba(197,160,89,0.55); }
+        .ob-title { font-family:Cinzel,serif;font-size:0.78rem;letter-spacing:2px;color:#ffffff;line-height:1.5;margin-bottom:8px; }
         .ob-body p { margin:0 0 10px;color:rgba(255,255,255,0.45);line-height:1.75;font-size:0.95rem; }
         .ob-body .gap { height:6px; }
-        .ob-btn { width:100%;padding:14px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:'Orbitron',sans-serif;font-size:0.52rem;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:6px; }
+        .ob-btn { width:100%;padding:14px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:Cinzel,serif;font-size:0.52rem;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:6px; }
         .ob-btn:disabled { opacity:.3;cursor:not-allowed; }
     `;
     document.head.appendChild(s);
@@ -153,8 +153,8 @@ function _renderSetup(state: OBState): void {
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 0 24px;">
 
                 <!-- Photo — large, centered, face first -->
-                <div id="ob-photo" style="width:120px;height:120px;border-radius:50%;border:2px solid rgba(197,160,89,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:rgba(197,160,89,0.03);margin-bottom:12px;box-shadow:0 0 30px rgba(197,160,89,0.08);">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.3)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                <div id="ob-photo" style="width:160px;height:160px;border-radius:50%;border:2px solid rgba(197,160,89,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:rgba(197,160,89,0.03);margin-bottom:12px;box-shadow:0 0 30px rgba(197,160,89,0.08);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.3)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
                 </div>
                 <div id="ob-photo-status" style="font-size:0.75rem;color:rgba(255,255,255,0.2);margin-bottom:6px;">Tap to upload your photo</div>
                 <div class="ob-label" style="font-size:0.35rem;margin-bottom:32px;color:rgba(255,255,255,0.12);">This is how others will see you</div>
