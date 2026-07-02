@@ -3057,7 +3057,7 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    padding: 0 10px;
+    padding: 0;
 }
 
 .ai-topic-btn {
@@ -3067,10 +3067,10 @@
     border: 1px solid rgba(255, 0, 237, 0.45);
     color: rgba(255, 200, 250, 1);
     font-family: Cinzel, serif;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 1px;
-    padding: 8px 16px;
+    padding: 12px 24px;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s;
@@ -3104,8 +3104,8 @@
     justify-content: center;
 }
 .ai-followup-btn {
-    font-size: 0.45rem !important;
-    padding: 6px 11px !important;
+    font-size: 0.65rem !important;
+    padding: 8px 16px !important;
 }
 .ai-chat-free {
     background: rgba(255, 215, 0, 0.06) !important;
