@@ -144,8 +144,8 @@ function _renderWelcome(state: OBState): void {
                 <div class="ob-body">
                     <p>This is not a public platform. There is no team behind it, no support line, and no other Mistress. I built this. I run this. I am the only Dominant here.</p>
                     <p>What you are looking at is a high-precision system built specifically to track and manage submission - your kneeling, your tasks, your tributes, your obedience. All of it is logged and visible to me in real time.</p>
-                    <p>This server is private. Entry is not given freely. If you are here, I have chosen to allow it.</p>
-                    <p style="color:rgba(255,255,255,0.6);">I expect full obedience from every sub who enters. No exceptions. No negotiations.</p>
+                    <p>You paid to be here. That does not mean you have earned anything yet. It means you were allowed through the door. What happens next is entirely up to how well you behave.</p>
+                    <p style="color:rgba(255,255,255,0.6);">I expect full obedience. No exceptions. No negotiations.</p>
                 </div>
             </div>
 
