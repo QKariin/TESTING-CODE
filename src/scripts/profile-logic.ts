@@ -972,19 +972,21 @@ function _updateInstallRow() {
     const show = !isStandalone && !alreadyClaimed;
     const row = document.getElementById('queenHubInstallRow');
     if (row) row.style.display = show ? '' : 'none';
+}
 
-    // Send dashboard notification when running as installed app
-    if (isStandalone && !localStorage.getItem('_appInstallNotified')) {
-        const userId = state.memberId || state.id;
-        if (userId) {
-            localStorage.setItem('_appInstallNotified', '1');
-            fetch('/api/app-install-notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: userId, memberName: raw?.name || 'Unknown' })
-            }).catch(() => {});
-        }
-    }
+function _sendInstallNotifyOnce(u: any) {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    if (!isStandalone) return;
+    if (localStorage.getItem('_appInstallNotified')) return;
+    const { memberId, id } = getState();
+    const userId = memberId || id;
+    if (!userId) return;
+    localStorage.setItem('_appInstallNotified', '1');
+    fetch('/api/app-install-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, memberName: u?.name || 'Unknown' })
+    }).catch(() => {});
 }
 
 export async function handleInstallApp() {
@@ -8150,6 +8152,9 @@ export function renderProfileSidebar(u: any) {
 
     // Trigger loading tributes exactly once when profile data lands and sidebar renders
     if (globalTributes.length === 0) loadTributes();
+
+    // Send dashboard notification on first standalone (installed app) launch
+    _sendInstallNotifyOnce(u);
 
     // Load routine widget state from server (bypasses RLS via admin API)
     updateRoutineWidget();
