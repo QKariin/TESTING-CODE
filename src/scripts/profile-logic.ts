@@ -5,6 +5,52 @@ import { uploadToSupabase, getVideoDuration, isVideo, extractAndUploadVideoThumb
 import { getOptimizedUrl } from './media';
 import { presenceKey } from './dashboard-presence';
 
+// ─── Custom coin confirm modal ───────────────────────────────────────────────
+function _showCoinConfirm(opts: { title: string; cost: number; wallet: number; onConfirm: () => void; onCancel?: () => void }) {
+    const existing = document.getElementById('_coinConfirmOverlay');
+    if (existing) existing.remove();
+
+    // Inject keyframes once
+    if (!document.getElementById('_ccKeyframes')) {
+        const style = document.createElement('style');
+        style.id = '_ccKeyframes';
+        style.textContent = '@keyframes _ccFadeIn{from{opacity:0}to{opacity:1}}';
+        document.head.appendChild(style);
+    }
+
+    const canAfford = opts.wallet >= opts.cost;
+    const ov = document.createElement('div');
+    ov.id = '_coinConfirmOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:_ccFadeIn 0.25s ease;';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'width:88%;max-width:340px;border-radius:18px;background:linear-gradient(170deg,#0c0a10 0%,#110e18 50%,#0c0a10 100%);border:1px solid rgba(197,160,89,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 30px rgba(197,160,89,0.04);padding:28px 24px 22px;text-align:center;';
+
+    const coinColor = canAfford ? 'rgba(197,160,89,0.9)' : 'rgba(255,60,60,0.8)';
+    const walletColor = canAfford ? 'rgba(255,255,255,0.35)' : 'rgba(255,60,60,0.5)';
+
+    card.innerHTML = `
+        <div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:4px;margin-bottom:16px;">${opts.title}</div>
+        <div style="font-family:Cinzel,serif;font-size:2rem;color:${coinColor};font-weight:700;letter-spacing:2px;">${opts.cost.toLocaleString()}</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(197,160,89,0.45);margin-top:2px;letter-spacing:2px;">COINS</div>
+        <div style="width:60px;height:1px;background:rgba(197,160,89,0.15);margin:16px auto;"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:${walletColor};">wallet: ${opts.wallet.toLocaleString()} coins</div>
+        ${!canAfford ? '<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,60,60,0.6);margin-top:6px;">insufficient funds</div>' : ''}
+        <div style="display:flex;gap:12px;margin-top:24px;">
+            <button id="_ccCancel" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
+            ${canAfford ? '<button id="_ccConfirm" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.3);color:rgba(197,160,89,0.9);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">PROCEED</button>' : ''}
+        </div>`;
+
+    ov.appendChild(card);
+    document.body.appendChild(ov);
+
+    const close = () => { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.2s'; setTimeout(() => ov.remove(), 200); };
+
+    ov.querySelector('#_ccCancel')!.addEventListener('click', () => { close(); opts.onCancel?.(); });
+    if (canAfford) ov.querySelector('#_ccConfirm')!.addEventListener('click', () => { close(); opts.onConfirm(); });
+    ov.addEventListener('click', (e) => { if (e.target === ov) { close(); opts.onCancel?.(); } });
+}
+
 // ─── DAILY VERIFICATION CODE (same formula as dashboard) ───
 function getDailyCode(): string {
     const d = new Date();
@@ -7667,86 +7713,82 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
 }
 
 async function _doProfileUpload() {
-    // Confirm price before proceeding
     const wallet = getState().wallet || 0;
-    if (wallet < 1000) {
-        alert(`Photo change costs 1,000 coins. You only have ${wallet.toLocaleString()}.`);
-        return;
-    }
-    if (!confirm(`Changing your photo costs 1,000 coins.\nYour wallet: ${wallet.toLocaleString()} coins.\n\nProceed?`)) return;
 
-    // iOS Safari blocks programmatic input.click() if called after any await.
-    // Solution: create input and click it synchronously first,
-    // then resolve the user email inside the onchange handler.
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
-    document.body.appendChild(input);
+    _showCoinConfirm({
+        title: 'PHOTO CHANGE',
+        cost: 1000,
+        wallet,
+        onConfirm: () => {
+            // iOS Safari blocks programmatic input.click() if called after any await.
+            // Must create + click file input inside user gesture (the confirm button click).
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
+            document.body.appendChild(input);
+            input.onchange = async () => { _handlePhotoFile(input); };
+            input.click();
+        },
+    });
+}
 
-    input.onchange = async () => {
-        const file = input.files?.[0];
-        document.body.removeChild(input);
-        if (!file) return;
+async function _handlePhotoFile(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    document.body.removeChild(input);
+    if (!file) return;
 
-        const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
-        const elHudPic = document.getElementById('hudUserPic') as HTMLImageElement;
-        if (elProfilePic) elProfilePic.style.opacity = '0.5';
-        if (elHudPic) elHudPic.style.opacity = '0.5';
+    const elProfilePic = document.getElementById('profilePic') as HTMLImageElement;
+    const elHudPic = document.getElementById('hudUserPic') as HTMLImageElement;
+    if (elProfilePic) elProfilePic.style.opacity = '0.5';
+    if (elHudPic) elHudPic.style.opacity = '0.5';
 
-        try {
-            // Get user email here (after file selected - async is fine now)
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            const memberEmail = user?.email || getState().email || getState().raw?.member_id || user?.id;
-            if (!memberEmail) {
-                alert('Not logged in.');
-                if (elProfilePic) elProfilePic.style.opacity = '1';
-                if (elHudPic) elHudPic.style.opacity = '1';
-                return;
-            }
-
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('memberEmail', memberEmail);
-
-            const res = await fetch('/api/upload-avatar', { method: 'POST', body: fd });
-            const data = await res.json();
-
+    try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const memberEmail = user?.email || getState().email || getState().raw?.member_id || user?.id;
+        if (!memberEmail) {
+            alert('Not logged in.');
             if (elProfilePic) elProfilePic.style.opacity = '1';
             if (elHudPic) elHudPic.style.opacity = '1';
-
-            if (data.success && data.url) {
-                if (elProfilePic) elProfilePic.src = data.url;
-                if (elHudPic) elHudPic.src = data.url;
-                const elHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
-                if (elHaloPic) elHaloPic.src = data.url;
-                // Update cached state so certificate/other features see the new avatar
-                if ((window as any).__currentProfileRaw) (window as any).__currentProfileRaw.avatar_url = data.url;
-                const s = getState(); if (s?.raw) s.raw.avatar_url = data.url;
-                // Deduct 1000 coins for photo change
-                try {
-                    await fetch('/api/profile-update', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ memberEmail, field: '_deductOnly', value: '', cost: 1000 })
-                    });
-                    const newWallet = Math.max(0, (getState().wallet || 0) - 1000);
-                    setState({ wallet: newWallet });
-                    document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = newWallet.toLocaleString(); });
-                } catch {}
-            } else {
-                alert('Photo upload failed: ' + (data.error || 'Unknown error'));
-            }
-        } catch (err: any) {
-            if (elProfilePic) elProfilePic.style.opacity = '1';
-            if (elHudPic) elHudPic.style.opacity = '1';
-            alert('Photo upload failed: ' + (err.message || 'Unknown error'));
+            return;
         }
-    };
 
-    // Click synchronously - must happen within the user gesture on iOS
-    input.click();
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('memberEmail', memberEmail);
+
+        const res = await fetch('/api/upload-avatar', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (elProfilePic) elProfilePic.style.opacity = '1';
+        if (elHudPic) elHudPic.style.opacity = '1';
+
+        if (data.success && data.url) {
+            if (elProfilePic) elProfilePic.src = data.url;
+            if (elHudPic) elHudPic.src = data.url;
+            const elHaloPic = document.getElementById('mob_profilePic') as HTMLImageElement;
+            if (elHaloPic) elHaloPic.src = data.url;
+            if ((window as any).__currentProfileRaw) (window as any).__currentProfileRaw.avatar_url = data.url;
+            const s = getState(); if (s?.raw) s.raw.avatar_url = data.url;
+            try {
+                await fetch('/api/profile-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberEmail, field: '_deductOnly', value: '', cost: 1000 })
+                });
+                const newWallet = Math.max(0, (getState().wallet || 0) - 1000);
+                setState({ wallet: newWallet });
+                document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = newWallet.toLocaleString(); });
+            } catch {}
+        } else {
+            alert('Photo upload failed: ' + (data.error || 'Unknown error'));
+        }
+    } catch (err: any) {
+        if (elProfilePic) elProfilePic.style.opacity = '1';
+        if (elHudPic) elHudPic.style.opacity = '1';
+        alert('Photo upload failed: ' + (err.message || 'Unknown error'));
+    }
 }
 
 const CHIP_LIST = ["JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", "Protocol", "Obedience", "Psychological domination"];
@@ -7966,10 +8008,22 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         if (fieldId === 'name') {
             cost = 5000;
             const w = getState().wallet || 0;
-            if (w < 5000) { showErr(`Name change costs 5,000 coins. You have ${w.toLocaleString()}.`); return; }
-            if (!confirm(`Changing your name costs 5,000 coins.\nYour wallet: ${w.toLocaleString()} coins.\n\nProceed?`)) { if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; } return; }
+            _showCoinConfirm({
+                title: 'NAME CHANGE',
+                cost: 5000,
+                wallet: w,
+                onConfirm: () => _doSaveField(fieldId, value, cost, email!, overlay, saveBtn),
+                onCancel: () => { if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; } },
+            });
+            return;
         }
     }
+
+    _doSaveField(fieldId, value, cost, email!, overlay, saveBtn);
+}
+
+async function _doSaveField(fieldId: string, value: string, cost: number, email: string, overlay: HTMLElement, saveBtn: HTMLButtonElement | null) {
+    const showErr = (msg: string) => { const errEl = document.getElementById('_reqError'); if (errEl) { errEl.style.display = 'block'; errEl.textContent = msg; } if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; } };
 
     const res = await fetch('/api/profile-update', {
         method: 'POST',
@@ -7997,6 +8051,7 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
         document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = wStr; });
 
         renderProfileSidebar(patchedProfile);
+        const { memberId, id } = getState();
         loadChatHistory(memberId || id || email);
     } else {
         showErr('Save failed: ' + (data.error || 'Unknown error'));
