@@ -13,6 +13,26 @@ export async function POST(req: Request) {
         const { memberId, memberName } = await req.json();
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
+        // Check if already notified (idempotent — won't duplicate)
+        const { data: existing } = await adminClient
+            .from('chats')
+            .select('id')
+            .eq('member_id', memberId)
+            .like('content', 'APP_INSTALL::%')
+            .maybeSingle();
+
+        if (existing) return NextResponse.json({ success: true, alreadyExists: true });
+
+        // Also check case-insensitive for email-based member_ids
+        const { data: existingIlike } = await adminClient
+            .from('chats')
+            .select('id')
+            .ilike('member_id', memberId)
+            .like('content', 'APP_INSTALL::%')
+            .maybeSingle();
+
+        if (existingIlike) return NextResponse.json({ success: true, alreadyExists: true });
+
         const payload = {
             userName: memberName || 'Unknown',
             installedAt: new Date().toISOString(),
