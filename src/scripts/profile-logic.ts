@@ -3234,9 +3234,12 @@ export async function initChatSystem() {
     // Broadcast presence so dashboard knows this member is online.
     // Stored at module level so it can be unsubscribed in cleanupChatSystem().
     _presenceCh = supabase.channel('members-online');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+    const platform = isStandalone ? 'app' : isMobile ? 'mobile' : 'desktop';
     _presenceCh.subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
-            await _presenceCh.track({ id: presenceKey(email!) });
+            await _presenceCh.track({ id: presenceKey(email!), platform });
         }
     });
 

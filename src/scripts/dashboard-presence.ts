@@ -16,6 +16,7 @@ export function presenceKey(email: string): string {
 }
 
 export const onlineMembers = new Set<string>();
+export const memberPlatforms = new Map<string, string>(); // presenceKey → 'app' | 'mobile' | 'desktop'
 let _lastValidSync = 0; // timestamp of last sync that had members
 
 type PresenceListener = () => void;
@@ -48,17 +49,17 @@ export function initPresenceTracking() {
 
     _channel
         .on('presence', { event: 'sync' }, () => {
-            const state = _channel!.presenceState<{ id?: string; email?: string }>();
+            const state = _channel!.presenceState<{ id?: string; email?: string; platform?: string }>();
 
             // Build the set of keys present in this sync event
             const nowPresent = new Set<string>();
             Object.values(state)
                 .flat()
                 .forEach((p: any) => {
-                    if (p?.id) {
-                        nowPresent.add(p.id);
-                    } else if (p?.email) {
-                        nowPresent.add(presenceKey(p.email));
+                    const key = p?.id || (p?.email ? presenceKey(p.email) : null);
+                    if (key) {
+                        nowPresent.add(key);
+                        if (p?.platform) memberPlatforms.set(key, p.platform);
                     }
                 });
 
@@ -87,6 +88,7 @@ export function initPresenceTracking() {
                     _absentCount[key] = (_absentCount[key] || 0) + 1;
                     if (_absentCount[key] >= OFFLINE_THRESHOLD) {
                         onlineMembers.delete(key);
+                        memberPlatforms.delete(key);
                         delete _absentCount[key];
                         changed = true;
                     }
@@ -122,6 +124,12 @@ export function isMemberOnline(email: string): boolean {
     return onlineMembers.has(presenceKey(email));
 }
 
+/** Returns the platform the member is using: 'app', 'mobile', 'desktop', or null if offline. */
+export function getMemberPlatform(email: string): string | null {
+    if (!email) return null;
+    return memberPlatforms.get(presenceKey(email)) || null;
+}
+
 /** Unsubscribe and clean up the presence channel. Call on page unload. */
 export function cleanupPresenceTracking() {
     if (_channel) {
@@ -129,4 +137,5 @@ export function cleanupPresenceTracking() {
         _channel = null;
     }
     onlineMembers.clear();
+    memberPlatforms.clear();
 }

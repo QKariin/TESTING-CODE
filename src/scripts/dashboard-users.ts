@@ -10,7 +10,7 @@ import { clean, raw, formatTimer } from './utils';
 import { getSignedUrl, mediaType as mediaTypeFunction, getOptimizedUrl } from './media';
 
 import { getHierarchyReport } from '../lib/hierarchyRules';
-import { isMemberOnline } from './dashboard-presence';
+import { isMemberOnline, getMemberPlatform } from './dashboard-presence';
 
 // --- Theme helpers (reads runtime theme from window.__dashTheme) ---
 function _tHex(): string { return (window as any).__dashTheme?.hex || '#c5a059'; }
@@ -209,29 +209,15 @@ export async function updateDetail(u: any) {
     setText('chatterHeaderRank', realRank.toUpperCase());
 
     const stEl = document.getElementById('dMirrorStatus');
+    const presEmail = u?.member_id || u?.email || '';
+    const platform = isOnline ? getMemberPlatform(presEmail) : null;
     if (stEl) {
-        stEl.innerText = status;
-        stEl.style.color = isOnline ? '#00ff00' : '#666';
-    }
-
-    // App install indicator in header
-    const appInstalled = u?.parameters?.appInstallClaimed === true;
-    let appDot = document.getElementById('dAppInstallDot');
-    if (!appDot) {
-        const tagline = document.querySelector('.vu-tagline');
-        if (tagline) {
-            const dot = document.createElement('span');
-            dot.id = 'dAppInstallDot';
-            dot.style.cssText = 'margin-left:6px;font-size:0.65rem;';
-            tagline.appendChild(dot);
-        }
-        appDot = document.getElementById('dAppInstallDot');
-    }
-    if (appDot) {
-        if (appInstalled) {
-            appDot.innerHTML = '<span title="App installed" style="color:#4ade80;">&#9679;</span>';
+        if (isOnline && platform) {
+            const platformLabel = platform === 'app' ? 'APP' : platform === 'mobile' ? 'BROWSER' : 'DESKTOP';
+            stEl.innerHTML = `<span style="color:#00ff00;">ONLINE</span> <span style="color:rgba(255,255,255,0.35);font-size:0.6em;margin-left:4px;">${platformLabel}</span>`;
         } else {
-            appDot.innerHTML = '';
+            stEl.innerText = status;
+            stEl.style.color = isOnline ? '#00ff00' : '#666';
         }
     }
 
@@ -1260,7 +1246,7 @@ async function _showExtrasOverlay(memberId: string) {
             </div>
 
             <!-- APP -->
-            <div id="_extrasAppSection" style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
+            <div style="padding:18px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.18);border-radius:12px;">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                     <span style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);">+</span>
                     <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:#fff;letter-spacing:2px;font-weight:700;">APP INSTALL</div>
@@ -1268,7 +1254,6 @@ async function _showExtrasOverlay(memberId: string) {
                 <div style="display:flex;align-items:center;gap:8px;">
                     <div style="width:10px;height:10px;border-radius:50%;background:${appInstalled ? '#4ade80' : 'rgba(255,255,255,0.1)'};${appInstalled ? 'box-shadow:0 0 8px rgba(74,222,128,0.5);' : ''}"></div>
                     <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:${appInstalled ? '#4ade80' : 'rgba(255,255,255,0.25)'};">${appInstalled ? 'Installed' : 'Not installed'}</div>
-                    ${!appInstalled ? `<button id="_markInstalled" style="margin-left:auto;padding:4px 12px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:6px;color:#4ade80;font-family:Rajdhani,sans-serif;font-size:0.7rem;cursor:pointer;letter-spacing:1px;">MARK INSTALLED</button>` : ''}
                 </div>
             </div>
 
@@ -1323,29 +1308,6 @@ async function _showExtrasOverlay(memberId: string) {
     document.body.appendChild(overlay);
     requestAnimationFrame(() => { overlay.style.opacity = '1'; });
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
-
-    // "Mark installed" button
-    const markBtn = overlay.querySelector('#_markInstalled');
-    if (markBtn) {
-        markBtn.addEventListener('click', async () => {
-            (markBtn as HTMLButtonElement).disabled = true;
-            (markBtn as HTMLButtonElement).textContent = '...';
-            try {
-                await fetch('/api/app-install-notify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId, memberName: u?.name || 'Unknown' })
-                });
-                // Update cached user data so the overlay refreshes correctly
-                if (u) {
-                    if (!u.parameters) u.parameters = {};
-                    u.parameters.appInstallClaimed = true;
-                }
-                overlay.remove();
-                _showExtrasOverlay(memberId);
-            } catch { (markBtn as HTMLButtonElement).textContent = 'FAILED'; }
-        });
-    }
 
     // Load vault items for this user
     _loadVaultForUser(memberId);
