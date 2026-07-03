@@ -1021,14 +1021,14 @@ async function _claimInstallReward() {
         await fetch('/api/claim-reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberId: userId, type: 'app_install', coins: 1000 })
+            body: JSON.stringify({ memberId: userId, choice: 'coins' })
         });
-        // Send dashboard notification
-        fetch('/api/app-install-notify', {
+        // Set appInstallClaimed + send dashboard notification (idempotent)
+        await fetch('/api/app-install-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ memberId: userId, memberName: raw?.name || 'Unknown' })
-        }).catch(() => {});
+        });
         const row = document.getElementById('hubInstallRow');
         if (row) row.style.display = 'none';
     } catch (e) {

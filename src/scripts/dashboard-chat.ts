@@ -110,15 +110,6 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail || x.member_id === memberIdOrEmail);
     const activeId = u?.memberId || memberIdOrEmail;
 
-    // If user installed the app, ensure the dashboard notification exists
-    if (u?.parameters?.appInstallClaimed === true) {
-        fetch('/api/app-install-notify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberId: activeId, memberName: u?.name || 'Unknown' })
-        }).catch(() => {});
-    }
-
     // ── KILL everything from previous user ──
     // Increment generation — every old callback will see a stale number and bail
     const gen = ++_chatGen;
