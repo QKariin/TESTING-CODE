@@ -5481,18 +5481,18 @@ h3,
 .vu-rank {
     font-family: 'Rajdhani', sans-serif;
     color: #af8d57;
-    font-size: 0.5rem;
+    font-size: 0.75rem;
     letter-spacing: 3px;
     text-transform: uppercase;
     font-weight: 700;
 }
 .vu-rank-dot {
     color: rgba(255,255,255,0.12);
-    font-size: 0.5rem;
+    font-size: 0.6rem;
 }
 .vu-status {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 0.42rem;
+    font-size: 0.7rem;
     letter-spacing: 2px;
     color: #666;
 }

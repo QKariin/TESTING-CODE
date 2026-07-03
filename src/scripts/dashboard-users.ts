@@ -214,7 +214,8 @@ export async function updateDetail(u: any) {
     if (stEl) {
         if (isOnline && platform) {
             const platformLabel = platform === 'app' ? 'APP' : platform === 'mobile' ? 'BROWSER' : 'DESKTOP';
-            stEl.innerHTML = `<span style="color:#00ff00;">ONLINE</span> <span style="color:rgba(255,255,255,0.35);font-size:0.6em;margin-left:4px;">${platformLabel}</span>`;
+            const pColor = platform === 'app' ? '#4ade80' : 'rgba(255,255,255,0.4)';
+            stEl.innerHTML = `<span style="color:#00ff00;">ONLINE</span><span style="color:${pColor};margin-left:6px;font-weight:700;">${platformLabel}</span>`;
         } else {
             stEl.innerText = status;
             stEl.style.color = isOnline ? '#00ff00' : '#666';
