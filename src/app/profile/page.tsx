@@ -2177,7 +2177,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <div className="mob-overlay-title" style={{ color: 'rgba(160,100,255,0.9)' }}>AI ASSISTANT</div>
-                            <div style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: 'rgba(160,100,255,0.4)', letterSpacing: '1px' }}>ALWAYS ONLINE</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,0,237,0.6)', letterSpacing: '1px' }}>@VLAD</div>
                         </div>
                     </div>
                     <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>✕</button>
@@ -2186,7 +2186,7 @@ export default function ProfilePage() {
                 {/* TAB BAR */}
                 <div className="mob-gl-tabs">
                     <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => { (window as any).toggleAiMode(false); (window as any).switchMobChatTab('chat'); }}>CHAT</button>
-                    <button id="mobChatBtnAi" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(true); (window as any).switchMobChatTab('chat'); }}>AI</button>
+                    <button id="mobChatBtnAi" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(true); (window as any).switchMobChatTab('chat'); }}>@VLAD</button>
                     <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode(false); (window as any).switchMobChatTab('service'); }}>SERVICE</button>
                 </div>
 

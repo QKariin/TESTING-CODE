@@ -4530,7 +4530,7 @@ export function toggleAiMode(on?: boolean) {
 }
 
 const AI_TOPICS: { label: string; msg?: string; action?: string }[] = [
-    { label: "I'm new, guide me", action: 'startTour' },
+    { label: "I'm new, guide me around", action: 'startTour' },
     { label: 'Hierarchy', msg: 'How does the hierarchy system work?' },
     { label: 'Kneeling', msg: 'How does kneeling work?' },
     { label: 'Tasks', msg: 'How do tasks work?' },
@@ -4542,13 +4542,24 @@ const AI_TOPICS: { label: string; msg?: string; action?: string }[] = [
 ];
 
 function _aiTopicBtns(): string {
-    const tour = AI_TOPICS[0]; // "I'm new, guide me" — always first, alone on its line
+    const tour = AI_TOPICS[0];
     const rest = AI_TOPICS.slice(1);
     return `<div class="ai-topics" style="flex-direction:column;align-items:center;gap:8px;">
-        <div>${tour.action
-            ? `<button class="ai-topic-btn" onclick="window._aiAction('${tour.action}')">${tour.label}</button>`
+        <div style="margin-bottom:24px;">${tour.action
+            ? `<button class="ai-topic-btn" style="background:rgba(255,0,237,0.1);border:2px solid rgba(255,0,237,0.5);padding:10px 28px;font-size:0.85rem;" onclick="window._aiAction('${tour.action}')">${tour.label}</button>`
             : `<button class="ai-topic-btn" onclick="window._sendAiTopic('${tour.msg!.replace(/'/g, "\\'")}')">${tour.label}</button>`
         }</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${rest.map(t =>
+            t.action
+                ? `<button class="ai-topic-btn" onclick="window._aiAction('${t.action}')">${t.label}</button>`
+                : `<button class="ai-topic-btn" onclick="window._sendAiTopic('${t.msg!.replace(/'/g, "\\'")}')">${t.label}</button>`
+        ).join('')}</div>
+    </div>`;
+}
+
+function _aiTopicBtnsNoTour(): string {
+    const rest = AI_TOPICS.slice(1);
+    return `<div class="ai-topics" style="flex-direction:column;align-items:center;gap:8px;">
         <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">${rest.map(t =>
             t.action
                 ? `<button class="ai-topic-btn" onclick="window._aiAction('${t.action}')">${t.label}</button>`
@@ -4656,14 +4667,21 @@ function _showAiChat() {
     const existingAiMsgs = content.querySelectorAll('.cb-row-ai-in, .cb-row-ai-out');
     if (existingAiMsgs.length === 0 && !content.querySelector('.ai-welcome')) {
         const welcomeHtml = `
-            <div class="ai-welcome" style="text-align:center;padding:20px 16px;">
-                <img src="/vlad-avatar.png" alt="Vlad" style="width:70px;height:70px;border-radius:50%;object-fit:cover;object-position:center 20%;border:2px solid rgba(255,0,237,0.3);margin:0 auto 14px;display:block;box-shadow:0 0 20px rgba(255,0,237,0.15);" />
-                <div style="font-family:Cinzel,serif;font-size:0.95rem;color:rgba(255,0,237,0.8);letter-spacing:3px;margin-bottom:4px;">VLAD</div>
-                <div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(160,100,255,0.6);letter-spacing:2px;margin-bottom:12px;">AI ASSISTANT</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(255,255,255,0.65);line-height:1.6;max-width:300px;margin:0 auto 24px;">
-                    Hey! Pick a topic or ask me anything.
+            <div class="ai-welcome" style="text-align:center;padding:12px 0;">
+                <div style="display:flex;align-items:center;gap:20px;padding:18px 24px;border:1px solid rgba(255,0,237,0.2);border-radius:14px;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);margin-bottom:10px;width:100%;">
+                    <img src="/vlad-avatar.png" alt="Vlad" style="width:68px;height:68px;border-radius:50%;object-fit:cover;object-position:center 20%;border:2px solid rgba(255,0,237,0.3);box-shadow:0 0 20px rgba(255,0,237,0.15);" />
+                    <div style="text-align:left;">
+                        <div style="font-size:1.4rem;color:rgba(255,0,237,0.85);letter-spacing:3px;"><span style="font-family:Rajdhani,sans-serif;">@</span><span style="font-family:Cinzel,serif;">VLAD</span></div>
+                        <div style="font-family:Cinzel,serif;font-size:0.48rem;color:rgba(160,100,255,0.5);letter-spacing:2px;margin-top:4px;">AI ASSISTANT</div>
+                    </div>
                 </div>
-                ${_aiTopicBtns()}
+                <div style="margin:28px 0 32px;">
+                    <button class="ai-topic-btn" style="background:rgba(255,0,237,0.1);border:2px solid rgba(255,0,237,0.5);padding:10px 28px;font-size:0.85rem;" onclick="window._aiAction('startTour')">I'm new, guide me around</button>
+                </div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(255,255,255,0.5);line-height:1.6;max-width:300px;margin:0 auto 32px;">
+                    Hey, I'm Vlad. Pick a topic or ask me anything.
+                </div>
+                ${_aiTopicBtnsNoTour()}
             </div>`;
         content.innerHTML = welcomeHtml;
         if (deskContent) deskContent.innerHTML = welcomeHtml;
@@ -4677,15 +4695,22 @@ function _aiAction(action: string) {
     } else if (action === 'openWishlist') {
         (window as any)._tributeShowWishlist?.();
     } else if (action === 'startTour') {
-        // Close the entire mobile chat overlay so tour can highlight elements beneath
+        // Fade out the mobile chat overlay smoothly, then start tour
         const chatOverlay = document.getElementById('mobChatOverlay');
-        if (chatOverlay) chatOverlay.style.display = 'none';
+        if (chatOverlay) {
+            chatOverlay.style.transition = 'opacity 0.4s ease';
+            chatOverlay.style.opacity = '0';
+            setTimeout(() => {
+                chatOverlay.style.display = 'none';
+                chatOverlay.style.opacity = '';
+                chatOverlay.style.transition = '';
+            }, 400);
+        }
         const deskAi = document.getElementById('mob_aiChatContent');
         if (deskAi) deskAi.style.display = 'none';
         setTimeout(() => {
-            console.log('[TOUR] calling window.startProfileTour');
             (window as any).startProfileTour?.();
-        }, 300);
+        }, 450);
     }
 }
 
@@ -7636,6 +7661,14 @@ export function selectRoutineItem(el: HTMLElement, type: string) {
 }
 
 async function _doProfileUpload() {
+    // Confirm price before proceeding
+    const wallet = getState().wallet || 0;
+    if (wallet < 1000) {
+        alert(`Photo change costs 1,000 coins. You only have ${wallet.toLocaleString()}.`);
+        return;
+    }
+    if (!confirm(`Changing your photo costs 1,000 coins.\nYour wallet: ${wallet.toLocaleString()} coins.\n\nProceed?`)) return;
+
     // iOS Safari blocks programmatic input.click() if called after any await.
     // Solution: create input and click it synchronously first,
     // then resolve the user email inside the onchange handler.
@@ -7685,6 +7718,17 @@ async function _doProfileUpload() {
                 // Update cached state so certificate/other features see the new avatar
                 if ((window as any).__currentProfileRaw) (window as any).__currentProfileRaw.avatar_url = data.url;
                 const s = getState(); if (s?.raw) s.raw.avatar_url = data.url;
+                // Deduct 1000 coins for photo change
+                try {
+                    await fetch('/api/profile-update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberEmail, field: '_deductOnly', value: '', cost: 1000 })
+                    });
+                    const newWallet = Math.max(0, (getState().wallet || 0) - 1000);
+                    setState({ wallet: newWallet });
+                    document.querySelectorAll('#coins, #mobCoins').forEach(el => { (el as HTMLElement).innerText = newWallet.toLocaleString(); });
+                } catch {}
             } else {
                 alert('Photo upload failed: ' + (data.error || 'Unknown error'));
             }
@@ -7763,6 +7807,9 @@ export function openTextFieldModal(fieldId: string, label: string, existingValue
         const customDisplay = isCustom ? 'block' : 'none';
         const customVal = isCustom ? existingValue : '';
         inner += `</div><div id="_customRoutineWrap" style="display:${customDisplay};margin-bottom:12px;"><input id="_customRoutineInput" value="${customVal}" placeholder="Describe your custom routine..." style="width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;border-radius:6px;font-family:'Orbitron';font-size:0.8rem;" /></div><div id="_reqCostDisplay" style="color:#c5a059;font-size:0.65rem;letter-spacing:2px;margin-bottom:12px;">SELECT A PROTOCOL</div>`;
+    } else if (fieldId === 'name') {
+        inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:14px;letter-spacing:1px;">NAME CHANGE: 5,000 ₡</div>`;
+        inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Orbitron';font-size:16px;resize:vertical;">${existingValue || ''}</textarea>`;
     } else {
         inner += `<div style="color:rgba(255,255,255,0.35);font-size:0.55rem;margin-bottom:12px;">STORED IN YOUR PROFILE · FREE</div>`;
         inner += `<textarea id="_reqInput" placeholder="Enter your ${label.toLowerCase()}..." style="width:100%;min-height:90px;background:rgba(255,255,255,0.05);border:1px solid rgba(197,160,89,0.3);color:#fff;padding:10px;border-radius:6px;font-family:'Orbitron';font-size:16px;resize:vertical;">${existingValue || ''}</textarea>`;
@@ -7910,6 +7957,12 @@ async function saveModalData(fieldId: string, label: string, overlay: HTMLElemen
     } else {
         value = (document.getElementById('_reqInput') as HTMLTextAreaElement)?.value?.trim() || '';
         if (!value) { showErr('Cannot be empty.'); return; }
+        if (fieldId === 'name') {
+            cost = 5000;
+            const w = getState().wallet || 0;
+            if (w < 5000) { showErr(`Name change costs 5,000 coins. You have ${w.toLocaleString()}.`); return; }
+            if (!confirm(`Changing your name costs 5,000 coins.\nYour wallet: ${w.toLocaleString()} coins.\n\nProceed?`)) { if (saveBtn) { saveBtn.textContent = 'SAVE'; saveBtn.disabled = false; } return; }
+        }
     }
 
     const res = await fetch('/api/profile-update', {
@@ -7969,8 +8022,8 @@ export function openManageProfileModal(u: any) {
     const canEditLimitsKinks = rank0 !== 'hall boy' && rank0 !== 'footman';
     const canEditRoutine = rank0 !== 'hall boy';
 
-    inner += `<button class="_manageBtn" data-action="photo" style="${btnStyle}"><span>UPDATE PHOTO</span> <span>&#9998;</span></button>`;
-    inner += `<button class="_manageBtn" data-action="field" data-field="name" data-label="IDENTITY" data-val="${getRaw('name').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT IDENTITY</span> <span>&#9998;</span></button>`;
+    inner += `<button class="_manageBtn" data-action="photo" style="${btnStyle}"><span>UPDATE PHOTO</span> <span style="font-size:0.55rem;color:#c5a059;">1,000 ₡</span></button>`;
+    inner += `<button class="_manageBtn" data-action="field" data-field="name" data-label="IDENTITY" data-val="${getRaw('name').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT IDENTITY</span> <span style="font-size:0.55rem;color:#c5a059;">5,000 ₡</span></button>`;
     if (canEditLimitsKinks) {
         inner += `<button class="_manageBtn" data-action="field" data-field="limits" data-label="LIMITS" data-val="${getRaw('limits').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT LIMITS</span> <span>&#9998;</span></button>`;
         inner += `<button class="_manageBtn" data-action="field" data-field="kinks" data-label="KINKS" data-val="${getRaw('kinks').replace(/"/g, '&quot;')}" style="${btnStyle}"><span>EDIT KINKS</span> <span>&#9998;</span></button>`;

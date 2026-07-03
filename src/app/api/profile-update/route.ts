@@ -33,8 +33,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Whitelist of allowed fields
-        const ALLOWED_FIELDS = ['avatar_url', 'limits', 'kinks', 'routine', 'name', 'lastKneelDate'];
+        // Whitelist of allowed fields (+ _deductOnly for cost-only operations like photo change)
+        const ALLOWED_FIELDS = ['avatar_url', 'limits', 'kinks', 'routine', 'name', 'lastKneelDate', '_deductOnly'];
         if (!ALLOWED_FIELDS.includes(field)) {
             return NextResponse.json({ error: 'Field not allowed' }, { status: 403 });
         }
@@ -57,6 +57,16 @@ export async function POST(req: Request) {
                 .from('profiles')
                 .update({ wallet: (profile.wallet || 0) - cost })
                 .ilike('member_id', memberEmail);
+        }
+
+        // _deductOnly: just deduct coins, no field update
+        if (field === '_deductOnly') {
+            const { data } = await supabaseAdmin
+                .from('profiles')
+                .select('*')
+                .ilike('member_id', memberEmail)
+                .maybeSingle();
+            return NextResponse.json({ success: true, profile: data });
         }
 
         const { error } = await supabaseAdmin

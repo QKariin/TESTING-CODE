@@ -2314,9 +2314,10 @@
         padding: 14px 6px;
         background: none;
         border: none;
-        color: #666;
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.65rem;
+        color: rgba(255,255,255,0.45);
+        font-family: Cinzel, serif;
+        font-size: 0.8rem;
+        font-weight: 600;
         letter-spacing: 2px;
         cursor: pointer;
         transition: color 0.2s, border-bottom 0.2s;
@@ -2920,24 +2921,17 @@
 }
 
 #mobChatOverlay.ai-mode .mob-gl-scroll {
-    background: url('/vlad-avatar.png') center 15% / cover no-repeat fixed;
+    background: url('/vlad-avatar.png') center 15% / cover no-repeat;
     position: relative;
 }
 #mobChatOverlay.ai-mode .mob-gl-scroll::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        to bottom,
-        rgba(10, 0, 20, 0.94) 0%,
-        rgba(10, 0, 20, 0.92) 30%,
-        rgba(10, 0, 20, 0.93) 70%,
-        rgba(10, 0, 20, 0.96) 100%
-    );
+    background: rgba(10, 0, 20, 0.65);
     pointer-events: none;
     z-index: 0;
 }
-
 #mobChatOverlay.ai-mode .mob-gl-scroll > * {
     position: relative;
     z-index: 1;
@@ -3061,9 +3055,9 @@
 }
 
 .ai-topic-btn {
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 0, 237, 0.45);
     color: rgba(255, 200, 250, 1);
     font-family: Cinzel, serif;

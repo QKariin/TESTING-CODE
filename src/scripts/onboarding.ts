@@ -40,6 +40,7 @@ interface OBState {
 
 export async function checkAndShowOnboarding(raw: any): Promise<void> {
     if (_onboardingActive) return; // already showing (React strict mode guard)
+    if (window.location.hostname === 'localhost') return; // skip on local dev
     const forceShow = new URLSearchParams(window.location.search).get('onboarding') === '1';
     if (!forceShow && raw?.parameters?.onboarding_seen === true) return;
     if (!forceShow && ((raw?.score || 0) > 0 || (raw?.kneelCount || 0) > 0)) {
