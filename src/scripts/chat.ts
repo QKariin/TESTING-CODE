@@ -45,7 +45,7 @@ export async function renderChat(messages: any[]) {
 
     const _isHidden = (m: any) => {
         const txt = (m.content || m.message || "");
-        return txt.startsWith('TOUR_REPORT::');
+        return txt.startsWith('TOUR_REPORT::') || txt.startsWith('APP_INSTALL::');
     };
     const systemMessages = sortedMessages.filter(m => _isSystem(m));
     const conversationMessages = sortedMessages.filter(m => !_isSystem(m) && !_isHidden(m));

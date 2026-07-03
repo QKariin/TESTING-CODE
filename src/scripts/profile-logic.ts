@@ -953,7 +953,7 @@ export async function handleInstallApp() {
 }
 
 async function _claimInstallReward() {
-    const { memberId, id } = getState();
+    const { memberId, id, raw } = getState();
     const userId = memberId || id;
     if (!userId) return;
     try {
@@ -962,6 +962,12 @@ async function _claimInstallReward() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ memberId: userId, type: 'app_install', coins: 1000 })
         });
+        // Send dashboard notification
+        fetch('/api/app-install-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: userId, memberName: raw?.name || 'Unknown' })
+        }).catch(() => {});
         const row = document.getElementById('hubInstallRow');
         if (row) row.style.display = 'none';
     } catch (e) {
@@ -3092,7 +3098,7 @@ async function _pollMissedMessages() {
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
 
             if (m.metadata?.isAI) return; // AI messages only in AI mode
-            if ((m.content || '').startsWith('TOUR_REPORT::')) return; // Queen-only
+            if ((m.content || '').startsWith('TOUR_REPORT::') || (m.content || '').startsWith('APP_INSTALL::')) return; // Queen-only
             if (isSystemMessage(m)) {
                 updateSystemTicker(m);
                 appendSystemLog(m);
@@ -3198,8 +3204,8 @@ export async function initChatSystem() {
             if (!matchesUser) return;
             // Skip AI messages in regular chat — they only show in AI mode
             if (msg.metadata?.isAI) return;
-            // Tour reports are Queen-only — never show to the user
-            if ((msg.content || '').startsWith('TOUR_REPORT::')) return;
+            // Tour reports & app installs are Queen-only — never show to the user
+            if ((msg.content || '').startsWith('TOUR_REPORT::') || (msg.content || '').startsWith('APP_INSTALL::')) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
             if (isSystemMessage(msg)) {
@@ -3633,7 +3639,7 @@ export async function loadChatHistory(memberId: string) {
             _lastRenderedChatTs = 0;
             const allDisplay = messages.filter((m: any) => m.content && m.content.trim());
             const sysDisplay = allDisplay.filter((m: any) => isSystemMessage(m));
-            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m) && !m.metadata?.isAI && !(m.content || '').startsWith('TOUR_REPORT::'));
+            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m) && !m.metadata?.isAI && !(m.content || '').startsWith('TOUR_REPORT::') && !(m.content || '').startsWith('APP_INSTALL::'));
 
             // Populate system log from history
             if (sysDisplay.length > 0) {

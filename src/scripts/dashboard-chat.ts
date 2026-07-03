@@ -603,6 +603,28 @@ function renderToHtml(m: any) {
         } catch (_) { /* fall through */ }
     }
 
+    // ── App Install Card (Queen eyes only) ──
+    if (content.startsWith('APP_INSTALL::')) {
+        try {
+            const d = JSON.parse(content.replace('APP_INSTALL::', ''));
+            const name = purifier.sanitize(d.userName || 'Unknown');
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:280px;width:65vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#060c08 0%,#0a120c 50%,#060c08 100%);border:1px solid rgba(74,222,128,0.25);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 20px rgba(74,222,128,0.06);">
+                        <div style="padding:18px 20px;text-align:center;">
+                            <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(74,222,128,0.7)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span style="font-family:Cinzel,serif;font-size:0.42rem;color:rgba(74,222,128,0.6);letter-spacing:4px;">APP INSTALLED</span>
+                            </div>
+                            <div style="font-family:Cinzel,serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(74,222,128,0.45);margin-top:6px;">installed the app</div>
+                        </div>
+                    </div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+                </div>`;
+        } catch (_) { /* fall through */ }
+    }
+
     // ── Routine Change Card ──
     if (content.startsWith('ROUTINE_CHANGE::')) {
         try {
