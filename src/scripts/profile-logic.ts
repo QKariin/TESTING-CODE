@@ -21,7 +21,7 @@ function _showCoinConfirm(opts: { title: string; cost: number; wallet: number; o
     const canAfford = opts.wallet >= opts.cost;
     const ov = document.createElement('div');
     ov.id = '_coinConfirmOverlay';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:_ccFadeIn 0.25s ease;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:_ccFadeIn 0.25s ease;';
 
     const card = document.createElement('div');
     card.style.cssText = 'width:88%;max-width:340px;border-radius:18px;background:linear-gradient(170deg,#0c0a10 0%,#110e18 50%,#0c0a10 100%);border:1px solid rgba(197,160,89,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 30px rgba(197,160,89,0.04);padding:28px 24px 22px;text-align:center;';
