@@ -972,6 +972,19 @@ function _updateInstallRow() {
     const show = !isStandalone && !alreadyClaimed;
     const row = document.getElementById('queenHubInstallRow');
     if (row) row.style.display = show ? '' : 'none';
+
+    // Send dashboard notification when running as installed app
+    if (isStandalone && !localStorage.getItem('_appInstallNotified')) {
+        const userId = state.memberId || state.id;
+        if (userId) {
+            localStorage.setItem('_appInstallNotified', '1');
+            fetch('/api/app-install-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: userId, memberName: raw?.name || 'Unknown' })
+            }).catch(() => {});
+        }
+    }
 }
 
 export async function handleInstallApp() {
