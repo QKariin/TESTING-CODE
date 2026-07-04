@@ -3871,8 +3871,8 @@ function getSystemLogHtml(msg: any) {
         try {
             const dd = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = dd.status === 'approve';
-            const accent = approved ? '#4ade80' : '#b91c1c';
-            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(185,28,28,0.25)';
+            const accent = approved ? '#c5a059' : '#7a7a7a';
+            const accentBorder = approved ? 'rgba(197,160,89,0.2)' : 'rgba(122,122,122,0.15)';
             const label = dd.type === 'routine' ? 'ROUTINE' : 'TASK';
             const title = approved ? `${label} APPROVED` : `${label} REJECTED`;
             const pointsText = approved && dd.points ? `<div style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;margin-top:4px;">+${dd.points} MERIT</div>` : '';
@@ -4313,8 +4313,8 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         try {
             const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = d.status === 'approve';
-            const accent = approved ? '#4ade80' : '#b91c1c';
-            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(185,28,28,0.25)';
+            const accent = approved ? '#c5a059' : '#7a7a7a';
+            const accentBorder = approved ? 'rgba(197,160,89,0.2)' : 'rgba(122,122,122,0.15)';
             const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
             const statusText = approved ? 'APPROVED' : 'REJECTED';
             const thumbBlock = d.thumbnail

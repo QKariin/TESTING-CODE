@@ -187,8 +187,8 @@ export async function renderChat(messages: any[]) {
                 try {
                     const d = JSON.parse(originalMsg.replace('TASK_REVIEW_CARD::', ''));
                     const approved = d.status === 'approve';
-                    const accent = approved ? '#4ade80' : '#b91c1c';
-                    const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(185,28,28,0.25)';
+                    const accent = approved ? '#c5a059' : '#7a7a7a';
+                    const accentBorder = approved ? 'rgba(197,160,89,0.2)' : 'rgba(122,122,122,0.15)';
                     const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
                     const statusText = approved ? 'APPROVED' : 'REJECTED';
                     const thumbBlock = d.thumbnail
