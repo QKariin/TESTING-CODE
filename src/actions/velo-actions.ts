@@ -611,10 +611,10 @@ export async function getSubscriptionLink(email: string) {
 }
 
 // --- 8. REVIEW TASK (Admin) ---
-export async function adminApproveTaskAction(taskId: string, memberId: string, bonus: number, comment: string | null) {
+export async function adminApproveTaskAction(taskId: string, memberId: string, bonus: number, comment: string | null, imageUrl?: string | null) {
     try {
         await DbService.approveTask(taskId, memberId, bonus, null, comment);
-        sendTaskPush(memberId, 'approve', bonus).catch(() => {});
+        sendTaskPush(memberId, 'approve', bonus, imageUrl).catch(() => {});
         return { success: true };
     } catch (e: any) {
         console.error("adminApproveTaskAction error:", e);
@@ -622,10 +622,10 @@ export async function adminApproveTaskAction(taskId: string, memberId: string, b
     }
 }
 
-export async function adminRejectTaskAction(taskId: string, memberId: string, comment: string | null = null) {
+export async function adminRejectTaskAction(taskId: string, memberId: string, comment: string | null = null, imageUrl?: string | null) {
     try {
         await DbService.rejectTask(taskId, memberId, comment);
-        sendTaskPush(memberId, 'reject').catch(() => {});
+        sendTaskPush(memberId, 'reject', undefined, imageUrl).catch(() => {});
         return { success: true };
     } catch (e: any) {
         console.error("adminRejectTaskAction error:", e);

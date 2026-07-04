@@ -318,7 +318,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
             import('./dashboard-main').then(m => m.renderMainDashboard());
             closeModal();
 
-            adminApproveTaskAction(taskData.id!, taskData.memberId!, 50, null)
+            adminApproveTaskAction(taskData.id!, taskData.memberId!, 50, null, taskData.thumbnailUrl || taskData.mediaUrl || null)
                 .then(res => {
                     isConfirming = false;
                     if (!res.success) console.error("Routine approve fail:", res.error);
@@ -335,7 +335,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
             import('./dashboard-main').then(m => m.renderMainDashboard());
             closeModal();
 
-            adminRejectTaskAction(taskData.id!, taskData.memberId!, routeNote || null)
+            adminRejectTaskAction(taskData.id!, taskData.memberId!, routeNote || null, taskData.thumbnailUrl || taskData.mediaUrl || null)
                 .then(res => {
                     isConfirming = false;
                     if (!res?.success) console.error("Routine reject fail:", res?.error);
@@ -373,7 +373,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
         import('./dashboard-main').then(m => m.renderMainDashboard());
         closeModal();
 
-        adminRejectTaskAction(taskData.id!, taskData.memberId!, rejectNote || null)
+        adminRejectTaskAction(taskData.id!, taskData.memberId!, rejectNote || null, taskData.thumbnailUrl || taskData.mediaUrl || null)
             .then(res => {
                 isConfirming = false;
                 if (!res.success) {
@@ -532,7 +532,7 @@ export function confirmReward() {
     closeModal();
     // --- OPTIMISTIC UPDATE END ---
 
-    adminApproveTaskAction(taskData.id!, taskData.memberId!, bonus, comment)
+    adminApproveTaskAction(taskData.id!, taskData.memberId!, bonus, comment, taskData.thumbnailUrl || taskData.mediaUrl || null)
         .then(res => {
             isConfirming = false;
             if (!res.success) {
