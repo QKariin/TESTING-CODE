@@ -3871,24 +3871,29 @@ function getSystemLogHtml(msg: any) {
         try {
             const dd = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = dd.status === 'approve';
-            const borderColor = approved ? 'rgba(74,222,128,0.5)' : 'rgba(255,60,60,0.4)';
-            const accentColor = approved ? '#4ade80' : '#e85d75';
-            const icon = approved ? '\u2713' : '\u2717';
+            const accent = approved ? '#4ade80' : '#ff6b8a';
+            const accentDim = approved ? 'rgba(74,222,128,0.15)' : 'rgba(255,107,138,0.12)';
+            const accentBorder = approved ? 'rgba(74,222,128,0.3)' : 'rgba(255,107,138,0.25)';
+            const gradBg = approved
+                ? 'linear-gradient(135deg,rgba(6,13,8,0.8),rgba(10,26,14,0.5),rgba(13,13,13,0.6))'
+                : 'linear-gradient(135deg,rgba(13,6,8,0.8),rgba(26,10,14,0.5),rgba(13,13,13,0.6))';
             const label = dd.type === 'routine' ? 'ROUTINE' : 'TASK';
             const title = approved ? `${label} APPROVED` : `${label} REJECTED`;
-            const pointsLine = approved && dd.points ? `<div style="font-family:Orbitron,sans-serif;font-size:0.7rem;color:${accentColor};margin-top:6px;">+${dd.points} MERIT</div>` : '';
-            const penaltyLine = !approved && dd.penalty ? `<div style="font-family:Orbitron,sans-serif;font-size:0.7rem;color:${accentColor};margin-top:6px;">-${dd.penalty} COINS</div>` : '';
-            const taskText = dd.taskText ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">${dd.taskText}</div>` : '';
-            const thumb = dd.thumbnail ? `<img src="${dd.thumbnail}" style="width:100%;max-width:200px;border-radius:6px;margin-top:8px;opacity:0.7;" onerror="this.style.display='none'">` : '';
-            const comment = dd.comment ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:6px;font-style:italic;">"${dd.comment}"</div>` : '';
+            const pointsLine = approved && dd.points ? `<div style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:3px;margin-top:8px;">+${dd.points} MERIT</div>` : '';
+            const penaltyLine = !approved && dd.penalty ? `<div style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:3px;margin-top:8px;">-${dd.penalty} COINS</div>` : '';
+            const taskText = dd.taskText ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.45);margin-top:6px;line-height:1.5;">${dd.taskText}</div>` : '';
+            const thumb = dd.thumbnail ? `<div style="margin-top:10px;border-radius:8px;overflow:hidden;"><img src="${dd.thumbnail}" style="width:100%;max-width:200px;border-radius:8px;filter:brightness(0.75);" onerror="this.parentElement.style.display='none'"></div>` : '';
+            const comment = dd.comment ? `<div style="margin-top:10px;padding:8px 12px;background:rgba(255,255,255,0.025);border-radius:6px;border:1px solid rgba(255,255,255,0.04);"><div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.4;">"${dd.comment}"</div></div>` : '';
             return `
-            <div style="display:flex;flex-direction:column;background:rgba(255,255,255,0.02);border-left:2px solid ${borderColor};border-radius:4px;padding:12px 16px;margin-bottom:10px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                    <span style="font-size:1rem;color:${accentColor};">${icon}</span>
-                    <span style="font-family:Orbitron,sans-serif;font-size:0.75rem;color:${accentColor};letter-spacing:2px;">${title}</span>
+            <div style="display:flex;flex-direction:column;background:${gradBg};border-left:3px solid ${accentBorder};border-radius:8px;padding:16px 20px;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 20px ${accentDim};">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:${accentDim};border:1.5px solid ${accentBorder};flex-shrink:0;box-shadow:0 0 16px ${accentDim};">
+                        <span style="font-size:1rem;color:${accent};line-height:1;">${approved ? '\u2713' : '\u2717'}</span>
+                    </div>
+                    <span style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};letter-spacing:2px;font-weight:700;">${title}</span>
                 </div>
                 ${taskText}${thumb}${pointsLine}${penaltyLine}${comment}
-                <span style="font-family:Orbitron,sans-serif;color:rgba(255,255,255,0.2);font-size:0.55rem;margin-top:8px;">${dateStr} - ${timeStr}</span>
+                <span style="font-family:'Cinzel',serif;color:rgba(255,255,255,0.15);font-size:0.55rem;margin-top:12px;letter-spacing:1px;">${dateStr} - ${timeStr}</span>
             </div>`;
         } catch (_) {}
     }
@@ -4313,34 +4318,43 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         try {
             const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = d.status === 'approve';
-            const borderColor = approved ? 'rgba(74,222,128,0.5)' : 'rgba(255,60,60,0.4)';
-            const accentColor = approved ? '#4ade80' : '#e85d75';
-            const icon = approved ? '✓' : '✗';
+            const accent = approved ? '#4ade80' : '#ff6b8a';
+            const accentDim = approved ? 'rgba(74,222,128,0.15)' : 'rgba(255,107,138,0.12)';
+            const accentBorder = approved ? 'rgba(74,222,128,0.3)' : 'rgba(255,107,138,0.25)';
+            const gradBg = approved
+                ? 'linear-gradient(135deg,#060d08 0%,#0a1a0e 40%,#0d0d0d 100%)'
+                : 'linear-gradient(135deg,#0d0608 0%,#1a0a0e 40%,#0d0d0d 100%)';
             const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
             const statusText = approved ? 'APPROVED' : 'REJECTED';
-            const pointsLine = approved && d.points
-                ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">+${(d.points || 0).toLocaleString()} MERIT</div>`
-                : d.penalty
-                    ? `<div style="font-family:'Cinzel',serif;font-size:0.75rem;color:${accentColor};font-weight:700;letter-spacing:1px;">-${d.penalty} COINS</div>`
-                    : '';
-            const commentLine = d.comment
-                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;">"${d.comment}"</div>`
-                : '';
             const thumbBlock = d.thumbnail
-                ? `<img src="${d.thumbnail}" style="width:52px;height:52px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.08);margin-bottom:10px;" onerror="this.style.display='none'" />`
+                ? `<div style="position:relative;width:100%;aspect-ratio:16/10;border-radius:10px;overflow:hidden;margin-bottom:16px;">
+                    <img src="${d.thumbnail}" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.7);" onerror="this.parentElement.style.display='none'" />
+                    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.8) 0%,transparent 60%);"></div>
+                   </div>`
                 : '';
             const taskTextLine = d.taskText
-                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.48rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${d.taskText}</div>`
+                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.78rem;color:rgba(255,255,255,0.5);letter-spacing:0.3px;margin-bottom:14px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${d.taskText}</div>`
+                : '';
+            const pointsLine = approved && d.points
+                ? `<div style="font-family:'Cinzel',serif;font-size:1rem;color:${accent};font-weight:700;letter-spacing:3px;margin-top:4px;">+${(d.points || 0).toLocaleString()} MERIT</div>`
+                : d.penalty
+                    ? `<div style="font-family:'Cinzel',serif;font-size:1rem;color:${accent};font-weight:700;letter-spacing:3px;margin-top:4px;">-${d.penalty} COINS</div>`
+                    : '';
+            const commentLine = d.comment
+                ? `<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,0.025);border-radius:8px;border:1px solid rgba(255,255,255,0.05);"><div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.5;">"${d.comment}"</div></div>`
                 : '';
             return `
-                <div class="cb-row" style="justify-content:center;padding:8px 0;">
-                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0b06,#110d04,#0a0703);border:1px solid ${borderColor};box-shadow:0 12px 40px rgba(0,0,0,0.8);">
-                        <div style="padding:18px 20px;text-align:center;">
-                            <div style="font-family:'Cinzel',serif;font-size:0.42rem;color:${accentColor};letter-spacing:3px;margin-bottom:10px;">${label} ${statusText}</div>
-                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,${borderColor},transparent);margin:0 auto 12px;"></div>
+                <div class="cb-row" style="justify-content:center;padding:10px 0;">
+                    <div style="max-width:300px;width:70vw;border-radius:20px;overflow:hidden;background:${gradBg};border:1px solid ${accentBorder};box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px ${accentDim};">
+                        <div style="padding:24px 22px 20px;text-align:center;">
                             ${thumbBlock}
+                            <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:${accentDim};border:1.5px solid ${accentBorder};margin-bottom:16px;box-shadow:0 0 24px ${accentDim};">
+                                <span style="font-size:1.4rem;color:${accent};line-height:1;">${approved ? '\u2713' : '\u2717'}</span>
+                            </div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;">${label}</div>
+                            <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:${accent};letter-spacing:3px;font-weight:700;margin-bottom:8px;">${statusText}</div>
+                            <div style="width:60px;height:1.5px;background:${accent};margin:0 auto 16px;opacity:0.4;border-radius:1px;"></div>
                             ${taskTextLine}
-                            <div style="font-size:1.6rem;margin-bottom:8px;">${icon}</div>
                             ${pointsLine}
                             ${commentLine}
                         </div>
