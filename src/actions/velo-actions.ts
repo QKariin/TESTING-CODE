@@ -609,10 +609,38 @@ export async function getSubscriptionLink(email: string) {
     }
 }
 
+// --- Push notification helper ---
+async function sendTaskPushNotification(memberId: string, action: 'approve' | 'reject', points?: number) {
+    try {
+        const profile = await DbService.getProfile(memberId);
+        const email = (profile?.member_id || memberId).toLowerCase();
+        const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+        const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+        if (!apiKey || !email) return;
+        const heading = action === 'approve' ? 'Task Approved' : 'Task Rejected';
+        const body = action === 'approve'
+            ? `Your task was approved! +${points || 0} merit earned.`
+            : 'Your task was rejected. -300 coins penalty.';
+        await fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+            body: JSON.stringify({
+                app_id: appId,
+                target_channel: 'push',
+                include_aliases: { external_id: [email] },
+                headings: { en: heading },
+                contents: { en: body },
+                url: 'https://throne.qkarin.com/profile',
+            }),
+        });
+    } catch (_) {}
+}
+
 // --- 8. REVIEW TASK (Admin) ---
 export async function adminApproveTaskAction(taskId: string, memberId: string, bonus: number, comment: string | null) {
     try {
         await DbService.approveTask(taskId, memberId, bonus, null, comment);
+        sendTaskPushNotification(memberId, 'approve', bonus).catch(() => {});
         return { success: true };
     } catch (e: any) {
         console.error("adminApproveTaskAction error:", e);
@@ -623,6 +651,7 @@ export async function adminApproveTaskAction(taskId: string, memberId: string, b
 export async function adminRejectTaskAction(taskId: string, memberId: string, comment: string | null = null) {
     try {
         await DbService.rejectTask(taskId, memberId, comment);
+        sendTaskPushNotification(memberId, 'reject').catch(() => {});
         return { success: true };
     } catch (e: any) {
         console.error("adminRejectTaskAction error:", e);
@@ -666,8 +695,10 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
             // Delegate to DbService which handles all routine logic
             if (decision === 'approve') {
                 await DbService.approveTask(submissionId, memberId, 50, null, null);
+                sendTaskPushNotification(memberId, 'approve', 50).catch(() => {});
             } else {
                 await DbService.rejectTask(submissionId, memberId);
+                sendTaskPushNotification(memberId, 'reject').catch(() => {});
             }
 
             // Fetch fresh profile for hierarchy update
