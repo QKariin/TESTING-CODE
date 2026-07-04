@@ -6,7 +6,6 @@ import { stripe } from '@/lib/stripe';
 import { HIERARCHY_RULES, determineRank, getHierarchyReport, HierarchyReport, SlaveRecord } from '@/lib/hierarchyRules';
 import { z } from 'zod';
 import { DbService } from '@/lib/supabase-service';
-import { sendTaskPush } from '@/lib/push-notify';
 
 // --- SUPABASE ADMIN CLIENT (Bypasses RLS) ---
 // Initialize with SERVICE_ROLE_KEY for backend operations
@@ -614,7 +613,7 @@ export async function getSubscriptionLink(email: string) {
 export async function adminApproveTaskAction(taskId: string, memberId: string, bonus: number, comment: string | null, imageUrl?: string | null) {
     try {
         await DbService.approveTask(taskId, memberId, bonus, null, comment);
-        await sendTaskPush(memberId, 'approve', bonus, imageUrl);
+
         return { success: true };
     } catch (e: any) {
         console.error("adminApproveTaskAction error:", e);
@@ -625,7 +624,7 @@ export async function adminApproveTaskAction(taskId: string, memberId: string, b
 export async function adminRejectTaskAction(taskId: string, memberId: string, comment: string | null = null, imageUrl?: string | null) {
     try {
         await DbService.rejectTask(taskId, memberId, comment);
-        await sendTaskPush(memberId, 'reject', undefined, imageUrl);
+
         return { success: true };
     } catch (e: any) {
         console.error("adminRejectTaskAction error:", e);
@@ -669,10 +668,10 @@ export async function reviewTaskAction(memberId: string, decision: 'approve' | '
             // Delegate to DbService which handles all routine logic
             if (decision === 'approve') {
                 await DbService.approveTask(submissionId, memberId, 50, null, null);
-                await sendTaskPush(memberId, 'approve', 50);
+
             } else {
                 await DbService.rejectTask(submissionId, memberId);
-                await sendTaskPush(memberId, 'reject');
+
             }
 
             // Fetch fresh profile for hierarchy update
