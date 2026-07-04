@@ -25,49 +25,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: false, reason: 'no api key' });
         }
 
-        // ── TASK_REVIEW_CARD: push to the MEMBER, not the queen ──
-        if (senderEmail === 'system' && typeof content === 'string' && content.startsWith('TASK_REVIEW_CARD::')) {
-            const memberId = (conversationId || '').toLowerCase();
-            if (!memberId) return NextResponse.json({ ok: true, reason: 'no member id' });
-
-            // Resolve email if conversationId is a UUID
-            let targetEmail = memberId;
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-            if (isUUID) {
-                const { data: p } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
-                targetEmail = (p?.member_id || '').toLowerCase();
-            }
-            if (!targetEmail) return NextResponse.json({ ok: true, reason: 'no target email' });
-
-            try {
-                const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
-                const approved = d.status === 'approve';
-                const heading = approved ? 'Task Approved' : 'Task Rejected';
-                const body = approved
-                    ? `+${d.points || 0} merit earned.`
-                    : `-${d.penalty || 300} coins penalty.`;
-
-                const res = await fetch('https://api.onesignal.com/notifications', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${ONESIGNAL_KEY}` },
-                    body: JSON.stringify({
-                        app_id: ONESIGNAL_APP_ID,
-                        target_channel: 'push',
-                        include_aliases: { external_id: [targetEmail] },
-                        headings: { en: heading },
-                        contents: { en: body },
-                        url: 'https://throne.qkarin.com/profile',
-                    }),
-                });
-                const data = await res.json();
-                console.log('[notify/chat] task push to', targetEmail, ':', JSON.stringify(data));
-                return NextResponse.json({ ok: true, status: res.status, data });
-            } catch (e: any) {
-                console.error('[notify/chat] task card parse error:', e.message);
-                return NextResponse.json({ ok: false, reason: 'parse error' });
-            }
-        }
-
         // Only notify queen when a NON-queen message arrives
         const isFromQueen = senderEmail === ADMIN_EMAIL || senderEmail === 'queen';
         if (isFromQueen) return NextResponse.json({ ok: true, reason: 'queen message, skipped' });

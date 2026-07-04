@@ -394,6 +394,9 @@ export const DbService = {
             const cardData = { status: 'approve', points: bonus, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb };
             try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
 
+            // Push notification to member
+            await this._sendTaskPush(profileId, 'approve', bonus);
+
             // Update profiles.parameters for backward compat
             try {
                 const prof = await this.getProfile(profileId);
@@ -438,6 +441,9 @@ export const DbService = {
         await this.awardPoints(profileId, bonus);
         const cardData = { status: 'approve', points: bonus, type: 'task', comment: comment || null, taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
         try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+
+        // Push notification to member
+        await this._sendTaskPush(profileId, 'approve', bonus);
 
         // Check if user now qualifies for promotion
         checkAndPromote(profileId).catch(() => {});
@@ -484,6 +490,10 @@ export const DbService = {
             const thumb = userRoutine.pending_thumbnail_url || userRoutine.pending_proof_url || null;
             const cardData = { status: 'reject', points: 0, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb, comment: comment || null };
             try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+
+            // Push notification to member
+            await this._sendTaskPush(profileId, 'reject');
+
             return;
         }
 
@@ -518,6 +528,9 @@ export const DbService = {
         if (idx > -1 && comment) history[idx].adminComment = comment;
         const cardData = { status: 'reject', points: 0, penalty: 300, type: 'task', comment: comment || null, taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
         try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
+
+        // Push notification to member
+        await this._sendTaskPush(profileId, 'reject', 0);
     },
 
     async submitTask(memberId: string, proofUrl: string, proofType: string, taskText: string, isRoutine: boolean = false, thumbnailUrl: string | null = null, tz: string = 'UTC') {
@@ -696,6 +709,43 @@ export const DbService = {
         } catch (err: any) {
             console.error("DB_SERVICE_FETCH_FAILED:", err);
             return [];
+        }
+    },
+
+    async _sendTaskPush(profileId: string, action: 'approve' | 'reject', points?: number) {
+        try {
+            const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+            const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+            if (!apiKey) return;
+
+            const profile = await this.getProfile(profileId);
+            const email = (profile?.member_id || profileId).toLowerCase();
+            if (!email) return;
+
+            const heading = action === 'approve' ? 'Task Approved' : 'Task Rejected';
+            const body = action === 'approve'
+                ? `+${points || 0} merit earned.`
+                : '-300 coins penalty.';
+
+            const res = await fetch('https://api.onesignal.com/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    app_id: appId,
+                    target_channel: 'push',
+                    include_aliases: { external_id: [email] },
+                    headings: { en: heading },
+                    contents: { en: body },
+                    url: 'https://throne.qkarin.com/profile',
+                }),
+            });
+            const data = await res.json();
+            console.log('[DbService] task push to', email, ':', JSON.stringify(data));
+        } catch (e: any) {
+            console.error('[DbService] task push error:', e.message);
         }
     }
 };
