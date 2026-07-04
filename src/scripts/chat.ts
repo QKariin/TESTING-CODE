@@ -188,44 +188,39 @@ export async function renderChat(messages: any[]) {
                     const d = JSON.parse(originalMsg.replace('TASK_REVIEW_CARD::', ''));
                     const approved = d.status === 'approve';
                     const accent = approved ? '#4ade80' : '#ff6b8a';
-                    const accentDim = approved ? 'rgba(74,222,128,0.15)' : 'rgba(255,107,138,0.12)';
-                    const accentBorder = approved ? 'rgba(74,222,128,0.3)' : 'rgba(255,107,138,0.25)';
-                    const gradBg = approved
-                        ? 'linear-gradient(135deg,#060d08 0%,#0a1a0e 40%,#0d0d0d 100%)'
-                        : 'linear-gradient(135deg,#0d0608 0%,#1a0a0e 40%,#0d0d0d 100%)';
+                    const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(255,107,138,0.15)';
                     const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
                     const statusText = approved ? 'APPROVED' : 'REJECTED';
                     const thumbBlock = d.thumbnail
-                        ? `<div style="position:relative;width:100%;aspect-ratio:16/10;border-radius:10px;overflow:hidden;margin-bottom:16px;">
-                            <img src="${d.thumbnail}" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.7);" onerror="this.parentElement.style.display='none'" />
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.8) 0%,transparent 60%);"></div>
-                           </div>`
+                        ? `<img src="${d.thumbnail}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);" onerror="this.style.display='none'" />`
                         : '';
                     const taskTextLine = d.taskText
-                        ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.78rem;color:rgba(255,255,255,0.5);letter-spacing:0.3px;margin-bottom:14px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${DOMPurify.sanitize(d.taskText)}</div>`
+                        ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${DOMPurify.sanitize(d.taskText)}</div>`
                         : '';
-                    const pointsLine = approved && d.points
-                        ? `<div style="font-family:'Cinzel',serif;font-size:1rem;color:${accent};font-weight:700;letter-spacing:3px;margin-top:4px;">+${(d.points || 0).toLocaleString()} MERIT</div>`
+                    const pointsText = approved && d.points
+                        ? `<span style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:2px;">+${(d.points || 0).toLocaleString()} MERIT</span>`
                         : d.penalty
-                            ? `<div style="font-family:'Cinzel',serif;font-size:1rem;color:${accent};font-weight:700;letter-spacing:3px;margin-top:4px;">-${d.penalty} COINS</div>`
+                            ? `<span style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:2px;">-${d.penalty} COINS</span>`
                             : '';
                     const commentLine = d.comment
-                        ? `<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,0.025);border-radius:8px;border:1px solid rgba(255,255,255,0.05);"><div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);font-style:italic;line-height:1.5;">"${DOMPurify.sanitize(d.comment)}"</div></div>`
+                        ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.35);font-style:italic;margin-top:6px;line-height:1.4;border-top:1px solid rgba(255,255,255,0.04);padding-top:6px;">"${DOMPurify.sanitize(d.comment)}"</div>`
                         : '';
+                    const ts = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
                     contentHtml = `
-                    <div style="width:min(72%,300px);margin:0 auto;">
-                        <div style="border-radius:20px;overflow:hidden;background:${gradBg};border:1px solid ${accentBorder};box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px ${accentDim};">
-                            <div style="padding:24px 22px 20px;text-align:center;">
+                    <div style="width:min(88%,340px);margin:0 auto;">
+                        <div style="border-radius:12px;overflow:hidden;background:#0c0c0c;border:1px solid ${accentBorder};">
+                            <div style="height:2px;background:linear-gradient(to right,transparent,${accent},transparent);opacity:0.5;"></div>
+                            <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;">
                                 ${thumbBlock}
-                                <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:${accentDim};border:1.5px solid ${accentBorder};margin-bottom:16px;box-shadow:0 0 24px ${accentDim};">
-                                    <span style="font-size:1.4rem;color:${accent};line-height:1;">${approved ? '\u2713' : '\u2717'}</span>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                                        <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:${accent};letter-spacing:2px;font-weight:700;">${label} ${statusText}</div>
+                                        ${pointsText}
+                                    </div>
+                                    ${taskTextLine}
+                                    ${commentLine}
+                                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.2);margin-top:6px;">${ts}</div>
                                 </div>
-                                <div style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:4px;text-transform:uppercase;margin-bottom:4px;">${label}</div>
-                                <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:${accent};letter-spacing:3px;font-weight:700;margin-bottom:8px;">${statusText}</div>
-                                <div style="width:60px;height:1.5px;background:${accent};margin:0 auto 16px;opacity:0.4;border-radius:1px;"></div>
-                                ${taskTextLine}
-                                ${pointsLine}
-                                ${commentLine}
                             </div>
                         </div>
                     </div>`;
