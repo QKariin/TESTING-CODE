@@ -1,4 +1,4 @@
-export function sendTaskPush(
+export async function sendTaskPush(
     memberId: string,
     action: 'approve' | 'reject',
     points?: number,
@@ -29,9 +29,11 @@ export function sendTaskPush(
         payload.chrome_web_image = imageUrl;
     }
 
-    fetch('https://api.onesignal.com/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
-        body: JSON.stringify(payload),
-    }).catch(() => {});
+    try {
+        await fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+            body: JSON.stringify(payload),
+        });
+    } catch (_) {}
 }
