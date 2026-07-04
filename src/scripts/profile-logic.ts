@@ -3871,12 +3871,12 @@ function getSystemLogHtml(msg: any) {
         try {
             const dd = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = dd.status === 'approve';
-            const accent = approved ? '#4ade80' : '#ff6b8a';
-            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(255,107,138,0.15)';
+            const accent = approved ? '#4ade80' : '#b91c1c';
+            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(185,28,28,0.25)';
             const label = dd.type === 'routine' ? 'ROUTINE' : 'TASK';
             const title = approved ? `${label} APPROVED` : `${label} REJECTED`;
-            const pointsText = approved && dd.points ? `<span style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;">+${dd.points} MERIT</span>` : '';
-            const penaltyText = !approved && dd.penalty ? `<span style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;">-${dd.penalty} COINS</span>` : '';
+            const pointsText = approved && dd.points ? `<div style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;margin-top:4px;">+${dd.points} MERIT</div>` : '';
+            const penaltyText = !approved && dd.penalty ? `<div style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;margin-top:4px;">-${dd.penalty} COINS</div>` : '';
             const taskText = dd.taskText ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">${dd.taskText}</div>` : '';
             const thumb = dd.thumbnail ? `<img src="${dd.thumbnail}" style="width:50px;height:50px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);margin-right:12px;" onerror="this.style.display='none'">` : '';
             const comment = dd.comment ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.35);font-style:italic;margin-top:4px;line-height:1.4;border-top:1px solid rgba(255,255,255,0.04);padding-top:4px;">"${dd.comment}"</div>` : '';
@@ -3884,10 +3884,8 @@ function getSystemLogHtml(msg: any) {
             <div style="display:flex;align-items:flex-start;background:#0c0c0c;border-radius:8px;border:1px solid ${accentBorder};border-top:2px solid ${accent};padding:12px 14px;margin-bottom:10px;">
                 ${thumb}
                 <div style="flex:1;min-width:0;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-                        <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:${accent};letter-spacing:2px;font-weight:700;">${title}</span>
-                        ${pointsText}${penaltyText}
-                    </div>
+                    <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:${accent};letter-spacing:2px;font-weight:700;">${title}</span>
+                    ${pointsText}${penaltyText}
                     ${taskText}${comment}
                     <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.18);margin-top:6px;">${dateStr} - ${timeStr}</div>
                 </div>
@@ -4315,8 +4313,8 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         try {
             const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = d.status === 'approve';
-            const accent = approved ? '#4ade80' : '#ff6b8a';
-            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(255,107,138,0.15)';
+            const accent = approved ? '#4ade80' : '#b91c1c';
+            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(185,28,28,0.25)';
             const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
             const statusText = approved ? 'APPROVED' : 'REJECTED';
             const thumbBlock = d.thumbnail
@@ -4340,10 +4338,8 @@ function renderChatMessage(msg: any, prevTs?: number): string {
                         <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;">
                             ${thumbBlock}
                             <div style="flex:1;min-width:0;">
-                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                                    <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:${accent};letter-spacing:2px;font-weight:700;">${label} ${statusText}</div>
-                                    ${pointsText}
-                                </div>
+                                <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:${accent};letter-spacing:2px;font-weight:700;margin-bottom:4px;">${label} ${statusText}</div>
+                                ${pointsText ? `<div style="margin-bottom:4px;">${pointsText}</div>` : ''}
                                 ${taskTextLine}
                                 ${commentLine}
                                 ${timeStr ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.2);margin-top:6px;">${timeStr}</div>` : ''}

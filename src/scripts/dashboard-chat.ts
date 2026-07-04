@@ -710,8 +710,8 @@ function renderToHtml(m: any) {
         try {
             const d = JSON.parse(content.replace('TASK_REVIEW_CARD::', ''));
             const approved = d.status === 'approve';
-            const accent = approved ? '#4ade80' : '#ff6b8a';
-            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(255,107,138,0.15)';
+            const accent = approved ? '#4ade80' : '#b91c1c';
+            const accentBorder = approved ? 'rgba(74,222,128,0.2)' : 'rgba(185,28,28,0.25)';
             const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
             const statusText = approved ? 'APPROVED' : 'REJECTED';
             const thumbBlock = d.thumbnail
@@ -735,10 +735,8 @@ function renderToHtml(m: any) {
                         <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;">
                             ${thumbBlock}
                             <div style="flex:1;min-width:0;">
-                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                                    <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:${accent};letter-spacing:2px;font-weight:700;">${label} ${statusText}</div>
-                                    ${pointsText}
-                                </div>
+                                <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:${accent};letter-spacing:2px;font-weight:700;margin-bottom:4px;">${label} ${statusText}</div>
+                                ${pointsText ? `<div style="margin-bottom:4px;">${pointsText}</div>` : ''}
                                 ${taskTextLine}
                                 ${commentLine}
                                 <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.2);margin-top:6px;">${timeStr}</div>
