@@ -3539,6 +3539,50 @@ async function _pollNewChatMessages(memberId: string) {
 }
 
 
+function _showPwaNotifPrompt(memberId: string) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000002;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;';
+    overlay.innerHTML = `
+        <div style="max-width:340px;width:100%;background:#0c0c0c;border-radius:16px;border:1px solid rgba(197,160,89,0.2);padding:32px 28px;text-align:center;">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <span style="font-size:1.6rem;line-height:1;">&#128276;</span>
+            </div>
+            <div style="font-family:'Cinzel',serif;font-size:1rem;color:#c5a059;letter-spacing:2px;margin-bottom:8px;">STAY CONNECTED</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:28px;">
+                Turn on notifications so you never miss a message from Queen Karin. Task results, rewards, and royal decrees. Directly to your screen.
+            </div>
+            <button id="_pwaNotifAllow" style="width:100%;padding:14px;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.3);border-radius:10px;color:#c5a059;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:2px;cursor:pointer;margin-bottom:12px;transition:background 0.2s;">ENABLE NOTIFICATIONS</button>
+            <button id="_pwaNotifSkip" style="width:100%;padding:10px;background:transparent;border:none;color:rgba(255,255,255,0.25);font-family:Rajdhani,sans-serif;font-size:0.72rem;letter-spacing:1px;cursor:pointer;">MAYBE LATER</button>
+        </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+    const close = () => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 300); };
+
+    overlay.querySelector('#_pwaNotifAllow')?.addEventListener('click', async () => {
+        close();
+        const OS = (window as any).OneSignal;
+        if (OS?.Notifications?.requestPermission) {
+            await OS.Notifications.requestPermission();
+        } else {
+            await (window as any).Notification.requestPermission();
+        }
+        try {
+            await new Promise(r => setTimeout(r, 1500));
+            const subId = (window as any).OneSignal?.User?.PushSubscription?.id;
+            if (subId) {
+                await fetch('/api/push', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscriptionId: subId, memberId }) });
+            }
+        } catch {}
+        _updateNotifToggleUI();
+    });
+
+    overlay.querySelector('#_pwaNotifSkip')?.addEventListener('click', () => {
+        close();
+        localStorage.setItem('pushBannerDismissed', String(Date.now()));
+    });
+}
+
 function initOneSignal(memberId: string) {
     // Init OneSignal in background (for subscription management)
     const w = window as any;
@@ -3570,8 +3614,16 @@ function initOneSignal(memberId: string) {
     if (!('Notification' in window)) return;
     if ((window as any).Notification.permission === 'granted') return;
 
-    // Don't show again if dismissed within last 7 days (but always show in PWA on first open)
     const isPwa = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+
+    // PWA first launch: show full-screen notification prompt immediately
+    if (isPwa && (window as any).Notification.permission === 'default' && !localStorage.getItem('_pwaNotifPrompted')) {
+        localStorage.setItem('_pwaNotifPrompted', '1');
+        setTimeout(() => _showPwaNotifPrompt(memberId), 1200);
+        return;
+    }
+
+    // Don't show again if dismissed within last 7 days (but always show in PWA on first open)
     const dismissedAt = parseInt(localStorage.getItem('pushBannerDismissed') || '0', 10);
     const daysSinceDismiss = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
     if (!isPwa && dismissedAt && daysSinceDismiss < 7) return;
