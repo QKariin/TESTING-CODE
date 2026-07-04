@@ -3878,16 +3878,16 @@ function getSystemLogHtml(msg: any) {
             const pointsText = approved && dd.points ? `<div style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;margin-top:4px;">+${dd.points} MERIT</div>` : '';
             const penaltyText = !approved && dd.penalty ? `<div style="font-family:'Cinzel',serif;font-size:0.8rem;color:${accent};font-weight:700;letter-spacing:2px;margin-top:4px;">-${dd.penalty} COINS</div>` : '';
             const taskText = dd.taskText ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">${dd.taskText}</div>` : '';
-            const thumb = dd.thumbnail ? `<img src="${dd.thumbnail}" style="width:50px;height:50px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);margin-right:12px;" onerror="this.style.display='none'">` : '';
-            const comment = dd.comment ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.35);font-style:italic;margin-top:4px;line-height:1.4;border-top:1px solid rgba(255,255,255,0.04);padding-top:4px;">"${dd.comment}"</div>` : '';
+            const thumb = dd.thumbnail ? `<img src="${dd.thumbnail}" style="width:46px;height:64px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);margin-right:12px;" onerror="this.style.display='none'">` : '';
+            const comment = dd.comment ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.55);font-style:italic;margin-top:4px;line-height:1.4;">"${dd.comment}"</div>` : '';
             return `
-            <div style="display:flex;align-items:flex-start;background:#0c0c0c;border-radius:8px;border:1px solid ${accentBorder};border-top:2px solid ${accent};padding:12px 14px;margin-bottom:10px;">
+            <div style="position:relative;display:flex;align-items:flex-start;background:#0c0c0c;border-radius:8px;border:1px solid ${accentBorder};border-top:2px solid ${accent};padding:12px 14px;margin-bottom:10px;">
+                <div style="position:absolute;top:10px;right:12px;font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.18);">${dateStr} ${timeStr}</div>
                 ${thumb}
                 <div style="flex:1;min-width:0;">
                     <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:${accent};letter-spacing:2px;font-weight:700;">${title}</span>
                     ${pointsText}${penaltyText}
                     ${taskText}${comment}
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.18);margin-top:6px;">${dateStr} - ${timeStr}</div>
                 </div>
             </div>`;
         } catch (_) {}
@@ -4318,31 +4318,31 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             const label = d.type === 'routine' ? 'ROUTINE' : 'TASK';
             const statusText = approved ? 'APPROVED' : 'REJECTED';
             const thumbBlock = d.thumbnail
-                ? `<img src="${d.thumbnail}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);" onerror="this.style.display='none'" />`
+                ? `<img src="${d.thumbnail}" style="width:52px;height:72px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.06);" onerror="this.style.display='none'" />`
                 : '';
             const taskTextLine = d.taskText
                 ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;">${d.taskText}</div>`
                 : '';
             const pointsText = approved && d.points
-                ? `<span style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:2px;">+${(d.points || 0).toLocaleString()} MERIT</span>`
+                ? `<div style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:2px;text-align:center;margin:6px 0;">+${(d.points || 0).toLocaleString()} MERIT</div>`
                 : d.penalty
-                    ? `<span style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:2px;">-${d.penalty} COINS</span>`
+                    ? `<div style="font-family:'Cinzel',serif;font-size:0.85rem;color:${accent};font-weight:700;letter-spacing:2px;text-align:center;margin:6px 0;">-${d.penalty} COINS</div>`
                     : '';
             const commentLine = d.comment
-                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.68rem;color:rgba(255,255,255,0.35);font-style:italic;margin-top:6px;line-height:1.4;border-top:1px solid rgba(255,255,255,0.04);padding-top:6px;">"${d.comment}"</div>`
+                ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.78rem;color:rgba(255,255,255,0.55);font-style:italic;margin-top:6px;line-height:1.4;">"${d.comment}"</div>`
                 : '';
             return `
                 <div class="cb-row" style="justify-content:center;padding:6px 0;">
                     <div style="max-width:360px;width:88%;border-radius:12px;overflow:hidden;background:#0c0c0c;border:1px solid ${accentBorder};">
                         <div style="height:2px;background:linear-gradient(to right,transparent,${accent},transparent);opacity:0.5;"></div>
-                        <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;">
+                        <div style="position:relative;display:flex;gap:14px;padding:12px 16px;">
+                            ${timeStr ? `<div style="position:absolute;top:10px;right:14px;font-family:Rajdhani,sans-serif;font-size:0.58rem;color:rgba(255,255,255,0.2);">${timeStr}</div>` : ''}
                             ${thumbBlock}
-                            <div style="flex:1;min-width:0;">
+                            <div style="flex:1;min-width:0;text-align:center;">
                                 <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:${accent};letter-spacing:2px;font-weight:700;margin-bottom:4px;">${label} ${statusText}</div>
-                                ${pointsText ? `<div style="margin-bottom:4px;">${pointsText}</div>` : ''}
+                                ${pointsText}
                                 ${taskTextLine}
                                 ${commentLine}
-                                ${timeStr ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.2);margin-top:6px;">${timeStr}</div>` : ''}
                             </div>
                         </div>
                     </div>
