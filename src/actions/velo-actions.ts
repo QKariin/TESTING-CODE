@@ -620,9 +620,9 @@ export async function adminApproveTaskAction(taskId: string, memberId: string, b
     }
 }
 
-export async function adminRejectTaskAction(taskId: string, memberId: string) {
+export async function adminRejectTaskAction(taskId: string, memberId: string, comment: string | null = null) {
     try {
-        await DbService.rejectTask(taskId, memberId);
+        await DbService.rejectTask(taskId, memberId, comment);
         return { success: true };
     } catch (e: any) {
         console.error("adminRejectTaskAction error:", e);

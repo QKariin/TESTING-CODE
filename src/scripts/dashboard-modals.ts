@@ -328,11 +328,14 @@ export function reviewTask(decision: 'approve' | 'reject') {
                     console.error("Routine approval error:", err);
                 });
         } else {
-            // Reject routine — update server so it doesn't reappear on reload
+            // Reject routine — read comment before closing
+            const routeNoteEl = (document.getElementById('reviewComment') || document.getElementById('taskQuickNote')) as HTMLInputElement | HTMLTextAreaElement;
+            const routeNote = routeNoteEl?.value.trim() || '';
+
             import('./dashboard-main').then(m => m.renderMainDashboard());
             closeModal();
 
-            adminRejectTaskAction(taskData.id!, taskData.memberId!)
+            adminRejectTaskAction(taskData.id!, taskData.memberId!, routeNote || null)
                 .then(res => {
                     isConfirming = false;
                     if (!res?.success) console.error("Routine reject fail:", res?.error);
@@ -370,7 +373,7 @@ export function reviewTask(decision: 'approve' | 'reject') {
         import('./dashboard-main').then(m => m.renderMainDashboard());
         closeModal();
 
-        adminRejectTaskAction(taskData.id!, taskData.memberId!)
+        adminRejectTaskAction(taskData.id!, taskData.memberId!, rejectNote || null)
             .then(res => {
                 isConfirming = false;
                 if (!res.success) {

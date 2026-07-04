@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     if (!isCEO(caller.email)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
 
     try {
-        const { submissionId, memberId, action, bonus } = await req.json();
+        const { submissionId, memberId, action, bonus, comment } = await req.json();
 
         if (!submissionId || !memberId || !action) {
             return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         }
 
         if (action === 'reject') {
-            await DbService.rejectTask(submissionId, memberId);
+            await DbService.rejectTask(submissionId, memberId, comment || null);
             const profile = await DbService.getProfile(memberId);
             const name = profile?.name || 'A subject';
             discordTaskReviewed(name, 'reject').catch(() => {});

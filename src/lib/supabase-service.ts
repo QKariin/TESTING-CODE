@@ -443,7 +443,7 @@ export const DbService = {
         checkAndPromote(profileId).catch(() => {});
     },
 
-    async rejectTask(taskId: string, profileId: string) {
+    async rejectTask(taskId: string, profileId: string, comment: string | null = null) {
         // Check user_routines table for pending routine with this ID
         const { data: userRoutine } = await supabaseAdmin
             .from('user_routines')
@@ -482,7 +482,7 @@ export const DbService = {
             cacheDelete(`routine:${userRoutine.member_id.toLowerCase()}`);
 
             const thumb = userRoutine.pending_thumbnail_url || userRoutine.pending_proof_url || null;
-            const cardData = { status: 'reject', points: 0, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb };
+            const cardData = { status: 'reject', points: 0, type: 'routine', taskText: userRoutine.routine_name || 'Daily Routine', thumbnail: thumb, comment: comment || null };
             try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
             return;
         }
@@ -515,7 +515,8 @@ export const DbService = {
             }
         } catch (_) { }
 
-        const cardData = { status: 'reject', points: 0, penalty: 300, type: 'task', taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
+        if (idx > -1 && comment) history[idx].adminComment = comment;
+        const cardData = { status: 'reject', points: 0, penalty: 300, type: 'task', comment: comment || null, taskText: entry?.text || null, thumbnail: entry?.thumbnail_url || entry?.proofUrl || null };
         try { await this.sendMessage(profileId, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
     },
 
