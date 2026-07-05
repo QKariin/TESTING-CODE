@@ -178,24 +178,45 @@ function subscribeToDashboardTaskUpdates() {
                 event: '*',
                 schema: 'public',
                 table: 'tasks',
-            }, () => {
+            }, (payload: any) => {
                 console.log('[DASHBOARD REALTIME] Tasks changed - refreshing...');
                 debouncedRefresh();
+                // Detect new pending task from Taskdom_History
+                if (payload.new?.Taskdom_History && payload.new?.Status === 'pending') {
+                    try {
+                        const hist = JSON.parse(payload.new.Taskdom_History);
+                        const pending = hist.filter((t: any) => t.status === 'pending');
+                        const latest = pending[pending.length - 1];
+                        if (latest) {
+                            const age = Date.now() - new Date(latest.submitted_at || latest.createdAt || 0).getTime();
+                            if (age < 30_000) {
+                                showNewTaskToast(payload.new.member_id, latest.text || 'Task', latest.id, latest.thumbnail_url || latest.proofUrl || null, false);
+                            }
+                        }
+                    } catch (_) {}
+                }
             });
         _tasksWatchChannel.subscribe();
     }
 
-    // Realtime on routines table — fires when routine is submitted/reviewed
+    // Realtime on user_routines table — fires when routine is submitted/reviewed
     if (!_routinesWatchChannel) {
         _routinesWatchChannel = supabase
             .channel('dashboard_routines_watch')
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
-                table: 'routines',
-            }, () => {
+                table: 'user_routines',
+            }, (payload: any) => {
                 console.log('[DASHBOARD REALTIME] Routines changed - refreshing...');
                 debouncedRefresh();
+                // Show toast for new pending submission
+                if (payload.new?.pending_id && payload.new?.pending_submitted_at) {
+                    const age = Date.now() - new Date(payload.new.pending_submitted_at).getTime();
+                    if (age < 30_000) {
+                        showNewTaskToast(payload.new.member_id, payload.new.routine_name || 'Daily Routine', payload.new.pending_id, payload.new.pending_thumbnail_url || payload.new.pending_proof_url || null, true);
+                    }
+                }
             });
         _routinesWatchChannel.subscribe();
     }
@@ -1140,6 +1161,80 @@ export async function rejectFromGallery(submissionId: string, memberId: string) 
     } catch (err) {
         alert('Network error during rejection.');
     }
+}
+
+// ── NEW TASK TOAST NOTIFICATION ──
+let _toastContainer: HTMLElement | null = null;
+
+function getToastContainer(): HTMLElement {
+    if (_toastContainer && document.body.contains(_toastContainer)) return _toastContainer;
+    _toastContainer = document.createElement('div');
+    _toastContainer.id = '__taskToastContainer';
+    _toastContainer.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
+    document.body.appendChild(_toastContainer);
+    return _toastContainer;
+}
+
+function showNewTaskToast(memberId: string, taskText: string, taskId: string, thumbUrl: string | null, isRoutine: boolean) {
+    const container = getToastContainer();
+    const name = getUserName(memberId);
+    const thumbHtml = thumbUrl
+        ? `<img src="${getOptimizedUrl(thumbUrl, 60)}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(197,160,89,0.3);" />`
+        : `<div style="width:40px;height:40px;border-radius:6px;background:rgba(197,160,89,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(197,160,89,0.2);font-size:1rem;">📋</div>`;
+
+    const toast = document.createElement('div');
+    toast.className = '__taskToast';
+    toast.style.cssText = 'pointer-events:all;background:rgba(10,10,15,0.97);border:1px solid rgba(197,160,89,0.4);border-radius:12px;padding:14px 16px;min-width:300px;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 1px rgba(197,160,89,0.3);backdrop-filter:blur(12px);animation:toastSlideIn 0.3s ease;';
+    toast.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            ${thumbHtml}
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.7);letter-spacing:2px;text-transform:uppercase;">NEW ${isRoutine ? 'ROUTINE' : 'TASK'} SUBMITTED</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:rgba(255,255,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${taskText}</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button class="__toastReviewBtn" style="flex:1;padding:8px 0;border:1px solid rgba(197,160,89,0.5);background:rgba(197,160,89,0.12);color:#c5a059;font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:1px;border-radius:6px;cursor:pointer;transition:all 0.2s;">REVIEW NOW</button>
+            <button class="__toastLaterBtn" style="flex:1;padding:8px 0;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;border-radius:6px;cursor:pointer;transition:all 0.2s;">LATER</button>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto-dismiss after 15s
+    const autoDismiss = setTimeout(() => dismissToast(toast), 15000);
+
+    toast.querySelector('.__toastReviewBtn')!.addEventListener('click', () => {
+        clearTimeout(autoDismiss);
+        dismissToast(toast);
+        // Open review modal
+        import('./dashboard-modals').then(m => m.openModById(taskId, memberId, false));
+    });
+
+    toast.querySelector('.__toastLaterBtn')!.addEventListener('click', () => {
+        clearTimeout(autoDismiss);
+        dismissToast(toast);
+    });
+
+    // Inject animation keyframes if not yet done
+    if (!document.getElementById('__toastKeyframes')) {
+        const style = document.createElement('style');
+        style.id = '__toastKeyframes';
+        style.textContent = `@keyframes toastSlideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes toastSlideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}`;
+        document.head.appendChild(style);
+    }
+}
+
+function dismissToast(el: HTMLElement) {
+    el.style.animation = 'toastSlideOut 0.25s ease forwards';
+    setTimeout(() => el.remove(), 250);
+}
+
+function getUserName(memberId: string): string {
+    const id = (memberId || '').toLowerCase();
+    const u = users.find((x: any) => (x.member_id || x.memberId || '').toLowerCase() === id);
+    return u?.name || u?.displayName || id.split('@')[0] || 'Subject';
 }
 
 // Global Exports for legacy window compatibility
