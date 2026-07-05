@@ -240,6 +240,10 @@ function subscribeToDashboardTaskUpdates() {
     if (_dashboardPollInterval) clearInterval(_dashboardPollInterval);
     _dashboardPollInterval = setInterval(refreshQueueFromServer, 30000);
 
+    // Fast poll for new pending tasks — checks every 10s for new submissions
+    if (_pendingPollInterval) clearInterval(_pendingPollInterval);
+    _pendingPollInterval = setInterval(pollForNewPending, 10000);
+
     // Periodic unread poll — catches missed messages even when all realtime channels are dead
     if (_unreadPollInterval) clearInterval(_unreadPollInterval);
     _unreadPollInterval = setInterval(refreshUnreadStatus, 45000);
@@ -258,8 +262,51 @@ function subscribeToDashboardTaskUpdates() {
 
 // Polling interval references
 let _dashboardPollInterval: ReturnType<typeof setInterval> | null = null;
+let _pendingPollInterval: ReturnType<typeof setInterval> | null = null;
 let _unreadPollInterval: ReturnType<typeof setInterval> | null = null;
 let _expiredTaskInterval: ReturnType<typeof setInterval> | null = null;
+
+// Track known pending task IDs so we only toast NEW ones
+let _knownPendingIds: Set<string> = new Set();
+let _pendingPollInitialized = false;
+
+async function pollForNewPending() {
+    try {
+        const res = await fetch('/api/tasks/pending');
+        const data = await res.json();
+        const queue: any[] = data.pending || [];
+        const currentIds = new Set(queue.map((t: any) => t.id));
+
+        if (!_pendingPollInitialized) {
+            // First run — just record what we have, don't toast
+            _knownPendingIds = currentIds;
+            _pendingPollInitialized = true;
+            return;
+        }
+
+        // Find truly new items
+        let hasNew = false;
+        for (const task of queue) {
+            if (!_knownPendingIds.has(task.id)) {
+                hasNew = true;
+                showNewTaskToast(
+                    task.member_id || '',
+                    task.text || 'Task',
+                    task.id,
+                    task.thumbnail_url || null,
+                    task.isRoutine
+                );
+            }
+        }
+
+        _knownPendingIds = currentIds;
+
+        // If new tasks appeared, also do a full refresh so the profile panel updates
+        if (hasNew) {
+            refreshQueueFromServer(true);
+        }
+    } catch (_) {}
+}
 
 async function runExpiredTaskCheck() {
     try {
