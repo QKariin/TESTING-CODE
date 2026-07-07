@@ -855,7 +855,7 @@ function _buildGifPickerHtml(searchInputId: string) {
         <div data-gif-grid style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
             <div style="grid-column:1/-1;text-align:center;padding:16px;font-family:'Orbitron';font-size:0.45rem;color:rgba(255,255,255,0.25);">LOADING...</div>
         </div>
-        <div style="padding:3px 0;text-align:right;"><span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span></div>
+        <div style="padding:3px 0;text-align:right;"><span style="font-family:'Orbitron';font-size:0.3rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via GIPHY</span></div>
     `;
 }
 

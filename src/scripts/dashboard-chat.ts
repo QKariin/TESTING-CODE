@@ -1291,7 +1291,7 @@ export function openChatGifPicker() {
             <div style="grid-column:1/-1;text-align:center;padding:30px;font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.2);">SEARCHING...</div>
         </div>
         <div style="padding:5px 10px;text-align:right;flex-shrink:0;">
-            <span style="font-family:Rajdhani,sans-serif;font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via Tenor</span>
+            <span style="font-family:Rajdhani,sans-serif;font-size:0.32rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">via GIPHY</span>
         </div>
     `;
 
