@@ -14,7 +14,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
     const body = await req.json();
-    const { title, price, imageUrl, category, is_crowdfund, goal_amount } = body;
+    const { title, price, imageUrl, category, is_crowdfund, goal_amount, one_time } = body;
     if (!title || price === undefined) {
         return NextResponse.json({ error: 'Title and price are required' }, { status: 400 });
     }
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
             is_crowdfund: is_crowdfund || false,
             goal_amount: goal_amount || 0,
             raised_amount: 0,
+            one_time: one_time || false,
         })
         .select()
         .single();
@@ -37,13 +38,14 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
     const body = await req.json();
-    const { id, title, price, imageUrl, category, is_crowdfund, goal_amount } = body;
+    const { id, title, price, imageUrl, category, is_crowdfund, goal_amount, one_time } = body;
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
     const updates: any = {};
     if (title !== undefined) updates.Title = title;
     if (imageUrl !== undefined) updates.Image = imageUrl;
     if (category !== undefined) updates.Category = category;
+    if (one_time !== undefined) updates.one_time = one_time;
     if (is_crowdfund !== undefined) updates.is_crowdfund = is_crowdfund;
     if (is_crowdfund) {
         // For crowdfund items, goal_amount IS the price

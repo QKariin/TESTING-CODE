@@ -28,6 +28,8 @@ function renderWishlistPanel() {
 
     const itemsHtml = wishlistItems.map(item => {
         const isCrowdfund = item.is_crowdfund || item.Is_Crowdfund || false;
+        const isOneTime = item.one_time || false;
+        const isPurchased = item.purchased || false;
         const price = parseInt(item.Price || item.price || 0);
         const raised = parseInt(item.raised_amount || 0);
         const goal = parseInt(item.goal_amount || item.Goal_Amount || 0);
@@ -58,6 +60,7 @@ function renderWishlistPanel() {
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                     <span style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:#c5a059;font-weight:700;">${price.toLocaleString()} coins</span>
                     <span style="font-family:'Rajdhani',sans-serif;font-size:0.45rem;padding:2px 6px;border-radius:10px;background:${typeBg};color:${typeColor};">${isCrowdfund ? 'CROWDFUND' : 'GIFT'}</span>
+                    ${isOneTime ? `<span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;padding:2px 6px;border-radius:10px;background:rgba(255,100,100,0.15);color:#ff6464;">${isPurchased ? 'SOLD' : 'ONE-TIME'}</span>` : ''}
                     ${category ? `<span style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,255,255,0.25);">${category}</span>` : ''}
                 </div>
                 ${progressBar}
@@ -126,6 +129,16 @@ function renderWishlistPanel() {
                     </div>
                 </div>
 
+                <div style="margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="wishlistOneTime" style="accent-color:#c5a059;width:16px;height:16px;">
+                        <div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:#fff;font-weight:600;">ONE-TIME</div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.3);">Disappears after purchase</div>
+                        </div>
+                    </label>
+                </div>
+
                 <div id="goalAmountRow" style="margin-bottom:16px;display:none;">
                     <div style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.7);letter-spacing:1px;margin-bottom:6px;">GOAL AMOUNT (COINS)</div>
                     <input type="number" id="wishlistFieldGoal" placeholder="e.g. 10000" min="0" style="width:100%;box-sizing:border-box;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(100,180,255,0.2);border-radius:4px;color:#64b4ff;font-family:'Rajdhani',sans-serif;font-size:0.8rem;outline:none;">
@@ -171,8 +184,10 @@ export function openWishlistEdit(id: string) {
     resetWishlistForm();
 
     const isCrowdfund = item.is_crowdfund || item.Is_Crowdfund || false;
+    const isOneTime = item.one_time || false;
 
     (document.getElementById('wishlistFieldTitle') as HTMLInputElement).value = item.Title || item.title || '';
+    (document.getElementById('wishlistOneTime') as HTMLInputElement).checked = isOneTime;
     (document.getElementById('wishlistFieldPrice') as HTMLInputElement).value = String(item.Price || item.price || '');
     (document.getElementById('wishlistFieldCategory') as HTMLInputElement).value = item.Category || item.category || '';
     (document.getElementById('wishlistImgUrl') as HTMLInputElement).value = item.Image || item.image || '';
@@ -205,6 +220,7 @@ function resetWishlistForm() {
         if (el) el.value = '';
     });
     (document.getElementById('wishlistTypeGift') as HTMLInputElement).checked = true;
+    (document.getElementById('wishlistOneTime') as HTMLInputElement).checked = false;
     const goalRow = document.getElementById('goalAmountRow');
     if (goalRow) goalRow.style.display = 'none';
     const preview = document.getElementById('wishlistImgPreview');
@@ -259,6 +275,7 @@ export async function saveWishlistItem() {
     const category = (document.getElementById('wishlistFieldCategory') as HTMLInputElement)?.value.trim();
     const isCrowdfund = (document.getElementById('wishlistTypeCrowdfund') as HTMLInputElement)?.checked;
     const goalAmount = parseInt((document.getElementById('wishlistFieldGoal') as HTMLInputElement)?.value || '0');
+    const oneTime = (document.getElementById('wishlistOneTime') as HTMLInputElement)?.checked || false;
 
     const errEl = document.getElementById('wishlistSaveErr');
     if (!title) { if (errEl) { errEl.textContent = 'Name is required.'; errEl.style.display = 'block'; } return; }
@@ -270,7 +287,7 @@ export async function saveWishlistItem() {
     if (saveBtn) { saveBtn.textContent = 'SAVING...'; saveBtn.disabled = true; }
 
     try {
-        const payload: any = { title, price: isCrowdfund ? goalAmount : price, imageUrl, category, is_crowdfund: isCrowdfund, goal_amount: isCrowdfund ? goalAmount : 0 };
+        const payload: any = { title, price: isCrowdfund ? goalAmount : price, imageUrl, category, is_crowdfund: isCrowdfund, goal_amount: isCrowdfund ? goalAmount : 0, one_time: oneTime };
         if (editingId) payload.id = editingId;
 
         const res = await fetch('/api/admin/wishlist', {

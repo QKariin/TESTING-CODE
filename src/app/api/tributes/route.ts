@@ -67,9 +67,14 @@ export async function GET() {
                 is_crowdfund: tribute.is_crowdfund || tribute.Is_Crowdfund || false,
                 goal_amount: parseInt(tribute.goal_amount ?? tribute.Goal_Amount ?? 0),
                 raised_amount: parseInt(tribute.raised_amount ?? tribute.Raised_Amount ?? 0),
-                top_contributor: topContributorName
+                top_contributor: topContributorName,
+                one_time: tribute.one_time || false,
+                purchased: tribute.purchased || false,
             };
         }));
+
+        // Hide purchased one-time items from public view
+        const visibleTributes = formattedTributes.filter((t: any) => !(t.one_time && t.purchased));
 
         // ── Last Tribute: most recent wishlist message from chats ──────────────
         let lastTribute = null;
@@ -106,7 +111,7 @@ export async function GET() {
         }
 
         return NextResponse.json(
-            { success: true, tributes: formattedTributes, lastTribute },
+            { success: true, tributes: visibleTributes, lastTribute },
             { headers: { 'Cache-Control': 'no-store, max-age=0' } }
         );
 

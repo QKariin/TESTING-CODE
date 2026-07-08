@@ -94,6 +94,20 @@ export async function POST(request: Request) {
             });
         } catch (_) {}
 
+        // Mark one-time items as purchased
+        if (tributeId) {
+            try {
+                const { data: wishItem } = await supabase
+                    .from('Wishlist')
+                    .select('one_time')
+                    .eq('ID', tributeId)
+                    .maybeSingle();
+                if (wishItem?.one_time) {
+                    await supabase.from('Wishlist').update({ purchased: true }).eq('ID', tributeId);
+                }
+            } catch {}
+        }
+
         // Discord notification
         const senderNameFinal = (profile as any).name || realEmail.split('@')[0];
         discordWishlistPurchase(senderNameFinal, tributeTitle, tributeCost, tributeImage).catch(() => {});
