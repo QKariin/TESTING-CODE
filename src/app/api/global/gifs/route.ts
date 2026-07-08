@@ -2,17 +2,12 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// GIPHY API — get a free key at https://developers.giphy.com/
-const GIPHY_KEY = process.env.GIPHY_API_KEY || '';
+// GIPHY API — uses env key if set, falls back to public beta key
+const GIPHY_KEY = process.env.GIPHY_API_KEY || 'dc6zaTOxFJmzC';
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get('q')?.trim() || 'funny';
-
-    if (!GIPHY_KEY) {
-        console.error('[gifs] GIPHY_API_KEY not set');
-        return NextResponse.json({ results: [] });
-    }
 
     try {
         const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&rating=pg-13&lang=en`;
