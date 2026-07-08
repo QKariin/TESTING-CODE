@@ -346,8 +346,8 @@ export default function KeyholderPage() {
                 @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-                .kh-section { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
-                .kh-section.visible { opacity: 1; transform: translateY(0); }
+                .kh-section { opacity: 0; transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1); }
+                .kh-section.visible { opacity: 1; }
 
                 .qz-card { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); cursor:pointer; position:relative; overflow:hidden; }
                 .qz-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.25s; background:linear-gradient(135deg, rgba(139,0,0,0.1), transparent 60%); }
@@ -373,8 +373,7 @@ export default function KeyholderPage() {
                 }
 
                 @media (min-width: 769px) {
-                    .kh-container { max-width: 1100px !important; padding: 0 60px 80px !important; }
-                    .kh-bottom-pad { height: 0 !important; }
+                    .kh-container { max-width: 1100px !important; padding: 0 60px 20px !important; }
                     .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
                     .kh-quiz-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-tiers-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -478,7 +477,7 @@ export default function KeyholderPage() {
             })}
 
             {/* ─── CONTENT ─── */}
-            <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
+            <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 20px' }}>
 
                 {/* ════════ SECTION 1: HERO — Full Viewport ════════ */}
                 <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
@@ -538,12 +537,12 @@ export default function KeyholderPage() {
 
                     <div className="kh-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
                         {[
-                            { icon: '⛓', title: 'CONTROL', text: 'You lock yourself in a chastity device. She decides when you are released. No negotiations. No loopholes. No mercy.' },
-                            { icon: '👁', title: 'ACCOUNTABILITY', text: 'Daily check-ins. Kneeling hours. Proof of obedience. Someone is watching. Someone who will not let you slip.' },
-                            { icon: '🔥', title: 'DEVOTION', text: 'Every locked day proves your commitment. Every unlock is earned, never given. You become what you claimed to be.' },
+                            { icon: '\u26D3', title: 'CONTROL', text: 'You lock yourself in a chastity device. She decides when you are released. No negotiations. No loopholes. No mercy.' },
+                            { icon: '\u25C9', title: 'ACCOUNTABILITY', text: 'Daily check-ins. Kneeling hours. Proof of obedience. Someone is watching. Someone who will not let you slip.' },
+                            { icon: '\u2666', title: 'DEVOTION', text: 'Every locked day proves your commitment. Every unlock is earned, never given. You become what you claimed to be.' },
                         ].map((item, i) => (
                             <div key={i} style={{ textAlign: 'center', padding: 'clamp(24px,4vw,40px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
-                                <div style={{ fontSize: '1.8rem', marginBottom: 16, opacity: 0.6 }}>{item.icon}</div>
+                                <div style={{ fontSize: '1.4rem', marginBottom: 16, color: 'rgba(197,160,89,0.3)' }}>{item.icon}</div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, marginBottom: 12 }}>{item.title}</div>
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, maxWidth: 320, margin: '0 auto' }}>{item.text}</div>
                             </div>
@@ -817,8 +816,7 @@ export default function KeyholderPage() {
                     <div style={{ textAlign: 'center', marginTop: 24, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: 'rgba(255,100,100,0.5)' }}>Something went wrong. Please try again.</div>
                 )}
 
-                {/* Bottom padding for fake nav */}
-                <div className="kh-bottom-pad" style={{ height: 80 }} />
+                <div style={{ height: 20 }} />
             </div>
 
         </div>
