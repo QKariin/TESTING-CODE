@@ -69,7 +69,6 @@ export default function KeyholderPage() {
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
     const [toasts, setToasts] = useState<any[]>([]);
-    const [reviews, setReviews] = useState<any[]>([]);
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -122,14 +121,6 @@ export default function KeyholderPage() {
             } catch {}
         };
         init();
-    }, []);
-
-    /* fetch reviews */
-    useEffect(() => {
-        fetch('/api/reviews/public')
-            .then(r => r.json())
-            .then(d => { if (d.reviews) setReviews(d.reviews); })
-            .catch(() => {});
     }, []);
 
     /* show a toast for 8s then remove it */
@@ -308,10 +299,6 @@ export default function KeyholderPage() {
     const isVisible = (id: string) => visibleSections.has(id);
     const setRef = (id: string) => (el: HTMLDivElement | null) => { sectionRefs.current[id] = el; };
 
-    const stars = (n: number) => Array.from({ length: 5 }, (_, i) => (
-        <span key={i} style={{ color: i < n ? '#c5a059' : 'rgba(255,255,255,0.08)', fontSize: '0.75rem' }}>&#9733;</span>
-    ));
-
     /* ── SUCCESS STATE ── */
     if (status === 'success') {
         return (
@@ -378,11 +365,6 @@ export default function KeyholderPage() {
                 .cta-main { transition:transform 0.25s, box-shadow 0.25s; }
                 .cta-main:hover { transform:scale(1.02) !important; box-shadow:0 8px 60px rgba(139,0,0,0.5) !important; }
                 .cta-main:active { transform:scale(0.98) !important; }
-                .review-card { transition: transform 0.4s ease, box-shadow 0.4s ease; }
-                .review-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 1px rgba(197,160,89,0.2); }
-                .feature-item { transition: transform 0.3s ease; }
-                .feature-item:hover { transform: translateX(4px); }
-
                 * { scrollbar-width: none; }
                 *::-webkit-scrollbar { display: none; }
 
@@ -390,7 +372,6 @@ export default function KeyholderPage() {
                     .kh-container { max-width: 1100px !important; padding: 0 60px 80px !important; }
                     .kh-bottom-pad { height: 0 !important; }
                     .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
-                    .kh-reviews-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)) !important; gap: 20px !important; max-width: 800px !important; margin-left: auto !important; margin-right: auto !important; }
                     .kh-quiz-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-tiers-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-features-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -493,43 +474,164 @@ export default function KeyholderPage() {
             })}
 
             {/* ─── CONTENT ─── */}
-            <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 560, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
+            <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
 
-                {/* ════════ BRAND HEADER ════════ */}
-                <div style={{ paddingTop: 'clamp(80px, 14vw, 120px)', textAlign: 'center' }}>
+                {/* ════════ SECTION 1: HERO — Full Viewport ════════ */}
+                <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
                     <div style={{ animation: mounted ? 'fadeIn 1.2s ease-out both' : 'none' }}>
-                        <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto 24px' }}>
-                            <div style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'ringExpand 4s ease-in-out infinite' }} />
-                            <div style={{ position: 'absolute', inset: -16, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.08)', animation: 'ringExpand 4s ease-in-out infinite 0.7s' }} />
-                            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.04)', animation: 'ringExpand 4s ease-in-out infinite 1.4s' }} />
-                            <img src="/queen-karin.png" alt="Queen Karin" style={{ width: 110, height: 110, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.35)', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.08)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        {/* Photo placeholder — replace src with your photo/video later */}
+                        <div style={{ position: 'relative', width: 130, height: 130, margin: '0 auto 32px' }}>
+                            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'ringExpand 4s ease-in-out infinite' }} />
+                            <div style={{ position: 'absolute', inset: -20, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.08)', animation: 'ringExpand 4s ease-in-out infinite 0.7s' }} />
+                            <div style={{ position: 'absolute', inset: -30, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.04)', animation: 'ringExpand 4s ease-in-out infinite 1.4s' }} />
+                            <img src="/queen-karin.png" alt="Queen Karin" style={{ width: 130, height: 130, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.35)', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.08)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         </div>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: 'rgba(197,160,89,0.4)', letterSpacing: '8px', textTransform: 'uppercase', marginBottom: 12 }}>
-                            PRESENTED BY
+                    </div>
+
+                    <div style={{ animation: mounted ? 'fadeUp 1s ease-out 0.4s both' : 'none' }}>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', fontWeight: 400, color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginBottom: 16, lineHeight: 1.7 }}>
+                            You&rsquo;ve been looking for someone<br/>who won&rsquo;t let you quit.
                         </div>
-                        <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(2rem, 7vw, 3rem)', color: '#fff', letterSpacing: '4px', textTransform: 'uppercase', margin: '0 0 4px', fontWeight: 600, lineHeight: 1.05, whiteSpace: 'nowrap' }}>
-                            QUEEN KARIN
+                        <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(2.2rem, 7vw, 3.6rem)', color: '#fff', letterSpacing: '6px', textTransform: 'uppercase', margin: '0 0 16px', fontWeight: 700, lineHeight: 1.05 }}>
+                            SURRENDER<br/>YOUR KEY
                         </h1>
-                        <div style={{ width: 50, height: '1.5px', margin: '16px auto 0', background: 'linear-gradient(90deg, transparent, #c5a059, transparent)' }} />
+                        <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '0 auto 24px' }} />
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 32, background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.2)', borderRadius: 2, padding: '6px 24px' }}>
+                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#8b0000', animation: 'pulse2 1.5s infinite', boxShadow: '0 0 8px rgba(139,0,0,0.6)' }} />
+                            <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: '#8b0000', letterSpacing: 5 }}>KEYHOLDER SERVICE</span>
+                        </div>
+                        <div>
+                            <button className="cta-main" onClick={() => document.getElementById('sec-quiz')?.scrollIntoView({ behavior: 'smooth' })}
+                                style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
+                                <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                                START NOW
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Scroll indicator */}
+                    <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', animation: mounted ? 'fadeIn 2s ease-out 1.5s both' : 'none' }}>
+                        <div style={{ animation: 'float 2.5s ease-in-out infinite', textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.12)', letterSpacing: 4, marginBottom: 8 }}>SCROLL</div>
+                            <svg width="16" height="24" viewBox="0 0 16 24" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"><rect x="1" y="1" width="14" height="22" rx="7"/><line x1="8" y1="6" x2="8" y2="10" stroke="rgba(197,160,89,0.4)" strokeWidth="1.5" strokeLinecap="round"><animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/></line></svg>
+                        </div>
+                    </div>
+
+                    {/* Countdown tucked in corner */}
+                    <div style={{ position: 'absolute', top: 20, right: 0, fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(139,0,0,0.3)', letterSpacing: 3, animation: mounted ? 'fadeIn 1.5s ease-out 1s both' : 'none' }}>
+                        <span>{countdown.d}d {countdown.h}h {countdown.m}m</span>
                     </div>
                 </div>
 
-                {/* ════════ HERO TEXT ════════ */}
-                <div style={{ paddingTop: 40, textAlign: 'center', animation: mounted ? 'fadeUp 1s ease-out 0.5s both' : 'none' }}>
-                    {/* Keyholder badge */}
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28, background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.2)', borderRadius: 2, padding: '6px 24px' }}>
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#8b0000', animation: 'pulse2 1.5s infinite', boxShadow: '0 0 8px rgba(139,0,0,0.6)' }} />
-                        <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: '#8b0000', letterSpacing: 5 }}>KEYHOLDER SERVICE</span>
+                {/* ════════ SECTION 2: WHAT IS KEYHOLDING? ════════ */}
+                <div id="sec-what" ref={setRef('sec-what')} className={`kh-section ${isVisible('sec-what') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 48 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>WHAT IS KEYHOLDING</div>
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: 0, lineHeight: 1.3 }}>
+                            You lock. She holds the key.<br/>You obey.
+                        </h2>
                     </div>
 
-                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.8rem,5.5vw,3rem)', color: '#fff', letterSpacing: 6, textTransform: 'uppercase', margin: '0 0 8px', fontWeight: 700, lineHeight: 1.05 }}>
-                        SURRENDER<br/>YOUR KEY
-                    </h2>
-                    <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '16px auto' }} />
-                    <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.35)', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
-                        Professional chastity keyholding by Queen Karin. Real-time control, daily check-ins, strict accountability. Your lock, Her rules.
-                    </p>
+                    <div className="kh-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
+                        {[
+                            { icon: '⛓', title: 'CONTROL', text: 'You lock yourself in a chastity device. She decides when you are released. No negotiations. No loopholes. No mercy.' },
+                            { icon: '👁', title: 'ACCOUNTABILITY', text: 'Daily check-ins. Kneeling hours. Proof of obedience. Someone is watching. Someone who will not let you slip.' },
+                            { icon: '🔥', title: 'DEVOTION', text: 'Every locked day proves your commitment. Every unlock is earned, never given. You become what you claimed to be.' },
+                        ].map((item, i) => (
+                            <div key={i} style={{ textAlign: 'center', padding: 'clamp(24px,4vw,40px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
+                                <div style={{ fontSize: '1.8rem', marginBottom: 16, opacity: 0.6 }}>{item.icon}</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, marginBottom: 12 }}>{item.title}</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, maxWidth: 320, margin: '0 auto' }}>{item.text}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
+                {/* ════════ SECTION 3: HOW IT WORKS ════════ */}
+                <div id="sec-how" ref={setRef('sec-how')} className={`kh-section ${isVisible('sec-how') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 48 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>HOW IT WORKS</div>
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: 0 }}>Three steps. No way back.</h2>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxWidth: 480, margin: '0 auto', width: '100%' }}>
+                        {[
+                            { num: '01', title: 'Choose your sentence', text: '3 days, 7 days, or 30 days. Pick your lock-up period. The longer you commit, the deeper you go.' },
+                            { num: '02', title: 'Surrender your key', text: 'Lock yourself and submit proof. Your lock code goes to Queen Karin. You no longer control your own release.' },
+                            { num: '03', title: 'Serve daily', text: 'Check-ins every morning and evening. Tasks, kneeling hours, obedience reports. Miss one and your sentence extends.' },
+                        ].map((s, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 24, position: 'relative' }}>
+                                {/* Vertical line */}
+                                {i < 2 && <div style={{ position: 'absolute', left: 19, top: 44, bottom: -4, width: 1, background: 'linear-gradient(180deg, rgba(139,0,0,0.3), rgba(139,0,0,0.05))' }} />}
+                                <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#8b0000', background: 'rgba(139,0,0,0.06)' }}>
+                                    {s.num}
+                                </div>
+                                <div style={{ paddingBottom: 40 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, letterSpacing: 1, marginBottom: 6 }}>{s.title}</div>
+                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7 }}>{s.text}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ════════ SECTION 4: LIVE STATS ════════ */}
+                <div id="sec-stats" ref={setRef('sec-stats')} className={`kh-section ${isVisible('sec-stats') ? 'visible' : ''}`} style={{ minHeight: '70dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 48 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>LIVE STATS</div>
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: 0 }}>You are not the first. You won&rsquo;t be the last.</h2>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, textAlign: 'center' }}>
+                        {[
+                            { value: '24', label: 'SUBJECTS SERVED' },
+                            { value: '1,200+', label: 'DAYS LOCKED' },
+                            { value: '98%', label: 'OBEDIENCE RATE' },
+                        ].map((stat, i) => (
+                            <div key={i} style={{ padding: 'clamp(20px,3vw,32px) 8px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.6rem,5vw,2.8rem)', color: '#c5a059', fontWeight: 700, lineHeight: 1, marginBottom: 8 }}>{stat.value}</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 3 }}>{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ════════ SECTION 5: BEFORE vs AFTER ════════ */}
+                <div id="sec-compare" ref={setRef('sec-compare')} className={`kh-section ${isVisible('sec-compare') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        {/* WITHOUT */}
+                        <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4, marginBottom: 20 }}>WITHOUT A KEYHOLDER</div>
+                            {[
+                                'You unlock after 2 hours',
+                                'No one knows. No one cares.',
+                                'You tell yourself "next time"',
+                                'There is no next time',
+                            ].map((line, i) => (
+                                <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.25)', lineHeight: 1.6, padding: '6px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                                    {line}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* WITH */}
+                        <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 4, marginBottom: 20 }}>UNDER QUEEN KARIN</div>
+                            {[
+                                'Daily check-ins. She knows.',
+                                'Real consequences for failure.',
+                                'You earn every unlock.',
+                                'You become who you claimed to be.',
+                            ].map((line, i) => (
+                                <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.55)', lineHeight: 1.6, padding: '6px 0', borderBottom: i < 3 ? '1px solid rgba(197,160,89,0.06)' : 'none' }}>
+                                    {line}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ════════ SECTION 6: QUIZ → PRICING ════════ */}
 
                 {/* ════════ QUIZ ════════ */}
                 <div id="sec-quiz" ref={setRef('sec-quiz')} className={`kh-section ${isVisible('sec-quiz') ? 'visible' : ''}`} style={{ marginTop: 56 }}>
@@ -665,89 +767,34 @@ export default function KeyholderPage() {
                 )}
                 </div>
 
-                {/* ════════ WHAT YOU GET ════════ */}
-                <div id="sec-features" ref={setRef('sec-features')} className={`kh-section ${isVisible('sec-features') ? 'visible' : ''}`} style={{ marginTop: 64 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.15))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: 'rgba(197,160,89,0.35)', letterSpacing: '6px' }}>WHAT YOU GET</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
-                    </div>
-                    <div className="kh-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
-                        {[
-                            { title: 'REAL KEYHOLDER', text: 'Your lock code held by Queen Karin. No self-unlocking. Real power exchange.' },
-                            { title: 'DAILY CHECK-INS', text: 'Morning and evening reports. Missed check-in = consequences.' },
-                            { title: 'TASK CONTROL', text: 'Assignments, kneeling hours, routines — all on Her schedule.' },
-                            { title: 'LIVE MONITORING', text: 'She decides when and if you unlock. Real-time control.' },
-                            { title: 'PRIVATE ACCESS', text: 'Direct messages with Queen Karin. Personal attention and guidance.' },
-                            { title: 'STRICT RULES', text: 'Break a rule, extend your lock. No mercy, no exceptions.' },
-                        ].map((item, i) => (
-                            <div key={i} className="feature-item" style={{
-                                padding: '14px 16px',
-                                background: 'rgba(197,160,89,0.02)', borderLeft: '2px solid rgba(197,160,89,0.15)',
-                                borderRadius: 4,
-                            }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,0.7)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 }}>{item.title}</div>
-                                <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>{item.text}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* ════════ REVIEWS ════════ */}
-                <div id="sec-reviews" ref={setRef('sec-reviews')} className={`kh-section ${isVisible('sec-reviews') ? 'visible' : ''}`} style={{ marginTop: 80 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.15))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: 'rgba(197,160,89,0.35)', letterSpacing: '6px' }}>TESTIMONIALS</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
-                    </div>
-
-                    {reviews.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '30px 0', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.12)' }}>
-                            No reviews yet
+                {/* ════════ SECTION 7: FINAL CTA ════════ */}
+                <div id="sec-final" ref={setRef('sec-final')} className={`kh-section ${isVisible('sec-final') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 80, paddingBottom: 60 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>STILL THINKING?</div>
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
+                            Every minute you hesitate<br/>is a minute wasted unlocked.
+                        </h2>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, maxWidth: 440, margin: '0 auto 36px' }}>
+                            You already know what you want. You already know you can&rsquo;t do it alone.<br/>
+                            Stop pretending otherwise.
                         </div>
-                    )}
-                    <div className="kh-reviews-grid" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {reviews.map((review: any) => {
-                            const rev = review.reviewer || {};
-                            const rName = rev.name || 'Loyal Subject';
-                            const rAvatar = rev.avatar || null;
-                            const rHierarchy = rev.hierarchy || 'Hall Boy';
-                            const rMerit = rev.merit || 0;
-                            const rServing = rev.servingText || '';
-                            return (
-                            <div key={review.id} className="review-card" style={{
-                                borderRadius: 14, overflow: 'hidden',
-                                border: '1px solid rgba(197,160,89,0.08)',
-                            }}>
-                                <div style={{
-                                    padding: '16px 20px',
-                                    background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))',
-                                    borderBottom: '1px solid rgba(197,160,89,0.06)',
-                                    display: 'flex', alignItems: 'center', gap: 14,
-                                }}>
-                                    {rAvatar ? (
-                                        <img src={rAvatar} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0 }} />
-                                    ) : (
-                                        <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', border: '1px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>
-                                            {rName.charAt(0)}
-                                        </div>
-                                    )}
-                                    <div style={{ flex: 1, position: 'relative' }}>
-                                        <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 2 }}>{stars(review.rating)}</div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600, marginBottom: 4 }}>{rName}</div>
-                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600, color: 'rgba(197,160,89,0.4)', letterSpacing: 2, textTransform: 'uppercase' }}>
-                                            {rHierarchy} &bull; {rMerit.toLocaleString()} merit{rServing ? ` \u2022 ${rServing}` : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{ padding: '16px 20px' }}>
-                                    <p style={{ margin: 0, fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, fontStyle: 'italic' }}>
-                                        &ldquo;{review.text}&rdquo;
-                                    </p>
-                                </div>
-                            </div>
-                            );
-                        })}
+                    </div>
+
+                    {/* Video placeholder — replace src with your video/photo later */}
+                    <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '0 auto 40px', aspectRatio: '16/9', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.15)" strokeWidth="1"><polygon points="5 3 19 12 5 21 5 3" fill="rgba(197,160,89,0.06)"/></svg>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.15)', letterSpacing: 4, marginTop: 8 }}>VIDEO PLACEHOLDER</div>
+                        </div>
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
+                        <button className="cta-main" onClick={() => document.getElementById('sec-quiz')?.scrollIntoView({ behavior: 'smooth' })}
+                            style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
+                            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                            SURRENDER YOUR KEY
+                        </button>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.1)', letterSpacing: 3, marginTop: 16 }}>NO REFUNDS. NO EXCUSES.</div>
                     </div>
                 </div>
 
