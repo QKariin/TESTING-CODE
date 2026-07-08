@@ -242,12 +242,9 @@ export default function KeyholderPage() {
     const pick = (v: string) => { setAnswers([...answers, v]); setStep(step + 1); };
 
     const navigateOut = (url: string) => {
-        // If inside an iframe (Wix), send postMessage so Velo can navigate the top window
-        if (window.parent !== window) {
-            window.parent.postMessage({ type: 'redirect', url }, '*');
-        } else {
-            window.location.href = url;
-        }
+        // Navigate top window directly (works even cross-origin from iframe)
+        try { if (window.top && window.top !== window) { window.top.location.href = url; return; } } catch {}
+        window.location.href = url;
     };
 
     const handleCheckout = async (tierId: string) => {
@@ -367,6 +364,13 @@ export default function KeyholderPage() {
                 .cta-main:active { transform:scale(0.98) !important; }
                 * { scrollbar-width: none; }
                 *::-webkit-scrollbar { display: none; }
+
+                @media (max-width: 480px) {
+                    .kh-compare-grid { grid-template-columns: 1fr !important; }
+                    .kh-stats-grid { gap: 8px !important; }
+                    .kh-stats-grid .kh-stat-label { font-size: 0.22rem !important; letter-spacing: 1.5px !important; }
+                    .kh-section-tall { min-height: auto !important; padding-top: 40px !important; padding-bottom: 40px !important; }
+                }
 
                 @media (min-width: 769px) {
                     .kh-container { max-width: 1100px !important; padding: 0 60px 80px !important; }
@@ -501,10 +505,10 @@ export default function KeyholderPage() {
                             <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: '#8b0000', letterSpacing: 5 }}>KEYHOLDER SERVICE</span>
                         </div>
                         <div>
-                            <button className="cta-main" onClick={() => document.getElementById('sec-quiz')?.scrollIntoView({ behavior: 'smooth' })}
-                                style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
+                            <button className="cta-main" onClick={() => handleCheckout('weekly')} disabled={!!loading}
+                                style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: loading ? 'wait' : 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)', opacity: loading === 'weekly' ? 0.6 : 1 }}>
                                 <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
-                                START NOW
+                                {loading === 'weekly' ? 'PROCESSING...' : 'START NOW'}
                             </button>
                         </div>
                     </div>
@@ -524,7 +528,7 @@ export default function KeyholderPage() {
                 </div>
 
                 {/* ════════ SECTION 2: WHAT IS KEYHOLDING? ════════ */}
-                <div id="sec-what" ref={setRef('sec-what')} className={`kh-section ${isVisible('sec-what') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                <div id="sec-what" ref={setRef('sec-what')} className={`kh-section kh-section-tall ${isVisible('sec-what') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 48 }}>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>WHAT IS KEYHOLDING</div>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: 0, lineHeight: 1.3 }}>
@@ -548,7 +552,7 @@ export default function KeyholderPage() {
                 </div>
 
                 {/* ════════ SECTION 3: HOW IT WORKS ════════ */}
-                <div id="sec-how" ref={setRef('sec-how')} className={`kh-section ${isVisible('sec-how') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                <div id="sec-how" ref={setRef('sec-how')} className={`kh-section kh-section-tall ${isVisible('sec-how') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 48 }}>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>HOW IT WORKS</div>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: 0 }}>Three steps. No way back.</h2>
@@ -576,29 +580,29 @@ export default function KeyholderPage() {
                 </div>
 
                 {/* ════════ SECTION 4: LIVE STATS ════════ */}
-                <div id="sec-stats" ref={setRef('sec-stats')} className={`kh-section ${isVisible('sec-stats') ? 'visible' : ''}`} style={{ minHeight: '70dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                <div id="sec-stats" ref={setRef('sec-stats')} className={`kh-section kh-section-tall ${isVisible('sec-stats') ? 'visible' : ''}`} style={{ minHeight: '70dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 48 }}>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>LIVE STATS</div>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: 0 }}>You are not the first. You won&rsquo;t be the last.</h2>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, textAlign: 'center' }}>
+                    <div className="kh-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, textAlign: 'center' }}>
                         {[
                             { value: '24', label: 'SUBJECTS SERVED' },
                             { value: '1,200+', label: 'DAYS LOCKED' },
                             { value: '98%', label: 'OBEDIENCE RATE' },
                         ].map((stat, i) => (
-                            <div key={i} style={{ padding: 'clamp(20px,3vw,32px) 8px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.6rem,5vw,2.8rem)', color: '#c5a059', fontWeight: 700, lineHeight: 1, marginBottom: 8 }}>{stat.value}</div>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 3 }}>{stat.label}</div>
+                            <div key={i} style={{ padding: 'clamp(16px,3vw,32px) 4px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4.5vw,2.8rem)', color: '#c5a059', fontWeight: 700, lineHeight: 1, marginBottom: 8 }}>{stat.value}</div>
+                                <div className="kh-stat-label" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.26rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 2 }}>{stat.label}</div>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* ════════ SECTION 5: BEFORE vs AFTER ════════ */}
-                <div id="sec-compare" ref={setRef('sec-compare')} className={`kh-section ${isVisible('sec-compare') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div id="sec-compare" ref={setRef('sec-compare')} className={`kh-section kh-section-tall ${isVisible('sec-compare') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                    <div className="kh-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {/* WITHOUT */}
                         <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4 }}>
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4, marginBottom: 20 }}>WITHOUT A KEYHOLDER</div>
@@ -768,7 +772,7 @@ export default function KeyholderPage() {
                 </div>
 
                 {/* ════════ SECTION 7: FINAL CTA ════════ */}
-                <div id="sec-final" ref={setRef('sec-final')} className={`kh-section ${isVisible('sec-final') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 80, paddingBottom: 60 }}>
+                <div id="sec-final" ref={setRef('sec-final')} className={`kh-section kh-section-tall ${isVisible('sec-final') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 80, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 40 }}>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>STILL THINKING?</div>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
@@ -789,10 +793,10 @@ export default function KeyholderPage() {
                     </div>
 
                     <div style={{ textAlign: 'center' }}>
-                        <button className="cta-main" onClick={() => document.getElementById('sec-quiz')?.scrollIntoView({ behavior: 'smooth' })}
-                            style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
+                        <button className="cta-main" onClick={() => handleCheckout('weekly')} disabled={!!loading}
+                            style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: loading ? 'wait' : 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)', opacity: loading === 'weekly' ? 0.6 : 1 }}>
                             <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
-                            SURRENDER YOUR KEY
+                            {loading === 'weekly' ? 'PROCESSING...' : 'SURRENDER YOUR KEY'}
                         </button>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.1)', letterSpacing: 3, marginTop: 16 }}>NO REFUNDS. NO EXCUSES.</div>
                     </div>
