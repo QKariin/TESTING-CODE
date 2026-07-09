@@ -156,17 +156,16 @@ export default function KeyholderPage() {
             }).catch(() => {});
     }, []);
 
-    /* ── Scroll reveal sections ── */
+    /* ── Scroll reveal sections (one-way, like home) ── */
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
                     e.target.classList.add('kh-visible');
-                } else if (e.target.id !== 'sec-reviews') {
-                    e.target.classList.remove('kh-visible');
+                    observer.unobserve(e.target);
                 }
             });
-        }, { threshold: 0.02, rootMargin: '0px 0px 120px 0px' });
+        }, { threshold: 0.05 });
         const observe = () => document.querySelectorAll('.kh-section').forEach(el => observer.observe(el));
         const t = setTimeout(observe, 100);
         return () => { clearTimeout(t); observer.disconnect(); };
