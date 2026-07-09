@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 import { discordReviewSubmitted } from '@/lib/discord';
+import { invalidateReviewsCache } from '@/app/api/reviews/public/route';
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,9 @@ export async function POST(req: Request) {
             });
 
         if (insertError) throw insertError;
+
+        // Bust the public reviews cache so new review shows up immediately
+        invalidateReviewsCache();
 
         // Award 500 coins + mark reviewSubmitted in parameters
         const newWallet = (profile.wallet || 0) + 500;

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { invalidateReviewsCache } from '@/app/api/reviews/public/route';
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,9 @@ export async function POST(req: Request) {
             .ilike('member_id', email);
 
         if (error) throw error;
+
+        // Bust the public reviews cache so change shows up immediately
+        invalidateReviewsCache();
 
         return NextResponse.json({ success: true, status: newStatus });
     } catch (err: any) {
