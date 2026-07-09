@@ -171,26 +171,20 @@ export default function KeyholderPage() {
         return () => { clearTimeout(t); observer.disconnect(); };
     }, [reviews]);
 
-    /* ── Grow-on-scroll for review cards ── */
+    /* ── Grow-on-scroll for items (one-way observer, no RAF) ── */
     useEffect(() => {
-        let rafId: number;
-        const loop = () => {
-            const vh = window.innerHeight;
-            document.querySelectorAll<HTMLElement>('.kh-grow').forEach(el => {
-                const rect = el.getBoundingClientRect();
-                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.5)));
-                const leaveRaw = rect.bottom >= vh * 0.3 ? 1 : Math.max(0, rect.bottom / (vh * 0.3));
-                const raw = Math.min(enterRaw, leaveRaw);
-                const progress = 1 - Math.pow(1 - raw, 2);
-                const scale = 0.6 + progress * 0.4;
-                el.style.setProperty('transform', `scale(${scale})`, 'important');
-                el.style.setProperty('opacity', `${progress}`, 'important');
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    (e.target as HTMLElement).style.opacity = '1';
+                    (e.target as HTMLElement).style.transform = 'scale(1)';
+                    obs.unobserve(e.target);
+                }
             });
-            rafId = requestAnimationFrame(loop);
-        };
-        rafId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(rafId);
-    }, []);
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.kh-grow').forEach(el => obs.observe(el));
+        return () => obs.disconnect();
+    }, [reviews]);
 
     /* show a toast for 8s then remove it */
     const showToast = (item: any) => {
@@ -356,10 +350,10 @@ export default function KeyholderPage() {
     /* ── SUCCESS STATE ── */
     if (status === 'success') {
         return (
-            <div style={{ background: '#020202', color: '#fff', minHeight: '100dvh', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: '#020202', color: '#fff', minHeight: '100svh', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.5, filter: 'saturate(0.3)' }} />
                 <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(2,2,2,0.75) 35%, rgba(2,2,2,0.95) 65%, #020202 100%)', zIndex: 0 }} />
-                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100svh' }}>
                     <div style={{ textAlign: 'center', padding: 40 }}>
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.2" style={{ marginBottom: 20, filter: 'drop-shadow(0 0 20px rgba(197,160,89,0.4))' }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="#c5a059"/></svg>
                         <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.6rem,5vw,2.4rem)', color: '#c5a059', letterSpacing: 4, marginBottom: 14 }}>KEY ACCEPTED</h1>
@@ -390,7 +384,7 @@ export default function KeyholderPage() {
             </div>
         </div>
 
-        <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative', zIndex: 1, WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ background: 'transparent', color: '#fff', minHeight: '100svh', overflowX: 'hidden', position: 'relative', zIndex: 1, WebkitOverflowScrolling: 'touch' }}>
 
             <style>{`
                 html, body { overflow-x: hidden; background: #020202; }
@@ -421,15 +415,15 @@ export default function KeyholderPage() {
                 @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-                .kh-section { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.03); }
-                .kh-section.kh-visible { opacity: 1; transform: translateY(0); }
+                .kh-section { opacity: 0; transition: opacity 0.8s ease-out; background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.03); }
+                .kh-section.kh-visible { opacity: 1; }
                 .kh-section-alt { background: rgba(0,0,0,0.85); border-top: 1px solid rgba(197,160,89,0.08); border-bottom: 1px solid rgba(197,160,89,0.08); }
                 .kh-divider { width: 100%; display: flex; align-items: center; gap: 20px; padding: 120px 0 120px; }
                 .kh-divider::before, .kh-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), rgba(197,160,89,0.2)); }
                 .kh-divider::after { background: linear-gradient(90deg, rgba(197,160,89,0.2), rgba(139,0,0,0.3), transparent); }
                 .kh-divider span { font-family: Orbitron, sans-serif; font-size: 0.65rem; color: rgba(197,160,89,0.5); letter-spacing: 6px; white-space: nowrap; }
 
-                .kh-grow { opacity: 0; transform: scale(0.6); transform-origin: center center; will-change: transform, opacity; }
+                .kh-grow { opacity: 0; transform: scale(0.92); transform-origin: center center; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
 
                 #sec-reviews .review-card { border-color: rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
                 #sec-reviews .review-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
@@ -590,7 +584,7 @@ export default function KeyholderPage() {
             <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) calc(140px + env(safe-area-inset-bottom))' }}>
 
                 {/* ════════ SECTION 1: HERO — Full Viewport ════════ */}
-                <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', userSelect: 'none', cursor: 'default' }}>
+                <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', userSelect: 'none', cursor: 'default' }}>
                     <div style={{ animation: mounted ? 'fadeIn 1.2s ease-out both' : 'none' }}>
                         {/* Photo placeholder — replace src with your photo/video later */}
                         <div style={{ position: 'relative', width: 130, height: 130, margin: '0 auto 32px' }}>
@@ -694,7 +688,7 @@ export default function KeyholderPage() {
                 <div className="kh-divider"><span>HOW IT WORKS</span></div>
 
                 {/* ════════ SECTION 4: HOW IT WORKS ════════ */}
-                <div id="sec-how" className="kh-section kh-section-tall" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
+                <div id="sec-how" className="kh-section kh-section-tall" style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 40px', textAlign: 'center' }}>Three steps. No way back.</h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxWidth: 480, margin: '0 auto', width: '100%' }}>
@@ -798,7 +792,7 @@ export default function KeyholderPage() {
                 <div className="kh-divider"><span>THE DIFFERENCE</span></div>
 
                 {/* ════════ SECTION 5: BEFORE vs AFTER ════════ */}
-                <div id="sec-compare" className="kh-section kh-section-tall" style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
+                <div id="sec-compare" className="kh-section kh-section-tall" style={{ minHeight: '80svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <div className="kh-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {/* WITHOUT */}
                         <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4 }}>
@@ -1012,7 +1006,7 @@ export default function KeyholderPage() {
                 <div className="kh-divider"><span>STILL THINKING?</span></div>
 
                 {/* ════════ FINAL CTA ════════ */}
-                <div id="sec-final" className="kh-section kh-section-tall kh-section-alt" style={{ minHeight: '60dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
+                <div id="sec-final" className="kh-section kh-section-tall kh-section-alt" style={{ minHeight: '60svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 40 }}>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
                             There is no going back.
