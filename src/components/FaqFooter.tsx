@@ -92,7 +92,7 @@ export default function FaqFooter({ onNavClick, onUnlock, hideOnDesktop }: FaqFo
                     border: 'none',
                     zIndex: 9999999,
                     background: 'transparent',
-                    colorScheme: 'normal',
+                    colorScheme: 'dark',
                     pointerEvents: faqOpen ? 'auto' : undefined,
                 }}
             />

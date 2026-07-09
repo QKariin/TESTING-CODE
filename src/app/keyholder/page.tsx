@@ -3,6 +3,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import FaqFooter from '@/components/FaqFooter';
+import '@/css/landing.css';
+
+interface ReviewData {
+    text?: string;
+    rating?: number;
+    reviewer?: {
+        name?: string;
+        avatar?: string;
+        hierarchy?: string;
+        merit?: number;
+        tasksCompleted?: number;
+        servingText?: string;
+    };
+}
 
 /* ── time ago helper ── */
 function timeAgo(dateStr: string) {
@@ -18,9 +32,9 @@ function timeAgo(dateStr: string) {
 }
 
 const TIERS = [
-    { id: 'trial',   price: '29',  period: '3 DAYS',  label: 'TRIAL',   desc: 'Test your devotion. Three days under Her key.', badge: null },
-    { id: 'weekly',  price: '55',  period: '7 DAYS',  label: 'WEEKLY',  desc: 'A full week locked. Prove you are worthy of Her attention.', badge: 'POPULAR' },
-    { id: 'monthly', price: '150', period: '30 DAYS', label: 'MONTHLY', desc: 'Complete surrender. One month under absolute control.', badge: 'BEST VALUE' },
+    { id: 'weekly',    price: '55',  period: '7 DAYS',   label: 'WEEKLY',    desc: 'A full week locked. Prove you are worthy of Her attention.', badge: null },
+    { id: 'monthly',   price: '150', period: '30 DAYS',  label: 'MONTHLY',   desc: 'Complete surrender. One month under absolute control.', badge: 'POPULAR' },
+    { id: 'quarterly', price: '300', period: '90 DAYS',  label: 'QUARTERLY', desc: 'Three months of total ownership. No breaks. No mercy. No way out.', badge: 'BEST VALUE' },
 ];
 
 const QUIZ = [
@@ -43,9 +57,9 @@ const QUIZ = [
     {
         q: 'How long can you handle?',
         opts: [
-            { text: 'A few days', sub: 'Dip my toes in', value: 'short', icon: '3' },
-            { text: 'One full week', sub: 'I\'m serious about this', value: 'medium', icon: '7' },
-            { text: 'A month or more', sub: 'No limits. Lock me down.', value: 'long', icon: '30' },
+            { text: 'One full week', sub: 'Start with real commitment', value: 'short', icon: '7' },
+            { text: 'One full month', sub: 'I\'m serious about this', value: 'medium', icon: '30' },
+            { text: 'Three months', sub: 'No limits. Lock me down.', value: 'long', icon: '90' },
         ],
     },
 ];
@@ -53,12 +67,12 @@ const QUIZ = [
 function getRecommendation(answers: string[]): { tier: string; title: string; text: string } {
     const [exp, motive, duration] = answers;
     if (duration === 'long' || motive === 'tpe' || exp === 'advanced') {
-        return { tier: 'monthly', title: 'FULL SURRENDER', text: 'You are ready for complete control. One month under Her lock — no excuses, no escape.' };
+        return { tier: 'quarterly', title: 'TOTAL OWNERSHIP', text: 'Three months under Her lock. No breaks. No mercy. You belong to Her completely.' };
     }
     if (duration === 'medium' || motive === 'accountability' || exp === 'intermediate') {
-        return { tier: 'weekly', title: 'WEEKLY LOCKDOWN', text: 'A full week under Her key. Daily check-ins, strict accountability, real consequences.' };
+        return { tier: 'monthly', title: 'FULL SURRENDER', text: 'One month under Her key. Daily check-ins, strict accountability, real consequences.' };
     }
-    return { tier: 'trial', title: 'FIRST LOCK', text: 'Three days to discover what real control feels like. Check-ins, kneeling hours, total obedience.' };
+    return { tier: 'weekly', title: 'WEEKLY LOCKDOWN', text: 'A full week locked. Prove you are worthy of Her attention. No shortcuts, no excuses.' };
 }
 
 export default function KeyholderPage() {
@@ -69,8 +83,9 @@ export default function KeyholderPage() {
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
     const [toasts, setToasts] = useState<any[]>([]);
-    const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
-    const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [reviews, setReviews] = useState<ReviewData[]>([]);
+    const [showAllReviews, setShowAllReviews] = useState(false);
+    const [showStickyHeader, setShowStickyHeader] = useState(false);
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
 
     /* countdown to next Sunday midnight */
@@ -99,6 +114,13 @@ export default function KeyholderPage() {
         return () => clearInterval(iv);
     }, []);
 
+    /* ── Sticky header on scroll ── */
+    useEffect(() => {
+        const onScroll = () => setShowStickyHeader(window.scrollY > window.innerHeight * 0.8);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
     useEffect(() => {
         setMounted(true);
         const params = new URLSearchParams(window.location.search);
@@ -112,7 +134,7 @@ export default function KeyholderPage() {
                     setUserEmail(user.email || null);
                     // Auto-checkout if redirected back with a tier
                     const autoTier = params.get('tier');
-                    if (autoTier && ['trial', 'weekly', 'monthly'].includes(autoTier)) {
+                    if (autoTier && ['weekly', 'monthly', 'quarterly'].includes(autoTier)) {
                         // Clean the URL
                         window.history.replaceState({}, '', '/keyholder');
                         handleCheckout(autoTier);
@@ -121,6 +143,53 @@ export default function KeyholderPage() {
             } catch {}
         };
         init();
+    }, []);
+
+    /* ── Load reviews ── */
+    useEffect(() => {
+        fetch('/api/reviews/public')
+            .then(r => r.json())
+            .then(data => {
+                const revs = data.reviews || data;
+                if (Array.isArray(revs)) setReviews(revs);
+            }).catch(() => {});
+    }, []);
+
+    /* ── Scroll reveal sections ── */
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('kh-visible');
+                } else if (e.target.id !== 'sec-reviews') {
+                    e.target.classList.remove('kh-visible');
+                }
+            });
+        }, { threshold: 0.02, rootMargin: '0px 0px 120px 0px' });
+        const observe = () => document.querySelectorAll('.kh-section').forEach(el => observer.observe(el));
+        const t = setTimeout(observe, 100);
+        return () => { clearTimeout(t); observer.disconnect(); };
+    }, [reviews]);
+
+    /* ── Grow-on-scroll for review cards ── */
+    useEffect(() => {
+        let rafId: number;
+        const loop = () => {
+            const vh = window.innerHeight;
+            document.querySelectorAll<HTMLElement>('.kh-grow').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.5)));
+                const leaveRaw = rect.bottom >= vh * 0.3 ? 1 : Math.max(0, rect.bottom / (vh * 0.3));
+                const raw = Math.min(enterRaw, leaveRaw);
+                const progress = 1 - Math.pow(1 - raw, 2);
+                const scale = 0.6 + progress * 0.4;
+                el.style.setProperty('transform', `scale(${scale})`, 'important');
+                el.style.setProperty('opacity', `${progress}`, 'important');
+            });
+            rafId = requestAnimationFrame(loop);
+        };
+        rafId = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(rafId);
     }, []);
 
     /* show a toast for 8s then remove it */
@@ -228,16 +297,6 @@ export default function KeyholderPage() {
         return () => { clearTimeout(timer); supabase.removeChannel(channel); };
     }, []);
 
-    /* intersection observer for scroll animations */
-    useEffect(() => {
-        if (typeof IntersectionObserver === 'undefined') return;
-        const observer = new IntersectionObserver(
-            (entries) => { entries.forEach(e => { if (e.isIntersecting) setVisibleSections(prev => new Set([...prev, e.target.id])); }); },
-            { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-        );
-        Object.values(sectionRefs.current).forEach(el => { if (el) observer.observe(el); });
-        return () => observer.disconnect();
-    }, [mounted]);
 
     const pick = (v: string) => { setAnswers([...answers, v]); setStep(step + 1); };
 
@@ -293,8 +352,6 @@ export default function KeyholderPage() {
     const fakeNavIconStyle: React.CSSProperties = { fontSize: '1.6rem', color: 'rgba(197, 160, 89, 0.35)', lineHeight: 1 };
     const fakeNavLabelStyle: React.CSSProperties = { fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(197, 160, 89, 0.35)', letterSpacing: 1.5, textTransform: 'uppercase' };
 
-    const isVisible = (id: string) => visibleSections.has(id);
-    const setRef = (id: string) => (el: HTMLDivElement | null) => { sectionRefs.current[id] = el; };
 
     /* ── SUCCESS STATE ── */
     if (status === 'success') {
@@ -336,6 +393,7 @@ export default function KeyholderPage() {
                 @keyframes ringExpand { 0% { transform: scale(0.95); opacity: 0.4; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(0.95); opacity: 0.4; } }
                 @keyframes ctaShine { 0% { left: -100%; } 50%,100% { left: 100%; } }
                 @keyframes fadeSlide { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+                @keyframes stickySlide { from{transform:translateY(-100%)} to{transform:translateY(0)} }
                 @keyframes borderGlow {
                     0%,100% { border-color:rgba(139,0,0,0.15); box-shadow:0 0 30px rgba(139,0,0,0.06); }
                     50% { border-color:rgba(139,0,0,0.4); box-shadow:0 0 50px rgba(139,0,0,0.12); }
@@ -346,8 +404,26 @@ export default function KeyholderPage() {
                 @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-                .kh-section { opacity: 0; transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1); }
-                .kh-section.visible { opacity: 1; }
+                .kh-section { opacity: 0.06; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+                .kh-section.kh-visible { opacity: 1; transform: translateY(0); }
+                .kh-section-alt { background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(197,160,89,0.08); border-bottom: 1px solid rgba(197,160,89,0.08); }
+                .kh-divider { width: 100%; display: flex; align-items: center; gap: 20px; padding: 120px 0 120px; }
+                .kh-divider::before, .kh-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), rgba(197,160,89,0.2)); }
+                .kh-divider::after { background: linear-gradient(90deg, rgba(197,160,89,0.2), rgba(139,0,0,0.3), transparent); }
+                .kh-divider span { font-family: Orbitron, sans-serif; font-size: 0.35rem; color: rgba(197,160,89,0.4); letter-spacing: 6px; white-space: nowrap; }
+
+                .kh-grow { opacity: 0; transform: scale(0.6); transform-origin: center center; will-change: transform, opacity; }
+
+                #sec-reviews .review-name { font-size: 0.8rem; }
+                #sec-reviews .review-merit { font-size: 0.5rem; }
+                #sec-reviews .review-hierarchy { font-size: 0.42rem; }
+                #sec-reviews .review-body p { font-size: 0.85rem; line-height: 1.7; }
+                #sec-reviews .review-body.clamped p { -webkit-line-clamp: 3; }
+                #sec-reviews .review-header { padding: 12px 16px; }
+                #sec-reviews .review-body { padding: 14px 16px 16px; }
+                #sec-reviews .review-read-more { font-size: 0.5rem; padding: 6px 16px 10px; }
+                .kh-need-item { transition: background 0.3s ease; }
+                .kh-need-item:hover { background: rgba(139,0,0,0.03); }
 
                 .qz-card { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); cursor:pointer; position:relative; overflow:hidden; }
                 .qz-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity 0.25s; background:linear-gradient(135deg, rgba(139,0,0,0.1), transparent 60%); }
@@ -365,15 +441,14 @@ export default function KeyholderPage() {
                 * { scrollbar-width: none; }
                 *::-webkit-scrollbar { display: none; }
 
-                @media (max-width: 480px) {
+                @media (max-width: 768px) {
                     .kh-compare-grid { grid-template-columns: 1fr !important; }
-                    .kh-stats-grid { gap: 8px !important; }
-                    .kh-stats-grid .kh-stat-label { font-size: 0.22rem !important; letter-spacing: 1.5px !important; }
                     .kh-section-tall { min-height: auto !important; padding-top: 40px !important; padding-bottom: 40px !important; }
                 }
 
                 @media (min-width: 769px) {
-                    .kh-container { max-width: 1100px !important; padding: 0 60px 20px !important; }
+                    .kh-container { max-width: 1100px !important; padding: 0 60px 40px !important; }
+                    .kh-section-alt { margin-left: -60px; margin-right: -60px; padding-left: 60px; padding-right: 60px; }
                     .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
                     .kh-quiz-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-tiers-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -382,13 +457,34 @@ export default function KeyholderPage() {
             `}</style>
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.35, filter: 'saturate(0.2) brightness(0.7)' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.7) 30%, rgba(2,2,2,0.92) 55%, #020202 75%)', zIndex: 0 }} />
-            <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '50vh', background: 'radial-gradient(ellipse at center top, rgba(139,0,0,0.06) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(2,2,2,0.55) 35%, rgba(2,2,2,0.85) 60%, #020202 80%)', zIndex: 0 }} />
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
                 <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
             </div>
+
+            {/* ─── STICKY HEADER ─── */}
+            {showStickyHeader && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+                    background: 'rgba(2,2,2,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    borderBottom: '1px solid rgba(139,0,0,0.2)',
+                    padding: '10px 20px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    animation: 'stickySlide 0.3s ease-out',
+                }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2, fontWeight: 600 }}>SURRENDER YOUR KEY</div>
+                    <button className="cta-main" onClick={() => handleCheckout('weekly')} disabled={!!loading}
+                        style={{
+                            padding: '8px 24px', background: 'linear-gradient(135deg, #8b0000, #5a0000)', color: '#fff',
+                            border: 'none', borderRadius: 2, cursor: loading ? 'wait' : 'pointer',
+                            fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', letterSpacing: 3,
+                        }}>
+                        {loading === 'weekly' ? '...' : 'START NOW'}
+                    </button>
+                </div>
+            )}
 
             {/* ─── TOAST NOTIFICATIONS ─── */}
             {toasts.map((t: any) => {
@@ -477,7 +573,7 @@ export default function KeyholderPage() {
             })}
 
             {/* ─── CONTENT ─── */}
-            <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 20px' }}>
+            <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) calc(140px + env(safe-area-inset-bottom))' }}>
 
                 {/* ════════ SECTION 1: HERO — Full Viewport ════════ */}
                 <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
@@ -512,50 +608,56 @@ export default function KeyholderPage() {
                         </div>
                     </div>
 
-                    {/* Scroll indicator */}
-                    <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', animation: mounted ? 'fadeIn 2s ease-out 1.5s both' : 'none' }}>
-                        <div style={{ animation: 'float 2.5s ease-in-out infinite', textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.12)', letterSpacing: 4, marginBottom: 8 }}>SCROLL</div>
-                            <svg width="16" height="24" viewBox="0 0 16 24" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"><rect x="1" y="1" width="14" height="22" rx="7"/><line x1="8" y1="6" x2="8" y2="10" stroke="rgba(197,160,89,0.4)" strokeWidth="1.5" strokeLinecap="round"><animate attributeName="opacity" values="1;0;1" dur="2s" repeatCount="indefinite"/></line></svg>
-                        </div>
-                    </div>
-
                     {/* Countdown tucked in corner */}
                     <div style={{ position: 'absolute', top: 20, right: 0, fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(139,0,0,0.3)', letterSpacing: 3, animation: mounted ? 'fadeIn 1.5s ease-out 1s both' : 'none' }}>
                         <span>{countdown.d}d {countdown.h}h {countdown.m}m</span>
                     </div>
                 </div>
 
-                {/* ════════ SECTION 2: WHAT IS KEYHOLDING? ════════ */}
-                <div id="sec-what" ref={setRef('sec-what')} className={`kh-section kh-section-tall ${isVisible('sec-what') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
-                    <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>WHAT IS KEYHOLDING</div>
-                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: 0, lineHeight: 1.3 }}>
-                            You lock. She holds the key.<br/>You obey.
-                        </h2>
-                    </div>
+                <div className="kh-divider"><span>BEFORE YOU BEGIN</span></div>
 
-                    <div className="kh-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24 }}>
+                {/* ════════ SECTION 2: WHAT YOU NEED ════════ */}
+                <div id="sec-need" className="kh-section kh-section-tall kh-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
+                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 32px', lineHeight: 1.3, textAlign: 'center' }}>
+                        What you need to start.
+                    </h2>
+
+                    <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 0 }}>
                         {[
-                            { icon: '\u26D3', title: 'CONTROL', text: 'You lock yourself in a chastity device. She decides when you are released. No negotiations. No loopholes. No mercy.' },
-                            { icon: '\u25C9', title: 'ACCOUNTABILITY', text: 'Daily check-ins. Kneeling hours. Proof of obedience. Someone is watching. Someone who will not let you slip.' },
-                            { icon: '\u2666', title: 'DEVOTION', text: 'Every locked day proves your commitment. Every unlock is earned, never given. You become what you claimed to be.' },
+                            { num: '01', title: 'A chastity cage', text: 'Metal or polycarbonate. Pick one that fits. If you have never worn one, start with a lightweight beginner cage. Comfort matters because you will be wearing it for days.' },
+                            { num: '02', title: 'A numbered lock', text: 'Not a key lock. A numbered plastic seal or a combination lock. The number gets sent to your keyholder. If the seal is broken, She knows. You cannot cheat what you cannot hide.' },
+                            { num: '03', title: 'A phone with a camera', text: 'Daily check-in photos. Proof of lock. Proof of obedience. This is how She monitors you. No photos, no trust. No trust, no service.' },
+                            { num: '04', title: 'The willingness to obey', text: 'This is the only item on this list that cannot be purchased. You either want to be held accountable, or you do not. If you are not ready to follow rules, do not waste Her time.' },
                         ].map((item, i) => (
-                            <div key={i} style={{ textAlign: 'center', padding: 'clamp(24px,4vw,40px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
-                                <div style={{ fontSize: '1.4rem', marginBottom: 16, color: 'rgba(197,160,89,0.3)' }}>{item.icon}</div>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, marginBottom: 12 }}>{item.title}</div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, maxWidth: 320, margin: '0 auto' }}>{item.text}</div>
+                            <div key={i} className="kh-need-item kh-grow" style={{
+                                display: 'flex', gap: 20, position: 'relative',
+                                padding: '24px 0',
+                                borderBottom: i < 3 ? '1px solid rgba(197,160,89,0.06)' : 'none',
+                                animation: mounted ? `fadeUpSlow 0.6s ease-out ${0.15 * i}s both` : 'none',
+                            }}>
+                                <div style={{
+                                    flexShrink: 0, width: 44, height: 44, borderRadius: 4,
+                                    border: '1px solid rgba(139,0,0,0.2)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: 'rgba(139,0,0,0.5)',
+                                    background: 'rgba(139,0,0,0.04)',
+                                }}>
+                                    {item.num}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 6 }}>{item.title}</div>
+                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>{item.text}</div>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* ════════ SECTION 3: HOW IT WORKS ════════ */}
-                <div id="sec-how" ref={setRef('sec-how')} className={`kh-section kh-section-tall ${isVisible('sec-how') ? 'visible' : ''}`} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
-                    <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>HOW IT WORKS</div>
-                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: 0 }}>Three steps. No way back.</h2>
-                    </div>
+                <div className="kh-divider"><span>HOW IT WORKS</span></div>
+
+                {/* ════════ SECTION 4: HOW IT WORKS ════════ */}
+                <div id="sec-how" className="kh-section kh-section-tall" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
+                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 40px', textAlign: 'center' }}>Three steps. No way back.</h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxWidth: 480, margin: '0 auto', width: '100%' }}>
                         {[
@@ -563,7 +665,7 @@ export default function KeyholderPage() {
                             { num: '02', title: 'Surrender your key', text: 'Lock yourself and submit proof. Your lock code goes to Queen Karin. You no longer control your own release.' },
                             { num: '03', title: 'Serve daily', text: 'Check-ins every morning and evening. Tasks, kneeling hours, obedience reports. Miss one and your sentence extends.' },
                         ].map((s, i) => (
-                            <div key={i} style={{ display: 'flex', gap: 24, position: 'relative' }}>
+                            <div key={i} className="kh-grow" style={{ display: 'flex', gap: 24, position: 'relative' }}>
                                 {/* Vertical line */}
                                 {i < 2 && <div style={{ position: 'absolute', left: 19, top: 44, bottom: -4, width: 1, background: 'linear-gradient(180deg, rgba(139,0,0,0.3), rgba(139,0,0,0.05))' }} />}
                                 <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', color: '#8b0000', background: 'rgba(139,0,0,0.06)' }}>
@@ -578,29 +680,87 @@ export default function KeyholderPage() {
                     </div>
                 </div>
 
-                {/* ════════ SECTION 4: LIVE STATS ════════ */}
-                <div id="sec-stats" ref={setRef('sec-stats')} className={`kh-section kh-section-tall ${isVisible('sec-stats') ? 'visible' : ''}`} style={{ minHeight: '70dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
-                    <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>LIVE STATS</div>
-                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: 0 }}>You are not the first. You won&rsquo;t be the last.</h2>
-                    </div>
+                <div className="kh-divider"><span>TESTIMONIALS</span></div>
 
-                    <div className="kh-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, textAlign: 'center' }}>
-                        {[
-                            { value: '24', label: 'SUBJECTS SERVED' },
-                            { value: '1,200+', label: 'DAYS LOCKED' },
-                            { value: '98%', label: 'OBEDIENCE RATE' },
-                        ].map((stat, i) => (
-                            <div key={i} style={{ padding: 'clamp(16px,3vw,32px) 4px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4 }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4.5vw,2.8rem)', color: '#c5a059', fontWeight: 700, lineHeight: 1, marginBottom: 8 }}>{stat.value}</div>
-                                <div className="kh-stat-label" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.26rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 2 }}>{stat.label}</div>
+                {/* ════════ SECTION 4: TESTIMONIALS ════════ */}
+                {reviews.length > 0 && (
+                <div id="sec-reviews" className="kh-section kh-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
+                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: '0 0 40px', textAlign: 'center' }}>You are not the first. You won&rsquo;t be the last.</h2>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600, margin: '0 auto' }}>
+                        {(showAllReviews ? reviews : reviews.slice(0, 3)).map((r, i) => {
+                            const rev = r.reviewer || {};
+                            const name = rev.name || 'Loyal Subject';
+                            const avatar = rev.avatar || null;
+                            const hierarchy = rev.hierarchy || 'Hall Boy';
+                            const merit = rev.merit || 0;
+                            const tasks = rev.tasksCompleted || 0;
+                            const serving = rev.servingText || '';
+                            const rating = r.rating || 5;
+                            const initial = name.charAt(0).toUpperCase();
+                            const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
+
+                            return (
+                                <div key={i} className="kh-grow">
+                                    <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(139,0,0,0.25)', boxShadow: '0 0 20px rgba(139,0,0,0.06)' }}>
+                                        <div className="review-header">
+                                            {avatar ? (
+                                                <img className="review-avatar" src={avatar} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                            ) : (
+                                                <div className="review-avatar-placeholder">{initial}</div>
+                                            )}
+                                            <div className="review-meta">
+                                                <div className="review-stars">
+                                                    {Array.from({ length: 5 }, (_, s) => (
+                                                        <span key={s} className={s < rating ? 'star-on' : 'star-off'}>&#9733;</span>
+                                                    ))}
+                                                </div>
+                                                <div className="review-name">{name}</div>
+                                                <div className="review-merit">{merit.toLocaleString()} MERIT &middot; {tasks} TASKS</div>
+                                                <div className="review-hierarchy">{hierarchy.toUpperCase()}{servingHtml}</div>
+                                            </div>
+                                        </div>
+                                        <div className="review-body clamped" id={`kh-review-body-${i}`}>
+                                            <p>&ldquo;{r.text || ''}&rdquo;</p>
+                                        </div>
+                                        <button className="review-read-more" onClick={(e) => {
+                                            const body = document.getElementById(`kh-review-body-${i}`);
+                                            if (body) {
+                                                const isClamped = body.classList.toggle('clamped');
+                                                (e.target as HTMLElement).textContent = isClamped ? 'READ MORE \u25B8' : 'SHOW LESS \u25B4';
+                                            }
+                                        }}>READ MORE &#9656;</button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {!showAllReviews && reviews.length > 3 && (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <button onClick={() => setShowAllReviews(true)} style={{
+                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.15)',
+                                    borderRadius: 4, padding: '12px 36px', cursor: 'pointer',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)',
+                                    letterSpacing: 4, transition: 'all 0.25s',
+                                }}>SEE ALL REVIEWS</button>
                             </div>
-                        ))}
+                        )}
+                        {showAllReviews && reviews.length > 3 && (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <button onClick={() => setShowAllReviews(false)} style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.12)',
+                                    letterSpacing: 4, padding: '8px 16px',
+                                }}>SHOW LESS</button>
+                            </div>
+                        )}
                     </div>
                 </div>
+                )}
+
+                <div className="kh-divider"><span>THE DIFFERENCE</span></div>
 
                 {/* ════════ SECTION 5: BEFORE vs AFTER ════════ */}
-                <div id="sec-compare" ref={setRef('sec-compare')} className={`kh-section kh-section-tall ${isVisible('sec-compare') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 60, paddingBottom: 60 }}>
+                <div id="sec-compare" className="kh-section kh-section-tall" style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <div className="kh-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {/* WITHOUT */}
                         <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4 }}>
@@ -634,10 +794,12 @@ export default function KeyholderPage() {
                     </div>
                 </div>
 
+                <div className="kh-divider"><span>CHOOSE YOUR SENTENCE</span></div>
+
                 {/* ════════ SECTION 6: QUIZ → PRICING ════════ */}
 
                 {/* ════════ QUIZ ════════ */}
-                <div id="sec-quiz" ref={setRef('sec-quiz')} className={`kh-section ${isVisible('sec-quiz') ? 'visible' : ''}`} style={{ marginTop: 56 }}>
+                <div id="sec-quiz" className="kh-section kh-section-alt" style={{ marginTop: 56, paddingTop: 60, paddingBottom: 60 }}>
                 {step < 3 ? (
                     <div key={step} style={{ animation: 'fadeSlide 0.45s ease-out both' }}>
                         <div style={{ maxWidth: 400, margin: '0 auto 32px' }}>
@@ -770,10 +932,50 @@ export default function KeyholderPage() {
                 )}
                 </div>
 
-                {/* ════════ SECTION 7: FINAL CTA ════════ */}
-                <div id="sec-final" ref={setRef('sec-final')} className={`kh-section kh-section-tall ${isVisible('sec-final') ? 'visible' : ''}`} style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 80, paddingBottom: 60 }}>
+                <div className="kh-divider"><span>THE PSYCHOLOGY</span></div>
+
+                {/* ════════ THE PSYCHOLOGY ════════ */}
+                <div id="sec-what" className="kh-section kh-section-tall" style={{ paddingTop: 40, paddingBottom: 60 }}>
+                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 32px', lineHeight: 1.3, textAlign: 'center' }}>
+                        Why men lock themselves<br/>for a woman they barely know.
+                    </h2>
+
+                    <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
+                        <div>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 10 }}>Surrender is not weakness.</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.8 }}>
+                                Most men who seek a keyholder are high-performers. Decision-makers. People who carry control all day and crave the one thing they cannot give themselves: permission to let go. Handing someone your key is not submission out of weakness. It is a deliberate choice to silence the noise.
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 10 }}>The body remembers what the mind forgets.</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.8 }}>
+                                A locked device is not a toy. It is a constant, physical reminder that someone else holds power over your most private instinct. Every hour you wear it, your brain rewires. Anticipation sharpens. Dopamine builds with no release. You stop thinking about what you want and start thinking about what She wants.
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 10 }}>Trust you cannot fake.</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.8 }}>
+                                Giving someone the key to your body is the most vulnerable thing a man can do. There is no halfway. No pretending. The lock does not care about your excuses. This level of trust deepens everything. Your focus, your discipline, your connection to the person who holds what you gave away.
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 10 }}>Accountability changes behavior.</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.8 }}>
+                                Self-locking fails because you hold the exit. A keyholder removes the exit. Daily check-ins, kneeling hours, obedience reports. Someone is watching. Someone who does not accept excuses. That structure does not just keep you locked. It makes you better.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="kh-divider"><span>STILL THINKING?</span></div>
+
+                {/* ════════ FINAL CTA ════════ */}
+                <div id="sec-final" className="kh-section kh-section-tall kh-section-alt" style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.35)', letterSpacing: 6, marginBottom: 16 }}>STILL THINKING?</div>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
                             Every minute you hesitate<br/>is a minute wasted unlocked.
                         </h2>
@@ -815,8 +1017,6 @@ export default function KeyholderPage() {
                 {status === 'error' && (
                     <div style={{ textAlign: 'center', marginTop: 24, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: 'rgba(255,100,100,0.5)' }}>Something went wrong. Please try again.</div>
                 )}
-
-                <div style={{ height: 20 }} />
             </div>
 
         </div>
