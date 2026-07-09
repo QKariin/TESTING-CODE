@@ -770,9 +770,9 @@ export default function TestLandingPage() {
                 )}
 
                 {/* FINAL CTA */}
-                <div className="grow-card" style={{ textAlign: 'center', padding: '80px 20px 40px', position: 'relative', zIndex: 2 }}>
-                    <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', marginBottom: 32, lineHeight: 1.6 }}>You either feel it or you don&apos;t.</p>
-                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 3.5vw, 1.4rem)', color: 'rgba(255,255,255,0.25)', letterSpacing: 3, marginBottom: 48, lineHeight: 1.6 }}>I don&apos;t convince. I open doors.</p>
+                <div style={{ textAlign: 'center', padding: '80px 20px 40px', position: 'relative', zIndex: 2 }}>
+                    <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.2rem, 5vw, 1.8rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', marginBottom: 24, lineHeight: 1.6 }}>You either feel it or you don&apos;t.</p>
+                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.1rem, 4vw, 1.6rem)', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 48, lineHeight: 1.6 }}>I don&apos;t convince. I open doors.</p>
                     <a href="/login" className="btn-join">JOIN NOW</a>
                 </div>
 
