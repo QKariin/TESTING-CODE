@@ -309,7 +309,7 @@ export default function KeyholderPage() {
     const handleCheckout = async (tierId: string) => {
         // If not logged in, send to login with tier saved in URL
         if (!userEmail) {
-            navigateOut(`https://throne.qkarin.com/login?redirect=/keyholder?tier=${tierId}`);
+            navigateOut(`https://throne.qkarin.com/login?redirect=${encodeURIComponent('/keyholder?tier=' + tierId)}`);
             return;
         }
         setLoading(tierId);
@@ -404,9 +404,9 @@ export default function KeyholderPage() {
                 @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-                .kh-section { opacity: 0.06; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+                .kh-section { opacity: 0.06; transform: translateY(40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.03); }
                 .kh-section.kh-visible { opacity: 1; transform: translateY(0); }
-                .kh-section-alt { background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(197,160,89,0.08); border-bottom: 1px solid rgba(197,160,89,0.08); }
+                .kh-section-alt { background: rgba(0,0,0,0.85); border-top: 1px solid rgba(197,160,89,0.08); border-bottom: 1px solid rgba(197,160,89,0.08); }
                 .kh-divider { width: 100%; display: flex; align-items: center; gap: 20px; padding: 120px 0 120px; }
                 .kh-divider::before, .kh-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), rgba(197,160,89,0.2)); }
                 .kh-divider::after { background: linear-gradient(90deg, rgba(197,160,89,0.2), rgba(139,0,0,0.3), transparent); }
@@ -448,7 +448,7 @@ export default function KeyholderPage() {
 
                 @media (min-width: 769px) {
                     .kh-container { max-width: 1100px !important; padding: 0 60px 40px !important; }
-                    .kh-section-alt { margin-left: -60px; margin-right: -60px; padding-left: 60px; padding-right: 60px; }
+                    .kh-section { margin-left: -60px; margin-right: -60px; padding-left: 60px; padding-right: 60px; }
                     .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
                     .kh-quiz-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-tiers-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -458,7 +458,7 @@ export default function KeyholderPage() {
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0 }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(2,2,2,0.55) 35%, rgba(2,2,2,0.85) 60%, #020202 80%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #000000 50%, #000000 100%)', zIndex: 0 }} />
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
                 <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
@@ -763,22 +763,22 @@ export default function KeyholderPage() {
                 <div id="sec-compare" className="kh-section kh-section-tall" style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <div className="kh-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         {/* WITHOUT */}
-                        <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4 }}>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4, marginBottom: 20 }}>WITHOUT A KEYHOLDER</div>
+                        <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4 }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 20 }}>WITHOUT A KEYHOLDER</div>
                             {[
                                 'You unlock after 2 hours',
                                 'No one knows. No one cares.',
                                 'You tell yourself "next time"',
                                 'There is no next time',
                             ].map((line, i) => (
-                                <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.25)', lineHeight: 1.6, padding: '6px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                                <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, padding: '6px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                                     {line}
                                 </div>
                             ))}
                         </div>
 
                         {/* WITH */}
-                        <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(197,160,89,0.02)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 4 }}>
+                        <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 4 }}>
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 4, marginBottom: 20 }}>UNDER QUEEN KARIN</div>
                             {[
                                 'Daily check-ins. She knows.',
