@@ -794,7 +794,7 @@ export default function KeyholderPage() {
 
                 {/* ════════ SECTION 4: TESTIMONIALS ════════ */}
                 {reviews.length > 0 && (
-                <div id="sec-reviews" className="kh-section kh-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
+                <div id="sec-reviews" className="kh-section" style={{ paddingTop: 40, paddingBottom: 60, background: 'transparent', borderTop: 'none', borderBottom: 'none' }}>
                     <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: '0 0 40px', textAlign: 'center' }}>You are not the first. You won&rsquo;t be the last.</h2>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600, margin: '0 auto' }}>
