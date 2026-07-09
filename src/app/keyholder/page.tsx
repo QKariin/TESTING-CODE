@@ -414,14 +414,19 @@ export default function KeyholderPage() {
 
                 .kh-grow { opacity: 0; transform: scale(0.6); transform-origin: center center; will-change: transform, opacity; }
 
-                #sec-reviews .review-name { font-size: 0.8rem; }
-                #sec-reviews .review-merit { font-size: 0.5rem; }
-                #sec-reviews .review-hierarchy { font-size: 0.42rem; }
-                #sec-reviews .review-body p { font-size: 0.85rem; line-height: 1.7; }
+                #sec-reviews .review-card { border-color: rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
+                #sec-reviews .review-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+                #sec-reviews .review-header { padding: 12px 16px; background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.04); }
+                #sec-reviews .review-avatar { border-color: rgba(255,255,255,0.1); }
+                #sec-reviews .review-avatar-placeholder { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.3); }
+                #sec-reviews .review-name { font-size: 0.8rem; color: rgba(255,255,255,0.75); }
+                #sec-reviews .review-merit { font-size: 0.5rem; color: rgba(255,255,255,0.25); }
+                #sec-reviews .review-stars .star-on { color: #8b0000; }
+                #sec-reviews .review-hierarchy { font-size: 0.42rem; color: rgba(255,255,255,0.15); }
+                #sec-reviews .review-body { padding: 14px 16px 16px; background: rgba(255,255,255,0.01); }
+                #sec-reviews .review-body p { font-size: 0.85rem; line-height: 1.7; color: rgba(255,255,255,0.5); }
                 #sec-reviews .review-body.clamped p { -webkit-line-clamp: 3; }
-                #sec-reviews .review-header { padding: 12px 16px; }
-                #sec-reviews .review-body { padding: 14px 16px 16px; }
-                #sec-reviews .review-read-more { font-size: 0.5rem; padding: 6px 16px 10px; }
+                #sec-reviews .review-read-more { font-size: 0.5rem; padding: 6px 16px 10px; color: rgba(255,255,255,0.2); }
                 .kh-need-item { transition: background 0.3s ease; }
                 .kh-need-item:hover { background: rgba(139,0,0,0.03); }
 
@@ -458,7 +463,7 @@ export default function KeyholderPage() {
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0 }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.35) 30%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0.85) 60%, #000000 75%, #000000 100%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,1) 55%)', zIndex: 0 }} />
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
                 <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
