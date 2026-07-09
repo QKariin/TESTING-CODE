@@ -769,16 +769,17 @@ export default function TestLandingPage() {
                 </div>
                 )}
 
-                {/* FINAL CTA */}
-                <div style={{ textAlign: 'center', padding: '80px 20px 40px', position: 'relative', zIndex: 2 }}>
-                    <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.2rem, 5vw, 1.8rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', marginBottom: 24, lineHeight: 1.6 }}>You either feel it or you don&apos;t.</p>
-                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.1rem, 4vw, 1.6rem)', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 48, lineHeight: 1.6 }}>I don&apos;t convince. I open doors.</p>
-                    <a href="/login" className="btn-join">JOIN NOW</a>
-                </div>
-
                 {/* Bottom padding */}
-                <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
+                <div style={{ height: 40 }} />
             </main>
+
+            {/* FINAL CTA — outside main so scroll animation can't touch it */}
+            <div id="final-cta" style={{ textAlign: 'center', padding: '60px 20px', position: 'relative', zIndex: 2 }}>
+                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.2rem, 5vw, 1.8rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', marginBottom: 24, lineHeight: 1.6 }}>You either feel it or you don&apos;t.</p>
+                <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.1rem, 4vw, 1.6rem)', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 48, lineHeight: 1.6 }}>I don&apos;t convince. I open doors.</p>
+                <a href="/login" className="btn-join" style={{ display: 'inline-block' }}>JOIN NOW</a>
+                <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
+            </div>
 
             {/* SEO content -- invisible to users, crawlable by Google */}
             <main aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
