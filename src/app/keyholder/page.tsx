@@ -391,10 +391,10 @@ export default function KeyholderPage() {
             </div>
         </div>
 
-        <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative', zIndex: 1 }}>
+        <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative', zIndex: 1, WebkitOverflowScrolling: 'touch' }}>
 
             <style>{`
-                html, body { overscroll-behavior: none; overflow-x: hidden; background: #020202; }
+                html, body { overflow-x: hidden; background: #020202; }
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
                 @font-face {
                     font-family: 'Rosella Solid';
@@ -422,7 +422,7 @@ export default function KeyholderPage() {
                 @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
 
-                .kh-section { opacity: 0; transform: translateY(12px); transition: opacity 1.2s ease-out, transform 1.2s ease-out; background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.03); }
+                .kh-section { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; background: rgba(0,0,0,0.5); margin-left: calc(-1 * clamp(20px,5vw,32px)); margin-right: calc(-1 * clamp(20px,5vw,32px)); padding-left: clamp(20px,5vw,32px); padding-right: clamp(20px,5vw,32px); border-top: 1px solid rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.03); }
                 .kh-section.kh-visible { opacity: 1; transform: translateY(0); }
                 .kh-section-alt { background: rgba(0,0,0,0.85); border-top: 1px solid rgba(197,160,89,0.08); border-bottom: 1px solid rgba(197,160,89,0.08); }
                 .kh-divider { width: 100%; display: flex; align-items: center; gap: 20px; padding: 120px 0 120px; }
