@@ -146,6 +146,7 @@ export default function TestLandingPage() {
     const [lbPeriod, setLbPeriod] = useState('weekly');
     const [lbEntries, setLbEntries] = useState<LeaderboardEntry[]>([]);
     const [reviews, setReviews] = useState<ReviewData[]>([]);
+    const [showAllReviews, setShowAllReviews] = useState(false);
     const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
     const [toastClass, setToastClass] = useState('');
     const [accessDenied, setAccessDenied] = useState<{ section: string } | null>(null);
@@ -277,7 +278,7 @@ export default function TestLandingPage() {
             .then(r => r.json())
             .then(data => {
                 const revs = data.reviews || data;
-                if (Array.isArray(revs)) setReviews(revs.slice(0, 6));
+                if (Array.isArray(revs)) setReviews(revs);
             }).catch(() => {});
     }, []);
 
@@ -693,60 +694,80 @@ export default function TestLandingPage() {
                     </div>
                 </div>
 
-                {/* REVIEWS — each card grows individually */}
-                <div id="reviews" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 100, padding: '0 16px', position: 'relative', zIndex: 2 }}>
-                    {reviews.map((r, i) => {
-                        const rev = r.reviewer || {};
-                        const name = rev.name || 'Loyal Subject';
-                        const avatar = rev.avatar || null;
-                        const hierarchy = rev.hierarchy || 'Hall Boy';
-                        const merit = rev.merit || 0;
-                        const tasks = rev.tasksCompleted || 0;
-                        const serving = rev.servingText || '';
-                        const rating = r.rating || 5;
-                        const initial = name.charAt(0).toUpperCase();
-                        const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
+                {/* REVIEWS — keyholder-style: 3 visible, clamped, grow animation */}
+                {reviews.length > 0 && (
+                <div id="reviews" style={{ paddingTop: 40, paddingBottom: 60, position: 'relative', zIndex: 2 }}>
+                    <h2 className="grow-card" style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: '0 0 40px', textAlign: 'center' }}>You are not the first. You won&rsquo;t be the last.</h2>
 
-                        return (
-                            <div key={i} style={{ display: 'contents' }}>
-                                {i === 0 && (
-                                    <div className="grow-card" style={{ width: '100%', maxWidth: 600, textAlign: 'center', padding: '18px 0 8px', fontFamily: 'Cinzel,serif', fontSize: 22, fontWeight: 700, letterSpacing: 8, color: '#c5a44e', textTransform: 'uppercase' }}>TESTIMONIALS</div>
-                                )}
-                                <div className="grow-card" style={{ width: '100%', maxWidth: 600, padding: 6, borderRadius: 22, background: 'linear-gradient(135deg, #ff00ed, #000aff)' }}>
-                                    <div className="review-card" style={{ margin: 0, borderRadius: 18 }}>
-                                        <div className="review-header">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600, margin: '0 auto' }}>
+                        {(showAllReviews ? reviews : reviews.slice(0, 3)).map((r, i) => {
+                            const rev = r.reviewer || {};
+                            const name = rev.name || 'Loyal Subject';
+                            const avatar = rev.avatar || null;
+                            const hierarchy = rev.hierarchy || 'Hall Boy';
+                            const merit = rev.merit || 0;
+                            const tasks = rev.tasksCompleted || 0;
+                            const serving = rev.servingText || '';
+                            const rating = r.rating || 5;
+                            const initial = name.charAt(0).toUpperCase();
+                            const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
+
+                            return (
+                                <div key={i} className="grow-card">
+                                    <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
+                                        <div className="review-header" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                             {avatar ? (
-                                                <img className="review-avatar" src={avatar} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                <img className="review-avatar" src={avatar} style={{ borderColor: 'rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                             ) : (
-                                                <div className="review-avatar-placeholder">{initial}</div>
+                                                <div className="review-avatar-placeholder" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>{initial}</div>
                                             )}
                                             <div className="review-meta">
                                                 <div className="review-stars">
                                                     {Array.from({ length: 5 }, (_, s) => (
-                                                        <span key={s} className={s < rating ? 'star-on' : 'star-off'}>&#9733;</span>
+                                                        <span key={s} className={s < rating ? 'star-on' : 'star-off'} style={s < rating ? { color: '#8b0000' } : {}}>&#9733;</span>
                                                     ))}
                                                 </div>
-                                                <div className="review-name">{name}</div>
-                                                <div className="review-merit">{merit.toLocaleString()} MERIT &middot; {tasks} TASKS</div>
-                                                <div className="review-hierarchy">{hierarchy.toUpperCase()}{servingHtml}</div>
+                                                <div className="review-name" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>{name}</div>
+                                                <div className="review-merit" style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{merit.toLocaleString()} MERIT &middot; {tasks} TASKS</div>
+                                                <div className="review-hierarchy" style={{ fontSize: '0.42rem', color: 'rgba(255,255,255,0.15)' }}>{hierarchy.toUpperCase()}{servingHtml}</div>
                                             </div>
                                         </div>
-                                        <div className="review-body clamped" id={`review-body-${i}`}>
-                                            <p>&ldquo;{r.text || ''}&rdquo;</p>
+                                        <div className="review-body clamped" id={`review-body-${i}`} style={{ padding: '14px 16px 16px', background: 'rgba(255,255,255,0.01)' }}>
+                                            <p style={{ fontSize: '0.85rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.5)' }}>&ldquo;{r.text || ''}&rdquo;</p>
                                         </div>
-                                        <button className="review-read-more" onClick={(e) => {
+                                        <button className="review-read-more" style={{ fontSize: '0.5rem', padding: '6px 16px 10px', color: 'rgba(255,255,255,0.2)' }} onClick={(e) => {
                                             const body = document.getElementById(`review-body-${i}`);
                                             if (body) {
                                                 const isClamped = body.classList.toggle('clamped');
-                                                (e.target as HTMLElement).textContent = isClamped ? 'READ MORE ▸' : 'SHOW LESS ▴';
+                                                (e.target as HTMLElement).textContent = isClamped ? 'READ MORE \u25B8' : 'SHOW LESS \u25B4';
                                             }
-                                        }}>READ MORE ▸</button>
+                                        }}>READ MORE &#9656;</button>
                                     </div>
                                 </div>
+                            );
+                        })}
+                        {!showAllReviews && reviews.length > 3 && (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <button onClick={() => setShowAllReviews(true)} style={{
+                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.15)',
+                                    borderRadius: 4, padding: '12px 36px', cursor: 'pointer',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)',
+                                    letterSpacing: 4, transition: 'all 0.25s',
+                                }}>SEE ALL REVIEWS</button>
                             </div>
-                        );
-                    })}
+                        )}
+                        {showAllReviews && reviews.length > 3 && (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <button onClick={() => setShowAllReviews(false)} style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.12)',
+                                    letterSpacing: 4, padding: '8px 16px',
+                                }}>SHOW LESS</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
+                )}
 
                 {/* FINAL CTA */}
                 <section className="funnel-section funnel-section-glass final-cta">

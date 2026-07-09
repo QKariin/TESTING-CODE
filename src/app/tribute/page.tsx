@@ -27,6 +27,7 @@ export default function TributePage() {
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [lbPeriod, setLbPeriod] = useState<'today' | 'weekly' | 'monthly' | 'alltime'>('weekly');
     const [reviews, setReviews] = useState<any[]>([]);
+    const [showAllReviews, setShowAllReviews] = useState(false);
     const [toasts, setToasts] = useState<any[]>([]);
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const [iframeFull, setIframeFull] = useState(false);
@@ -207,6 +208,21 @@ export default function TributePage() {
         Object.values(sectionRefs.current).forEach(el => { if (el) observer.observe(el); });
         return () => observer.disconnect();
     }, [mounted]);
+
+    /* ── Grow-on-scroll for review cards ── */
+    useEffect(() => {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    (e.target as HTMLElement).style.opacity = '1';
+                    (e.target as HTMLElement).style.transform = 'scale(1)';
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.trib-grow').forEach(el => obs.observe(el));
+        return () => obs.disconnect();
+    }, [reviews, showAllReviews]);
 
     /* ── Footer iframe message listener (same approach as home page) ── */
     useEffect(() => {
@@ -524,6 +540,8 @@ export default function TributePage() {
                 .lb-tab { transition: all 0.3s ease; cursor: pointer; }
                 .lb-tab:hover { color: #c5a059 !important; }
 
+                .trib-grow { opacity: 0; transform: scale(0.92); transform-origin: center center; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+
                 .review-card {
                     transition: transform 0.4s ease, box-shadow 0.4s ease;
                 }
@@ -531,6 +549,9 @@ export default function TributePage() {
                     transform: translateY(-3px);
                     box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 1px rgba(197,160,89,0.2);
                 }
+
+                .review-body.clamped p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+                .review-read-more { display: block; width: 100%; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-family: Orbitron, sans-serif; letter-spacing: 3px; text-align: left; }
 
                 .feature-item {
                     transition: transform 0.3s ease;
@@ -1063,14 +1084,14 @@ export default function TributePage() {
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
                     </div>
 
-                    {/* Review cards */}
+                    {/* Review cards — keyholder style: 3 visible, clamped, grow animation */}
                     {reviews.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '30px 0', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.12)' }}>
                             No reviews yet
                         </div>
                     )}
-                    <div className="trib-reviews-grid" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                        {reviews.map((review, i) => {
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600, margin: '0 auto' }}>
+                        {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review, i) => {
                             const rev = review.reviewer || {};
                             const rName = rev.name || 'Loyal Subject';
                             const rAvatar = rev.avatar || null;
@@ -1078,75 +1099,62 @@ export default function TributePage() {
                             const rMerit = rev.merit || 0;
                             const rTasks = rev.tasksCompleted || 0;
                             const rServing = rev.servingText || '';
+                            const rRating = review.rating || 5;
+                            const initial = rName.charAt(0).toUpperCase();
+                            const servingHtml = rServing ? ` \u00B7 SERVING ${rServing.toUpperCase()}` : '';
                             return (
-                            <div key={review.id} className="review-card" style={{
-                                borderRadius: 14, overflow: 'hidden',
-                                border: '1px solid rgba(197,160,89,0.08)',
-                            }}>
-                                {/* Header block */}
-                                <div style={{
-                                    padding: '16px 20px',
-                                    background: 'linear-gradient(135deg, rgba(197,160,89,0.06), rgba(197,160,89,0.02))',
-                                    borderBottom: '1px solid rgba(197,160,89,0.06)',
-                                    display: 'flex', alignItems: 'center', gap: 14,
-                                }}>
-                                    {/* Avatar */}
-                                    {rAvatar ? (
-                                        <img src={rAvatar} style={{
-                                            width: 44, height: 44, borderRadius: '50%', objectFit: 'cover',
-                                            border: '1px solid rgba(197,160,89,0.25)', flexShrink: 0,
-                                        }} />
-                                    ) : (
-                                        <div style={{
-                                            width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                                            background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))',
-                                            border: '1px solid rgba(197,160,89,0.2)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600,
-                                        }}>
-                                            {rName.charAt(0)}
-                                        </div>
-                                    )}
-                                    <div style={{ flex: 1, position: 'relative' }}>
-                                        {/* Stars top right */}
-                                        <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: 2 }}>{stars(review.rating)}</div>
-                                        {/* Line 1: Name */}
-                                        <div style={{
-                                            fontFamily: 'Cinzel, serif', fontSize: '0.82rem',
-                                            color: 'rgba(255,255,255,0.65)', fontWeight: 600, marginBottom: 4,
-                                        }}>
-                                            {rName}
-                                        </div>
-                                        {/* Line 2: Merit + Tasks */}
-                                        <div style={{
-                                            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 600,
-                                            color: 'rgba(197,160,89,0.5)', letterSpacing: '1.5px', marginBottom: 3,
-                                        }}>
-                                            {rMerit.toLocaleString()} MERIT &middot; {rTasks} TASKS
-                                        </div>
-                                        {/* Line 3: Hierarchy + serving */}
-                                        <div style={{
-                                            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.52rem', fontWeight: 500,
-                                            color: 'rgba(255,255,255,0.2)', letterSpacing: '1.5px',
-                                        }}>
-                                            {rHierarchy.toUpperCase()} {rServing ? <>&middot; SERVING {rServing.toUpperCase()}</> : ''}
+                            <div key={review.id || i} className="trib-grow">
+                                <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
+                                    <div className="review-header" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        {rAvatar ? (
+                                            <img className="review-avatar" src={rAvatar} style={{ borderColor: 'rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                        ) : (
+                                            <div className="review-avatar-placeholder" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>{initial}</div>
+                                        )}
+                                        <div className="review-meta">
+                                            <div className="review-stars">
+                                                {Array.from({ length: 5 }, (_, s) => (
+                                                    <span key={s} className={s < rRating ? 'star-on' : 'star-off'} style={s < rRating ? { color: '#8b0000' } : {}}>&#9733;</span>
+                                                ))}
+                                            </div>
+                                            <div className="review-name" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>{rName}</div>
+                                            <div className="review-merit" style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{rMerit.toLocaleString()} MERIT &middot; {rTasks} TASKS</div>
+                                            <div className="review-hierarchy" style={{ fontSize: '0.42rem', color: 'rgba(255,255,255,0.15)' }}>{rHierarchy.toUpperCase()}{servingHtml}</div>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Review text */}
-                                <div style={{ padding: '18px 20px 22px', background: 'linear-gradient(160deg, rgba(12,10,6,0.7), rgba(6,5,3,0.8))' }}>
-                                    <p style={{
-                                        fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.84rem',
-                                        color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, margin: 0,
-                                        fontWeight: 300,
-                                    }}>
-                                        &ldquo;{review.text}&rdquo;
-                                    </p>
+                                    <div className="review-body clamped" id={`trib-review-body-${i}`} style={{ padding: '14px 16px 16px', background: 'rgba(255,255,255,0.01)' }}>
+                                        <p style={{ fontSize: '0.85rem', lineHeight: 1.7, color: 'rgba(255,255,255,0.5)' }}>&ldquo;{review.text}&rdquo;</p>
+                                    </div>
+                                    <button className="review-read-more" style={{ fontSize: '0.5rem', padding: '6px 16px 10px', color: 'rgba(255,255,255,0.2)' }} onClick={(e) => {
+                                        const body = document.getElementById(`trib-review-body-${i}`);
+                                        if (body) {
+                                            const isClamped = body.classList.toggle('clamped');
+                                            (e.target as HTMLElement).textContent = isClamped ? 'READ MORE \u25B8' : 'SHOW LESS \u25B4';
+                                        }
+                                    }}>READ MORE &#9656;</button>
                                 </div>
                             </div>
                             );
                         })}
+                        {!showAllReviews && reviews.length > 3 && (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <button onClick={() => setShowAllReviews(true)} style={{
+                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.15)',
+                                    borderRadius: 4, padding: '12px 36px', cursor: 'pointer',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.5)',
+                                    letterSpacing: 4, transition: 'all 0.25s',
+                                }}>SEE ALL REVIEWS</button>
+                            </div>
+                        )}
+                        {showAllReviews && reviews.length > 3 && (
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                                <button onClick={() => setShowAllReviews(false)} style={{
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.12)',
+                                    letterSpacing: 4, padding: '8px 16px',
+                                }}>SHOW LESS</button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
