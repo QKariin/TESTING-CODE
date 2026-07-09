@@ -503,7 +503,7 @@ export default function KeyholderPage() {
 
                 .kh-grow { opacity: 0; transform: scale(0.92); transform-origin: center center; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
 
-                #sec-reviews .review-card { border-color: rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
+                #sec-reviews .review-card { border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
                 #sec-reviews .review-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
                 #sec-reviews .review-header { padding: 12px 16px; background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.04); }
                 #sec-reviews .review-avatar { border-color: rgba(255,255,255,0.1); }
@@ -513,7 +513,7 @@ export default function KeyholderPage() {
                 #sec-reviews .review-stars .star-on { color: #8b0000; }
                 #sec-reviews .review-hierarchy { font-size: 0.42rem; color: rgba(255,255,255,0.15); }
                 #sec-reviews .review-body { padding: 14px 16px 16px; background: rgba(255,255,255,0.01); }
-                #sec-reviews .review-body p { font-size: 0.85rem; line-height: 1.7; color: rgba(255,255,255,0.5); }
+                #sec-reviews .review-body p { font-size: 0.95rem; line-height: 1.8; color: rgba(255,255,255,0.55); }
                 #sec-reviews .review-body.clamped p { -webkit-line-clamp: 3; }
                 #sec-reviews .review-read-more { font-size: 0.5rem; padding: 6px 16px 10px; color: rgba(255,255,255,0.2); }
                 .kh-need-item { transition: background 0.3s ease; }
