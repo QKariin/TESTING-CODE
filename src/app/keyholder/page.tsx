@@ -503,7 +503,7 @@ export default function KeyholderPage() {
 
                 .kh-grow { opacity: 0; transform: scale(0.92); transform-origin: center center; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
 
-                #sec-reviews .review-card { border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+                #sec-reviews .review-card { border-color: rgba(255,255,255,0.08); background: rgba(6,6,10,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
                 #sec-reviews .review-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
                 #sec-reviews .review-header { padding: 12px 16px; background: rgba(255,255,255,0.02); border-bottom-color: rgba(255,255,255,0.04); }
                 #sec-reviews .review-avatar { border-color: rgba(255,255,255,0.1); }

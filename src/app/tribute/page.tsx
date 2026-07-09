@@ -1104,7 +1104,7 @@ export default function TributePage() {
                             const servingHtml = rServing ? ` \u00B7 SERVING ${rServing.toUpperCase()}` : '';
                             return (
                             <div key={review.id || i} className="trib-grow">
-                                <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+                                <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
                                     <div className="review-header" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                         {rAvatar ? (
                                             <img className="review-avatar" src={rAvatar} style={{ borderColor: 'rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
