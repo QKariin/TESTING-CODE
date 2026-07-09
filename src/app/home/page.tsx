@@ -770,11 +770,11 @@ export default function TestLandingPage() {
                 )}
 
                 {/* FINAL CTA */}
-                <section className="funnel-section funnel-section-glass final-cta">
-                    <p className="funnel-text dim" style={{ marginBottom: 15 }}>You either feel it or you don&apos;t.</p>
+                <div className="grow-card" style={{ textAlign: 'center', padding: '80px 20px 40px', position: 'relative', zIndex: 2 }}>
+                    <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', marginBottom: 32, lineHeight: 1.6 }}>You either feel it or you don&apos;t.</p>
+                    <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 3.5vw, 1.4rem)', color: 'rgba(255,255,255,0.25)', letterSpacing: 3, marginBottom: 48, lineHeight: 1.6 }}>I don&apos;t convince. I open doors.</p>
                     <a href="/login" className="btn-join">JOIN NOW</a>
-                    <p className="funnel-text dim" style={{ marginTop: 40, fontSize: 10, opacity: 0.3 }}>I don&apos;t convince. I open doors.</p>
-                </section>
+                </div>
 
                 {/* Bottom padding */}
                 <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
