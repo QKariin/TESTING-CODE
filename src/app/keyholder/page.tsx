@@ -448,7 +448,7 @@ export default function KeyholderPage() {
 
                 @media (min-width: 769px) {
                     .kh-container { max-width: 1100px !important; padding: 0 60px 40px !important; }
-                    .kh-section { margin-left: -60px; margin-right: -60px; padding-left: 60px; padding-right: 60px; }
+                    .kh-section { margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding-left: calc(50vw - 50% + 60px); padding-right: calc(50vw - 50% + 60px); }
                     .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
                     .kh-quiz-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-tiers-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -458,7 +458,7 @@ export default function KeyholderPage() {
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0 }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, transparent 0%, #000000 50%, #000000 100%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 30%, #000000 60%, #000000 100%)', zIndex: 0 }} />
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
                 <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
