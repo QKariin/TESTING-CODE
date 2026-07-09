@@ -178,7 +178,7 @@ export default function TestLandingPage() {
         fomoFiredRef.current = true;
         setTimeout(() => {
             if (faqIsOpenRef.current) return;
-            fetch('/api/global/messages')
+            fetch('/api/global/messages?limit=5')
                 .then(r => r.json())
                 .then(data => {
                     const msgs = data.messages || data;
@@ -324,8 +324,8 @@ export default function TestLandingPage() {
 
     /* ── Realtime activity polling ── */
     useEffect(() => {
-        // Get initial latest ID
-        fetch('/api/global/messages')
+        // Get initial latest ID (only need the 1 newest message)
+        fetch('/api/global/messages?limit=1')
             .then(r => r.json())
             .then(data => {
                 const msgs = data.messages || data;
@@ -335,11 +335,12 @@ export default function TestLandingPage() {
             })
             .catch(() => {});
 
-        // Start polling after a short delay
+        // Poll for new messages — only fetch messages after the last seen ID
         const startPolling = setTimeout(() => {
             pollIntervalRef.current = setInterval(() => {
                 if (faqIsOpenRef.current) return;
-                fetch('/api/global/messages')
+                const afterParam = lastSeenIdRef.current ? `&after=${lastSeenIdRef.current}` : '';
+                fetch(`/api/global/messages?limit=1${afterParam}`)
                     .then(r => r.json())
                     .then(data => {
                         const msgs = data.messages || data;

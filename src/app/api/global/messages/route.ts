@@ -11,8 +11,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const channel = searchParams.get('channel') || 'global';
+    const limitParam = parseInt(searchParams.get('limit') || '100', 10);
+    const afterId = searchParams.get('after'); // only return messages with id > this
 
-    // Fetch newest 100 messages (descending), then reverse so oldest→newest for display
+    // Fetch messages (descending), then reverse so oldest→newest for display
     // Filter out rows with NULL created_at to prevent ghost messages sorting weirdly
     let query = supabaseAdmin
         .from('global_messages')
@@ -24,9 +26,14 @@ export async function GET(req: Request) {
         query = query.eq('channel', 'stream');
     }
 
+    // If caller only wants messages after a specific ID, filter
+    if (afterId) {
+        query = query.gt('id', afterId);
+    }
+
     const { data: rawData, error } = await query
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(Math.min(limitParam, 100));
     const data = (rawData || []).reverse();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
