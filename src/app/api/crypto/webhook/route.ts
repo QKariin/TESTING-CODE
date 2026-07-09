@@ -39,8 +39,8 @@ export async function POST(req: Request) {
 
     console.log(`[CRYPTAPI WEBHOOK] order=${orderId} uuid=${uuid} value=${valueCoin} confirmations=${confirmations} pending=${isPending}`);
 
-    if (!orderId || !coins) {
-        console.error('[CRYPTAPI WEBHOOK] Missing order_id or coins');
+    if (!orderId) {
+        console.error('[CRYPTAPI WEBHOOK] Missing order_id');
         return new NextResponse('*ok*', { status: 200 });
     }
 
@@ -82,7 +82,11 @@ export async function POST(req: Request) {
             completed_at: new Date().toISOString(),
         }).eq('id', orderId);
 
-        // Credit coins to user
+        // Credit coins to user (skip if coins=0, e.g. entrance tribute or keyholder)
+        if (!coins) {
+            console.log(`[CRYPTAPI WEBHOOK] Order ${orderId} completed (no coin credit needed)`);
+            return new NextResponse('*ok*', { status: 200 });
+        }
         let profile: any = null;
         const email = userEmail || order.user_email;
         const uid = userId || order.user_id;
