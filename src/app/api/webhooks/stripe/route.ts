@@ -188,8 +188,8 @@ export async function POST(req: Request) {
                 const userId = metadata.userId;
                 const userEmail = metadata.email;
                 const userName = metadata.name || userEmail.split('@')[0];
-                const tierId = metadata.tierId || 'trial';
-                const days = parseInt(metadata.days || '3', 10);
+                const tierId = metadata.tierId || 'weekly';
+                const days = parseInt(metadata.days || '7', 10);
                 const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
 
                 console.log(`[KEYHOLDER] Processing ${tierId} (${days}d) for: ${userEmail}`);
