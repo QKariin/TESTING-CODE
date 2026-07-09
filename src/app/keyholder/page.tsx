@@ -87,6 +87,7 @@ export default function KeyholderPage() {
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [showStickyHeader, setShowStickyHeader] = useState(false);
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+    const [showTierModal, setShowTierModal] = useState(false);
 
     /* countdown to next Sunday midnight */
     useEffect(() => {
@@ -410,7 +411,7 @@ export default function KeyholderPage() {
                 .kh-divider { width: 100%; display: flex; align-items: center; gap: 20px; padding: 120px 0 120px; }
                 .kh-divider::before, .kh-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), rgba(197,160,89,0.2)); }
                 .kh-divider::after { background: linear-gradient(90deg, rgba(197,160,89,0.2), rgba(139,0,0,0.3), transparent); }
-                .kh-divider span { font-family: Orbitron, sans-serif; font-size: 0.35rem; color: rgba(197,160,89,0.4); letter-spacing: 6px; white-space: nowrap; }
+                .kh-divider span { font-family: Orbitron, sans-serif; font-size: 0.65rem; color: rgba(197,160,89,0.5); letter-spacing: 6px; white-space: nowrap; }
 
                 .kh-grow { opacity: 0; transform: scale(0.6); transform-origin: center center; will-change: transform, opacity; }
 
@@ -462,8 +463,8 @@ export default function KeyholderPage() {
             `}</style>
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0 }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,1) 55%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.35 }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 75%)', zIndex: 0 }} />
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
                 <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
@@ -480,13 +481,13 @@ export default function KeyholderPage() {
                     animation: 'stickySlide 0.3s ease-out',
                 }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2, fontWeight: 600 }}>SURRENDER YOUR KEY</div>
-                    <button className="cta-main" onClick={() => handleCheckout('weekly')} disabled={!!loading}
+                    <button className="cta-main" onClick={() => setShowTierModal(true)}
                         style={{
                             padding: '8px 24px', background: 'linear-gradient(135deg, #8b0000, #5a0000)', color: '#fff',
-                            border: 'none', borderRadius: 2, cursor: loading ? 'wait' : 'pointer',
+                            border: 'none', borderRadius: 2, cursor: 'pointer',
                             fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', letterSpacing: 3,
                         }}>
-                        {loading === 'weekly' ? '...' : 'START NOW'}
+                        START NOW
                     </button>
                 </div>
             )}
@@ -581,14 +582,14 @@ export default function KeyholderPage() {
             <div className="kh-container" style={{ position: 'relative', zIndex: 1, maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) calc(140px + env(safe-area-inset-bottom))' }}>
 
                 {/* ════════ SECTION 1: HERO — Full Viewport ════════ */}
-                <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+                <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', userSelect: 'none', cursor: 'default' }}>
                     <div style={{ animation: mounted ? 'fadeIn 1.2s ease-out both' : 'none' }}>
                         {/* Photo placeholder — replace src with your photo/video later */}
                         <div style={{ position: 'relative', width: 130, height: 130, margin: '0 auto 32px' }}>
-                            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'ringExpand 4s ease-in-out infinite' }} />
-                            <div style={{ position: 'absolute', inset: -20, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.08)', animation: 'ringExpand 4s ease-in-out infinite 0.7s' }} />
-                            <div style={{ position: 'absolute', inset: -30, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.04)', animation: 'ringExpand 4s ease-in-out infinite 1.4s' }} />
-                            <img src="/queen-karin.png" alt="Queen Karin" style={{ width: 130, height: 130, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.35)', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.08)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.3)', animation: 'ringExpand 4s ease-in-out infinite' }} />
+                            <div style={{ position: 'absolute', inset: -20, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.15)', animation: 'ringExpand 4s ease-in-out infinite 0.7s' }} />
+                            <div style={{ position: 'absolute', inset: -30, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.06)', animation: 'ringExpand 4s ease-in-out infinite 1.4s' }} />
+                            <img src="/keyholder-bg.png" alt="Keyholder" style={{ width: 130, height: 130, borderRadius: '50%', objectFit: 'contain', border: '1.5px solid rgba(139,0,0,0.4)', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(139,0,0,0.15)', background: 'rgba(0,0,0,0.5)', padding: 16 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         </div>
                     </div>
 
@@ -605,10 +606,10 @@ export default function KeyholderPage() {
                             <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: '#8b0000', letterSpacing: 5 }}>KEYHOLDER SERVICE</span>
                         </div>
                         <div>
-                            <button className="cta-main" onClick={() => handleCheckout('weekly')} disabled={!!loading}
-                                style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: loading ? 'wait' : 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)', opacity: loading === 'weekly' ? 0.6 : 1 }}>
+                            <button className="cta-main" onClick={() => setShowTierModal(true)}
+                                style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
                                 <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
-                                {loading === 'weekly' ? 'PROCESSING...' : 'START NOW'}
+                                START NOW
                             </button>
                         </div>
                     </div>
@@ -622,7 +623,7 @@ export default function KeyholderPage() {
                 <div className="kh-divider"><span>BEFORE YOU BEGIN</span></div>
 
                 {/* ════════ SECTION 2: WHAT YOU NEED ════════ */}
-                <div id="sec-need" className="kh-section kh-section-tall kh-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
+                <div id="sec-need" className="kh-section kh-section-tall" style={{ paddingTop: 40, paddingBottom: 60 }}>
                     <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 32px', lineHeight: 1.3, textAlign: 'center' }}>
                         What you need to start.
                     </h2>
@@ -637,7 +638,7 @@ export default function KeyholderPage() {
                             <div key={i} className="kh-need-item kh-grow" style={{
                                 display: 'flex', gap: 20, position: 'relative',
                                 padding: '24px 0',
-                                borderBottom: i < 3 ? '1px solid rgba(197,160,89,0.06)' : 'none',
+                                borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                                 animation: mounted ? `fadeUpSlow 0.6s ease-out ${0.15 * i}s both` : 'none',
                             }}>
                                 <div style={{
@@ -655,6 +656,30 @@ export default function KeyholderPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+
+                <div className="kh-divider"><span>WATCH THIS</span></div>
+
+                {/* ════════ EVERY MINUTE YOU HESITATE + VIDEO ════════ */}
+                <div id="sec-video" className="kh-section kh-section-alt" style={{ paddingTop: 60, paddingBottom: 60 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
+                            Every minute you hesitate<br/>is a minute wasted unlocked.
+                        </h2>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, maxWidth: 440, margin: '0 auto' }}>
+                            You already know what you want. You already know you can&rsquo;t do it alone.<br/>
+                            Stop pretending otherwise.
+                        </div>
+                    </div>
+                    <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 480, margin: '0 auto', background: '#000' }}>
+                        <video
+                            src="/tribute-intro.mov"
+                            controls
+                            playsInline
+                            preload="metadata"
+                            style={{ width: '100%', display: 'block' }}
+                        />
                     </div>
                 </div>
 
@@ -979,41 +1004,31 @@ export default function KeyholderPage() {
                 <div className="kh-divider"><span>STILL THINKING?</span></div>
 
                 {/* ════════ FINAL CTA ════════ */}
-                <div id="sec-final" className="kh-section kh-section-tall kh-section-alt" style={{ minHeight: '80dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
+                <div id="sec-final" className="kh-section kh-section-tall kh-section-alt" style={{ minHeight: '60dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: 40, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 40 }}>
                         <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
-                            Every minute you hesitate<br/>is a minute wasted unlocked.
+                            There is no going back.
                         </h2>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, maxWidth: 440, margin: '0 auto 36px' }}>
-                            You already know what you want. You already know you can&rsquo;t do it alone.<br/>
-                            Stop pretending otherwise.
+                            You already know what you want. Stop pretending otherwise.
                         </div>
                     </div>
-
-                    {/* Video placeholder — replace src with your video/photo later */}
-                    <div style={{ position: 'relative', width: '100%', maxWidth: 480, margin: '0 auto 40px', aspectRatio: '16/9', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ textAlign: 'center' }}>
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.15)" strokeWidth="1"><polygon points="5 3 19 12 5 21 5 3" fill="rgba(197,160,89,0.06)"/></svg>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(197,160,89,0.15)', letterSpacing: 4, marginTop: 8 }}>VIDEO PLACEHOLDER</div>
-                        </div>
+                    {/* Quote before button */}
+                    <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                        <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.18)', fontStyle: 'italic', maxWidth: 460, margin: '0 auto', lineHeight: 1.8 }}>
+                            &ldquo;Once you hand over the key, there is no going back. You will serve on My terms, on My schedule.&rdquo;
+                        </p>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(197,160,89,0.15)', letterSpacing: 5, marginTop: 16 }}>QUEEN KARIN</div>
                     </div>
 
                     <div style={{ textAlign: 'center' }}>
-                        <button className="cta-main" onClick={() => handleCheckout('weekly')} disabled={!!loading}
-                            style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: loading ? 'wait' : 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)', opacity: loading === 'weekly' ? 0.6 : 1 }}>
+                        <button className="cta-main" onClick={() => setShowTierModal(true)}
+                            style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg, #8b0000 0%, #5a0000 50%, #8b0000 100%)', backgroundSize: '200% auto', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
                             <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
-                            {loading === 'weekly' ? 'PROCESSING...' : 'SURRENDER YOUR KEY'}
+                            SURRENDER YOUR KEY
                         </button>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.1)', letterSpacing: 3, marginTop: 16 }}>NO REFUNDS. NO EXCUSES.</div>
                     </div>
-                </div>
-
-                {/* ════════ BOTTOM QUOTE ════════ */}
-                <div style={{ textAlign: 'center', marginTop: 72 }}>
-                    <p style={{ fontFamily: 'Cinzel,serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.18)', fontStyle: 'italic', maxWidth: 460, margin: '0 auto', lineHeight: 1.8 }}>
-                        &ldquo;Once you hand over the key, there is no going back. You will serve on My terms, on My schedule.&rdquo;
-                    </p>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: 'rgba(197,160,89,0.15)', letterSpacing: 5, marginTop: 16 }}>QUEEN KARIN</div>
                 </div>
 
                 {status === 'cancelled' && (
@@ -1025,6 +1040,39 @@ export default function KeyholderPage() {
             </div>
 
         </div>
+
+            {/* ─── TIER SELECTION MODAL ─── */}
+            {showTierModal && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }} onClick={() => setShowTierModal(false)}>
+                    <div style={{ width: '90%', maxWidth: 420, padding: '40px 24px 32px', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setShowTierModal(false)} style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+                        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.2rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, marginBottom: 8 }}>CHOOSE YOUR SENTENCE</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)' }}>Select how long you surrender.</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {TIERS.map(tier => (
+                                <button key={tier.id} className="tier-card" onClick={() => { setShowTierModal(false); handleCheckout(tier.id); }} disabled={!!loading}
+                                    style={{
+                                        position: 'relative', padding: '20px 24px', background: 'rgba(255,255,255,0.03)',
+                                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: loading ? 'wait' : 'pointer',
+                                        textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    }}>
+                                    {tier.badge && <div style={{ position: 'absolute', top: -8, right: 16, fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem', color: '#8b0000', letterSpacing: 2, background: '#020202', padding: '2px 8px', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 2 }}>{tier.badge}</div>}
+                                    <div>
+                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, marginBottom: 4 }}>{tier.period}</div>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>{tier.desc}</div>
+                                    </div>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: '#fff', fontWeight: 700, flexShrink: 0, marginLeft: 16 }}>
+                                        &euro;{tier.price}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
         <FaqFooter hideOnDesktop />
     </>);
 }
