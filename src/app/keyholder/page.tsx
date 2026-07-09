@@ -41,17 +41,17 @@ const QUIZ = [
     {
         q: 'Your experience with chastity?',
         opts: [
-            { text: 'Never been locked', sub: 'Curious & ready to explore', value: 'beginner', icon: '?' },
-            { text: 'Self-locked before', sub: 'Know the feeling, need real control', value: 'intermediate', icon: '\u26BF' },
-            { text: 'Had a keyholder', sub: 'Ready for the real thing', value: 'advanced', icon: '\u2620' },
+            { text: 'Never been locked', sub: 'Curious & ready to explore', value: 'beginner', icon: 'I' },
+            { text: 'Self-locked before', sub: 'Know the feeling, need real control', value: 'intermediate', icon: 'II' },
+            { text: 'Had a keyholder', sub: 'Ready for the real thing', value: 'advanced', icon: 'III' },
         ],
     },
     {
         q: 'What are you looking for?',
         opts: [
-            { text: 'Explore & discover', sub: 'See if this is for me', value: 'curious', icon: '\u2736' },
-            { text: 'Accountability', sub: 'I need someone to hold me to it', value: 'accountability', icon: '\u26D3' },
-            { text: 'Total power exchange', sub: 'Complete control, no questions', value: 'tpe', icon: '\u2694' },
+            { text: 'Explore & discover', sub: 'See if this is for me', value: 'curious', icon: 'A' },
+            { text: 'Accountability', sub: 'I need someone to hold me to it', value: 'accountability', icon: 'B' },
+            { text: 'Total power exchange', sub: 'Complete control, no questions', value: 'tpe', icon: 'C' },
         ],
     },
     {
@@ -375,7 +375,7 @@ export default function KeyholderPage() {
     }
 
     return (<>
-        <div style={{ background: '#020202', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative' }}>
+        <div style={{ background: '#020202', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', overscrollBehavior: 'none', position: 'relative' }}>
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
@@ -664,17 +664,17 @@ export default function KeyholderPage() {
                 {/* ════════ EVERY MINUTE YOU HESITATE + VIDEO ════════ */}
                 <div id="sec-video" className="kh-section kh-section-alt" style={{ paddingTop: 60, paddingBottom: 60 }}>
                     <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
-                            Every minute you hesitate<br/>is a minute wasted unlocked.
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1rem,3vw,1.6rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>
+                            Every minute you hesitate is a minute wasted unlocked.
                         </h2>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, maxWidth: 440, margin: '0 auto' }}>
                             You already know what you want. You already know you can&rsquo;t do it alone.<br/>
                             Stop pretending otherwise.
                         </div>
                     </div>
-                    <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 480, margin: '0 auto', background: '#000' }}>
+                    <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 300, margin: '0 auto', background: '#000' }}>
                         <video
-                            src="/tribute-intro.mov"
+                            src="/tribute-intro.mov#t=0.1"
                             controls
                             playsInline
                             preload="metadata"
