@@ -375,12 +375,20 @@ export default function KeyholderPage() {
     }
 
     return (<>
-        {/* Fixed backgrounds — outside page wrapper so transforms can't break position:fixed */}
-        <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', zIndex: 0, opacity: 0.35 }} />
-        <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 75%)', zIndex: 0 }} />
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', opacity: 0.02, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
-        <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none', opacity: 0.03 }}>
-            <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
+        {/* Fixed backgrounds — outside page wrapper, GPU-composited with oversized ::after to prevent elastic zoom */}
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', transform: 'translateZ(0)', backfaceVisibility: 'hidden', overflow: 'hidden', opacity: 0.35 }}>
+            <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, background: "url('/queen-bg-mobile.jpg') center 20%/cover no-repeat" }} />
+        </div>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', transform: 'translateZ(0)', backfaceVisibility: 'hidden', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 75%)' }} />
+        </div>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', transform: 'translateZ(0)', backfaceVisibility: 'hidden', overflow: 'hidden', opacity: 0.02 }}>
+            <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
+        </div>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none', transform: 'translateZ(0)', backfaceVisibility: 'hidden', overflow: 'hidden', opacity: 0.03 }}>
+            <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50 }}>
+                <div style={{ position: 'absolute', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.8), transparent)', animation: 'scanline 8s linear infinite' }} />
+            </div>
         </div>
 
         <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative', zIndex: 1 }}>
