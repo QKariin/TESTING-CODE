@@ -1741,6 +1741,26 @@ let taskInterval: any = null;
 export function startTaskTimer(ms: number) {
     if (taskInterval) clearInterval(taskInterval);
 
+    // Task already expired — skip negative display, go straight to expiration
+    if (ms <= 0) {
+        const mainArea = document.getElementById('mainButtonsArea');
+        const activeArea = document.getElementById('activeTaskContent');
+        const readyText = document.getElementById('readyText');
+        const qmIdle = document.getElementById('qm_TaskIdle');
+        const qmActive = document.getElementById('qm_TaskActive');
+        const mobTaskText = document.getElementById('mobTaskText');
+
+        if (mainArea) mainArea.style.display = 'flex';
+        if (activeArea) activeArea.classList.add('hidden');
+        if (readyText) readyText.innerText = '-';
+        if (qmIdle) qmIdle.classList.remove('hidden');
+        if (qmActive) qmActive.classList.add('hidden');
+        if (mobTaskText) mobTaskText.innerText = '-';
+
+        import('@/actions/velo-actions').then(m => m.checkExpiredTasks()).catch(() => {});
+        return;
+    }
+
     const updateUI = (totalMs: number) => {
         const h = Math.floor(totalMs / (1000 * 60 * 60));
         const m = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
