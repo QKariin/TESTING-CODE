@@ -2144,24 +2144,36 @@ export default function DashboardPage() {
                                     )}
                                 </div>
 
-                                {/* ── VAULT LOCK REQUEST ── */}
+                                {/* ── VAULT LOCK REQUEST — BIG PANEL ── */}
                                 {vaultRequest && vaultRequest.status === 'pending' && (
-                                    <div className="dp-section" style={{ borderTop: '1px solid rgba(255,180,50,0.15)', paddingTop: 14 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                                            <span style={{ fontSize: '0.9rem' }}>⏳</span>
-                                            <span style={{ fontFamily: "'Cinzel', serif", fontSize: '0.4rem', color: 'rgba(255,180,50,0.8)', letterSpacing: 3 }}>LOCK REQUEST</span>
+                                    <div style={{ background: 'linear-gradient(170deg, rgba(255,180,50,0.06) 0%, rgba(10,8,4,0.95) 100%)', border: '1px solid rgba(255,180,50,0.3)', borderRadius: 14, margin: '0 8px 12px', padding: '20px 18px', textAlign: 'center' }}>
+                                        <div style={{ fontSize: '2rem', marginBottom: 8 }}>⏳</div>
+                                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.7rem', color: 'rgba(255,180,50,0.9)', letterSpacing: 4, fontWeight: 700, marginBottom: 4 }}>LOCK REQUEST</div>
+                                        <div style={{ width: 40, height: 1, background: 'rgba(255,180,50,0.25)', margin: '10px auto 14px' }}></div>
+
+                                        <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '1.4rem', color: '#fff', fontWeight: 700, marginBottom: 4 }}>{vaultRequest.lockDays || '?'} DAYS</div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
+                                            {vaultRequest.coinsPaid ? `${Number(vaultRequest.coinsPaid).toLocaleString()} coins paid` : 'Keyholder purchase'}
                                         </div>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>
-                                            {vaultRequest.lockDays || '?'} days — {vaultRequest.coinsPaid ? `${Number(vaultRequest.coinsPaid).toLocaleString()} coins` : 'keyholder'}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 6 }}>
+
+                                        {vaultRequest.requestedStart && (
+                                            <div style={{ background: 'rgba(255,180,50,0.08)', border: '1px solid rgba(255,180,50,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: 'rgba(255,180,50,0.5)', letterSpacing: 2, marginBottom: 4 }}>REQUESTED START</div>
+                                                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.7rem', color: 'rgba(255,180,50,0.9)', fontWeight: 700 }}>
+                                                    {new Date(vaultRequest.requestedStart).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
                                             <button disabled={vaultLoading} onClick={async () => {
                                                 setVaultLoading(true);
                                                 try {
                                                     await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'accept', sessionId: vaultRequest.sessionId }) });
                                                     setVaultRequest({ ...vaultRequest, status: 'active' });
                                                 } catch (_) {} finally { setVaultLoading(false); }
-                                            }} style={{ flex: 1, padding: '9px', background: 'rgba(80,200,80,0.1)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: 2, cursor: 'pointer' }}>ACCEPT</button>
+                                            }} style={{ width: '100%', padding: '12px', background: 'rgba(80,200,80,0.1)', border: '1px solid rgba(80,200,80,0.35)', borderRadius: 8, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel', serif", fontSize: '0.5rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>ACTIVATE LOCK NOW</button>
+
                                             <button disabled={vaultLoading} onClick={async () => {
                                                 const when = prompt('Schedule start (YYYY-MM-DD HH:MM):');
                                                 if (!when) return;
@@ -2170,24 +2182,26 @@ export default function DashboardPage() {
                                                     await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'schedule', sessionId: vaultRequest.sessionId, scheduledStart: new Date(when).toISOString() }) });
                                                     setVaultRequest({ ...vaultRequest, status: 'scheduled' });
                                                 } catch (_) {} finally { setVaultLoading(false); }
-                                            }} style={{ flex: 1, padding: '9px', background: 'rgba(100,180,255,0.08)', border: '1px solid rgba(100,180,255,0.25)', borderRadius: 6, color: 'rgba(100,180,255,0.7)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: 2, cursor: 'pointer' }}>SCHEDULE</button>
+                                            }} style={{ width: '100%', padding: '12px', background: 'rgba(100,180,255,0.06)', border: '1px solid rgba(100,180,255,0.25)', borderRadius: 8, color: 'rgba(100,180,255,0.7)', fontFamily: "'Cinzel', serif", fontSize: '0.5rem', letterSpacing: 2, cursor: 'pointer' }}>SCHEDULE DIFFERENT TIME</button>
+
                                             <button disabled={vaultLoading} onClick={async () => {
                                                 setVaultLoading(true);
                                                 try {
                                                     await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deny', sessionId: vaultRequest.sessionId }) });
                                                     setVaultRequest(null);
                                                 } catch (_) {} finally { setVaultLoading(false); }
-                                            }} style={{ flex: 1, padding: '9px', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.6)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: 2, cursor: 'pointer' }}>DENY</button>
+                                            }} style={{ width: '100%', padding: '10px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>DENY & REFUND</button>
                                         </div>
                                     </div>
                                 )}
-                                {vaultRequest && vaultRequest.status !== 'pending' && (
-                                    <div className="dp-section" style={{ borderTop: '1px solid rgba(197,160,89,0.06)', paddingTop: 10 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{ fontSize: '0.8rem' }}>{vaultRequest.status === 'active' ? '🔒' : '📅'}</span>
-                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', color: vaultRequest.status === 'active' ? '#c5a059' : 'rgba(100,180,255,0.7)', letterSpacing: 1 }}>
-                                                {vaultRequest.status === 'active' ? 'LOCKED' : 'SCHEDULED'} — {vaultRequest.lockDays}d
-                                            </span>
+                                {vaultRequest && vaultRequest.status !== 'pending' && vaultRequest.status && (
+                                    <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, margin: '0 8px 12px', padding: '14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <span style={{ fontSize: '1.2rem' }}>{vaultRequest.status === 'active' ? '🔒' : '📅'}</span>
+                                        <div>
+                                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.5rem', color: vaultRequest.status === 'active' ? '#c5a059' : 'rgba(100,180,255,0.8)', letterSpacing: 2, fontWeight: 700 }}>
+                                                {vaultRequest.status === 'active' ? 'LOCKED' : 'SCHEDULED'}
+                                            </div>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>{vaultRequest.lockDays}d sentence</div>
                                         </div>
                                     </div>
                                 )}

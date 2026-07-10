@@ -5447,6 +5447,12 @@ export async function openVaultLockRequest() {
                 <button id="_vaultWaitQueen" style="width:100%;padding:16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
             </div>
 
+            <div id="_vaultDatePicker" style="display:none;margin-top:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;">
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:10px;letter-spacing:1px;">When should your lock begin?</div>
+                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:12px;border-radius:8px;border:1px solid rgba(197,160,89,0.3);background:rgba(0,0,0,0.5);color:#c5a059;font-family:Orbitron,sans-serif;font-size:0.75rem;outline:none;box-sizing:border-box;" />
+                <button id="_vaultSubmitDate" style="width:100%;margin-top:12px;padding:14px;border-radius:10px;background:rgba(197,160,89,0.1);border:1px solid rgba(197,160,89,0.35);color:#c5a059;font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;font-weight:700;">SUBMIT REQUEST</button>
+            </div>
+
             <button id="_vaultLockClose" style="margin-top:18px;background:none;border:none;color:rgba(255,255,255,0.2);font-family:Orbitron,sans-serif;font-size:0.5rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
         </div>
     `;
@@ -5461,8 +5467,26 @@ export async function openVaultLockRequest() {
     // Lock Now (instant)
     ov.querySelector('#_vaultLockNow')!.addEventListener('click', () => _submitVaultLock('apply-instant'));
 
-    // Wait for Queen (pending)
-    ov.querySelector('#_vaultWaitQueen')!.addEventListener('click', () => _submitVaultLock('apply'));
+    // Wait for Queen — show date picker
+    ov.querySelector('#_vaultWaitQueen')!.addEventListener('click', () => {
+        const dp = ov.querySelector('#_vaultDatePicker') as HTMLElement;
+        if (dp) {
+            dp.style.display = 'block';
+            // Set default to tomorrow 9am
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(9, 0, 0, 0);
+            const inp = ov.querySelector('#_vaultDateInput') as HTMLInputElement;
+            if (inp) inp.value = tomorrow.toISOString().slice(0, 16);
+        }
+    });
+
+    // Submit date request
+    ov.querySelector('#_vaultSubmitDate')!.addEventListener('click', () => {
+        const inp = ov.querySelector('#_vaultDateInput') as HTMLInputElement;
+        const requestedStart = inp?.value ? new Date(inp.value).toISOString() : null;
+        _submitVaultLock('apply', requestedStart);
+    });
 }
 
 function _closeVaultOverlay() {
@@ -5470,7 +5494,7 @@ function _closeVaultOverlay() {
     if (ov) { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.2s'; setTimeout(() => ov.remove(), 200); }
 }
 
-async function _submitVaultLock(action: string) {
+async function _submitVaultLock(action: string, requestedStart?: string | null) {
     const tier = (window as any)._vaultSelectedTier || '7';
     const tierData = LOCK_TIERS.find(t => t.key === tier);
     if (!tierData) return;
@@ -5495,10 +5519,12 @@ async function _submitVaultLock(action: string) {
         wallet,
         onConfirm: async () => {
             try {
+                const body: any = { action, duration: tierData.days };
+                if (requestedStart) body.requestedStart = requestedStart;
                 const res = await fetch('/api/vault/apply', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action, duration: tierData.days }),
+                    body: JSON.stringify(body),
                 });
                 const data = await res.json();
                 if (data.error) {
@@ -5571,22 +5597,23 @@ function _showVaultStatus(data: any) {
 }
 
 export function _updateVaultLockButton(data: { active: boolean; status?: string; lockDays?: number } | null) {
-    const btn = document.getElementById('vaultLockBtn');
-    const mobBtn = document.getElementById('mobVaultLockBtn');
+    const btn = document.getElementById('vaultLockBtn') as HTMLButtonElement | null;
+    const mobBtn = document.getElementById('mobVaultLockBtn') as HTMLButtonElement | null;
 
     if (!data || !data.active) {
-        if (btn) { btn.textContent = 'REQUEST LOCK'; btn.style.borderColor = 'rgba(197,160,89,0.3)'; btn.style.color = '#c5a059'; }
-        if (mobBtn) { mobBtn.textContent = 'REQUEST LOCK'; mobBtn.style.borderColor = 'rgba(197,160,89,0.3)'; mobBtn.style.color = '#c5a059'; }
+        if (btn) { btn.textContent = 'REQUEST LOCK'; btn.style.borderColor = 'rgba(197,160,89,0.3)'; btn.style.color = '#c5a059'; btn.style.opacity = '1'; btn.disabled = false; }
+        if (mobBtn) { mobBtn.textContent = 'REQUEST LOCK'; mobBtn.style.borderColor = 'rgba(197,160,89,0.3)'; mobBtn.style.color = '#c5a059'; mobBtn.style.opacity = '1'; mobBtn.disabled = false; }
         return;
     }
 
-    const labels: Record<string, string> = { active: '🔒 LOCKED', pending: '⏳ PENDING', scheduled: '📅 SCHEDULED' };
+    const labels: Record<string, string> = { active: '🔒 LOCKED', pending: '⏳ AWAITING QUEEN', scheduled: '📅 SCHEDULED' };
     const colors: Record<string, string> = { active: '#c5a059', pending: 'rgba(255,180,50,0.8)', scheduled: 'rgba(100,180,255,0.8)' };
     const label = labels[data.status || ''] || 'LOCK STATUS';
     const color = colors[data.status || ''] || '#c5a059';
+    const isLocked = data.status === 'pending' || data.status === 'scheduled' || data.status === 'active';
 
-    if (btn) { btn.textContent = label; btn.style.borderColor = color + '55'; btn.style.color = color; }
-    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = color + '55'; mobBtn.style.color = color; }
+    if (btn) { btn.textContent = label; btn.style.borderColor = color + '55'; btn.style.color = color; btn.style.opacity = isLocked ? '0.7' : '1'; btn.disabled = isLocked; }
+    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = color + '55'; mobBtn.style.color = color; mobBtn.style.opacity = isLocked ? '0.7' : '1'; mobBtn.disabled = isLocked; }
 }
 
 export async function checkVaultLockStatus() {
