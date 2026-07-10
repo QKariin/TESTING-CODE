@@ -9628,8 +9628,18 @@ export function _applyPaywall(paywall: any, memberId: string) {
         const reasonEl = document.getElementById('paywallReason');
         const amountEl = document.getElementById('paywallAmount');
         const payBtn   = document.getElementById('paywallPayBtn');
+        const cryptoBtn = document.getElementById('paywallCryptoBtn');
         if (reasonEl) reasonEl.textContent = paywall.reason || '';
         if (amountEl) amountEl.textContent  = `€${Number(paywall.amount).toFixed(2)}`;
+
+        // Crypto pay button
+        if (cryptoBtn) {
+            cryptoBtn.onclick = () => {
+                const amount = Number(paywall.amount) || 0;
+                _showPaywallCryptoPicker(amount, memberId, overlay);
+            };
+        }
+
         if (payBtn) {
             payBtn.onclick = async () => {
                 payBtn.textContent = 'LOADING...';
@@ -9738,6 +9748,135 @@ export function _applyPaywall(paywall: any, memberId: string) {
     } else {
         overlay.style.display = 'none';
         document.body.style.overflow = '';
+    }
+}
+
+// ─── PAYWALL CRYPTO ──────────────────────────────────────────────────────────
+
+const PAYWALL_CRYPTO_OPTIONS = [
+    { ticker: 'trc20/usdt', label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮' },
+    { ticker: 'btc', label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿' },
+    { ticker: 'eth', label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ' },
+    { ticker: 'ltc', label: 'LITECOIN', sub: 'LTC · ~5 min', color: '#bfbbbb', icon: 'Ł' },
+];
+
+function _showPaywallCryptoPicker(amount: number, memberId: string, paywallOverlay: HTMLElement) {
+    const existing = document.getElementById('_paywallCryptoPicker');
+    if (existing) existing.remove();
+
+    const isMob = window.innerWidth < 768;
+    const overlay = document.createElement('div');
+    overlay.id = '_paywallCryptoPicker';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:9999999;display:flex;align-items:center;justify-content:center;';
+
+    const box = document.createElement('div');
+    box.style.cssText = `background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(160,100,220,0.2);border-radius:${isMob ? '14px' : '18px'};padding:${isMob ? '32px 24px' : '40px 44px'};max-width:${isMob ? '340px' : '420px'};width:90%;display:flex;flex-direction:column;align-items:center;gap:14px;`;
+
+    let btns = '';
+    for (const opt of PAYWALL_CRYPTO_OPTIONS) {
+        btns += `<button data-ticker="${opt.ticker}" style="width:100%;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid ${opt.color}33;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.2s;">
+            <div style="width:38px;height:38px;border-radius:50%;background:${opt.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:${opt.color};">${opt.icon}</div>
+            <div style="text-align:left;">
+                <div style="font-family:Cinzel,serif;font-size:0.75rem;color:${opt.color};letter-spacing:2px;font-weight:600;">${opt.label}</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:2px;">${opt.sub}</div>
+            </div>
+        </button>`;
+    }
+
+    box.innerHTML = `
+        <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.8rem' : '0.95rem'};color:#d4b0f0;letter-spacing:5px;font-weight:700;">SELECT CRYPTO</div>
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(160,100,220,0.3),transparent);"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:3px;">€${amount.toFixed(2)}</div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:8px;">${btns}</div>
+        <button id="_pwCryptoCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:3px;padding:8px 20px;cursor:pointer;margin-top:4px;">CANCEL</button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    box.querySelector('#_pwCryptoCancel')!.addEventListener('click', () => overlay.remove());
+
+    box.querySelectorAll('button[data-ticker]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const ticker = (btn as HTMLElement).dataset.ticker!;
+            overlay.remove();
+            await _processPaywallCrypto(amount, ticker, memberId, paywallOverlay);
+        });
+    });
+}
+
+async function _processPaywallCrypto(amount: number, ticker: string, memberId: string, paywallOverlay: HTMLElement) {
+    // Show loading
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = '_paywallCryptoLoading';
+    loadingOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999999;display:flex;align-items:center;justify-content:center;';
+    loadingOverlay.innerHTML = '<div style="text-align:center;"><div style="font-family:Cinzel,serif;font-size:1rem;color:#d4b0f0;letter-spacing:5px;margin-bottom:12px;">CRYPTO PAYMENT</div><div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:4px;">PREPARING...</div></div>';
+    document.body.appendChild(loadingOverlay);
+
+    try {
+        const res = await fetch('/api/paywall/crypto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker, memberId }),
+        });
+        const data = await res.json();
+        if (!data.address) {
+            loadingOverlay.remove();
+            alert('Could not create crypto payment. Try again.');
+            return;
+        }
+
+        // Show payment details
+        const isMob = window.innerWidth < 768;
+        loadingOverlay.innerHTML = `
+            <div style="background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(160,100,220,0.2);border-radius:${isMob ? '14px' : '18px'};padding:${isMob ? '28px 20px' : '40px 44px'};max-width:${isMob ? '340px' : '420px'};width:90%;text-align:center;">
+                <div style="font-family:Cinzel,serif;font-size:0.95rem;color:#d4b0f0;letter-spacing:5px;font-weight:700;margin-bottom:16px;">CRYPTO PAYMENT</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:3px;margin-bottom:20px;">€${amount.toFixed(2)}</div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(160,100,220,0.15);border-radius:10px;padding:16px;margin-bottom:16px;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:3px;margin-bottom:8px;">SEND EXACTLY</div>
+                    <div style="font-family:'Courier New',monospace;font-size:1.1rem;color:#fff;word-break:break-all;margin-bottom:12px;">${data.amount}</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:3px;margin-bottom:8px;">TO ADDRESS</div>
+                    <div style="font-family:'Courier New',monospace;font-size:0.65rem;color:rgba(255,255,255,0.7);word-break:break-all;user-select:all;">${data.address}</div>
+                </div>
+                <div id="_pwCryptoStatus" style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.35);letter-spacing:3px;">WAITING FOR PAYMENT...</div>
+                <button id="_pwCryptoClose" style="background:none;border:none;color:rgba(255,255,255,0.15);font-family:Rajdhani,sans-serif;font-size:0.55rem;letter-spacing:3px;padding:12px 20px;cursor:pointer;margin-top:16px;">CLOSE</button>
+            </div>
+        `;
+
+        loadingOverlay.querySelector('#_pwCryptoClose')!.addEventListener('click', () => loadingOverlay.remove());
+
+        // Poll for confirmation
+        let polls = 0;
+        const pollInterval = setInterval(async () => {
+            polls++;
+            if (polls > 120) { clearInterval(pollInterval); return; }
+            try {
+                const r = await fetch('/api/paywall/crypto-verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentId: data.paymentId, memberId }),
+                });
+                const v = await r.json();
+                if (v.paid) {
+                    clearInterval(pollInterval);
+                    const statusEl = document.getElementById('_pwCryptoStatus');
+                    if (statusEl) {
+                        statusEl.style.color = '#4caf50';
+                        statusEl.textContent = '✓ PAYMENT CONFIRMED — UNLOCKING...';
+                    }
+                    setTimeout(() => {
+                        loadingOverlay.remove();
+                        paywallOverlay.style.display = 'none';
+                        document.body.style.overflow = '';
+                        window.location.reload();
+                    }, 1500);
+                }
+            } catch {}
+        }, 5000);
+    } catch (e: any) {
+        loadingOverlay.remove();
+        alert('Payment error: ' + e.message);
     }
 }
 

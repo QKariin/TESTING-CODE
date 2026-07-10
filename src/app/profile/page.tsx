@@ -963,10 +963,17 @@ export default function ProfilePage() {
                     <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                     <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
                 </div>
-                <button id="paywallPayBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}>
-                    PAY NOW
-                </button>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <button id="paywallPayBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        PAY WITH CARD
+                    </button>
+                    <button id="paywallCryptoBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        PAY WITH CRYPTO
+                    </button>
+                </div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Card &amp; Crypto accepted</div>
             </div>
             {/* Payment Element mounts here */}
             <div id="paywallEmbedContainer" style={{ display: 'none', width: '100%', maxWidth: 480 }}>
