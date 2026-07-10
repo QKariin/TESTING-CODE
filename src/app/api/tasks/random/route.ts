@@ -32,22 +32,37 @@ export async function GET(req: NextRequest) {
                 ? JSON.parse(taskRow.taskdom_active_task)
                 : taskRow.taskdom_active_task;
 
-            const assignedAt = new Date(activeTask.assigned_at).getTime();
-            const now = new Date().getTime();
-            const hoursPassed = (now - assignedAt) / (1000 * 60 * 60);
-
-            // Admin-forced tasks (category "Directive") are NEVER overwritten by random picks.
-            // They stay until the subject completes/submits them or admin changes them.
+            const now = Date.now();
+            const assignedAt = activeTask.assigned_at ? new Date(activeTask.assigned_at).getTime() : now;
+            const endTime = activeTask.endTime || (assignedAt + 24 * 60 * 60 * 1000);
+            const timeLeftMs = endTime - now;
             const isAdminForced = activeTask.category === 'Directive';
 
-            if (isAdminForced || !activeTask.assigned_at || hoursPassed < 24) {
+            // Task expired — clear it, deduct 300 coins, let them request a new one
+            if (timeLeftMs <= 0 && !isAdminForced) {
+                // Clear expired task in DB (checkExpiredTasks handles penalty but run inline too)
+                const profileId = profile?.ID || memberEmail;
+                await supabaseAdmin.from('tasks').update({
+                    taskdom_active_task: null,
+                    taskdom_pending_state: null,
+                }).eq('ID', profileId);
+                // Deduct 300 coins
+                if (profile) {
+                    const newWallet = Math.max(0, Number(profile.wallet || 0) - 300);
+                    await supabaseAdmin.from('profiles').update({ wallet: newWallet }).eq('ID', profile.ID);
+                    try {
+                        await DbService.sendMessage(profile.member_id || memberEmail,
+                            `TASK EXPIRED — 300 <i class="fas fa-coins" style="color:#c5a059;"></i> PENALTY.`,
+                            'system');
+                    } catch (_) {}
+                }
+                // Fall through to assign new task or return null
+            } else if (timeLeftMs > 0 || isAdminForced) {
                 return NextResponse.json({
                     success: true,
                     task: activeTask,
                     isReassigned: false,
-                    timeLeftMs: isAdminForced
-                        ? (activeTask.endTime ? activeTask.endTime - now : 24 * 60 * 60 * 1000)
-                        : (24 * 60 * 60 * 1000) - (now - assignedAt)
+                    timeLeftMs: Math.max(0, timeLeftMs),
                 });
             }
         }
