@@ -11,7 +11,7 @@ function _el(): HTMLElement | null { return document.getElementById('mobTributeC
 function _email(): string { const s = getState(); return s?.email || s?.memberId || ''; }
 function _wallet(): number { return getState()?.wallet || 0; }
 
-const _boostBtn = `<button onclick="window.closeStandaloneTribute();if(window.goToExchequer)window.goToExchequer();" style="padding:9px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span></button>`;
+const _boostBtn = `<button onclick="window._showBoostWallet?window._showBoostWallet():(window.closeStandaloneTribute(),window.goToExchequer&&window.goToExchequer());" style="padding:9px 24px;background:linear-gradient(135deg,rgba(197,160,89,0.12),rgba(197,160,89,0.04));border:1px solid rgba(197,160,89,0.3);border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;"><span style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:#c5a059;letter-spacing:2px;">BOOST WALLET</span></button>`;
 
 function _header(subtitle: string) {
     return `<div style="text-align:center;padding-top:10px;">
@@ -467,7 +467,7 @@ function _showWishlist() {
         <div style="overflow-y:auto;scrollbar-width:none;height:100%;padding:0 4px;">
             ${_header('QUEEN\'S WISHLIST')}
             <div id="standaloneWishlistGrid" style="margin-top:16px;"></div>
-            ${_backFooter()}
+            ${_menuFooter()}
         </div>`;
     const grid = document.getElementById('standaloneWishlistGrid');
     if (grid && (window as any)._renderTributeGridMobile) {

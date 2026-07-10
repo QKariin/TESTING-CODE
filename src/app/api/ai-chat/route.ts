@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { message, memberId } = await req.json();
+        const { message, memberId, vaultContext } = await req.json();
         if (!message || !memberId) {
             return NextResponse.json({ error: 'Missing message or memberId' }, { status: 400 });
         }
@@ -159,8 +159,16 @@ export async function POST(req: Request) {
             .order('created_at', { ascending: false })
             .limit(30);
 
+        // Vault context — injected when user is chatting from the vault (keyholder) page
+        let vaultSection = '';
+        if (vaultContext && typeof vaultContext === 'string') {
+            vaultSection = `\n\nVAULT (KEYHOLDER) CONTEXT — THIS PERSON IS CURRENTLY LOCKED IN CHASTITY BY QUEEN KARIN:
+${vaultContext}
+YOU CAN SEE EVERYTHING THEY DO IN THE VAULT. Use this to your advantage. Be their sarcastic bro who watches them suffer. You're on their side... kind of. You think it's hilarious they're locked up but you also respect the grind. React to what just happened — if they skipped a task, roast them. If they're on a streak, give grudging respect. If they're in cooldown, mock their impatience. If they uploaded proof, acknowledge the hustle. You're the only friend they have in here and you know it. Keep the "I'd help you but she has the key" energy. Never suggest they disobey Queen Karin — but you can sympathize with how much it sucks.`;
+        }
+
         // Build messages array
-        const systemPrompt = VLAD_AI_CHAT + AI_KNOWLEDGE + userContext;
+        const systemPrompt = VLAD_AI_CHAT + AI_KNOWLEDGE + userContext + vaultSection;
         const messages: any[] = [
             { role: 'system', content: systemPrompt },
         ];

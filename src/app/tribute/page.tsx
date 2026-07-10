@@ -544,11 +544,27 @@ export default function TributePage() {
 
                 .review-card {
                     transition: transform 0.4s ease, box-shadow 0.4s ease;
+                    overflow: hidden;
                 }
                 .review-card:hover {
                     transform: translateY(-3px);
                     box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 1px rgba(197,160,89,0.2);
                 }
+                .review-avatar {
+                    width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+                    border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+                }
+                .review-avatar-placeholder {
+                    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+                    display: flex; align-items: center; justify-content: center;
+                    font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 600;
+                }
+                .review-header {
+                    display: flex; align-items: center; gap: 14px;
+                }
+                .review-stars { display: flex; gap: 2px; margin-bottom: 2px; }
+                .review-body { overflow: hidden; }
+                .review-body img, .review-body video { max-width: 100%; height: auto; border-radius: 8px; display: block; }
 
                 .review-body.clamped p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
                 .review-read-more { display: block; width: 100%; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-family: Orbitron, sans-serif; letter-spacing: 3px; text-align: left; }

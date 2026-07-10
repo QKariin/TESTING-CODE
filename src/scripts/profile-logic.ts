@@ -450,7 +450,9 @@ function renderGridMobile(gridEl: HTMLElement) {
     // Set the grid container itself
     gridEl.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 10px 24px;overflow-y:auto;flex:1;align-content:start;align-items:start;width:100%;min-height:0;box-sizing:border-box;';
 
-    gridEl.innerHTML = globalTributes.map(t => {
+    const items = (window as any)._vaultHideCrowdfund ? globalTributes.filter(t => !t.is_crowdfund) : globalTributes;
+
+    gridEl.innerHTML = items.map(t => {
         const img = getOptimizedUrl(t.image, 400) || '';
 
         if (t.is_crowdfund) {
@@ -2488,26 +2490,36 @@ export async function updateRoutineWidget() {
         const mobDone = document.getElementById('routineDoneMsg');
         const mobTime = document.getElementById('routineTimeMsg');
 
+        // ── Rank gate: Hall Boy cannot use routine ──
+        const _st = getState();
+        const _raw = (window as any).__currentProfileRaw || _st.raw || _st;
+        const rankForRoutine = ((_st as any).rank || _raw?.hierarchy || 'Hall Boy').toLowerCase().trim();
+
+        // Video uploads: Butler and above only
+        const VIDEO_RANKS = ['butler', 'chamberlain', 'secretary', "queen's champion"];
+        const canUploadVideo = VIDEO_RANKS.includes(rankForRoutine);
+
         // iOS-safe routine upload: create input dynamically so .click() fires
         // synchronously within the user gesture (same fix as profile photo)
         const triggerRoutineFilePick = () => {
             if ((window as any).__routineSubmittedToday) return;
             const inp = document.createElement('input');
             inp.type = 'file';
-            inp.accept = 'image/*,video/*';
+            inp.accept = canUploadVideo ? 'image/*,video/*' : 'image/*';
             inp.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
             document.body.appendChild(inp);
             inp.onchange = () => {
                 document.body.removeChild(inp);
-                if (inp.files?.[0]) handleRoutineUpload(inp);
+                const file = inp.files?.[0];
+                if (!file) return;
+                if (!canUploadVideo && file.type.startsWith('video/')) {
+                    showUploadNotice('<div style="font-family:Cinzel,serif;font-size:0.7rem;color:rgba(197,160,89,0.7);letter-spacing:2px;padding:12px 16px;background:rgba(139,0,0,0.15);border:1px solid rgba(139,0,0,0.3);border-radius:8px;line-height:1.6;">Video uploads are reserved for <b>Butler</b> rank and above.<br><span style="font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">Prove your devotion first.</span></div>');
+                    return;
+                }
+                handleRoutineUpload(inp);
             };
             inp.click();
         };
-
-        // ── Rank gate: Hall Boy cannot use routine ──
-        const _st = getState();
-        const _raw = (window as any).__currentProfileRaw || _st.raw || _st;
-        const rankForRoutine = ((_st as any).rank || _raw?.hierarchy || 'Hall Boy').toLowerCase().trim();
         if (rankForRoutine === 'hall boy') {
             if (display) display.textContent = 'Locked until Footman';
             if (mobDisplay) mobDisplay.textContent = 'Locked until Footman';
@@ -2709,10 +2721,18 @@ export function triggerTaskEvidencePick() {
 }
 
 async function submitTaskEvidence(file: File, isRoutine: boolean = false): Promise<boolean> {
-    // Enforce rank-based video duration limit on ALL upload paths
+    // Enforce rank-based video restrictions on ALL upload paths
     if (isVideo(file)) {
         const _raw = (window as any).__currentProfileRaw || getState().raw || getState();
         const _rank = ((getState() as any).rank || _raw?.hierarchy || 'Hall Boy').toLowerCase().trim();
+
+        // Routine uploads: video only for Butler and above
+        const videoRoutineRanks = ['butler', 'chamberlain', 'secretary', "queen's champion"];
+        if (isRoutine && !videoRoutineRanks.includes(_rank)) {
+            showUploadNotice('<div style="font-family:Cinzel,serif;font-size:0.7rem;color:rgba(197,160,89,0.7);letter-spacing:2px;padding:12px 16px;background:rgba(139,0,0,0.15);border:1px solid rgba(139,0,0,0.3);border-radius:8px;line-height:1.6;">Video uploads are reserved for <b>Butler</b> rank and above.<br><span style="font-size:0.6rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">Prove your devotion first.</span></div>');
+            return false;
+        }
+
         let maxSecs = 120;
         if (_rank === 'hall boy') maxSecs = 30;
         else if (_rank === 'footman') maxSecs = 45;
@@ -3159,7 +3179,7 @@ async function _pollMissedMessages() {
             if (m.created_at) _lastChatMsgTimestamp = m.created_at;
 
             if (m.metadata?.isAI) return; // AI messages only in AI mode
-            if ((m.content || '').startsWith('TOUR_REPORT::') || (m.content || '').startsWith('APP_INSTALL::')) return; // Queen-only
+            if ((m.content || '').startsWith('TOUR_REPORT::') || (m.content || '').startsWith('APP_INSTALL::') || (m.content || '').startsWith('VAULT_ATTENTION::')) return; // Queen-only
             if (isSystemMessage(m)) {
                 updateSystemTicker(m);
                 appendSystemLog(m);
@@ -3268,8 +3288,8 @@ export async function initChatSystem() {
             if (!matchesUser) return;
             // Skip AI messages in regular chat — they only show in AI mode
             if (msg.metadata?.isAI) return;
-            // Tour reports & app installs are Queen-only — never show to the user
-            if ((msg.content || '').startsWith('TOUR_REPORT::') || (msg.content || '').startsWith('APP_INSTALL::')) return;
+            // Tour reports & app installs & vault attention are Queen-only — never show to the user
+            if ((msg.content || '').startsWith('TOUR_REPORT::') || (msg.content || '').startsWith('APP_INSTALL::') || (msg.content || '').startsWith('VAULT_ATTENTION::')) return;
             const sender = (msg.sender_email || msg.sender || '').toLowerCase();
 
             if (isSystemMessage(msg)) {
@@ -3755,7 +3775,7 @@ export async function loadChatHistory(memberId: string) {
             _lastRenderedChatTs = 0;
             const allDisplay = messages.filter((m: any) => m.content && m.content.trim());
             const sysDisplay = allDisplay.filter((m: any) => isSystemMessage(m));
-            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m) && !m.metadata?.isAI && !(m.content || '').startsWith('TOUR_REPORT::') && !(m.content || '').startsWith('APP_INSTALL::'));
+            const chatDisplay = allDisplay.filter((m: any) => !isSystemMessage(m) && !m.metadata?.isAI && !(m.content || '').startsWith('TOUR_REPORT::') && !(m.content || '').startsWith('APP_INSTALL::') && !(m.content || '').startsWith('VAULT_ATTENTION::'));
 
             // Populate system log from history
             if (sysDisplay.length > 0) {

@@ -786,6 +786,14 @@ html, body {
 .review-body {
     padding: 18px 20px 22px;
     background: linear-gradient(160deg, rgba(12,10,6,0.7), rgba(6,5,3,0.8));
+    overflow: hidden;
+}
+.review-body img,
+.review-body video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
 }
 .review-body p {
     font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;

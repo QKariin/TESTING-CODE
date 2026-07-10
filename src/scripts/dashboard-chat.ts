@@ -33,6 +33,7 @@ interface ChatCacheEntry {
     lastTimestamp: string | null;
     dedupIds: Set<string>;
     cachedAt: number;
+    draftInput: string;    // unsent message draft
 }
 const _chatCache = new Map<string, ChatCacheEntry>();
 const CACHE_MAX_ENTRIES = 30; // keep last 30 conversations in memory
@@ -110,6 +111,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     const u = users.find((x: any) => x.memberId === memberIdOrEmail || x.id === memberIdOrEmail || x.member_id === memberIdOrEmail);
     const activeId = u?.memberId || memberIdOrEmail;
 
+    // If we're already on this user's chat, don't re-init (preserves input draft)
+    if (activeChatEmail === activeId && chatChannel) return;
+
     // ── KILL everything from previous user ──
     // Increment generation — every old callback will see a stale number and bail
     const gen = ++_chatGen;
@@ -128,15 +132,14 @@ export async function initDashboardChat(memberIdOrEmail: string) {
     const tickerEl = document.getElementById('dashSystemTicker');
     if (tickerEl) tickerEl.innerHTML = '';
 
-    // Clear input from previous chat
-    const inp = document.getElementById('adminInp') as HTMLTextAreaElement;
-    if (inp) { inp.value = ''; inp.style.height = 'auto'; inp.style.color = ''; inp.style.borderColor = ''; }
-
     activeChatEmail = activeId;
 
     // ── Restore from cache or fetch fresh ──
     const cached = _chatCache.get(activeId.toLowerCase());
     const cacheAge = cached ? Date.now() - cached.cachedAt : Infinity;
+
+    // Restore or clear input draft
+    const inp = document.getElementById('adminInp') as HTMLTextAreaElement | null;
 
     if (cached && cacheAge < 5 * 60 * 1000) {
         lastChatMsgId = cached.lastMsgId;
@@ -146,8 +149,11 @@ export async function initDashboardChat(memberIdOrEmail: string) {
 
         const b = document.getElementById('adminChatBox');
         if (b) { b.innerHTML = cached.html; _attachImgScrollHandlers(b); forceBottom(); }
-        const logEl = document.getElementById('dashSystemLogContent');
-        if (logEl && cached.sysHtml) { logEl.innerHTML = cached.sysHtml; logEl.scrollTop = logEl.scrollHeight; }
+        const logEl2 = document.getElementById('dashSystemLogContent');
+        if (logEl2 && cached.sysHtml) { logEl2.innerHTML = cached.sysHtml; logEl2.scrollTop = logEl2.scrollHeight; }
+
+        // Restore draft message for this chat
+        if (inp) { inp.value = cached.draftInput || ''; inp.style.height = 'auto'; inp.style.color = ''; inp.style.borderColor = ''; }
 
         pollNewMessages(activeId, gen);
     } else {
@@ -158,6 +164,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
 
         const b = document.getElementById('adminChatBox');
         if (b) b.innerHTML = '<div style="color:#444; text-align:center; padding:20px; font-family:Rajdhani,sans-serif; font-size:0.7rem;">ESTABLISHING ENCRYPTED LINK...</div>';
+
+        // No cached draft — clear input
+        if (inp) { inp.value = ''; inp.style.height = 'auto'; inp.style.color = ''; inp.style.borderColor = ''; }
 
         await loadDashboardChatHistory(activeId, gen);
     }
@@ -194,6 +203,7 @@ function _saveChatToCache() {
     const logEl = document.getElementById('dashSystemLogContent');
     if (!b) return;
 
+    const inp = document.getElementById('adminInp') as HTMLTextAreaElement | null;
     const entry: ChatCacheEntry = {
         html: b.innerHTML,
         sysHtml: logEl?.innerHTML || '',
@@ -201,6 +211,7 @@ function _saveChatToCache() {
         lastTimestamp: lastChatMsgTimestamp,
         dedupIds: new Set(_renderedMsgIds),
         cachedAt: Date.now(),
+        draftInput: inp?.value || '',
     };
     _chatCache.set(activeChatEmail.toLowerCase(), entry);
 
@@ -216,7 +227,7 @@ function _saveChatToCache() {
 }
 
 /** Force-reconnect the chat channel + poll immediately. Called on tab visibility restore. */
-export function reconnectDashboardChat() {
+export async function reconnectDashboardChat() {
     if (!activeChatEmail) return;
     const activeId = activeChatEmail;
 
@@ -225,9 +236,14 @@ export function reconnectDashboardChat() {
         chatChannel.state === 'closed';
 
     if (needsFullReinit) {
+        // Save draft before reconnecting so it survives the re-init
+        const inp = document.getElementById('adminInp') as HTMLTextAreaElement | null;
+        const draft = inp?.value || '';
         _chatCache.delete(activeId.toLowerCase());
         activeChatEmail = null;
-        initDashboardChat(activeId);
+        await initDashboardChat(activeId);
+        // Restore draft after reconnect
+        if (draft && inp) inp.value = draft;
         return;
     }
 
@@ -618,6 +634,50 @@ function renderToHtml(m: any) {
                             </div>
                             <div style="font-family:Cinzel,serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:2px;">${name}</div>
                             <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(74,222,128,0.45);margin-top:6px;">installed the app</div>
+                        </div>
+                    </div>
+                    ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}
+                </div>`;
+        } catch (_) { /* fall through */ }
+    }
+
+    // ── Vault Attention Card (Queen eyes only) ──
+    if (content.startsWith('VAULT_ATTENTION::')) {
+        try {
+            const d = JSON.parse(content.replace('VAULT_ATTENTION::', ''));
+            const name = purifier.sanitize(d.memberName || 'Unknown');
+            const taskLabel = purifier.sanitize(d.taskLabel || 'Unknown Task');
+            const taskType = purifier.sanitize(d.taskType || 'unknown');
+            const completed = d.completed;
+            const skipped = d.skipped;
+            const result = d.result ? purifier.sanitize(d.result) : null;
+            const statusColor = skipped ? '#ff4444' : completed ? '#4ade80' : 'rgba(197,160,89,0.7)';
+            const statusText = skipped ? 'SKIPPED' : completed ? 'COMPLETED' : 'ASSIGNED';
+            const statusBg = skipped ? 'rgba(255,60,60,0.04)' : completed ? 'rgba(74,222,128,0.04)' : 'rgba(197,160,89,0.04)';
+            const statusBorder = skipped ? 'rgba(255,60,60,0.2)' : completed ? 'rgba(74,222,128,0.2)' : 'rgba(197,160,89,0.15)';
+
+            const typeIcons: Record<string, string> = {
+                spin: '&#9819;', tribute: '&#9733;', proof: '&#9670;',
+                coinflip: '&#9673;', patience: '&#9201;', confess: '&#9998;',
+            };
+            const icon = typeIcons[taskType] || '&#9670;';
+
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:300px;width:70vw;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0a0608 0%,#120a0c 50%,#0a0608 100%);border:1px solid ${statusBorder};box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 20px rgba(139,0,0,0.06);">
+                        <div style="padding:16px 18px 12px;text-align:center;border-bottom:1px solid rgba(139,0,0,0.1);">
+                            <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                <span style="font-size:0.85rem;color:rgba(139,0,0,0.5);">${icon}</span>
+                                <span style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:rgba(139,0,0,0.5);letter-spacing:4px;">VAULT ATTENTION</span>
+                            </div>
+                            <div style="font-family:Cinzel,serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:4px;">${name}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);">${taskLabel}</div>
+                        </div>
+                        <div style="padding:14px 18px;text-align:center;">
+                            <div style="display:inline-block;padding:5px 14px;border-radius:6px;background:${statusBg};border:1px solid ${statusBorder};">
+                                <span style="font-family:Orbitron,sans-serif;font-size:0.42rem;color:${statusColor};letter-spacing:2px;font-weight:700;">${statusText}</span>
+                            </div>
+                            ${result ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:10px;">${result}</div>` : ''}
                         </div>
                     </div>
                     ${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}

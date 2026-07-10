@@ -55,6 +55,7 @@ export async function getCaller(): Promise<{ email: string; id: string } | null>
 }
 
 export function isCEO(email: string): boolean {
+    if (IS_DEV) return true;
     return CEO_EMAILS.includes(email.toLowerCase());
 }
 

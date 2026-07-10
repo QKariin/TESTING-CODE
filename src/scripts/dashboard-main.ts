@@ -84,13 +84,10 @@ export function initDashboard() {
         if (!currId) return;
         const currUser = users.find((x: any) => x.memberId === currId);
         if (!isMemberOnline(currUser?.member_id || '')) return;
-        // Member just came online while admin has them open - wake everything up
-        const [{ updateDetail }, { initDashboardChat }] = await Promise.all([
-            import('./dashboard-users'),
-            import('./dashboard-chat'),
-        ]);
+        // Member just came online while admin has them open — update detail only
+        // Do NOT re-init chat — it wipes the input draft
+        const { updateDetail } = await import('./dashboard-users');
         if (currUser) updateDetail(currUser);
-        initDashboardChat(currId);
     });
 
     console.log('Dashboard initialized. ID:', dayCode);

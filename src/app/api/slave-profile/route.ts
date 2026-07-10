@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     if (!email) return NextResponse.json({ error: 'Email is required' }, { status: 400 });
 
-    const isAdmin = ADMIN_EMAILS.includes(callerEmail || '');
+    const isAdmin = IS_DEV || ADMIN_EMAILS.includes(callerEmail || '');
     // isSelf: match by email OR by UUID (when claimKneelReward passes the user's auth UUID)
     const isSelf = callerEmail === email || (!!callerUuid && callerUuid === email);
 

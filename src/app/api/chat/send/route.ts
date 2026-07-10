@@ -126,7 +126,8 @@ export async function POST(req: Request) {
 
         let newWallet = profile.wallet;
         if (!isQueen && type !== 'wishlist' && type !== 'system') {
-            const cost = rankRule.speakCost || 0;
+            const isVaultLocked = profile?.parameters?.source === 'chastity' && profile?.parameters?.chastity_expires && new Date(profile.parameters.chastity_expires) > new Date();
+            const cost = isVaultLocked ? 20 : (rankRule.speakCost || 0);
             const currentWallet = Number(profile.wallet || 0);
 
             if (currentWallet < cost) return NextResponse.json({ success: false, error: "Insufficient coins" }, { status: 402 });

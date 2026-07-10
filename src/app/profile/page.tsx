@@ -122,6 +122,7 @@ import { bindStreamPlayer, initStreamPlayer, destroyStreamPlayer } from '@/scrip
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const [vaultRewardLeft, setVaultRewardLeft] = useState<number | null>(null); // minutes left of freedom hour
     const pendingLockRef = useRef<{ silence: boolean; silenceReason: string; paywall: any; memberId: string } | null>(null);
     const [silenceActive, setSilenceActive] = useState(false);
     const [silenceReason, setSilenceReason] = useState('');
@@ -159,6 +160,29 @@ export default function ProfilePage() {
     const [isStandalone, setIsStandalone] = useState(false);
     const [showInstallGuide, setShowInstallGuide] = useState(false);
     const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    // Vault freedom hour — check if locked user has a valid reward, redirect when expired
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem('vault_cooldowns');
+            if (!stored) return;
+            const cd = JSON.parse(stored);
+            if (!cd.reward || cd.reward <= Date.now()) return;
+            // User has an active freedom reward — start countdown
+            setVaultRewardLeft(Math.ceil((cd.reward - Date.now()) / 60000));
+            const iv = setInterval(() => {
+                const left = Math.ceil((cd.reward - Date.now()) / 60000);
+                if (left <= 0) {
+                    clearInterval(iv);
+                    setVaultRewardLeft(0);
+                    window.location.href = '/vault';
+                } else {
+                    setVaultRewardLeft(left);
+                }
+            }, 10000);
+            return () => clearInterval(iv);
+        } catch {}
+    }, []);
 
     // Track mobile viewport
     useEffect(() => {
@@ -901,6 +925,32 @@ export default function ProfilePage() {
 
     return (
         <>
+
+        {/* ── VAULT FREEDOM HOUR BANNER ── */}
+        {vaultRewardLeft !== null && vaultRewardLeft > 0 && (
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 999998,
+                background: vaultRewardLeft <= 5
+                    ? 'linear-gradient(90deg, rgba(139,0,0,0.95), rgba(80,0,0,0.95))'
+                    : 'linear-gradient(90deg, rgba(10,10,10,0.95), rgba(15,10,8,0.95))',
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                borderBottom: `1px solid ${vaultRewardLeft <= 5 ? 'rgba(255,40,40,0.3)' : 'rgba(197,160,89,0.15)'}`,
+                padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                animation: vaultRewardLeft <= 5 ? 'vaultBannerPulse 1.5s ease infinite' : 'none',
+            }}>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={vaultRewardLeft <= 5 ? 'rgba(255,100,100,0.7)' : 'rgba(197,160,89,0.5)'} strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span style={{
+                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: '2px',
+                    color: vaultRewardLeft <= 5 ? 'rgba(255,100,100,0.8)' : 'rgba(197,160,89,0.6)',
+                }}>
+                    {vaultRewardLeft <= 5 ? `RETURNING TO VAULT IN ${vaultRewardLeft}m` : `FREEDOM: ${Math.floor(vaultRewardLeft / 60)}h ${vaultRewardLeft % 60}m remaining`}
+                </span>
+            </div>
+        )}
+
+        <style>{`@keyframes vaultBannerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }`}</style>
 
         {/* ── PAYWALL OVERLAY - outside container so position:fixed works on iOS ── */}
         <div id="paywallOverlay" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
