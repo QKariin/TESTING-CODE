@@ -112,6 +112,10 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [clientSecret, setClientSecret] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [paid, setPaid] = useState(false);
+    const [cryptoView, setCryptoView] = useState<'pick' | 'pay' | null>(null);
+    const [cryptoLoading, setCryptoLoading] = useState(false);
+    const [cryptoPayment, setCryptoPayment] = useState<{ paymentId: string; address: string; amount: string; currency: string; amount_eur: number } | null>(null);
+    const [cryptoCopied, setCryptoCopied] = useState<'addr' | 'amt' | null>(null);
 
     useEffect(() => {
         if (sessionStorage.getItem('__silenced') === '1') {
@@ -260,6 +264,51 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         window.location.reload();
     }
 
+    const CRYPTO_OPTIONS = [
+        { ticker: 'trc20/usdt', label: 'USDT', sub: 'TRC20' },
+        { ticker: 'btc', label: 'BTC', sub: 'Bitcoin' },
+        { ticker: 'eth', label: 'ETH', sub: 'Ethereum' },
+        { ticker: 'ltc', label: 'LTC', sub: 'Litecoin' },
+    ];
+
+    async function handleCryptoPay(ticker: string) {
+        setCryptoLoading(true);
+        try {
+            const res = await fetch('/api/paywall/crypto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticker, memberId: email }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setCryptoPayment({ paymentId: data.paymentId, address: data.address, amount: String(data.amount), currency: data.currency, amount_eur: data.amount_eur });
+                setCryptoView('pay');
+                // Start polling for confirmation
+                const poll = setInterval(async () => {
+                    try {
+                        const vRes = await fetch('/api/paywall/crypto-verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ paymentId: data.paymentId, memberId: email }),
+                        });
+                        const vData = await vRes.json();
+                        if (vData.paid) {
+                            clearInterval(poll);
+                            handleSuccess();
+                        }
+                    } catch {}
+                }, 5000);
+            }
+        } catch {}
+        setCryptoLoading(false);
+    }
+
+    function copyToClipboard(text: string, type: 'addr' | 'amt') {
+        navigator.clipboard.writeText(text).catch(() => {});
+        setCryptoCopied(type);
+        setTimeout(() => setCryptoCopied(null), 2000);
+    }
+
     if (silenced) return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'rgba(8,2,2,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
             <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
@@ -280,7 +329,42 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     if (paywalled && !paid) return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
             <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
-                {!clientSecret ? (
+                {clientSecret ? (
+                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+                        <PaymentForm email={email} onSuccess={handleSuccess} />
+                    </Elements>
+                ) : cryptoView === 'pick' ? (
+                    <>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(160,100,220,0.6)', letterSpacing: '4px', marginBottom: 24 }}>SELECT CURRENCY</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                            {CRYPTO_OPTIONS.map(c => (
+                                <button key={c.ticker} onClick={() => handleCryptoPay(c.ticker)} disabled={cryptoLoading} style={{ width: '100%', padding: '16px', background: 'rgba(160,100,220,0.06)', border: '1px solid rgba(160,100,220,0.25)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '2px', cursor: cryptoLoading ? 'not-allowed' : 'pointer', opacity: cryptoLoading ? 0.5 : 1 }}>
+                                    {c.label} <span style={{ fontSize: '0.4rem', color: 'rgba(160,100,220,0.4)', marginLeft: 6 }}>{c.sub}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={() => setCryptoView(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>← BACK</button>
+                    </>
+                ) : cryptoView === 'pay' && cryptoPayment ? (
+                    <>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(160,100,220,0.6)', letterSpacing: '4px', marginBottom: 8 }}>SEND {cryptoPayment.currency}</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginBottom: 24 }}>€{cryptoPayment.amount_eur.toFixed(2)}</div>
+                        <div style={{ background: 'rgba(160,100,220,0.06)', border: '1px solid rgba(160,100,220,0.2)', borderRadius: 10, padding: '20px 16px', marginBottom: 12 }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(160,100,220,0.4)', letterSpacing: '2px', marginBottom: 8 }}>AMOUNT</div>
+                            <div onClick={() => copyToClipboard(cryptoPayment.amount, 'amt')} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1rem', color: '#d4b0f0', wordBreak: 'break-all', cursor: 'pointer' }}>
+                                {cryptoPayment.amount} {cryptoCopied === 'amt' && <span style={{ fontSize: '0.35rem', color: '#8f8' }}>COPIED</span>}
+                            </div>
+                        </div>
+                        <div style={{ background: 'rgba(160,100,220,0.06)', border: '1px solid rgba(160,100,220,0.2)', borderRadius: 10, padding: '20px 16px', marginBottom: 20 }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(160,100,220,0.4)', letterSpacing: '2px', marginBottom: 8 }}>ADDRESS</div>
+                            <div onClick={() => copyToClipboard(cryptoPayment.address, 'addr')} style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: '#d4b0f0', wordBreak: 'break-all', cursor: 'pointer' }}>
+                                {cryptoPayment.address} {cryptoCopied === 'addr' && <span style={{ fontSize: '0.35rem', color: '#8f8' }}>COPIED</span>}
+                            </div>
+                        </div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', marginBottom: 16 }}>Waiting for payment confirmation...</div>
+                        <button onClick={() => { setCryptoView(null); setCryptoPayment(null); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer' }}>← BACK</button>
+                    </>
+                ) : (
                     <>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
@@ -290,15 +374,18 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                             <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(paywallAmount).toFixed(2)}</div>
                         </div>
-                        <button onClick={handlePayNow} disabled={loading} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}>
-                            {loading ? 'LOADING...' : 'PAY NOW'}
-                        </button>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Secure payment via Stripe</div>
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            <button onClick={handlePayNow} disabled={loading} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                                {loading ? 'LOADING...' : 'PAY WITH CARD'}
+                            </button>
+                            <button onClick={() => setCryptoView('pick')} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                                PAY WITH CRYPTO
+                            </button>
+                        </div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Card &amp; Crypto accepted</div>
                     </>
-                ) : (
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                        <PaymentForm email={email} onSuccess={handleSuccess} />
-                    </Elements>
                 )}
             </div>
         </div>
