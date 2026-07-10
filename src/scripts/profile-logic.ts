@@ -5400,65 +5400,64 @@ export async function openVaultLockRequest() {
 
     const { wallet } = getState();
 
-    // Inject keyframes + datetime-local styling
+    // Inject styles — hidden scrollbars + date picker
     if (!document.getElementById('_vaultLockStyles')) {
         const style = document.createElement('style');
         style.id = '_vaultLockStyles';
         style.textContent = `
             @keyframes _vFadeIn{from{opacity:0}to{opacity:1}}
-            @keyframes _vPulse{0%,100%{box-shadow:0 0 20px rgba(139,0,0,0.15)}50%{box-shadow:0 0 40px rgba(139,0,0,0.3)}}
-            #_vaultDateInput::-webkit-calendar-picker-indicator{filter:invert(0.3) sepia(1) hue-rotate(-30deg);cursor:pointer;}
+            #_vaultLockOverlay{scrollbar-width:none;-ms-overflow-style:none;}
+            #_vaultLockOverlay::-webkit-scrollbar{display:none;}
+            #_vaultDateInput::-webkit-calendar-picker-indicator{filter:invert(0.25) sepia(1) hue-rotate(-30deg);cursor:pointer;}
         `;
         document.head.appendChild(style);
     }
 
     const ov = document.createElement('div');
     ov.id = '_vaultLockOverlay';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;align-items:center;background:linear-gradient(170deg,#0a0608 0%,#0d060a 40%,#08040e 100%);animation:_vFadeIn 0.3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;';
-
-    const R = 'rgba(139,0,0,';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;align-items:center;background:#080507;animation:_vFadeIn 0.3s ease;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;';
 
     ov.innerHTML = `
-        <div style="width:100%;max-width:400px;padding:60px 16px 40px;text-align:center;margin:0 auto;">
-            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="${R}0.6)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px;filter:drop-shadow(0 0 16px ${R}0.4));">
+        <div style="width:100%;max-width:360px;padding:80px 24px 50px;text-align:center;margin:0 auto;">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:18px;opacity:0.7;">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            <div style="font-family:Cinzel,serif;font-size:1.6rem;color:#8b0000;letter-spacing:6px;font-weight:700;text-shadow:0 0 30px ${R}0.4);margin-bottom:4px;">LOCK</div>
-            <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,${R}0.4),transparent);margin:14px auto 20px;"></div>
+            <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.6);letter-spacing:6px;font-weight:700;margin-bottom:4px;">LOCK</div>
+            <div style="width:30px;height:1px;background:rgba(255,255,255,0.06);margin:16px auto 28px;"></div>
 
-            <div id="_vaultTierPicker" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+            <div id="_vaultTierPicker" style="display:flex;flex-direction:column;gap:6px;margin-bottom:24px;">
                 ${LOCK_TIERS.map((t, i) => {
                     const canAfford = wallet >= t.coins;
                     return `
-                    <div class="_vaultTierCard" data-tier="${t.key}" style="padding:18px 20px;border-radius:12px;border:1px solid ${i === 0 ? `${R}0.4)` : `${R}0.12)`};background:${i === 0 ? `${R}0.06)` : 'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor='${R}0.12)';c.style.background='transparent';});this.style.borderColor='${R}0.4)';this.style.background='${R}0.06)';window._vaultSelectedTier='${t.key}';">
+                    <div class="_vaultTierCard" data-tier="${t.key}" style="padding:16px 18px;border-radius:10px;border:1px solid ${i === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'};background:${i === 0 ? 'rgba(255,255,255,0.03)' : 'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor='rgba(255,255,255,0.04)';c.style.background='transparent';});this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.03)';window._vaultSelectedTier='${t.key}';">
                         <div style="text-align:left;">
-                            <div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(255,255,255,0.85);font-weight:700;letter-spacing:3px;">${t.label}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);margin-top:2px;">${t.eur}€</div>
+                            <div style="font-family:Cinzel,serif;font-size:1rem;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:3px;">${t.label}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.15);margin-top:2px;">${t.eur}€</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-family:Orbitron,sans-serif;font-size:0.9rem;color:${canAfford ? '#8b0000' : 'rgba(255,40,40,0.4)'};font-weight:700;text-shadow:${canAfford ? `0 0 12px ${R}0.3)` : 'none'};">${t.coins.toLocaleString()}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.15);letter-spacing:2px;">COINS</div>
+                            <div style="font-family:Orbitron,sans-serif;font-size:0.85rem;color:${canAfford ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'};font-weight:600;">${t.coins.toLocaleString()}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.1);letter-spacing:2px;">COINS</div>
                         </div>
                     </div>`;
                 }).join('')}
             </div>
 
-            <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.15);letter-spacing:1px;">WALLET: <span style="color:${wallet >= 5500 ? `${R}0.7)` : 'rgba(255,40,40,0.5)'};font-weight:700;">${wallet.toLocaleString()}</span></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">WALLET: <span style="color:rgba(255,255,255,${wallet >= 5500 ? '0.35' : '0.12'});font-weight:600;">${wallet.toLocaleString()}</span></div>
 
-            <div style="width:100%;height:1px;background:${R}0.08);margin:20px 0;"></div>
+            <div style="width:100%;height:1px;background:rgba(255,255,255,0.03);margin:24px 0;"></div>
 
-            <div style="display:flex;flex-direction:column;gap:10px;">
-                <button id="_vaultLockNow" style="width:100%;padding:18px;border-radius:10px;background:linear-gradient(135deg,${R}0.15),${R}0.06));border:1px solid ${R}0.4);color:#8b0000;font-family:Cinzel,serif;font-size:0.8rem;letter-spacing:4px;cursor:pointer;font-weight:700;text-shadow:0 0 16px ${R}0.3);animation:_vPulse 3s ease infinite;">LOCK ME NOW</button>
-                <button id="_vaultWaitQueen" style="width:100%;padding:16px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.3);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button id="_vaultLockNow" style="width:100%;padding:16px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(180,40,40,0.8);font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:4px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
+                <button id="_vaultWaitQueen" style="width:100%;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
             </div>
 
             <div id="_vaultDatePicker" style="display:none;margin-top:16px;">
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);margin-bottom:10px;letter-spacing:1px;">When should your sentence begin?</div>
-                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid ${R}0.25);background:${R}0.04);color:#8b0000;font-family:Orbitron,sans-serif;font-size:0.8rem;outline:none;box-sizing:border-box;text-align:center;" />
-                <button id="_vaultSubmitDate" style="width:100%;margin-top:12px;padding:16px;border-radius:10px;background:${R}0.1);border:1px solid ${R}0.35);color:#8b0000;font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:3px;cursor:pointer;font-weight:700;">SUBMIT REQUEST</button>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.2);margin-bottom:10px;letter-spacing:1px;">When should your sentence begin?</div>
+                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.5);font-family:Orbitron,sans-serif;font-size:0.8rem;outline:none;box-sizing:border-box;text-align:center;" />
+                <button id="_vaultSubmitDate" style="width:100%;margin-top:12px;padding:14px;border-radius:10px;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);color:rgba(180,40,40,0.7);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT REQUEST</button>
             </div>
 
-            <button id="_vaultLockClose" style="margin-top:28px;background:none;border:none;color:rgba(255,255,255,0.12);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:4px;cursor:pointer;">CANCEL</button>
+            <button id="_vaultLockClose" style="margin-top:32px;background:none;border:none;color:rgba(255,255,255,0.08);font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
         </div>
     `;
 
@@ -5561,14 +5560,14 @@ async function _submitVaultLock(action: string, requestedStart?: string | null) 
 
 function _showVaultConfirmation(isInstant: boolean, days: number) {
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:linear-gradient(170deg,#0a0608 0%,#0d060a 40%,#08040e 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;animation:_vFadeIn 0.3s ease;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:#080507;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;animation:_vFadeIn 0.3s ease;';
     ov.innerHTML = `
-        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="rgba(139,0,0,0.7)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 24px rgba(139,0,0,0.5));">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
             ${isInstant ? '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' : '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'}
         </svg>
-        <div style="font-family:Cinzel,serif;font-size:1.3rem;color:#8b0000;letter-spacing:5px;text-align:center;font-weight:700;text-shadow:0 0 30px rgba(139,0,0,0.4);">${isInstant ? 'LOCKED' : 'REQUEST SENT'}</div>
-        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(139,0,0,0.3),transparent);"></div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);text-align:center;max-width:280px;line-height:1.6;">${isInstant ? `${days} day sentence activated.<br>Send your verification video.` : `${days} day lock request submitted.<br>Waiting for Queen Karin's approval.`}</div>
+        <div style="font-family:Cinzel,serif;font-size:1.2rem;color:rgba(255,255,255,0.5);letter-spacing:5px;text-align:center;font-weight:700;">${isInstant ? 'LOCKED' : 'REQUEST SENT'}</div>
+        <div style="width:30px;height:1px;background:rgba(255,255,255,0.06);"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.25);text-align:center;max-width:280px;line-height:1.6;">${isInstant ? `${days} day sentence activated.<br>Send your verification video.` : `${days} day lock request submitted.<br>Waiting for Queen Karin's approval.`}</div>
     `;
     ov.addEventListener('click', () => { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.3s'; setTimeout(() => ov.remove(), 300); });
     document.body.appendChild(ov);
@@ -5581,8 +5580,6 @@ function _showVaultStatus(data: any) {
         pending: 'AWAITING APPROVAL',
         scheduled: 'LOCK SCHEDULED',
     };
-
-    const R = 'rgba(139,0,0,';
     const icons: Record<string, string> = {
         active: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
         scheduled: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
@@ -5590,18 +5587,18 @@ function _showVaultStatus(data: any) {
     };
 
     const ov = document.createElement('div');
-    ov.style.cssText = `position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(170deg,#0a0608 0%,#0d060a 40%,#08040e 100%);animation:_vFadeIn 0.25s ease;`;
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#080507;animation:_vFadeIn 0.25s ease;';
     ov.innerHTML = `
-        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="${R}0.6)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;filter:drop-shadow(0 0 20px ${R}0.4));">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:18px;">
             ${icons[data.status] || icons.pending}
         </svg>
-        <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#8b0000;letter-spacing:4px;font-weight:700;margin-bottom:6px;text-shadow:0 0 24px ${R}0.3);">${statusLabels[data.status] || data.status.toUpperCase()}</div>
-        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,${R}0.3),transparent);margin:12px 0;"></div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);line-height:1.6;text-align:center;">
+        <div style="font-family:Cinzel,serif;font-size:1rem;color:rgba(255,255,255,0.5);letter-spacing:4px;font-weight:700;margin-bottom:6px;">${statusLabels[data.status] || data.status.toUpperCase()}</div>
+        <div style="width:30px;height:1px;background:rgba(255,255,255,0.06);margin:12px 0;"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.2);line-height:1.6;text-align:center;">
             ${data.lockDays} day sentence${data.coinsPaid ? ` — ${data.coinsPaid.toLocaleString()} coins` : ''}
-            ${data.scheduledStart ? `<br><span style="color:${R}0.5);">Starts: ${new Date(data.scheduledStart).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>` : ''}
+            ${data.scheduledStart ? `<br>Starts: ${new Date(data.scheduledStart).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : ''}
         </div>
-        <button style="margin-top:28px;background:none;border:none;color:rgba(255,255,255,0.12);font-family:Orbitron,sans-serif;font-size:0.45rem;letter-spacing:4px;cursor:pointer;">CLOSE</button>
+        <button style="margin-top:32px;background:none;border:none;color:rgba(255,255,255,0.08);font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:3px;cursor:pointer;">CLOSE</button>
     `;
     ov.querySelector('button')!.addEventListener('click', () => ov.remove());
     ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
