@@ -150,7 +150,7 @@ async function _pushToUser(memberId: string, message: string) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             externalId: memberId,
-            title: 'Queen Karin — Vault',
+            title: '🔏 Keyholder',
             message,
         }),
     });
