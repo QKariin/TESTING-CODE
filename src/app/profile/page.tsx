@@ -1085,7 +1085,7 @@ export default function ProfilePage() {
                             <ul id="desk_CurrentBenefits" className="hidden" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.7rem', fontFamily: 'Cinzel', paddingLeft: 15, lineHeight: 1.5, marginTop: 10, textAlign: 'left' }}></ul>
                         </div>
 
-                        <button id="vaultLockBtn" onClick={() => (window as any).openVaultLockRequest?.()} style={{ marginTop: 15, width: '100%', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Cinzel', fontSize: '0.65rem', letterSpacing: 3, padding: '12px 0', cursor: 'pointer', borderRadius: 8, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(197,160,89,0.12)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.5)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(197,160,89,0.06)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.3)'; }}>
+                        <button id="vaultLockBtn" onClick={() => (window as any).openVaultLockRequest?.()} style={{ marginTop: 15, width: '100%', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.3)', color: '#8b0000', fontFamily: 'Cinzel', fontSize: '0.65rem', letterSpacing: 3, padding: '12px 0', cursor: 'pointer', borderRadius: 8, fontWeight: 700, transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,0,0,0.12)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.5)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,0,0,0.06)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.3)'; }}>
                             REQUEST LOCK
                         </button>
 
@@ -2119,7 +2119,7 @@ export default function ProfilePage() {
                             <div id="vaultGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                                 <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: 'Rajdhani', fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', padding: 20 }}>Loading...</div>
                             </div>
-                            <button id="mobVaultLockBtn" onClick={() => (window as any).openVaultLockRequest?.()} style={{ width: '100%', marginTop: 12, padding: '14px 0', borderRadius: 10, background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>REQUEST LOCK</button>
+                            <button id="mobVaultLockBtn" onClick={() => (window as any).openVaultLockRequest?.()} style={{ width: '100%', marginTop: 12, padding: '14px 0', borderRadius: 10, background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.3)', color: '#8b0000', fontFamily: 'Cinzel,serif', fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>REQUEST LOCK</button>
                         </div>
 
                         {/* VAULT PREVIEW MODAL */}
