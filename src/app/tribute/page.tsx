@@ -560,9 +560,9 @@ export default function TributePage() {
                     font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 600;
                 }
                 .review-header {
-                    display: flex; align-items: center; gap: 14px;
+                    display: flex; align-items: center; gap: 14px; position: relative;
                 }
-                .review-stars { display: flex; gap: 2px; margin-bottom: 2px; }
+                .review-stars { display: flex; gap: 2px; position: absolute; top: 12px; right: 16px; }
                 .review-body { overflow: hidden; }
                 .review-body img, .review-body video { max-width: 100%; height: auto; border-radius: 8px; display: block; }
 

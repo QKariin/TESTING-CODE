@@ -324,14 +324,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     }
 
-    // ── ENSURE TODAY ── create today's daily record if missing
+    // ── ENSURE TODAY ── create today's daily record if missing, or reset if pre-seeded
     if (action === 'ensure_today') {
         const today = new Date().toISOString().split('T')[0];
         const daysIn = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 86400000) + 1;
 
         const { data: existing } = await supabaseAdmin
             .from('vault_daily')
-            .select('id')
+            .select('*')
             .eq('session_id', session.id)
             .eq('date', today)
             .maybeSingle();
@@ -346,6 +346,23 @@ export async function POST(req: NextRequest) {
                 orders: JSON.stringify(orders),
                 orders_total: orders.length,
             });
+        } else if (existing.perfect) {
+            // Record shows perfect but verify against real data — if no spin/trial exists, it's fake
+            const { data: todaySpin } = await supabaseAdmin
+                .from('vault_spins').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
+            const { data: todayTrial } = await supabaseAdmin
+                .from('vault_trials').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
+            if (!todaySpin && !todayTrial) {
+                // No real activity — reset pre-seeded record
+                const orders = _generateDailyOrders(daysIn);
+                await supabaseAdmin.from('vault_daily').update({
+                    orders: JSON.stringify(orders),
+                    orders_total: orders.length,
+                    orders_completed: 0,
+                    perfect: false,
+                    reward_claimed: false,
+                }).eq('id', existing.id);
+            }
         }
 
         return NextResponse.json({ success: true });

@@ -194,7 +194,8 @@ export default function VaultPage() {
     const lockDays = vaultData?.session?.lock_days ?? MOCK.lockDays;
     const dailyRecords = vaultData?.dailyRecords || [];
     const adjustments = vaultData?.adjustments || [];
-    const todayOrders = vaultData?.today?.orders || TODAYS_ORDERS;
+    const rawOrders = vaultData?.today?.orders;
+    const todayOrders = rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
     const todayPerfect = vaultData?.today?.perfect ?? false;
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
@@ -272,10 +273,12 @@ export default function VaultPage() {
                                     if (ks.todayKneeling) setKneelToday(ks.todayKneeling);
                                     if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
                                 }).catch(() => {});
-                            // Ensure today's daily record exists
-                            if (!vd.today) {
-                                fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) }).catch(() => {});
-                            }
+                            // Ensure today's daily record exists and isn't pre-seeded, then re-fetch
+                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) })
+                                .then(() => fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`))
+                                .then(r => r.json())
+                                .then(vd2 => { if (vd2.active) setVaultData(vd2); })
+                                .catch(() => {});
                         }
                     })
                     .catch(e => console.error('[VAULT] Session fetch failed:', e));
@@ -986,11 +989,6 @@ export default function VaultPage() {
 
                 {/* ── KNEEL BAR ── */}
                 <div style={{ width: '100%', padding: '28px 20px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {/* Kneel counter */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: `${R}0.5)`, fontWeight: 700 }}>{kneelToday}</span>
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>/ 8 TODAY</span>
-                    </div>
                     <div style={{ width: '100%', maxWidth: 340, position: 'relative' }}>
                         <div
                             onPointerDown={kneelDown}
