@@ -139,13 +139,13 @@ export async function POST(req: Request) {
         // Check if user now qualifies for promotion
         checkAndPromote(memberId).catch(() => {});
 
-        // Push notification: send immediately with TTL so it arrives ~when cooldown expires
+        // Push notification: schedule for when cooldown expires (1 hour later)
         try {
             const email = taskEmail || memberId;
             const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
             const apiKey = process.env.ONESIGNAL_REST_API_KEY;
             if (apiKey && email) {
-                const cooldownMin = Math.round(COOLDOWN_MS / 60000);
+                const sendAfter = new Date(nowMs + COOLDOWN_MS).toISOString();
                 fetch('https://api.onesignal.com/notifications', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
@@ -154,8 +154,9 @@ export async function POST(req: Request) {
                         target_channel: 'push',
                         include_aliases: { external_id: [email.toLowerCase()] },
                         headings: { en: 'Queen Karin' },
-                        contents: { en: `Session complete. Return in ${cooldownMin} minutes to kneel again.` },
+                        contents: { en: 'Your cooldown is over. Come back and kneel.' },
                         url: 'https://throne.qkarin.com/profile',
+                        send_after: sendAfter,
                     }),
                 }).catch(() => {});
             }
