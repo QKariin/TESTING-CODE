@@ -1144,13 +1144,16 @@ export default function VaultPage() {
                                 </button>
                             ) : rewardUntil > 0 ? (
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.4rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px' }}>
-                                    FREEDOM HOUR USED
+                                    FREEDOM USED
                                 </div>
                             ) : (
                                 <button onClick={() => {
-                                    const until = Date.now() + 60 * 60 * 1000;
+                                    // Freedom until user's local midnight
+                                    const now = new Date();
+                                    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+                                    const until = midnight.getTime();
                                     setRewardUntil(until);
-                                    vladReact('Member just UNLOCKED their 1 hour of freedom by completing all daily orders. They earned it. Congratulate them sarcastically — remind them it is only 1 hour.');
+                                    vladReact('Member just UNLOCKED their freedom until midnight by completing all daily orders. They earned it. Congratulate them sarcastically — remind them it ends at midnight.');
                                     // Record reward claim in DB
                                     if (vaultData?.session?.id) {
                                         fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'claim_reward', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com' }) }).catch(() => {});
@@ -1165,7 +1168,7 @@ export default function VaultPage() {
                                         <path d="M7 11V7a5 5 0 0 1 9.9-1" /><rect x="3" y="11" width="18" height="11" rx="2" />
                                     </svg>
                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>
-                                        CLAIM 1 HOUR OF FREEDOM
+                                        CLAIM FREEDOM UNTIL MIDNIGHT
                                     </span>
                                 </button>
                             )}

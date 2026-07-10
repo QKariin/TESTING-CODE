@@ -197,25 +197,26 @@ export async function POST(req: Request) {
                 // Check if profile already exists
                 const { data: existing } = await supabaseAdmin
                     .from('profiles')
-                    .select('ID, parameters')
+                    .select('ID, parameters, wallet')
                     .or(`ID.eq.${userId}${userEmail ? `,member_id.ilike.${userEmail}` : ''}`)
                     .maybeSingle();
 
                 if (existing) {
-                    // Update existing profile with keyholder info
+                    // Update existing profile with keyholder info + give 1000 coins
                     const params = existing.parameters || {};
                     params.source = 'chastity';
                     params.chastity_tier = tierId;
                     params.chastity_days = days;
                     params.chastity_started = new Date().toISOString();
                     params.chastity_expires = expiresAt;
+                    const newWallet = Number(existing.wallet || 0) + 1000;
                     await supabaseAdmin
                         .from('profiles')
-                        .update({ parameters: params })
+                        .update({ parameters: params, wallet: newWallet })
                         .eq('ID', existing.ID);
-                    console.log(`[KEYHOLDER] Updated existing profile for ${userEmail}`);
+                    console.log(`[KEYHOLDER] Updated existing profile for ${userEmail}, gave 1000 coins`);
                 } else {
-                    // Create new profile
+                    // Create new profile with 1000 starter coins
                     await supabaseAdmin
                         .from('profiles')
                         .insert({
@@ -224,7 +225,7 @@ export async function POST(req: Request) {
                             name: userName,
                             hierarchy: 'Chastity Sub',
                             score: 0,
-                            wallet: 0,
+                            wallet: 1000,
                             parameters: {
                                 source: 'chastity',
                                 chastity_tier: tierId,
@@ -250,6 +251,49 @@ export async function POST(req: Request) {
                     console.log(`[KEYHOLDER] New chastity profile created for ${userEmail}`);
                 }
 
+                // Auto-create vault lock session (pending — waiting for Queen)
+                try {
+                    const memberId = (userEmail || '').toLowerCase();
+                    // Check no existing active/pending session
+                    const { data: existingSession } = await supabaseAdmin
+                        .from('vault_sessions')
+                        .select('id')
+                        .eq('member_id', memberId)
+                        .in('status', ['active', 'pending', 'scheduled'])
+                        .maybeSingle();
+
+                    if (!existingSession) {
+                        const { data: lockSession } = await supabaseAdmin
+                            .from('vault_sessions')
+                            .insert({
+                                member_id: memberId,
+                                tier: tierId,
+                                lock_days: days,
+                                status: 'pending',
+                            })
+                            .select()
+                            .single();
+
+                        if (lockSession) {
+                            // Store vault_request in profile parameters
+                            const profileId = existing?.ID || userId;
+                            const { data: freshProfile } = await supabaseAdmin
+                                .from('profiles')
+                                .select('parameters')
+                                .eq('ID', profileId)
+                                .maybeSingle();
+                            if (freshProfile) {
+                                const p = freshProfile.parameters || {};
+                                p.vault_request = { sessionId: lockSession.id, status: 'pending', requestedAt: new Date().toISOString(), lockDays: days };
+                                await supabaseAdmin.from('profiles').update({ parameters: p }).eq('ID', profileId);
+                            }
+                            console.log(`[KEYHOLDER] Auto-created pending lock session for ${memberId}`);
+                        }
+                    }
+                } catch (e: any) {
+                    console.error('[KEYHOLDER] Auto-lock session error:', e.message);
+                }
+
                 // Discord notification
                 discordNewMember(`${userName} (Keyholder ${tierId})`).catch(() => {});
 
@@ -262,7 +306,7 @@ export async function POST(req: Request) {
                         body: JSON.stringify({
                             externalId: 'ceo@qkarin.com',
                             title: 'New Keyholder Sub',
-                            message: `${userName} surrendered their key — ${tierId} (${days} days)`,
+                            message: `${userName} surrendered their key — ${tierId} (${days} days). Lock request auto-created.`,
                         }),
                     });
                 } catch (e: any) {
