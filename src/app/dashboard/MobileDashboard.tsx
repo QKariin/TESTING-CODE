@@ -68,6 +68,7 @@ const PAYWALL_PRESETS = [
     "Outstanding debt. You know what you did.",
     "You've been a disappointment. Pay your dues.",
     "Access suspended. Tribute required immediately.",
+    "Ghosting Fee: You ruined your shot to serve. Inclusion isn't free for you. You either serve, or you pay the price to remain here. And you already made your choice.",
 ];
 
 const SILENCE_PRESETS = [
