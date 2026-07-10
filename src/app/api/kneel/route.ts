@@ -145,6 +145,8 @@ export async function POST(req: Request) {
             const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
             const apiKey = process.env.ONESIGNAL_REST_API_KEY;
             if (apiKey && email) {
+                const { data: prof } = await supabaseAdmin.from('profiles').select('name').ilike('member_id', email).maybeSingle();
+                const name = prof?.name || email.split('@')[0];
                 const sendAfter = new Date(nowMs + COOLDOWN_MS).toISOString();
                 fetch('https://api.onesignal.com/notifications', {
                     method: 'POST',
@@ -153,8 +155,8 @@ export async function POST(req: Request) {
                         app_id: appId,
                         target_channel: 'push',
                         include_aliases: { external_id: [email.toLowerCase()] },
-                        headings: { en: 'Queen Karin' },
-                        contents: { en: 'Your cooldown is over. Come back and kneel.' },
+                        headings: { en: `🔔 Time to kneel ${name}` },
+                        contents: { en: 'Your cooldown is over. Get back on your knees.' },
                         url: 'https://throne.qkarin.com/profile',
                         send_after: sendAfter,
                     }),
