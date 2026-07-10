@@ -166,6 +166,15 @@ export default function VaultPage() {
     const [chatGateConfessText, setChatGateConfessText] = useState('');
     const [chatGateCooldownUntil, setChatGateCooldownUntil] = useState(0);
     const [cancelShame, setCancelShame] = useState<'attn' | 'gate' | null>(null);
+    // Kneel state
+    const [kneelHolding, setKneelHolding] = useState(false);
+    const [kneelFill, setKneelFill] = useState(0);
+    const [kneelToday, setKneelToday] = useState(0);
+    const [kneelCooldownUntil, setKneelCooldownUntil] = useState(0);
+    const [kneelDone, setKneelDone] = useState(false); // just completed animation
+    const kneelTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+    const kneelStartTime = useRef(0);
+    const kneelCooldown = kneelCooldownUntil > Date.now();
     // Vlad mini-chat
     const [vladOpen, setVladOpen] = useState(false);
     const [vladMsgs, setVladMsgs] = useState<{ role: 'user' | 'vlad'; text: string }[]>([]);
@@ -256,6 +265,13 @@ export default function VaultPage() {
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
                             if (todayTrial && (todayTrial.status === 'submitted' || todayTrial.status === 'approved')) setTrialDone(true);
+                            // Load kneel status
+                            fetch(`/api/kneel-status?memberId=${encodeURIComponent(memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`)
+                                .then(r => r.json())
+                                .then(ks => {
+                                    if (ks.todayKneeling) setKneelToday(ks.todayKneeling);
+                                    if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
+                                }).catch(() => {});
                             // Ensure today's daily record exists
                             if (!vd.today) {
                                 fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) }).catch(() => {});
@@ -482,6 +498,56 @@ export default function VaultPage() {
     const vladReact = useCallback((event: string) => {
         sendVladMsg(`[SYSTEM EVENT — react to this naturally, don't quote it verbatim] ${event}`, true);
     }, [sendVladMsg]);
+
+    // Kneel hold handler
+    const KNEEL_HOLD_TIME = 3000; // 3 second hold to kneel
+    const kneelDown = useCallback(() => {
+        if (kneelCooldown || kneelDone) return;
+        setKneelHolding(true);
+        kneelStartTime.current = Date.now();
+        kneelTimer.current = setInterval(() => {
+            const progress = Math.min(1, (Date.now() - kneelStartTime.current) / KNEEL_HOLD_TIME);
+            setKneelFill(progress * 100);
+            if (progress >= 1) {
+                if (kneelTimer.current) clearInterval(kneelTimer.current);
+                setKneelHolding(false);
+                setKneelFill(0);
+                setKneelDone(true);
+                setTimeout(() => setKneelDone(false), 2000);
+                // Call kneel API
+                const memberId = profile?.member_id || profile?.ID || 'pr.finsko@gmail.com';
+                fetch('/api/kneel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId }),
+                }).then(r => r.json()).then(data => {
+                    if (data.success) {
+                        setKneelToday(data.todayKneeling);
+                        // Set cooldown (1h prod, 1m dev)
+                        const cooldownMs = process.env.NODE_ENV === 'development' ? 60000 : 3600000;
+                        setKneelCooldownUntil(Date.now() + cooldownMs);
+                        // Update vault daily order
+                        if (vaultData?.session?.id) {
+                            fetch('/api/vault/session', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'kneel', amount: 1 }),
+                            }).catch(() => {});
+                        }
+                        vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${data.todayKneeling >= 8 ? 'They hit the daily target!' : `${8 - data.todayKneeling} more to go.`}`);
+                    } else if (data.error === 'COOLDOWN') {
+                        setKneelCooldownUntil(Date.now() + data.minLeft * 60000);
+                    }
+                }).catch(() => {});
+            }
+        }, 30);
+    }, [kneelCooldown, kneelDone, profile, vaultData, vladReact]);
+
+    const kneelUp = useCallback(() => {
+        if (kneelTimer.current) clearInterval(kneelTimer.current);
+        setKneelHolding(false);
+        setKneelFill(0);
+    }, []);
 
     const spin = useCallback(() => {
         if (spinning || wheelUsed) return;
@@ -918,212 +984,77 @@ export default function VaultPage() {
                     })()}
                 </div>
 
-                {/* ── ATTENTION BAR ── */}
+                {/* ── KNEEL BAR ── */}
                 <div style={{ width: '100%', padding: '28px 20px 12px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {/* Kneel counter */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: `${R}0.5)`, fontWeight: 700 }}>{kneelToday}</span>
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>/ 8 TODAY</span>
+                    </div>
                     <div style={{ width: '100%', maxWidth: 340, position: 'relative' }}>
                         <div
-                            onPointerDown={attnDown}
-                            onPointerUp={attnUp}
-                            onPointerLeave={attnUp}
-                            onPointerCancel={attnUp}
+                            onPointerDown={kneelDown}
+                            onPointerUp={kneelUp}
+                            onPointerLeave={kneelUp}
+                            onPointerCancel={kneelUp}
                             onContextMenu={(e) => e.preventDefault()}
                             style={{
                                 position: 'relative', width: '100%', height: 52, borderRadius: 26,
-                                background: `${R}0.06)`, border: `1.5px solid ${R}${attnHolding ? '0.4' : '0.15'})`,
-                                overflow: 'hidden', cursor: attnCooldown ? 'default' : 'pointer',
-                                boxShadow: attnHolding ? `0 0 20px ${R}0.2)` : 'none',
-                                transition: 'border-color 0.2s, box-shadow 0.2s',
+                                background: kneelDone ? 'rgba(80,200,120,0.06)' : `${R}0.06)`,
+                                border: `1.5px solid ${kneelDone ? 'rgba(80,200,120,0.3)' : `${R}${kneelHolding ? '0.4' : '0.15'})`}`,
+                                overflow: 'hidden', cursor: kneelCooldown ? 'default' : 'pointer',
+                                boxShadow: kneelHolding ? `0 0 20px ${R}0.2)` : kneelDone ? '0 0 20px rgba(80,200,120,0.1)' : 'none',
+                                transition: 'border-color 0.3s, box-shadow 0.3s, background 0.3s',
                                 WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
                             } as React.CSSProperties}
                         >
                             {/* Fill bar */}
                             <div style={{
                                 position: 'absolute', left: 0, top: 0, bottom: 0,
-                                width: `${attnFill}%`,
+                                width: `${kneelFill}%`,
                                 background: `linear-gradient(90deg, ${R}0.15), ${R}0.35))`,
-                                borderRadius: 26, transition: attnHolding ? 'none' : 'width 0.2s',
+                                borderRadius: 26, transition: kneelHolding ? 'none' : 'width 0.2s',
                             }} />
                             {/* Content */}
                             <div style={{
                                 position: 'relative', zIndex: 1, width: '100%', height: '100%',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                             }}>
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={`${R}${attnCooldown ? '0.2' : '0.6'})`} strokeWidth="1.5">
-                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                {/* Kneeling person icon */}
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={kneelDone ? 'rgba(80,200,120,0.5)' : `${R}${kneelCooldown ? '0.2' : '0.6'})`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="4" r="2" />
+                                    <path d="M12 6v6l-3 4" />
+                                    <path d="M12 12l3 4" />
+                                    <path d="M9 10l-2 1" />
+                                    <path d="M15 10l2 1" />
                                 </svg>
                                 <span style={{
                                     fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem',
                                     letterSpacing: '4px',
-                                    color: attnCooldown ? 'rgba(255,255,255,0.08)' : `${R}0.55)`,
+                                    color: kneelDone ? 'rgba(80,200,120,0.5)' : kneelCooldown ? 'rgba(255,255,255,0.08)' : `${R}0.55)`,
                                 }}>
-                                    {attnCooldown ? (() => {
-                                        const left = Math.max(0, Math.ceil((attnCooldownUntil - Date.now()) / 1000));
+                                    {kneelDone ? 'KNELT' : kneelCooldown ? (() => {
+                                        const left = Math.max(0, Math.ceil((kneelCooldownUntil - Date.now()) / 1000));
                                         if (left < 60) return `${left}s`;
                                         const h = Math.floor(left / 3600); const m = Math.floor((left % 3600) / 60);
                                         return h > 0 ? `${h}h ${m}m` : `${m}m`;
-                                    })() : attnHolding ? 'HOLD...' : 'ATTENTION'}
+                                    })() : kneelHolding ? 'HOLD...' : 'KNEEL'}
                                 </span>
                             </div>
                         </div>
                     </div>
-
-                    {/* Skip cooldown option — costs 5 hours of lock time per hour of cooldown */}
-                    {attnCooldown && (() => {
-                        const hoursLeft = Math.ceil((attnCooldownUntil - Date.now()) / 3600000);
-                        const cost = hoursLeft * 5;
-                        return (
-                            <button onClick={() => {
-                                setPenaltyHours(prev => prev + cost);
-                                setAttnCooldownUntil(0);
-                                setChatGateCooldownUntil(0);
-                                setAttnSkippedToday(false);
-                                vladReact(`Member just PAID ${cost} HOURS of extra lock time to skip their cooldown. That is ${cost} hours added to their sentence. They were that desperate. Roast their impatience.`);
-                                // Persist adjustment to DB
-                                if (vaultData?.session?.id) {
-                                    fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'adjust', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com', hours: cost, reason: `Skipped cooldown (${hoursLeft}h × 5)` }) }).catch(() => {});
-                                }
-                            }} style={{
-                                marginTop: 8, background: 'none', border: `1px solid ${R}0.12)`,
-                                borderRadius: 16, padding: '8px 20px', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: 8,
-                                WebkitTapHighlightColor: 'transparent',
-                            }}>
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke={`${R}0.3)`} strokeWidth="1.5">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                </svg>
-                                <span style={{
-                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem',
-                                    color: `${R}0.3)`, letterSpacing: '2px',
-                                }}>
-                                    SKIP COOLDOWN (+{cost}h lock time)
-                                </span>
-                            </button>
-                        );
-                    })()}
+                    {/* Kneel progress dots */}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} style={{
+                                width: 8, height: 8, borderRadius: '50%',
+                                background: i < kneelToday ? '#8b0000' : 'rgba(255,255,255,0.04)',
+                                border: `1px solid ${i < kneelToday ? 'rgba(139,0,0,0.5)' : 'rgba(255,255,255,0.06)'}`,
+                                transition: 'all 0.3s ease',
+                            }} />
+                        ))}
+                    </div>
                 </div>
-
-                {/* ── ATTENTION RESULT OVERLAY ── */}
-                {attnResult && (
-                    <div style={{
-                        position: 'fixed', inset: 0, zIndex: 100,
-                        background: 'rgba(0,0,0,0.92)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        padding: 20, animation: 'vFadeIn 0.4s ease',
-                    }}>
-                        <div style={{
-                            width: '100%', maxWidth: 360,
-                            background: '#0a0a0e', border: `1px solid ${R}0.2)`,
-                            borderRadius: 16, padding: '28px 22px',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            boxShadow: `0 0 60px ${R}0.1)`,
-                        }}>
-                            {/* Icon */}
-                            <div style={{
-                                width: 56, height: 56, borderRadius: '50%',
-                                background: `${R}0.06)`, border: `1px solid ${R}0.2)`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                marginBottom: 16,
-                            }}>
-                                <span style={{ fontSize: '1.3rem', color: `${R}0.5)` }} dangerouslySetInnerHTML={{ __html: attnResult.icon }} />
-                            </div>
-
-                            {/* Title */}
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: `${R}0.45)`, letterSpacing: '4px', marginBottom: 6 }}>QUEEN DEMANDS</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#8b0000', letterSpacing: '2px', textShadow: `0 0 20px ${R}0.4)`, textAlign: 'center', marginBottom: 6 }}>
-                                {attnResult.label}
-                            </div>
-                            <div style={{ width: 50, height: 1, background: `linear-gradient(90deg, transparent, ${R}0.3), transparent)`, margin: '8px 0 14px' }} />
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.7, marginBottom: 24 }}>
-                                {attnResult.desc}
-                            </div>
-
-                            {/* Action area — depends on type */}
-                            {attnResult.type === 'spin' && (
-                                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                                    {/* Inline wheel */}
-                                    <div style={{ position: 'relative', width: 160, height: 160 }}>
-                                        <div style={{ position: 'absolute', top: -5, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `10px solid ${R}0.6)` }} />
-                                        <div style={{ width: 160, height: 160, borderRadius: '50%', border: `1px solid ${R}0.15)`, transform: `rotate(${attnSpinAngle}deg)`, transition: attnSpinning ? 'transform 3.5s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
-                                            {WHEEL.map((_, i) => { const seg = 360 / WHEEL.length; return <div key={i} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${i * seg - 90}deg) skewY(-${90 - seg}deg)`, background: i % 2 === 0 ? `${R}0.06)` : 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
-                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 32, height: 32, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                                                <span style={{ fontSize: '0.6rem', color: `${R}0.4)` }}>&#9819;</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {attnSpinResult ? (
-                                        <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: `${R}0.6)`, lineHeight: 1.5, marginBottom: 6 }}>{attnSpinResult.text}</div>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 14 }}>{attnSpinResult.type}</div>
-                                            <button onClick={() => { if (attnResult) sendAttentionCard(attnResult, { completed: true, result: attnSpinResult?.text }); setAttnResult(null); setAttnSpinResult(null); }} style={{
-                                                width: '100%', padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
-                                                color: 'rgba(80,200,120,0.5)', background: 'rgba(80,200,120,0.04)', border: '1px solid rgba(80,200,120,0.15)', borderRadius: 10, cursor: 'pointer',
-                                            }}>DONE</button>
-                                        </div>
-                                    ) : (
-                                        <button disabled={attnSpinning} onClick={() => {
-                                            setAttnSpinning(true);
-                                            const idx = Math.floor(Math.random() * WHEEL.length);
-                                            const seg = 360 / WHEEL.length;
-                                            setAttnSpinAngle(prev => prev + 360 * 4 + (360 - idx * seg - seg / 2));
-                                            setTimeout(() => { setAttnSpinResult(WHEEL[idx]); setAttnSpinning(false); vladReact(`Member spun the wheel and got: "${WHEEL[idx].text}" (${WHEEL[idx].type})`); }, 3500);
-                                        }} style={{
-                                            padding: '10px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
-                                            color: attnSpinning ? 'rgba(255,255,255,0.08)' : `${R}0.5)`, background: 'transparent',
-                                            border: `1px solid ${attnSpinning ? 'rgba(255,255,255,0.04)' : `${R}0.12)`}`, borderRadius: 8, cursor: attnSpinning ? 'default' : 'pointer',
-                                        }}>{attnSpinning ? 'SPINNING...' : 'SPIN'}</button>
-                                    )}
-                                </div>
-                            )}
-
-                            {attnResult.type === 'tribute' && (
-                                <button onClick={() => { sendAttentionCard(attnResult, { completed: true, result: 'Opened wishlist' }); vladReact('Member is opening the wishlist to tribute Queen. They\'re paying up.'); setAttnResult(null); (window as any).openStandaloneTribute?.('wishlist'); }} style={{
-                                    width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: '3px',
-                                    color: `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer',
-                                }}>OPEN WISHLIST</button>
-                            )}
-
-                            {attnResult.type === 'proof' && (
-                                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                    {!attnProofUploaded ? (
-                                        <>
-                                            <div style={{ textAlign: 'center', marginBottom: 10 }}>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px', marginBottom: 4 }}>WRITE THIS NUMBER ON YOUR PROOF</div>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.2rem', color: `${R}0.7)`, fontWeight: 700, letterSpacing: 6, textShadow: `0 0 20px ${R}0.3)` }}>#{daysIn + 1}</div>
-                                            </div>
-                                            <label style={{
-                                                width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: '3px',
-                                                color: `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer',
-                                                textAlign: 'center', display: 'block',
-                                            }}>
-                                                UPLOAD PROOF
-                                                <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={() => { sendAttentionCard(attnResult, { completed: true, result: 'Proof uploaded' }); setAttnProofUploaded(true); vladReact('Member just uploaded proof for their attention task. They actually did it. Acknowledge.'); }} />
-                                            </label>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: 'rgba(255,255,255,0.06)', letterSpacing: '1px', textAlign: 'center' }}>PHOTO OR VIDEO</div>
-                                        </>
-                                    ) : (
-                                        <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 8 }}><path d="M20 6L9 17l-5-5" /></svg>
-                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '3px' }}>PROOF SUBMITTED</div>
-                                            <button onClick={() => { setAttnResult(null); setAttnProofUploaded(false); }} style={{
-                                                marginTop: 12, width: '100%', padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
-                                                color: 'rgba(80,200,120,0.5)', background: 'rgba(80,200,120,0.04)', border: '1px solid rgba(80,200,120,0.15)', borderRadius: 10, cursor: 'pointer',
-                                            }}>DONE</button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Cancel — skipping breaks perfect day + 5h cooldown */}
-                            <button onClick={cancelAttn} style={{
-                                marginTop: 16, padding: '10px 24px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
-                                color: 'rgba(255,255,255,0.12)', background: 'transparent', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, cursor: 'pointer',
-                            }}>CANCEL</button>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.25rem', color: `${R}0.2)`, letterSpacing: '1px', marginTop: 4 }}>CANCEL = 5H COOLDOWN + BROKEN OBEDIENCE</div>
-                        </div>
-                    </div>
-                )}
 
                 {/* ── SHAME OVERLAY — shown when cancelling ── */}
                 {cancelShame && (
