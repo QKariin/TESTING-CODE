@@ -195,12 +195,22 @@ export async function GET(req: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const email = (user.email || user.id).toLowerCase();
+        const email = (user.email || user.user_metadata?.provider_id
+            ? `twitter_${user.user_metadata.provider_id}` : user.id).toLowerCase();
+
+        // Look up profile to get member_id
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('member_id')
+            .or(`ID.eq.${user.id},member_id.ilike.${email}`)
+            .maybeSingle();
+
+        const memberId = (profile?.member_id || email).toLowerCase();
 
         const { data: session } = await supabaseAdmin
             .from('vault_sessions')
             .select('*')
-            .or(`member_id.ilike.${email}`)
+            .ilike('member_id', memberId)
             .in('status', ['active', 'pending', 'scheduled'])
             .order('created_at', { ascending: false })
             .limit(1)

@@ -413,6 +413,10 @@ export async function updateDetail(u: any) {
     if (typeof window !== 'undefined' && (window as any)._setQueenOnlyChat) {
         (window as any)._setQueenOnlyChat(!!(u.parameters?.queen_only_chat));
     }
+    // Notify React of vault lock request state
+    if (typeof window !== 'undefined' && (window as any)._setVaultRequest) {
+        (window as any)._setVaultRequest(u.parameters?.vault_request || null);
+    }
 }
 
 function renderKneelSection(u: any) {

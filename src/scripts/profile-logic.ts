@@ -5379,6 +5379,224 @@ if (typeof window !== 'undefined') {
     (window as any)._openVaultPreview = _openVaultPreview;
 }
 
+// ─── VAULT LOCK REQUEST ────────────────────────────────────────────────────────
+
+const LOCK_TIERS = [
+    { key: '7',  days: 7,  coins: 5500,  eur: 55,  label: '7 DAYS' },
+    { key: '30', days: 30, coins: 15000, eur: 150, label: '30 DAYS' },
+    { key: '90', days: 90, coins: 30000, eur: 300, label: '90 DAYS' },
+];
+
+export async function openVaultLockRequest() {
+    // First check if there's already an active/pending lock
+    const statusEl = document.getElementById('vaultLockStatus');
+    try {
+        const res = await fetch('/api/vault/apply');
+        const data = await res.json();
+        if (data.active) {
+            _showVaultStatus(data);
+            return;
+        }
+    } catch (_) {}
+
+    const { wallet } = getState();
+    const ov = document.createElement('div');
+    ov.id = '_vaultLockOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:_ccFadeIn 0.25s ease;overflow-y:auto;padding:20px;';
+
+    // Inject keyframes
+    if (!document.getElementById('_ccKeyframes')) {
+        const style = document.createElement('style');
+        style.id = '_ccKeyframes';
+        style.textContent = '@keyframes _ccFadeIn{from{opacity:0}to{opacity:1}}';
+        document.head.appendChild(style);
+    }
+
+    ov.innerHTML = `
+        <div style="width:92%;max-width:380px;border-radius:20px;background:linear-gradient(170deg,#0c0a10 0%,#110e18 50%,#0c0a10 100%);border:1px solid rgba(197,160,89,0.2);box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 40px rgba(197,160,89,0.04);padding:30px 22px 24px;text-align:center;">
+            <div style="font-family:Orbitron,sans-serif;font-size:0.45rem;color:rgba(197,160,89,0.4);letter-spacing:5px;margin-bottom:6px;">REQUEST</div>
+            <div style="font-family:Cinzel,serif;font-size:1.4rem;color:#c5a059;letter-spacing:4px;font-weight:700;margin-bottom:4px;">LOCK</div>
+            <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.4),transparent);margin:12px auto 18px;"></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;">Select your sentence duration</div>
+
+            <div id="_vaultTierPicker" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+                ${LOCK_TIERS.map((t, i) => {
+                    const canAfford = wallet >= t.coins;
+                    const sel = i === 0 ? 'border-color:rgba(197,160,89,0.5);background:rgba(197,160,89,0.08);' : '';
+                    return `
+                    <div class="_vaultTierCard" data-tier="${t.key}" data-coins="${t.coins}" style="padding:16px 18px;border-radius:14px;border:1px solid rgba(197,160,89,0.15);background:rgba(197,160,89,0.03);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;${i === 0 ? sel : ''}" onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor='rgba(197,160,89,0.15)';c.style.background='rgba(197,160,89,0.03)';});this.style.borderColor='rgba(197,160,89,0.5)';this.style.background='rgba(197,160,89,0.08)';window._vaultSelectedTier='${t.key}';">
+                        <div style="text-align:left;">
+                            <div style="font-family:Cinzel,serif;font-size:1rem;color:#fff;font-weight:700;letter-spacing:2px;">${t.label}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:2px;">${t.eur}€ value</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-family:Orbitron,sans-serif;font-size:0.85rem;color:${canAfford ? '#c5a059' : 'rgba(255,60,60,0.6)'};font-weight:700;">${t.coins.toLocaleString()}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(197,160,89,0.4);">COINS</div>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.25);margin-bottom:6px;">YOUR WALLET: <span style="color:${wallet >= 5500 ? 'rgba(197,160,89,0.7)' : 'rgba(255,60,60,0.6)'};font-weight:700;">${wallet.toLocaleString()}</span> COINS</div>
+            <div style="width:100%;height:1px;background:rgba(255,255,255,0.05);margin:16px 0;"></div>
+
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.5;">How do you want to begin?</div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button id="_vaultLockNow" style="width:100%;padding:16px;border-radius:12px;background:linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05));border:1px solid rgba(197,160,89,0.4);color:#c5a059;font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:3px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
+                <button id="_vaultWaitQueen" style="width:100%;padding:16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
+            </div>
+
+            <button id="_vaultLockClose" style="margin-top:18px;background:none;border:none;color:rgba(255,255,255,0.2);font-family:Orbitron,sans-serif;font-size:0.5rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
+        </div>
+    `;
+
+    document.body.appendChild(ov);
+    (window as any)._vaultSelectedTier = '7';
+
+    // Close
+    ov.querySelector('#_vaultLockClose')!.addEventListener('click', () => _closeVaultOverlay());
+    ov.addEventListener('click', (e) => { if (e.target === ov) _closeVaultOverlay(); });
+
+    // Lock Now (instant)
+    ov.querySelector('#_vaultLockNow')!.addEventListener('click', () => _submitVaultLock('apply-instant'));
+
+    // Wait for Queen (pending)
+    ov.querySelector('#_vaultWaitQueen')!.addEventListener('click', () => _submitVaultLock('apply'));
+}
+
+function _closeVaultOverlay() {
+    const ov = document.getElementById('_vaultLockOverlay');
+    if (ov) { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.2s'; setTimeout(() => ov.remove(), 200); }
+}
+
+async function _submitVaultLock(action: string) {
+    const tier = (window as any)._vaultSelectedTier || '7';
+    const tierData = LOCK_TIERS.find(t => t.key === tier);
+    if (!tierData) return;
+
+    const { wallet } = getState();
+    if (wallet < tierData.coins) {
+        const ov = document.getElementById('_vaultLockOverlay');
+        if (ov) ov.remove();
+        // Show poverty overlay
+        const pov = document.getElementById('povertyOverlay');
+        if (pov) { pov.classList.remove('hidden'); pov.style.display = 'flex'; }
+        return;
+    }
+
+    // Confirm
+    _closeVaultOverlay();
+
+    const isInstant = action === 'apply-instant';
+    _showCoinConfirm({
+        title: isInstant ? 'LOCK NOW' : 'REQUEST LOCK',
+        cost: tierData.coins,
+        wallet,
+        onConfirm: async () => {
+            try {
+                const res = await fetch('/api/vault/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, duration: tierData.days }),
+                });
+                const data = await res.json();
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Update wallet in state + UI
+                if (data.newWallet !== undefined) {
+                    setState({ wallet: data.newWallet });
+                    const s = getState(); if (s?.raw) s.raw.wallet = data.newWallet;
+                    ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(id => {
+                        const e = document.getElementById(id);
+                        if (e) e.textContent = data.newWallet.toLocaleString();
+                    });
+                }
+
+                // Show confirmation
+                _showVaultConfirmation(isInstant, tierData.days);
+
+                // Update status button
+                _updateVaultLockButton({ active: true, status: data.status, lockDays: tierData.days });
+            } catch (err: any) {
+                alert('Connection error. Try again.');
+            }
+        },
+    });
+}
+
+function _showVaultConfirmation(isInstant: boolean, days: number) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;animation:_ccFadeIn 0.3s ease;';
+    ov.innerHTML = `
+        <div style="font-size:2.5rem;filter:drop-shadow(0 0 20px rgba(197,160,89,0.8));">${isInstant ? '🔒' : '⏳'}</div>
+        <div style="font-family:Cinzel,serif;font-size:1.2rem;color:#c5a059;letter-spacing:4px;text-align:center;">${isInstant ? 'LOCKED' : 'REQUEST SENT'}</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.5);text-align:center;max-width:280px;line-height:1.5;">${isInstant ? `${days} day sentence activated. Send your verification video.` : `${days} day lock request submitted. Waiting for Queen Karin's approval.`}</div>
+    `;
+    ov.addEventListener('click', () => { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.3s'; setTimeout(() => ov.remove(), 300); });
+    document.body.appendChild(ov);
+    setTimeout(() => { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.3s'; setTimeout(() => ov.remove(), 300); }, 4000);
+}
+
+function _showVaultStatus(data: any) {
+    const statusLabels: Record<string, string> = {
+        active: 'LOCK ACTIVE',
+        pending: 'AWAITING APPROVAL',
+        scheduled: 'LOCK SCHEDULED',
+    };
+    const statusColors: Record<string, string> = {
+        active: '#c5a059',
+        pending: 'rgba(255,180,50,0.8)',
+        scheduled: 'rgba(100,180,255,0.8)',
+    };
+
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:_ccFadeIn 0.25s ease;';
+    ov.innerHTML = `
+        <div style="width:88%;max-width:340px;border-radius:18px;background:linear-gradient(170deg,#0c0a10 0%,#110e18 50%,#0c0a10 100%);border:1px solid ${statusColors[data.status] || '#c5a059'}33;box-shadow:0 20px 60px rgba(0,0,0,0.9);padding:30px 24px;text-align:center;">
+            <div style="font-size:2.2rem;margin-bottom:12px;">${data.status === 'active' ? '🔒' : data.status === 'scheduled' ? '📅' : '⏳'}</div>
+            <div style="font-family:Cinzel,serif;font-size:1rem;color:${statusColors[data.status] || '#c5a059'};letter-spacing:3px;font-weight:700;margin-bottom:8px;">${statusLabels[data.status] || data.status.toUpperCase()}</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);line-height:1.5;">
+                ${data.lockDays} day sentence${data.coinsPaid ? ` — ${data.coinsPaid.toLocaleString()} coins` : ''}
+                ${data.scheduledStart ? `<br>Starts: ${new Date(data.scheduledStart).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : ''}
+            </div>
+            <button onclick="this.closest('div[style]').parentElement.remove()" style="margin-top:22px;padding:12px 30px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:2px;cursor:pointer;">CLOSE</button>
+        </div>
+    `;
+    ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+}
+
+export function _updateVaultLockButton(data: { active: boolean; status?: string; lockDays?: number } | null) {
+    const btn = document.getElementById('vaultLockBtn');
+    const mobBtn = document.getElementById('mobVaultLockBtn');
+
+    if (!data || !data.active) {
+        if (btn) { btn.textContent = 'REQUEST LOCK'; btn.style.borderColor = 'rgba(197,160,89,0.3)'; btn.style.color = '#c5a059'; }
+        if (mobBtn) { mobBtn.textContent = 'REQUEST LOCK'; mobBtn.style.borderColor = 'rgba(197,160,89,0.3)'; mobBtn.style.color = '#c5a059'; }
+        return;
+    }
+
+    const labels: Record<string, string> = { active: '🔒 LOCKED', pending: '⏳ PENDING', scheduled: '📅 SCHEDULED' };
+    const colors: Record<string, string> = { active: '#c5a059', pending: 'rgba(255,180,50,0.8)', scheduled: 'rgba(100,180,255,0.8)' };
+    const label = labels[data.status || ''] || 'LOCK STATUS';
+    const color = colors[data.status || ''] || '#c5a059';
+
+    if (btn) { btn.textContent = label; btn.style.borderColor = color + '55'; btn.style.color = color; }
+    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = color + '55'; mobBtn.style.color = color; }
+}
+
+export async function checkVaultLockStatus() {
+    try {
+        const res = await fetch('/api/vault/apply');
+        const data = await res.json();
+        _updateVaultLockButton(data);
+    } catch (_) {}
+}
+
 // ─── PROFILE CHAT GIF PICKER ──────────────────────────────────────────────────
 
 let _profileGifOpen = false;
@@ -8256,6 +8474,9 @@ export function renderProfileSidebar(u: any) {
 
     // Load vault items
     loadVault();
+
+    // Check vault lock status
+    checkVaultLockStatus();
 
     // Auto-promotion is handled server-side (on routine/task approve, kneel, etc.)
     // The user sees their new rank on next page load via the PROMOTION_CARD in chat.
