@@ -418,7 +418,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.6rem', color: '#f3e5ab', letterSpacing: 1, fontWeight: 700 }}>
                             {cryptoData.amount} <span style={{ fontSize: '0.75rem', color: 'rgba(160,100,220,0.7)', fontWeight: 500, letterSpacing: 2 }}>{cryptoData.currency}</span>
                         </div>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>(€{cryptoData.amount_eur?.toFixed(2)})</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.2rem', color: '#c5a059', fontWeight: 700, letterSpacing: 2, marginTop: 8 }}>€{cryptoData.amount_eur?.toFixed(2)}</div>
                     </div>
 
                     <div style={{ width: '100%', marginTop: 4 }}>
