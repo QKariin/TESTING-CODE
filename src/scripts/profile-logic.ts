@@ -6,7 +6,7 @@ import { getOptimizedUrl } from './media';
 import { presenceKey } from './dashboard-presence';
 
 // ─── Custom coin confirm modal ───────────────────────────────────────────────
-function _showCoinConfirm(opts: { title: string; cost: number; wallet: number; onConfirm: () => void; onCancel?: () => void }) {
+function _showCoinConfirm(opts: { title: string; cost: number; wallet: number; onConfirm: () => void; onCancel?: () => void; theme?: 'gold' | 'vault' }) {
     const existing = document.getElementById('_coinConfirmOverlay');
     if (existing) existing.remove();
 
@@ -18,32 +18,50 @@ function _showCoinConfirm(opts: { title: string; cost: number; wallet: number; o
         document.head.appendChild(style);
     }
 
+    const isVault = opts.theme === 'vault';
     const canAfford = opts.wallet >= opts.cost;
     const ov = document.createElement('div');
     ov.id = '_coinConfirmOverlay';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:_ccFadeIn 0.25s ease;';
 
-    const card = document.createElement('div');
-    card.style.cssText = 'width:88%;max-width:340px;border-radius:18px;background:linear-gradient(170deg,#0c0a10 0%,#110e18 50%,#0c0a10 100%);border:1px solid rgba(197,160,89,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 30px rgba(197,160,89,0.04);padding:28px 24px 22px;text-align:center;';
+    if (isVault) {
+        // Full-screen vault mood
+        ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#080507;animation:_ccFadeIn 0.25s ease;';
+        const accent = canAfford ? 'rgba(255,255,255,0.5)' : 'rgba(255,60,60,0.5)';
+        ov.innerHTML = `
+            <div style="text-align:center;max-width:300px;padding:0 24px;">
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.2);letter-spacing:4px;margin-bottom:20px;">${opts.title}</div>
+                <div style="font-family:Cinzel,serif;font-size:2.2rem;color:${accent};font-weight:700;letter-spacing:2px;">${opts.cost.toLocaleString()}</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.15);margin-top:4px;letter-spacing:3px;">COINS</div>
+                <div style="width:40px;height:1px;background:rgba(255,255,255,0.06);margin:20px auto;"></div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.2);">wallet: ${opts.wallet.toLocaleString()} coins</div>
+                ${!canAfford ? '<div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,60,60,0.5);margin-top:6px;">insufficient funds</div>' : ''}
+                <div style="display:flex;gap:12px;margin-top:28px;">
+                    <button id="_ccCancel" style="flex:1;padding:14px 0;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
+                    ${canAfford ? '<button id="_ccConfirm" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(180,40,40,0.8);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:2px;cursor:pointer;">PROCEED</button>' : ''}
+                </div>
+            </div>`;
+    } else {
+        // Default gold theme
+        ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:_ccFadeIn 0.25s ease;';
+        const card = document.createElement('div');
+        card.style.cssText = 'width:88%;max-width:340px;border-radius:18px;background:linear-gradient(170deg,#0c0a10 0%,#110e18 50%,#0c0a10 100%);border:1px solid rgba(197,160,89,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 30px rgba(197,160,89,0.04);padding:28px 24px 22px;text-align:center;';
+        const coinColor = canAfford ? 'rgba(197,160,89,0.9)' : 'rgba(255,60,60,0.8)';
+        const walletColor = canAfford ? 'rgba(255,255,255,0.35)' : 'rgba(255,60,60,0.5)';
+        card.innerHTML = `
+            <div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:4px;margin-bottom:16px;">${opts.title}</div>
+            <div style="font-family:Cinzel,serif;font-size:2rem;color:${coinColor};font-weight:700;letter-spacing:2px;">${opts.cost.toLocaleString()}</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(197,160,89,0.45);margin-top:2px;letter-spacing:2px;">COINS</div>
+            <div style="width:60px;height:1px;background:rgba(197,160,89,0.15);margin:16px auto;"></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:${walletColor};">wallet: ${opts.wallet.toLocaleString()} coins</div>
+            ${!canAfford ? '<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,60,60,0.6);margin-top:6px;">insufficient funds</div>' : ''}
+            <div style="display:flex;gap:12px;margin-top:24px;">
+                <button id="_ccCancel" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
+                ${canAfford ? '<button id="_ccConfirm" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.3);color:rgba(197,160,89,0.9);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">PROCEED</button>' : ''}
+            </div>`;
+        ov.appendChild(card);
+    }
 
-    const coinColor = canAfford ? 'rgba(197,160,89,0.9)' : 'rgba(255,60,60,0.8)';
-    const walletColor = canAfford ? 'rgba(255,255,255,0.35)' : 'rgba(255,60,60,0.5)';
-
-    card.innerHTML = `
-        <div style="font-family:Cinzel,serif;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:4px;margin-bottom:16px;">${opts.title}</div>
-        <div style="font-family:Cinzel,serif;font-size:2rem;color:${coinColor};font-weight:700;letter-spacing:2px;">${opts.cost.toLocaleString()}</div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(197,160,89,0.45);margin-top:2px;letter-spacing:2px;">COINS</div>
-        <div style="width:60px;height:1px;background:rgba(197,160,89,0.15);margin:16px auto;"></div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:${walletColor};">wallet: ${opts.wallet.toLocaleString()} coins</div>
-        ${!canAfford ? '<div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,60,60,0.6);margin-top:6px;">insufficient funds</div>' : ''}
-        <div style="display:flex;gap:12px;margin-top:24px;">
-            <button id="_ccCancel" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
-            ${canAfford ? '<button id="_ccConfirm" style="flex:1;padding:14px 0;border-radius:10px;background:rgba(197,160,89,0.12);border:1px solid rgba(197,160,89,0.3);color:rgba(197,160,89,0.9);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:2px;cursor:pointer;">PROCEED</button>' : ''}
-        </div>`;
-
-    ov.appendChild(card);
     document.body.appendChild(ov);
-
     const close = () => { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.2s'; setTimeout(() => ov.remove(), 200); };
 
     ov.querySelector('#_ccCancel')!.addEventListener('click', () => { close(); opts.onCancel?.(); });
@@ -5417,56 +5435,64 @@ export async function openVaultLockRequest() {
     ov.id = '_vaultLockOverlay';
     ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;align-items:center;background:#080507;animation:_vFadeIn 0.3s ease;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;';
 
-    ov.innerHTML = `
-        <div style="width:100%;max-width:360px;padding:80px 24px 50px;text-align:center;margin:0 auto;">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:18px;opacity:0.7;">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.6);letter-spacing:6px;font-weight:700;margin-bottom:4px;">LOCK</div>
-            <div style="width:30px;height:1px;background:rgba(255,255,255,0.06);margin:16px auto 28px;"></div>
+    const canAffordAny = wallet >= 5500;
 
-            <div id="_vaultTierPicker" style="display:flex;flex-direction:column;gap:6px;margin-bottom:24px;">
+    ov.innerHTML = `
+        <div style="width:100%;max-width:340px;padding:70px 28px 50px;text-align:center;margin:0 auto;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.15);letter-spacing:5px;margin-bottom:6px;">KEYHOLDER</div>
+            <div style="font-family:Cinzel,serif;font-size:1.2rem;color:rgba(255,255,255,0.55);letter-spacing:5px;font-weight:700;">REQUEST</div>
+            <div style="width:30px;height:1px;background:rgba(255,255,255,0.06);margin:20px auto 24px;"></div>
+
+            <div id="_vaultTierPicker" style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
                 ${LOCK_TIERS.map((t, i) => {
                     const canAfford = wallet >= t.coins;
+                    const selected = i === 0 && canAfford;
                     return `
-                    <div class="_vaultTierCard" data-tier="${t.key}" style="padding:16px 18px;border-radius:10px;border:1px solid ${i === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'};background:${i === 0 ? 'rgba(255,255,255,0.03)' : 'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor='rgba(255,255,255,0.04)';c.style.background='transparent';});this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.03)';window._vaultSelectedTier='${t.key}';">
-                        <div style="text-align:left;">
-                            <div style="font-family:Cinzel,serif;font-size:1rem;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:3px;">${t.label}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.15);margin-top:2px;">${t.eur}€</div>
+                    <div class="_vaultTierCard" data-tier="${t.key}" style="padding:14px 16px;border-radius:8px;border:1px solid ${selected ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'};background:${selected ? 'rgba(255,255,255,0.03)' : 'transparent'};cursor:${canAfford ? 'pointer' : 'default'};opacity:${canAfford ? '1' : '0.3'};display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" ${canAfford ? `onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor='rgba(255,255,255,0.04)';c.style.background='transparent';});this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.03)';window._vaultSelectedTier='${t.key}';"` : ''}>
+                        <div>
+                            <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,${canAfford ? '0.7' : '0.3'});font-weight:600;letter-spacing:2px;">${t.label}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.12);margin-top:1px;">${t.eur}€</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-family:Orbitron,sans-serif;font-size:0.85rem;color:${canAfford ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)'};font-weight:600;">${t.coins.toLocaleString()}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.1);letter-spacing:2px;">COINS</div>
+                            <div style="font-family:Orbitron,sans-serif;font-size:0.8rem;color:rgba(255,255,255,${canAfford ? '0.45' : '0.12'});font-weight:600;">${t.coins.toLocaleString()}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.45rem;color:rgba(255,255,255,0.08);letter-spacing:2px;">COINS</div>
                         </div>
                     </div>`;
                 }).join('')}
             </div>
 
-            <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.12);letter-spacing:1px;">WALLET: <span style="color:rgba(255,255,255,${wallet >= 5500 ? '0.35' : '0.12'});font-weight:600;">${wallet.toLocaleString()}</span></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.12);letter-spacing:1px;margin-bottom:${canAffordAny ? '0' : '8'}px;">WALLET: <span style="color:rgba(255,255,255,0.3);font-weight:600;">${wallet.toLocaleString()}</span></div>
+            ${!canAffordAny ? '<button id="_vaultBoostWallet" style="margin-top:4px;padding:10px 24px;border-radius:8px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.2);color:rgba(197,160,89,0.6);font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:2px;cursor:pointer;font-weight:600;">BOOST WALLET</button>' : ''}
 
-            <div style="width:100%;height:1px;background:rgba(255,255,255,0.03);margin:24px 0;"></div>
+            <div style="width:100%;height:1px;background:rgba(255,255,255,0.03);margin:20px 0;"></div>
 
             <div style="display:flex;flex-direction:column;gap:8px;">
-                <button id="_vaultLockNow" style="width:100%;padding:16px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(180,40,40,0.8);font-family:Cinzel,serif;font-size:0.75rem;letter-spacing:4px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
-                <button id="_vaultWaitQueen" style="width:100%;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
+                <button id="_vaultLockNow" style="width:100%;padding:15px;border-radius:8px;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.2);color:rgba(180,40,40,0.75);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
+                <button id="_vaultWaitQueen" style="width:100%;padding:13px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-family:Cinzel,serif;font-size:0.6rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
             </div>
 
-            <div id="_vaultDatePicker" style="display:none;margin-top:16px;">
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.2);margin-bottom:10px;letter-spacing:1px;">When should your sentence begin?</div>
-                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.5);font-family:Orbitron,sans-serif;font-size:0.8rem;outline:none;box-sizing:border-box;text-align:center;" />
-                <button id="_vaultSubmitDate" style="width:100%;margin-top:12px;padding:14px;border-radius:10px;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);color:rgba(180,40,40,0.7);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT REQUEST</button>
+            <div id="_vaultDatePicker" style="display:none;margin-top:14px;">
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.18);margin-bottom:8px;letter-spacing:1px;">When should your sentence begin?</div>
+                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.45);font-family:Orbitron,sans-serif;font-size:0.75rem;outline:none;box-sizing:border-box;text-align:center;" />
+                <button id="_vaultSubmitDate" style="width:100%;margin-top:10px;padding:13px;border-radius:8px;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.18);color:rgba(180,40,40,0.65);font-family:Cinzel,serif;font-size:0.65rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT REQUEST</button>
             </div>
 
-            <button id="_vaultLockClose" style="margin-top:32px;background:none;border:none;color:rgba(255,255,255,0.08);font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
+            <button id="_vaultLockClose" style="margin-top:28px;background:none;border:none;color:rgba(255,255,255,0.08);font-family:Rajdhani,sans-serif;font-size:0.55rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
         </div>
     `;
 
     document.body.appendChild(ov);
-    (window as any)._vaultSelectedTier = '7';
+    // Default to first affordable tier
+    const firstAffordable = LOCK_TIERS.find(t => wallet >= t.coins);
+    (window as any)._vaultSelectedTier = firstAffordable?.key || '7';
 
     // Close
     ov.querySelector('#_vaultLockClose')!.addEventListener('click', () => _closeVaultOverlay());
     ov.addEventListener('click', (e) => { if (e.target === ov) _closeVaultOverlay(); });
+
+    // Boost wallet — scroll to shop
+    const boostBtn = ov.querySelector('#_vaultBoostWallet');
+    if (boostBtn) boostBtn.addEventListener('click', () => { _closeVaultOverlay(); document.getElementById('shopSection')?.scrollIntoView({ behavior: 'smooth' }); });
 
     // Lock Now (instant)
     ov.querySelector('#_vaultLockNow')!.addEventListener('click', () => _submitVaultLock('apply-instant'));
@@ -5518,9 +5544,10 @@ async function _submitVaultLock(action: string, requestedStart?: string | null) 
 
     const isInstant = action === 'apply-instant';
     _showCoinConfirm({
-        title: isInstant ? 'LOCK NOW' : 'REQUEST LOCK',
+        title: isInstant ? 'LOCK NOW' : 'KEYHOLDER REQUEST',
         cost: tierData.coins,
         wallet,
+        theme: 'vault',
         onConfirm: async () => {
             try {
                 const body: any = { action, duration: tierData.days };
