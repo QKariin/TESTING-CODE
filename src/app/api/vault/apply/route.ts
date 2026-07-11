@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { DbService } from '@/lib/supabase-service';
 import { discordVaultLock } from '@/lib/discord';
+
+// Fresh admin client — NOT the shared singleton
+function getAdmin() {
+    return createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -25,19 +34,38 @@ export async function POST(req: Request) {
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
         // Find profile — use the email the client already loaded successfully
+        const admin = getAdmin();
         const selectCols = 'ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url';
-        const { data: profile, error: profileErr } = await supabaseAdmin
-            .from('profiles').select(selectCols).ilike('member_id', email).maybeSingle();
 
-        if (profileErr) console.error('[VAULT APPLY] profile lookup error:', profileErr.message);
+        let profile: any = null;
+
+        // Try ilike first (case-insensitive)
+        const r1 = await admin.from('profiles').select(selectCols).ilike('member_id', email).maybeSingle();
+        profile = r1.data;
+
+        // Try exact eq match
         if (!profile) {
-            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+            const r2 = await admin.from('profiles').select(selectCols).eq('member_id', email).maybeSingle();
+            profile = r2.data;
+        }
+
+        // Try by auth UUID
+        if (!profile) {
+            const r3 = await admin.from('profiles').select(selectCols).eq('id', user.id).maybeSingle();
+            profile = r3.data;
+        }
+
+        if (!profile) {
+            // Log everything to find the issue
+            const { data: allProfiles } = await admin.from('profiles').select('member_id').limit(5);
+            console.error('[VAULT APPLY] FAILED. searching:', email, 'uuid:', user.id, 'sample:', JSON.stringify(allProfiles));
+            return NextResponse.json({ error: `Profile not found for: ${email}` }, { status: 404 });
         }
 
         const memberId = (profile.member_id || email).toLowerCase();
 
         // Check for existing active or pending session
-        const { data: existing } = await supabaseAdmin
+        const { data: existing } = await getAdmin()
             .from('vault_sessions')
             .select('id, status')
             .eq('member_id', memberId)
@@ -65,7 +93,7 @@ export async function POST(req: Request) {
             const chastityDays = params.chastity_days || tier.days;
 
             // Create session as pending (wait for Queen) or active (instant)
-            const { data: session, error } = await supabaseAdmin
+            const { data: session, error } = await getAdmin()
                 .from('vault_sessions')
                 .insert({
                     member_id: memberId,
@@ -84,7 +112,7 @@ export async function POST(req: Request) {
             delete params.chastity_started;
             delete params.chastity_expires;
             params.vault_request = { sessionId: session.id, status: 'pending', requestedAt: new Date().toISOString() };
-            await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+            await getAdmin().from('profiles').update({ parameters: params }).eq('ID', profile.ID);
 
             // Notify Queen
             _notifyQueen(profile.name || memberId, chastityDays, 'keyholder').catch(() => {});
@@ -118,7 +146,7 @@ export async function POST(req: Request) {
         if (userMessage) insertPayload.request_message = userMessage;
         if (requestedStart && !isInstant) insertPayload.scheduled_start = requestedStart;
 
-        const { data: session, error } = await supabaseAdmin
+        const { data: session, error } = await getAdmin()
             .from('vault_sessions')
             .insert(insertPayload)
             .select()
@@ -150,7 +178,7 @@ export async function POST(req: Request) {
         if (purchaseHistory.length > 100) purchaseHistory.splice(100);
         params.purchaseHistory = purchaseHistory;
 
-        await supabaseAdmin.from('profiles').update({ wallet: newWallet, parameters: params }).eq('ID', profile.ID);
+        await getAdmin().from('profiles').update({ wallet: newWallet, parameters: params }).eq('ID', profile.ID);
 
         // System message
         try {
@@ -169,7 +197,7 @@ export async function POST(req: Request) {
         const rawPic = profile.avatar_url || profile.profile_picture_url || '';
         const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
         const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
-        try { await supabaseAdmin.from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
+        try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
         discordVaultLock(memberName, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
 
         return NextResponse.json({
@@ -195,10 +223,10 @@ export async function GET(req: Request) {
         const email = (user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        const { data: getProfile } = await supabaseAdmin.from('profiles').select('member_id').ilike('member_id', email).maybeSingle();
+        const { data: getProfile } = await getAdmin().from('profiles').select('member_id').ilike('member_id', email).maybeSingle();
         const memberId = (getProfile?.member_id || email).toLowerCase();
 
-        const { data: session } = await supabaseAdmin
+        const { data: session } = await getAdmin()
             .from('vault_sessions')
             .select('*')
             .ilike('member_id', memberId)
