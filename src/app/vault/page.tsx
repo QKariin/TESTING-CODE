@@ -1437,7 +1437,7 @@ export default function VaultPage() {
                                             const cost = hoursLeft * 5;
                                             return (
                                                 <button onClick={() => {
-                                                    setPenaltyHours(prev => prev + cost);
+                                                    setPenaltyHours((prev: number) => prev + cost);
                                                     setAttnCooldownUntil(0);
                                                     setChatGateCooldownUntil(0);
                                                     setAttnSkippedToday(false);
