@@ -120,10 +120,22 @@ function fmt(ms: number) {
     return { d: Math.floor(t / 86400), h: Math.floor((t % 86400) / 3600), m: Math.floor((t % 3600) / 60) };
 }
 
+// Read cached data synchronously before first render — no flash
+function _readCache() {
+    if (typeof window === 'undefined') return { profile: null, session: null, kneel: null };
+    try {
+        const p = sessionStorage.getItem('_vaultProfileCache');
+        const s = sessionStorage.getItem('_vaultSessionCache');
+        const k = sessionStorage.getItem('_vaultKneelCache');
+        return { profile: p ? JSON.parse(p) : null, session: s ? JSON.parse(s) : null, kneel: k ? JSON.parse(k) : null };
+    } catch { return { profile: null, session: null, kneel: null }; }
+}
+const _initCache = _readCache();
+
 export default function VaultPage() {
-    const [loading, setLoading] = useState(true);
-    const [profile, setProfile] = useState<any>(null);
-    const [vaultData, setVaultData] = useState<any>(null); // real DB data from /api/vault/session
+    const [loading, setLoading] = useState(!_initCache.profile);
+    const [profile, setProfile] = useState<any>(_initCache.profile);
+    const [vaultData, setVaultData] = useState<any>(_initCache.session?.active ? _initCache.session : null); // real DB data from /api/vault/session
     const [elapsed, setElapsed] = useState(fmt(Date.now() - new Date(MOCK.lockStart).getTime()));
     const [remaining, setRemaining] = useState(fmt(new Date(MOCK.lockEnd).getTime() - Date.now()));
     const [attentionCount, setAttentionCount] = useState(0);
@@ -145,7 +157,7 @@ export default function VaultPage() {
     const [attnFill, setAttnFill] = useState(0);
     const [attnResult, setAttnResult] = useState<typeof ATTENTION_TASKS[0] | null>(null);
     const [attnCooldownUntil, setAttnCooldownUntil] = useState(0); // timestamp when cooldown ends
-    const [penaltyHours, setPenaltyHours] = useState(0); // hours added to lock sentence
+    const [penaltyHours, setPenaltyHours] = useState(_initCache.session?.totalPenaltyHours || 0); // hours added to lock sentence
     const [rewardUntil, setRewardUntil] = useState(0); // timestamp when 1h freedom expires
     const [attnProofUploaded, setAttnProofUploaded] = useState(false);
     const [attnSpinning, setAttnSpinning] = useState(false);
@@ -171,8 +183,8 @@ export default function VaultPage() {
     // Kneel state
     const [kneelHolding, setKneelHolding] = useState(false);
     const [kneelFill, setKneelFill] = useState(0);
-    const [kneelToday, setKneelToday] = useState(0);
-    const [kneelCooldownUntil, setKneelCooldownUntil] = useState(0);
+    const [kneelToday, setKneelToday] = useState(_initCache.kneel?.todayKneeling || 0);
+    const [kneelCooldownUntil, setKneelCooldownUntil] = useState(_initCache.kneel?.isLocked && _initCache.kneel?.minLeft > 0 ? Date.now() + _initCache.kneel.minLeft * 60000 : 0);
     const [kneelDone, setKneelDone] = useState(false); // just completed animation
     const kneelTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const kneelStartTime = useRef(0);
@@ -248,18 +260,12 @@ export default function VaultPage() {
     // Init profile state from real DB + tribute system
     useEffect(() => {
         const _splashStart = Date.now();
-        // Check if data was pre-loaded by /profile splash — skip ALL fetches + splash
-        let _cachedProfile: any = null;
-        let _cachedSession: any = null;
-        let _cachedKneel: any = null;
-        try {
-            const pRaw = sessionStorage.getItem('_vaultProfileCache');
-            if (pRaw) { _cachedProfile = JSON.parse(pRaw); sessionStorage.removeItem('_vaultProfileCache'); }
-            const sRaw = sessionStorage.getItem('_vaultSessionCache');
-            if (sRaw) { _cachedSession = JSON.parse(sRaw); sessionStorage.removeItem('_vaultSessionCache'); }
-            const kRaw = sessionStorage.getItem('_vaultKneelCache');
-            if (kRaw) { _cachedKneel = JSON.parse(kRaw); sessionStorage.removeItem('_vaultKneelCache'); }
-        } catch {}
+        // Use data pre-loaded by /profile splash (already in state via _initCache)
+        const _cachedProfile = _initCache.profile;
+        const _cachedSession = _initCache.session;
+        const _cachedKneel = _initCache.kneel;
+        // Clean up sessionStorage
+        try { sessionStorage.removeItem('_vaultProfileCache'); sessionStorage.removeItem('_vaultSessionCache'); sessionStorage.removeItem('_vaultKneelCache'); } catch {}
 
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
