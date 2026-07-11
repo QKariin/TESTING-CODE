@@ -5742,7 +5742,7 @@ function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
                 <input id="_vaultVideoInput" type="file" accept="video/*" capture="user" style="display:none;" />
             </label>
 
-            <button id="_vaultVideoClose" style="margin-top:28px;background:none;border:none;color:rgba(255,255,255,0.25);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
+            <div style="margin-top:28px;font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.15);letter-spacing:2px;">YOU CANNOT PROCEED WITHOUT VIDEO PROOF</div>
         </div>
     `;
 
@@ -5764,8 +5764,6 @@ function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
         // Move to step 2: thumbnail picker
         _showVaultThumbPicker(ov, file, data);
     });
-
-    ov.querySelector('#_vaultVideoClose')!.addEventListener('click', () => ov.remove());
 }
 
 function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: string; lockDays: number }) {
@@ -5906,6 +5904,11 @@ export async function checkVaultLockStatus() {
         const res = await fetch('/api/vault/apply');
         const data = await res.json();
         _updateVaultLockButton(data);
+
+        // Force video proof overlay if awaiting — user cannot use the app until submitted
+        if (data.active && data.status === 'awaiting_video' && data.sessionId) {
+            _showVideoProofUpload({ sessionId: data.sessionId, lockDays: data.lockDays });
+        }
 
         // Subscribe to realtime vault session updates
         if (!_vaultRealtimeChannel && data.active && data.sessionId) {
