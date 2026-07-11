@@ -164,32 +164,37 @@ export default function ProfilePage() {
 
     // Vault freedom hour — check if locked user has a valid reward, redirect when expired
     useEffect(() => {
-        // Check if user has active vault lock — redirect to /vault if no freedom
+        // Check if user has active overlay (vault etc) — redirect if no freedom earned
         (async () => {
             try {
-                const res = await fetch('/api/vault/apply');
-                const data = await res.json();
-                if (!data.active || data.status !== 'active') return;
+                // First try profile data already loaded
+                const overlay = profile?.parameters?.active_overlay;
+                if (!overlay) {
+                    // Fallback: check vault API directly
+                    const res = await fetch('/api/vault/apply');
+                    const data = await res.json();
+                    if (!data.active || data.status !== 'active') return;
+                }
 
                 // Active lock — check if user has earned freedom
                 const stored = localStorage.getItem('vault_cooldowns');
                 const cd = stored ? JSON.parse(stored) : {};
                 const hasFreedom = cd.reward && cd.reward > Date.now();
 
+                const targetUrl = overlay === 'vault' ? '/vault' : `/${overlay || 'vault'}`;
+
                 if (!hasFreedom) {
-                    // No freedom — redirect to vault immediately
-                    window.location.href = '/vault';
+                    window.location.href = targetUrl;
                     return;
                 }
 
-                // Has freedom — show countdown and redirect when it expires
                 setVaultRewardLeft(Math.ceil((cd.reward - Date.now()) / 60000));
                 const iv = setInterval(() => {
                     const left = Math.ceil((cd.reward - Date.now()) / 60000);
                     if (left <= 0) {
                         clearInterval(iv);
                         setVaultRewardLeft(0);
-                        window.location.href = '/vault';
+                        window.location.href = targetUrl;
                     } else {
                         setVaultRewardLeft(left);
                     }
@@ -198,7 +203,7 @@ export default function ProfilePage() {
             } catch {}
         })();
         return () => { if ((window as any)._vaultFreedomInterval) clearInterval((window as any)._vaultFreedomInterval); };
-    }, []);
+    }, [profile]);
 
     // Track mobile viewport
     useEffect(() => {

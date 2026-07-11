@@ -47,6 +47,7 @@ export async function POST(req: Request) {
             if (profile) {
                 const params = profile.parameters || {};
                 params.vault_request = { ...params.vault_request, status: 'active', activatedAt: new Date().toISOString() };
+                params.active_overlay = 'vault';
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
             }
 
@@ -153,6 +154,7 @@ export async function POST(req: Request) {
             if (profile) {
                 const params = profile.parameters || {};
                 delete params.vault_request;
+                delete params.active_overlay;
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
             }
 

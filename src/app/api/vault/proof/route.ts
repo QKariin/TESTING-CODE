@@ -55,6 +55,17 @@ export async function POST(req: Request) {
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+        // Set active_overlay = 'vault' on profile
+        try {
+            const { data: fullProfile } = await supabaseAdmin.from('profiles').select('parameters').eq('ID', profile.ID).maybeSingle();
+            if (fullProfile) {
+                const params = fullProfile.parameters || {};
+                params.active_overlay = 'vault';
+                params.vault_request = { ...params.vault_request, status: 'active', activatedAt: now };
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+            }
+        } catch (_) {}
+
         // Create day 1 orders
         try {
             const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';

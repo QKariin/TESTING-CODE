@@ -121,6 +121,7 @@ function fmt(ms: number) {
 }
 
 export default function VaultPage() {
+    const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const [vaultData, setVaultData] = useState<any>(null); // real DB data from /api/vault/session
     const [elapsed, setElapsed] = useState(fmt(Date.now() - new Date(MOCK.lockStart).getTime()));
@@ -246,6 +247,7 @@ export default function VaultPage() {
 
     // Init profile state from real DB + tribute system
     useEffect(() => {
+        const _splashStart = Date.now();
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (!user) { window.location.href = '/login'; return; }
@@ -260,6 +262,8 @@ export default function VaultPage() {
                     email: user.email,
                 };
                 console.log('[VAULT] Loaded profile:', data);
+                // Cache name + avatar for loading screen
+                try { if (data.name) localStorage.setItem('_qk_name', data.name); if (data.avatar_url) localStorage.setItem('_qk_avatar', data.avatar_url); } catch {}
                 setProfile(data);
                 const { initProfileState } = await import('@/scripts/profile-state');
                 initProfileState(data);
@@ -273,18 +277,15 @@ export default function VaultPage() {
                         if (vd.active) {
                             setVaultData(vd);
                             setPenaltyHours(vd.totalPenaltyHours || 0);
-                            // Set already-done states from DB
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
                             if (todayTrial && (todayTrial.status === 'submitted' || todayTrial.status === 'approved')) setTrialDone(true);
-                            // Load kneel status
                             fetch(`/api/kneel-status?memberId=${encodeURIComponent(memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`)
                                 .then(r => r.json())
                                 .then(ks => {
                                     if (ks.todayKneeling) setKneelToday(ks.todayKneeling);
                                     if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
                                 }).catch(() => {});
-                            // Ensure today's daily record exists and isn't pre-seeded, then re-fetch
                             fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) })
                                 .then(() => fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`))
                                 .then(r => r.json())
@@ -301,8 +302,12 @@ export default function VaultPage() {
                 (window as any).switchMobChatTab = switchMobChatTab;
                 (window as any).handleMediaPlus = handleMediaPlus;
                 (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
+                // Dismiss splash after minimum 5s
+                const elapsed = Date.now() - _splashStart;
+                const remaining = Math.max(0, 5000 - elapsed);
+                setTimeout(() => setLoading(false), remaining);
             })
-            .catch(() => {});
+            .catch(() => { setLoading(false); });
         }).catch(() => { window.location.href = '/login'; });
         import('@/scripts/tribute-game').then(({ bindTributeGame }) => {
             bindTributeGame();
@@ -681,6 +686,55 @@ export default function VaultPage() {
         prevTab.current = tab;
     }, [tab, chatGateCooldown, vladReact]);
 
+    // ── LOADING SCREEN ──
+    if (loading) {
+        const _cachedName = typeof window !== 'undefined' ? (localStorage.getItem('_qk_name') || '') : '';
+        const _cachedAvatar = typeof window !== 'undefined' ? (localStorage.getItem('_qk_avatar') || '') : '';
+        return (
+            <div style={{ height: '100dvh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', background: '#050508', padding: '18vh 0 12vh', boxSizing: 'border-box' }}>
+                <style>{`
+                    @keyframes _vSplashGrow { 0% { transform: scale(0.8); opacity: 0; } 15% { opacity: 1; } 100% { transform: scale(1.35); opacity: 1; } }
+                    @keyframes _vSplashGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(139,0,0,0.15); } 50% { box-shadow: 0 0 50px 12px rgba(139,0,0,0.12); } }
+                    @keyframes _vSplashFade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+                `}</style>
+
+                {/* Top */}
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(139,0,0,0.45)', letterSpacing: '6px', fontWeight: 500, animation: '_vSplashFade 0.8s ease-out both' }}>
+                    SEALED
+                </div>
+
+                {/* Center — Avatar */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+                    {_cachedAvatar ? (
+                        <img
+                            src={_cachedAvatar}
+                            alt=""
+                            style={{ width: 140, height: 140, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(139,0,0,0.3)', animation: '_vSplashGrow 5s ease-out forwards, _vSplashGlow 2.5s ease-in-out infinite', marginBottom: 32 }}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                    ) : (
+                        <div style={{ width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,0,0,0.06) 0%, transparent 100%)', border: '2px solid rgba(139,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: '_vSplashGrow 5s ease-out forwards, _vSplashGlow 2.5s ease-in-out infinite', marginBottom: 32 }}>
+                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2.8rem', color: 'rgba(139,0,0,0.4)' }}>{_cachedName ? _cachedName[0].toUpperCase() : ''}</span>
+                        </div>
+                    )}
+                    {_cachedName && (
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: '#fff', letterSpacing: '3px', fontWeight: 700, animation: '_vSplashFade 0.8s ease-out 0.4s both', textAlign: 'center' }}>
+                            {_cachedName}
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom */}
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(139,0,0,0.3)', animation: '_vSplashFade 0.8s ease-out 1s both', letterSpacing: '3px' }}>
+                    loading your sentence...
+                </div>
+            </div>
+        );
+    }
+
+    // ── Pressure: actual percentage based on days elapsed vs total ──
+    const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
+
     return (
         <div style={{ background: '#050508', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
 
@@ -726,7 +780,7 @@ export default function VaultPage() {
 
                         {/* Rank / Status */}
                         <div style={{
-                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem',
+                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem',
                             color: '#8b0000', letterSpacing: '4px', textTransform: 'uppercase',
                         }}>
                             SEALED
@@ -817,7 +871,7 @@ export default function VaultPage() {
                                 <span id="vaultMerit" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.score ?? MOCK.merit}</span>
                                 <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
                             </div>
-                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>MERIT</span>
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>MERIT</span>
                         </div>
                         <div style={{ width: 1, height: 50, background: 'rgba(255,255,255,0.06)' }} />
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
@@ -825,7 +879,7 @@ export default function VaultPage() {
                                 <span id="vaultCoins" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.wallet ?? MOCK.coins}</span>
                                 <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9z" /></svg>
                             </div>
-                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>COINS</span>
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>COINS</span>
                         </div>
                     </div>
                 </div>
@@ -844,41 +898,41 @@ export default function VaultPage() {
                         { v: vaultData?.trials?.length ?? MOCK.trialsCompleted, l: 'TRIALS' },
                     ].map(s => (
                         <div key={s.l} style={{ textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: `${R}0.55)`, fontWeight: 700 }}>{s.v}</div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '1.5px', marginTop: 3 }}>{s.l}</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1rem', color: `${R}0.55)`, fontWeight: 700 }}>{s.v}</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px', marginTop: 3 }}>{s.l}</div>
                         </div>
                     ))}
                 </div>
 
                 {/* ── LOCKED X DAYS AGO ── */}
                 <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
-                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>LOCKED </span>
-                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.4rem', color: `${R}0.4)`, letterSpacing: '1px' }}>{elapsed.d}</span>
-                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
+                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>LOCKED </span>
+                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: `${R}0.65)`, letterSpacing: '1px' }}>{elapsed.d}</span>
+                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
                 </div>
 
                 {/* ── RELEASE COUNTDOWN — profile task timer style ── */}
                 <div style={{ width: '100%', padding: '4px 20px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: `${R}0.25)`, letterSpacing: '4px', marginBottom: 12 }}>RELEASE IN</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.5)`, letterSpacing: '4px', marginBottom: 12 }}>RELEASE IN</div>
                     {penaltyHours > 0 && (
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(255,40,40,0.4)', letterSpacing: '2px', marginBottom: 8 }}>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(255,40,40,0.4)', letterSpacing: '2px', marginBottom: 8 }}>
                             +{penaltyHours}h ADDED
                         </div>
                     )}
                     <div className="card-timer-row" style={{ gap: 10 }}>
                         <div className="card-t-box" style={{ background: `${R}0.06)`, border: `1px solid ${R}0.15)`, color: '#8b0000', textShadow: '0 0 10px rgba(139,0,0,0.3)', width: 72 }}>
                             {String(remaining.d).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: `${R}0.3)`, letterSpacing: '2px', marginTop: 2 }}>DAYS</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: `${R}0.55)`, letterSpacing: '2px', marginTop: 2 }}>DAYS</div>
                         </div>
-                        <div className="t-sep" style={{ color: `${R}0.25)` }}>:</div>
+                        <div className="t-sep" style={{ color: `${R}0.5)` }}>:</div>
                         <div className="card-t-box" style={{ background: `${R}0.06)`, border: `1px solid ${R}0.15)`, color: '#8b0000', textShadow: '0 0 10px rgba(139,0,0,0.3)', width: 72 }}>
                             {String(remaining.h).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: `${R}0.3)`, letterSpacing: '2px', marginTop: 2 }}>HRS</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: `${R}0.55)`, letterSpacing: '2px', marginTop: 2 }}>HRS</div>
                         </div>
-                        <div className="t-sep" style={{ color: `${R}0.25)` }}>:</div>
+                        <div className="t-sep" style={{ color: `${R}0.5)` }}>:</div>
                         <div className="card-t-box" style={{ background: `${R}0.06)`, border: `1px solid ${R}0.15)`, color: '#8b0000', textShadow: '0 0 10px rgba(139,0,0,0.3)', width: 72 }}>
                             {String(remaining.m).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: `${R}0.3)`, letterSpacing: '2px', marginTop: 2 }}>MIN</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: `${R}0.55)`, letterSpacing: '2px', marginTop: 2 }}>MIN</div>
                         </div>
                     </div>
                 </div>
@@ -890,12 +944,12 @@ export default function VaultPage() {
                         padding: '12px 14px', background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 10,
                         cursor: 'pointer', outline: 'none',
                     }}>
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: `${R}0.35)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.6)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)' }}>
+                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.45)' }}>
                                 {(dailyRecords.length > 0 ? dailyRecords.filter((d: any) => d.perfect).length : MOCK.dailyObedience.filter(Boolean).length)}/{daysIn} PERFECT
                             </span>
-                            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '0.6rem', transform: calendarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>&#9662;</span>
+                            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', transform: calendarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>&#9662;</span>
                         </div>
                     </button>
 
@@ -910,7 +964,7 @@ export default function VaultPage() {
                                 {/* Weekday headers */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 6 }}>
                                     {WEEKDAYS.map(d => (
-                                        <div key={d} style={{ textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '1px' }}>{d}</div>
+                                        <div key={d} style={{ textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>{d}</div>
                                     ))}
                                 </div>
                                 {/* Calendar grid */}
@@ -955,7 +1009,7 @@ export default function VaultPage() {
                                                     position: 'relative',
                                                 }}>
                                                 <span style={{
-                                                    fontFamily: 'Orbitron, monospace', fontSize: '0.4rem',
+                                                    fontFamily: 'Orbitron, monospace', fontSize: '0.7rem',
                                                     color: isToday
                                                         ? 'rgba(197,160,89,0.6)'
                                                         : obedient === true
@@ -990,7 +1044,7 @@ export default function VaultPage() {
                                     ].map(l => (
                                         <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: l.color }} />
-                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '1px' }}>{l.label}</span>
+                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>{l.label}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -1039,7 +1093,7 @@ export default function VaultPage() {
                                     <path d="M15 10l2 1" />
                                 </svg>
                                 <span style={{
-                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem',
+                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem',
                                     letterSpacing: '4px',
                                     color: kneelDone ? 'rgba(80,200,120,0.5)' : kneelCooldown ? 'rgba(255,255,255,0.08)' : `${R}0.55)`,
                                 }}>
@@ -1084,10 +1138,10 @@ export default function VaultPage() {
                                 Queen is disappointed.
                             </div>
                             <div style={{ width: 60, height: 1, background: `linear-gradient(90deg, transparent, ${R}0.3), transparent)`, margin: '0 auto 20px' }} />
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: `${R}0.5)`, letterSpacing: '4px', marginBottom: 8 }}>
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: `${R}0.5)`, letterSpacing: '4px', marginBottom: 8 }}>
                                 5 HOUR LOCKOUT
                             </div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>
                                 PERFECT OBEDIENCE BROKEN
                             </div>
                         </div>
@@ -1097,8 +1151,8 @@ export default function VaultPage() {
                 {/* ── TODAY'S ORDERS ── */}
                 <div style={{ width: '100%', padding: '0 20px 32px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: `${R}0.4)`, letterSpacing: '4px' }}>TODAY&apos;S ORDERS</div>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.65)`, letterSpacing: '4px' }}>TODAY&apos;S ORDERS</div>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
                     </div>
                     {attnSkippedToday && (
                         <div style={{ textAlign: 'center', padding: '8px 0 12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.3rem', color: 'rgba(255,40,40,0.4)', letterSpacing: '3px' }}>
@@ -1122,13 +1176,13 @@ export default function VaultPage() {
                                         {completed && <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                                     </div>
                                     <span style={{
-                                        flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.6rem',
+                                        flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.75rem',
                                         color: completed ? 'rgba(80,200,120,0.35)' : 'rgba(255,255,255,0.35)',
                                         textDecoration: completed ? 'line-through' : 'none',
                                         letterSpacing: '0.5px',
                                     }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
                                     {!completed && o.done > 0 && (
-                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: `${R}0.35)` }}>{o.done}/{o.target}</span>
+                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: `${R}0.6)` }}>{o.done}/{o.target}</span>
                                     )}
                                 </div>
                             );
@@ -1136,7 +1190,7 @@ export default function VaultPage() {
                     </div>
                     {todayOrders.every((o: any) => o.done >= o.target) && (
                         <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '3px' }}>
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '3px' }}>
                                 ALL ORDERS COMPLETE
                             </div>
                             {/* 1 Hour Freedom Reward */}
@@ -1150,12 +1204,12 @@ export default function VaultPage() {
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="1.5">
                                         <path d="M7 11V7a5 5 0 0 1 9.9-1" /><rect x="3" y="11" width="18" height="11" rx="2" />
                                     </svg>
-                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(80,200,120,0.5)', letterSpacing: '2px' }}>
+                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.5)', letterSpacing: '2px' }}>
                                         ENTER FREEDOM — {(() => { const left = Math.max(0, Math.ceil((rewardUntil - Date.now()) / 60000)); const h = Math.floor(left / 60); const m = left % 60; return `${h}h ${m}m left`; })()}
                                     </span>
                                 </button>
                             ) : rewardUntil > 0 ? (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.4rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px' }}>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>
                                     FREEDOM USED
                                 </div>
                             ) : (
@@ -1179,7 +1233,7 @@ export default function VaultPage() {
                                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5">
                                         <path d="M7 11V7a5 5 0 0 1 9.9-1" /><rect x="3" y="11" width="18" height="11" rx="2" />
                                     </svg>
-                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>
+                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px' }}>
                                         CLAIM FREEDOM UNTIL MIDNIGHT
                                     </span>
                                 </button>
@@ -1216,21 +1270,21 @@ export default function VaultPage() {
                 {/* ── PRESSURE ── */}
                 <div style={{ width: '100%', padding: '0 24px 32px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '3px' }}>PRESSURE</span>
-                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: sanity > 80 ? `${R}0.8)` : sanity > 50 ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.2)' }}>{Math.floor(sanity)}%</span>
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px' }}>PRESSURE</span>
+                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: pressurePct > 80 ? `${R}0.8)` : pressurePct > 50 ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.4)' }}>{pressurePct}%</span>
                     </div>
-                    <div style={{ height: 3, background: 'rgba(255,255,255,0.03)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
                         <div style={{
-                            height: '100%', width: `${sanity}%`, borderRadius: 2, transition: 'width 1s ease',
-                            background: sanity > 80 ? `linear-gradient(90deg, ${R}0.5), ${R}0.8))` : sanity > 50 ? 'linear-gradient(90deg, rgba(197,160,89,0.2), rgba(197,160,89,0.5))' : 'linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.15))',
+                            height: '100%', width: `${pressurePct}%`, borderRadius: 3, transition: 'width 1s ease',
+                            background: pressurePct > 80 ? `linear-gradient(90deg, ${R}0.5), ${R}0.8))` : pressurePct > 50 ? 'linear-gradient(90deg, rgba(197,160,89,0.3), rgba(197,160,89,0.6))' : 'linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.25))',
                         }} />
                     </div>
-                    {sanity > 85 && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', color: `${R}0.45)`, textAlign: 'center', marginTop: 10, letterSpacing: '1px' }}>You&apos;re breaking. Beg for mercy?</div>}
+                    {pressurePct > 85 && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: `${R}0.5)`, textAlign: 'center', marginTop: 10, letterSpacing: '1px' }}>You&apos;re breaking. Beg for mercy?</div>}
                 </div>
 
                 {/* ── MILESTONES ── */}
                 <div style={{ width: '100%', padding: '0 20px 36px' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '4px', textAlign: 'center', marginBottom: 16 }}>SEAL MILESTONES</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '4px', textAlign: 'center', marginBottom: 16 }}>SEAL MILESTONES</div>
                     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                         {SEALS.map(m => {
                             const done = daysIn >= m.days;
@@ -1246,7 +1300,7 @@ export default function VaultPage() {
                                         {cur && <svg viewBox="0 0 46 46" style={{ position: 'absolute', inset: -2, transform: 'rotate(-90deg)' }}><circle cx="23" cy="23" r="21" fill="none" stroke="rgba(197,160,89,0.1)" strokeWidth="1.5" /><circle cx="23" cy="23" r="21" fill="none" stroke="rgba(197,160,89,0.35)" strokeWidth="1.5" strokeDasharray={`${prog * 1.319} ${131.9 - prog * 1.319}`} /></svg>}
                                     </div>
                                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: done ? m.color : 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>{m.label}</div>
-                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.28rem', color: 'rgba(255,255,255,0.06)', marginTop: 2 }}>{m.days}d</div>
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{m.days}d</div>
                                 </div>
                             );
                         })}
@@ -1255,7 +1309,7 @@ export default function VaultPage() {
 
                 {/* ── LEADERBOARD ── */}
                 <div style={{ width: '100%', padding: '0 20px 36px' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: `${R}0.3)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>LEADERBOARD OF SUFFERING</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.55)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>LEADERBOARD OF SUFFERING</div>
                     {[
                         { r: 1, n: 'Subject #12', d: 93, s: 5 },
                         { r: 2, n: 'Subject #47', d: 47, s: 3, you: true },
@@ -1263,19 +1317,19 @@ export default function VaultPage() {
                         { r: 4, n: 'Subject #08', d: 21, s: 1 },
                     ].map(e => (
                         <div key={e.r} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: e.you ? `${R}0.03)` : 'transparent', borderLeft: e.you ? `2px solid ${R}0.25)` : '2px solid transparent', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.45rem', color: e.r === 1 ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.1)', minWidth: 20 }}>{String(e.r).padStart(2, '0')}</span>
-                            <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.55rem', color: e.you ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>{e.n}</span>
-                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '1px' }}>{e.d}d &middot; {e.s}x</span>
+                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: e.r === 1 ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.1)', minWidth: 20 }}>{String(e.r).padStart(2, '0')}</span>
+                            <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: e.you ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>{e.n}</span>
+                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>{e.d}d &middot; {e.s}x</span>
                         </div>
                     ))}
                 </div>
 
                 {/* ── BEG BUTTON ── */}
                 <div style={{ textAlign: 'center', padding: '20px 0 40px' }}>
-                    <button onClick={() => setShowBeg(true)} style={{ padding: '14px 44px', fontFamily: 'Cinzel, serif', fontSize: '0.6rem', letterSpacing: '3px', color: `${R}0.55)`, background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 10, cursor: 'pointer' }}>
+                    <button onClick={() => setShowBeg(true)} style={{ padding: '14px 44px', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '3px', color: `${R}0.55)`, background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 10, cursor: 'pointer' }}>
                         BEG FOR RELEASE
                     </button>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? MOCK.denials} TIMES</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? MOCK.denials} TIMES</div>
                 </div>
             </div>
 
@@ -1297,7 +1351,7 @@ export default function VaultPage() {
                                     </div>
                                     <div>
                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>QUEEN KARIN</div>
-                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: `${R}0.35)`, letterSpacing: '2px' }}>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: `${R}0.6)`, letterSpacing: '2px' }}>
                                             {chatExpiresAt ? (() => { const left = Math.max(0, Math.ceil((chatExpiresAt - Date.now()) / 1000)); const m = Math.floor(left / 60); const s = left % 60; return `${m}:${s.toString().padStart(2, '0')} LEFT`; })() : 'KEYHOLDER'}
                                         </div>
                                     </div>
@@ -1305,7 +1359,7 @@ export default function VaultPage() {
                             ) : (
                                 <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>{title}</span>
                             )}
-                            <button onClick={() => setTab('vault')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '1.2rem', cursor: 'pointer' }}>&#10005;</button>
+                            <button onClick={() => setTab('vault')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: '1.2rem', cursor: 'pointer' }}>&#10005;</button>
                         </div>
 
                         {/* Content or lock */}
@@ -1389,8 +1443,8 @@ export default function VaultPage() {
                                                         <polyline points="12 6 12 12 16 14" />
                                                     </svg>
                                                     <span style={{
-                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem',
-                                                        color: `${R}0.3)`, letterSpacing: '2px',
+                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem',
+                                                        color: `${R}0.55)`, letterSpacing: '2px',
                                                     }}>
                                                         SKIP COOLDOWN (+{cost}h lock time)
                                                     </span>
@@ -1409,11 +1463,11 @@ export default function VaultPage() {
                                             <span style={{ fontSize: '1.1rem', color: `${R}0.5)` }} dangerouslySetInnerHTML={{ __html: chatGateTask.icon }} />
                                         </div>
 
-                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: `${R}0.4)`, letterSpacing: '3px' }}>TO ENTER CHAT</div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#8b0000', letterSpacing: '2px', textShadow: `0 0 16px ${R}0.3)`, textAlign: 'center' }}>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: `${R}0.65)`, letterSpacing: '3px' }}>TO ENTER CHAT</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#8b0000', letterSpacing: '2px', textShadow: `0 0 16px ${R}0.3)`, textAlign: 'center' }}>
                                             {chatGateTask.label}
                                         </div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', lineHeight: 1.7 }}>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', lineHeight: 1.7 }}>
                                             {chatGateTask.desc}
                                         </div>
 
@@ -1426,16 +1480,16 @@ export default function VaultPage() {
                                                     <div style={{ width: 140, height: 140, borderRadius: '50%', border: `1px solid ${R}0.15)`, transform: `rotate(${chatGateSpinAngle}deg)`, transition: chatGateSpinning ? 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
                                                         {WHEEL.map((_, i) => { const seg = 360 / WHEEL.length; return <div key={i} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${i * seg - 90}deg) skewY(-${90 - seg}deg)`, background: i % 2 === 0 ? `${R}0.06)` : 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
                                                         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 28, height: 28, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                                                            <span style={{ fontSize: '0.5rem', color: `${R}0.4)` }}>&#9819;</span>
+                                                            <span style={{ fontSize: '0.7rem', color: `${R}0.65)` }}>&#9819;</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 {chatGateSpinResult ? (
                                                     <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', color: `${R}0.6)`, lineHeight: 1.5, marginBottom: 6 }}>{chatGateSpinResult.text}</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 12 }}>{chatGateSpinResult.type}</div>
+                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: `${R}0.6)`, lineHeight: 1.5, marginBottom: 6 }}>{chatGateSpinResult.text}</div>
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 12 }}>{chatGateSpinResult.type}</div>
                                                         <button onClick={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: chatGateSpinResult?.text }); setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }} style={{
-                                                            width: '100%', padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
+                                                            width: '100%', padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
                                                             color: 'rgba(80,200,120,0.5)', background: 'rgba(80,200,120,0.04)', border: '1px solid rgba(80,200,120,0.15)', borderRadius: 10, cursor: 'pointer',
                                                         }}>ENTER CHAT</button>
                                                     </div>
@@ -1447,7 +1501,7 @@ export default function VaultPage() {
                                                         setChatGateSpinAngle(prev => prev + 360 * 4 + (360 - idx * seg - seg / 2));
                                                         setTimeout(() => { setChatGateSpinResult(WHEEL[idx]); setChatGateSpinning(false); }, 3000);
                                                     }} style={{
-                                                        padding: '10px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
+                                                        padding: '10px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
                                                         color: chatGateSpinning ? 'rgba(255,255,255,0.08)' : `${R}0.5)`, background: 'transparent',
                                                         border: `1px solid ${chatGateSpinning ? 'rgba(255,255,255,0.04)' : `${R}0.12)`}`, borderRadius: 8, cursor: chatGateSpinning ? 'default' : 'pointer',
                                                     }}>{chatGateSpinning ? 'SPINNING...' : 'SPIN'}</button>
@@ -1460,7 +1514,7 @@ export default function VaultPage() {
                                             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                     <svg width="14" height="14" viewBox="0 0 512 512" fill={`${R}0.4)`}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80z" /></svg>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 1 }}>{profile?.wallet ?? MOCK.coins}</span>
+                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>{profile?.wallet ?? MOCK.coins}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
                                                     {[
@@ -1473,12 +1527,12 @@ export default function VaultPage() {
                                                             fontFamily: 'Orbitron, sans-serif', background: `${R}0.04)`, border: `1px solid ${R}0.15)`,
                                                             borderRadius: 10, cursor: 'pointer',
                                                         }}>
-                                                            <span style={{ fontSize: '0.5rem', fontWeight: 700, color: `${R}0.6)`, letterSpacing: 2 }}>{opt.label}</span>
-                                                            <span style={{ fontSize: '0.4rem', color: 'rgba(255,255,255,0.12)', letterSpacing: 1 }}>{opt.coins} COINS</span>
+                                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: `${R}0.6)`, letterSpacing: 2 }}>{opt.label}</span>
+                                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>{opt.coins} COINS</span>
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.25rem', color: 'rgba(255,255,255,0.05)', letterSpacing: 2 }}>BUY TIME WITH QUEEN</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>BUY TIME WITH QUEEN</div>
                                             </div>
                                         )}
 
@@ -1487,23 +1541,23 @@ export default function VaultPage() {
                                             !chatGateProofUploaded ? (
                                                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                                                     <div style={{ textAlign: 'center', marginBottom: 4 }}>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '2px', marginBottom: 3 }}>WRITE THIS NUMBER ON YOUR PROOF</div>
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 3 }}>WRITE THIS NUMBER ON YOUR PROOF</div>
                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: `${R}0.7)`, fontWeight: 700, letterSpacing: 6, textShadow: `0 0 20px ${R}0.3)` }}>#{daysIn + 1}</div>
                                                     </div>
                                                     <label style={{
-                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
+                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
                                                         color: `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer',
                                                         textAlign: 'center', display: 'block',
                                                     }}>
                                                         UPLOAD PROOF
                                                         <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: 'Proof uploaded' }); setChatGateProofUploaded(true); vladReact('Member uploaded proof to earn chat access. They want to talk to Queen badly.'); setTimeout(() => { setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }, 1200); }} />
                                                     </label>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.06)', letterSpacing: '1px' }}>PHOTO OR VIDEO</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>PHOTO OR VIDEO</div>
                                                 </div>
                                             ) : (
                                                 <div style={{ textAlign: 'center', animation: 'vFadeIn 0.3s ease' }}>
                                                     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 6 }}>PROOF SUBMITTED — ENTERING CHAT...</div>
+                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 6 }}>PROOF SUBMITTED — ENTERING CHAT...</div>
                                                 </div>
                                             )
                                         )}
@@ -1554,32 +1608,32 @@ export default function VaultPage() {
                                                             }
                                                         }, 1500);
                                                     }} style={{
-                                                        padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: '3px',
+                                                        padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '3px',
                                                         color: 'rgba(197,160,89,0.5)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer',
                                                     }}>FLIP</button>
                                                 )}
 
                                                 {chatGateFlipState === 'flipping' && (
-                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '3px' }}>FLIPPING...</div>
+                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '3px' }}>FLIPPING...</div>
                                                 )}
 
                                                 {chatGateFlipState === 'heads' && (
                                                     <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.5)', letterSpacing: '2px' }}>HEADS</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(80,200,120,0.3)', letterSpacing: '2px', marginTop: 4 }}>LUCKY — ENTERING CHAT...</div>
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.3)', letterSpacing: '2px', marginTop: 4 }}>LUCKY — ENTERING CHAT...</div>
                                                     </div>
                                                 )}
 
                                                 {chatGateFlipState === 'tails' && (
                                                     <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: `${R}0.6)`, letterSpacing: '2px' }}>TAILS</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: `${R}0.35)`, letterSpacing: '2px', marginTop: 4 }}>DENIED — LOCKED OUT 5 MINUTES</div>
-                                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: `${R}0.4)`, marginTop: 12 }}>
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 4 }}>DENIED — LOCKED OUT 5 MINUTES</div>
+                                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: `${R}0.65)`, marginTop: 12 }}>
                                                             {Math.max(0, Math.ceil((chatGateFlipLocked - Date.now()) / 60000))}m
                                                         </div>
                                                         <button onClick={() => { setChatGateFlipState('idle'); setChatGateTask(null); setTab('vault'); }} style={{
-                                                            marginTop: 14, padding: '8px 20px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', letterSpacing: '2px',
-                                                            color: 'rgba(255,255,255,0.1)', background: 'transparent', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 6, cursor: 'pointer',
+                                                            marginTop: 14, padding: '8px 20px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', letterSpacing: '2px',
+                                                            color: 'rgba(255,255,255,0.4)', background: 'transparent', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 6, cursor: 'pointer',
                                                         }}>RETURN TO VAULT</button>
                                                     </div>
                                                 )}
@@ -1607,7 +1661,7 @@ export default function VaultPage() {
                                                             });
                                                         }, 1000);
                                                     }} style={{
-                                                        padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: '3px',
+                                                        padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '3px',
                                                         color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer',
                                                     }}>BEGIN WAIT</button>
                                                 ) : chatGateWaitLeft > 0 ? (
@@ -1629,17 +1683,17 @@ export default function VaultPage() {
                                                                 <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.6rem', color: `${R}0.5)` }}>
                                                                     {chatGateWaitLeft}
                                                                 </div>
-                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px' }}>SECONDS</div>
+                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>SECONDS</div>
                                                             </div>
                                                         </div>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.5rem', color: 'rgba(255,255,255,0.15)', textAlign: 'center', lineHeight: 1.7 }}>
+                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.7 }}>
                                                             Patience is obedience.<br />Do not leave.
                                                         </div>
                                                     </>
                                                 ) : (
                                                     <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
                                                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 8 }}>PATIENCE PROVEN</div>
+                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 8 }}>PATIENCE PROVEN</div>
                                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(80,200,120,0.2)', letterSpacing: '2px', marginTop: 4 }}>ENTERING CHAT...</div>
                                                     </div>
                                                 )}
@@ -1673,7 +1727,7 @@ export default function VaultPage() {
                                                     disabled={chatGateConfessText.split(/\s+/).filter(Boolean).length < 20}
                                                     onClick={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: chatGateConfessText.slice(0, 100) }); vladReact(`Member just confessed to enter chat. They wrote: "${chatGateConfessText.slice(0, 80)}..." React to their confession.`); setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }}
                                                     style={{
-                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
+                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
                                                         color: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? `${R}0.6)` : 'rgba(255,255,255,0.06)',
                                                         background: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? `${R}0.04)` : 'transparent',
                                                         border: `1px solid ${chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? `${R}0.15)` : 'rgba(255,255,255,0.03)'}`,
@@ -1684,8 +1738,8 @@ export default function VaultPage() {
 
                                         {/* CANCEL — always visible on every chat gate task */}
                                         <button onClick={cancelChatGate} style={{
-                                            marginTop: 12, padding: '10px 24px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', letterSpacing: '3px',
-                                            color: 'rgba(255,255,255,0.1)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, cursor: 'pointer',
+                                            marginTop: 12, padding: '10px 24px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
+                                            color: 'rgba(255,255,255,0.4)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, cursor: 'pointer',
                                         }}>CANCEL</button>
                                     </div>
                                 )}
@@ -1695,8 +1749,8 @@ export default function VaultPage() {
                                 <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke={`${R}0.3)`} strokeWidth="1.5">
                                     <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
                                 </svg>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: `${R}0.45)`, letterSpacing: '3px', textAlign: 'center', padding: '0 40px' }}>{lockMsg}</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '2px' }}>TO UNLOCK UNION</div>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: `${R}0.65)`, letterSpacing: '3px', textAlign: 'center', padding: '0 40px' }}>{lockMsg}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>TO UNLOCK UNION</div>
                             </div>
                         ) : t === 'chat' ? (
                             <div id="mobChatOverlay" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1720,7 +1774,7 @@ export default function VaultPage() {
                                             <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus?.()}>+</button>
                                             <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey?.(e)} />
                                         </div>
-                                        <button onClick={() => (window as any).openProfileGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.38rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
+                                        <button onClick={() => (window as any).openProfileGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.65rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
                                         <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage?.()}>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1753,7 +1807,7 @@ export default function VaultPage() {
 
                                 {/* ── DAILY TRIAL ── */}
                                 <div style={{ width: '100%', padding: '0 4px 36px' }}>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: `${R}0.35)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.6)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>
                                         DAILY TRIAL &middot; DAY {daysIn + 1}
                                     </div>
                                     <div style={{ background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 12, padding: '20px 18px' }}>
@@ -1762,7 +1816,7 @@ export default function VaultPage() {
                                         </div>
                                         {!trialDone && !trialOpen && (
                                             <button onClick={() => setTrialOpen(true)} style={{
-                                                marginTop: 14, width: '100%', padding: '11px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '3px',
+                                                marginTop: 14, width: '100%', padding: '11px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
                                                 color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 8, cursor: 'pointer',
                                             }}>SUBMIT TRIAL</button>
                                         )}
@@ -1771,20 +1825,20 @@ export default function VaultPage() {
                                                 <textarea value={trialText} onChange={e => setTrialText(e.target.value)} placeholder="Write here..."
                                                     style={{ width: '100%', minHeight: 90, marginTop: 14, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 8, padding: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.75rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)' }}>{trialText.split(/\s+/).filter(Boolean).length} / 200</span>
+                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>{trialText.split(/\s+/).filter(Boolean).length} / 200</span>
                                                     <button onClick={() => {
                                                         setTrialDone(true); setTrialOpen(false);
                                                         if (vaultData?.session?.id) {
                                                             const todayTrial = vaultData?.today ? null : MOCK.todayTrial;
                                                             fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: todayTrial?.text || 'Daily trial', response: trialText }) }).catch(() => {});
                                                         }
-                                                    }} style={{ padding: '8px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 6, cursor: 'pointer' }}>SUBMIT</button>
+                                                    }} style={{ padding: '8px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 6, cursor: 'pointer' }}>SUBMIT</button>
                                                 </div>
                                             </>
                                         )}
                                         {trialDone && (
                                             <div style={{ marginTop: 14, textAlign: 'center' }}>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', color: 'rgba(80,200,120,0.45)', letterSpacing: '3px' }}>TRIAL COMPLETE</div>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.45)', letterSpacing: '3px' }}>TRIAL COMPLETE</div>
                                             </div>
                                         )}
                                     </div>
@@ -1796,23 +1850,23 @@ export default function VaultPage() {
 
                                 {/* ── TEMPTATION WHEEL ── */}
                                 <div style={{ width: '100%', padding: '0 4px 36px', textAlign: 'center' }}>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.25)', letterSpacing: '4px', marginBottom: 16 }}>TEMPTATION WHEEL</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.25)', letterSpacing: '4px', marginBottom: 16 }}>TEMPTATION WHEEL</div>
                                     <div style={{ position: 'relative', width: 220, height: 220, margin: '0 auto 16px' }}>
                                         <div style={{ position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: `12px solid ${R}0.6)` }} />
                                         <div style={{ width: 220, height: 220, borderRadius: '50%', border: `1.5px solid ${R}0.15)`, transform: `rotate(${wheelAngle}deg)`, transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
                                             {WHEEL.map((_, i) => { const seg = 360 / WHEEL.length; return <div key={i} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${i * seg - 90}deg) skewY(-${90 - seg}deg)`, background: i % 2 === 0 ? `${R}0.04)` : 'rgba(255,255,255,0.015)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
                                             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 44, height: 44, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                                                <span style={{ fontSize: '0.7rem', color: `${R}0.4)` }}>&#9819;</span>
+                                                <span style={{ fontSize: '0.7rem', color: `${R}0.65)` }}>&#9819;</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <button onClick={spin} disabled={spinning || wheelUsed} style={{ padding: '10px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.38rem', letterSpacing: '4px', color: wheelUsed ? 'rgba(255,255,255,0.1)' : `${R}0.5)`, background: 'transparent', border: `1px solid ${wheelUsed ? 'rgba(255,255,255,0.04)' : `${R}0.12)`}`, borderRadius: 8, cursor: wheelUsed ? 'default' : 'pointer' }}>
+                                    <button onClick={spin} disabled={spinning || wheelUsed} style={{ padding: '10px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '4px', color: wheelUsed ? 'rgba(255,255,255,0.1)' : `${R}0.5)`, background: 'transparent', border: `1px solid ${wheelUsed ? 'rgba(255,255,255,0.04)' : `${R}0.12)`}`, borderRadius: 8, cursor: wheelUsed ? 'default' : 'pointer' }}>
                                         {wheelUsed ? 'USED TODAY' : spinning ? 'SPINNING...' : 'SPIN'}
                                     </button>
                                     {wheelResult && (
                                         <div style={{ marginTop: 16, padding: '14px 20px', background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 10, animation: 'vFadeIn 0.5s ease' }}>
                                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: `${R}0.7)`, lineHeight: 1.5 }}>{wheelResult.text}</div>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px', marginTop: 6, textTransform: 'uppercase' }}>{wheelResult.type}</div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginTop: 6, textTransform: 'uppercase' }}>{wheelResult.type}</div>
                                         </div>
                                     )}
                                 </div>
@@ -1820,7 +1874,7 @@ export default function VaultPage() {
                             </div>
                         ) : (
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.4rem', color: 'rgba(255,255,255,0.06)', letterSpacing: '2px' }}>{title} PREVIEW</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{title} PREVIEW</div>
                             </div>
                         )}
 
@@ -1845,8 +1899,8 @@ export default function VaultPage() {
                     <div style={{ width: '100%', maxWidth: 380, background: '#0a0a0e', border: `1px solid ${R}0.12)`, borderRadius: 16, padding: '28px 22px' }} onClick={e => e.stopPropagation()}>
                         {!begSent ? (
                             <>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: `${R}0.45)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 6 }}>BEG FOR RELEASE</div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.5rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginBottom: 20, lineHeight: 1.6 }}>Choose your words carefully.<br />Queen Karin will decide your fate.</div>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: `${R}0.65)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 6 }}>BEG FOR RELEASE</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginBottom: 20, lineHeight: 1.6 }}>Choose your words carefully.<br />Queen Karin will decide your fate.</div>
                                 <textarea value={begText} onChange={e => setBegText(e.target.value)} placeholder="Please, Queen Karin..." style={{ width: '100%', minHeight: 100, background: `${R}0.02)`, border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.4)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.75rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
                                 <button onClick={() => {
                                     setBegSent(true);
@@ -1854,14 +1908,14 @@ export default function VaultPage() {
                                     if (vaultData?.session?.id) {
                                         fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'beg', memberId: profile?.member_id || profile?.memberId || '', message: begText }) }).catch(() => {});
                                     }
-                                }} disabled={!begText.trim()} style={{ marginTop: 14, width: '100%', padding: '13px', fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '3px', color: begText.trim() ? `${R}0.6)` : 'rgba(255,255,255,0.08)', background: begText.trim() ? `${R}0.04)` : 'transparent', border: `1px solid ${begText.trim() ? `${R}0.15)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: begText.trim() ? 'pointer' : 'default' }}>SUBMIT YOUR BEG</button>
+                                }} disabled={!begText.trim()} style={{ marginTop: 14, width: '100%', padding: '13px', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '3px', color: begText.trim() ? `${R}0.6)` : 'rgba(255,255,255,0.08)', background: begText.trim() ? `${R}0.04)` : 'transparent', border: `1px solid ${begText.trim() ? `${R}0.15)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: begText.trim() ? 'pointer' : 'default' }}>SUBMIT YOUR BEG</button>
                             </>
                         ) : (
                             <div style={{ textAlign: 'center', padding: '16px 0' }}>
                                 <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke={`${R}0.35)`} strokeWidth="1.5" style={{ marginBottom: 14 }}><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></svg>
                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>Your plea has been sent.</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '3px' }}>AWAIT HER DECISION</div>
-                                <button onClick={() => { setShowBeg(false); setBegSent(false); setBegText(''); }} style={{ marginTop: 20, padding: '8px 20px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.38rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.12)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 6, cursor: 'pointer' }}>CLOSE</button>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px' }}>AWAIT HER DECISION</div>
+                                <button onClick={() => { setShowBeg(false); setBegSent(false); setBegText(''); }} style={{ marginTop: 20, padding: '8px 20px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', letterSpacing: '2px', color: 'rgba(255,255,255,0.4)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 6, cursor: 'pointer' }}>CLOSE</button>
                             </div>
                         )}
                     </div>
@@ -1878,8 +1932,8 @@ export default function VaultPage() {
                         {/* Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                             <div>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: `${R}0.45)`, letterSpacing: '4px' }}>DAY {selectedDay.day}</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginTop: 4 }}>{new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: `${R}0.65)`, letterSpacing: '4px' }}>DAY {selectedDay.day}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginTop: 4 }}>{new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 {selectedDay.seal && (
@@ -1907,14 +1961,14 @@ export default function VaultPage() {
                             background: selectedDay.perfect ? `${R}0.04)` : 'rgba(255,40,40,0.03)',
                             border: `1px solid ${selectedDay.perfect ? `${R}0.1)` : 'rgba(255,40,40,0.08)'}`,
                         }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: selectedDay.perfect ? `${R}0.6)` : 'rgba(255,40,40,0.45)', letterSpacing: '2px' }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: selectedDay.perfect ? `${R}0.6)` : 'rgba(255,40,40,0.45)', letterSpacing: '2px' }}>
                                 {selectedDay.perfect ? 'PERFECT OBEDIENCE' : 'DISOBEDIENT'}
                             </div>
                         </div>
 
                         {/* Orders checklist */}
                         <div style={{ marginBottom: 20 }}>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '3px', marginBottom: 10 }}>ORDERS</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: 10 }}>ORDERS</div>
                             {selectedDay.orders.map((o, i) => {
                                 const completed = o.done >= o.target;
                                 const label = o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type === 'silence' ? 'No messages today' : o.type;
@@ -1928,9 +1982,9 @@ export default function VaultPage() {
                                         }}>
                                             {completed && <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#8b0000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                                         </div>
-                                        <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: completed ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)', textDecoration: completed ? 'none' : 'none' }}>{label}</span>
+                                        <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: completed ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)', textDecoration: completed ? 'none' : 'none' }}>{label}</span>
                                         {o.type === 'kneel' && !completed && (
-                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.35rem', color: 'rgba(255,40,40,0.35)' }}>{o.done}/{o.target}</span>
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: 'rgba(255,40,40,0.35)' }}>{o.done}/{o.target}</span>
                                         )}
                                     </div>
                                 );
@@ -1940,9 +1994,9 @@ export default function VaultPage() {
                         {/* Trial */}
                         {selectedDay.trial && (
                             <div style={{ marginBottom: 20 }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '3px', marginBottom: 10 }}>TRIAL</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: 10 }}>TRIAL</div>
                                 <div style={{ background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 10, padding: '14px 16px' }}>
-                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', color: `${R}0.45)`, lineHeight: 1.6, marginBottom: 10 }}>{selectedDay.trial.prompt}</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: `${R}0.65)`, lineHeight: 1.6, marginBottom: 10 }}>{selectedDay.trial.prompt}</div>
                                     <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.03)', margin: '8px 0' }} />
                                     <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, fontStyle: 'italic' }}>
                                         &ldquo;{selectedDay.trial.response}&rdquo;
@@ -1954,11 +2008,11 @@ export default function VaultPage() {
                         {/* Spin result */}
                         {selectedDay.spin && (
                             <div style={{ marginBottom: 20 }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '3px', marginBottom: 10 }}>WHEEL RESULT</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: 10 }}>WHEEL RESULT</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 10, padding: '12px 16px' }}>
                                     <span style={{ fontSize: '1rem', opacity: 0.4 }}>&#9819;</span>
                                     <div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>{selectedDay.spin.text}</div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>{selectedDay.spin.text}</div>
                                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: selectedDay.spin.type === 'reward' ? 'rgba(80,200,120,0.35)' : selectedDay.spin.type === 'punishment' ? `${R}0.35)` : 'rgba(255,255,255,0.08)', letterSpacing: '2px', marginTop: 3, textTransform: 'uppercase' }}>{selectedDay.spin.type}</div>
                                     </div>
                                 </div>
@@ -1968,17 +2022,17 @@ export default function VaultPage() {
                         {/* Tribute */}
                         {selectedDay.tribute > 0 && (
                             <div style={{ marginBottom: 20 }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '3px', marginBottom: 10 }}>TRIBUTE</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px', marginBottom: 10 }}>TRIBUTE</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 10, padding: '12px 16px' }}>
                                     <svg width="18" height="18" viewBox="0 0 512 512" fill={`${R}0.5)`}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80z" /></svg>
                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: `${R}0.5)`, fontWeight: 700 }}>{selectedDay.tribute}</span>
-                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>COINS TRIBUTED</span>
+                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>COINS TRIBUTED</span>
                                 </div>
                             </div>
                         )}
 
                         {/* Close */}
-                        <button onClick={() => setSelectedDay(null)} style={{ width: '100%', padding: '12px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.4rem', letterSpacing: '3px', color: 'rgba(255,255,255,0.12)', background: 'transparent', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, cursor: 'pointer', marginTop: 4 }}>CLOSE</button>
+                        <button onClick={() => setSelectedDay(null)} style={{ width: '100%', padding: '12px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', letterSpacing: '3px', color: 'rgba(255,255,255,0.4)', background: 'transparent', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 8, cursor: 'pointer', marginTop: 4 }}>CLOSE</button>
                     </div>
                 </div>
             )}
@@ -2078,8 +2132,8 @@ export default function VaultPage() {
                                 <img src="/vlad-avatar.png" alt="Vlad" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                             </div>
                             <div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.5rem', color: 'rgba(255,0,237,0.6)', letterSpacing: '3px' }}>VLAD</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.28rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '1px' }}>WATCHING YOU SUFFER</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,0,237,0.6)', letterSpacing: '3px' }}>VLAD</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>WATCHING YOU SUFFER</div>
                             </div>
                         </div>
                         <button onClick={() => setVladOpen(false)} style={{
@@ -2152,7 +2206,7 @@ export default function VaultPage() {
                             style={{
                                 padding: '8px 14px', background: 'rgba(255,0,237,0.06)',
                                 border: '1px solid rgba(255,0,237,0.12)', borderRadius: 12,
-                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', letterSpacing: '2px',
+                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '2px',
                                 color: vladSending ? 'rgba(255,0,237,0.12)' : 'rgba(255,0,237,0.45)',
                                 cursor: vladSending ? 'default' : 'pointer',
                             }}>SEND</button>
@@ -2185,7 +2239,7 @@ function NavBtn({ active, icon, label, onClick, locked }: { active: boolean; ico
     return (
         <button onClick={onClick} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', padding: '4px 12px', position: 'relative' }}>
             <span style={{ fontSize: typeof icon === 'string' ? '1rem' : undefined, color, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.1rem' }}>{icon}</span>
-            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.28rem', color, letterSpacing: '1px' }}>{label}</span>
+            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color, letterSpacing: '1px' }}>{label}</span>
             {locked && (
                 <div style={{ position: 'absolute', top: -2, right: 2, width: 12, height: 12, borderRadius: '50%', background: '#050508', border: '1px solid rgba(139,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg viewBox="0 0 24 24" width="7" height="7" fill="rgba(139,0,0,0.4)"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
