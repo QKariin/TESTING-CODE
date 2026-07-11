@@ -164,25 +164,40 @@ export default function ProfilePage() {
 
     // Vault freedom hour — check if locked user has a valid reward, redirect when expired
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem('vault_cooldowns');
-            if (!stored) return;
-            const cd = JSON.parse(stored);
-            if (!cd.reward || cd.reward <= Date.now()) return;
-            // User has an active freedom reward — start countdown
-            setVaultRewardLeft(Math.ceil((cd.reward - Date.now()) / 60000));
-            const iv = setInterval(() => {
-                const left = Math.ceil((cd.reward - Date.now()) / 60000);
-                if (left <= 0) {
-                    clearInterval(iv);
-                    setVaultRewardLeft(0);
+        // Check if user has active vault lock — redirect to /vault if no freedom
+        (async () => {
+            try {
+                const res = await fetch('/api/vault/apply');
+                const data = await res.json();
+                if (!data.active || data.status !== 'active') return;
+
+                // Active lock — check if user has earned freedom
+                const stored = localStorage.getItem('vault_cooldowns');
+                const cd = stored ? JSON.parse(stored) : {};
+                const hasFreedom = cd.reward && cd.reward > Date.now();
+
+                if (!hasFreedom) {
+                    // No freedom — redirect to vault immediately
                     window.location.href = '/vault';
-                } else {
-                    setVaultRewardLeft(left);
+                    return;
                 }
-            }, 10000);
-            return () => clearInterval(iv);
-        } catch {}
+
+                // Has freedom — show countdown and redirect when it expires
+                setVaultRewardLeft(Math.ceil((cd.reward - Date.now()) / 60000));
+                const iv = setInterval(() => {
+                    const left = Math.ceil((cd.reward - Date.now()) / 60000);
+                    if (left <= 0) {
+                        clearInterval(iv);
+                        setVaultRewardLeft(0);
+                        window.location.href = '/vault';
+                    } else {
+                        setVaultRewardLeft(left);
+                    }
+                }, 10000);
+                (window as any)._vaultFreedomInterval = iv;
+            } catch {}
+        })();
+        return () => { if ((window as any)._vaultFreedomInterval) clearInterval((window as any)._vaultFreedomInterval); };
     }, []);
 
     // Track mobile viewport
