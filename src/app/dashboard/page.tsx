@@ -769,6 +769,8 @@ export default function DashboardPage() {
     const [queenOnlyChat, setQueenOnlyChat] = useState(false);
     const [vaultRequest, setVaultRequest] = useState<any>(null);
     const [vaultLoading, setVaultLoading] = useState(false);
+    const [vaultSession, setVaultSession] = useState<any>(null);
+    const [vaultSessionLoading, setVaultSessionLoading] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
     const isDashboardRoute = pathname === '/dashboard';
@@ -908,7 +910,23 @@ export default function DashboardPage() {
         // Expose lock state setter so vanilla updateDetail can push state into React
         (window as any)._setActiveLocks = setActiveLocks;
         (window as any)._setQueenOnlyChat = setQueenOnlyChat;
-        (window as any)._setVaultRequest = setVaultRequest;
+        (window as any)._setVaultRequest = (req: any) => {
+            setVaultRequest(req);
+            // Auto-fetch full vault session data when user has active lock
+            if (req?.status === 'active') {
+                const id = (window as any).currId;
+                if (id) {
+                    setVaultSessionLoading(true);
+                    fetch(`/api/vault/session?memberId=${encodeURIComponent(id)}`)
+                        .then(r => r.json())
+                        .then(d => { if (d.active) setVaultSession(d); else setVaultSession(null); })
+                        .catch(() => setVaultSession(null))
+                        .finally(() => setVaultSessionLoading(false));
+                }
+            } else {
+                setVaultSession(null);
+            }
+        };
 
         // Inject scripts into window for legacy compatibility (DOM onclick handlers)
         if (typeof window !== 'undefined') {
@@ -2020,8 +2038,165 @@ export default function DashboardPage() {
                                 {/* ═══ SECTIONS ═══ */}
                                 <div className="dp-sections">
 
-                                {/* ── DIRECTIVE (collapsible) ── */}
-                                <div className="dp-section">
+                                {/* ── VAULT LOCKED VIEW — replaces normal sections when user is locked ── */}
+                                {vaultRequest?.status === 'active' && (() => {
+                                    const vs = vaultSession;
+                                    const s = vs?.session;
+                                    const daysIn = vs?.daysIn ?? 0;
+                                    const lockDays = s?.lock_days || vaultRequest.lockDays || 0;
+                                    const startedAt = s?.started_at ? new Date(s.started_at) : null;
+                                    const expiresAt = s?.expires_at ? new Date(s.expires_at) : null;
+                                    const remaining = expiresAt ? Math.max(0, expiresAt.getTime() - Date.now()) : 0;
+                                    const remainDays = Math.floor(remaining / 86400000);
+                                    const remainHrs = Math.floor((remaining % 86400000) / 3600000);
+                                    const pctDone = lockDays > 0 ? Math.min(100, (daysIn / lockDays) * 100) : 0;
+                                    const penaltyHrs = vs?.totalPenaltyHours || 0;
+                                    const streak = s?.current_streak || 0;
+                                    const bestStreak = s?.best_streak || 0;
+                                    const perfectDays = s?.total_perfect_days || 0;
+                                    const todayOrders: any[] = vs?.today?.orders ? (typeof vs.today.orders === 'string' ? JSON.parse(vs.today.orders) : vs.today.orders) : [];
+                                    const todayPerfect = vs?.today?.perfect || false;
+                                    const dailyRecords: any[] = vs?.dailyRecords || [];
+                                    const begs: any[] = vs?.begs || [];
+                                    const orderLabels: Record<string, string> = { kneel: 'KNEEL', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
+                                    const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                                    return (
+                                    <div style={{ padding: '0 4px' }}>
+                                        {/* ── LOCKED HEADER ── */}
+                                        <div style={{ textAlign: 'center', padding: '20px 10px 16px' }}>
+                                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="rgba(139,0,0,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                            <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.85rem', color: 'rgba(180,40,40,0.85)', letterSpacing: 6, fontWeight: 700, marginTop: 8 }}>VAULT LOCKED</div>
+                                            <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, marginTop: 4 }}>
+                                                {s?.tier || `${lockDays}d`} SENTENCE
+                                            </div>
+                                        </div>
+
+                                        {/* ── COUNTDOWN ── */}
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, margin: '0 0 16px' }}>
+                                            <div style={{ textAlign: 'center' }}>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.6rem', fontWeight: 800, color: '#fff' }}>{daysIn}</div>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>DAY</div>
+                                            </div>
+                                            <div style={{ width: 1, background: 'rgba(139,0,0,0.2)', alignSelf: 'stretch' }} />
+                                            <div style={{ textAlign: 'center' }}>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.6rem', fontWeight: 800, color: 'rgba(139,0,0,0.8)' }}>{remainDays}d {remainHrs}h</div>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>REMAINING</div>
+                                            </div>
+                                        </div>
+
+                                        {/* ── PROGRESS BAR ── */}
+                                        <div style={{ margin: '0 8px 20px' }}>
+                                            <div style={{ height: 4, background: 'rgba(139,0,0,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                                                <div style={{ height: '100%', width: `${pctDone}%`, background: 'linear-gradient(90deg, rgba(139,0,0,0.4), rgba(139,0,0,0.7))', borderRadius: 2, transition: 'width 0.5s' }} />
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{startedAt ? fmtDate(startedAt) : '—'}</span>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(139,0,0,0.5)' }}>{Math.round(pctDone)}%</span>
+                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{expiresAt ? fmtDate(expiresAt) : '—'}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* ── TODAY'S ORDERS ── */}
+                                        <div style={{ background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 8, margin: '0 4px 12px', padding: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                                <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3 }}>TODAY&apos;S ORDERS</span>
+                                                {todayPerfect && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(80,200,80,0.8)', letterSpacing: 2 }}>✓ PERFECT</span>}
+                                            </div>
+                                            {todayOrders.length > 0 ? todayOrders.map((o: any, i: number) => (
+                                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.3)'}`, background: o.done >= o.target ? 'rgba(80,200,80,0.1)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', color: o.done >= o.target ? 'rgba(80,200,80,0.8)' : 'transparent' }}>✓</div>
+                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.7)', letterSpacing: 2, flex: 1, textDecoration: o.done >= o.target ? 'line-through' : 'none', opacity: o.done >= o.target ? 0.5 : 1 }}>{orderLabels[o.type] || o.type.toUpperCase()}</span>
+                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
+                                                </div>
+                                            )) : (
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', textAlign: 'center' }}>{vaultSessionLoading ? 'Loading...' : 'No orders yet'}</div>
+                                            )}
+                                        </div>
+
+                                        {/* ── STATS GRID ── */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, margin: '0 4px 12px' }}>
+                                            {[
+                                                { label: 'STREAK', value: streak, color: streak > 0 ? 'rgba(80,200,80,0.7)' : 'rgba(255,255,255,0.4)' },
+                                                { label: 'BEST', value: bestStreak, color: 'rgba(197,160,89,0.7)' },
+                                                { label: 'PERFECT', value: perfectDays, color: 'rgba(255,255,255,0.5)' },
+                                            ].map((st, i) => (
+                                                <div key={i} style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(139,0,0,0.03)', border: '1px solid rgba(139,0,0,0.08)', borderRadius: 6 }}>
+                                                    <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1rem', fontWeight: 700, color: st.color }}>{st.value}</div>
+                                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>{st.label}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* ── PENALTY ── */}
+                                        {penaltyHrs > 0 && (
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, margin: '0 4px 12px', padding: '8px', background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 6 }}>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: 'rgba(255,60,60,0.6)', letterSpacing: 2 }}>+{penaltyHrs}h PENALTY</span>
+                                            </div>
+                                        )}
+
+                                        {/* ── DAILY HISTORY (last 7) ── */}
+                                        {dailyRecords.length > 0 && (
+                                            <div style={{ margin: '0 4px 12px' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>DAILY LOG</div>
+                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                    {dailyRecords.slice(-14).map((d: any, i: number) => (
+                                                        <div key={i} title={`Day ${d.day_number}: ${d.perfect ? 'Perfect' : `${d.orders_completed || 0}/${d.orders_total || 0}`}`} style={{ width: 22, height: 22, borderRadius: 4, background: d.perfect ? 'rgba(80,200,80,0.15)' : 'rgba(139,0,0,0.08)', border: `1px solid ${d.perfect ? 'rgba(80,200,80,0.3)' : 'rgba(139,0,0,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Orbitron',sans-serif", fontSize: '0.35rem', color: d.perfect ? 'rgba(80,200,80,0.7)' : 'rgba(255,255,255,0.2)' }}>
+                                                            {d.day_number}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ── BEGS ── */}
+                                        {begs.length > 0 && (
+                                            <div style={{ margin: '0 4px 12px' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>BEGS ({begs.length})</div>
+                                                <div style={{ maxHeight: 100, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                    {begs.slice(-5).map((b: any, i: number) => (
+                                                        <div key={i} style={{ padding: '6px 10px', background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.08)', borderRadius: 6, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                                                            &ldquo;{b.message}&rdquo;
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ── VIDEO PROOF ── */}
+                                        {s?.video_proof_url && (
+                                            <div style={{ margin: '0 4px 12px' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>VIDEO PROOF</div>
+                                                <a href={s.video_proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px', background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 6, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 1, textAlign: 'center', textDecoration: 'none' }}>
+                                                    {s.video_reviewed ? '✓ REVIEWED' : '▶ WATCH PROOF'}
+                                                </a>
+                                            </div>
+                                        )}
+
+                                        {/* ── RELEASE CONTROLS ── */}
+                                        <div style={{ margin: '0 4px 12px', padding: '12px', background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 8 }}>
+                                            <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 10 }}>RELEASE</div>
+                                            <textarea id="vaultReleaseReasonTop" placeholder="Reason for release (shown to user)..." style={{ width: '100%', minHeight: 50, padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 6, color: 'rgba(255,255,255,0.6)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', resize: 'vertical', marginBottom: 8 }} />
+                                            <button disabled={vaultLoading} onClick={async () => {
+                                                const reasonEl = document.getElementById('vaultReleaseReasonTop') as HTMLTextAreaElement;
+                                                const reason = reasonEl?.value?.trim() || '';
+                                                if (!confirm('Release this lock immediately?')) return;
+                                                setVaultLoading(true);
+                                                try {
+                                                    await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'release', sessionId: vaultRequest.sessionId, reason }) });
+                                                    setVaultRequest(null);
+                                                    setVaultSession(null);
+                                                } catch (_) {} finally { setVaultLoading(false); }
+                                            }} style={{ width: '100%', padding: '10px', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(255,60,60,0.25)', borderRadius: 6, color: 'rgba(255,60,60,0.7)', fontFamily: "'Cinzel',serif", fontSize: '0.5rem', letterSpacing: 3, cursor: vaultLoading ? 'default' : 'pointer', fontWeight: 700, opacity: vaultLoading ? 0.5 : 1 }}>IMMEDIATE RELEASE</button>
+                                        </div>
+                                    </div>
+                                    );
+                                })()}
+
+                                {/* ── DIRECTIVE (collapsible) — hidden when vault locked ── */}
+                                <div className="dp-section" style={vaultRequest?.status === 'active' ? { display: 'none' } : {}}>
                                     <div className="dp-directive-header" onClick={() => { const d = document.getElementById('taskDrawer'); if (d) d.classList.toggle('open'); }}>
                                         <div className="dp-divider-label">
                                             <span className="dp-divider-text" style={{ fontFamily: "'Cinzel', serif" }}>DIRECTIVES</span>
@@ -2048,8 +2223,8 @@ export default function DashboardPage() {
                                 {/* kneeling is in the header now */}
                                 <div id="admin_KneelSection" style={{ display: 'none' }}></div>
 
-                                {/* ── PROMOTION ── */}
-                                <div id="progress_section" className="dp-section">
+                                {/* ── PROMOTION — hidden when vault locked ── */}
+                                <div id="progress_section" className="dp-section" style={vaultRequest?.status === 'active' ? { display: 'none' } : {}}>
                                     <div className="dp-divider-label">
                                         <span className="dp-divider-text">PROMOTION</span>
                                         <span id="admin_NextRank" className="dp-promo-target">—</span>
@@ -2057,8 +2232,8 @@ export default function DashboardPage() {
                                     <div id="admin_ProgressContainer" className="dp-promo-bars"></div>
                                 </div>
 
-                                {/* ── INVENTORY ── */}
-                                <div className="dp-section">
+                                {/* ── INVENTORY — hidden when vault locked ── */}
+                                <div className="dp-section" style={vaultRequest?.status === 'active' ? { display: 'none' } : {}}>
                                     <div className="dp-divider-label">
                                         <span className="dp-divider-text">INVENTORY</span>
                                     </div>
@@ -2081,8 +2256,8 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* ── TELEMETRY + KINKS ── */}
-                                <div className="dp-section dp-section-split">
+                                {/* ── TELEMETRY + KINKS — hidden when vault locked ── */}
+                                <div className="dp-section dp-section-split" style={vaultRequest?.status === 'active' ? { display: 'none' } : {}}>
                                     <div id="telemetry_section" className="dp-split-half" onClick={() => { const c = document.getElementById('admin_TelemetryContainer'); const a = document.getElementById('telemetry_arrow'); if (c) { const open = c.style.display !== 'none'; c.style.display = open ? 'none' : 'grid'; if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)'; } }}>
                                         <div className="dp-split-trigger">
                                             <span className="dp-section-title">INTEL</span>
@@ -2194,13 +2369,13 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                 )}
-                                {vaultRequest && (vaultRequest.status === 'active' || vaultRequest.status === 'scheduled' || vaultRequest.status === 'awaiting_video') && (
+                                {vaultRequest && (vaultRequest.status === 'scheduled' || vaultRequest.status === 'awaiting_video') && (
                                     <div style={{ background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.2)', borderRadius: 10, margin: '0 8px 12px', padding: '14px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                            <span style={{ fontSize: '1.2rem' }}>{vaultRequest.status === 'active' ? '🔒' : vaultRequest.status === 'awaiting_video' ? '🔏' : '📅'}</span>
+                                            <span style={{ fontSize: '1.2rem' }}>{vaultRequest.status === 'awaiting_video' ? '🔏' : '📅'}</span>
                                             <div>
                                                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.8)', letterSpacing: 2, fontWeight: 700 }}>
-                                                    {vaultRequest.status === 'active' ? 'LOCKED' : vaultRequest.status === 'awaiting_video' ? 'AWAITING VIDEO' : 'SCHEDULED'}
+                                                    {vaultRequest.status === 'awaiting_video' ? 'AWAITING VIDEO' : 'SCHEDULED'}
                                                 </div>
                                                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>{vaultRequest.lockDays}d sentence</div>
                                             </div>
@@ -2214,6 +2389,7 @@ export default function DashboardPage() {
                                             try {
                                                 await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'release', sessionId: vaultRequest.sessionId, reason }) });
                                                 setVaultRequest(null);
+                                                setVaultSession(null);
                                             } catch (_) {} finally { setVaultLoading(false); }
                                         }} style={{ width: '100%', padding: '10px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>IMMEDIATE RELEASE</button>
                                     </div>
