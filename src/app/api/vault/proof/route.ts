@@ -12,7 +12,7 @@ export async function POST(req: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { sessionId, videoUrl, memberId: clientMemberId } = await req.json();
+        const { sessionId, videoUrl, thumbUrl, memberId: clientMemberId } = await req.json();
         if (!sessionId || !videoUrl) return NextResponse.json({ error: 'Missing sessionId or videoUrl' }, { status: 400 });
 
         const email = (clientMemberId || user.email || (user.user_metadata?.provider_id
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
                 started_at: now,
                 expires_at: expiresAt,
                 video_proof_url: videoUrl,
+                video_thumb_url: thumbUrl || null,
                 video_submitted_at: now,
             })
             .eq('id', sessionId);

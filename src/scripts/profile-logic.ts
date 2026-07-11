@@ -5726,32 +5726,21 @@ function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
     ov.id = '_vaultVideoOverlay';
     ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080507;animation:_vFadeIn 0.3s ease;overflow:hidden;';
 
+    // Step 1: Record video
     ov.innerHTML = `
         <div style="text-align:center;max-width:340px;padding:0 28px;">
             <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);letter-spacing:4px;margin-bottom:6px;">DAY 1</div>
             <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:4px;font-weight:700;margin-bottom:6px;">VERIFICATION</div>
             <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.4);margin-bottom:28px;">${data.lockDays} day sentence — submit video proof</div>
 
-            <div id="_vaultVideoPreview" style="display:none;margin-bottom:18px;border-radius:12px;overflow:hidden;border:1px solid rgba(139,0,0,0.25);max-height:220px;">
-                <video id="_vaultVideoEl" style="width:100%;max-height:220px;object-fit:contain;" playsinline controls></video>
-            </div>
-
-            <label id="_vaultVideoLabel" style="display:flex;align-items:center;justify-content:center;width:100%;height:140px;border-radius:12px;border:1px dashed rgba(255,255,255,0.15);cursor:pointer;flex-direction:column;gap:10px;">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <label id="_vaultVideoLabel" style="display:flex;align-items:center;justify-content:center;width:100%;height:160px;border-radius:12px;border:1px dashed rgba(255,255,255,0.15);cursor:pointer;flex-direction:column;gap:10px;">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="rgba(139,0,0,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);letter-spacing:1px;">TAP TO RECORD OR SELECT VIDEO</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);letter-spacing:1px;">TAP TO RECORD VIDEO</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.2);letter-spacing:1px;">MAX 2 MINUTES</div>
                 <input id="_vaultVideoInput" type="file" accept="video/*" capture="user" style="display:none;" />
             </label>
-
-            <div id="_vaultVideoProgress" style="display:none;margin-top:18px;">
-                <div style="width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
-                    <div id="_vaultVideoBar" style="width:0%;height:100%;background:rgba(139,0,0,0.7);transition:width 0.3s;"></div>
-                </div>
-                <div id="_vaultVideoStatus" style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);margin-top:8px;letter-spacing:1px;">UPLOADING...</div>
-            </div>
-
-            <button id="_vaultVideoSubmit" style="display:none;width:100%;margin-top:18px;padding:16px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:0.9rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT PROOF</button>
 
             <button id="_vaultVideoClose" style="margin-top:28px;background:none;border:none;color:rgba(255,255,255,0.25);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
         </div>
@@ -5759,78 +5748,155 @@ function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
 
     document.body.appendChild(ov);
 
-    let uploadedUrl = '';
-
     const fileInput = ov.querySelector('#_vaultVideoInput') as HTMLInputElement;
-    const preview = ov.querySelector('#_vaultVideoPreview') as HTMLElement;
-    const videoEl = ov.querySelector('#_vaultVideoEl') as HTMLVideoElement;
-    const label = ov.querySelector('#_vaultVideoLabel') as HTMLElement;
-    const submitBtn = ov.querySelector('#_vaultVideoSubmit') as HTMLElement;
 
-    fileInput.addEventListener('change', async () => {
+    fileInput.addEventListener('change', () => {
         const file = fileInput.files?.[0];
         if (!file) return;
 
-        // Show preview
-        videoEl.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-        label.style.display = 'none';
+        const MAX_SIZE_MB = 100;
+        const sizeMB = file.size / 1024 / 1024;
+        if (sizeMB > MAX_SIZE_MB) {
+            alert(`Video is ${sizeMB.toFixed(0)}MB — max ${MAX_SIZE_MB}MB. Record a shorter clip.`);
+            return;
+        }
 
-        // Upload
-        const progress = ov.querySelector('#_vaultVideoProgress') as HTMLElement;
-        const bar = ov.querySelector('#_vaultVideoBar') as HTMLElement;
-        const status = ov.querySelector('#_vaultVideoStatus') as HTMLElement;
-        progress.style.display = 'block';
-        bar.style.width = '30%';
+        // Move to step 2: thumbnail picker
+        _showVaultThumbPicker(ov, file, data);
+    });
 
-        try {
-            const url = await uploadToSupabase('proofs', 'vault-proof', file);
-            if (url.startsWith('failed:')) {
-                status.textContent = url.replace('failed:', '');
-                status.style.color = 'rgba(255,60,60,0.6)';
-                bar.style.width = '0%';
-                return;
-            }
-            bar.style.width = '100%';
-            status.textContent = 'UPLOADED';
-            uploadedUrl = url;
-            submitBtn.style.display = 'block';
-        } catch (err: any) {
-            status.textContent = err.message || 'Upload failed';
-            status.style.color = 'rgba(255,60,60,0.6)';
+    ov.querySelector('#_vaultVideoClose')!.addEventListener('click', () => ov.remove());
+}
+
+function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: string; lockDays: number }) {
+    const videoUrl = URL.createObjectURL(file);
+
+    ov.innerHTML = `
+        <div style="text-align:center;max-width:380px;padding:0 24px;width:100%;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.3);letter-spacing:4px;margin-bottom:6px;">CHOOSE YOUR</div>
+            <div style="font-family:Cinzel,serif;font-size:1.3rem;color:rgba(255,255,255,0.7);letter-spacing:4px;font-weight:700;margin-bottom:20px;">THUMBNAIL</div>
+
+            <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;margin-bottom:14px;border:1px solid rgba(139,0,0,0.25);">
+                <video id="_vtpVideo" style="width:100%;height:100%;object-fit:contain;display:block;" muted playsinline></video>
+                <div id="_vtpDuration" style="position:absolute;bottom:8px;right:10px;font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;letter-spacing:1px;"></div>
+            </div>
+
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-bottom:6px;">SCRUB TO PICK FRAME</div>
+            <input id="_vtpScrub" type="range" min="0" max="100" value="0" step="0.1" style="width:100%;margin-bottom:20px;accent-color:rgba(139,0,0,0.8);cursor:pointer;height:3px;" />
+
+            <div id="_vtpProgress" style="display:none;margin-bottom:16px;">
+                <div style="width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+                    <div id="_vtpBar" style="width:0%;height:100%;background:rgba(139,0,0,0.7);transition:width 0.3s;"></div>
+                </div>
+                <div id="_vtpStatus" style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);margin-top:8px;letter-spacing:1px;">UPLOADING...</div>
+            </div>
+
+            <button id="_vtpSubmit" style="width:100%;padding:16px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:0.9rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT PROOF</button>
+
+            <button id="_vtpBack" style="margin-top:18px;background:none;border:none;color:rgba(255,255,255,0.25);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">RE-RECORD</button>
+        </div>
+    `;
+
+    const video = ov.querySelector('#_vtpVideo') as HTMLVideoElement;
+    const scrub = ov.querySelector('#_vtpScrub') as HTMLInputElement;
+    const submitBtn = ov.querySelector('#_vtpSubmit') as HTMLButtonElement;
+    const backBtn = ov.querySelector('#_vtpBack') as HTMLElement;
+    const durationEl = ov.querySelector('#_vtpDuration') as HTMLElement;
+    const progressEl = ov.querySelector('#_vtpProgress') as HTMLElement;
+    const barEl = ov.querySelector('#_vtpBar') as HTMLElement;
+    const statusEl = ov.querySelector('#_vtpStatus') as HTMLElement;
+
+    video.src = videoUrl;
+    video.addEventListener('loadedmetadata', () => {
+        video.currentTime = 0;
+        const dur = Math.round(video.duration);
+        durationEl.textContent = `${Math.floor(dur / 60)}:${(dur % 60).toString().padStart(2, '0')}`;
+    });
+
+    // Scrub to pick frame
+    scrub.addEventListener('input', () => {
+        if (video.duration) {
+            video.currentTime = (parseFloat(scrub.value) / 100) * video.duration;
         }
     });
 
+    // Re-record
+    backBtn.addEventListener('click', () => {
+        URL.revokeObjectURL(videoUrl);
+        _showVideoProofUpload(data);
+    });
+
+    // Submit — grab thumbnail frame, upload both
     submitBtn.addEventListener('click', async () => {
-        if (!uploadedUrl) return;
-        submitBtn.textContent = 'ACTIVATING...';
-        (submitBtn as HTMLButtonElement).disabled = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'UPLOADING...';
+        progressEl.style.display = 'block';
+        barEl.style.width = '20%';
 
         try {
+            // 1. Capture thumbnail from current frame
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.min(video.videoWidth, 720);
+            canvas.height = Math.round(canvas.width * (video.videoHeight / Math.max(video.videoWidth, 1)));
+            const ctx = canvas.getContext('2d')!;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const thumbBlob = await new Promise<Blob>((resolve) => {
+                canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.85);
+            });
+            const thumbFile = new File([thumbBlob], `vault-thumb-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+            // 2. Upload video
+            statusEl.textContent = 'UPLOADING VIDEO...';
+            barEl.style.width = '40%';
+            const vUrl = await uploadToSupabase('proofs', 'vault-proof', file);
+            if (vUrl.startsWith('failed:')) {
+                statusEl.textContent = vUrl.replace('failed:', '');
+                statusEl.style.color = 'rgba(255,60,60,0.6)';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'SUBMIT PROOF';
+                return;
+            }
+
+            // 3. Upload thumbnail
+            statusEl.textContent = 'SAVING THUMBNAIL...';
+            barEl.style.width = '80%';
+            const tUrl = await uploadToSupabase('proofs', 'vault-thumb', thumbFile);
+            const thumbUrl = tUrl.startsWith('failed:') ? null : tUrl;
+
+            barEl.style.width = '100%';
+            statusEl.textContent = 'ACTIVATING LOCK...';
+
+            // 4. Submit proof to API
+            const state = getState();
             const res = await fetch('/api/vault/proof', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId: data.sessionId, videoUrl: uploadedUrl }),
+                body: JSON.stringify({
+                    sessionId: data.sessionId,
+                    videoUrl: vUrl,
+                    thumbUrl,
+                    memberId: state.email || state.memberId,
+                }),
             });
             const result = await res.json();
             if (result.error) {
                 alert(result.error);
+                submitBtn.disabled = false;
                 submitBtn.textContent = 'SUBMIT PROOF';
-                (submitBtn as HTMLButtonElement).disabled = false;
                 return;
             }
 
+            URL.revokeObjectURL(videoUrl);
             ov.remove();
             _showVaultConfirmation(true, data.lockDays);
             _updateVaultLockButton({ active: true, status: 'active', lockDays: data.lockDays });
-        } catch {
-            alert('Connection error. Try again.');
+        } catch (err: any) {
+            alert(err.message || 'Connection error. Try again.');
+            submitBtn.disabled = false;
             submitBtn.textContent = 'SUBMIT PROOF';
-            (submitBtn as HTMLButtonElement).disabled = false;
         }
     });
-
-    ov.querySelector('#_vaultVideoClose')!.addEventListener('click', () => ov.remove());
 }
 
 let _vaultRealtimeChannel: any = null;
