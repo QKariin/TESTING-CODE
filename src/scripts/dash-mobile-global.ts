@@ -144,7 +144,7 @@ async function _loadMobGlTalk() {
         const data = await res.json();
         const msgs: any[] = (data.messages || []).filter((m: any) => {
             const c = m.message || '';
-            return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::') && !c.startsWith('VAULT_LOCK_CARD::');
+            return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::');
         });
         _renderMobGlTalk(msgs);
         _mobGlLoaded['talk'] = true;
@@ -163,7 +163,7 @@ function _initMobGlRealtime() {
             (payload: any) => {
                 const msg = payload.new;
                 const content = msg.message || '';
-                if (content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::') || content.startsWith('VAULT_LOCK_CARD::')) return;
+                if (content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::')) return;
                 const dedupKey = msg.media_url || content;
                 if (_mobGlPendingSent.has(dedupKey)) { _mobGlPendingSent.delete(dedupKey); return; }
                 _appendMobGlMessage(msg);
