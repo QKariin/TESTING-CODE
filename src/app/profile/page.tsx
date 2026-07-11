@@ -162,47 +162,28 @@ export default function ProfilePage() {
     const [showInstallGuide, setShowInstallGuide] = useState(false);
     const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-    // Vault freedom hour — check if locked user has a valid reward, redirect when expired
+    // Vault freedom hour — monitor remaining freedom time and redirect when expired
     useEffect(() => {
-        // Check if user has active overlay (vault etc) — redirect if no freedom earned
-        (async () => {
-            try {
-                // First try profile data already loaded
-                const overlay = profile?.parameters?.active_overlay;
-                if (!overlay) {
-                    // Fallback: check vault API directly
-                    const res = await fetch('/api/vault/apply');
-                    const data = await res.json();
-                    if (!data.active || data.status !== 'active') return;
-                }
+        if (!profile?.parameters?.active_overlay) return;
+        const overlay = profile.parameters.active_overlay;
+        const stored = localStorage.getItem('vault_cooldowns');
+        const cd = stored ? JSON.parse(stored) : {};
+        if (!cd.reward || cd.reward <= Date.now()) return; // already redirected during splash
 
-                // Active lock — check if user has earned freedom
-                const stored = localStorage.getItem('vault_cooldowns');
-                const cd = stored ? JSON.parse(stored) : {};
-                const hasFreedom = cd.reward && cd.reward > Date.now();
-
-                const targetUrl = overlay === 'vault' ? '/vault' : `/${overlay || 'vault'}`;
-
-                if (!hasFreedom) {
-                    window.location.href = targetUrl;
-                    return;
-                }
-
-                setVaultRewardLeft(Math.ceil((cd.reward - Date.now()) / 60000));
-                const iv = setInterval(() => {
-                    const left = Math.ceil((cd.reward - Date.now()) / 60000);
-                    if (left <= 0) {
-                        clearInterval(iv);
-                        setVaultRewardLeft(0);
-                        window.location.href = targetUrl;
-                    } else {
-                        setVaultRewardLeft(left);
-                    }
-                }, 10000);
-                (window as any)._vaultFreedomInterval = iv;
-            } catch {}
-        })();
-        return () => { if ((window as any)._vaultFreedomInterval) clearInterval((window as any)._vaultFreedomInterval); };
+        const targetUrl = overlay === 'vault' ? '/vault' : `/${overlay}`;
+        setVaultRewardLeft(Math.ceil((cd.reward - Date.now()) / 60000));
+        const iv = setInterval(() => {
+            const left = Math.ceil((cd.reward - Date.now()) / 60000);
+            if (left <= 0) {
+                clearInterval(iv);
+                setVaultRewardLeft(0);
+                window.location.href = targetUrl;
+            } else {
+                setVaultRewardLeft(left);
+            }
+        }, 10000);
+        (window as any)._vaultFreedomInterval = iv;
+        return () => clearInterval(iv);
     }, [profile]);
 
     // Track mobile viewport
@@ -574,6 +555,24 @@ export default function ProfilePage() {
                         paywall: unifiedData?.parameters?.paywall ?? null,
                         memberId: unifiedData.member_id || unifiedData.memberId || '',
                     };
+
+                    // ── VAULT REDIRECT — check during splash so no double-load ──
+                    const _overlay = unifiedData?.parameters?.active_overlay;
+                    const _vaultReq = unifiedData?.parameters?.vault_request;
+                    if (_overlay) {
+                        const stored = localStorage.getItem('vault_cooldowns');
+                        const cd = stored ? JSON.parse(stored) : {};
+                        const hasFreedom = cd.reward && cd.reward > Date.now();
+                        if (!hasFreedom) {
+                            const targetUrl = _overlay === 'vault' ? '/vault' : `/${_overlay}`;
+                            window.location.href = targetUrl;
+                            return; // stop loading — redirect in progress
+                        }
+                    }
+                    // awaiting_video — store for checkVaultLockStatus to pick up instantly
+                    if (_vaultReq?.status === 'awaiting_video' && _vaultReq?.sessionId) {
+                        (window as any)._vaultAwaitingVideo = { sessionId: _vaultReq.sessionId, lockDays: _vaultReq.lockDays || 7 };
+                    }
 
                     // Init deferred to after splash — see finish() in finally block
                 }

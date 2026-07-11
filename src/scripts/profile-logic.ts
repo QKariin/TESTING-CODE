@@ -5920,8 +5920,16 @@ let _vaultRealtimeChannel: any = null;
 
 export async function checkVaultLockStatus() {
     try {
-        const res = await fetch('/api/vault/apply');
-        const data = await res.json();
+        // Use cached data from splash if available — avoids duplicate API call
+        const cached = (window as any)._vaultAwaitingVideo;
+        let data: any;
+        if (cached) {
+            delete (window as any)._vaultAwaitingVideo;
+            data = { active: true, status: 'awaiting_video', sessionId: cached.sessionId, lockDays: cached.lockDays };
+        } else {
+            const res = await fetch('/api/vault/apply');
+            data = await res.json();
+        }
         _updateVaultLockButton(data);
 
         // Force video proof overlay if awaiting — user cannot use the app until submitted
