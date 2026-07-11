@@ -383,6 +383,7 @@ async function _loadTalkPreview() {
                         (m.message||'').startsWith('UPDATE_COINS_CARD::') ? 'COINS EARNED' :
                         (m.message||'').startsWith('UPDATE_MERIT_CARD::') ? 'MERIT EARNED' :
                         (m.message||'').startsWith('LEADERBOARD_REWARD_CARD::') ? 'LEADERBOARD CHAMPION' :
+                        (m.message||'').startsWith('VAULT_LOCK_CARD::') ? 'KEYHOLDER LOCK' :
                         m.message}</div>
                 </div>
             </div>`;
@@ -895,6 +896,33 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
                             ${d.winnerName ? `<div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:#fff;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">${d.winnerName}</div>` : ''}
                             <div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.8);margin-bottom:6px;">${d.rewards || ''}</div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(197,160,89,0.5);letter-spacing:2px;">SCORE: ${(d.score || 0).toLocaleString()} · ${(d.period || '').toUpperCase()}</div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch (e) { /* fall through */ }
+    }
+
+    // ── Vault Lock Card ──
+    if (content.startsWith('VAULT_LOCK_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('VAULT_LOCK_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(139,0,0,0.08),rgba(139,0,0,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(139,0,0,0.4);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.4rem;color:rgba(180,40,40,0.8);">${initials}</div></div>`;
+            const dayLabel = d.days === 1 ? 'DAY' : 'DAYS';
+            const typeLabel = d.type === 'instant' ? 'Self-locked' : 'Awaiting approval';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:8px;">
+                <div style="width:60%;min-width:240px;max-width:480px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0406,#0d0404,#0a0303);border:1px solid rgba(139,0,0,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;">${photoBlock}${photoFallback}</div>
+                        <div style="padding:16px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(139,0,0,0.65);letter-spacing:3px;margin-bottom:8px;">KEYHOLDER LOCK</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.35),transparent);margin:0 auto 10px;"></div>
+                            <div style="margin-bottom:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:1px;margin-bottom:4px;">${d.name||''} — ${d.days||0} ${dayLabel}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(139,0,0,0.45);">${typeLabel}</div>
                         </div>
                     </div>
                     <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
