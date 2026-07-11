@@ -121,7 +121,12 @@ function fmt(ms: number) {
 }
 
 export default function VaultPage() {
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try { if (sessionStorage.getItem('_vaultProfileCache')) return false; } catch {}
+        }
+        return true;
+    });
     const [profile, setProfile] = useState<any>(null);
     const [vaultData, setVaultData] = useState<any>(null); // real DB data from /api/vault/session
     const [elapsed, setElapsed] = useState(fmt(Date.now() - new Date(MOCK.lockStart).getTime()));
