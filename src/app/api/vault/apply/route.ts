@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
         // Find profile — use the email the client already loaded successfully
         const admin = getAdmin();
-        const selectCols = 'ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url';
+        const selectCols = 'ID, wallet, parameters, name, member_id, avatar_url';
 
         let profile: any = null;
 
@@ -194,7 +194,7 @@ export async function POST(req: Request) {
 
         // Global chat card + Discord
         const memberName = profile.name || memberId.split('@')[0];
-        const rawPic = profile.avatar_url || profile.profile_picture_url || '';
+        const rawPic = profile.avatar_url || '';
         const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
         const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
         try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
