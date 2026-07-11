@@ -291,6 +291,24 @@ export default function VaultPage() {
                                 .then(r => r.json())
                                 .then(vd2 => { if (vd2.active) setVaultData(vd2); })
                                 .catch(() => {});
+
+                            // Realtime: listen for release/completion — redirect immediately
+                            const rtSub = supabase
+                                .channel('vault_release_watch')
+                                .on('postgres_changes', {
+                                    event: 'UPDATE',
+                                    schema: 'public',
+                                    table: 'vault_sessions',
+                                    filter: `id=eq.${vd.session.id}`,
+                                }, (payload: any) => {
+                                    const s = payload.new;
+                                    if (s.status === 'released_early' || s.status === 'completed' || s.status === 'denied') {
+                                        try { localStorage.removeItem('vault_cooldowns'); } catch {}
+                                        window.location.href = '/profile';
+                                    }
+                                })
+                                .subscribe();
+                            (window as any)._vaultRtSub = rtSub;
                         }
                     })
                     .catch(e => console.error('[VAULT] Session fetch failed:', e));
