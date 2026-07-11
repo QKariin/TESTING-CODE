@@ -223,7 +223,7 @@ export async function GET(req: Request) {
         const email = (user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        const { data: getProfile } = await getAdmin().from('profiles').select('member_id').ilike('member_id', email).maybeSingle();
+        const { data: getProfile } = await getAdmin().from('profiles').select('member_id, parameters').ilike('member_id', email).maybeSingle();
         const memberId = (getProfile?.member_id || email).toLowerCase();
 
         const { data: session } = await getAdmin()
@@ -236,6 +236,18 @@ export async function GET(req: Request) {
             .maybeSingle();
 
         if (!session) return NextResponse.json({ active: false });
+
+        // Self-heal: if session says active but profile has no vault_request/active_overlay,
+        // the release update failed (e.g. missing column). Fix the stale session now.
+        const profileParams = getProfile?.parameters || {};
+        if (session.status === 'active' && !profileParams.vault_request && !profileParams.active_overlay) {
+            console.warn('[VAULT APPLY GET] Stale active session detected — auto-releasing:', session.id);
+            await getAdmin().from('vault_sessions').update({
+                status: 'released_early',
+                released_at: new Date().toISOString(),
+            }).eq('id', session.id);
+            return NextResponse.json({ active: false });
+        }
 
         return NextResponse.json({
             active: true,

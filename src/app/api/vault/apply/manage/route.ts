@@ -139,11 +139,23 @@ export async function POST(req: Request) {
 
         // ── RELEASE (immediate early release) ──
         if (action === 'release') {
-            await supabaseAdmin.from('vault_sessions').update({
+            // Critical: update status first — must succeed
+            const { error: releaseErr } = await supabaseAdmin.from('vault_sessions').update({
                 status: 'released_early',
                 released_at: new Date().toISOString(),
-                release_reason: reason || null,
             }).eq('id', sessionId);
+
+            if (releaseErr) {
+                console.error('[VAULT MANAGE] Release status update failed:', releaseErr);
+                return NextResponse.json({ error: 'Failed to release: ' + releaseErr.message }, { status: 500 });
+            }
+
+            // Optional: store reason (column may not exist yet)
+            if (reason) {
+                try {
+                    await supabaseAdmin.from('vault_sessions').update({ release_reason: reason }).eq('id', sessionId);
+                } catch (_) {}
+            }
 
             // Clear vault_request from profile
             const { data: profile } = await supabaseAdmin
@@ -172,10 +184,12 @@ export async function POST(req: Request) {
 
         // ── APPROVE PROOF (mark video as reviewed) ──
         if (action === 'approve-proof') {
-            await supabaseAdmin.from('vault_sessions').update({
+            const { error: reviewErr } = await supabaseAdmin.from('vault_sessions').update({
                 video_reviewed: true,
                 video_reviewed_at: new Date().toISOString(),
             }).eq('id', sessionId);
+
+            if (reviewErr) console.error('[VAULT MANAGE] Approve proof failed:', reviewErr);
 
             try {
                 await DbService.sendMessage(memberId,
