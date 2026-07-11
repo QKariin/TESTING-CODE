@@ -5906,6 +5906,18 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
                     <style>@keyframes _vaultSpin{to{transform:rotate(360deg)}}</style>
                 </div>
             `;
+            // Pre-fetch vault data so vault page has real data immediately (no MOCK)
+            const _memberId = state.email || state.memberId || '';
+            try {
+                const [vaultRes, kneelRes] = await Promise.all([
+                    fetch(`/api/vault/session?memberId=${encodeURIComponent(_memberId)}`).then(r => r.json()).catch(() => null),
+                    fetch(`/api/kneel-status?memberId=${encodeURIComponent(_memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`).then(r => r.json()).catch(() => null),
+                ]);
+                sessionStorage.setItem('_vaultProfileCache', JSON.stringify(state.raw || state));
+                if (vaultRes) sessionStorage.setItem('_vaultSessionCache', JSON.stringify(vaultRes));
+                if (kneelRes) sessionStorage.setItem('_vaultKneelCache', JSON.stringify(kneelRes));
+            } catch {}
+            sessionStorage.setItem('_vaultFirstArrival', '1');
             // Redirect to vault after a moment
             setTimeout(() => { window.location.href = '/vault'; }, 2500);
         } catch (err: any) {

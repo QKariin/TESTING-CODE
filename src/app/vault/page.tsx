@@ -136,10 +136,16 @@ export default function VaultPage() {
     const [loading, setLoading] = useState(!_initCache.profile);
     const [profile, setProfile] = useState<any>(_initCache.profile);
     const [vaultData, setVaultData] = useState<any>(_initCache.session?.active ? _initCache.session : null); // real DB data from /api/vault/session
-    const [elapsed, setElapsed] = useState(fmt(Date.now() - new Date(MOCK.lockStart).getTime()));
-    const [remaining, setRemaining] = useState(fmt(new Date(MOCK.lockEnd).getTime() - Date.now()));
+    const [elapsed, setElapsed] = useState(() => {
+        const s = _initCache.session?.session;
+        return s?.started_at ? fmt(Date.now() - new Date(s.started_at).getTime()) : fmt(0);
+    });
+    const [remaining, setRemaining] = useState(() => {
+        const s = _initCache.session?.session;
+        return s?.expires_at ? fmt(new Date(s.expires_at).getTime() - Date.now()) : fmt(0);
+    });
     const [attentionCount, setAttentionCount] = useState(0);
-    const [sanity, setSanity] = useState(MOCK.sanity);
+    const [sanity, setSanity] = useState(62);
     const [trialOpen, setTrialOpen] = useState(false);
     const [trialText, setTrialText] = useState('');
     const [trialDone, setTrialDone] = useState(false);
@@ -206,8 +212,8 @@ export default function VaultPage() {
     const chatGateStartTime = useRef(0);
     const globalOk = attentionCount >= KNEELS_NEEDED;
     const chatOk = chatGateDone;
-    const daysIn = vaultData?.daysIn ?? Math.floor((Date.now() - new Date(MOCK.lockStart).getTime()) / 86400000);
-    const lockDays = vaultData?.session?.lock_days ?? MOCK.lockDays;
+    const daysIn = vaultData?.daysIn ?? 0;
+    const lockDays = vaultData?.session?.lock_days ?? 0;
     const dailyRecords = vaultData?.dailyRecords || [];
     const adjustments = vaultData?.adjustments || [];
     const rawOrders = vaultData?.today?.orders;
@@ -245,8 +251,9 @@ export default function VaultPage() {
     }, [attnCooldownUntil, chatGateCooldownUntil, penaltyHours, rewardUntil]);
 
     useEffect(() => {
-        const lockStart = vaultData?.session?.started_at || MOCK.lockStart;
-        const lockEnd = vaultData?.session?.expires_at || MOCK.lockEnd;
+        if (!vaultData?.session?.started_at) return;
+        const lockStart = vaultData.session.started_at;
+        const lockEnd = vaultData.session.expires_at || new Date(Date.now() + 86400000).toISOString();
         const iv = setInterval(() => {
             setElapsed(fmt(Date.now() - new Date(lockStart).getTime()));
             setRemaining(fmt(new Date(lockEnd).getTime() - Date.now()));
@@ -511,7 +518,7 @@ export default function VaultPage() {
     // Send attention card to dashboard
     const sendAttentionCard = useCallback((task: typeof ATTENTION_TASKS[0], opts: { completed?: boolean; skipped?: boolean; result?: string } = {}) => {
         const memberId = profile?.member_id || profile?.memberId || '';
-        const memberName = profile?.name || MOCK.name;
+        const memberName = profile?.name || '';
         fetch('/api/vault/attention', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -528,9 +535,9 @@ export default function VaultPage() {
 
     // Build vault context string for Vlad
     const buildVaultContext = useCallback(() => {
-        const name = profile?.name || MOCK.name;
-        const streak = profile?.parameters?.routine_streak || MOCK.streak;
-        const coins = profile?.wallet ?? MOCK.coins;
+        const name = profile?.name || '';
+        const streak = profile?.parameters?.routine_streak || 0;
+        const coins = profile?.wallet ?? 0;
         const cooldownLeft = attnCooldownUntil > Date.now() ? Math.ceil((attnCooldownUntil - Date.now()) / 60000) : 0;
         const lines = [
             `LOCKED MEMBER: ${name}`,
@@ -577,6 +584,21 @@ export default function VaultPage() {
     const vladReact = useCallback((event: string) => {
         sendVladMsg(`[SYSTEM EVENT — react to this naturally, don't quote it verbatim] ${event}`, true);
     }, [sendVladMsg]);
+
+    // Vlad welcome on first vault arrival (after video submission)
+    useEffect(() => {
+        if (loading || !profile) return;
+        try {
+            const first = sessionStorage.getItem('_vaultFirstArrival');
+            if (first) {
+                sessionStorage.removeItem('_vaultFirstArrival');
+                const name = profile?.name || '';
+                setTimeout(() => {
+                    vladReact(`${name} has just been locked in the vault for the first time. Welcome them to their cage. Be dark, theatrical, slightly menacing but welcoming. This is their first moment inside.`);
+                }, 1500);
+            }
+        } catch {}
+    }, [loading, profile, vladReact]);
 
     // Kneel hold handler
     const KNEEL_HOLD_TIME = 3000; // 3 second hold to kneel
@@ -814,7 +836,7 @@ export default function VaultPage() {
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                             marginBottom: 5,
                         }}>
-                            {profile?.name || MOCK.name}
+                            {profile?.name || ''}
                         </div>
 
                         {/* Rank / Status */}
@@ -836,9 +858,9 @@ export default function VaultPage() {
                             {Array.from({ length: lockDays }).map((_, i) => {
                                 const isToday = i === daysIn;
                                 const isPast = i < daysIn;
-                                const obedient = isPast ? (dailyRecords[i]?.perfect ?? MOCK.dailyObedience[i]) : undefined;
+                                const obedient = isPast ? (dailyRecords[i]?.perfect ?? undefined) : undefined;
                                 const clickable = isPast || isToday;
-                                const dayLog = dailyRecords[i] ? _toDayLog(dailyRecords[i]) : MOCK.dailyLogs[i];
+                                const dayLog = dailyRecords[i] ? _toDayLog(dailyRecords[i]) : null;
                                 const lockSize = lockDays > 30 ? 14 : lockDays > 14 ? 18 : 22;
 
                                 // Colors per state
@@ -907,7 +929,7 @@ export default function VaultPage() {
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                <span id="vaultMerit" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.score ?? MOCK.merit}</span>
+                                <span id="vaultMerit" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.score ?? 0}</span>
                                 <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
                             </div>
                             <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>MERIT</span>
@@ -915,7 +937,7 @@ export default function VaultPage() {
                         <div style={{ width: 1, height: 50, background: 'rgba(255,255,255,0.06)' }} />
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                <span id="vaultCoins" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.wallet ?? MOCK.coins}</span>
+                                <span id="vaultCoins" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.wallet ?? 0}</span>
                                 <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9z" /></svg>
                             </div>
                             <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>COINS</span>
@@ -932,9 +954,9 @@ export default function VaultPage() {
                 }}>
                     {[
                         { v: daysIn, l: 'DAYS LOCKED' },
-                        { v: vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? MOCK.denials, l: 'DENIED' },
-                        { v: vaultData?.session?.current_streak ?? MOCK.streak, l: 'STREAK' },
-                        { v: vaultData?.trials?.length ?? MOCK.trialsCompleted, l: 'TRIALS' },
+                        { v: vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? 0, l: 'DENIED' },
+                        { v: vaultData?.session?.current_streak ?? 0, l: 'STREAK' },
+                        { v: vaultData?.trials?.length ?? 0, l: 'TRIALS' },
                     ].map(s => (
                         <div key={s.l} style={{ textAlign: 'center' }}>
                             <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1rem', color: `${R}0.55)`, fontWeight: 700 }}>{s.v}</div>
@@ -986,14 +1008,14 @@ export default function VaultPage() {
                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.6)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.45)' }}>
-                                {(dailyRecords.length > 0 ? dailyRecords.filter((d: any) => d.perfect).length : MOCK.dailyObedience.filter(Boolean).length)}/{daysIn} PERFECT
+                                {(dailyRecords.filter((d: any) => d.perfect).length)}/{daysIn} PERFECT
                             </span>
                             <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', transform: calendarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>&#9662;</span>
                         </div>
                     </button>
 
                     {calendarOpen && (() => {
-                        const lockStart = new Date(vaultData?.session?.started_at || MOCK.lockStart);
+                        const lockStart = new Date(vaultData?.session?.started_at || new Date().toISOString());
                         const startDay = (lockStart.getUTCDay() + 6) % 7; // 0=Mon
                         const totalCells = startDay + lockDays;
                         const rows = Math.ceil(totalCells / 7);
@@ -1015,8 +1037,8 @@ export default function VaultPage() {
 
                                         const isToday = dayIdx === daysIn;
                                         const isPast = dayIdx < daysIn;
-                                        const obedient = isPast ? (dailyRecords[dayIdx]?.perfect ?? MOCK.dailyObedience[dayIdx]) : undefined;
-                                        const dayLog = dailyRecords[dayIdx] ? _toDayLog(dailyRecords[dayIdx]) : MOCK.dailyLogs[dayIdx];
+                                        const obedient = isPast ? (dailyRecords[dayIdx]?.perfect ?? undefined) : undefined;
+                                        const dayLog = dailyRecords[dayIdx] ? _toDayLog(dailyRecords[dayIdx]) : null;
                                         const cellDate = new Date(lockStart.getTime() + dayIdx * 86400000);
                                         const clickable = (isPast || isToday) && dayLog;
 
@@ -1368,7 +1390,7 @@ export default function VaultPage() {
                     <button onClick={() => setShowBeg(true)} style={{ padding: '14px 44px', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '3px', color: `${R}0.55)`, background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 10, cursor: 'pointer' }}>
                         BEG FOR RELEASE
                     </button>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? MOCK.denials} TIMES</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? 0} TIMES</div>
                 </div>
             </div>
 
@@ -1553,7 +1575,7 @@ export default function VaultPage() {
                                             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                     <svg width="14" height="14" viewBox="0 0 512 512" fill={`${R}0.4)`}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80z" /></svg>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>{profile?.wallet ?? MOCK.coins}</span>
+                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>{profile?.wallet ?? 0}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
                                                     {[
@@ -1851,7 +1873,7 @@ export default function VaultPage() {
                                     </div>
                                     <div style={{ background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 12, padding: '20px 18px' }}>
                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
-                                            {vaultData?.today?.trial_prompt || MOCK.todayTrial.text}
+                                            {vaultData?.today?.trial_prompt || 'No trial assigned yet.'}
                                         </div>
                                         {!trialDone && !trialOpen && (
                                             <button onClick={() => setTrialOpen(true)} style={{
@@ -1868,8 +1890,7 @@ export default function VaultPage() {
                                                     <button onClick={() => {
                                                         setTrialDone(true); setTrialOpen(false);
                                                         if (vaultData?.session?.id) {
-                                                            const todayTrial = vaultData?.today ? null : MOCK.todayTrial;
-                                                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: todayTrial?.text || 'Daily trial', response: trialText }) }).catch(() => {});
+                                                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: vaultData?.today?.trial_prompt || 'Daily trial', response: trialText }) }).catch(() => {});
                                                         }
                                                     }} style={{ padding: '8px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 6, cursor: 'pointer' }}>SUBMIT</button>
                                                 </div>
@@ -1882,7 +1903,7 @@ export default function VaultPage() {
                                         )}
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 12, flexWrap: 'wrap' }}>
-                                        {(vaultData?.trials || MOCK.trialHistory.map((ok: boolean) => ({ status: ok ? 'submitted' : 'pending' }))).map((t: any, i: number) => <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: (t === true || t.status === 'submitted' || t.status === 'approved') ? 'rgba(80,200,120,0.35)' : `${R}0.25)` }} />)}
+                                        {(vaultData?.trials || []).map((t: any, i: number) => <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: (t === true || t.status === 'submitted' || t.status === 'approved') ? 'rgba(80,200,120,0.35)' : `${R}0.25)` }} />)}
                                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: trialDone ? 'rgba(80,200,120,0.35)' : 'rgba(197,160,89,0.25)', boxShadow: trialDone ? 'none' : '0 0 4px rgba(197,160,89,0.15)' }} />
                                     </div>
                                 </div>
