@@ -5697,8 +5697,23 @@ export function _updateVaultLockButton(data: { active: boolean; status?: string;
         return;
     }
 
-    if (btn) { btn.textContent = label; btn.style.borderColor = 'rgba(139,0,0,0.25)'; btn.style.color = color; btn.style.opacity = isDisabled ? '0.6' : '1'; btn.disabled = isDisabled; btn.onclick = null; }
-    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = isDisabled ? '0.6' : '1'; mobBtn.disabled = isDisabled; mobBtn.onclick = null; }
+    // Active lock — button navigates to /vault
+    if (data.status === 'active') {
+        const setupActiveBtn = (b: HTMLButtonElement) => {
+            b.textContent = label;
+            b.style.borderColor = 'rgba(139,0,0,0.3)';
+            b.style.color = color;
+            b.style.opacity = '1';
+            b.disabled = false;
+            b.onclick = () => { window.location.href = '/vault'; };
+        };
+        if (btn) setupActiveBtn(btn);
+        if (mobBtn) setupActiveBtn(mobBtn);
+        return;
+    }
+
+    if (btn) { btn.textContent = label; btn.style.borderColor = 'rgba(139,0,0,0.25)'; btn.style.color = color; btn.style.opacity = '0.6'; btn.disabled = true; btn.onclick = null; }
+    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = '0.6'; mobBtn.disabled = true; mobBtn.onclick = null; }
 }
 
 function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
