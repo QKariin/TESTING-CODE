@@ -2205,11 +2205,14 @@ export default function DashboardPage() {
                                                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>{vaultRequest.lockDays}d sentence</div>
                                             </div>
                                         </div>
+                                        <textarea id="vaultReleaseReason" placeholder="Reason for release (shown to user)..." style={{ width: '100%', minHeight: 60, padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', resize: 'vertical', marginBottom: 8 }} />
                                         <button disabled={vaultLoading} onClick={async () => {
+                                            const reasonEl = document.getElementById('vaultReleaseReason') as HTMLTextAreaElement;
+                                            const reason = reasonEl?.value?.trim() || '';
                                             if (!confirm('Release this lock immediately?')) return;
                                             setVaultLoading(true);
                                             try {
-                                                await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'release', sessionId: vaultRequest.sessionId }) });
+                                                await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'release', sessionId: vaultRequest.sessionId, reason }) });
                                                 setVaultRequest(null);
                                             } catch (_) {} finally { setVaultLoading(false); }
                                         }} style={{ width: '100%', padding: '10px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>IMMEDIATE RELEASE</button>

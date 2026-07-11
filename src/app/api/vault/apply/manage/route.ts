@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { action, sessionId, scheduledStart } = await req.json();
+        const { action, sessionId, scheduledStart, reason } = await req.json();
         if (!sessionId) return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 });
 
         const { data: session } = await supabaseAdmin
@@ -142,6 +142,7 @@ export async function POST(req: Request) {
             await supabaseAdmin.from('vault_sessions').update({
                 status: 'released_early',
                 released_at: new Date().toISOString(),
+                release_reason: reason || null,
             }).eq('id', sessionId);
 
             // Clear vault_request from profile
@@ -159,8 +160,9 @@ export async function POST(req: Request) {
             }
 
             try {
+                const reasonMsg = reason ? `\n\n"${reason}"` : '';
                 await DbService.sendMessage(memberId,
-                    `LOCK RELEASED EARLY by Queen Karin. ${session.lock_days} day sentence ended.`,
+                    `LOCK RELEASED EARLY by Queen Karin. ${session.lock_days} day sentence ended.${reasonMsg}`,
                     'system');
                 await _pushToUser(memberId, 'Your lock has been released by the Queen.');
             } catch (_) {}

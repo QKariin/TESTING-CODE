@@ -189,6 +189,8 @@ export default function VaultPage() {
     const kneelTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const kneelStartTime = useRef(0);
     const kneelCooldown = kneelCooldownUntil > Date.now();
+    // Release overlay
+    const [releaseOverlay, setReleaseOverlay] = useState<{ reason: string } | null>(null);
     // Vlad mini-chat
     const [vladOpen, setVladOpen] = useState(false);
     const [vladMsgs, setVladMsgs] = useState<{ role: 'user' | 'vlad'; text: string }[]>([]);
@@ -331,7 +333,7 @@ export default function VaultPage() {
                                 .then(vd2 => { if (vd2.active) setVaultData(vd2); })
                                 .catch(() => {});
 
-                            // Realtime: listen for release/completion — redirect immediately
+                            // Realtime: listen for release/completion — show overlay
                             const rtSub = supabase
                                 .channel('vault_release_watch')
                                 .on('postgres_changes', {
@@ -343,7 +345,7 @@ export default function VaultPage() {
                                     const s = payload.new;
                                     if (s.status === 'released_early' || s.status === 'completed' || s.status === 'denied') {
                                         try { localStorage.removeItem('vault_cooldowns'); } catch {}
-                                        window.location.href = '/profile';
+                                        setReleaseOverlay({ reason: s.release_reason || '' });
                                     }
                                 })
                                 .subscribe();
@@ -745,6 +747,29 @@ export default function VaultPage() {
 
     // No splash — profile page splash already covered the loading
     if (loading) return <div style={{ height: '100dvh', width: '100vw', background: '#050508' }} />;
+
+    // ── Release overlay — inescapable, shown when Queen unlocks ──
+    if (releaseOverlay) return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'linear-gradient(180deg, #050508 0%, #0a0008 50%, #050508 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+            <div style={{ width: 48, height: 1, background: 'rgba(139,0,0,0.4)', marginBottom: 32 }} />
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '1.1rem', color: 'rgba(139,0,0,0.9)', letterSpacing: 6, fontWeight: 700, textAlign: 'center', marginBottom: 16 }}>LOCK RELEASED</div>
+            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 32 }}>Message from Queen Karin</div>
+            {releaseOverlay.reason && (
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', textAlign: 'center', maxWidth: 320, lineHeight: 1.6, marginBottom: 40, fontStyle: 'italic' }}>
+                    &ldquo;{releaseOverlay.reason}&rdquo;
+                </div>
+            )}
+            {!releaseOverlay.reason && (
+                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', maxWidth: 320, lineHeight: 1.6, marginBottom: 40 }}>
+                    Your sentence has ended. You are free to go.
+                </div>
+            )}
+            <div style={{ width: 48, height: 1, background: 'rgba(139,0,0,0.2)', marginBottom: 40 }} />
+            <button onClick={() => { window.location.href = '/profile'; }} style={{ padding: '14px 40px', background: 'none', border: '1px solid rgba(139,0,0,0.4)', borderRadius: 6, color: 'rgba(139,0,0,0.9)', fontFamily: "'Cinzel', serif", fontSize: '0.55rem', letterSpacing: 4, cursor: 'pointer', textTransform: 'uppercase', transition: 'all 0.3s' }}>
+                THANK YOU QUEEN KARIN
+            </button>
+        </div>
+    );
 
     // ── Pressure: actual percentage based on days elapsed vs total ──
     const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
