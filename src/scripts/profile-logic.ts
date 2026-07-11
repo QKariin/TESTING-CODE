@@ -5775,7 +5775,7 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             <div style="font-family:Cinzel,serif;font-size:1.3rem;color:rgba(255,255,255,0.7);letter-spacing:4px;font-weight:700;margin-bottom:20px;">THUMBNAIL</div>
 
             <div style="position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;margin-bottom:14px;border:1px solid rgba(139,0,0,0.25);">
-                <video id="_vtpVideo" style="width:100%;height:100%;object-fit:contain;display:block;" muted playsinline></video>
+                <video id="_vtpVideo" style="width:100%;height:100%;object-fit:contain;display:block;" muted playsinline preload="auto"></video>
                 <div id="_vtpDuration" style="position:absolute;bottom:8px;right:10px;font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;letter-spacing:1px;"></div>
             </div>
 
@@ -5805,8 +5805,11 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
     const statusEl = ov.querySelector('#_vtpStatus') as HTMLElement;
 
     video.src = videoUrl;
+    video.load();
+    video.addEventListener('loadeddata', () => {
+        video.currentTime = 0.01;
+    });
     video.addEventListener('loadedmetadata', () => {
-        video.currentTime = 0;
         const dur = Math.round(video.duration);
         durationEl.textContent = `${Math.floor(dur / 60)}:${(dur % 60).toString().padStart(2, '0')}`;
     });
