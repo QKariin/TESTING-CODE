@@ -19,14 +19,23 @@ export async function POST(req: Request) {
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
         let profile: any = null;
-        const { data: pById } = await supabaseAdmin.from('profiles').select('ID, member_id, name').eq('ID', user.id).maybeSingle();
+        const { data: pById, error: pErrId } = await supabaseAdmin.from('profiles').select('ID, member_id, name').eq('ID', user.id).maybeSingle();
+        if (pErrId) console.error('[VAULT PROOF] byId error:', pErrId.message);
         profile = pById;
         if (!profile) {
-            const { data: pByEmail } = await supabaseAdmin.from('profiles').select('ID, member_id, name').ilike('member_id', email).maybeSingle();
+            const { data: pByIdLower } = await supabaseAdmin.from('profiles').select('ID, member_id, name').eq('id', user.id).maybeSingle();
+            profile = pByIdLower;
+        }
+        if (!profile) {
+            const { data: pByEmail, error: pErrEmail } = await supabaseAdmin.from('profiles').select('ID, member_id, name').ilike('member_id', email).maybeSingle();
+            if (pErrEmail) console.error('[VAULT PROOF] byEmail error:', pErrEmail.message);
             profile = pByEmail;
         }
 
-        if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        if (!profile) {
+            console.error('[VAULT PROOF] Profile not found. user.id:', user.id, 'email:', email);
+            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        }
         const memberId = (profile.member_id || email).toLowerCase();
 
         // Verify session exists and is awaiting_video

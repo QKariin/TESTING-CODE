@@ -24,26 +24,55 @@ export async function POST(req: Request) {
         const email = (user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        // Get profile — try UUID first, fall back to email
+        // Get profile — multiple fallback strategies
         let profile: any = null;
-        const { data: byId } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url')
-            .eq('ID', user.id)
-            .maybeSingle();
+        const selectCols = 'ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url';
+
+        // Strategy 1: UUID match
+        const { data: byId, error: errById } = await supabaseAdmin
+            .from('profiles').select(selectCols).eq('ID', user.id).maybeSingle();
+        if (errById) console.error('[VAULT APPLY] byId error:', errById.message, errById.code);
         profile = byId;
+
+        // Strategy 2: email ilike match
         if (!profile) {
-            const { data: byEmail } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url')
-                .ilike('member_id', email)
-                .maybeSingle();
+            const { data: byEmail, error: errByEmail } = await supabaseAdmin
+                .from('profiles').select(selectCols).ilike('member_id', email).maybeSingle();
+            if (errByEmail) console.error('[VAULT APPLY] byEmail ilike error:', errByEmail.message, errByEmail.code);
             profile = byEmail;
         }
 
+        // Strategy 3: exact email eq match (in case ilike has issues)
         if (!profile) {
-            console.error('[VAULT APPLY] Profile not found. user.id:', user.id, 'email:', email);
-            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+            const { data: byEmailExact, error: errExact } = await supabaseAdmin
+                .from('profiles').select(selectCols).eq('member_id', email).maybeSingle();
+            if (errExact) console.error('[VAULT APPLY] byEmail eq error:', errExact.message, errExact.code);
+            profile = byEmailExact;
+        }
+
+        // Strategy 4: if user.email differs from computed email, try user.email directly
+        if (!profile && user.email && user.email.toLowerCase() !== email) {
+            const { data: byAuthEmail } = await supabaseAdmin
+                .from('profiles').select(selectCols).ilike('member_id', user.email).maybeSingle();
+            profile = byAuthEmail;
+        }
+
+        // Strategy 5: full-text search on member_id containing the email domain
+        if (!profile && user.email) {
+            const { data: byLike } = await supabaseAdmin
+                .from('profiles').select(selectCols).ilike('member_id', `%${user.email.split('@')[0]}%`).limit(1).maybeSingle();
+            profile = byLike;
+            if (byLike) console.log('[VAULT APPLY] Found profile via fuzzy match:', byLike.member_id);
+        }
+
+        if (!profile) {
+            console.error('[VAULT APPLY] ALL lookups failed. user.id:', user.id, 'email:', email, 'user.email:', user.email, 'provider:', user.app_metadata?.provider);
+            const { data: sampleProfiles, error: sampleErr } = await supabaseAdmin.from('profiles').select('ID, member_id').limit(3);
+            console.error('[VAULT APPLY] DB accessible?', sampleErr ? `ERROR: ${sampleErr.message}` : `YES, ${(sampleProfiles||[]).length} profiles found`);
+            return NextResponse.json({
+                error: 'Profile not found',
+                debug: { userId: user.id, email, userEmail: user.email, provider: user.app_metadata?.provider },
+            }, { status: 404 });
         }
 
         const memberId = (profile.member_id || email).toLowerCase();
@@ -209,8 +238,13 @@ export async function GET(req: Request) {
 
         // Look up profile to get member_id — try UUID first, fall back to email
         let getProfile: any = null;
-        const { data: gById } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
+        const { data: gById, error: gErrId } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
+        if (gErrId) console.error('[VAULT APPLY GET] byId error:', gErrId.message);
         getProfile = gById;
+        if (!getProfile) {
+            const { data: gByIdLower } = await supabaseAdmin.from('profiles').select('member_id').eq('id', user.id).maybeSingle();
+            getProfile = gByIdLower;
+        }
         if (!getProfile) {
             const { data: gByEmail } = await supabaseAdmin.from('profiles').select('member_id').ilike('member_id', email).maybeSingle();
             getProfile = gByEmail;
