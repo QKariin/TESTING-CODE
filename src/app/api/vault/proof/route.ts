@@ -18,11 +18,13 @@ export async function POST(req: Request) {
         const email = (user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, member_id, name')
-            .or(`ID.eq.${user.id},member_id.ilike.${email}`)
-            .maybeSingle();
+        let profile: any = null;
+        const { data: pById } = await supabaseAdmin.from('profiles').select('ID, member_id, name').eq('ID', user.id).maybeSingle();
+        profile = pById;
+        if (!profile) {
+            const { data: pByEmail } = await supabaseAdmin.from('profiles').select('ID, member_id, name').ilike('member_id', email).maybeSingle();
+            profile = pByEmail;
+        }
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         const memberId = (profile.member_id || email).toLowerCase();

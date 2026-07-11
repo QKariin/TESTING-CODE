@@ -24,14 +24,27 @@ export async function POST(req: Request) {
         const email = (user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        // Get profile
-        const { data: profile } = await supabaseAdmin
+        // Get profile — try UUID first, fall back to email
+        let profile: any = null;
+        const { data: byId } = await supabaseAdmin
             .from('profiles')
             .select('ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url')
-            .or(`ID.eq.${user.id},member_id.ilike.${email}`)
+            .eq('ID', user.id)
             .maybeSingle();
+        profile = byId;
+        if (!profile) {
+            const { data: byEmail } = await supabaseAdmin
+                .from('profiles')
+                .select('ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url')
+                .ilike('member_id', email)
+                .maybeSingle();
+            profile = byEmail;
+        }
 
-        if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        if (!profile) {
+            console.error('[VAULT APPLY] Profile not found. user.id:', user.id, 'email:', email);
+            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+        }
 
         const memberId = (profile.member_id || email).toLowerCase();
 
@@ -194,14 +207,16 @@ export async function GET(req: Request) {
         const email = (user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        // Look up profile to get member_id
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('member_id')
-            .or(`ID.eq.${user.id},member_id.ilike.${email}`)
-            .maybeSingle();
+        // Look up profile to get member_id — try UUID first, fall back to email
+        let getProfile: any = null;
+        const { data: gById } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', user.id).maybeSingle();
+        getProfile = gById;
+        if (!getProfile) {
+            const { data: gByEmail } = await supabaseAdmin.from('profiles').select('member_id').ilike('member_id', email).maybeSingle();
+            getProfile = gByEmail;
+        }
 
-        const memberId = (profile?.member_id || email).toLowerCase();
+        const memberId = (getProfile?.member_id || email).toLowerCase();
 
         const { data: session } = await supabaseAdmin
             .from('vault_sessions')
