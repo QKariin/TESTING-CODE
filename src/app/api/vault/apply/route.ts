@@ -192,13 +192,13 @@ export async function POST(req: Request) {
         // Notify Queen
         _notifyQueen(profile.name || memberId, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
 
-        // Global chat card + Discord
-        const memberName = profile.name || memberId.split('@')[0];
-        const rawPic = profile.avatar_url || '';
-        const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
-        const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
-        try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
-        discordVaultLock(memberName, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
+        // Global chat card + Discord (DISABLED FOR TESTING)
+        // const memberName = profile.name || memberId.split('@')[0];
+        // const rawPic = profile.avatar_url || '';
+        // const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
+        // const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
+        // try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
+        // discordVaultLock(memberName, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
 
         return NextResponse.json({
             success: true,

@@ -159,13 +159,14 @@ export async function POST(req: Request) {
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
             }
 
-            try {
-                const reasonMsg = reason ? `\n\n"${reason}"` : '';
-                await DbService.sendMessage(memberId,
-                    `LOCK RELEASED EARLY by Queen Karin. ${session.lock_days} day sentence ended.${reasonMsg}`,
-                    'system');
-                await _pushToUser(memberId, 'Your lock has been released by the Queen.');
-            } catch (_) {}
+            // DISABLED FOR TESTING
+            // try {
+            //     const reasonMsg = reason ? `\n\n"${reason}"` : '';
+            //     await DbService.sendMessage(memberId,
+            //         `LOCK RELEASED EARLY by Queen Karin. ${session.lock_days} day sentence ended.${reasonMsg}`,
+            //         'system');
+            //     await _pushToUser(memberId, 'Your lock has been released by the Queen.');
+            // } catch (_) {}
 
             return NextResponse.json({ success: true, status: 'released_early' });
         }
