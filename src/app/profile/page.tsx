@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 import { initProfileState, getState, setState } from '@/scripts/profile-state';
@@ -121,6 +122,7 @@ import { bindStreamPlayer, initStreamPlayer, destroyStreamPlayer } from '@/scrip
 
 
 export default function ProfilePage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const [vaultRewardLeft, setVaultRewardLeft] = useState<number | null>(null); // minutes left of freedom hour
@@ -578,7 +580,7 @@ export default function ProfilePage() {
                                 if (kneelRes) sessionStorage.setItem('_vaultKneelCache', JSON.stringify(kneelRes));
                             } catch { try { sessionStorage.setItem('_vaultProfileCache', JSON.stringify(unifiedData)); } catch {} }
                             _redirecting = true;
-                            window.location.href = targetUrl;
+                            router.push(targetUrl);
                             return; // stop loading — redirect in progress
                         }
                     }
