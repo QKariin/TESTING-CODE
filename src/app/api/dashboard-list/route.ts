@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
     try {
-        const [{ data: profiles, error }, { data: taskRows }] = await Promise.all([
+        const [{ data: profiles, error }, { data: taskRows }, { data: vaultSessions }] = await Promise.all([
             supabaseAdmin
                 .from('profiles')
                 .select('member_id, name, avatar_url, hierarchy, last_active, silence, parameters')
@@ -20,6 +20,11 @@ export async function GET() {
             supabaseAdmin
                 .from('tasks')
                 .select('member_id, taskdom_active_task, "Taskdom_History"'),
+            supabaseAdmin
+                .from('vault_sessions')
+                .select('id, member_id, status, lock_days, video_proof_url, video_thumb_url, video_submitted_at, video_reviewed, tier, started_at, expires_at')
+                .in('status', ['active', 'awaiting_video', 'scheduled', 'pending'])
+                .order('created_at', { ascending: false }),
         ]);
 
         if (error) throw error;
@@ -37,6 +42,13 @@ export async function GET() {
         for (const p of profiles || []) {
             const key = (p.member_id || '').toLowerCase();
             if (key) profileMap[key] = p;
+        }
+
+        // Vault session lookup by email
+        const vaultMap: Record<string, any> = {};
+        for (const v of vaultSessions || []) {
+            const key = (v.member_id || '').toLowerCase();
+            if (!vaultMap[key]) vaultMap[key] = v; // most recent first
         }
 
         const now = Date.now();
@@ -58,6 +70,30 @@ export async function GET() {
                     avatarUrl: avatar,
                 });
             }
+        }
+
+        // Add vault video proofs to pending reviews (only unreviewed ones)
+        for (const v of vaultSessions || []) {
+            if (!v.video_proof_url || (v as any).video_reviewed) continue;
+            const email = (v.member_id || '').toLowerCase();
+            const profile = profileMap[email];
+            const rawPic = profile?.avatar_url || profile?.parameters?.avatar_url || '';
+            const avatar = (rawPic && rawPic.length > 5) ? rawPic : '/collar-placeholder.png';
+            pendingReviews.push({
+                id: `vault_proof_${v.id}`,
+                taskName: `VAULT LOCK PROOF — ${v.lock_days}d ${v.tier}`,
+                text: `Vault Lock Video Proof`,
+                proofUrl: v.video_proof_url,
+                thumbnailUrl: v.video_thumb_url || '',
+                proofType: 'video',
+                status: 'pending',
+                isVaultProof: true,
+                vaultSessionId: v.id,
+                member_id: email,
+                memberName: profile?.name || email.split('@')[0],
+                avatarUrl: avatar,
+                submitted_at: v.video_submitted_at || v.started_at,
+            });
         }
 
         const users = (profiles || []).map((p: any) => {
@@ -84,6 +120,14 @@ export async function GET() {
                 }));
             }
 
+            // Include vault lock state
+            const vaultSession = vaultMap[(p.member_id || '').toLowerCase()];
+            const vaultRequest = params.vault_request || (vaultSession ? {
+                status: vaultSession.status,
+                sessionId: vaultSession.id,
+                lockDays: vaultSession.lock_days,
+            } : null);
+
             return {
                 memberId: p.member_id || '',
                 name: p.name || (p.member_id || '').split('@')[0] || 'Unknown',
@@ -95,6 +139,7 @@ export async function GET() {
                 activeTask: hasActiveTask ? active : null,
                 endTime: hasActiveTask ? endTime : 0,
                 reviewQueue: userReviewQueue,
+                vaultRequest,
             };
         });
 

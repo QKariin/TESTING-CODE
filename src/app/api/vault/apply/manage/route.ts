@@ -170,6 +170,23 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, status: 'released_early' });
         }
 
+        // ── APPROVE PROOF (mark video as reviewed) ──
+        if (action === 'approve-proof') {
+            await supabaseAdmin.from('vault_sessions').update({
+                video_reviewed: true,
+                video_reviewed_at: new Date().toISOString(),
+            }).eq('id', sessionId);
+
+            try {
+                await DbService.sendMessage(memberId,
+                    `VIDEO PROOF REVIEWED & APPROVED by Queen Karin. Your lock is confirmed.`,
+                    'system');
+                await _pushToUser(memberId, 'Queen has reviewed your proof. Lock confirmed.');
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'proof_approved' });
+        }
+
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     } catch (err: any) {
         console.error('[VAULT MANAGE] Error:', err);

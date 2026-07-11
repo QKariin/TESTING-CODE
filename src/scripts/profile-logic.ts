@@ -3507,6 +3507,10 @@ export async function initChatSystem() {
                 // Paywall / silence activated or deactivated in realtime
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
                 _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
+                // Vault lock released — reset button if active_overlay removed
+                if (!fresh.parameters?.active_overlay && !fresh.parameters?.vault_request) {
+                    _updateVaultLockButton(null);
+                }
             })
         .subscribe();
 
@@ -5969,6 +5973,10 @@ export async function checkVaultLockStatus() {
                         _showVaultStatus({ status: 'denied', lockDays: updated.lock_days, coinsPaid: updated.coins_paid });
                     } else if (updated.status === 'scheduled') {
                         _updateVaultLockButton({ active: true, status: 'scheduled', lockDays: updated.lock_days });
+                    } else if (updated.status === 'released_early' || updated.status === 'completed') {
+                        _updateVaultLockButton(null);
+                        _vaultRealtimeChannel?.unsubscribe();
+                        _vaultRealtimeChannel = null;
                     }
                 })
                 .subscribe();

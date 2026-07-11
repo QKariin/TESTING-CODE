@@ -180,6 +180,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     parameters: {
                         paywall: u.paywall ? { active: true } : undefined,
                         silence: u.silence ? { active: true } : undefined,
+                        vault_request: u.vaultRequest || undefined,
                     },
                     reviewQueue: u.reviewQueue || [],
                     lastMessageTime: unread[(u.memberId || '').toLowerCase()] || null,
@@ -591,21 +592,23 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                 const rtText = stripHtml(rt.taskName || rt.task_name || rt.text || 'Task');
                 const rtRoutine = !!(rt.isRoutine || rt.category === 'Routine' || rt.text === 'Daily Routine');
                 const rtBusy = rootReviewing === (rt.id || rt.taskId || rt.text);
+                const isVaultProof = !!rt.isVaultProof;
                 const handleApprove = async (tier: number, note: string) => {
                     if (!rtUser) return;
                     const taskId = rt.id || rt.taskId;
                     setRootReviewing(taskId || rt.text);
                     try {
-                        await adminApproveTaskAction(taskId, rtUser.memberId, tier, note || null);
-                        if (note?.trim()) {
-                            await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
+                        if (isVaultProof) {
+                            // Mark vault proof as reviewed — the API also sends a system message
+                            await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve-proof', sessionId: rt.vaultSessionId }) });
+                        } else {
+                            await adminApproveTaskAction(taskId, rtUser.memberId, tier, note || null);
+                            if (note?.trim()) {
+                                await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
+                            }
                         }
                         setRootReviewTask(null);
-                        setGlobalQueue(q => q.filter(t => {
-                            const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
-                            const rText = (rt.taskName || rt.task_name || rt.text || '').slice(0, 80);
-                            return !((t.member_id || '').toLowerCase() === rtMid && tText === rText);
-                        }));
+                        setGlobalQueue(q => q.filter(t => t.id !== rt.id));
                         loadData();
                     } catch (e) { console.error(e); }
                     setRootReviewing(null);
@@ -615,16 +618,17 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                     const taskId = rt.id || rt.taskId;
                     setRootReviewing(taskId || rt.text);
                     try {
-                        await adminRejectTaskAction(taskId, rtUser.memberId);
-                        if (note?.trim()) {
-                            await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
+                        if (isVaultProof) {
+                            // Deny the vault session
+                            await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deny', sessionId: rt.vaultSessionId }) });
+                        } else {
+                            await adminRejectTaskAction(taskId, rtUser.memberId);
+                            if (note?.trim()) {
+                                await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
+                            }
                         }
                         setRootReviewTask(null);
-                        setGlobalQueue(q => q.filter(t => {
-                            const tText = (t.taskName || t.task_name || t.text || '').slice(0, 80);
-                            const rText = (rt.taskName || rt.task_name || rt.text || '').slice(0, 80);
-                            return !((t.member_id || '').toLowerCase() === rtMid && tText === rText);
-                        }));
+                        setGlobalQueue(q => q.filter(t => t.id !== rt.id));
                         loadData();
                     } catch (e) { console.error(e); }
                     setRootReviewing(null);
@@ -2558,8 +2562,8 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
             )}
 
             {/* Lock status pills */}
-            {(paywallActive || silenceActive) && (
-                <div style={{ display: 'flex', gap: 8 }}>
+            {(paywallActive || silenceActive || vaultActive) && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {paywallActive && <div className="luxury-card" style={{ flex: 1, textAlign: 'center', borderTopColor: 'rgba(255,51,51,0.5)' }}>
                         <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.68rem', color: '#ff6666', letterSpacing: '1px' }}>PAYWALL ACTIVE</div>
                         <div style={{ fontSize: '0.78rem', color: '#ff9999', marginTop: 4, fontFamily: "'Rajdhani',sans-serif" }}>{user.parameters?.paywall?.reason}</div>
@@ -2567,6 +2571,10 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                     {silenceActive && <div className="luxury-card" style={{ flex: 1, textAlign: 'center', borderTopColor: 'rgba(255,140,66,0.5)' }}>
                         <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.68rem', color: '#ff8c42', letterSpacing: '1px' }}>SILENCED</div>
                         <div style={{ fontSize: '0.78rem', color: '#ffaa77', marginTop: 4, fontFamily: "'Rajdhani',sans-serif" }}>{user.parameters?.silence?.reason}</div>
+                    </div>}
+                    {vaultActive && <div className="luxury-card" style={{ flex: 1, textAlign: 'center', borderTopColor: 'rgba(139,0,0,0.5)' }}>
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.68rem', color: 'rgba(180,40,40,0.8)', letterSpacing: '1px' }}>VAULT {vaultReq.status === 'active' ? 'LOCKED' : vaultReq.status.toUpperCase()}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'rgba(180,40,40,0.5)', marginTop: 4, fontFamily: "'Rajdhani',sans-serif" }}>{vaultReq.lockDays}d sentence</div>
                     </div>}
                 </div>
             )}
