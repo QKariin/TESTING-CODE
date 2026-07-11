@@ -737,51 +737,8 @@ export default function VaultPage() {
         prevTab.current = tab;
     }, [tab, chatGateCooldown, vladReact]);
 
-    // ── LOADING SCREEN ──
-    if (loading) {
-        const _cachedName = typeof window !== 'undefined' ? (localStorage.getItem('_qk_name') || '') : '';
-        const _cachedAvatar = typeof window !== 'undefined' ? (localStorage.getItem('_qk_avatar') || '') : '';
-        return (
-            <div style={{ height: '100dvh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', background: '#050508', padding: '18vh 0 12vh', boxSizing: 'border-box' }}>
-                <style>{`
-                    @keyframes _vSplashGrow { 0% { transform: scale(0.8); opacity: 0; } 15% { opacity: 1; } 100% { transform: scale(1.35); opacity: 1; } }
-                    @keyframes _vSplashGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(139,0,0,0.15); } 50% { box-shadow: 0 0 50px 12px rgba(139,0,0,0.12); } }
-                    @keyframes _vSplashFade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-                `}</style>
-
-                {/* Top */}
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(139,0,0,0.45)', letterSpacing: '6px', fontWeight: 500, animation: '_vSplashFade 0.8s ease-out both' }}>
-                    SEALED
-                </div>
-
-                {/* Center — Avatar */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-                    {_cachedAvatar ? (
-                        <img
-                            src={_cachedAvatar}
-                            alt=""
-                            style={{ width: 140, height: 140, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(139,0,0,0.3)', animation: '_vSplashGrow 5s ease-out forwards, _vSplashGlow 2.5s ease-in-out infinite', marginBottom: 32 }}
-                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                        />
-                    ) : (
-                        <div style={{ width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,0,0,0.06) 0%, transparent 100%)', border: '2px solid rgba(139,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: '_vSplashGrow 5s ease-out forwards, _vSplashGlow 2.5s ease-in-out infinite', marginBottom: 32 }}>
-                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2.8rem', color: 'rgba(139,0,0,0.4)' }}>{_cachedName ? _cachedName[0].toUpperCase() : ''}</span>
-                        </div>
-                    )}
-                    {_cachedName && (
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: '#fff', letterSpacing: '3px', fontWeight: 700, animation: '_vSplashFade 0.8s ease-out 0.4s both', textAlign: 'center' }}>
-                            {_cachedName}
-                        </div>
-                    )}
-                </div>
-
-                {/* Bottom */}
-                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(139,0,0,0.3)', animation: '_vSplashFade 0.8s ease-out 1s both', letterSpacing: '3px' }}>
-                    loading your sentence...
-                </div>
-            </div>
-        );
-    }
+    // No splash — profile page splash already covered the loading
+    if (loading) return <div style={{ height: '100dvh', width: '100vw', background: '#050508' }} />;
 
     // ── Pressure: actual percentage based on days elapsed vs total ──
     const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
