@@ -15,8 +15,8 @@ export async function POST(req: Request) {
         const { sessionId, videoUrl } = await req.json();
         if (!sessionId || !videoUrl) return NextResponse.json({ error: 'Missing sessionId or videoUrl' }, { status: 400 });
 
-        const email = (user.email || user.user_metadata?.provider_id
-            ? `twitter_${user.user_metadata.provider_id}` : user.id).toLowerCase();
+        const email = (user.email || (user.user_metadata?.provider_id
+            ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
         const { data: profile } = await supabaseAdmin
             .from('profiles')

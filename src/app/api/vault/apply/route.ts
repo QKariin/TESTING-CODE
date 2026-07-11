@@ -21,8 +21,8 @@ export async function POST(req: Request) {
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { action, duration, message: userMessage, requestedStart } = await req.json();
-        const email = (user.email || user.user_metadata?.provider_id
-            ? `twitter_${user.user_metadata.provider_id}` : user.id).toLowerCase();
+        const email = (user.email || (user.user_metadata?.provider_id
+            ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
         // Get profile
         const { data: profile } = await supabaseAdmin
@@ -191,8 +191,8 @@ export async function GET(req: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const email = (user.email || user.user_metadata?.provider_id
-            ? `twitter_${user.user_metadata.provider_id}` : user.id).toLowerCase();
+        const email = (user.email || (user.user_metadata?.provider_id
+            ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
         // Look up profile to get member_id
         const { data: profile } = await supabaseAdmin

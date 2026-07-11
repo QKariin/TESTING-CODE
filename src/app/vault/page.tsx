@@ -1151,7 +1151,7 @@ export default function VaultPage() {
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#8b0000', letterSpacing: '3px', textShadow: `0 0 30px ${R}0.4)`, marginBottom: 16, lineHeight: 1.5 }}>
                                 PATHETIC
                             </div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', lineHeight: 1.8, marginBottom: 24 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, marginBottom: 24 }}>
                                 You couldn&apos;t even obey a simple order.<br />
                                 Queen is disappointed.
                             </div>
@@ -1170,10 +1170,10 @@ export default function VaultPage() {
                 <div style={{ width: '100%', padding: '0 20px 32px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.65)`, letterSpacing: '4px' }}>TODAY&apos;S ORDERS</div>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.32rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
+                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
                     </div>
                     {attnSkippedToday && (
-                        <div style={{ textAlign: 'center', padding: '8px 0 12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.3rem', color: 'rgba(255,40,40,0.4)', letterSpacing: '3px' }}>
+                        <div style={{ textAlign: 'center', padding: '8px 0 12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(255,40,40,0.4)', letterSpacing: '3px' }}>
                             &#10005; PERFECTION BROKEN — ORDER SKIPPED
                         </div>
                     )}
@@ -1317,7 +1317,7 @@ export default function VaultPage() {
                                         }
                                         {cur && <svg viewBox="0 0 46 46" style={{ position: 'absolute', inset: -2, transform: 'rotate(-90deg)' }}><circle cx="23" cy="23" r="21" fill="none" stroke="rgba(197,160,89,0.1)" strokeWidth="1.5" /><circle cx="23" cy="23" r="21" fill="none" stroke="rgba(197,160,89,0.35)" strokeWidth="1.5" strokeDasharray={`${prog * 1.319} ${131.9 - prog * 1.319}`} /></svg>}
                                     </div>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: done ? m.color : 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>{m.label}</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: done ? m.color : 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>{m.label}</div>
                                     <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{m.days}d</div>
                                 </div>
                             );
@@ -1347,7 +1347,7 @@ export default function VaultPage() {
                     <button onClick={() => setShowBeg(true)} style={{ padding: '14px 44px', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', letterSpacing: '3px', color: `${R}0.55)`, background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 10, cursor: 'pointer' }}>
                         BEG FOR RELEASE
                     </button>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? MOCK.denials} TIMES</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? MOCK.denials} TIMES</div>
                 </div>
             </div>
 
@@ -1388,7 +1388,7 @@ export default function VaultPage() {
                                         <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke={`${R}0.3)`} strokeWidth="1.5">
                                             <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
                                         </svg>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', lineHeight: 1.7 }}>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.7 }}>
                                             Prove your devotion before<br />speaking to Queen Karin
                                         </div>
 
@@ -1485,7 +1485,7 @@ export default function VaultPage() {
                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#8b0000', letterSpacing: '2px', textShadow: `0 0 16px ${R}0.3)`, textAlign: 'center' }}>
                                             {chatGateTask.label}
                                         </div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', lineHeight: 1.7 }}>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.7 }}>
                                             {chatGateTask.desc}
                                         </div>
 
@@ -1712,7 +1712,7 @@ export default function VaultPage() {
                                                     <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
                                                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 8 }}>PATIENCE PROVEN</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(80,200,120,0.2)', letterSpacing: '2px', marginTop: 4 }}>ENTERING CHAT...</div>
+                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.2)', letterSpacing: '2px', marginTop: 4 }}>ENTERING CHAT...</div>
                                                     </div>
                                                 )}
                                             </div>
@@ -1734,7 +1734,7 @@ export default function VaultPage() {
                                                 />
                                                 <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <span style={{
-                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem',
+                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem',
                                                         color: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? 'rgba(80,200,120,0.3)' : 'rgba(255,255,255,0.08)',
                                                         letterSpacing: '1px',
                                                     }}>
@@ -1884,7 +1884,7 @@ export default function VaultPage() {
                                     {wheelResult && (
                                         <div style={{ marginTop: 16, padding: '14px 20px', background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 10, animation: 'vFadeIn 0.5s ease' }}>
                                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', color: `${R}0.7)`, lineHeight: 1.5 }}>{wheelResult.text}</div>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.32rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginTop: 6, textTransform: 'uppercase' }}>{wheelResult.type}</div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginTop: 6, textTransform: 'uppercase' }}>{wheelResult.type}</div>
                                         </div>
                                     )}
                                 </div>
@@ -1951,11 +1951,11 @@ export default function VaultPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                             <div>
                                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: `${R}0.65)`, letterSpacing: '4px' }}>DAY {selectedDay.day}</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px', marginTop: 4 }}>{new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', marginTop: 4 }}>{new Date(selectedDay.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 {selectedDay.seal && (
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.32rem', color: selectedDay.seal === 'bronze' ? '#cd7f32' : selectedDay.seal === 'silver' ? '#c0c0c0' : selectedDay.seal === 'gold' ? '#c5a059' : '#b9f2ff', letterSpacing: '2px', padding: '3px 8px', border: `1px solid ${selectedDay.seal === 'bronze' ? 'rgba(205,127,50,0.3)' : selectedDay.seal === 'silver' ? 'rgba(192,192,192,0.3)' : 'rgba(197,160,89,0.3)'}`, borderRadius: 4 }}>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: selectedDay.seal === 'bronze' ? '#cd7f32' : selectedDay.seal === 'silver' ? '#c0c0c0' : selectedDay.seal === 'gold' ? '#c5a059' : '#b9f2ff', letterSpacing: '2px', padding: '3px 8px', border: `1px solid ${selectedDay.seal === 'bronze' ? 'rgba(205,127,50,0.3)' : selectedDay.seal === 'silver' ? 'rgba(192,192,192,0.3)' : 'rgba(197,160,89,0.3)'}`, borderRadius: 4 }}>
                                         {selectedDay.seal.toUpperCase()} SEAL
                                     </div>
                                 )}
@@ -2031,7 +2031,7 @@ export default function VaultPage() {
                                     <span style={{ fontSize: '1rem', opacity: 0.4 }}>&#9819;</span>
                                     <div>
                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>{selectedDay.spin.text}</div>
-                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.3rem', color: selectedDay.spin.type === 'reward' ? 'rgba(80,200,120,0.35)' : selectedDay.spin.type === 'punishment' ? `${R}0.35)` : 'rgba(255,255,255,0.08)', letterSpacing: '2px', marginTop: 3, textTransform: 'uppercase' }}>{selectedDay.spin.type}</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: selectedDay.spin.type === 'reward' ? 'rgba(80,200,120,0.35)' : selectedDay.spin.type === 'punishment' ? `${R}0.35)` : 'rgba(255,255,255,0.08)', letterSpacing: '2px', marginTop: 3, textTransform: 'uppercase' }}>{selectedDay.spin.type}</div>
                                     </div>
                                 </div>
                             </div>
