@@ -284,11 +284,7 @@ export default function VaultPage() {
                 setProfile(data);
                 const { initProfileState } = await import('@/scripts/profile-state');
                 initProfileState(data);
-                // Load vault session — use cache from /profile splash if available
                 const memberId = data.member_id || userEmail;
-                const sessionReady = _cachedSession
-                    ? Promise.resolve(_cachedSession)
-                    : fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`).then(r => r.json());
 
                 const { sendChatMessage, handleChatKey, toggleAiMode, sendAiMessage, switchMobChatTab, handleMediaPlus } = await import('@/scripts/profile-logic');
                 (window as any).sendChatMessage = sendChatMessage;
