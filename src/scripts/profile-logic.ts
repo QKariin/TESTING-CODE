@@ -5889,9 +5889,25 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             }
 
             URL.revokeObjectURL(videoUrl);
-            ov.remove();
-            _showVaultConfirmation(true, data.lockDays);
             _updateVaultLockButton({ active: true, status: 'active', lockDays: data.lockDays });
+            // Show locked modal inside the same inescapable overlay, then redirect to vault
+            ov.innerHTML = `
+                <div style="text-align:center;max-width:340px;padding:0 28px;">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="rgba(139,0,0,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:24px;">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <div style="font-family:Cinzel,serif;font-size:1.6rem;color:rgba(255,255,255,0.75);letter-spacing:6px;font-weight:700;margin-bottom:12px;">LOCKED</div>
+                    <div style="width:40px;height:1px;background:rgba(139,0,0,0.3);margin:0 auto 20px;"></div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(255,255,255,0.4);line-height:1.7;">
+                        ${data.lockDays} day sentence activated.<br>
+                        Find your way out of the cage.
+                    </div>
+                    <div style="margin-top:40px;width:24px;height:24px;border:2px solid rgba(139,0,0,0.3);border-top-color:rgba(139,0,0,0.7);border-radius:50%;animation:_vaultSpin 0.8s linear infinite;margin:40px auto 0;"></div>
+                    <style>@keyframes _vaultSpin{to{transform:rotate(360deg)}}</style>
+                </div>
+            `;
+            // Redirect to vault after a moment
+            setTimeout(() => { window.location.href = '/vault'; }, 2500);
         } catch (err: any) {
             alert(err.message || 'Connection error. Try again.');
             submitBtn.disabled = false;
