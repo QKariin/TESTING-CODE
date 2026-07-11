@@ -248,11 +248,17 @@ export default function VaultPage() {
     // Init profile state from real DB + tribute system
     useEffect(() => {
         const _splashStart = Date.now();
-        // Check if profile was pre-loaded by /profile redirect — skip splash
+        // Check if data was pre-loaded by /profile splash — skip ALL fetches + splash
         let _cachedProfile: any = null;
+        let _cachedSession: any = null;
+        let _cachedKneel: any = null;
         try {
-            const raw = sessionStorage.getItem('_vaultProfileCache');
-            if (raw) { _cachedProfile = JSON.parse(raw); sessionStorage.removeItem('_vaultProfileCache'); }
+            const pRaw = sessionStorage.getItem('_vaultProfileCache');
+            if (pRaw) { _cachedProfile = JSON.parse(pRaw); sessionStorage.removeItem('_vaultProfileCache'); }
+            const sRaw = sessionStorage.getItem('_vaultSessionCache');
+            if (sRaw) { _cachedSession = JSON.parse(sRaw); sessionStorage.removeItem('_vaultSessionCache'); }
+            const kRaw = sessionStorage.getItem('_vaultKneelCache');
+            if (kRaw) { _cachedKneel = JSON.parse(kRaw); sessionStorage.removeItem('_vaultKneelCache'); }
         } catch {}
 
         const supabase = createClient();
@@ -278,12 +284,13 @@ export default function VaultPage() {
                 setProfile(data);
                 const { initProfileState } = await import('@/scripts/profile-state');
                 initProfileState(data);
-                // Load vault session from real DB
-                // vault_sessions.member_id stores email, not UUID
+                // Load vault session — use cache from /profile splash if available
                 const memberId = data.member_id || userEmail;
-                fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`)
-                    .then(r => r.json())
-                    .then(vd => {
+                const sessionReady = _cachedSession
+                    ? Promise.resolve(_cachedSession)
+                    : fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`).then(r => r.json());
+
+                sessionReady.then(vd => {
                         console.log('[VAULT] Session data:', vd);
                         if (vd.active) {
                             setVaultData(vd);
@@ -291,12 +298,17 @@ export default function VaultPage() {
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
                             if (todayTrial && (todayTrial.status === 'submitted' || todayTrial.status === 'approved')) setTrialDone(true);
-                            fetch(`/api/kneel-status?memberId=${encodeURIComponent(memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`)
-                                .then(r => r.json())
-                                .then(ks => {
-                                    if (ks.todayKneeling) setKneelToday(ks.todayKneeling);
-                                    if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
-                                }).catch(() => {});
+                            if (_cachedKneel) {
+                                if (_cachedKneel.todayKneeling) setKneelToday(_cachedKneel.todayKneeling);
+                                if (_cachedKneel.isLocked && _cachedKneel.minLeft > 0) setKneelCooldownUntil(Date.now() + _cachedKneel.minLeft * 60000);
+                            } else {
+                                fetch(`/api/kneel-status?memberId=${encodeURIComponent(memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`)
+                                    .then(r => r.json())
+                                    .then(ks => {
+                                        if (ks.todayKneeling) setKneelToday(ks.todayKneeling);
+                                        if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
+                                    }).catch(() => {});
+                            }
                             fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) })
                                 .then(() => fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`))
                                 .then(r => r.json())
@@ -331,11 +343,14 @@ export default function VaultPage() {
                 (window as any).switchMobChatTab = switchMobChatTab;
                 (window as any).handleMediaPlus = handleMediaPlus;
                 (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
-                // Dismiss splash — skip wait if profile was pre-cached from /profile
-                const elapsed = Date.now() - _splashStart;
-                const minSplash = _cachedProfile ? 800 : 5000;
-                const remaining = Math.max(0, minSplash - elapsed);
-                setTimeout(() => setLoading(false), remaining);
+                // Dismiss splash — instant if pre-cached from /profile splash
+                if (_cachedProfile) {
+                    setLoading(false);
+                } else {
+                    const elapsed = Date.now() - _splashStart;
+                    const remaining = Math.max(0, 5000 - elapsed);
+                    setTimeout(() => setLoading(false), remaining);
+                }
             })
             .catch(() => { setLoading(false); });
         }).catch(() => { window.location.href = '/login'; });

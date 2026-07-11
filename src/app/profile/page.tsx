@@ -565,8 +565,17 @@ export default function ProfilePage() {
                         const hasFreedom = cd.reward && cd.reward > Date.now();
                         if (!hasFreedom) {
                             const targetUrl = _overlay === 'vault' ? '/vault' : `/${_overlay}`;
-                            // Pass profile data so vault page skips its own splash
-                            try { sessionStorage.setItem('_vaultProfileCache', JSON.stringify(unifiedData)); } catch {}
+                            // Pre-fetch vault session data during splash so vault page has ZERO load time
+                            const _memberId = unifiedData.member_id || unifiedData.email || '';
+                            try {
+                                const [vaultRes, kneelRes] = await Promise.all([
+                                    fetch(`/api/vault/session?memberId=${encodeURIComponent(_memberId)}`).then(r => r.json()).catch(() => null),
+                                    fetch(`/api/kneel-status?memberId=${encodeURIComponent(_memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`).then(r => r.json()).catch(() => null),
+                                ]);
+                                sessionStorage.setItem('_vaultProfileCache', JSON.stringify(unifiedData));
+                                if (vaultRes) sessionStorage.setItem('_vaultSessionCache', JSON.stringify(vaultRes));
+                                if (kneelRes) sessionStorage.setItem('_vaultKneelCache', JSON.stringify(kneelRes));
+                            } catch { try { sessionStorage.setItem('_vaultProfileCache', JSON.stringify(unifiedData)); } catch {} }
                             window.location.href = targetUrl;
                             return; // stop loading — redirect in progress
                         }
