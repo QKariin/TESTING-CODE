@@ -946,7 +946,8 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                 const hasPending = u.reviewQueue.length > 0;
                 const isSilenced = !!(u.parameters?.silence?.active);
                 const isPaywalled = !!(u.parameters?.paywall?.active);
-                const isLocked = isSilenced || isPaywalled;
+                const isVaultLocked = u.parameters?.vault_request?.status === 'active';
+                const isLocked = isSilenced || isPaywalled || isVaultLocked;
                 // Format last seen for offline users
                 const lastSeenMs = u.lastSeen ? Date.now() - new Date(u.lastSeen).getTime() : null;
                 const lastSeenText = lastSeenMs === null ? 'never seen' : lastSeenMs < 60000 ? 'just now' : lastSeenMs < 3600000 ? `${Math.floor(lastSeenMs / 60000)}m ago` : lastSeenMs < 86400000 ? `${Math.floor(lastSeenMs / 3600000)}h ago` : `${Math.floor(lastSeenMs / 86400000)}d ago`;
@@ -956,7 +957,7 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                 const starPath = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
                 return (
                     <button key={u.memberId} onClick={() => onSelect(u)}
-                        style={{ ...S.userCard, ...(isLocked ? { border: `1px solid ${isSilenced ? 'rgba(220,60,60,0.4)' : 'rgba(197,160,89,0.4)'}`, background: isSilenced ? 'rgba(220,60,60,0.06)' : 'rgba(197,160,89,0.06)' } : unread ? { border: '1px solid rgba(74,158,255,0.3)', background: 'rgba(74,158,255,0.04)' } : !isOnline ? { opacity: 0.65 } : {}) }}>
+                        style={{ ...S.userCard, ...(isLocked ? { border: `1px solid ${isSilenced ? 'rgba(220,60,60,0.4)' : isVaultLocked ? 'rgba(180,40,40,0.4)' : 'rgba(197,160,89,0.4)'}`, background: isSilenced ? 'rgba(220,60,60,0.06)' : isVaultLocked ? 'rgba(180,40,40,0.06)' : 'rgba(197,160,89,0.06)' } : unread ? { border: '1px solid rgba(74,158,255,0.3)', background: 'rgba(74,158,255,0.04)' } : !isOnline ? { opacity: 0.65 } : {}) }}>
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                             <img src={u.avatar} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${unread ? '#4a9eff' : rc(u.rank) + '44'}`, display: 'block' }} onError={(e) => { (e.target as any).src = '/collar-placeholder.png'; }} alt="" />
                             <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, background: dotC, borderRadius: '50%', border: '2px solid #030303', boxShadow: isOnline ? `0 0 6px ${dotC}` : 'none' }} />
@@ -968,7 +969,7 @@ function SubjectsView({ users, allCount, search, setSearch, unreadMap, onSelect,
                             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.9rem', color: unread ? '#fff' : '#ddd', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: unread ? 700 : 400, marginBottom: 4 }}>{u.name}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', letterSpacing: '1px', padding: '1px 6px', borderRadius: 100, background: rc(u.rank) + '22', color: rc(u.rank), border: `1px solid ${rc(u.rank)}44` }}>{u.rank}</span>
-                                {isLocked && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', letterSpacing: '2px', padding: '1px 7px', borderRadius: 100, background: isSilenced ? 'rgba(220,60,60,0.12)' : 'rgba(197,160,89,0.12)', color: isSilenced ? '#dc3c3c' : '#c5a059', border: `1px solid ${isSilenced ? 'rgba(220,60,60,0.35)' : 'rgba(197,160,89,0.35)'}` }}>{isSilenced ? '🔇 SILENCED' : '🔒 PAYWALLED'}</span>}
+                                {isLocked && <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.55rem', letterSpacing: '2px', padding: '1px 7px', borderRadius: 100, background: isSilenced ? 'rgba(220,60,60,0.12)' : isVaultLocked ? 'rgba(180,40,40,0.12)' : 'rgba(197,160,89,0.12)', color: isSilenced ? '#dc3c3c' : isVaultLocked ? 'rgba(180,40,40,0.8)' : '#c5a059', border: `1px solid ${isSilenced ? 'rgba(220,60,60,0.35)' : isVaultLocked ? 'rgba(180,40,40,0.35)' : 'rgba(197,160,89,0.35)'}` }}>{isSilenced ? '🔇 SILENCED' : isVaultLocked ? '🔒 VAULT LOCKED' : '🔒 PAYWALLED'}</span>}
                             </div>
                             {!isOnline && (
                                 <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.56rem', color: '#3a3a3a', letterSpacing: '1px', marginTop: 4 }}>last seen {lastSeenText}</div>
@@ -2042,8 +2043,10 @@ function UserProfile({ user, profileTab, setProfileTab, onBack, adminEmail, onRe
                             <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.95rem', color: '#eee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>{user.name}</span>
                             <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.6rem', color: GOLD, opacity: 0.7, letterSpacing: '1px', flexShrink: 0 }}>{user.rank}</span>
                         </div>
-                        {(isSilenced || isPaywalled) ? (
-                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', letterSpacing: '2px', color: isSilenced ? '#dc3c3c' : GOLD }}>{isSilenced ? '🔇 SILENCED' : '🔒 PAYWALLED'}</span>
+                        {(isSilenced || isPaywalled || !!(user.parameters?.vault_request?.status === 'active')) ? (
+                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', letterSpacing: '2px', color: isSilenced ? '#dc3c3c' : user.parameters?.vault_request?.status === 'active' ? 'rgba(180,40,40,0.8)' : GOLD }}>
+                                {isSilenced ? '🔇 SILENCED' : user.parameters?.vault_request?.status === 'active' ? '🔒 VAULT LOCKED' : '🔒 PAYWALLED'}
+                            </span>
                         ) : activeTaskText ? (
                             <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                                 <span style={{ color: '#6bcb77', fontSize: '0.65rem', fontFamily: "'Orbitron',sans-serif", letterSpacing: '1px', marginRight: 4 }}>TASK:</span>{activeTaskText}
