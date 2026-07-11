@@ -136,6 +136,36 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, status: 'denied' });
         }
 
+        // ── RELEASE (immediate early release) ──
+        if (action === 'release') {
+            await supabaseAdmin.from('vault_sessions').update({
+                status: 'released_early',
+                released_at: new Date().toISOString(),
+            }).eq('id', sessionId);
+
+            // Clear vault_request from profile
+            const { data: profile } = await supabaseAdmin
+                .from('profiles')
+                .select('ID, parameters')
+                .ilike('member_id', memberId)
+                .maybeSingle();
+
+            if (profile) {
+                const params = profile.parameters || {};
+                delete params.vault_request;
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+            }
+
+            try {
+                await DbService.sendMessage(memberId,
+                    `LOCK RELEASED EARLY by Queen Karin. ${session.lock_days} day sentence ended.`,
+                    'system');
+                await _pushToUser(memberId, 'Your lock has been released by the Queen.');
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'released_early' });
+        }
+
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     } catch (err: any) {
         console.error('[VAULT MANAGE] Error:', err);

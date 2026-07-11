@@ -2194,15 +2194,25 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                 )}
-                                {vaultRequest && vaultRequest.status !== 'pending' && vaultRequest.status && (
-                                    <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, margin: '0 8px 12px', padding: '14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <span style={{ fontSize: '1.2rem' }}>{vaultRequest.status === 'active' ? '🔒' : '📅'}</span>
-                                        <div>
-                                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.5rem', color: vaultRequest.status === 'active' ? '#c5a059' : 'rgba(100,180,255,0.8)', letterSpacing: 2, fontWeight: 700 }}>
-                                                {vaultRequest.status === 'active' ? 'LOCKED' : 'SCHEDULED'}
+                                {vaultRequest && (vaultRequest.status === 'active' || vaultRequest.status === 'scheduled' || vaultRequest.status === 'awaiting_video') && (
+                                    <div style={{ background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.2)', borderRadius: 10, margin: '0 8px 12px', padding: '14px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                                            <span style={{ fontSize: '1.2rem' }}>{vaultRequest.status === 'active' ? '🔒' : vaultRequest.status === 'awaiting_video' ? '🔏' : '📅'}</span>
+                                            <div>
+                                                <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.8)', letterSpacing: 2, fontWeight: 700 }}>
+                                                    {vaultRequest.status === 'active' ? 'LOCKED' : vaultRequest.status === 'awaiting_video' ? 'AWAITING VIDEO' : 'SCHEDULED'}
+                                                </div>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>{vaultRequest.lockDays}d sentence</div>
                                             </div>
-                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>{vaultRequest.lockDays}d sentence</div>
                                         </div>
+                                        <button disabled={vaultLoading} onClick={async () => {
+                                            if (!confirm('Release this lock immediately?')) return;
+                                            setVaultLoading(true);
+                                            try {
+                                                await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'release', sessionId: vaultRequest.sessionId }) });
+                                                setVaultRequest(null);
+                                            } catch (_) {} finally { setVaultLoading(false); }
+                                        }} style={{ width: '100%', padding: '10px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>IMMEDIATE RELEASE</button>
                                     </div>
                                 )}
 
