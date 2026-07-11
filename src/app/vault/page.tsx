@@ -248,14 +248,25 @@ export default function VaultPage() {
     // Init profile state from real DB + tribute system
     useEffect(() => {
         const _splashStart = Date.now();
+        // Check if profile was pre-loaded by /profile redirect — skip splash
+        let _cachedProfile: any = null;
+        try {
+            const raw = sessionStorage.getItem('_vaultProfileCache');
+            if (raw) { _cachedProfile = JSON.parse(raw); sessionStorage.removeItem('_vaultProfileCache'); }
+        } catch {}
+
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
             if (!user) { window.location.href = '/login'; return; }
             const userEmail = user.email || user.id;
-        fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail, full: true }) })
-            .then(r => r.json())
-            .then(async (rawData) => {
-                const data = {
+
+        const profileReady = _cachedProfile
+            ? Promise.resolve(_cachedProfile)
+            : fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail, full: true }) }).then(r => r.json());
+
+        profileReady
+            .then(async (rawData: any) => {
+                const data = _cachedProfile ? rawData : {
                     ...(rawData && !rawData.error ? rawData : {}),
                     member_id: rawData?.member_id || user.email,
                     memberId: user.id,
@@ -320,9 +331,10 @@ export default function VaultPage() {
                 (window as any).switchMobChatTab = switchMobChatTab;
                 (window as any).handleMediaPlus = handleMediaPlus;
                 (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
-                // Dismiss splash after minimum 5s
+                // Dismiss splash — skip wait if profile was pre-cached from /profile
                 const elapsed = Date.now() - _splashStart;
-                const remaining = Math.max(0, 5000 - elapsed);
+                const minSplash = _cachedProfile ? 800 : 5000;
+                const remaining = Math.max(0, minSplash - elapsed);
                 setTimeout(() => setLoading(false), remaining);
             })
             .catch(() => { setLoading(false); });

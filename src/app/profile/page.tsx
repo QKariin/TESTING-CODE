@@ -565,6 +565,8 @@ export default function ProfilePage() {
                         const hasFreedom = cd.reward && cd.reward > Date.now();
                         if (!hasFreedom) {
                             const targetUrl = _overlay === 'vault' ? '/vault' : `/${_overlay}`;
+                            // Pass profile data so vault page skips its own splash
+                            try { sessionStorage.setItem('_vaultProfileCache', JSON.stringify(unifiedData)); } catch {}
                             window.location.href = targetUrl;
                             return; // stop loading — redirect in progress
                         }
