@@ -32,10 +32,17 @@ export async function POST(req: Request) {
             profile = pByEmail;
         }
 
+        // Auto-fix: relink orphan profile or create new one
         if (!profile) {
-            console.error('[VAULT PROOF] Profile not found. user.id:', user.id, 'email:', email);
-            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+            const { data: orphan } = await supabaseAdmin
+                .from('profiles').select('ID, member_id, name').ilike('member_id', user.email || email).maybeSingle();
+            if (orphan) {
+                await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', orphan.ID);
+                await supabaseAdmin.from('tasks').update({ ID: user.id }).eq('ID', orphan.ID);
+                profile = { ...orphan, ID: user.id };
+            }
         }
+        if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         const memberId = (profile.member_id || email).toLowerCase();
 
         // Verify session exists and is awaiting_video

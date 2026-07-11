@@ -65,14 +65,43 @@ export async function POST(req: Request) {
             if (byLike) console.log('[VAULT APPLY] Found profile via fuzzy match:', byLike.member_id);
         }
 
+        // Auto-fix: if no profile found, try to link or create one
         if (!profile) {
-            console.error('[VAULT APPLY] ALL lookups failed. user.id:', user.id, 'email:', email, 'user.email:', user.email, 'provider:', user.app_metadata?.provider);
-            const { data: sampleProfiles, error: sampleErr } = await supabaseAdmin.from('profiles').select('ID, member_id').limit(3);
-            console.error('[VAULT APPLY] DB accessible?', sampleErr ? `ERROR: ${sampleErr.message}` : `YES, ${(sampleProfiles||[]).length} profiles found`);
-            return NextResponse.json({
-                error: 'Profile not found',
-                debug: { userId: user.id, email, userEmail: user.email, provider: user.app_metadata?.provider },
-            }, { status: 404 });
+            console.warn('[VAULT APPLY] No profile found for', user.id, email, '— attempting auto-fix');
+
+            // Check if a profile exists with this email but different UUID (re-auth scenario)
+            const { data: orphan } = await supabaseAdmin
+                .from('profiles').select(selectCols).ilike('member_id', user.email || email).maybeSingle();
+
+            if (orphan) {
+                // Profile exists under old UUID — relink to current auth user
+                console.log('[VAULT APPLY] Relinking orphan profile', orphan.ID, '→', user.id);
+                await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', orphan.ID);
+                await supabaseAdmin.from('tasks').update({ ID: user.id }).eq('ID', orphan.ID);
+                profile = { ...orphan, ID: user.id };
+            } else {
+                // No profile at all — create one
+                console.log('[VAULT APPLY] Creating new profile for', user.id, email);
+                const { data: created, error: createErr } = await supabaseAdmin
+                    .from('profiles')
+                    .insert({
+                        ID: user.id,
+                        member_id: email,
+                        name: email.split('@')[0],
+                        hierarchy: 'Hall Boy',
+                        wallet: 5000,
+                        score: 0,
+                        parameters: { devotion: 100 },
+                    })
+                    .select(selectCols)
+                    .single();
+
+                if (createErr) {
+                    console.error('[VAULT APPLY] Failed to create profile:', createErr.message);
+                    return NextResponse.json({ error: 'Profile not found and could not be created' }, { status: 404 });
+                }
+                profile = created;
+            }
         }
 
         const memberId = (profile.member_id || email).toLowerCase();

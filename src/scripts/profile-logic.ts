@@ -5587,7 +5587,7 @@ async function _submitVaultLock(action: string, requestedStart?: string | null) 
                 const data = await res.json();
                 if (data.error) {
                     console.error('[VAULT LOCK] Error:', data);
-                    alert(data.debug ? `${data.error}\n\nDebug: userId=${data.debug.userId}\nemail=${data.debug.email}\nprovider=${data.debug.provider}` : data.error);
+                    alert(data.error);
                     return;
                 }
 
