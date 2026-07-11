@@ -5678,8 +5678,8 @@ export function _updateVaultLockButton(data: { active: boolean; status?: string;
     const mobBtn = document.getElementById('mobVaultLockBtn') as HTMLButtonElement | null;
 
     if (!data || !data.active) {
-        if (btn) { btn.textContent = 'REQUEST LOCK'; btn.style.borderColor = 'rgba(139,0,0,0.3)'; btn.style.color = '#8b0000'; btn.style.opacity = '1'; btn.disabled = false; }
-        if (mobBtn) { mobBtn.textContent = 'REQUEST LOCK'; mobBtn.style.borderColor = 'rgba(139,0,0,0.3)'; mobBtn.style.color = '#8b0000'; mobBtn.style.opacity = '1'; mobBtn.disabled = false; }
+        if (btn) { btn.textContent = 'REQUEST LOCK'; btn.style.borderColor = 'rgba(139,0,0,0.3)'; btn.style.color = '#8b0000'; btn.style.opacity = '1'; btn.disabled = false; btn.onclick = null; }
+        if (mobBtn) { mobBtn.textContent = 'REQUEST LOCK'; mobBtn.style.borderColor = 'rgba(139,0,0,0.3)'; mobBtn.style.color = '#8b0000'; mobBtn.style.opacity = '1'; mobBtn.disabled = false; mobBtn.onclick = null; }
         return;
     }
 
