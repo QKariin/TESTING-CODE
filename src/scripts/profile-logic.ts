@@ -5577,7 +5577,8 @@ async function _submitVaultLock(action: string, requestedStart?: string | null) 
         theme: 'vault',
         onConfirm: async () => {
             try {
-                const body: any = { action, duration: tierData.days };
+                const state = getState();
+                const body: any = { action, duration: tierData.days, memberId: state.member_id || state.memberId || state.email };
                 if (requestedStart) body.requestedStart = requestedStart;
                 const res = await fetch('/api/vault/apply', {
                     method: 'POST',

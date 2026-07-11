@@ -12,36 +12,14 @@ export async function POST(req: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { sessionId, videoUrl } = await req.json();
+        const { sessionId, videoUrl, memberId: clientMemberId } = await req.json();
         if (!sessionId || !videoUrl) return NextResponse.json({ error: 'Missing sessionId or videoUrl' }, { status: 400 });
 
-        const email = (user.email || (user.user_metadata?.provider_id
+        const email = (clientMemberId || user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        let profile: any = null;
-        const { data: pById, error: pErrId } = await supabaseAdmin.from('profiles').select('ID, member_id, name').eq('ID', user.id).maybeSingle();
-        if (pErrId) console.error('[VAULT PROOF] byId error:', pErrId.message);
-        profile = pById;
-        if (!profile) {
-            const { data: pByIdLower } = await supabaseAdmin.from('profiles').select('ID, member_id, name').eq('id', user.id).maybeSingle();
-            profile = pByIdLower;
-        }
-        if (!profile) {
-            const { data: pByEmail, error: pErrEmail } = await supabaseAdmin.from('profiles').select('ID, member_id, name').ilike('member_id', email).maybeSingle();
-            if (pErrEmail) console.error('[VAULT PROOF] byEmail error:', pErrEmail.message);
-            profile = pByEmail;
-        }
-
-        // Auto-fix: relink orphan profile or create new one
-        if (!profile) {
-            const { data: orphan } = await supabaseAdmin
-                .from('profiles').select('ID, member_id, name').ilike('member_id', user.email || email).maybeSingle();
-            if (orphan) {
-                await supabaseAdmin.from('profiles').update({ ID: user.id }).eq('ID', orphan.ID);
-                await supabaseAdmin.from('tasks').update({ ID: user.id }).eq('ID', orphan.ID);
-                profile = { ...orphan, ID: user.id };
-            }
-        }
+        const { data: profile } = await supabaseAdmin
+            .from('profiles').select('ID, member_id, name').ilike('member_id', email).maybeSingle();
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         const memberId = (profile.member_id || email).toLowerCase();
 
