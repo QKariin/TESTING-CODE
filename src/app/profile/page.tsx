@@ -454,6 +454,7 @@ export default function ProfilePage() {
         async function loadProfile() {
             const _splashStart = Date.now();
             let _loadedData: any = null;
+            let _redirecting = false;
             try {
                 // ─── LOCAL DEV BYPASS ────────────────────────────────────────
                 // Skips login when running on localhost so you can see UI changes instantly.
@@ -576,6 +577,7 @@ export default function ProfilePage() {
                                 if (vaultRes) sessionStorage.setItem('_vaultSessionCache', JSON.stringify(vaultRes));
                                 if (kneelRes) sessionStorage.setItem('_vaultKneelCache', JSON.stringify(kneelRes));
                             } catch { try { sessionStorage.setItem('_vaultProfileCache', JSON.stringify(unifiedData)); } catch {} }
+                            _redirecting = true;
                             window.location.href = targetUrl;
                             return; // stop loading — redirect in progress
                         }
@@ -590,6 +592,7 @@ export default function ProfilePage() {
             } catch (err) {
                 console.error("Critical Load Error:", err);
             } finally {
+                if (_redirecting) return; // keep splash visible during redirect
                 const elapsed = Date.now() - _splashStart;
                 const remaining = Math.max(0, 5000 - elapsed);
                 const finish = () => {

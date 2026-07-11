@@ -121,12 +121,7 @@ function fmt(ms: number) {
 }
 
 export default function VaultPage() {
-    const [loading, setLoading] = useState(() => {
-        if (typeof window !== 'undefined') {
-            try { if (sessionStorage.getItem('_vaultProfileCache')) return false; } catch {}
-        }
-        return true;
-    });
+    const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const [vaultData, setVaultData] = useState<any>(null); // real DB data from /api/vault/session
     const [elapsed, setElapsed] = useState(fmt(Date.now() - new Date(MOCK.lockStart).getTime()));
@@ -295,6 +290,20 @@ export default function VaultPage() {
                     ? Promise.resolve(_cachedSession)
                     : fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`).then(r => r.json());
 
+                const { sendChatMessage, handleChatKey, toggleAiMode, sendAiMessage, switchMobChatTab, handleMediaPlus } = await import('@/scripts/profile-logic');
+                (window as any).sendChatMessage = sendChatMessage;
+                (window as any).handleChatKey = handleChatKey;
+                (window as any).toggleAiMode = toggleAiMode;
+                (window as any).sendAiMessage = sendAiMessage;
+                (window as any).switchMobChatTab = switchMobChatTab;
+                (window as any).handleMediaPlus = handleMediaPlus;
+                (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
+
+                // Load vault session — use cache from /profile splash if available
+                const sessionReady = _cachedSession
+                    ? Promise.resolve(_cachedSession)
+                    : fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`).then(r => r.json());
+
                 sessionReady.then(vd => {
                         console.log('[VAULT] Session data:', vd);
                         if (vd.active) {
@@ -338,24 +347,20 @@ export default function VaultPage() {
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
                         }
+
+                        // ALL state set — NOW dismiss splash
+                        if (_cachedProfile) {
+                            setLoading(false);
+                        } else {
+                            const elapsed = Date.now() - _splashStart;
+                            const remaining = Math.max(0, 5000 - elapsed);
+                            setTimeout(() => setLoading(false), remaining);
+                        }
                     })
-                    .catch(e => console.error('[VAULT] Session fetch failed:', e));
-                const { sendChatMessage, handleChatKey, toggleAiMode, sendAiMessage, switchMobChatTab, handleMediaPlus } = await import('@/scripts/profile-logic');
-                (window as any).sendChatMessage = sendChatMessage;
-                (window as any).handleChatKey = handleChatKey;
-                (window as any).toggleAiMode = toggleAiMode;
-                (window as any).sendAiMessage = sendAiMessage;
-                (window as any).switchMobChatTab = switchMobChatTab;
-                (window as any).handleMediaPlus = handleMediaPlus;
-                (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
-                // Dismiss splash — instant if pre-cached from /profile splash
-                if (_cachedProfile) {
-                    setLoading(false);
-                } else {
-                    const elapsed = Date.now() - _splashStart;
-                    const remaining = Math.max(0, 5000 - elapsed);
-                    setTimeout(() => setLoading(false), remaining);
-                }
+                    .catch(e => {
+                        console.error('[VAULT] Session fetch failed:', e);
+                        setLoading(false);
+                    });
             })
             .catch(() => { setLoading(false); });
         }).catch(() => { window.location.href = '/login'; });
