@@ -341,6 +341,7 @@ export default function VaultPage() {
                                 .catch(() => {});
 
                             // Realtime: listen for release/completion — show overlay
+                            // Listen on BOTH vault_sessions AND profiles for maximum reliability
                             const rtSub = supabase
                                 .channel('vault_release_watch')
                                 .on('postgres_changes', {
@@ -353,6 +354,26 @@ export default function VaultPage() {
                                     if (s.status === 'released_early' || s.status === 'completed' || s.status === 'denied') {
                                         try { localStorage.removeItem('vault_cooldowns'); } catch {}
                                         setReleaseOverlay({ reason: s.release_reason || '' });
+                                    }
+                                })
+                                .on('postgres_changes', {
+                                    event: 'UPDATE',
+                                    schema: 'public',
+                                    table: 'profiles',
+                                }, (payload: any) => {
+                                    const row = payload.new;
+                                    if (!row) return;
+                                    const rowEmail = (row.member_id || '').toLowerCase();
+                                    if (rowEmail !== memberId.toLowerCase()) return;
+                                    // active_overlay removed = released
+                                    if (!row.parameters?.active_overlay && !row.parameters?.vault_request) {
+                                        try { localStorage.removeItem('vault_cooldowns'); } catch {}
+                                        // Fetch the session to get reason
+                                        fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`).then(r => r.json()).then(d => {
+                                            setReleaseOverlay({ reason: d?.session?.release_reason || '' });
+                                        }).catch(() => {
+                                            setReleaseOverlay({ reason: '' });
+                                        });
                                     }
                                 })
                                 .subscribe();

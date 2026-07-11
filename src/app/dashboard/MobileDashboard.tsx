@@ -2397,6 +2397,9 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
     // Lock states from parameters
     const paywallActive = !!(user.parameters?.paywall?.active);
     const silenceActive = !!(user.parameters?.silence?.active);
+    const vaultReq = user.parameters?.vault_request;
+    const vaultActive = vaultReq && (vaultReq.status === 'active' || vaultReq.status === 'scheduled' || vaultReq.status === 'awaiting_video');
+    const [releaseReason, setReleaseReason] = useState('');
 
     // Wallet
     const [walletAmt, setWalletAmt] = useState('100');
@@ -2637,6 +2640,41 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                     </button>
                 </div>
             </div>
+
+            {/* VAULT RELEASE */}
+            {vaultActive && (
+                <div>
+                    <div className="duty-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>VAULT LOCK</span>
+                        <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.58rem', color: 'rgba(180,40,40,0.8)', background: 'rgba(139,0,0,0.1)', padding: '2px 8px', borderRadius: 20, border: '1px solid rgba(139,0,0,0.25)' }}>
+                            {vaultReq.status === 'active' ? 'LOCKED' : vaultReq.status === 'awaiting_video' ? 'AWAITING VIDEO' : 'SCHEDULED'}
+                        </span>
+                    </div>
+                    <div className="luxury-card">
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.8rem', color: 'rgba(139,0,0,0.7)', textAlign: 'center', marginBottom: 10 }}>{vaultReq.lockDays}d sentence</div>
+                        <textarea value={releaseReason} onChange={e => setReleaseReason(e.target.value)} placeholder="Reason for release (shown to user)..." style={{ width: '100%', minHeight: 50, padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.84rem', resize: 'vertical', marginBottom: 8 }} />
+                        <button disabled={busy} onClick={async () => {
+                            if (!confirm('Release this lock immediately?')) return;
+                            setBusy(true);
+                            try {
+                                const res = await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'release', sessionId: vaultReq.sessionId, reason: releaseReason.trim() }) });
+                                const d = await res.json();
+                                if (d.success) {
+                                    flash('✓ Lock released');
+                                    const updatedParams = { ...user.parameters };
+                                    delete updatedParams.vault_request;
+                                    delete updatedParams.active_overlay;
+                                    onUserUpdated?.({ ...user, parameters: updatedParams });
+                                    setReleaseReason('');
+                                } else flash('✕ ' + (d.error || 'Failed'));
+                            } catch (e: any) { flash('✕ ' + e.message); }
+                            setBusy(false);
+                        }} style={{ width: '100%', padding: '12px', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 6, color: 'rgba(180,40,40,0.8)', fontFamily: "'Cinzel',serif", fontSize: '0.78rem', fontWeight: 700, letterSpacing: '2px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.5 : 1 }}>
+                            IMMEDIATE RELEASE
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Wallet + Merit row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
