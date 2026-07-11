@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createClient } from '@/utils/supabase/client';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 
@@ -245,16 +246,26 @@ export default function VaultPage() {
 
     // Init profile state from real DB + tribute system
     useEffect(() => {
-        const TEST_EMAIL = 'pr.finsko@gmail.com';
-        fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: TEST_EMAIL, full: true }) })
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!user) { window.location.href = '/login'; return; }
+            const userEmail = user.email || user.id;
+        fetch('/api/slave-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail, full: true }) })
             .then(r => r.json())
-            .then(async (data) => {
+            .then(async (rawData) => {
+                const data = {
+                    ...(rawData && !rawData.error ? rawData : {}),
+                    member_id: rawData?.member_id || user.email,
+                    memberId: user.id,
+                    email: user.email,
+                };
                 console.log('[VAULT] Loaded profile:', data);
                 setProfile(data);
                 const { initProfileState } = await import('@/scripts/profile-state');
                 initProfileState(data);
                 // Load vault session from real DB
-                const memberId = data.member_id || data.email || TEST_EMAIL;
+                // vault_sessions.member_id stores email, not UUID
+                const memberId = data.member_id || userEmail;
                 fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`)
                     .then(r => r.json())
                     .then(vd => {
@@ -292,6 +303,7 @@ export default function VaultPage() {
                 (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
             })
             .catch(() => {});
+        }).catch(() => { window.location.href = '/login'; });
         import('@/scripts/tribute-game').then(({ bindTributeGame }) => {
             bindTributeGame();
         });
@@ -359,7 +371,7 @@ export default function VaultPage() {
         if (!chatGateDone || !profile || chatLoaded.current) return;
         // Small delay to let React render the chat DOM elements
         const t = setTimeout(async () => {
-            const chatId = profile.ID || profile.member_id || 'pr.finsko@gmail.com';
+            const chatId = profile.memberId || profile.ID || profile.member_id || '';
             const { loadChatHistory } = await import('@/scripts/profile-logic');
             loadChatHistory(chatId);
             chatLoaded.current = true;
@@ -434,7 +446,7 @@ export default function VaultPage() {
 
     // Send attention card to dashboard
     const sendAttentionCard = useCallback((task: typeof ATTENTION_TASKS[0], opts: { completed?: boolean; skipped?: boolean; result?: string } = {}) => {
-        const memberId = profile?.member_id || 'pr.finsko@gmail.com';
+        const memberId = profile?.member_id || profile?.memberId || '';
         const memberName = profile?.name || MOCK.name;
         fetch('/api/vault/attention', {
             method: 'POST',
@@ -474,7 +486,7 @@ export default function VaultPage() {
     // Send message to Vlad
     const sendVladMsg = useCallback(async (msg: string, isAuto = false) => {
         if (vladSending) return;
-        const memberId = profile?.member_id || profile?.ID || 'pr.finsko@gmail.com';
+        const memberId = profile?.member_id || profile?.memberId || profile?.ID || '';
         if (!isAuto) setVladMsgs(prev => [...prev, { role: 'user', text: msg }]);
         setVladSending(true);
         try {
@@ -518,7 +530,7 @@ export default function VaultPage() {
                 setKneelDone(true);
                 setTimeout(() => setKneelDone(false), 2000);
                 // Call kneel API
-                const memberId = profile?.member_id || profile?.ID || 'pr.finsko@gmail.com';
+                const memberId = profile?.member_id || profile?.memberId || profile?.ID || '';
                 fetch('/api/kneel', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -563,7 +575,7 @@ export default function VaultPage() {
             vladReact(`Member spun the MAIN temptation wheel and got: "${WHEEL[idx].text}" (${WHEEL[idx].type}). React to this result.`);
             // Record spin in DB
             if (vaultData?.session?.id) {
-                fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'spin', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com', resultText: WHEEL[idx].text, resultType: WHEEL[idx].type }) }).catch(() => {});
+                fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'spin', memberId: profile?.member_id || profile?.memberId || '', resultText: WHEEL[idx].text, resultType: WHEEL[idx].type }) }).catch(() => {});
             }
         }, 4000);
     }, [spinning, wheelUsed, vladReact]);
@@ -1156,7 +1168,7 @@ export default function VaultPage() {
                                     vladReact('Member just UNLOCKED their freedom until midnight by completing all daily orders. They earned it. Congratulate them sarcastically — remind them it ends at midnight.');
                                     // Record reward claim in DB
                                     if (vaultData?.session?.id) {
-                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'claim_reward', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com' }) }).catch(() => {});
+                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'claim_reward', memberId: profile?.member_id || profile?.memberId || '' }) }).catch(() => {});
                                     }
                                 }} style={{
                                     padding: '12px 28px', background: 'linear-gradient(135deg, rgba(197,160,89,0.08), rgba(197,160,89,0.02))',
@@ -1364,7 +1376,7 @@ export default function VaultPage() {
                                                     vladReact(`Member just PAID ${cost} HOURS of extra lock time to skip their cooldown so they can talk to Queen. Desperate. Roast them.`);
                                                     // Persist adjustment to DB
                                                     if (vaultData?.session?.id) {
-                                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'adjust', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com', hours: cost, reason: `Skipped chat gate cooldown (${hoursLeft}h × 5)` }) }).catch(() => {});
+                                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'adjust', memberId: profile?.member_id || profile?.memberId || '', hours: cost, reason: `Skipped chat gate cooldown (${hoursLeft}h × 5)` }) }).catch(() => {});
                                                     }
                                                 }} style={{
                                                     marginTop: 12, background: 'none', border: `1px solid ${R}0.12)`,
@@ -1764,7 +1776,7 @@ export default function VaultPage() {
                                                         setTrialDone(true); setTrialOpen(false);
                                                         if (vaultData?.session?.id) {
                                                             const todayTrial = vaultData?.today ? null : MOCK.todayTrial;
-                                                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com', prompt: todayTrial?.text || 'Daily trial', response: trialText }) }).catch(() => {});
+                                                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: todayTrial?.text || 'Daily trial', response: trialText }) }).catch(() => {});
                                                         }
                                                     }} style={{ padding: '8px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 6, cursor: 'pointer' }}>SUBMIT</button>
                                                 </div>
@@ -1840,7 +1852,7 @@ export default function VaultPage() {
                                     setBegSent(true);
                                     // Record beg in DB
                                     if (vaultData?.session?.id) {
-                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'beg', memberId: profile?.member_id || profile?.email || 'pr.finsko@gmail.com', message: begText }) }).catch(() => {});
+                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'beg', memberId: profile?.member_id || profile?.memberId || '', message: begText }) }).catch(() => {});
                                     }
                                 }} disabled={!begText.trim()} style={{ marginTop: 14, width: '100%', padding: '13px', fontFamily: 'Cinzel, serif', fontSize: '0.55rem', letterSpacing: '3px', color: begText.trim() ? `${R}0.6)` : 'rgba(255,255,255,0.08)', background: begText.trim() ? `${R}0.04)` : 'transparent', border: `1px solid ${begText.trim() ? `${R}0.15)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: begText.trim() ? 'pointer' : 'default' }}>SUBMIT YOUR BEG</button>
                             </>

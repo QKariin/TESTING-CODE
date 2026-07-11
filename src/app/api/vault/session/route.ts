@@ -16,7 +16,13 @@ export async function GET(req: NextRequest) {
     const memberId = req.nextUrl.searchParams.get('memberId');
     if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-    const email = memberId.toLowerCase();
+    // Resolve UUID → email if needed (vault_sessions stores email as member_id)
+    let email = memberId.toLowerCase();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+    if (isUuid) {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', email).maybeSingle();
+        if (prof?.member_id) email = prof.member_id.toLowerCase();
+    }
 
     // 1. Get active session
     const { data: session } = await supabaseAdmin
@@ -114,7 +120,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Missing action or memberId' }, { status: 400 });
     }
 
-    const email = memberId.toLowerCase();
+    // Resolve UUID → email if needed (vault_sessions stores email as member_id)
+    let email = memberId.toLowerCase();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
+    if (isUuid) {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', email).maybeSingle();
+        if (prof?.member_id) email = prof.member_id.toLowerCase();
+    }
 
     // ── CREATE SESSION ──
     if (action === 'create') {
