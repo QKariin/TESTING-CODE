@@ -243,6 +243,17 @@ export function discordVideoChallengeCreated(name: string, taskCount: number, wi
     });
 }
 
+export function discordVaultLock(name: string, days: number, type: 'instant' | 'request') {
+    return sendDiscordEmbed({
+        title: type === 'instant' ? '🔏 KEYHOLDER LOCK' : '🔏 LOCK REQUEST',
+        description: type === 'instant'
+            ? `**${name}** has been locked for **${days} days**`
+            : `**${name}** requested a **${days} day** lock — awaiting approval`,
+        color: 0x8b0000,
+        image: { url: cardUrl('vault', type === 'instant' ? 'KEYHOLDER LOCK' : 'LOCK REQUEST', `${name} — ${days} day sentence`, type === 'instant' ? 'Self-locked' : 'Awaiting approval', '🔏') },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number, itemImage?: string | null) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',

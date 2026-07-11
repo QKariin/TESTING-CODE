@@ -126,19 +126,26 @@ function buildItemHtml(u: any, now: number): string {
     if (rawPic === "null" || rawPic === "undefined" || !rawPic) rawPic = DEFAULT_PIC;
     const finalPic = getOptimizedUrl(rawPic, 80) || DEFAULT_PIC;
 
-    const hasVaultRequest = u.parameters?.vault_request?.status === 'pending';
+    const vaultReqStatus = u.parameters?.vault_request?.status;
+    const hasVaultRequest = vaultReqStatus === 'pending' || vaultReqStatus === 'awaiting_video';
     const isSilenced = u.silence === true;
     const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
     const isLocked = isSilenced || isPaywalled;
 
     if (hasVaultRequest && !isLocked) {
+        const isAwaitingVideo = vaultReqStatus === 'awaiting_video';
+        const badgeColor = isAwaitingVideo ? 'rgba(139,0,0,0.85)' : 'rgba(255,180,50,0.85)';
+        const badgeBg = isAwaitingVideo ? 'rgba(139,0,0,0.06)' : 'rgba(255,180,50,0.06)';
+        const badgeBorder = isAwaitingVideo ? 'rgba(139,0,0,0.4)' : 'rgba(255,180,50,0.4)';
+        const badgeLabel = isAwaitingVideo ? 'VIDEO PROOF' : 'LOCK REQUEST';
+        const badgeIcon = isAwaitingVideo ? '🔏' : '⏳';
         return `
-            <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:rgba(255,180,50,0.06);border:1px solid rgba(255,180,50,0.4);justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+            <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${badgeBg};border:1px solid ${badgeBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
                 <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.15;filter:blur(0px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
-                <div style="font-size:1.4rem;position:relative;z-index:1;">⏳</div>
-                <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(255,180,50,0.85);letter-spacing:3px;position:relative;z-index:1;">LOCK REQUEST</div>
+                <div style="font-size:1.4rem;position:relative;z-index:1;">${badgeIcon}</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${badgeColor};letter-spacing:3px;position:relative;z-index:1;">${badgeLabel}</div>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
-                <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(255,180,50,0.5);letter-spacing:1px;position:relative;z-index:1;">${u.parameters.vault_request.lockDays || '?'}d</div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:${badgeColor.replace('0.85', '0.5')};letter-spacing:1px;position:relative;z-index:1;">${u.parameters.vault_request.lockDays || '?'}d</div>
             </div>
         `;
     }

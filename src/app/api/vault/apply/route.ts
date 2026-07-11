@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { discordVaultLock } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
         // Get profile
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('ID, wallet, parameters, name, member_id')
+            .select('ID, wallet, parameters, name, member_id, avatar_url, profile_picture_url')
             .or(`ID.eq.${user.id},member_id.ilike.${email}`)
             .maybeSingle();
 
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
             .from('vault_sessions')
             .select('id, status')
             .eq('member_id', memberId)
-            .in('status', ['active', 'pending', 'scheduled'])
+            .in('status', ['active', 'pending', 'scheduled', 'awaiting_video'])
             .maybeSingle();
 
         if (existing) {
@@ -102,10 +103,8 @@ export async function POST(req: Request) {
 
         // Determine status based on action
         const isInstant = action === 'apply-instant';
-        const status = isInstant ? 'active' : 'pending';
-        const expiresAt = isInstant
-            ? new Date(Date.now() + tier.days * 86400000).toISOString()
-            : null;
+        // Instant lock goes to awaiting_video — lock starts when video proof is submitted
+        const status = isInstant ? 'awaiting_video' : 'pending';
 
         // Create vault session
         const insertPayload: any = {
@@ -115,8 +114,6 @@ export async function POST(req: Request) {
             status,
             coins_paid: tier.coins,
         };
-        if (expiresAt) insertPayload.expires_at = expiresAt;
-        if (isInstant) insertPayload.started_at = new Date().toISOString();
         if (userMessage) insertPayload.request_message = userMessage;
         if (requestedStart && !isInstant) insertPayload.scheduled_start = requestedStart;
 
@@ -154,29 +151,25 @@ export async function POST(req: Request) {
 
         await supabaseAdmin.from('profiles').update({ wallet: newWallet, parameters: params }).eq('ID', profile.ID);
 
-        // If instant lock, create day 1 orders
-        if (isInstant) {
-            try {
-                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
-                await fetch(`${baseUrl}/api/vault/session`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'init-day', memberId, sessionId: session.id }),
-                });
-            } catch (_) {}
-        }
-
         // System message
         try {
             await DbService.sendMessage(memberId,
                 isInstant
-                    ? `VAULT LOCK ACTIVATED — ${tier.days} day sentence. ${tier.coins.toLocaleString()} coins charged. Send your verification video.`
-                    : `VAULT LOCK REQUESTED — ${tier.days} days. ${tier.coins.toLocaleString()} coins held. Waiting for Queen Karin's approval.`,
+                    ? `KEYHOLDER LOCK — ${tier.days} day sentence. ${tier.coins.toLocaleString()} coins charged. Submit your verification video to activate.`
+                    : `KEYHOLDER LOCK REQUESTED — ${tier.days} days. ${tier.coins.toLocaleString()} coins held. Waiting for Queen Karin's approval.`,
                 'system');
         } catch (_) {}
 
         // Notify Queen
         _notifyQueen(profile.name || memberId, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
+
+        // Global chat card + Discord
+        const memberName = profile.name || memberId.split('@')[0];
+        const rawPic = profile.avatar_url || profile.profile_picture_url || '';
+        const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
+        const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
+        try { await supabaseAdmin.from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
+        discordVaultLock(memberName, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
 
         return NextResponse.json({
             success: true,
@@ -214,7 +207,7 @@ export async function GET(req: Request) {
             .from('vault_sessions')
             .select('*')
             .ilike('member_id', memberId)
-            .in('status', ['active', 'pending', 'scheduled'])
+            .in('status', ['active', 'pending', 'scheduled', 'awaiting_video'])
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();

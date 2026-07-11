@@ -3369,6 +3369,8 @@ export async function initChatSystem() {
                         } catch { preview = 'Inventory updated'; }
                     } else if (rawContent.startsWith('VAULT_UNLOCK_CARD::')) {
                         preview = 'A new item was added to your Vault';
+                    } else if (rawContent.startsWith('VAULT_LOCK_CARD::')) {
+                        preview = 'Keyholder lock activated';
                     } else if (rawContent.startsWith('LEADERBOARD_REWARD_CARD::')) {
                         preview = 'Leaderboard Reward';
                     } else if (rawContent.startsWith('CERT_APPROVED::')) {
@@ -3914,7 +3916,7 @@ function isSystemMessage(msg: any) {
     if (!msg) return false;
     const content = (msg.content || msg.message || '');
     // Card messages are NOT system messages — they render as rich cards in regular chat
-    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
+    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('VAULT_LOCK_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
     if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const upper = content.toUpperCase();
@@ -4285,6 +4287,27 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
         } catch (_) {
             return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Vault Item Unlocked</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
+        }
+    }
+
+    // VAULT LOCK CARD
+    if (content.startsWith('VAULT_LOCK_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('VAULT_LOCK_CARD::', ''));
+            const typeLabel = d.type === 'instant' ? 'Self-locked' : 'Awaiting approval';
+            const cardHtml = `
+            <div style="width:min(85%,260px);margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0406,#0d0404,#0a0303);border:1px solid rgba(139,0,0,0.4);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                <div style="padding:16px 20px;text-align:center;">
+                    <div style="font-family:'Cinzel',serif;font-size:0.75rem;color:rgba(139,0,0,0.65);letter-spacing:3px;margin-bottom:8px;">KEYHOLDER LOCK</div>
+                    <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.35),transparent);margin:0 auto 10px;"></div>
+                    <div style="margin-bottom:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                    <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:1px;margin-bottom:4px;">${d.name||''} — ${d.days||0} Days</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(139,0,0,0.45);">${typeLabel}</div>
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) {
+            return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Vault Locked</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
         }
     }
 
@@ -5411,7 +5434,11 @@ export async function openVaultLockRequest() {
         const res = await fetch('/api/vault/apply');
         const data = await res.json();
         if (data.active) {
-            _showVaultStatus(data);
+            if (data.status === 'awaiting_video') {
+                _showVideoProofUpload({ sessionId: data.sessionId, lockDays: data.lockDays });
+            } else {
+                _showVaultStatus(data);
+            }
             return;
         }
     } catch (_) {}
@@ -5573,11 +5600,15 @@ async function _submitVaultLock(action: string, requestedStart?: string | null) 
                     });
                 }
 
-                // Show confirmation
-                _showVaultConfirmation(isInstant, tierData.days);
-
                 // Update status button
-                _updateVaultLockButton({ active: true, status: data.status, lockDays: tierData.days });
+                _updateVaultLockButton({ active: true, status: data.status, lockDays: tierData.days, sessionId: data.sessionId } as any);
+
+                // For instant: show video proof upload. For request: show confirmation.
+                if (isInstant && data.status === 'awaiting_video') {
+                    _showVideoProofUpload({ sessionId: data.sessionId, lockDays: tierData.days });
+                } else {
+                    _showVaultConfirmation(false, tierData.days);
+                }
             } catch (err: any) {
                 alert('Connection error. Try again.');
             }
@@ -5606,11 +5637,15 @@ function _showVaultStatus(data: any) {
         active: 'LOCK ACTIVE',
         pending: 'AWAITING APPROVAL',
         scheduled: 'LOCK SCHEDULED',
+        denied: 'REQUEST DENIED',
+        awaiting_video: 'VIDEO PROOF REQUIRED',
     };
     const icons: Record<string, string> = {
         active: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
         scheduled: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
         pending: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        denied: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+        awaiting_video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
     };
 
     const ov = document.createElement('div');
@@ -5642,20 +5677,177 @@ export function _updateVaultLockButton(data: { active: boolean; status?: string;
         return;
     }
 
-    const labels: Record<string, string> = { active: 'LOCKED', pending: 'AWAITING QUEEN', scheduled: 'SCHEDULED' };
+    const labels: Record<string, string> = { active: 'LOCKED', pending: 'AWAITING QUEEN', scheduled: 'SCHEDULED', awaiting_video: 'SUBMIT VIDEO PROOF' };
     const color = '#8b0000';
     const label = labels[data.status || ''] || 'LOCK STATUS';
-    const isLocked = data.status === 'pending' || data.status === 'scheduled' || data.status === 'active';
+    const isDisabled = data.status === 'pending' || data.status === 'scheduled' || data.status === 'active';
 
-    if (btn) { btn.textContent = label; btn.style.borderColor = 'rgba(139,0,0,0.25)'; btn.style.color = color; btn.style.opacity = isLocked ? '0.6' : '1'; btn.disabled = isLocked; }
-    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = isLocked ? '0.6' : '1'; mobBtn.disabled = isLocked; }
+    // awaiting_video — button stays enabled and opens video upload
+    if (data.status === 'awaiting_video') {
+        const setupVideoBtn = (b: HTMLButtonElement) => {
+            b.textContent = label;
+            b.style.borderColor = 'rgba(139,0,0,0.4)';
+            b.style.color = color;
+            b.style.opacity = '1';
+            b.disabled = false;
+            b.onclick = () => _showVideoProofUpload(data as any);
+        };
+        if (btn) setupVideoBtn(btn);
+        if (mobBtn) setupVideoBtn(mobBtn);
+        return;
+    }
+
+    if (btn) { btn.textContent = label; btn.style.borderColor = 'rgba(139,0,0,0.25)'; btn.style.color = color; btn.style.opacity = isDisabled ? '0.6' : '1'; btn.disabled = isDisabled; btn.onclick = null; }
+    if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = isDisabled ? '0.6' : '1'; mobBtn.disabled = isDisabled; mobBtn.onclick = null; }
 }
+
+function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
+    const existing = document.getElementById('_vaultVideoOverlay');
+    if (existing) existing.remove();
+
+    const ov = document.createElement('div');
+    ov.id = '_vaultVideoOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080507;animation:_vFadeIn 0.3s ease;overflow:hidden;';
+
+    ov.innerHTML = `
+        <div style="text-align:center;max-width:300px;padding:0 24px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.12);letter-spacing:4px;margin-bottom:4px;">DAY 1</div>
+            <div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(255,255,255,0.5);letter-spacing:4px;font-weight:700;margin-bottom:4px;">VERIFICATION</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.15);margin-bottom:24px;">${data.lockDays} day sentence — submit video proof</div>
+
+            <div id="_vaultVideoPreview" style="display:none;margin-bottom:16px;border-radius:10px;overflow:hidden;border:1px solid rgba(139,0,0,0.2);max-height:200px;">
+                <video id="_vaultVideoEl" style="width:100%;max-height:200px;object-fit:contain;" playsinline controls></video>
+            </div>
+
+            <label id="_vaultVideoLabel" style="display:flex;align-items:center;justify-content:center;width:100%;height:120px;border-radius:10px;border:1px dashed rgba(255,255,255,0.08);cursor:pointer;flex-direction:column;gap:8px;">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.15);letter-spacing:1px;">TAP TO RECORD OR SELECT VIDEO</div>
+                <input id="_vaultVideoInput" type="file" accept="video/*" capture="user" style="display:none;" />
+            </label>
+
+            <div id="_vaultVideoProgress" style="display:none;margin-top:16px;">
+                <div style="width:100%;height:3px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden;">
+                    <div id="_vaultVideoBar" style="width:0%;height:100%;background:rgba(139,0,0,0.6);transition:width 0.3s;"></div>
+                </div>
+                <div id="_vaultVideoStatus" style="font-family:Rajdhani,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.15);margin-top:6px;letter-spacing:1px;">UPLOADING...</div>
+            </div>
+
+            <button id="_vaultVideoSubmit" style="display:none;width:100%;margin-top:16px;padding:14px;border-radius:8px;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.2);color:rgba(180,40,40,0.75);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT PROOF</button>
+
+            <button id="_vaultVideoClose" style="margin-top:24px;background:none;border:none;color:rgba(255,255,255,0.08);font-family:Rajdhani,sans-serif;font-size:0.55rem;letter-spacing:3px;cursor:pointer;">CANCEL</button>
+        </div>
+    `;
+
+    document.body.appendChild(ov);
+
+    let uploadedUrl = '';
+
+    const fileInput = ov.querySelector('#_vaultVideoInput') as HTMLInputElement;
+    const preview = ov.querySelector('#_vaultVideoPreview') as HTMLElement;
+    const videoEl = ov.querySelector('#_vaultVideoEl') as HTMLVideoElement;
+    const label = ov.querySelector('#_vaultVideoLabel') as HTMLElement;
+    const submitBtn = ov.querySelector('#_vaultVideoSubmit') as HTMLElement;
+
+    fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+
+        // Show preview
+        videoEl.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        label.style.display = 'none';
+
+        // Upload
+        const progress = ov.querySelector('#_vaultVideoProgress') as HTMLElement;
+        const bar = ov.querySelector('#_vaultVideoBar') as HTMLElement;
+        const status = ov.querySelector('#_vaultVideoStatus') as HTMLElement;
+        progress.style.display = 'block';
+        bar.style.width = '30%';
+
+        try {
+            const url = await uploadToSupabase('proofs', 'vault-proof', file);
+            if (url.startsWith('failed:')) {
+                status.textContent = url.replace('failed:', '');
+                status.style.color = 'rgba(255,60,60,0.6)';
+                bar.style.width = '0%';
+                return;
+            }
+            bar.style.width = '100%';
+            status.textContent = 'UPLOADED';
+            uploadedUrl = url;
+            submitBtn.style.display = 'block';
+        } catch (err: any) {
+            status.textContent = err.message || 'Upload failed';
+            status.style.color = 'rgba(255,60,60,0.6)';
+        }
+    });
+
+    submitBtn.addEventListener('click', async () => {
+        if (!uploadedUrl) return;
+        submitBtn.textContent = 'ACTIVATING...';
+        (submitBtn as HTMLButtonElement).disabled = true;
+
+        try {
+            const res = await fetch('/api/vault/proof', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: data.sessionId, videoUrl: uploadedUrl }),
+            });
+            const result = await res.json();
+            if (result.error) {
+                alert(result.error);
+                submitBtn.textContent = 'SUBMIT PROOF';
+                (submitBtn as HTMLButtonElement).disabled = false;
+                return;
+            }
+
+            ov.remove();
+            _showVaultConfirmation(true, data.lockDays);
+            _updateVaultLockButton({ active: true, status: 'active', lockDays: data.lockDays });
+        } catch {
+            alert('Connection error. Try again.');
+            submitBtn.textContent = 'SUBMIT PROOF';
+            (submitBtn as HTMLButtonElement).disabled = false;
+        }
+    });
+
+    ov.querySelector('#_vaultVideoClose')!.addEventListener('click', () => ov.remove());
+}
+
+let _vaultRealtimeChannel: any = null;
 
 export async function checkVaultLockStatus() {
     try {
         const res = await fetch('/api/vault/apply');
         const data = await res.json();
         _updateVaultLockButton(data);
+
+        // Subscribe to realtime vault session updates
+        if (!_vaultRealtimeChannel && data.active && data.sessionId) {
+            const sb = createClient();
+            _vaultRealtimeChannel = sb
+                .channel('vault_session_updates')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'vault_sessions',
+                    filter: `id=eq.${data.sessionId}`,
+                }, (payload: any) => {
+                    const updated = payload.new;
+                    if (updated.status === 'active') {
+                        _updateVaultLockButton({ active: true, status: 'active', lockDays: updated.lock_days });
+                        _showVaultConfirmation(true, updated.lock_days);
+                    } else if (updated.status === 'denied') {
+                        _updateVaultLockButton(null);
+                        _showVaultStatus({ status: 'denied', lockDays: updated.lock_days, coinsPaid: updated.coins_paid });
+                    } else if (updated.status === 'scheduled') {
+                        _updateVaultLockButton({ active: true, status: 'scheduled', lockDays: updated.lock_days });
+                    }
+                })
+                .subscribe();
+        }
     } catch (_) {}
 }
 

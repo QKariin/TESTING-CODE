@@ -143,7 +143,7 @@ export async function POST(req: Request) {
                 // Skip system cards
                 if (content.startsWith('TASK_') || content.startsWith('WISHLIST::') || content.startsWith('PROMOTION_CARD::') ||
                     content.startsWith('WELCOME_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('INVENTORY_CARD::') ||
-                    content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('DIRECT_TRIBUTE_CARD::') || content.startsWith('RISKY_TRIBUTE_CARD::') ||
+                    content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('VAULT_LOCK_CARD::') || content.startsWith('DIRECT_TRIBUTE_CARD::') || content.startsWith('RISKY_TRIBUTE_CARD::') ||
                     content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::') || msg.type === 'system') continue;
                 if (content === '[GIF]' || content === '[PHOTO]' || content === '[VIDEO]') continue;
                 if (sender === 'guardian' || sender === 'ai-assistant') continue;

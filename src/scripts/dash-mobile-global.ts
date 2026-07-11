@@ -144,7 +144,7 @@ async function _loadMobGlTalk() {
         const data = await res.json();
         const msgs: any[] = (data.messages || []).filter((m: any) => {
             const c = m.message || '';
-            return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::');
+            return !c.startsWith('UPDATE_COINS_CARD::') && !c.startsWith('UPDATE_MERIT_CARD::') && !c.startsWith('VAULT_LOCK_CARD::');
         });
         _renderMobGlTalk(msgs);
         _mobGlLoaded['talk'] = true;
@@ -163,7 +163,7 @@ function _initMobGlRealtime() {
             (payload: any) => {
                 const msg = payload.new;
                 const content = msg.message || '';
-                if (content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::')) return;
+                if (content.startsWith('UPDATE_COINS_CARD::') || content.startsWith('UPDATE_MERIT_CARD::') || content.startsWith('VAULT_LOCK_CARD::')) return;
                 const dedupKey = msg.media_url || content;
                 if (_mobGlPendingSent.has(dedupKey)) { _mobGlPendingSent.delete(dedupKey); return; }
                 _appendMobGlMessage(msg);
@@ -391,6 +391,18 @@ function _buildMobGlBubble(msg: any): string {
             const d = JSON.parse(content.replace('UPDATE_COINS_CARD::', ''));
             const cInitial = (d.senderName || 'S')[0].toUpperCase();
             return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:85%;max-width:340px;min-width:200px;"><div style="background:rgba(197,160,89,0.05);border:1px solid rgba(197,160,89,0.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-sizing:border-box;"><div style="width:42px;height:42px;border-radius:50%;background:rgba(197,160,89,0.1);border:1.5px solid rgba(197,160,89,0.35);overflow:hidden;position:relative;flex-shrink:0;">${d.senderAvatar ? `<img src="${d.senderAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">` : ''}<div style="display:${d.senderAvatar ? 'none' : 'flex'};position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Orbitron';font-size:0.65rem;color:#c5a059;">${cInitial}</div></div><div style="flex:1;min-width:0;"><div style="font-family:'Orbitron';font-size:0.4rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px;">🪙 COINS EARNED</div><div style="font-family:'Orbitron';font-size:0.8rem;color:#fff;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.senderName||''}</div><div style="font-family:'Orbitron';font-size:0.82rem;color:#c5a059;font-weight:700;margin-top:2px;">+${d.points||0} COINS</div></div><div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.35);flex-shrink:0;align-self:flex-start;">${time}</div></div></div></div>`;
+        } catch { /* fall through */ }
+    }
+
+    // VAULT LOCK CARD
+    if (content.startsWith('VAULT_LOCK_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('VAULT_LOCK_CARD::', ''));
+            const initials = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(139,0,0,0.08),rgba(139,0,0,0.02));"><div style="width:60px;height:60px;border-radius:50%;border:1px solid rgba(139,0,0,0.4);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.4rem;color:rgba(180,40,40,0.8);">${initials}</div></div>`;
+            const dayLabel = d.days === 1 ? 'DAY' : 'DAYS';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;"><div style="width:85%;max-width:340px;min-width:200px;"><div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0e0406 0%,#0d0404 60%,#0a0303 100%);border:1px solid rgba(139,0,0,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8);"><div style="position:relative;width:100%;height:100px;background:#0a0303;overflow:hidden;">${photoBlock}${photoFallback}<div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,#0e0406 100%);"></div><div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,3,3,0.9);border:1px solid rgba(139,0,0,0.45);border-radius:20px;padding:3px 12px;white-space:nowrap;"><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(180,40,40,0.8);letter-spacing:2px;">\uD83D\uDD0F KEYHOLDER LOCK</span></div></div><div style="padding:12px 16px 16px;text-align:center;"><div style="font-family:'Orbitron',sans-serif;font-size:0.9rem;color:#fff;font-weight:700;letter-spacing:2px;margin-bottom:6px;">${d.name||''}</div><div style="font-family:'Orbitron',sans-serif;font-size:0.42rem;color:rgba(139,0,0,0.7);letter-spacing:2px;">${d.days||0} ${dayLabel} SENTENCE</div></div></div><div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div></div></div>`;
         } catch { /* fall through */ }
     }
 
