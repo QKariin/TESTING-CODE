@@ -5902,6 +5902,9 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
                 return;
             }
 
+            // Kill video element BEFORE revoking URL — prevents iOS "Load failed" dialog
+            const vidEl = ov.querySelector('video');
+            if (vidEl) { vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load(); vidEl.remove(); }
             URL.revokeObjectURL(videoUrl);
             _updateVaultLockButton({ active: true, status: 'active', lockDays: data.lockDays });
             // Show locked modal inside the same inescapable overlay, then redirect to vault
