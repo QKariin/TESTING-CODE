@@ -2206,10 +2206,8 @@ export default function DashboardPage() {
                                         {/* ── VIDEO PROOF ── */}
                                         {s?.video_proof_url && (
                                             <div style={{ margin: '0 4px 12px' }}>
-                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>VIDEO PROOF</div>
-                                                <a href={s.video_proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px', background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 6, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 1, textAlign: 'center', textDecoration: 'none' }}>
-                                                    {s.video_reviewed ? '✓ REVIEWED' : '▶ WATCH PROOF'}
-                                                </a>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>VIDEO PROOF {s.video_reviewed && <span style={{ color: 'rgba(100,180,100,0.6)' }}>- REVIEWED</span>}</div>
+                                                <video src={s.video_proof_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 300, borderRadius: 8, border: '1px solid rgba(139,0,0,0.15)', background: '#000' }} />
                                             </div>
                                         )}
 

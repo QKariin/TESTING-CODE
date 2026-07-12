@@ -5864,7 +5864,7 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             // 2. Upload video
             statusEl.textContent = 'UPLOADING VIDEO...';
             barEl.style.width = '40%';
-            const vUrl = await uploadToSupabase('proofs', 'vault-proof', file);
+            const vUrl = await uploadToSupabase('media', 'vault-proof', file);
             if (vUrl.startsWith('failed:')) {
                 statusEl.textContent = vUrl.replace('failed:', '');
                 statusEl.style.color = 'rgba(255,60,60,0.6)';
@@ -5876,7 +5876,7 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             // 3. Upload thumbnail
             statusEl.textContent = 'SAVING THUMBNAIL...';
             barEl.style.width = '80%';
-            const tUrl = await uploadToSupabase('proofs', 'vault-thumb', thumbFile);
+            const tUrl = await uploadToSupabase('media', 'vault-thumb', thumbFile);
             const thumbUrl = tUrl.startsWith('failed:') ? null : tUrl;
 
             barEl.style.width = '100%';
