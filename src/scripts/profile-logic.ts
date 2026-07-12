@@ -5861,6 +5861,14 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             });
             const thumbFile = new File([thumbBlob], `vault-thumb-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
+            // Kill video element NOW — before uploads start. iOS reclaims blob URLs
+            // during heavy async work and shows "Load failed" dialog if video is still in DOM.
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            video.remove();
+            URL.revokeObjectURL(videoUrl);
+
             // 2. Upload video
             statusEl.textContent = 'UPLOADING VIDEO...';
             barEl.style.width = '40%';
@@ -5901,11 +5909,6 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
                 submitBtn.textContent = 'SUBMIT PROOF';
                 return;
             }
-
-            // Kill video element BEFORE revoking URL — prevents iOS "Load failed" dialog
-            const vidEl = ov.querySelector('video');
-            if (vidEl) { vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load(); vidEl.remove(); }
-            URL.revokeObjectURL(videoUrl);
             _updateVaultLockButton({ active: true, status: 'active', lockDays: data.lockDays });
             // Show locked modal inside the same inescapable overlay, then redirect to vault
             ov.innerHTML = `
