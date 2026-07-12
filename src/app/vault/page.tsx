@@ -217,7 +217,9 @@ export default function VaultPage() {
     const dailyRecords = vaultData?.dailyRecords || [];
     const adjustments = vaultData?.adjustments || [];
     const rawOrders = vaultData?.today?.orders;
-    const todayOrders = rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
+    const todayOrdersBase = rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
+    // Sync kneel order with kneelToday so dots and list match
+    const todayOrders = todayOrdersBase.map((o: any) => o.type === 'kneel' ? { ...o, done: kneelToday } : o);
     const todayPerfect = vaultData?.today?.perfect ?? false;
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
@@ -818,10 +820,11 @@ export default function VaultPage() {
     const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
 
     return (
-        <div style={{ background: '#050508', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#080810', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
 
-            {/* BG */}
-            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(139,0,0,0.05) 0%, transparent 60%)' }} />
+            {/* BG — layered red glow */}
+            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(139,0,0,0.12) 0%, rgba(60,0,0,0.06) 40%, transparent 70%)' }} />
+            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 100%, rgba(139,0,0,0.06) 0%, transparent 50%)' }} />
 
             {/* ══════════════════════════════════════════════
                 VAULT TAB — main scroll
@@ -835,17 +838,17 @@ export default function VaultPage() {
                     <div style={{
                         position: 'relative', zIndex: 2,
                         width: 300, height: 300, borderRadius: '50%',
-                        border: '2px solid #8b0000',
-                        boxShadow: '0 0 40px rgba(139,0,0,0.35), inset 0 0 20px rgba(139,0,0,0.15)',
-                        background: 'rgba(0,0,0,0.55)',
+                        border: '2px solid #a01020',
+                        boxShadow: '0 0 60px rgba(160,16,32,0.3), 0 0 120px rgba(139,0,0,0.15), inset 0 0 30px rgba(139,0,0,0.2)',
+                        background: 'rgba(10,5,8,0.7)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         gap: 0, overflow: 'hidden',
                     }}>
                         {/* Lock icon */}
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(139,0,0,0.5)" strokeWidth="1.5" style={{ marginBottom: 8 }}>
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(180,30,30,0.7)" strokeWidth="1.5" style={{ marginBottom: 8 }}>
                             <rect x="3" y="11" width="18" height="11" rx="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
-                            <circle cx="12" cy="16" r="1.5" fill="rgba(139,0,0,0.5)" />
+                            <circle cx="12" cy="16" r="1.5" fill="rgba(180,30,30,0.7)" />
                         </svg>
 
                         {/* Name */}
@@ -863,7 +866,8 @@ export default function VaultPage() {
                         {/* Rank / Status */}
                         <div style={{
                             fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem',
-                            color: '#8b0000', letterSpacing: '4px', textTransform: 'uppercase',
+                            color: '#c03030', letterSpacing: '4px', textTransform: 'uppercase',
+                            textShadow: '0 0 12px rgba(180,30,30,0.4)',
                         }}>
                             SEALED
                         </div>
@@ -941,11 +945,11 @@ export default function VaultPage() {
                     <div style={{
                         position: 'relative', zIndex: 3,
                         marginTop: -55, width: '94%',
-                        background: 'rgba(10,10,10,0.85)',
-                        border: '1px solid rgba(139,0,0,0.2)',
-                        borderRadius: 12, padding: '14px 10px',
+                        background: 'rgba(18,12,14,0.92)',
+                        border: '1px solid rgba(160,20,20,0.25)',
+                        borderRadius: 12, padding: '16px 10px',
                         display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(139,0,0,0.06)',
                         marginBottom: 30,
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
@@ -953,15 +957,15 @@ export default function VaultPage() {
                                 <span id="vaultMerit" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.score ?? 0}</span>
                                 <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
                             </div>
-                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>MERIT</span>
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(180,40,40,0.65)', letterSpacing: '2px' }}>MERIT</span>
                         </div>
-                        <div style={{ width: 1, height: 50, background: 'rgba(255,255,255,0.06)' }} />
+                        <div style={{ width: 1, height: 50, background: 'rgba(139,0,0,0.15)' }} />
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                 <span id="vaultCoins" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.wallet ?? 0}</span>
-                                <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9z" /></svg>
+                                <svg width="24" height="24" viewBox="0 0 512 512" fill="#a01020"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9z" /></svg>
                             </div>
-                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)', letterSpacing: '2px' }}>COINS</span>
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(180,40,40,0.65)', letterSpacing: '2px' }}>COINS</span>
                         </div>
                     </div>
                 </div>
@@ -970,7 +974,7 @@ export default function VaultPage() {
                 <div style={{
                     width: '100%', display: 'flex', justifyContent: 'space-around',
                     padding: '0 20px 24px',
-                    borderBottom: '1px solid rgba(139,0,0,0.15)',
+                    borderBottom: '1px solid rgba(160,20,20,0.2)',
                     marginBottom: 12,
                 }}>
                     {[
@@ -995,24 +999,24 @@ export default function VaultPage() {
 
                 {/* ── RELEASE COUNTDOWN — profile task timer style ── */}
                 <div style={{ width: '100%', padding: '8px 20px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: `${R}0.6)`, letterSpacing: '5px', marginBottom: 14 }}>RELEASE IN</div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: `${R}0.7)`, letterSpacing: '5px', marginBottom: 14 }}>RELEASE IN</div>
                     {penaltyHours > 0 && (
                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '2px', marginBottom: 10 }}>
                             +{penaltyHours}h ADDED
                         </div>
                     )}
                     <div className="card-timer-row" style={{ gap: 12 }}>
-                        <div className="card-t-box" style={{ background: `${R}0.08)`, border: `1px solid ${R}0.2)`, color: '#a01010', textShadow: '0 0 12px rgba(139,0,0,0.4)', width: 80 }}>
+                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
                             {String(remaining.d).padStart(2, '0')}
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>DAYS</div>
                         </div>
                         <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
-                        <div className="card-t-box" style={{ background: `${R}0.08)`, border: `1px solid ${R}0.2)`, color: '#a01010', textShadow: '0 0 12px rgba(139,0,0,0.4)', width: 80 }}>
+                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
                             {String(remaining.h).padStart(2, '0')}
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>HRS</div>
                         </div>
                         <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
-                        <div className="card-t-box" style={{ background: `${R}0.08)`, border: `1px solid ${R}0.2)`, color: '#a01010', textShadow: '0 0 12px rgba(139,0,0,0.4)', width: 80 }}>
+                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
                             {String(remaining.m).padStart(2, '0')}
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>MIN</div>
                         </div>
@@ -1023,7 +1027,7 @@ export default function VaultPage() {
                 <div style={{ width: '100%', padding: '0 16px 28px' }}>
                     <button onClick={() => setCalendarOpen(!calendarOpen)} style={{
                         width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '14px 18px', background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 12,
+                        padding: '14px 18px', background: `${R}0.07)`, border: `1px solid ${R}0.22)`, borderRadius: 12,
                         cursor: 'pointer', outline: 'none',
                     }}>
                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.7)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
@@ -1146,8 +1150,8 @@ export default function VaultPage() {
                             onContextMenu={(e) => e.preventDefault()}
                             style={{
                                 position: 'relative', width: '100%', height: 56, borderRadius: 28,
-                                background: kneelDone ? 'rgba(80,200,120,0.06)' : `${R}0.06)`,
-                                border: `1.5px solid ${kneelDone ? 'rgba(80,200,120,0.3)' : `${R}${kneelHolding ? '0.4' : '0.15'})`}`,
+                                background: kneelDone ? 'rgba(80,200,120,0.08)' : `${R}0.08)`,
+                                border: `1.5px solid ${kneelDone ? 'rgba(80,200,120,0.4)' : `${R}${kneelHolding ? '0.5' : '0.25'})`}`,
                                 overflow: 'hidden', cursor: kneelCooldown ? 'default' : 'pointer',
                                 boxShadow: kneelHolding ? `0 0 20px ${R}0.2)` : kneelDone ? '0 0 20px rgba(80,200,120,0.1)' : 'none',
                                 transition: 'border-color 0.3s, box-shadow 0.3s, background 0.3s',
@@ -1194,8 +1198,9 @@ export default function VaultPage() {
                         {Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} style={{
                                 width: 10, height: 10, borderRadius: '50%',
-                                background: i < kneelToday ? '#a01010' : 'rgba(255,255,255,0.06)',
-                                border: `1px solid ${i < kneelToday ? 'rgba(160,16,16,0.6)' : 'rgba(255,255,255,0.1)'}`,
+                                background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
+                                border: `1px solid ${i < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`,
+                                boxShadow: i < kneelToday ? '0 0 6px rgba(184,32,32,0.3)' : 'none',
                                 transition: 'all 0.3s ease',
                             }} />
                         ))}
@@ -1241,25 +1246,25 @@ export default function VaultPage() {
                             &#10005; PERFECTION BROKEN — ORDER SKIPPED
                         </div>
                     )}
-                    <div style={{ background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 14, padding: '8px 0', overflow: 'hidden' }}>
+                    <div style={{ background: `${R}0.08)`, border: `1px solid ${R}0.22)`, borderRadius: 14, padding: '8px 0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
                         {todayOrders.map((o: any, i: number) => {
                             const completed = o.done >= o.target;
                             return (
                                 <div key={i} style={{
                                     display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px',
-                                    borderBottom: i < todayOrders.length - 1 ? `1px solid ${R}0.08)` : 'none',
+                                    borderBottom: i < todayOrders.length - 1 ? `1px solid ${R}0.12)` : 'none',
                                 }}>
                                     <div style={{
                                         width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                                        border: `2px solid ${completed ? 'rgba(80,200,120,0.5)' : `${R}0.2)`}`,
-                                        background: completed ? 'rgba(80,200,120,0.08)' : 'transparent',
+                                        border: `2px solid ${completed ? 'rgba(80,200,120,0.6)' : `${R}0.35)`}`,
+                                        background: completed ? 'rgba(80,200,120,0.1)' : `${R}0.04)`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
                                         {completed && <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                                     </div>
                                     <span style={{
                                         flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.95rem',
-                                        color: completed ? 'rgba(80,200,120,0.45)' : 'rgba(255,255,255,0.6)',
+                                        color: completed ? 'rgba(80,200,120,0.55)' : 'rgba(255,255,255,0.7)',
                                         textDecoration: completed ? 'line-through' : 'none',
                                         letterSpacing: '0.5px',
                                     }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
@@ -1327,10 +1332,10 @@ export default function VaultPage() {
                 {/* ── TRIBUTE BUTTON — opens real tribute overlay ── */}
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '0 20px 32px' }}>
                     <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
-                        width: 220, height: 44,
-                        background: `${R}0.06)`,
+                        width: 240, height: 48,
+                        background: `${R}0.08)`,
                         backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                        border: `1px solid ${R}0.35)`, borderRadius: 10,
+                        border: `1px solid ${R}0.35)`, borderRadius: 12,
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
@@ -2185,89 +2190,90 @@ export default function VaultPage() {
                 </div>
             )}
 
-            {/* ── VLAD CHAT PANEL ── */}
-            {vladOpen && (<>
-                {/* Backdrop — prevents clicks from reaching page behind */}
-                <div onClick={e => { e.stopPropagation(); setVladOpen(false); }} style={{
-                    position: 'fixed', inset: 0, zIndex: 159, background: 'rgba(0,0,0,0.4)',
-                }} />
+            {/* ── VLAD CHAT PANEL — full-screen overlay ── */}
+            {vladOpen && (
                 <div onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} style={{
-                    position: 'fixed', bottom: 70, right: 8, left: 8, zIndex: 160,
-                    maxWidth: 400, margin: '0 auto',
-                    height: 400, maxHeight: '58vh',
-                    background: 'linear-gradient(170deg, #0a0610 0%, #0d0818 50%, #08040e 100%)',
-                    border: '1px solid rgba(255,0,237,0.15)',
-                    borderRadius: 20, display: 'flex', flexDirection: 'column',
-                    boxShadow: '0 16px 60px rgba(0,0,0,0.85), 0 0 40px rgba(255,0,237,0.04)',
-                    animation: 'vFadeIn 0.3s ease', overflow: 'hidden',
+                    position: 'fixed', inset: 0, zIndex: 160,
+                    background: 'linear-gradient(170deg, #08040e 0%, #0c0614 40%, #0a0510 100%)',
+                    display: 'flex', flexDirection: 'column',
+                    animation: 'vFadeIn 0.2s ease', overflow: 'hidden',
                 }}>
+                    {/* BG glow */}
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 20%, rgba(255,0,237,0.04) 0%, transparent 60%)' }} />
+
                     {/* Header */}
                     <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '12px 16px', borderBottom: '1px solid rgba(255,0,237,0.08)',
+                        padding: '16px 20px', paddingTop: 'calc(env(safe-area-inset-top, 16px) + 10px)',
+                        borderBottom: '1px solid rgba(255,0,237,0.1)',
                         background: 'rgba(255,0,237,0.02)',
+                        position: 'relative', zIndex: 1,
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.3)', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,0,237,0.35)', flexShrink: 0, boxShadow: '0 0 20px rgba(255,0,237,0.15)' }}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/vlad-avatar.png" alt="Vlad" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                             </div>
                             <div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,0,237,0.6)', letterSpacing: '3px' }}>VLAD</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>WATCHING YOU SUFFER</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,0,237,0.7)', letterSpacing: '4px' }}>VLAD</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>YOUR GUARDIAN DEMON</div>
                             </div>
                         </div>
                         <button onClick={() => setVladOpen(false)} style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: 'rgba(255,0,237,0.2)', fontSize: '1.1rem', lineHeight: 1, padding: '4px 8px',
+                            background: 'rgba(255,0,237,0.04)', border: '1px solid rgba(255,0,237,0.12)',
+                            borderRadius: 10, cursor: 'pointer', width: 36, height: 36,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: 'rgba(255,0,237,0.4)', fontSize: '1.2rem', lineHeight: 1,
                         }}>&times;</button>
                     </div>
 
                     {/* Messages */}
-                    <div ref={vladScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div ref={vladScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14, position: 'relative', zIndex: 1 }}>
                         {vladMsgs.map((m, i) => (
                             <div key={i} style={{
-                                display: 'flex', gap: 8,
+                                display: 'flex', gap: 10,
                                 flexDirection: m.role === 'user' ? 'row-reverse' : 'row',
                                 alignItems: 'flex-end',
                             }}>
                                 {m.role === 'vlad' && (
-                                    <div style={{ width: 24, height: 24, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.2)', flexShrink: 0 }}>
+                                    <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.25)', flexShrink: 0 }}>
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src="/vlad-avatar.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                                     </div>
                                 )}
                                 <div style={{
-                                    maxWidth: '78%', padding: '9px 14px',
-                                    borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                                    maxWidth: '80%', padding: '12px 16px',
+                                    borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                                     background: m.role === 'user'
-                                        ? 'rgba(139,0,0,0.06)'
-                                        : 'rgba(255,0,237,0.04)',
-                                    border: `1px solid ${m.role === 'user' ? 'rgba(139,0,0,0.1)' : 'rgba(255,0,237,0.1)'}`,
-                                    fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.75rem',
-                                    color: m.role === 'user' ? 'rgba(255,255,255,0.3)' : 'rgba(255,0,237,0.5)',
-                                    lineHeight: 1.6,
+                                        ? 'rgba(139,0,0,0.08)'
+                                        : 'rgba(255,0,237,0.05)',
+                                    border: `1px solid ${m.role === 'user' ? 'rgba(139,0,0,0.15)' : 'rgba(255,0,237,0.12)'}`,
+                                    fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem',
+                                    color: m.role === 'user' ? 'rgba(255,255,255,0.5)' : 'rgba(255,0,237,0.6)',
+                                    lineHeight: 1.65,
                                 }}>{m.text}</div>
                             </div>
                         ))}
                         {vladSending && (
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                                <div style={{ width: 24, height: 24, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.2)', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+                                <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.25)', flexShrink: 0 }}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src="/vlad-avatar.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                                 </div>
-                                <div style={{ padding: '9px 14px', borderRadius: '14px 14px 14px 4px', background: 'rgba(255,0,237,0.04)', border: '1px solid rgba(255,0,237,0.1)' }}>
-                                    <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.75rem', color: 'rgba(255,0,237,0.25)', animation: 'vPulse 1s ease infinite' }}>typing...</span>
+                                <div style={{ padding: '12px 16px', borderRadius: '16px 16px 16px 4px', background: 'rgba(255,0,237,0.05)', border: '1px solid rgba(255,0,237,0.12)' }}>
+                                    <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', color: 'rgba(255,0,237,0.3)', animation: 'vPulse 1s ease infinite' }}>typing...</span>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Input */}
+                    {/* Input — fontSize 16px to prevent iOS zoom */}
                     <div style={{
-                        display: 'flex', gap: 8, padding: '10px 12px',
-                        borderTop: '1px solid rgba(255,0,237,0.08)',
-                        background: 'rgba(255,0,237,0.01)',
+                        display: 'flex', gap: 10, padding: '12px 16px',
+                        paddingBottom: 'calc(env(safe-area-inset-bottom, 12px) + 8px)',
+                        borderTop: '1px solid rgba(255,0,237,0.1)',
+                        background: 'rgba(255,0,237,0.02)',
+                        position: 'relative', zIndex: 1,
                     }}>
                         <input
                             value={vladInput}
@@ -2275,9 +2281,9 @@ export default function VaultPage() {
                             onKeyDown={e => { if (e.key === 'Enter' && vladInput.trim()) { sendVladMsg(vladInput.trim()); setVladInput(''); } }}
                             placeholder="Talk to Vlad..."
                             style={{
-                                flex: 1, background: 'rgba(255,0,237,0.02)', border: '1px solid rgba(255,0,237,0.08)',
-                                borderRadius: 12, padding: '10px 14px', color: 'rgba(255,255,255,0.35)',
-                                fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.75rem',
+                                flex: 1, background: 'rgba(255,0,237,0.03)', border: '1px solid rgba(255,0,237,0.12)',
+                                borderRadius: 14, padding: '12px 16px', color: 'rgba(255,255,255,0.5)',
+                                fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px',
                                 outline: 'none',
                             }}
                         />
@@ -2285,15 +2291,15 @@ export default function VaultPage() {
                             disabled={vladSending || !vladInput.trim()}
                             onClick={() => { if (vladInput.trim()) { sendVladMsg(vladInput.trim()); setVladInput(''); } }}
                             style={{
-                                padding: '8px 14px', background: 'rgba(255,0,237,0.06)',
-                                border: '1px solid rgba(255,0,237,0.12)', borderRadius: 12,
-                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '2px',
-                                color: vladSending ? 'rgba(255,0,237,0.12)' : 'rgba(255,0,237,0.45)',
+                                padding: '10px 18px', background: 'rgba(255,0,237,0.08)',
+                                border: '1px solid rgba(255,0,237,0.18)', borderRadius: 14,
+                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '2px',
+                                color: vladSending ? 'rgba(255,0,237,0.12)' : 'rgba(255,0,237,0.55)',
                                 cursor: vladSending ? 'default' : 'pointer',
                             }}>SEND</button>
                     </div>
                 </div>
-            </>)}
+            )}
 
             <style>{`
                 @keyframes vFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
