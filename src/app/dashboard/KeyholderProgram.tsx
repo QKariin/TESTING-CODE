@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 
 const F = "'Rajdhani', sans-serif";
 const FC = "'Cinzel', serif";
-const GOLD = 'rgba(197,160,89,0.85)';
-const GOLD_DIM = 'rgba(197,160,89,0.3)';
+const GOLD = 'rgba(197,160,89,0.9)';
+const GOLD_DIM = 'rgba(197,160,89,0.25)';
 const RED = 'rgba(160,20,30,0.75)';
 const RED_DIM = 'rgba(139,0,0,0.15)';
-const BG = '#0a0a0f';
-const CARD_BG = 'rgba(255,255,255,0.015)';
-const BORDER = 'rgba(255,255,255,0.045)';
-const BORDER_HOVER = 'rgba(197,160,89,0.2)';
-const TEXT = 'rgba(255,255,255,0.6)';
-const TEXT_DIM = 'rgba(255,255,255,0.2)';
+const BG = '#07070c';
+const CARD_BG = 'rgba(255,255,255,0.02)';
+const BORDER = 'rgba(255,255,255,0.05)';
+const BORDER_HOVER = 'rgba(197,160,89,0.25)';
+const TEXT = 'rgba(255,255,255,0.65)';
+const TEXT_DIM = 'rgba(255,255,255,0.22)';
 
 const TASK_TYPES: { type: string; label: string; icon: string; configKey?: string }[] = [
     { type: 'kneel', label: 'Kneel', icon: '\u25BD' },
@@ -173,16 +173,16 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden' }}>
             {/* ── HEADER ── */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '18px 28px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(0,0,0,0.3)' }}>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', fontSize: '1.3rem', padding: '0 12px 0 0', lineHeight: 1 }}>&larr;</button>
-                <span style={{ fontFamily: FC, fontSize: '0.95rem', color: GOLD, letterSpacing: 6, fontWeight: 700 }}>KEYHOLDER PROGRAM</span>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '22px 32px', borderBottom: `1px solid ${BORDER}`, background: 'linear-gradient(180deg, rgba(15,12,8,0.6), rgba(7,7,12,0.8))' }}>
+                <button onClick={onClose} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', fontSize: '1.4rem', padding: '0 16px 0 0', lineHeight: 1 }}>&larr;</button>
+                <span style={{ fontFamily: FC, fontSize: '1.1rem', color: GOLD, letterSpacing: 7, fontWeight: 700 }}>KEYHOLDER PROGRAM</span>
                 <div style={{ flex: 1 }} />
                 <div style={{ display: 'flex', gap: 0 }}>
                     {([['template','PROGRAM'],['config','WHEEL & CARDS'],['member','MEMBER']] as [TabType,string][]).map(([t,lbl]) => (
                         <button key={t} onClick={() => setTab(t)} style={{
-                            padding: '8px 22px', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`,
+                            padding: '10px 28px', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`,
                             background: 'transparent', color: tab === t ? GOLD : 'rgba(255,255,255,0.2)',
-                            fontFamily: F, fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer',
+                            fontFamily: F, fontSize: '0.85rem', letterSpacing: 3, cursor: 'pointer',
                             transition: 'color 0.2s',
                         }}>{lbl}</button>
                     ))}
@@ -194,20 +194,20 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 {/* ═══════════════════ PROGRAM TAB ═══════════════════ */}
                 {tab === 'template' && (<>
                     {/* LEFT SIDEBAR */}
-                    <div style={{ width: 300, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.15)' }}>
-                        <div style={{ padding: '16px 20px' }}>
+                    <div style={{ width: 320, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ padding: '20px 24px' }}>
                             <button onClick={saveTemplate} disabled={saving} style={{
-                                width: '100%', padding: '12px 0', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
+                                width: '100%', padding: '14px 0', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
                                 background: saving ? 'rgba(80,200,80,0.05)' : 'rgba(197,160,89,0.03)',
-                                color: saving ? 'rgba(80,200,80,0.8)' : GOLD, fontFamily: F, fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer',
+                                color: saving ? 'rgba(80,200,80,0.8)' : GOLD, fontFamily: F, fontSize: '0.85rem', letterSpacing: 4, cursor: 'pointer',
                                 transition: 'all 0.3s',
                             }}>{saving ? 'SAVED' : 'SAVE PROGRAM'}</button>
                         </div>
 
                         {PHASES.map((phase, pi) => (
                             <div key={phase.name}>
-                                <div style={{ padding: '14px 20px 8px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                                    <span style={{ fontFamily: FC, fontSize: '0.55rem', color: pi < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
+                                <div style={{ padding: '18px 24px 10px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                                    <span style={{ fontFamily: FC, fontSize: '0.65rem', color: pi < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
                                     <span style={{ fontFamily: F, fontSize: '0.55rem', color: TEXT_DIM, letterSpacing: 1 }}>{phase.sub}</span>
                                 </div>
                                 <div style={{ height: 1, background: BORDER, margin: '0 20px 4px' }} />
@@ -218,19 +218,19 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                                     return (
                                         <div key={day} onClick={() => { setSelectedDay(day); setEditTasks([...tasks]); }}
                                             style={{
-                                                padding: '12px 20px', cursor: 'pointer',
+                                                padding: '14px 24px', cursor: 'pointer',
                                                 background: isSel ? 'rgba(197,160,89,0.04)' : 'transparent',
                                                 borderLeft: isSel ? `3px solid ${GOLD}` : '3px solid transparent',
                                                 transition: 'all 0.15s',
                                             }}>
                                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <span style={{ fontFamily: F, fontSize: '0.95rem', color: isSel ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 700, letterSpacing: 1 }}>Day {day}</span>
-                                                <span style={{ fontFamily: F, fontSize: '0.65rem', color: TEXT_DIM, marginLeft: 'auto', letterSpacing: 1 }}>{tasks.length}</span>
+                                                <span style={{ fontFamily: F, fontSize: '1.1rem', color: isSel ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 700, letterSpacing: 1 }}>Day {day}</span>
+                                                <span style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT_DIM, marginLeft: 'auto', letterSpacing: 1 }}>{tasks.length}</span>
                                             </div>
                                             {/* Task preview icons */}
                                             <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                                                 {tasks.map((t, i) => (
-                                                    <span key={i} style={{ fontSize: '0.7rem', color: isSel ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.12)' }}>{getIcon(t.type)}</span>
+                                                    <span key={i} style={{ fontSize: '0.85rem', color: isSel ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.12)' }}>{getIcon(t.type)}</span>
                                                 ))}
                                             </div>
                                         </div>
@@ -241,7 +241,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                     </div>
 
                     {/* RIGHT DETAIL */}
-                    <div style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
+                    <div style={{ flex: 1, overflow: 'auto', padding: '36px 48px' }}>
                         <DayDetail
                             day={selectedDay}
                             tasks={editTasks}
@@ -256,33 +256,34 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 {/* ═══════════════════ CONFIG TAB ═══════════════════ */}
                 {tab === 'config' && (<>
                     {/* LEFT: Section list */}
-                    <div style={{ width: 240, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.15)' }}>
-                        <div style={{ padding: '16px 20px 10px' }}>
-                            <span style={{ fontFamily: FC, fontSize: '0.5rem', color: TEXT_DIM, letterSpacing: 4 }}>CONFIGURE</span>
+                    <div style={{ width: 280, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ padding: '20px 24px 12px' }}>
+                            <span style={{ fontFamily: FC, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 5 }}>CONFIGURE</span>
                         </div>
                         {CONFIG_SECTIONS.map(sec => (
                             <div key={sec.key} onClick={() => setConfigSection(sec.key)}
                                 style={{
-                                    padding: '14px 20px', cursor: 'pointer',
+                                    padding: '16px 24px', cursor: 'pointer',
                                     background: configSection === sec.key ? 'rgba(197,160,89,0.04)' : 'transparent',
                                     borderLeft: configSection === sec.key ? `3px solid ${GOLD}` : '3px solid transparent',
+                                    transition: 'all 0.15s',
                                 }}>
-                                <span style={{ fontFamily: F, fontSize: '0.8rem', color: configSection === sec.key ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 1 }}>{sec.title}</span>
+                                <span style={{ fontFamily: F, fontSize: '0.9rem', color: configSection === sec.key ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 1 }}>{sec.title}</span>
                             </div>
                         ))}
                     </div>
 
                     {/* RIGHT: Config editor */}
-                    <div style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
+                    <div style={{ flex: 1, overflow: 'auto', padding: '36px 48px' }}>
                         {(() => {
                             const sec = CONFIG_SECTIONS.find(s => s.key === configSection);
                             if (!sec) return null;
                             return (
                                 <div style={{ maxWidth: 900 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32 }}>
                                         <div>
-                                            <div style={{ fontFamily: FC, fontSize: '0.75rem', color: GOLD, letterSpacing: 5 }}>{sec.title}</div>
-                                            <div style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT_DIM, marginTop: 6 }}>{sec.description}</div>
+                                            <div style={{ fontFamily: FC, fontSize: '0.9rem', color: GOLD, letterSpacing: 6 }}>{sec.title}</div>
+                                            <div style={{ fontFamily: F, fontSize: '0.85rem', color: TEXT_DIM, marginTop: 8 }}>{sec.description}</div>
                                         </div>
                                         <div style={{ flex: 1 }} />
                                         <button onClick={() => {
@@ -411,7 +412,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 {/* ═══════════════════ MEMBER TAB ═══════════════════ */}
                 {tab === 'member' && (<>
                     {/* Search + left panel */}
-                    <div style={{ width: 300, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ width: 320, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}` }}>
                             <input value={memberEmail} onChange={e => setMemberEmail(e.target.value)} placeholder="Member email..."
                                 style={{ ...iS(), width: '100%', padding: '10px 14px', fontSize: '0.8rem', marginBottom: 8, boxSizing: 'border-box' }} />
@@ -431,8 +432,8 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                             <div style={{ flex: 1, overflow: 'auto' }}>
                                 {PHASES.map((phase, pi) => (
                                     <div key={phase.name}>
-                                        <div style={{ padding: '14px 20px 8px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                                            <span style={{ fontFamily: FC, fontSize: '0.55rem', color: pi < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
+                                        <div style={{ padding: '18px 24px 10px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                                            <span style={{ fontFamily: FC, fontSize: '0.65rem', color: pi < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
                                         </div>
                                         <div style={{ height: 1, background: BORDER, margin: '0 20px 4px' }} />
                                         {phase.days.map(day => {
@@ -441,7 +442,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                                             return (
                                                 <div key={day} onClick={() => { setMemberSelectedDay(day); setMemberEditTasks([...tasks]); }}
                                                     style={{
-                                                        padding: '12px 20px', cursor: 'pointer',
+                                                        padding: '14px 24px', cursor: 'pointer',
                                                         background: isSel ? 'rgba(197,160,89,0.04)' : 'transparent',
                                                         borderLeft: isSel ? `3px solid ${GOLD}` : '3px solid transparent',
                                                     }}>
@@ -451,7 +452,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                                                     </div>
                                                     <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                                                         {tasks.map((t, i) => (
-                                                            <span key={i} style={{ fontSize: '0.7rem', color: isSel ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.12)' }}>{getIcon(t.type)}</span>
+                                                            <span key={i} style={{ fontSize: '0.85rem', color: isSel ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.12)' }}>{getIcon(t.type)}</span>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -468,7 +469,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                     </div>
 
                     {/* RIGHT DETAIL */}
-                    <div style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
+                    <div style={{ flex: 1, overflow: 'auto', padding: '36px 48px' }}>
                         {memberProgram ? (
                             <DayDetail
                                 day={memberSelectedDay}
@@ -536,53 +537,53 @@ function DayDetail({ day, tasks, onChange, onSave, onJumpConfig, isMember, savin
     return (
         <div>
             {/* ── DAY HEADER ── */}
-            <div style={{ marginBottom: 32 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 6 }}>
-                    <span style={{ fontFamily: F, fontSize: '2.2rem', color: '#fff', fontWeight: 800, letterSpacing: 2, lineHeight: 1 }}>Day {day}</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontFamily: FC, fontSize: '0.55rem', color: phaseIdx < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
-                        <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM }}>{phase.sub} phase</span>
+            <div style={{ marginBottom: 40 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 8 }}>
+                    <span style={{ fontFamily: F, fontSize: '2.8rem', color: '#fff', fontWeight: 800, letterSpacing: 3, lineHeight: 1 }}>Day {day}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <span style={{ fontFamily: FC, fontSize: '0.7rem', color: phaseIdx < 2 ? GOLD : RED, letterSpacing: 6 }}>{phase.name}</span>
+                        <span style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT_DIM }}>{phase.sub} phase</span>
                     </div>
                     <div style={{ flex: 1 }} />
                     <button onClick={handleSave} style={{
-                        padding: '10px 28px', border: `1px solid ${saved ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
+                        padding: '12px 32px', border: `1px solid ${saved ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
                         background: saved ? 'rgba(80,200,80,0.04)' : 'transparent',
-                        color: saved ? 'rgba(80,200,80,0.8)' : GOLD, fontFamily: F, fontSize: '0.7rem', letterSpacing: 4, cursor: 'pointer',
+                        color: saved ? 'rgba(80,200,80,0.8)' : GOLD, fontFamily: F, fontSize: '0.8rem', letterSpacing: 4, cursor: 'pointer',
                         transition: 'all 0.3s',
                     }}>{saved ? 'SAVED' : saving ? 'SAVING...' : isMember ? 'SAVE FOR USER' : 'UPDATE'}</button>
                 </div>
-                <div style={{ height: 1, background: `linear-gradient(90deg, ${phaseIdx < 2 ? GOLD_DIM : 'rgba(139,0,0,0.2)'}, transparent)`, marginTop: 12 }} />
+                <div style={{ height: 1, background: `linear-gradient(90deg, ${phaseIdx < 2 ? GOLD_DIM : 'rgba(139,0,0,0.2)'}, transparent)`, marginTop: 14 }} />
             </div>
 
             {/* ── TASK LIST ── */}
-            <div style={{ display: 'grid', gap: 6, marginBottom: 36 }}>
+            <div style={{ display: 'grid', gap: 8, marginBottom: 44 }}>
                 {tasks.length === 0 && (
-                    <div style={{ padding: '24px 0', textAlign: 'center', color: TEXT_DIM, fontFamily: F, fontSize: '0.8rem' }}>No tasks assigned. Add tasks below.</div>
+                    <div style={{ padding: '32px 0', textAlign: 'center', color: TEXT_DIM, fontFamily: F, fontSize: '0.9rem' }}>No tasks assigned. Add tasks below.</div>
                 )}
                 {tasks.map((t, i) => {
                     const tt = TASK_TYPES.find(x => x.type === t.type);
                     const hasConfig = tt?.configKey;
                     return (
                         <div key={i} style={{
-                            display: 'flex', alignItems: 'center', gap: 16,
-                            padding: '14px 20px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8,
+                            display: 'flex', alignItems: 'center', gap: 20,
+                            padding: '18px 24px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 10,
                             transition: 'border-color 0.15s',
                         }}
                         onMouseEnter={e => e.currentTarget.style.borderColor = BORDER_HOVER}
                         onMouseLeave={e => e.currentTarget.style.borderColor = BORDER}
                         >
                             {/* Icon */}
-                            <span style={{ fontSize: '1.1rem', color: 'rgba(197,160,89,0.3)', width: 28, textAlign: 'center', flexShrink: 0 }}>{tt?.icon || '\u2022'}</span>
+                            <span style={{ fontSize: '1.4rem', color: 'rgba(197,160,89,0.3)', width: 32, textAlign: 'center', flexShrink: 0 }}>{tt?.icon || '\u2022'}</span>
 
                             {/* Label */}
                             <input value={t.label} onChange={e => updateTask(i, 'label', e.target.value)}
-                                style={{ flex: 1, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: F, fontSize: '0.9rem', outline: 'none', padding: 0 }} />
+                                style={{ flex: 1, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontFamily: F, fontSize: '1.05rem', outline: 'none', padding: 0, letterSpacing: 0.5 }} />
 
-                            {/* Config link for spin/card */}
+                            {/* Config link */}
                             {hasConfig && onJumpConfig && (
                                 <button onClick={() => onJumpConfig(tt!.configKey!)}
-                                    style={{ background: 'none', border: `1px solid ${GOLD_DIM}`, borderRadius: 4, padding: '3px 10px',
-                                        color: 'rgba(197,160,89,0.5)', fontFamily: F, fontSize: '0.55rem', cursor: 'pointer', letterSpacing: 1, flexShrink: 0,
+                                    style={{ background: 'none', border: `1px solid ${GOLD_DIM}`, borderRadius: 5, padding: '5px 14px',
+                                        color: 'rgba(197,160,89,0.5)', fontFamily: F, fontSize: '0.65rem', cursor: 'pointer', letterSpacing: 2, flexShrink: 0,
                                         transition: 'all 0.15s' }}
                                     onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
                                     onMouseLeave={e => { e.currentTarget.style.borderColor = GOLD_DIM; e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; }}
@@ -590,20 +591,20 @@ function DayDetail({ day, tasks, onChange, onSave, onJumpConfig, isMember, savin
                             )}
 
                             {/* Target */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                                <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 1 }}>x</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                                <span style={{ fontFamily: F, fontSize: '0.7rem', color: TEXT_DIM, letterSpacing: 1 }}>x</span>
                                 <input type="number" value={t.target} onChange={e => updateTask(i, 'target', Number(e.target.value))}
-                                    style={{ width: 44, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 4,
-                                        padding: '6px 0', color: GOLD, fontFamily: F, fontSize: '0.95rem', textAlign: 'center', outline: 'none',
+                                    style={{ width: 52, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 5,
+                                        padding: '8px 0', color: GOLD, fontFamily: F, fontSize: '1.1rem', textAlign: 'center', outline: 'none',
                                         MozAppearance: 'textfield' as any, WebkitAppearance: 'none' }} />
                             </div>
 
                             {/* Delete */}
                             <button onClick={() => removeTask(i)}
-                                style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.25)', cursor: 'pointer', fontSize: '1rem', padding: '0 2px', flexShrink: 0,
+                                style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.2)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', flexShrink: 0,
                                     transition: 'color 0.15s' }}
                                 onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,40,40,0.8)'}
-                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.25)'}
+                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.2)'}
                             >&times;</button>
                         </div>
                     );
@@ -612,19 +613,19 @@ function DayDetail({ day, tasks, onChange, onSave, onJumpConfig, isMember, savin
 
             {/* ── ADD TASK ── */}
             <div>
-                <div style={{ fontFamily: FC, fontSize: '0.5rem', color: TEXT_DIM, letterSpacing: 4, marginBottom: 14 }}>ADD TASK</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ fontFamily: FC, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 5, marginBottom: 18 }}>ADD TASK</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                     {TASK_TYPES.map(tt => (
                         <button key={tt.type} onClick={() => addTask(tt.type)} style={{
-                            padding: '8px 14px', borderRadius: 6, border: `1px solid ${BORDER}`,
-                            background: 'transparent', color: 'rgba(255,255,255,0.25)', fontFamily: F, fontSize: '0.7rem',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '10px 18px', borderRadius: 8, border: `1px solid ${BORDER}`,
+                            background: 'transparent', color: 'rgba(255,255,255,0.25)', fontFamily: F, fontSize: '0.8rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
                             transition: 'all 0.15s', letterSpacing: 0.5,
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = 'rgba(197,160,89,0.6)'; e.currentTarget.style.background = 'rgba(197,160,89,0.03)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = 'rgba(197,160,89,0.65)'; e.currentTarget.style.background = 'rgba(197,160,89,0.03)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}
                         >
-                            <span style={{ fontSize: '0.85rem', opacity: 0.6 }}>{tt.icon}</span>
+                            <span style={{ fontSize: '1rem', opacity: 0.5 }}>{tt.icon}</span>
                             {tt.label}
                         </button>
                     ))}
