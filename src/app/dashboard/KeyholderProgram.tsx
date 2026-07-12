@@ -14,27 +14,36 @@ const BORDER = 'rgba(197,160,89,0.2)';
 const TEXT = 'rgba(255,255,255,0.92)';
 const TEXT_DIM = 'rgba(255,255,255,0.55)';
 
-/* ── TASK TYPES — no emojis, elegant symbols only ── */
+/* ── TASK TYPES — 4 color tiers ── */
+/* GOLD #c5a059  = devotion / tribute / worship */
+/* SILVER #8a8a9a = discipline / routine / effort */
+/* RED #8b0000   = punishment / intensity / sacrifice */
+/* BLACK #555    = chance / random / unknown */
+const C_GOLD = '#c5a059';
+const C_SILVER = '#8a8a9a';
+const C_RED = '#8b0000';
+const C_BLACK = '#555555';
+
 const TASK_META: Record<string, { label: string; icon: string; color: string; configKey?: string }> = {
-    kneel:          { label: 'KNEEL',        icon: '\u25C7', color: '#c5a059' },
-    chastity_check: { label: 'CHASTITY',     icon: '\u25C8', color: '#8b0000' },
-    spin:           { label: 'SPIN WHEEL',   icon: '\u25CE', color: '#9b59b6', configKey: 'spin_wheel' },
-    card:           { label: 'TASK CARD',    icon: '\u2660', color: '#2ecc71', configKey: 'card_deck' },
-    tribute:        { label: 'TRIBUTE',      icon: '\u25C6', color: '#c5a059' },
-    journal:        { label: 'JOURNAL',      icon: '\u270E', color: '#3498db' },
-    worship:        { label: 'WORSHIP',      icon: '\u2661', color: '#e74c3c' },
-    lines:          { label: 'WRITE LINES',  icon: '\u2261', color: '#1abc9c', configKey: 'lines_texts' },
-    edge:           { label: 'EDGE',         icon: '\u2736', color: '#e91e63' },
-    denial:         { label: 'DENIAL',       icon: '\u2718', color: '#c0392b' },
-    confession:     { label: 'CONFESSION',   icon: '\u2767', color: '#8e44ad' },
-    cold_shower:    { label: 'COLD SHOWER',  icon: '\u2744', color: '#00bcd4' },
-    exercise:       { label: 'EXERCISE',     icon: '\u2191', color: '#4caf50', configKey: 'exercises' },
-    corner_time:    { label: 'CORNER TIME',  icon: '\u25A2', color: '#607d8b' },
-    body_writing:   { label: 'BODY WRITING', icon: '\u270D', color: '#ff5722', configKey: 'body_writing' },
-    gratitude:      { label: 'GRATITUDE',    icon: '\u2605', color: '#ffc107' },
-    quiz:           { label: 'QUIZ',         icon: '\u2753', color: '#00bcd4', configKey: 'quiz_questions' },
-    essay:          { label: 'ESSAY',        icon: '\u2016', color: '#795548' },
-    trial:          { label: 'TRIAL',        icon: '\u2694', color: '#9c27b0' },
+    kneel:          { label: 'KNEEL',        icon: '\u25C7', color: C_GOLD },
+    chastity_check: { label: 'CHASTITY',     icon: '\u25C8', color: C_RED },
+    tribute:        { label: 'TRIBUTE',      icon: '\u25C6', color: C_GOLD },
+    worship:        { label: 'WORSHIP',      icon: '\u2661', color: C_GOLD },
+    gratitude:      { label: 'GRATITUDE',    icon: '\u2605', color: C_GOLD },
+    journal:        { label: 'JOURNAL',      icon: '\u270E', color: C_GOLD },
+    lines:          { label: 'WRITE LINES',  icon: '\u2261', color: C_SILVER, configKey: 'lines_texts' },
+    exercise:       { label: 'EXERCISE',     icon: '\u2191', color: C_SILVER, configKey: 'exercises' },
+    corner_time:    { label: 'CORNER TIME',  icon: '\u25A2', color: C_SILVER },
+    body_writing:   { label: 'BODY WRITING', icon: '\u270D', color: C_SILVER, configKey: 'body_writing' },
+    essay:          { label: 'ESSAY',        icon: '\u2016', color: C_SILVER },
+    edge:           { label: 'EDGE',         icon: '\u2736', color: C_RED },
+    denial:         { label: 'DENIAL',       icon: '\u2718', color: C_RED },
+    cold_shower:    { label: 'COLD SHOWER',  icon: '\u2744', color: C_RED },
+    confession:     { label: 'CONFESSION',   icon: '\u2767', color: C_RED },
+    trial:          { label: 'TRIAL',        icon: '\u2694', color: C_RED },
+    spin:           { label: 'SPIN WHEEL',   icon: '\u25CE', color: C_BLACK, configKey: 'spin_wheel' },
+    card:           { label: 'TASK CARD',    icon: '\u2660', color: C_BLACK, configKey: 'card_deck' },
+    quiz:           { label: 'QUIZ',         icon: '\u2753', color: C_BLACK, configKey: 'quiz_questions' },
 };
 
 const PHASES = [
@@ -282,149 +291,199 @@ function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveT
     );
 }
 
-/* ═══════════════ TASK PANEL — luxury cards ═══════════════ */
+/* ═══════════════ TASK PANEL — glass cards ═══════════════ */
 function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, moveTask, dragIdx, setDragIdx, configData, setView, setConfigSection }: any) {
     const phase = PHASES.find(p => p.days.includes(dayNum));
     const [addOpen, setAddOpen] = useState(false);
+    const [editIdx, setEditIdx] = useState<number|null>(null);
+    const [adjustIdx, setAdjustIdx] = useState<number|null>(null);
 
     return (
-        <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, rgba(14,12,20,.99), ${BG})`, overflow: 'hidden' }}>
+        <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', position: 'relative' }}>
+            {/* Background image */}
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', opacity: 0.06, filter: 'saturate(0.2)', pointerEvents: 'none', zIndex: 0 }} />
             {/* Header */}
-            <div style={{ padding: '22px 32px 18px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+            <div style={{ padding: '24px 36px 20px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'flex-end', gap: 16, position: 'relative', zIndex: 1 }}>
                 <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-                        <span style={{ fontFamily: FC, fontSize: '1.8rem', color: 'rgba(255,255,255,.92)', lineHeight: 1 }}>Day {dayNum}</span>
-                        <span style={{ fontFamily: FC, fontSize: '.45rem', color: phase?.color, letterSpacing: 5 }}>{phase?.name}</span>
+                        <span style={{ fontFamily: FC, fontSize: '2rem', color: '#fff', lineHeight: 1 }}>Day {dayNum}</span>
+                        <span style={{ fontFamily: FC, fontSize: '.5rem', color: phase?.color, letterSpacing: 5 }}>{phase?.name}</span>
                     </div>
-                    <div style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, letterSpacing: 2, marginTop: 4 }}>
-                        {phase?.sub} phase {'\u00B7'} drag to reorder {'\u00B7'} {tasks.length + 1} tasks
+                    <div style={{ fontFamily: F, fontSize: '.45rem', color: TEXT_DIM, letterSpacing: 2, marginTop: 6 }}>
+                        {phase?.sub} phase {'\u00B7'} click to edit {'\u00B7'} drag to reorder {'\u00B7'} {tasks.length + 1} tasks
                     </div>
                 </div>
-                <button onClick={onClose} className="kbtn" style={{ background: 'rgba(197,160,89,.08)', border: `1px solid rgba(197,160,89,.2)`, borderRadius: 6, padding: '8px 20px', color: TEXT_DIM, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>CLOSE</button>
+                <button onClick={onClose} className="kbtn" style={{ background: 'rgba(197,160,89,.1)', border: `1px solid rgba(197,160,89,.25)`, borderRadius: 8, padding: '10px 24px', color: GOLD, fontFamily: FC, fontSize: '.45rem', letterSpacing: 3 }}>CLOSE</button>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }} className="kscr">
-                {/* CHASTITY CHECK — constant */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 36px', position: 'relative', zIndex: 1 }} className="kscr">
+                {/* CHASTITY CHECK — permanent strip */}
                 <div style={{
-                    borderRadius: 12, marginBottom: 16, overflow: 'hidden', position: 'relative',
-                    border: '1px solid rgba(139,0,0,.3)',
-                    background: 'linear-gradient(135deg, rgba(139,0,0,.12), rgba(15,12,20,.95))',
+                    borderRadius: 12, marginBottom: 24, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16,
+                    background: 'rgba(139,0,0,.08)', border: '1px solid rgba(139,0,0,.25)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,.3)',
                 }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, rgba(139,0,0,.5), transparent)' }} />
-                    <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 18 }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(139,0,0,.15)', border: '1px solid rgba(139,0,0,.3)', fontFamily: F, fontSize: '1.2rem', color: 'rgba(139,0,0,.8)' }}>{'\u25C8'}</div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.85)', letterSpacing: 3 }}>Chastity Check</div>
-                            <div style={{ fontFamily: F, fontSize: '.4rem', color: 'rgba(139,0,0,.6)', letterSpacing: 2, marginTop: 3 }}>Photo proof {'\u00B7'} every day {'\u00B7'} constant</div>
-                        </div>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(139,0,0,.15)', border: '1px solid rgba(139,0,0,.3)' }}>
+                        <span style={{ fontFamily: F, fontSize: '1.1rem', color: 'rgba(200,50,50,.9)' }}>{'\u25C8'}</span>
                     </div>
+                    <span style={{ fontFamily: FC, fontSize: '.6rem', color: 'rgba(255,255,255,.85)', letterSpacing: 3, flex: 1 }}>Chastity Check</span>
+                    <span style={{ fontFamily: F, fontSize: '.38rem', color: 'rgba(200,50,50,.6)', letterSpacing: 2 }}>CONSTANT {'\u00B7'} EVERY DAY</span>
                 </div>
 
-                {/* Editable task cards */}
-                {tasks.map((task: Task, idx: number) => {
-                    const meta = TASK_META[task.type] || { label: task.type, icon: '\u2022', color: '#666' };
-                    const hasConfig = !!(meta as any).configKey;
-                    const cfgKey = (meta as any).configKey;
-                    const cfgItems = hasConfig ? (configData[cfgKey] || []) : [];
+                {/* TASK CARDS GRID */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 18 }}>
+                    {tasks.map((task: Task, idx: number) => {
+                        const meta = TASK_META[task.type] || { label: task.type, icon: '\u2022', color: '#666' };
+                        const hasConfig = !!(meta as any).configKey;
+                        const cfgKey = (meta as any).configKey;
+                        const cfgItems = hasConfig ? (configData[cfgKey] || []) : [];
+                        const isEditing = editIdx === idx;
+                        const isAdjusting = adjustIdx === idx;
+                        const rgb = _hexToRgb(meta.color);
+                        const highlighted = isEditing || isAdjusting;
 
-                    return (
-                        <div key={idx}
-                            draggable onDragStart={() => setDragIdx(idx)}
-                            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('kdrag'); }}
-                            onDragLeave={(e) => e.currentTarget.classList.remove('kdrag')}
-                            onDrop={(e) => { e.currentTarget.classList.remove('kdrag'); if(dragIdx!==null) moveTask(dragIdx,idx); setDragIdx(null); }}
-                            onDragEnd={() => setDragIdx(null)}
-                            className="ktc"
-                            style={{
-                                borderRadius: 12, marginBottom: 14, opacity: dragIdx===idx ? .2 : 1, overflow: 'hidden', position: 'relative',
-                                border: `1px solid rgba(197,160,89,.18)`,
-                                background: 'linear-gradient(135deg, rgba(22,20,30,.95), rgba(14,12,20,.98))',
-                            }}>
-                            {/* Top accent line */}
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: 80, height: 2, background: `linear-gradient(90deg, ${meta.color}, transparent)`, opacity: .6 }} />
-
-                            {/* Main content */}
-                            <div style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', gap: 18 }}>
-                                {/* Drag handle */}
-                                <div style={{ color: 'rgba(197,160,89,.35)', fontSize: '.7rem', userSelect: 'none' }}>{'\u2982'}</div>
-
-                                {/* Icon */}
-                                <div style={{
-                                    width: 48, height: 48, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: `rgba(${_hexToRgb(meta.color)},.12)`, border: `1px solid rgba(${_hexToRgb(meta.color)},.25)`,
-                                    fontFamily: F, fontSize: '1.2rem', color: meta.color, opacity: .85, flexShrink: 0,
-                                }}>{meta.icon}</div>
-
-                                {/* Label + type */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <input value={task.label} onChange={(e) => updateTask(idx,'label',e.target.value)} style={{
-                                        background: 'transparent', border: 'none', outline: 'none', width: '100%',
-                                        fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.9)', letterSpacing: 1,
-                                    }} />
-                                    <div style={{ fontFamily: F, fontSize: '.38rem', color: meta.color, opacity: .7, letterSpacing: 3, marginTop: 3, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        {meta.label}
-                                        {hasConfig && (
-                                            <span onClick={(e) => { e.stopPropagation(); setConfigSection(cfgKey); setView('config'); }} style={{ color: GOLD, cursor: 'pointer', letterSpacing: 2, borderBottom: `1px solid rgba(197,160,89,.4)`, paddingBottom: 1 }}>
-                                                EDIT OPTIONS {'\u2192'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Target */}
-                                <input type="number" value={task.target} onChange={(e) => updateTask(idx,'target',parseInt(e.target.value)||1)} style={{
-                                    width: 48, height: 44, textAlign: 'center', borderRadius: 8,
-                                    background: 'rgba(0,0,0,.4)', border: `1px solid rgba(197,160,89,.2)`,
-                                    color: GOLD, fontFamily: FC, fontSize: '.9rem', outline: 'none',
-                                }} />
+                        return (
+                            <div key={idx}
+                                draggable onDragStart={() => setDragIdx(idx)}
+                                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('kdrag'); }}
+                                onDragLeave={(e) => e.currentTarget.classList.remove('kdrag')}
+                                onDrop={(e) => { e.currentTarget.classList.remove('kdrag'); if(dragIdx!==null) moveTask(dragIdx,idx); setDragIdx(null); }}
+                                onDragEnd={() => setDragIdx(null)}
+                                className="ktc"
+                                onClick={() => setEditIdx(isEditing ? null : idx)}
+                                style={{
+                                    borderRadius: 16, opacity: dragIdx===idx ? .15 : 1, overflow: 'hidden', position: 'relative',
+                                    display: 'flex', flexDirection: 'column',
+                                    background: 'rgba(15,15,20,0.85)',
+                                    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                                    border: `1px solid ${highlighted ? `rgba(${rgb},.5)` : 'rgba(197,160,89,.12)'}`,
+                                    boxShadow: highlighted
+                                        ? `0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(${rgb},.3), 0 0 20px rgba(${rgb},.1)`
+                                        : '0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.03)',
+                                    transform: isAdjusting ? 'scale(1.02)' : undefined,
+                                    transition: 'all .25s ease',
+                                }}>
+                                {/* Left accent bar */}
+                                <div style={{ position: 'absolute', top: 12, left: 0, width: 3, height: 40, borderRadius: '0 3px 3px 0', background: meta.color, opacity: .7 }} />
 
                                 {/* Delete */}
                                 <button onClick={(e) => { e.stopPropagation(); removeTask(idx); }} style={{
-                                    background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.25)',
-                                    fontFamily: F, fontSize: '1rem', padding: '4px 6px', transition: 'color .2s',
-                                }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
-                            </div>
+                                    position: 'absolute', top: 12, right: 14, background: 'none', border: 'none', cursor: 'pointer',
+                                    color: 'rgba(255,255,255,.25)', fontFamily: F, fontSize: '1rem', padding: '2px 4px', transition: 'color .2s', zIndex: 2,
+                                }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.8)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
 
-                            {/* Config preview */}
-                            {hasConfig && cfgItems.length > 0 && (
-                                <div style={{ padding: '0 24px 16px', paddingLeft: 90 }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                        {cfgItems.slice(0, 8).map((item: any, i: number) => {
-                                            const lbl = typeof item === 'string' ? item : (item.label || item.title || item.question || item.type || '');
-                                            return <span key={i} style={{ fontFamily: F, fontSize: '.4rem', color: meta.color, opacity: .85, background: `rgba(${_hexToRgb(meta.color)},.15)`, padding: '5px 12px', borderRadius: 5, border: `1px solid rgba(${_hexToRgb(meta.color)},.25)`, letterSpacing: 1 }}>{lbl}</span>;
-                                        })}
-                                        {cfgItems.length > 8 && <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, alignSelf: 'center' }}>+{cfgItems.length-8}</span>}
+                                {/* Card body */}
+                                <div style={{ padding: '24px 20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
+                                    {/* Label — big, top, Rajdhani */}
+                                    {isEditing ? (
+                                        <input value={task.label} onClick={e => e.stopPropagation()} onChange={(e) => updateTask(idx,'label',e.target.value)} style={{
+                                            background: 'rgba(0,0,0,.4)', border: `1px solid rgba(${rgb},.35)`, borderRadius: 8, outline: 'none', width: '100%',
+                                            fontFamily: F, fontSize: '.75rem', color: '#fff', fontWeight: 700, letterSpacing: 1, padding: '8px 12px', textAlign: 'center',
+                                        }} />
+                                    ) : (
+                                        <div style={{ fontFamily: F, fontSize: '.8rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textAlign: 'center', lineHeight: 1.3 }}>{task.label}</div>
+                                    )}
+
+                                    {/* Icon — no box, just the symbol */}
+                                    <div style={{ fontSize: '2.2rem', color: meta.color, lineHeight: 1, margin: '8px 0' }}>{meta.icon}</div>
+                                </div>
+
+                                {/* Bottom bar: goal left, number right, adjust if configurable */}
+                                <div style={{ padding: '12px 20px', borderTop: `1px solid rgba(255,255,255,.06)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,.2)' }}>
+                                    <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, letterSpacing: 2 }}>GOAL</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        {hasConfig && (
+                                            <span onClick={(e) => { e.stopPropagation(); setAdjustIdx(adjustIdx === idx ? null : idx); setAddOpen(false); }} style={{
+                                                fontFamily: F, fontSize: '.38rem', color: isAdjusting ? '#fff' : GOLD, cursor: 'pointer', letterSpacing: 2,
+                                                padding: '4px 12px', borderRadius: 6, border: `1px solid rgba(197,160,89,.25)`,
+                                                background: isAdjusting ? 'rgba(197,160,89,.25)' : 'rgba(197,160,89,.06)',
+                                            }}>
+                                                ADJUST
+                                            </span>
+                                        )}
+                                        {isEditing ? (
+                                            <input type="number" value={task.target} onClick={e => e.stopPropagation()} onChange={(e) => updateTask(idx,'target',parseInt(e.target.value)||1)} style={{
+                                                width: 50, height: 32, textAlign: 'center', borderRadius: 6,
+                                                background: 'rgba(0,0,0,.5)', border: `1px solid rgba(197,160,89,.3)`,
+                                                color: GOLD, fontFamily: F, fontSize: '.85rem', fontWeight: 700, outline: 'none',
+                                            }} />
+                                        ) : (
+                                            <span style={{ fontFamily: F, fontSize: '1rem', color: GOLD, fontWeight: 700 }}>{task.target}</span>
+                                        )}
                                     </div>
                                 </div>
+                            </div>
+                        );
+                    })}
+
+                </div>
+
+                {/* Divider — add more tasks */}
+                <div onClick={() => { setAddOpen(!addOpen); setAdjustIdx(null); }} style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '28px 0', cursor: 'pointer' }}>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.15)' }} />
+                    <span style={{ fontFamily: FC, fontSize: '.45rem', color: addOpen ? GOLD : TEXT_DIM, letterSpacing: 5, transition: 'color .2s' }}>ADD MORE TASKS</span>
+                    <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.15)' }} />
+                </div>
+
+                {/* Adjust options for selected task */}
+                {adjustIdx !== null && (() => {
+                    const task = tasks[adjustIdx];
+                    if (!task) return null;
+                    const meta = TASK_META[task.type] || { label: task.type, icon: '\u2022', color: '#666' };
+                    const cfgKey = (meta as any).configKey;
+                    if (!cfgKey) return null;
+                    const cfgItems = configData[cfgKey] || [];
+                    const rgb = _hexToRgb(meta.color);
+                    return (
+                        <div className="kfade" style={{ marginBottom: 24 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <span style={{ fontSize: '1rem', color: meta.color }}>{meta.icon}</span>
+                                    <span style={{ fontFamily: FC, fontSize: '.5rem', color: '#fff', letterSpacing: 3 }}>{meta.label} OPTIONS</span>
+                                    <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>{cfgItems.length} items</span>
+                                </div>
+                                <span onClick={() => { setConfigSection(cfgKey); setView('config'); }} style={{
+                                    fontFamily: F, fontSize: '.38rem', color: GOLD, cursor: 'pointer', letterSpacing: 2,
+                                    padding: '5px 14px', borderRadius: 6, border: `1px solid rgba(197,160,89,.2)`, background: 'rgba(197,160,89,.06)',
+                                }}>
+                                    EDIT ALL {'\u2192'}
+                                </span>
+                            </div>
+                            {cfgItems.length > 0 ? (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                    {cfgItems.map((item: any, i: number) => {
+                                        const lbl = typeof item === 'string' ? item : (item.label || item.title || item.question || item.type || '');
+                                        return <span key={i} style={{
+                                            fontFamily: F, fontSize: '.45rem', color: '#fff', background: `rgba(${rgb},.3)`,
+                                            padding: '8px 16px', borderRadius: 8, letterSpacing: 1,
+                                            border: `1px solid rgba(${rgb},.2)`,
+                                        }}>{lbl}</span>;
+                                    })}
+                                </div>
+                            ) : (
+                                <div style={{ fontFamily: F, fontSize: '.42rem', color: TEXT_DIM, letterSpacing: 2 }}>No options configured yet. Click EDIT ALL to add.</div>
                             )}
                         </div>
                     );
-                })}
+                })()}
 
-                {/* Add task */}
-                <div style={{ marginTop: 18 }}>
-                    <button onClick={() => setAddOpen(!addOpen)} className="kbtn" style={{
-                        width: '100%', padding: '18px', borderRadius: 12, border: `1px dashed rgba(197,160,89,.25)`,
-                        background: addOpen ? 'rgba(197,160,89,.06)' : 'transparent',
-                        color: addOpen ? GOLD : TEXT_DIM, fontFamily: FC, fontSize: '.45rem', letterSpacing: 4,
-                    }}>+ Add Task</button>
-
-                    {addOpen && (
-                        <div className="kfade" style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-                            {Object.entries(TASK_META).filter(([t]) => t!=='chastity_check').map(([type, meta]) => (
-                                <button key={type} onClick={() => { addTask(type); setAddOpen(false); }} className="kbtn" style={{
-                                    display: 'flex', alignItems: 'center', gap: 10, padding: '16px 16px',
-                                    borderRadius: 10, border: `1px solid rgba(197,160,89,.15)`, textAlign: 'left',
-                                    background: 'linear-gradient(135deg, rgba(22,20,30,.95), rgba(14,12,20,.98))',
-                                    fontFamily: F, fontSize: '.55rem', fontWeight: 600, color: TEXT,
-                                }}>
-                                    <span style={{ fontSize: '.9rem', color: meta.color, opacity: .8 }}>{meta.icon}</span>
-                                    <span style={{ letterSpacing: 1 }}>{meta.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                {/* Task picker */}
+                {addOpen && (
+                    <div className="kfade" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                        {Object.entries(TASK_META).filter(([t]) => t!=='chastity_check').map(([type, meta]) => (
+                            <button key={type} onClick={() => { addTask(type); setAddOpen(false); }} className="kbtn" style={{
+                                display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px',
+                                borderRadius: 12, border: `1px solid rgba(197,160,89,.12)`, textAlign: 'left',
+                                background: 'rgba(15,15,20,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                                boxShadow: '0 4px 16px rgba(0,0,0,.3)',
+                                fontFamily: F, fontSize: '.55rem', fontWeight: 600, color: '#fff',
+                            }}>
+                                <span style={{ fontSize: '1rem', color: meta.color }}>{meta.icon}</span>
+                                <span style={{ letterSpacing: 1 }}>{meta.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
