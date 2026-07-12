@@ -23,18 +23,27 @@ const TASK_TYPES: { type: string; label: string; icon: string; configKey?: strin
     { type: 'tribute', label: 'Tribute', icon: '\u25C6' },
     { type: 'journal', label: 'Journal', icon: '\u270E' },
     { type: 'worship', label: 'Worship', icon: '\u2661' },
-    { type: 'lines', label: 'Lines', icon: '\u2261' },
+    { type: 'lines', label: 'Lines', icon: '\u2261', configKey: 'lines_texts' },
     { type: 'edge', label: 'Edge', icon: '\u2736' },
     { type: 'denial', label: 'Denial', icon: '\u2718' },
     { type: 'confession', label: 'Confession', icon: '\u2767' },
     { type: 'cold_shower', label: 'Cold Shower', icon: '\u2744' },
-    { type: 'exercise', label: 'Exercise', icon: '\u2191' },
+    { type: 'exercise', label: 'Exercise', icon: '\u2191', configKey: 'exercises' },
     { type: 'corner_time', label: 'Corner Time', icon: '\u25A2' },
-    { type: 'body_writing', label: 'Body Writing', icon: '\u270D' },
+    { type: 'body_writing', label: 'Body Writing', icon: '\u270D', configKey: 'body_writing' },
     { type: 'gratitude', label: 'Gratitude', icon: '\u2605' },
-    { type: 'quiz', label: 'Quiz', icon: '?' },
+    { type: 'quiz', label: 'Quiz', icon: '?', configKey: 'quiz_questions' },
     { type: 'essay', label: 'Essay', icon: '\u2016' },
     { type: 'trial', label: 'Trial', icon: '\u2694' },
+];
+
+const CONFIG_SECTIONS: { key: string; title: string; description: string }[] = [
+    { key: 'spin_wheel', title: 'SPIN WHEEL', description: 'What the slave lands on when they spin. Weight = probability.' },
+    { key: 'card_deck', title: 'TASK CARDS', description: 'Cards the slave draws randomly. Each card is a task they must complete.' },
+    { key: 'lines_texts', title: 'WRITING LINES', description: 'What text they have to write repeatedly.' },
+    { key: 'body_writing', title: 'BODY WRITING', description: 'What words they write on their body for photo proof.' },
+    { key: 'quiz_questions', title: 'QUIZ QUESTIONS', description: 'Questions they must answer correctly about Queen\'s rules.' },
+    { key: 'exercises', title: 'EXERCISES', description: 'Physical tasks: type and count.' },
 ];
 
 interface Task { type: string; target: number; label: string; }
@@ -62,7 +71,11 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const [memberProgram, setMemberProgram] = useState<Record<string, Task[]> | null>(null);
     const [memberSelectedDay, setMemberSelectedDay] = useState<number>(1);
     const [memberEditTasks, setMemberEditTasks] = useState<Task[]>([]);
-    const [configSection, setConfigSection] = useState<'spin_wheel' | 'card_deck'>('spin_wheel');
+    const [configSection, setConfigSection] = useState<string>('spin_wheel');
+    const [linesTexts, setLinesTexts] = useState<string[]>([]);
+    const [bodyWriting, setBodyWriting] = useState<string[]>([]);
+    const [quizQuestions, setQuizQuestions] = useState<{ question: string; answer: string }[]>([]);
+    const [exercises, setExercises] = useState<{ type: string; count: number }[]>([]);
 
     useEffect(() => {
         loadTemplate();
@@ -101,6 +114,10 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 const val = typeof cfg.value === 'string' ? JSON.parse(cfg.value) : cfg.value;
                 if (cfg.key === 'spin_wheel') setSpinWheel(val);
                 if (cfg.key === 'card_deck') setCardDeck(val);
+                if (cfg.key === 'lines_texts') setLinesTexts(val);
+                if (cfg.key === 'body_writing') setBodyWriting(val);
+                if (cfg.key === 'quiz_questions') setQuizQuestions(val);
+                if (cfg.key === 'exercises') setExercises(val);
             }
         } catch { }
     };
@@ -237,121 +254,159 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 </>)}
 
                 {/* ═══════════════════ CONFIG TAB ═══════════════════ */}
-                {tab === 'config' && (
-                    <div style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
-                        {/* Section toggle */}
-                        <div style={{ display: 'flex', gap: 0, marginBottom: 32 }}>
-                            {([['spin_wheel', 'SPIN WHEEL'], ['card_deck', 'TASK CARDS']] as const).map(([k, lbl]) => (
-                                <button key={k} onClick={() => setConfigSection(k)} style={{
-                                    padding: '10px 28px', border: 'none', borderBottom: `2px solid ${configSection === k ? GOLD : 'transparent'}`,
-                                    background: 'transparent', color: configSection === k ? GOLD : TEXT_DIM,
-                                    fontFamily: FC, fontSize: '0.6rem', letterSpacing: 4, cursor: 'pointer',
-                                }}>{lbl}</button>
-                            ))}
+                {tab === 'config' && (<>
+                    {/* LEFT: Section list */}
+                    <div style={{ width: 240, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.15)' }}>
+                        <div style={{ padding: '16px 20px 10px' }}>
+                            <span style={{ fontFamily: FC, fontSize: '0.5rem', color: TEXT_DIM, letterSpacing: 4 }}>CONFIGURE</span>
                         </div>
-
-                        {/* SPIN WHEEL CONFIG */}
-                        {configSection === 'spin_wheel' && (
-                            <div style={{ maxWidth: 900 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
-                                    <div>
-                                        <div style={{ fontFamily: FC, fontSize: '0.7rem', color: GOLD, letterSpacing: 4 }}>SPIN WHEEL OPTIONS</div>
-                                        <div style={{ fontFamily: F, fontSize: '0.7rem', color: TEXT_DIM, marginTop: 4 }}>What the slave lands on when they spin. Weight = probability.</div>
-                                    </div>
-                                    <div style={{ flex: 1 }} />
-                                    <button onClick={() => saveConfig('spin_wheel', spinWheel)} style={{
-                                        padding: '10px 28px', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
-                                        background: 'transparent', color: saving ? 'rgba(80,200,80,0.8)' : GOLD,
-                                        fontFamily: F, fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer',
-                                    }}>{saving ? 'SAVED' : 'SAVE WHEEL'}</button>
-                                </div>
-
-                                {/* Header row */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 70px 70px 36px', gap: 12, padding: '0 16px 8px', marginBottom: 4 }}>
-                                    <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2 }}>LABEL</span>
-                                    <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2 }}>EFFECT</span>
-                                    <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2, textAlign: 'center' }}>VALUE</span>
-                                    <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2, textAlign: 'center' }}>WEIGHT</span>
-                                    <span />
-                                </div>
-
-                                <div style={{ display: 'grid', gap: 6 }}>
-                                    {spinWheel.map((opt, i) => (
-                                        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 70px 70px 36px', gap: 12, alignItems: 'center',
-                                            padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                            <input value={opt.label} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], label: e.target.value }; setSpinWheel(n); }}
-                                                style={{ ...iS(), fontSize: '0.85rem' }} />
-                                            <input value={opt.effect} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], effect: e.target.value }; setSpinWheel(n); }}
-                                                style={{ ...iS(), fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }} />
-                                            <input value={opt.value} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], value: Number(e.target.value) }; setSpinWheel(n); }}
-                                                style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem', color: GOLD }} />
-                                            <input value={opt.weight} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], weight: Number(e.target.value) }; setSpinWheel(n); }}
-                                                style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem' }} />
-                                            <button onClick={() => { const n = [...spinWheel]; n.splice(i, 1); setSpinWheel(n); }}
-                                                style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.35)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.15s' }}
-                                                onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,40,40,0.8)'}
-                                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.35)'}
-                                            >&times;</button>
-                                        </div>
-                                    ))}
-                                </div>
-                                <button onClick={() => setSpinWheel([...spinWheel, { label: '', effect: 'add_days', value: 1, weight: 1 }])}
-                                    style={{ marginTop: 12, padding: '10px 20px', border: `1px dashed ${BORDER}`, borderRadius: 8, background: 'transparent',
-                                        color: TEXT_DIM, fontFamily: F, fontSize: '0.7rem', cursor: 'pointer', letterSpacing: 2, width: '100%',
-                                        transition: 'all 0.15s' }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = GOLD; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_DIM; }}
-                                >+ ADD OPTION</button>
+                        {CONFIG_SECTIONS.map(sec => (
+                            <div key={sec.key} onClick={() => setConfigSection(sec.key)}
+                                style={{
+                                    padding: '14px 20px', cursor: 'pointer',
+                                    background: configSection === sec.key ? 'rgba(197,160,89,0.04)' : 'transparent',
+                                    borderLeft: configSection === sec.key ? `3px solid ${GOLD}` : '3px solid transparent',
+                                }}>
+                                <span style={{ fontFamily: F, fontSize: '0.8rem', color: configSection === sec.key ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 1 }}>{sec.title}</span>
                             </div>
-                        )}
-
-                        {/* CARD DECK CONFIG */}
-                        {configSection === 'card_deck' && (
-                            <div style={{ maxWidth: 900 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
-                                    <div>
-                                        <div style={{ fontFamily: FC, fontSize: '0.7rem', color: GOLD, letterSpacing: 4 }}>TASK CARD DECK</div>
-                                        <div style={{ fontFamily: F, fontSize: '0.7rem', color: TEXT_DIM, marginTop: 4 }}>Cards the slave draws randomly. Each card is a task they must complete.</div>
-                                    </div>
-                                    <div style={{ flex: 1 }} />
-                                    <button onClick={() => saveConfig('card_deck', cardDeck)} style={{
-                                        padding: '10px 28px', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
-                                        background: 'transparent', color: saving ? 'rgba(80,200,80,0.8)' : GOLD,
-                                        fontFamily: F, fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer',
-                                    }}>{saving ? 'SAVED' : 'SAVE DECK'}</button>
-                                </div>
-
-                                <div style={{ display: 'grid', gap: 8 }}>
-                                    {cardDeck.map((card, i) => (
-                                        <div key={i} style={{ padding: '16px 20px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <input value={card.title} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], title: e.target.value }; setCardDeck(n); }}
-                                                        style={{ ...iS(), fontWeight: 700, fontSize: '0.9rem', color: '#fff', width: '100%', marginBottom: 8 }} placeholder="Card title" />
-                                                    <input value={card.description} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], description: e.target.value }; setCardDeck(n); }}
-                                                        style={{ ...iS(), fontSize: '0.8rem', width: '100%', color: TEXT }} placeholder="Description of the task" />
-                                                </div>
-                                                <input value={card.category} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], category: e.target.value }; setCardDeck(n); }}
-                                                    style={{ ...iS(), width: 90, fontSize: '0.7rem', textAlign: 'center', color: 'rgba(197,160,89,0.5)' }} placeholder="Category" />
-                                                <button onClick={() => { const n = [...cardDeck]; n.splice(i, 1); setCardDeck(n); }}
-                                                    style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.35)', cursor: 'pointer', fontSize: '1rem', marginTop: 4 }}
-                                                    onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,40,40,0.8)'}
-                                                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.35)'}
-                                                >&times;</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <button onClick={() => setCardDeck([...cardDeck, { title: '', description: '', category: '' }])}
-                                    style={{ marginTop: 12, padding: '10px 20px', border: `1px dashed ${BORDER}`, borderRadius: 8, background: 'transparent',
-                                        color: TEXT_DIM, fontFamily: F, fontSize: '0.7rem', cursor: 'pointer', letterSpacing: 2, width: '100%' }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = GOLD; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_DIM; }}
-                                >+ ADD CARD</button>
-                            </div>
-                        )}
+                        ))}
                     </div>
-                )}
+
+                    {/* RIGHT: Config editor */}
+                    <div style={{ flex: 1, overflow: 'auto', padding: '32px 40px' }}>
+                        {(() => {
+                            const sec = CONFIG_SECTIONS.find(s => s.key === configSection);
+                            if (!sec) return null;
+                            return (
+                                <div style={{ maxWidth: 900 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
+                                        <div>
+                                            <div style={{ fontFamily: FC, fontSize: '0.75rem', color: GOLD, letterSpacing: 5 }}>{sec.title}</div>
+                                            <div style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT_DIM, marginTop: 6 }}>{sec.description}</div>
+                                        </div>
+                                        <div style={{ flex: 1 }} />
+                                        <button onClick={() => {
+                                            if (configSection === 'spin_wheel') saveConfig('spin_wheel', spinWheel);
+                                            if (configSection === 'card_deck') saveConfig('card_deck', cardDeck);
+                                            if (configSection === 'lines_texts') saveConfig('lines_texts', linesTexts);
+                                            if (configSection === 'body_writing') saveConfig('body_writing', bodyWriting);
+                                            if (configSection === 'quiz_questions') saveConfig('quiz_questions', quizQuestions);
+                                            if (configSection === 'exercises') saveConfig('exercises', exercises);
+                                        }} style={{
+                                            padding: '10px 28px', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
+                                            background: 'transparent', color: saving ? 'rgba(80,200,80,0.8)' : GOLD,
+                                            fontFamily: F, fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer',
+                                        }}>{saving ? 'SAVED' : 'SAVE'}</button>
+                                    </div>
+                                    <div style={{ height: 1, background: `linear-gradient(90deg, ${GOLD_DIM}, transparent)`, marginBottom: 24 }} />
+
+                                    {/* ── SPIN WHEEL ── */}
+                                    {configSection === 'spin_wheel' && (<>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 70px 70px 36px', gap: 12, padding: '0 16px 8px' }}>
+                                            {['LABEL','EFFECT','VALUE','WEIGHT',''].map((h,i) => (
+                                                <span key={i} style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2, textAlign: i > 1 && i < 4 ? 'center' : 'left' }}>{h}</span>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'grid', gap: 6 }}>
+                                            {spinWheel.map((opt, i) => (
+                                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 70px 70px 36px', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                                                    <input value={opt.label} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], label: e.target.value }; setSpinWheel(n); }} style={{ ...iS(), fontSize: '0.85rem' }} />
+                                                    <input value={opt.effect} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], effect: e.target.value }; setSpinWheel(n); }} style={{ ...iS(), fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }} />
+                                                    <input value={opt.value} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], value: Number(e.target.value) }; setSpinWheel(n); }} style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem', color: GOLD }} />
+                                                    <input value={opt.weight} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], weight: Number(e.target.value) }; setSpinWheel(n); }} style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem' }} />
+                                                    <XBtn onClick={() => { const n = [...spinWheel]; n.splice(i, 1); setSpinWheel(n); }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AddBtn onClick={() => setSpinWheel([...spinWheel, { label: '', effect: 'add_days', value: 1, weight: 1 }])} label="+ ADD OPTION" />
+                                    </>)}
+
+                                    {/* ── CARD DECK ── */}
+                                    {configSection === 'card_deck' && (<>
+                                        <div style={{ display: 'grid', gap: 8 }}>
+                                            {cardDeck.map((card, i) => (
+                                                <div key={i} style={{ padding: '16px 20px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <input value={card.title} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], title: e.target.value }; setCardDeck(n); }} style={{ ...iS(), fontWeight: 700, fontSize: '0.9rem', color: '#fff', width: '100%', marginBottom: 8 }} placeholder="Card title" />
+                                                            <input value={card.description} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], description: e.target.value }; setCardDeck(n); }} style={{ ...iS(), fontSize: '0.8rem', width: '100%', color: TEXT }} placeholder="Description" />
+                                                        </div>
+                                                        <input value={card.category} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], category: e.target.value }; setCardDeck(n); }} style={{ ...iS(), width: 90, fontSize: '0.7rem', textAlign: 'center', color: 'rgba(197,160,89,0.5)' }} placeholder="Category" />
+                                                        <XBtn onClick={() => { const n = [...cardDeck]; n.splice(i, 1); setCardDeck(n); }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AddBtn onClick={() => setCardDeck([...cardDeck, { title: '', description: '', category: '' }])} label="+ ADD CARD" />
+                                    </>)}
+
+                                    {/* ── LINES TEXTS ── */}
+                                    {configSection === 'lines_texts' && (<>
+                                        <div style={{ display: 'grid', gap: 6 }}>
+                                            {linesTexts.map((txt, i) => (
+                                                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                                                    <span style={{ fontFamily: F, fontSize: '0.7rem', color: TEXT_DIM, width: 24, textAlign: 'center' }}>{i + 1}</span>
+                                                    <input value={txt} onChange={e => { const n = [...linesTexts]; n[i] = e.target.value; setLinesTexts(n); }} style={{ ...iS(), flex: 1, fontSize: '0.9rem' }} placeholder="Text they must write..." />
+                                                    <XBtn onClick={() => { const n = [...linesTexts]; n.splice(i, 1); setLinesTexts(n); }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AddBtn onClick={() => setLinesTexts([...linesTexts, ''])} label="+ ADD LINE" />
+                                    </>)}
+
+                                    {/* ── BODY WRITING ── */}
+                                    {configSection === 'body_writing' && (<>
+                                        <div style={{ display: 'grid', gap: 6 }}>
+                                            {bodyWriting.map((txt, i) => (
+                                                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                                                    <input value={txt} onChange={e => { const n = [...bodyWriting]; n[i] = e.target.value; setBodyWriting(n); }} style={{ ...iS(), flex: 1, fontSize: '1rem', fontWeight: 700, letterSpacing: 3, color: '#fff' }} placeholder="Word to write..." />
+                                                    <XBtn onClick={() => { const n = [...bodyWriting]; n.splice(i, 1); setBodyWriting(n); }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AddBtn onClick={() => setBodyWriting([...bodyWriting, ''])} label="+ ADD WORD" />
+                                    </>)}
+
+                                    {/* ── QUIZ QUESTIONS ── */}
+                                    {configSection === 'quiz_questions' && (<>
+                                        <div style={{ display: 'grid', gap: 8 }}>
+                                            {quizQuestions.map((q, i) => (
+                                                <div key={i} style={{ padding: '16px 20px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                                        <span style={{ fontFamily: F, fontSize: '0.8rem', color: GOLD, marginTop: 4, flexShrink: 0 }}>Q{i + 1}</span>
+                                                        <div style={{ flex: 1 }}>
+                                                            <input value={q.question} onChange={e => { const n = [...quizQuestions]; n[i] = { ...n[i], question: e.target.value }; setQuizQuestions(n); }} style={{ ...iS(), fontSize: '0.9rem', color: '#fff', width: '100%', marginBottom: 10 }} placeholder="Question..." />
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2 }}>ANSWER</span>
+                                                                <input value={q.answer} onChange={e => { const n = [...quizQuestions]; n[i] = { ...n[i], answer: e.target.value }; setQuizQuestions(n); }} style={{ ...iS(), fontSize: '0.8rem', color: 'rgba(80,200,80,0.7)', flex: 1 }} placeholder="Correct answer..." />
+                                                            </div>
+                                                        </div>
+                                                        <XBtn onClick={() => { const n = [...quizQuestions]; n.splice(i, 1); setQuizQuestions(n); }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AddBtn onClick={() => setQuizQuestions([...quizQuestions, { question: '', answer: '' }])} label="+ ADD QUESTION" />
+                                    </>)}
+
+                                    {/* ── EXERCISES ── */}
+                                    {configSection === 'exercises' && (<>
+                                        <div style={{ display: 'grid', gap: 6 }}>
+                                            {exercises.map((ex, i) => (
+                                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 36px', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+                                                    <input value={ex.type} onChange={e => { const n = [...exercises]; n[i] = { ...n[i], type: e.target.value }; setExercises(n); }} style={{ ...iS(), fontSize: '0.9rem' }} placeholder="Exercise type..." />
+                                                    <input value={ex.count} onChange={e => { const n = [...exercises]; n[i] = { ...n[i], count: Number(e.target.value) }; setExercises(n); }} style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem', color: GOLD }} placeholder="Count" />
+                                                    <XBtn onClick={() => { const n = [...exercises]; n.splice(i, 1); setExercises(n); }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <AddBtn onClick={() => setExercises([...exercises, { type: '', count: 10 }])} label="+ ADD EXERCISE" />
+                                    </>)}
+                                </div>
+                            );
+                        })()}
+                    </div>
+                </>)}
 
                 {/* ═══════════════════ MEMBER TAB ═══════════════════ */}
                 {tab === 'member' && (<>
@@ -576,6 +631,28 @@ function DayDetail({ day, tasks, onChange, onSave, onJumpConfig, isMember, savin
                 </div>
             </div>
         </div>
+    );
+}
+
+// ── Shared buttons ──
+function XBtn({ onClick }: { onClick: () => void }) {
+    return (
+        <button onClick={onClick}
+            style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.3)', cursor: 'pointer', fontSize: '1rem', padding: '0 2px', transition: 'color 0.15s', flexShrink: 0 }}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,40,40,0.8)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.3)'}
+        >&times;</button>
+    );
+}
+
+function AddBtn({ onClick, label }: { onClick: () => void; label: string }) {
+    return (
+        <button onClick={onClick}
+            style={{ marginTop: 12, padding: '10px 20px', border: `1px dashed ${BORDER}`, borderRadius: 8, background: 'transparent',
+                color: TEXT_DIM, fontFamily: F, fontSize: '0.7rem', cursor: 'pointer', letterSpacing: 2, width: '100%', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = GOLD; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_DIM; }}
+        >{label}</button>
     );
 }
 
