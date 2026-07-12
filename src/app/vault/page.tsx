@@ -75,7 +75,8 @@ const R = 'rgba(139,0,0,'; // red accent base
 
 // Today's orders (mock — will be generated/set from vault_daily)
 const TODAYS_ORDERS = [
-    { type: 'kneel', label: 'Kneel 8 times', target: 8, done: 2 },
+    { type: 'kneel', label: 'Kneel 8 times', target: 8, done: 0 },
+    { type: 'chastity_check', label: 'Chastity check photo', target: 1, done: 0 },
     { type: 'spin', label: 'Spin the wheel', target: 1, done: 0 },
     { type: 'trial', label: 'Complete daily trial', target: 1, done: 0 },
     { type: 'tribute', label: 'Tribute 5 coins', target: 5, done: 0 },
@@ -1267,8 +1268,52 @@ export default function VaultPage() {
                                         color: completed ? 'rgba(80,200,120,0.55)' : 'rgba(255,255,255,0.7)',
                                         textDecoration: completed ? 'line-through' : 'none',
                                         letterSpacing: '0.5px',
-                                    }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
-                                    {!completed && o.done > 0 && (
+                                    }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'chastity_check' ? 'Chastity check photo' : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
+                                    {/* Chastity check — camera upload button */}
+                                    {o.type === 'chastity_check' && !completed && (
+                                        <label style={{
+                                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px',
+                                            color: `${R}0.65)`, background: `${R}0.06)`, border: `1px solid ${R}0.2)`,
+                                            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                                        }}>
+                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={`${R}0.6)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                                <circle cx="12" cy="13" r="4" />
+                                            </svg>
+                                            SNAP
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                style={{ display: 'none' }}
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    e.target.value = '';
+                                                    try {
+                                                        const memberId = profile?.member_id || profile?.memberId || '';
+                                                        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                        const fd = new FormData();
+                                                        fd.append('file', file);
+                                                        fd.append('folder', `vault/chastity/${memberId}`);
+                                                        fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                        const data = await res.json();
+                                                        if (data.url && vaultData?.session?.id) {
+                                                            await fetch('/api/vault/session', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'chastity_check' }),
+                                                            });
+                                                            vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
+                                                        }
+                                                    } catch {}
+                                                }}
+                                            />
+                                        </label>
+                                    )}
+                                    {!completed && o.done > 0 && o.type !== 'chastity_check' && (
                                         <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: `${R}0.7)` }}>{o.done}/{o.target}</span>
                                     )}
                                 </div>
@@ -2057,7 +2102,7 @@ export default function VaultPage() {
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '3px', marginBottom: 10 }}>ORDERS</div>
                             {selectedDay.orders.map((o, i) => {
                                 const completed = o.done >= o.target;
-                                const label = o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type === 'silence' ? 'No messages today' : o.type;
+                                const label = o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'chastity_check' ? 'Chastity check photo' : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type === 'silence' ? 'No messages today' : o.type;
                                 return (
                                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                         <div style={{

@@ -388,6 +388,7 @@ export async function POST(req: NextRequest) {
 function _generateDailyOrders(dayNumber: number) {
     const orders: { type: string; target: number; done: number }[] = [
         { type: 'kneel', target: 8, done: 0 },
+        { type: 'chastity_check', target: 1, done: 0 },
         { type: 'trial', target: 1, done: 0 },
     ];
 
