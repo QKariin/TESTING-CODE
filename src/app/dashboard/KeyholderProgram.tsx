@@ -72,6 +72,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const [memberSelectedDay, setMemberSelectedDay] = useState<number>(1);
     const [memberEditTasks, setMemberEditTasks] = useState<Task[]>([]);
     const [configSection, setConfigSection] = useState<string>('spin_wheel');
+    const [lockedMembers, setLockedMembers] = useState<any[]>([]);
     const [linesTexts, setLinesTexts] = useState<string[]>([]);
     const [bodyWriting, setBodyWriting] = useState<string[]>([]);
     const [quizQuestions, setQuizQuestions] = useState<{ question: string; answer: string }[]>([]);
@@ -80,9 +81,18 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     useEffect(() => {
         loadTemplate();
         loadConfig();
+        loadLockedMembers();
         if (initialMember) setTimeout(() => loadMemberProgram(), 100);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const loadLockedMembers = async () => {
+        try {
+            const res = await fetch('/api/vault/program?listLocked=true');
+            const json = await res.json();
+            if (json.locked) setLockedMembers(json.locked);
+        } catch { }
+    };
 
     // Auto-select day 1 tasks when template loads
     useEffect(() => {
@@ -188,6 +198,52 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                     ))}
                 </div>
             </div>
+
+            {/* ── LOCKED MEMBERS STRIP ── */}
+            {lockedMembers.length > 0 && (
+                <div style={{ borderBottom: `1px solid ${BORDER}`, padding: '16px 32px', display: 'flex', gap: 14, overflow: 'auto', background: 'rgba(0,0,0,0.2)' }}>
+                    {lockedMembers.map((m, i) => {
+                        const pct = m.lockDays > 0 ? Math.min(100, (m.daysIn / m.lockDays) * 100) : 0;
+                        return (
+                            <div key={i} onClick={() => { setMemberEmail(m.memberId); setTab('member'); setTimeout(() => loadMemberProgram(), 50); }}
+                                className="kh-member-card" style={{
+                                    minWidth: 180, padding: '14px 18px', background: 'rgba(139,0,0,0.03)', border: `1px solid rgba(139,0,0,0.15)`,
+                                    borderRadius: 10, cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+                                }}>
+                                {/* Glow accent */}
+                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, rgba(139,0,0,${m.todayPerfect ? '0.6' : '0.2'}), transparent)` }} />
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                                    {m.avatar ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={m.avatar} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(139,0,0,0.3)' }} />
+                                    ) : (
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(139,0,0,0.08)', border: '1.5px solid rgba(139,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F, fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)' }}>
+                                            {(m.name || '?')[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div style={{ fontFamily: F, fontSize: '0.85rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{m.name}</div>
+                                        <div style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 1 }}>{m.tier || `${m.lockDays}d`}</div>
+                                    </div>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div style={{ height: 3, background: 'rgba(139,0,0,0.1)', borderRadius: 2, marginBottom: 8, overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, rgba(139,0,0,0.3), rgba(139,0,0,0.6))', borderRadius: 2, transition: 'width 0.5s' }} />
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT }}>Day {m.daysIn}/{m.lockDays}</span>
+                                    <span style={{ fontFamily: F, fontSize: '0.75rem', color: m.todayPerfect ? 'rgba(80,200,80,0.8)' : m.todayDone > 0 ? GOLD : TEXT_DIM }}>
+                                        {m.todayDone}/{m.todayTotal} {m.todayPerfect ? '\u2713' : ''}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
 
@@ -493,6 +549,9 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 input[type=number]::-webkit-inner-spin-button,
                 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type=number] { -moz-appearance: textfield; }
+                .kh-member-card:hover { border-color: rgba(139,0,0,0.35) !important; background: rgba(139,0,0,0.06) !important; transform: translateY(-1px); }
+                @keyframes khPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+                @keyframes khFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
         </div>
     );

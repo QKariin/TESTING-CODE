@@ -10,6 +10,57 @@ export async function GET(req: NextRequest) {
     const memberId = req.nextUrl.searchParams.get('memberId');
     const isTemplate = req.nextUrl.searchParams.get('template') === 'true';
     const isConfig = req.nextUrl.searchParams.get('config') === 'true';
+    const listLocked = req.nextUrl.searchParams.get('listLocked') === 'true';
+
+    // ── LIST ALL LOCKED MEMBERS ──
+    if (listLocked) {
+        const { data: sessions } = await supabaseAdmin
+            .from('vault_sessions')
+            .select('id, member_id, started_at, lock_days, expires_at, current_streak, total_perfect_days, tier, status')
+            .eq('status', 'active')
+            .order('started_at', { ascending: false });
+
+        if (!sessions || sessions.length === 0) return NextResponse.json({ locked: [] });
+
+        const today = new Date().toISOString().split('T')[0];
+        const results = [];
+
+        for (const s of sessions) {
+            const daysIn = Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) + 1;
+            // Get today's daily record
+            const { data: todayRec } = await supabaseAdmin
+                .from('vault_daily')
+                .select('orders, orders_completed, orders_total, perfect')
+                .eq('session_id', s.id)
+                .eq('date', today)
+                .maybeSingle();
+
+            // Get profile name
+            const { data: prof } = await supabaseAdmin
+                .from('profiles')
+                .select('name, avatar_url, profile_picture_url')
+                .ilike('member_id', s.member_id)
+                .maybeSingle();
+
+            const orders = todayRec?.orders ? (typeof todayRec.orders === 'string' ? JSON.parse(todayRec.orders) : todayRec.orders) : [];
+            const completed = orders.filter((o: any) => o.done >= o.target).length;
+
+            results.push({
+                memberId: s.member_id,
+                name: prof?.name || s.member_id.split('@')[0],
+                avatar: prof?.profile_picture_url || prof?.avatar_url || null,
+                daysIn,
+                lockDays: s.lock_days,
+                streak: s.current_streak || 0,
+                todayTotal: orders.length,
+                todayDone: completed,
+                todayPerfect: todayRec?.perfect || false,
+                tier: s.tier,
+            });
+        }
+
+        return NextResponse.json({ locked: results });
+    }
 
     // ── GET CONFIG (spin wheel, cards, quiz, etc.) ──
     if (isConfig) {
