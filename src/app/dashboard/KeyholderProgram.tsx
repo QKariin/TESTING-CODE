@@ -1,82 +1,83 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
+/* ── DESIGN TOKENS ── */
 const F = "'Rajdhani', sans-serif";
 const FC = "'Cinzel', serif";
-const GOLD = 'rgba(197,160,89,0.9)';
+const GOLD = '#c5a059';
 const GOLD_DIM = 'rgba(197,160,89,0.25)';
-const RED = 'rgba(160,20,30,0.75)';
+const GOLD_GLOW = 'rgba(197,160,89,0.35)';
+const RED = 'rgba(160,20,30,0.85)';
 const RED_DIM = 'rgba(139,0,0,0.15)';
-const BG = '#07070c';
-const CARD_BG = 'rgba(255,255,255,0.02)';
-const BORDER = 'rgba(255,255,255,0.05)';
-const BORDER_HOVER = 'rgba(197,160,89,0.25)';
-const TEXT = 'rgba(255,255,255,0.65)';
-const TEXT_DIM = 'rgba(255,255,255,0.22)';
+const BG = '#08080c';
+const SURFACE = 'rgba(255,255,255,0.025)';
+const BORDER = 'rgba(255,255,255,0.06)';
+const TEXT = 'rgba(255,255,255,0.7)';
+const TEXT_DIM = 'rgba(255,255,255,0.25)';
 
-const TASK_TYPES: { type: string; label: string; icon: string; configKey?: string }[] = [
-    { type: 'kneel', label: 'Kneel', icon: '\u25BD' },
-    { type: 'chastity_check', label: 'Chastity Check', icon: '\u25C9' },
-    { type: 'spin', label: 'Spin Wheel', icon: '\u25CE', configKey: 'spin_wheel' },
-    { type: 'card', label: 'Task Card', icon: '\u2660', configKey: 'card_deck' },
-    { type: 'tribute', label: 'Tribute', icon: '\u25C6' },
-    { type: 'journal', label: 'Journal', icon: '\u270E' },
-    { type: 'worship', label: 'Worship', icon: '\u2661' },
-    { type: 'lines', label: 'Lines', icon: '\u2261', configKey: 'lines_texts' },
-    { type: 'edge', label: 'Edge', icon: '\u2736' },
-    { type: 'denial', label: 'Denial', icon: '\u2718' },
-    { type: 'confession', label: 'Confession', icon: '\u2767' },
-    { type: 'cold_shower', label: 'Cold Shower', icon: '\u2744' },
-    { type: 'exercise', label: 'Exercise', icon: '\u2191', configKey: 'exercises' },
-    { type: 'corner_time', label: 'Corner Time', icon: '\u25A2' },
-    { type: 'body_writing', label: 'Body Writing', icon: '\u270D', configKey: 'body_writing' },
-    { type: 'gratitude', label: 'Gratitude', icon: '\u2605' },
-    { type: 'quiz', label: 'Quiz', icon: '?', configKey: 'quiz_questions' },
-    { type: 'essay', label: 'Essay', icon: '\u2016' },
-    { type: 'trial', label: 'Trial', icon: '\u2694' },
+/* ── TASK TYPE METADATA ── */
+const TASK_META: Record<string, { label: string; icon: string; color: string; configKey?: string }> = {
+    kneel: { label: 'Kneel', icon: '◇', color: '#c5a059' },
+    chastity_check: { label: 'Chastity', icon: '◈', color: '#8b0000' },
+    spin: { label: 'Spin', icon: '◎', color: '#9b59b6', configKey: 'spin_wheel' },
+    card: { label: 'Card', icon: '♠', color: '#2ecc71', configKey: 'card_deck' },
+    tribute: { label: 'Tribute', icon: '◆', color: '#f39c12' },
+    journal: { label: 'Journal', icon: '✎', color: '#3498db' },
+    worship: { label: 'Worship', icon: '♡', color: '#e74c3c' },
+    lines: { label: 'Lines', icon: '≡', color: '#1abc9c', configKey: 'lines_texts' },
+    edge: { label: 'Edge', icon: '✶', color: '#e91e63' },
+    denial: { label: 'Denial', icon: '✖', color: '#c0392b' },
+    confession: { label: 'Confess', icon: '❧', color: '#8e44ad' },
+    cold_shower: { label: 'Cold', icon: '❄', color: '#00bcd4' },
+    exercise: { label: 'Exercise', icon: '↑', color: '#4caf50', configKey: 'exercises' },
+    corner_time: { label: 'Corner', icon: '▢', color: '#607d8b' },
+    body_writing: { label: 'Body', icon: '✍', color: '#ff5722', configKey: 'body_writing' },
+    gratitude: { label: 'Grateful', icon: '★', color: '#ffc107' },
+    quiz: { label: 'Quiz', icon: '?', color: '#00bcd4', configKey: 'quiz_questions' },
+    essay: { label: 'Essay', icon: '‖', color: '#795548' },
+    trial: { label: 'Trial', icon: '⚔', color: '#9c27b0' },
+};
+
+const PHASES = [
+    { name: 'OBEDIENCE', sub: 'Foundation', days: [1,2,3,4,5,6,7], color: 'rgba(197,160,89,0.6)' },
+    { name: 'DISCIPLINE', sub: 'Building', days: [8,9,10,11,12,13,14], color: 'rgba(139,0,0,0.6)' },
+    { name: 'ENDURANCE', sub: 'Testing', days: [15,16,17,18,19,20,21], color: 'rgba(156,39,176,0.6)' },
+    { name: 'DEVOTION', sub: 'Proving', days: [22,23,24,25,26,27,28,29,30], color: 'rgba(197,160,89,0.8)' },
 ];
 
-const CONFIG_SECTIONS: { key: string; title: string; description: string }[] = [
-    { key: 'spin_wheel', title: 'SPIN WHEEL', description: 'What the slave lands on when they spin. Weight = probability.' },
-    { key: 'card_deck', title: 'TASK CARDS', description: 'Cards the slave draws randomly. Each card is a task they must complete.' },
-    { key: 'lines_texts', title: 'WRITING LINES', description: 'What text they have to write repeatedly.' },
-    { key: 'body_writing', title: 'BODY WRITING', description: 'What words they write on their body for photo proof.' },
-    { key: 'quiz_questions', title: 'QUIZ QUESTIONS', description: 'Questions they must answer correctly about Queen\'s rules.' },
-    { key: 'exercises', title: 'EXERCISES', description: 'Physical tasks: type and count.' },
+const CONFIG_SECTIONS = [
+    { key: 'spin_wheel', title: 'SPIN WHEEL', desc: 'What they land on when spinning' },
+    { key: 'card_deck', title: 'TASK CARDS', desc: 'Random cards they draw' },
+    { key: 'lines_texts', title: 'WRITING LINES', desc: 'Text they write repeatedly' },
+    { key: 'body_writing', title: 'BODY WRITING', desc: 'Words written on body' },
+    { key: 'quiz_questions', title: 'QUIZ', desc: 'Questions about the rules' },
+    { key: 'exercises', title: 'EXERCISES', desc: 'Physical tasks' },
 ];
 
 interface Task { type: string; target: number; label: string; }
-type TabType = 'template' | 'config' | 'member';
-interface SpinOption { label: string; effect: string; value: number; weight: number; }
-interface CardOption { title: string; description: string; category: string; }
+type ViewMode = 'program' | 'config' | 'member';
 
-const PHASES = [
-    { name: 'OBEDIENCE', sub: 'Foundation', days: [1,2,3,4,5,6,7] },
-    { name: 'DISCIPLINE', sub: 'Building', days: [8,9,10,11,12,13,14] },
-    { name: 'ENDURANCE', sub: 'Testing', days: [15,16,17,18,19,20,21] },
-    { name: 'DEVOTION', sub: 'Proving', days: [22,23,24,25,26,27,28,29,30] },
-];
-
+/* ══════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════ */
 export function KeyholderProgramContent({ onClose, initialMember }: { onClose: () => void; initialMember?: string }) {
-    const [tab, setTab] = useState<TabType>(initialMember ? 'member' : 'template');
+    const [view, setView] = useState<ViewMode>(initialMember ? 'member' : 'program');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [templateDays, setTemplateDays] = useState<Record<string, Task[]>>({});
-    const [selectedDay, setSelectedDay] = useState<number>(1);
-    const [editTasks, setEditTasks] = useState<Task[]>([]);
-    const [spinWheel, setSpinWheel] = useState<SpinOption[]>([]);
-    const [cardDeck, setCardDeck] = useState<CardOption[]>([]);
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
+    const [lockedMembers, setLockedMembers] = useState<any[]>([]);
+    // Config state
+    const [configSection, setConfigSection] = useState('spin_wheel');
+    const [configData, setConfigData] = useState<Record<string, any>>({});
+    // Member state
     const [memberEmail, setMemberEmail] = useState(initialMember || '');
     const [memberProgram, setMemberProgram] = useState<Record<string, Task[]> | null>(null);
-    const [memberSelectedDay, setMemberSelectedDay] = useState<number>(1);
-    const [memberEditTasks, setMemberEditTasks] = useState<Task[]>([]);
-    const [configSection, setConfigSection] = useState<string>('spin_wheel');
-    const [lockedMembers, setLockedMembers] = useState<any[]>([]);
-    const [linesTexts, setLinesTexts] = useState<string[]>([]);
-    const [bodyWriting, setBodyWriting] = useState<string[]>([]);
-    const [quizQuestions, setQuizQuestions] = useState<{ question: string; answer: string }[]>([]);
-    const [exercises, setExercises] = useState<{ type: string; count: number }[]>([]);
+    const [memberSelectedDay, setMemberSelectedDay] = useState<number | null>(null);
+    const [memberInfo, setMemberInfo] = useState<any>(null);
+    // Drag state
+    const [dragIdx, setDragIdx] = useState<number | null>(null);
 
     useEffect(() => {
         loadTemplate();
@@ -94,24 +95,26 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
         } catch { }
     };
 
-    // Auto-select day 1 tasks when template loads
-    useEffect(() => {
-        if (templateDays['1']) setEditTasks([...templateDays['1']]);
-    }, [templateDays]);
-
     const loadTemplate = async () => {
         setLoading(true);
         try {
             const res = await fetch('/api/vault/program?template=true');
             const json = await res.json();
-            const days: Record<string, Task[]> = {};
-            if (json.template?.length) {
-                for (const row of json.template) days[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+            if (json.template && json.template.length > 0) {
+                const days: Record<string, Task[]> = {};
+                for (const row of json.template) {
+                    const tasks = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+                    days[String(row.day_number)] = tasks;
+                }
+                setTemplateDays(days);
+            } else {
+                // Load defaults from generate endpoint
+                const r2 = await fetch('/api/vault/program', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save_template', days: {} }),
+                });
             }
-            if (Object.keys(days).length === 0) {
-                for (let d = 1; d <= 30; d++) days[String(d)] = _localDefaultTasks(d);
-            }
-            setTemplateDays(days);
         } catch { }
         setLoading(false);
     };
@@ -120,573 +123,565 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
         try {
             const res = await fetch('/api/vault/program?config=true');
             const json = await res.json();
-            for (const cfg of (json.config || [])) {
-                const val = typeof cfg.value === 'string' ? JSON.parse(cfg.value) : cfg.value;
-                if (cfg.key === 'spin_wheel') setSpinWheel(val);
-                if (cfg.key === 'card_deck') setCardDeck(val);
-                if (cfg.key === 'lines_texts') setLinesTexts(val);
-                if (cfg.key === 'body_writing') setBodyWriting(val);
-                if (cfg.key === 'quiz_questions') setQuizQuestions(val);
-                if (cfg.key === 'exercises') setExercises(val);
+            if (json.config) {
+                const map: Record<string, any> = {};
+                for (const row of json.config) {
+                    map[row.key] = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
+                }
+                setConfigData(map);
             }
         } catch { }
-    };
-
-    const saveTemplate = async () => {
-        setSaving(true);
-        await fetch('/api/vault/program', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save_template', days: templateDays }) });
-        setTimeout(() => setSaving(false), 1200);
-    };
-
-    const saveConfig = async (key: string, value: any) => {
-        setSaving(true);
-        await fetch('/api/vault/program', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'save_config', key, value }) });
-        setTimeout(() => setSaving(false), 1200);
     };
 
     const loadMemberProgram = async () => {
         if (!memberEmail) return;
         setLoading(true);
-        const res = await fetch(`/api/vault/program?memberId=${encodeURIComponent(memberEmail)}`);
-        const json = await res.json();
-        if (json.program?.program) {
-            const p = typeof json.program.program === 'string' ? JSON.parse(json.program.program) : json.program.program;
-            setMemberProgram(p);
-            if (p['1']) setMemberEditTasks([...p['1']]);
-        } else setMemberProgram(null);
+        try {
+            const res = await fetch(`/api/vault/program?memberId=${encodeURIComponent(memberEmail)}`);
+            const json = await res.json();
+            if (json.program?.program) {
+                const p = typeof json.program.program === 'string' ? JSON.parse(json.program.program) : json.program.program;
+                setMemberProgram(p);
+            } else {
+                setMemberProgram(null);
+            }
+            // Get member info from locked list
+            const info = lockedMembers.find(m => m.memberId.toLowerCase() === memberEmail.toLowerCase());
+            setMemberInfo(info || null);
+        } catch { }
         setLoading(false);
     };
 
     const generateMemberProgram = async () => {
         if (!memberEmail) return;
-        setLoading(true);
-        await fetch('/api/vault/program', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'generate_program', memberId: memberEmail }) });
-        await loadMemberProgram();
-        setLoading(false);
+        setSaving(true);
+        try {
+            await fetch('/api/vault/program', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'generate_program', memberId: memberEmail }),
+            });
+            await loadMemberProgram();
+        } catch { }
+        setSaving(false);
     };
 
-    const saveMemberDay = async (day: number, tasks: Task[]) => {
+    const saveTemplate = async () => {
+        setSaving(true);
+        try {
+            await fetch('/api/vault/program', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'save_template', days: templateDays }),
+            });
+        } catch { }
+        setSaving(false);
+    };
+
+    const saveConfig = async (key: string, value: any) => {
+        setSaving(true);
+        try {
+            await fetch('/api/vault/program', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'save_config', key, value }),
+            });
+        } catch { }
+        setSaving(false);
+    };
+
+    const saveMemberDay = async (dayNum: number, tasks: Task[]) => {
         if (!memberEmail) return;
         setSaving(true);
-        await fetch('/api/vault/program', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_day', memberId: memberEmail, dayNumber: day, tasks }) });
-        if (memberProgram) setMemberProgram({ ...memberProgram, [String(day)]: tasks });
-        setTimeout(() => setSaving(false), 1200);
+        try {
+            await fetch('/api/vault/program', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'update_day', memberId: memberEmail, dayNumber: dayNum, tasks }),
+            });
+        } catch { }
+        setSaving(false);
     };
 
-    const getIcon = (type: string) => TASK_TYPES.find(t => t.type === type)?.icon || '\u2022';
+    // Get current days/tasks for active view
+    const activeDays = view === 'member' && memberProgram ? memberProgram : templateDays;
+    const activeSelectedDay = view === 'member' ? memberSelectedDay : selectedDay;
+    const setActiveSelectedDay = view === 'member' ? setMemberSelectedDay : setSelectedDay;
+    const activeTasks = activeSelectedDay ? (activeDays[String(activeSelectedDay)] || []) : [];
 
-    const jumpToConfig = (configKey: string) => {
-        setTab('config');
-        setConfigSection(configKey as any);
+    const updateTask = (dayNum: number, idx: number, field: string, value: any) => {
+        const days = view === 'member' ? { ...memberProgram } : { ...templateDays };
+        const tasks = [...(days[String(dayNum)] || [])];
+        tasks[idx] = { ...tasks[idx], [field]: value };
+        days[String(dayNum)] = tasks;
+        if (view === 'member') setMemberProgram(days as any);
+        else setTemplateDays(days);
+    };
+
+    const addTask = (dayNum: number, type: string) => {
+        const meta = TASK_META[type];
+        const days = view === 'member' ? { ...memberProgram } : { ...templateDays };
+        const tasks = [...(days[String(dayNum)] || [])];
+        tasks.push({ type, target: 1, label: meta?.label || type });
+        days[String(dayNum)] = tasks;
+        if (view === 'member') setMemberProgram(days as any);
+        else setTemplateDays(days);
+    };
+
+    const removeTask = (dayNum: number, idx: number) => {
+        const days = view === 'member' ? { ...memberProgram } : { ...templateDays };
+        const tasks = [...(days[String(dayNum)] || [])];
+        tasks.splice(idx, 1);
+        days[String(dayNum)] = tasks;
+        if (view === 'member') setMemberProgram(days as any);
+        else setTemplateDays(days);
+    };
+
+    const moveTask = (dayNum: number, fromIdx: number, toIdx: number) => {
+        if (fromIdx === toIdx) return;
+        const days = view === 'member' ? { ...memberProgram } : { ...templateDays };
+        const tasks = [...(days[String(dayNum)] || [])];
+        const [moved] = tasks.splice(fromIdx, 1);
+        tasks.splice(toIdx, 0, moved);
+        days[String(dayNum)] = tasks;
+        if (view === 'member') setMemberProgram(days as any);
+        else setTemplateDays(days);
     };
 
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', fontFamily: F }}>
+            {/* Global style overrides */}
+            <style>{`
+                input[type=number]::-webkit-outer-spin-button,
+                input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                input[type=number] { -moz-appearance: textfield; }
+                .kh-day-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+                .kh-day-card:hover { transform: translateY(-4px) scale(1.02); }
+                .kh-task-pill { transition: all 0.2s ease; }
+                .kh-task-pill:hover { transform: scale(1.03); }
+                .kh-member-card { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+                .kh-member-card:hover { transform: translateY(-6px); }
+                .kh-glow { animation: khGlow 3s ease-in-out infinite; }
+                @keyframes khGlow {
+                    0%, 100% { box-shadow: 0 0 20px rgba(197,160,89,0.08); }
+                    50% { box-shadow: 0 0 40px rgba(197,160,89,0.15); }
+                }
+                @keyframes khFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes khSlideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+                .kh-fade { animation: khFadeIn 0.4s ease forwards; }
+                .kh-slide { animation: khSlideIn 0.35s ease forwards; }
+                .kh-drag-over { border-color: ${GOLD} !important; background: rgba(197,160,89,0.06) !important; }
+                .kh-scroll::-webkit-scrollbar { width: 4px; }
+                .kh-scroll::-webkit-scrollbar-track { background: transparent; }
+                .kh-scroll::-webkit-scrollbar-thumb { background: rgba(197,160,89,0.15); border-radius: 4px; }
+            `}</style>
+
             {/* ── HEADER ── */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '22px 32px', borderBottom: `1px solid ${BORDER}`, background: 'linear-gradient(180deg, rgba(15,12,8,0.6), rgba(7,7,12,0.8))' }}>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', fontSize: '1.4rem', padding: '0 16px 0 0', lineHeight: 1 }}>&larr;</button>
-                <span style={{ fontFamily: FC, fontSize: '1.1rem', color: GOLD, letterSpacing: 7, fontWeight: 700 }}>KEYHOLDER PROGRAM</span>
-                <div style={{ flex: 1 }} />
-                <div style={{ display: 'flex', gap: 0 }}>
-                    {([['template','PROGRAM'],['config','WHEEL & CARDS'],['member','MEMBER']] as [TabType,string][]).map(([t,lbl]) => (
-                        <button key={t} onClick={() => setTab(t)} style={{
-                            padding: '10px 28px', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`,
-                            background: 'transparent', color: tab === t ? GOLD : 'rgba(255,255,255,0.2)',
-                            fontFamily: F, fontSize: '0.85rem', letterSpacing: 3, cursor: 'pointer',
-                            transition: 'color 0.2s',
-                        }}>{lbl}</button>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '16px 24px', borderBottom: `1px solid ${BORDER}`, gap: 16, flexShrink: 0 }}>
+                <button onClick={onClose} style={{ background: 'none', border: 'none', color: GOLD, fontSize: '1.4rem', cursor: 'pointer', padding: 0, lineHeight: 1 }}>←</button>
+                <h1 style={{ fontFamily: FC, fontSize: '0.85rem', color: GOLD, letterSpacing: 6, margin: 0, flex: 1 }}>KEYHOLDER PROGRAM</h1>
+                {/* View tabs */}
+                <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 3 }}>
+                    {(['program', 'config', 'member'] as ViewMode[]).map(v => (
+                        <button key={v} onClick={() => setView(v)} style={{
+                            padding: '8px 20px', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: F,
+                            fontSize: '0.65rem', letterSpacing: 3, fontWeight: 600, transition: 'all 0.25s ease',
+                            background: view === v ? (v === 'config' ? RED_DIM : 'rgba(197,160,89,0.1)') : 'transparent',
+                            color: view === v ? (v === 'config' ? RED : GOLD) : TEXT_DIM,
+                        }}>{v === 'program' ? 'PROGRAM' : v === 'config' ? 'CONFIG' : 'MEMBERS'}</button>
                     ))}
                 </div>
             </div>
 
             {/* ── LOCKED MEMBERS STRIP ── */}
             {lockedMembers.length > 0 && (
-                <div style={{ borderBottom: `1px solid ${BORDER}`, padding: '16px 32px', display: 'flex', gap: 14, overflow: 'auto', background: 'rgba(0,0,0,0.2)' }}>
-                    {lockedMembers.map((m, i) => {
-                        const pct = m.lockDays > 0 ? Math.min(100, (m.daysIn / m.lockDays) * 100) : 0;
-                        return (
-                            <div key={i} onClick={() => { setMemberEmail(m.memberId); setTab('member'); setTimeout(() => loadMemberProgram(), 50); }}
-                                className="kh-member-card" style={{
-                                    minWidth: 180, padding: '14px 18px', background: 'rgba(139,0,0,0.03)', border: `1px solid rgba(139,0,0,0.15)`,
-                                    borderRadius: 10, cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
-                                }}>
-                                {/* Glow accent */}
-                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, rgba(139,0,0,${m.todayPerfect ? '0.6' : '0.2'}), transparent)` }} />
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                    {m.avatar ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={m.avatar} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(139,0,0,0.3)' }} />
-                                    ) : (
-                                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(139,0,0,0.08)', border: '1.5px solid rgba(139,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F, fontSize: '0.75rem', color: 'rgba(139,0,0,0.5)' }}>
-                                            {(m.name || '?')[0].toUpperCase()}
-                                        </div>
-                                    )}
-                                    <div>
-                                        <div style={{ fontFamily: F, fontSize: '0.85rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>{m.name}</div>
-                                        <div style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 1 }}>{m.tier || `${m.lockDays}d`}</div>
-                                    </div>
-                                </div>
-
-                                {/* Progress bar */}
-                                <div style={{ height: 3, background: 'rgba(139,0,0,0.1)', borderRadius: 2, marginBottom: 8, overflow: 'hidden' }}>
-                                    <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, rgba(139,0,0,0.3), rgba(139,0,0,0.6))', borderRadius: 2, transition: 'width 0.5s' }} />
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT }}>Day {m.daysIn}/{m.lockDays}</span>
-                                    <span style={{ fontFamily: F, fontSize: '0.75rem', color: m.todayPerfect ? 'rgba(80,200,80,0.8)' : m.todayDone > 0 ? GOLD : TEXT_DIM }}>
-                                        {m.todayDone}/{m.todayTotal} {m.todayPerfect ? '\u2713' : ''}
-                                    </span>
+                <div style={{ display: 'flex', gap: 14, padding: '14px 24px', overflowX: 'auto', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }} className="kh-scroll">
+                    {lockedMembers.map((m, i) => (
+                        <div key={m.memberId} className="kh-member-card"
+                            onClick={() => { setMemberEmail(m.memberId); setView('member'); setTimeout(() => loadMemberProgram(), 50); }}
+                            style={{
+                                minWidth: 180, padding: 0, borderRadius: 14, cursor: 'pointer', overflow: 'hidden', position: 'relative',
+                                border: `1px solid ${memberEmail === m.memberId ? GOLD_DIM : BORDER}`,
+                                background: `linear-gradient(145deg, rgba(20,18,25,0.95), rgba(12,10,16,0.98))`,
+                                animationDelay: `${i * 0.08}s`,
+                            }}>
+                            {/* Photo header */}
+                            <div style={{ height: 70, position: 'relative', overflow: 'hidden' }}>
+                                {m.avatar ? (
+                                    <img src={m.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.4) saturate(0.6)' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, rgba(139,0,0,0.3), rgba(30,20,40,0.8))` }} />
+                                )}
+                                {/* Gradient overlay */}
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 30%, rgba(12,10,16,0.95) 100%)' }} />
+                                {/* Day badge */}
+                                <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', borderRadius: 6, padding: '2px 8px', border: `1px solid ${GOLD_DIM}` }}>
+                                    <span style={{ fontFamily: F, fontSize: '0.6rem', color: GOLD, fontWeight: 700 }}>DAY {m.daysIn}</span>
                                 </div>
                             </div>
-                        );
-                    })}
+                            {/* Info */}
+                            <div style={{ padding: '8px 14px 12px' }}>
+                                <div style={{ fontFamily: FC, fontSize: '0.6rem', color: 'rgba(255,255,255,0.85)', letterSpacing: 2, marginBottom: 6, textTransform: 'uppercase' }}>
+                                    {m.name}
+                                </div>
+                                {/* Progress bar */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${m.lockDays ? (m.daysIn / m.lockDays) * 100 : 0}%`, height: '100%',
+                                            background: `linear-gradient(90deg, ${GOLD}, rgba(139,0,0,0.8))`,
+                                            borderRadius: 2, transition: 'width 0.5s ease',
+                                        }} />
+                                    </div>
+                                    <span style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM }}>{m.daysIn}/{m.lockDays}</span>
+                                </div>
+                                {/* Today's completion */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                                    <span style={{ fontFamily: F, fontSize: '0.5rem', color: m.todayPerfect ? GOLD : TEXT_DIM }}>
+                                        {m.todayPerfect ? '✦ PERFECT' : `${m.todayDone}/${m.todayTotal} today`}
+                                    </span>
+                                    {m.streak > 0 && (
+                                        <span style={{ fontFamily: F, fontSize: '0.45rem', color: 'rgba(255,100,50,0.7)' }}>🔥{m.streak}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
+            {/* ── MAIN CONTENT ── */}
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
-
-                {/* ═══════════════════ PROGRAM TAB ═══════════════════ */}
-                {tab === 'template' && (<>
-                    {/* LEFT SIDEBAR */}
-                    <div style={{ width: 320, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
-                        <div style={{ padding: '20px 24px' }}>
-                            <button onClick={saveTemplate} disabled={saving} style={{
-                                width: '100%', padding: '14px 0', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
-                                background: saving ? 'rgba(80,200,80,0.05)' : 'rgba(197,160,89,0.03)',
-                                color: saving ? 'rgba(80,200,80,0.8)' : GOLD, fontFamily: F, fontSize: '0.85rem', letterSpacing: 4, cursor: 'pointer',
-                                transition: 'all 0.3s',
-                            }}>{saving ? 'SAVED' : 'SAVE PROGRAM'}</button>
-                        </div>
-
-                        {PHASES.map((phase, pi) => (
-                            <div key={phase.name}>
-                                <div style={{ padding: '18px 24px 10px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                                    <span style={{ fontFamily: FC, fontSize: '0.65rem', color: pi < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
-                                    <span style={{ fontFamily: F, fontSize: '0.55rem', color: TEXT_DIM, letterSpacing: 1 }}>{phase.sub}</span>
-                                </div>
-                                <div style={{ height: 1, background: BORDER, margin: '0 20px 4px' }} />
-
-                                {phase.days.map(day => {
-                                    const tasks = templateDays[String(day)] || [];
-                                    const isSel = selectedDay === day;
-                                    return (
-                                        <div key={day} onClick={() => { setSelectedDay(day); setEditTasks([...tasks]); }}
-                                            style={{
-                                                padding: '14px 24px', cursor: 'pointer',
-                                                background: isSel ? 'rgba(197,160,89,0.04)' : 'transparent',
-                                                borderLeft: isSel ? `3px solid ${GOLD}` : '3px solid transparent',
-                                                transition: 'all 0.15s',
-                                            }}>
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <span style={{ fontFamily: F, fontSize: '1.1rem', color: isSel ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 700, letterSpacing: 1 }}>Day {day}</span>
-                                                <span style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT_DIM, marginLeft: 'auto', letterSpacing: 1 }}>{tasks.length}</span>
-                                            </div>
-                                            {/* Task preview icons */}
-                                            <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                                                {tasks.map((t, i) => (
-                                                    <span key={i} style={{ fontSize: '0.85rem', color: isSel ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.12)' }}>{getIcon(t.type)}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* RIGHT DETAIL */}
-                    <div style={{ flex: 1, overflow: 'auto', padding: '36px 48px' }}>
-                        <DayDetail
-                            day={selectedDay}
-                            tasks={editTasks}
-                            onChange={t => setEditTasks(t)}
-                            onSave={() => setTemplateDays({ ...templateDays, [String(selectedDay)]: editTasks })}
-                            onJumpConfig={jumpToConfig}
-                            saving={saving}
-                        />
-                    </div>
-                </>)}
-
-                {/* ═══════════════════ CONFIG TAB ═══════════════════ */}
-                {tab === 'config' && (<>
-                    {/* LEFT: Section list */}
-                    <div style={{ width: 280, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)' }}>
-                        <div style={{ padding: '20px 24px 12px' }}>
-                            <span style={{ fontFamily: FC, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 5 }}>CONFIGURE</span>
-                        </div>
-                        {CONFIG_SECTIONS.map(sec => (
-                            <div key={sec.key} onClick={() => setConfigSection(sec.key)}
-                                style={{
-                                    padding: '16px 24px', cursor: 'pointer',
-                                    background: configSection === sec.key ? 'rgba(197,160,89,0.04)' : 'transparent',
-                                    borderLeft: configSection === sec.key ? `3px solid ${GOLD}` : '3px solid transparent',
-                                    transition: 'all 0.15s',
-                                }}>
-                                <span style={{ fontFamily: F, fontSize: '0.9rem', color: configSection === sec.key ? '#fff' : 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 1 }}>{sec.title}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* RIGHT: Config editor */}
-                    <div style={{ flex: 1, overflow: 'auto', padding: '36px 48px' }}>
-                        {(() => {
-                            const sec = CONFIG_SECTIONS.find(s => s.key === configSection);
-                            if (!sec) return null;
-                            return (
-                                <div style={{ maxWidth: 900 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32 }}>
-                                        <div>
-                                            <div style={{ fontFamily: FC, fontSize: '0.9rem', color: GOLD, letterSpacing: 6 }}>{sec.title}</div>
-                                            <div style={{ fontFamily: F, fontSize: '0.85rem', color: TEXT_DIM, marginTop: 8 }}>{sec.description}</div>
-                                        </div>
-                                        <div style={{ flex: 1 }} />
-                                        <button onClick={() => {
-                                            if (configSection === 'spin_wheel') saveConfig('spin_wheel', spinWheel);
-                                            if (configSection === 'card_deck') saveConfig('card_deck', cardDeck);
-                                            if (configSection === 'lines_texts') saveConfig('lines_texts', linesTexts);
-                                            if (configSection === 'body_writing') saveConfig('body_writing', bodyWriting);
-                                            if (configSection === 'quiz_questions') saveConfig('quiz_questions', quizQuestions);
-                                            if (configSection === 'exercises') saveConfig('exercises', exercises);
-                                        }} style={{
-                                            padding: '10px 28px', border: `1px solid ${saving ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
-                                            background: 'transparent', color: saving ? 'rgba(80,200,80,0.8)' : GOLD,
-                                            fontFamily: F, fontSize: '0.7rem', letterSpacing: 3, cursor: 'pointer',
-                                        }}>{saving ? 'SAVED' : 'SAVE'}</button>
-                                    </div>
-                                    <div style={{ height: 1, background: `linear-gradient(90deg, ${GOLD_DIM}, transparent)`, marginBottom: 24 }} />
-
-                                    {/* ── SPIN WHEEL ── */}
-                                    {configSection === 'spin_wheel' && (<>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 70px 70px 36px', gap: 12, padding: '0 16px 8px' }}>
-                                            {['LABEL','EFFECT','VALUE','WEIGHT',''].map((h,i) => (
-                                                <span key={i} style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2, textAlign: i > 1 && i < 4 ? 'center' : 'left' }}>{h}</span>
-                                            ))}
-                                        </div>
-                                        <div style={{ display: 'grid', gap: 6 }}>
-                                            {spinWheel.map((opt, i) => (
-                                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 70px 70px 36px', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                                    <input value={opt.label} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], label: e.target.value }; setSpinWheel(n); }} style={{ ...iS(), fontSize: '0.85rem' }} />
-                                                    <input value={opt.effect} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], effect: e.target.value }; setSpinWheel(n); }} style={{ ...iS(), fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }} />
-                                                    <input value={opt.value} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], value: Number(e.target.value) }; setSpinWheel(n); }} style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem', color: GOLD }} />
-                                                    <input value={opt.weight} onChange={e => { const n = [...spinWheel]; n[i] = { ...n[i], weight: Number(e.target.value) }; setSpinWheel(n); }} style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem' }} />
-                                                    <XBtn onClick={() => { const n = [...spinWheel]; n.splice(i, 1); setSpinWheel(n); }} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <AddBtn onClick={() => setSpinWheel([...spinWheel, { label: '', effect: 'add_days', value: 1, weight: 1 }])} label="+ ADD OPTION" />
-                                    </>)}
-
-                                    {/* ── CARD DECK ── */}
-                                    {configSection === 'card_deck' && (<>
-                                        <div style={{ display: 'grid', gap: 8 }}>
-                                            {cardDeck.map((card, i) => (
-                                                <div key={i} style={{ padding: '16px 20px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                                                        <div style={{ flex: 1 }}>
-                                                            <input value={card.title} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], title: e.target.value }; setCardDeck(n); }} style={{ ...iS(), fontWeight: 700, fontSize: '0.9rem', color: '#fff', width: '100%', marginBottom: 8 }} placeholder="Card title" />
-                                                            <input value={card.description} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], description: e.target.value }; setCardDeck(n); }} style={{ ...iS(), fontSize: '0.8rem', width: '100%', color: TEXT }} placeholder="Description" />
-                                                        </div>
-                                                        <input value={card.category} onChange={e => { const n = [...cardDeck]; n[i] = { ...n[i], category: e.target.value }; setCardDeck(n); }} style={{ ...iS(), width: 90, fontSize: '0.7rem', textAlign: 'center', color: 'rgba(197,160,89,0.5)' }} placeholder="Category" />
-                                                        <XBtn onClick={() => { const n = [...cardDeck]; n.splice(i, 1); setCardDeck(n); }} />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <AddBtn onClick={() => setCardDeck([...cardDeck, { title: '', description: '', category: '' }])} label="+ ADD CARD" />
-                                    </>)}
-
-                                    {/* ── LINES TEXTS ── */}
-                                    {configSection === 'lines_texts' && (<>
-                                        <div style={{ display: 'grid', gap: 6 }}>
-                                            {linesTexts.map((txt, i) => (
-                                                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                                    <span style={{ fontFamily: F, fontSize: '0.7rem', color: TEXT_DIM, width: 24, textAlign: 'center' }}>{i + 1}</span>
-                                                    <input value={txt} onChange={e => { const n = [...linesTexts]; n[i] = e.target.value; setLinesTexts(n); }} style={{ ...iS(), flex: 1, fontSize: '0.9rem' }} placeholder="Text they must write..." />
-                                                    <XBtn onClick={() => { const n = [...linesTexts]; n.splice(i, 1); setLinesTexts(n); }} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <AddBtn onClick={() => setLinesTexts([...linesTexts, ''])} label="+ ADD LINE" />
-                                    </>)}
-
-                                    {/* ── BODY WRITING ── */}
-                                    {configSection === 'body_writing' && (<>
-                                        <div style={{ display: 'grid', gap: 6 }}>
-                                            {bodyWriting.map((txt, i) => (
-                                                <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                                    <input value={txt} onChange={e => { const n = [...bodyWriting]; n[i] = e.target.value; setBodyWriting(n); }} style={{ ...iS(), flex: 1, fontSize: '1rem', fontWeight: 700, letterSpacing: 3, color: '#fff' }} placeholder="Word to write..." />
-                                                    <XBtn onClick={() => { const n = [...bodyWriting]; n.splice(i, 1); setBodyWriting(n); }} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <AddBtn onClick={() => setBodyWriting([...bodyWriting, ''])} label="+ ADD WORD" />
-                                    </>)}
-
-                                    {/* ── QUIZ QUESTIONS ── */}
-                                    {configSection === 'quiz_questions' && (<>
-                                        <div style={{ display: 'grid', gap: 8 }}>
-                                            {quizQuestions.map((q, i) => (
-                                                <div key={i} style={{ padding: '16px 20px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                                                        <span style={{ fontFamily: F, fontSize: '0.8rem', color: GOLD, marginTop: 4, flexShrink: 0 }}>Q{i + 1}</span>
-                                                        <div style={{ flex: 1 }}>
-                                                            <input value={q.question} onChange={e => { const n = [...quizQuestions]; n[i] = { ...n[i], question: e.target.value }; setQuizQuestions(n); }} style={{ ...iS(), fontSize: '0.9rem', color: '#fff', width: '100%', marginBottom: 10 }} placeholder="Question..." />
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                                <span style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2 }}>ANSWER</span>
-                                                                <input value={q.answer} onChange={e => { const n = [...quizQuestions]; n[i] = { ...n[i], answer: e.target.value }; setQuizQuestions(n); }} style={{ ...iS(), fontSize: '0.8rem', color: 'rgba(80,200,80,0.7)', flex: 1 }} placeholder="Correct answer..." />
-                                                            </div>
-                                                        </div>
-                                                        <XBtn onClick={() => { const n = [...quizQuestions]; n.splice(i, 1); setQuizQuestions(n); }} />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <AddBtn onClick={() => setQuizQuestions([...quizQuestions, { question: '', answer: '' }])} label="+ ADD QUESTION" />
-                                    </>)}
-
-                                    {/* ── EXERCISES ── */}
-                                    {configSection === 'exercises' && (<>
-                                        <div style={{ display: 'grid', gap: 6 }}>
-                                            {exercises.map((ex, i) => (
-                                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 36px', gap: 12, alignItems: 'center', padding: '12px 16px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-                                                    <input value={ex.type} onChange={e => { const n = [...exercises]; n[i] = { ...n[i], type: e.target.value }; setExercises(n); }} style={{ ...iS(), fontSize: '0.9rem' }} placeholder="Exercise type..." />
-                                                    <input value={ex.count} onChange={e => { const n = [...exercises]; n[i] = { ...n[i], count: Number(e.target.value) }; setExercises(n); }} style={{ ...iS(), textAlign: 'center', fontSize: '0.9rem', color: GOLD }} placeholder="Count" />
-                                                    <XBtn onClick={() => { const n = [...exercises]; n.splice(i, 1); setExercises(n); }} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <AddBtn onClick={() => setExercises([...exercises, { type: '', count: 10 }])} label="+ ADD EXERCISE" />
-                                    </>)}
-                                </div>
-                            );
-                        })()}
-                    </div>
-                </>)}
-
-                {/* ═══════════════════ MEMBER TAB ═══════════════════ */}
-                {tab === 'member' && (<>
-                    {/* Search + left panel */}
-                    <div style={{ width: 320, borderRight: `1px solid ${BORDER}`, overflow: 'auto', flexShrink: 0, background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}` }}>
-                            <input value={memberEmail} onChange={e => setMemberEmail(e.target.value)} placeholder="Member email..."
-                                style={{ ...iS(), width: '100%', padding: '10px 14px', fontSize: '0.8rem', marginBottom: 8, boxSizing: 'border-box' }} />
-                            <div style={{ display: 'flex', gap: 6 }}>
-                                <button onClick={loadMemberProgram} style={{
-                                    flex: 1, padding: '10px 0', border: `1px solid ${GOLD_DIM}`, borderRadius: 6,
-                                    background: 'transparent', color: GOLD, fontFamily: F, fontSize: '0.65rem', letterSpacing: 3, cursor: 'pointer',
-                                }}>LOAD</button>
-                                <button onClick={generateMemberProgram} style={{
-                                    flex: 1, padding: '10px 0', border: `1px solid rgba(139,0,0,0.25)`, borderRadius: 6,
-                                    background: 'transparent', color: RED, fontFamily: F, fontSize: '0.65rem', letterSpacing: 3, cursor: 'pointer',
-                                }}>GENERATE</button>
-                            </div>
-                        </div>
-
-                        {memberProgram ? (
-                            <div style={{ flex: 1, overflow: 'auto' }}>
-                                {PHASES.map((phase, pi) => (
-                                    <div key={phase.name}>
-                                        <div style={{ padding: '18px 24px 10px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                                            <span style={{ fontFamily: FC, fontSize: '0.65rem', color: pi < 2 ? GOLD : RED, letterSpacing: 5 }}>{phase.name}</span>
-                                        </div>
-                                        <div style={{ height: 1, background: BORDER, margin: '0 20px 4px' }} />
-                                        {phase.days.map(day => {
-                                            const tasks = memberProgram[String(day)] || [];
-                                            const isSel = memberSelectedDay === day;
-                                            return (
-                                                <div key={day} onClick={() => { setMemberSelectedDay(day); setMemberEditTasks([...tasks]); }}
-                                                    style={{
-                                                        padding: '14px 24px', cursor: 'pointer',
-                                                        background: isSel ? 'rgba(197,160,89,0.04)' : 'transparent',
-                                                        borderLeft: isSel ? `3px solid ${GOLD}` : '3px solid transparent',
-                                                    }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <span style={{ fontFamily: F, fontSize: '0.95rem', color: isSel ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 700 }}>Day {day}</span>
-                                                        <span style={{ fontFamily: F, fontSize: '0.65rem', color: TEXT_DIM, marginLeft: 'auto' }}>{tasks.length}</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                                                        {tasks.map((t, i) => (
-                                                            <span key={i} style={{ fontSize: '0.85rem', color: isSel ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.12)' }}>{getIcon(t.type)}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: TEXT_DIM, fontFamily: F, fontSize: '0.75rem', letterSpacing: 1, padding: 20, textAlign: 'center' }}>
-                                {loading ? 'Loading...' : 'Enter email and load program'}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* RIGHT DETAIL */}
-                    <div style={{ flex: 1, overflow: 'auto', padding: '36px 48px' }}>
-                        {memberProgram ? (
-                            <DayDetail
-                                day={memberSelectedDay}
-                                tasks={memberEditTasks}
-                                onChange={t => setMemberEditTasks(t)}
-                                onSave={() => saveMemberDay(memberSelectedDay, memberEditTasks)}
-                                onJumpConfig={jumpToConfig}
-                                isMember
-                                saving={saving}
-                            />
-                        ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: TEXT_DIM, fontFamily: F, fontSize: '0.85rem', letterSpacing: 2 }}>
-                                Load a member to edit their program
-                            </div>
-                        )}
-                    </div>
-                </>)}
+                {view === 'program' && <ProgramView
+                    days={templateDays} selectedDay={selectedDay} setSelectedDay={setSelectedDay}
+                    onUpdateTask={(d: number, i: number, f: string, v: any) => updateTask(d, i, f, v)} onAddTask={addTask} onRemoveTask={removeTask}
+                    onMoveTask={moveTask} onSave={saveTemplate} saving={saving} loading={loading}
+                    dragIdx={dragIdx} setDragIdx={setDragIdx}
+                />}
+                {view === 'config' && <ConfigView
+                    configData={configData} setConfigData={setConfigData}
+                    configSection={configSection} setConfigSection={setConfigSection}
+                    onSave={saveConfig} saving={saving}
+                />}
+                {view === 'member' && <MemberView
+                    email={memberEmail} setEmail={setMemberEmail}
+                    program={memberProgram} selectedDay={memberSelectedDay} setSelectedDay={setMemberSelectedDay}
+                    info={memberInfo} lockedMembers={lockedMembers}
+                    onLoad={loadMemberProgram} onGenerate={generateMemberProgram}
+                    onUpdateTask={(d: number, i: number, f: string, v: any) => updateTask(d, i, f, v)} onAddTask={addTask} onRemoveTask={removeTask}
+                    onMoveTask={moveTask} onSaveDay={saveMemberDay} saving={saving} loading={loading}
+                    dragIdx={dragIdx} setDragIdx={setDragIdx}
+                />}
             </div>
-
-            <style>{`
-                input[type=number]::-webkit-inner-spin-button,
-                input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-                input[type=number] { -moz-appearance: textfield; }
-                .kh-member-card:hover { border-color: rgba(139,0,0,0.35) !important; background: rgba(139,0,0,0.06) !important; transform: translateY(-1px); }
-                @keyframes khPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-                @keyframes khFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-            `}</style>
         </div>
     );
 }
 
-// ── Shared input style ──
-function iS(): React.CSSProperties {
-    return {
-        background: 'transparent', border: 'none', borderBottom: `1px solid ${BORDER}`,
-        padding: '4px 0', color: 'rgba(255,255,255,0.6)', fontFamily: F, fontSize: '0.8rem', outline: 'none',
-    };
-}
-
-// ── Day Detail Panel ──
-function DayDetail({ day, tasks, onChange, onSave, onJumpConfig, isMember, saving }: {
-    day: number; tasks: Task[]; onChange: (t: Task[]) => void; onSave: () => void;
-    onJumpConfig?: (key: string) => void; isMember?: boolean; saving?: boolean;
-}) {
-    const phase = PHASES.find(p => p.days.includes(day))!;
-    const phaseIdx = PHASES.indexOf(phase);
-    const [saved, setSaved] = useState(false);
-
-    const addTask = (type: string) => {
-        const info = TASK_TYPES.find(t => t.type === type);
-        onChange([...tasks, { type, target: 1, label: info?.label || type }]);
-    };
-
-    const removeTask = (idx: number) => {
-        const n = [...tasks]; n.splice(idx, 1); onChange(n);
-    };
-
-    const updateTask = (idx: number, field: string, value: any) => {
-        const n = [...tasks]; n[idx] = { ...n[idx], [field]: value }; onChange(n);
-    };
-
-    const handleSave = () => {
-        onSave();
-        setSaved(true);
-        setTimeout(() => setSaved(false), 1500);
-    };
-
+/* ══════════════════════════════════════════
+   PROGRAM VIEW — Day cards grid + detail panel
+   ══════════════════════════════════════════ */
+function ProgramView({ days, selectedDay, setSelectedDay, onUpdateTask, onAddTask, onRemoveTask, onMoveTask, onSave, saving, loading, dragIdx, setDragIdx }: any) {
     return (
-        <div>
-            {/* ── DAY HEADER ── */}
-            <div style={{ marginBottom: 40 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 8 }}>
-                    <span style={{ fontFamily: F, fontSize: '2.8rem', color: '#fff', fontWeight: 800, letterSpacing: 3, lineHeight: 1 }}>Day {day}</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        <span style={{ fontFamily: FC, fontSize: '0.7rem', color: phaseIdx < 2 ? GOLD : RED, letterSpacing: 6 }}>{phase.name}</span>
-                        <span style={{ fontFamily: F, fontSize: '0.75rem', color: TEXT_DIM }}>{phase.sub} phase</span>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            {/* LEFT: Day cards grid */}
+            <div style={{ width: selectedDay ? '42%' : '100%', transition: 'width 0.4s ease', overflowY: 'auto', padding: '20px 24px' }} className="kh-scroll">
+                {/* Save button */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <div>
+                        <div style={{ fontFamily: FC, fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 4 }}>MASTER TEMPLATE</div>
+                        <div style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, marginTop: 2 }}>30-day program formula for all new members</div>
                     </div>
-                    <div style={{ flex: 1 }} />
-                    <button onClick={handleSave} style={{
-                        padding: '12px 32px', border: `1px solid ${saved ? 'rgba(80,200,80,0.3)' : GOLD_DIM}`, borderRadius: 6,
-                        background: saved ? 'rgba(80,200,80,0.04)' : 'transparent',
-                        color: saved ? 'rgba(80,200,80,0.8)' : GOLD, fontFamily: F, fontSize: '0.8rem', letterSpacing: 4, cursor: 'pointer',
-                        transition: 'all 0.3s',
-                    }}>{saved ? 'SAVED' : saving ? 'SAVING...' : isMember ? 'SAVE FOR USER' : 'UPDATE'}</button>
+                    <button onClick={onSave} style={{
+                        padding: '10px 28px', borderRadius: 8, border: `1px solid ${GOLD_DIM}`, cursor: 'pointer',
+                        background: 'rgba(197,160,89,0.06)', color: GOLD, fontFamily: F, fontSize: '0.6rem', letterSpacing: 3, fontWeight: 600,
+                    }}>{saving ? 'SAVING...' : 'SAVE PROGRAM'}</button>
                 </div>
-                <div style={{ height: 1, background: `linear-gradient(90deg, ${phaseIdx < 2 ? GOLD_DIM : 'rgba(139,0,0,0.2)'}, transparent)`, marginTop: 14 }} />
+
+                {/* Phase groups */}
+                {PHASES.map((phase, pi) => (
+                    <div key={phase.name} style={{ marginBottom: 28 }} className="kh-fade" >
+                        {/* Phase header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, paddingLeft: 4 }}>
+                            <div style={{ width: 3, height: 22, borderRadius: 2, background: phase.color }} />
+                            <span style={{ fontFamily: FC, fontSize: '0.6rem', color: phase.color, letterSpacing: 5 }}>{phase.name}</span>
+                            <span style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, letterSpacing: 2 }}>{phase.sub}</span>
+                            <div style={{ flex: 1, height: 1, background: BORDER }} />
+                        </div>
+
+                        {/* Day cards grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: selectedDay ? 'repeat(auto-fill, minmax(160px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+                            {phase.days.map(d => {
+                                const tasks = days[String(d)] || [];
+                                const isActive = selectedDay === d;
+                                return (
+                                    <div key={d} className="kh-day-card kh-glow" onClick={() => setSelectedDay(isActive ? null : d)} style={{
+                                        borderRadius: 14, cursor: 'pointer', overflow: 'hidden', position: 'relative',
+                                        border: `1px solid ${isActive ? GOLD_DIM : BORDER}`,
+                                        background: isActive
+                                            ? `linear-gradient(145deg, rgba(197,160,89,0.06), rgba(12,10,16,0.98))`
+                                            : `linear-gradient(145deg, rgba(20,18,25,0.95), rgba(12,10,16,0.98))`,
+                                    }}>
+                                        {/* Card header with day number */}
+                                        <div style={{ padding: '14px 16px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div>
+                                                <div style={{ fontFamily: FC, fontSize: '1.1rem', color: isActive ? GOLD : 'rgba(255,255,255,0.6)', lineHeight: 1 }}>{d}</div>
+                                                <div style={{ fontFamily: F, fontSize: '0.45rem', color: TEXT_DIM, letterSpacing: 2, marginTop: 2 }}>DAY</div>
+                                            </div>
+                                            <div style={{
+                                                background: `rgba(${isActive ? '197,160,89' : '255,255,255'},0.06)`, borderRadius: 20,
+                                                padding: '3px 10px', fontFamily: F, fontSize: '0.5rem', color: isActive ? GOLD : TEXT_DIM,
+                                            }}>{tasks.length} tasks</div>
+                                        </div>
+                                        {/* Task pills preview */}
+                                        <div style={{ padding: '0 14px 14px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                            {tasks.slice(0, 6).map((t: Task, i: number) => {
+                                                const meta = TASK_META[t.type] || { icon: '•', color: '#666' };
+                                                return (
+                                                    <div key={i} style={{
+                                                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                        padding: '3px 8px', borderRadius: 6, fontSize: '0.48rem', fontFamily: F,
+                                                        background: `${meta.color}12`, color: `${meta.color}cc`,
+                                                        border: `1px solid ${meta.color}22`,
+                                                    }}>
+                                                        <span style={{ fontSize: '0.5rem' }}>{meta.icon}</span>
+                                                        {t.target > 1 && <span style={{ fontWeight: 700 }}>×{t.target}</span>}
+                                                    </div>
+                                                );
+                                            })}
+                                            {tasks.length > 6 && (
+                                                <div style={{ padding: '3px 8px', borderRadius: 6, fontSize: '0.45rem', fontFamily: F, color: TEXT_DIM }}>
+                                                    +{tasks.length - 6}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
             </div>
 
-            {/* ── TASK LIST ── */}
-            <div style={{ display: 'grid', gap: 8, marginBottom: 44 }}>
-                {tasks.length === 0 && (
-                    <div style={{ padding: '32px 0', textAlign: 'center', color: TEXT_DIM, fontFamily: F, fontSize: '0.9rem' }}>No tasks assigned. Add tasks below.</div>
-                )}
-                {tasks.map((t, i) => {
-                    const tt = TASK_TYPES.find(x => x.type === t.type);
-                    const hasConfig = tt?.configKey;
+            {/* RIGHT: Detail panel */}
+            {selectedDay && (
+                <DayDetailPanel
+                    dayNum={selectedDay} tasks={days[String(selectedDay)] || []}
+                    onClose={() => setSelectedDay(null)}
+                    onUpdateTask={(i: number, f: string, v: any) => onUpdateTask(selectedDay, i, f, v)}
+                    onAddTask={(type: string) => onAddTask(selectedDay, type)}
+                    onRemoveTask={(i: number) => onRemoveTask(selectedDay, i)}
+                    onMoveTask={(from: number, to: number) => onMoveTask(selectedDay, from, to)}
+                    dragIdx={dragIdx} setDragIdx={setDragIdx}
+                />
+            )}
+        </div>
+    );
+}
+
+/* ══════════════════════════════════════════
+   DAY DETAIL PANEL — Right side overlay
+   ══════════════════════════════════════════ */
+function DayDetailPanel({ dayNum, tasks, onClose, onUpdateTask, onAddTask, onRemoveTask, onMoveTask, dragIdx, setDragIdx }: any) {
+    const phase = PHASES.find(p => p.days.includes(dayNum));
+    const [addMenuOpen, setAddMenuOpen] = useState(false);
+
+    return (
+        <div className="kh-slide" style={{
+            width: '58%', borderLeft: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column',
+            background: `linear-gradient(180deg, rgba(15,13,20,0.98), ${BG})`, overflow: 'hidden',
+        }}>
+            {/* Header */}
+            <div style={{ padding: '24px 28px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+                        <span style={{ fontFamily: FC, fontSize: '2.4rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1 }}>Day {dayNum}</span>
+                        <span style={{ fontFamily: FC, fontSize: '0.55rem', color: phase?.color || TEXT_DIM, letterSpacing: 4 }}>{phase?.name}</span>
+                    </div>
+                    <div style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, letterSpacing: 2, marginTop: 4 }}>{phase?.sub} phase</div>
+                </div>
+                <button onClick={onClose} style={{
+                    background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 8,
+                    padding: '8px 16px', cursor: 'pointer', color: TEXT_DIM, fontFamily: F, fontSize: '0.55rem', letterSpacing: 2,
+                }}>CLOSE</button>
+            </div>
+
+            {/* Task list — draggable */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }} className="kh-scroll">
+                {tasks.map((task: Task, idx: number) => {
+                    const meta = TASK_META[task.type] || { label: task.type, icon: '•', color: '#666' };
                     return (
-                        <div key={i} style={{
-                            display: 'flex', alignItems: 'center', gap: 20,
-                            padding: '18px 24px', background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 10,
-                            transition: 'border-color 0.15s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = BORDER_HOVER}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = BORDER}
-                        >
+                        <div key={idx}
+                            draggable
+                            onDragStart={() => setDragIdx(idx)}
+                            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('kh-drag-over'); }}
+                            onDragLeave={(e) => { e.currentTarget.classList.remove('kh-drag-over'); }}
+                            onDrop={(e) => { e.currentTarget.classList.remove('kh-drag-over'); if (dragIdx !== null) onMoveTask(dragIdx, idx); setDragIdx(null); }}
+                            className="kh-task-pill"
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', marginBottom: 8,
+                                borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}`, cursor: 'grab',
+                                opacity: dragIdx === idx ? 0.4 : 1,
+                            }}>
+                            {/* Drag handle */}
+                            <div style={{ color: TEXT_DIM, fontSize: '0.7rem', cursor: 'grab', userSelect: 'none' }}>⠿</div>
+
                             {/* Icon */}
-                            <span style={{ fontSize: '1.4rem', color: 'rgba(197,160,89,0.3)', width: 32, textAlign: 'center', flexShrink: 0 }}>{tt?.icon || '\u2022'}</span>
+                            <div style={{
+                                width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: `${meta.color}15`, border: `1px solid ${meta.color}30`, fontSize: '1rem', flexShrink: 0,
+                            }}>{meta.icon}</div>
 
-                            {/* Label */}
-                            <input value={t.label} onChange={e => updateTask(i, 'label', e.target.value)}
-                                style={{ flex: 1, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)', fontFamily: F, fontSize: '1.05rem', outline: 'none', padding: 0, letterSpacing: 0.5 }} />
+                            {/* Label — editable */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <input
+                                    value={task.label}
+                                    onChange={(e) => onUpdateTask(idx, 'label', e.target.value)}
+                                    style={{
+                                        background: 'transparent', border: 'none', outline: 'none', width: '100%',
+                                        fontFamily: F, fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600,
+                                    }}
+                                />
+                                <div style={{ fontFamily: F, fontSize: '0.45rem', color: meta.color, letterSpacing: 2, marginTop: 1, textTransform: 'uppercase' }}>
+                                    {meta.label}
+                                    {meta.configKey && <span style={{ color: TEXT_DIM, marginLeft: 6 }}>• configurable</span>}
+                                </div>
+                            </div>
 
-                            {/* Config link */}
-                            {hasConfig && onJumpConfig && (
-                                <button onClick={() => onJumpConfig(tt!.configKey!)}
-                                    style={{ background: 'none', border: `1px solid ${GOLD_DIM}`, borderRadius: 5, padding: '5px 14px',
-                                        color: 'rgba(197,160,89,0.5)', fontFamily: F, fontSize: '0.65rem', cursor: 'pointer', letterSpacing: 2, flexShrink: 0,
-                                        transition: 'all 0.15s' }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = GOLD_DIM; e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; }}
-                                >EDIT OPTIONS</button>
-                            )}
-
-                            {/* Target */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                                <span style={{ fontFamily: F, fontSize: '0.7rem', color: TEXT_DIM, letterSpacing: 1 }}>x</span>
-                                <input type="number" value={t.target} onChange={e => updateTask(i, 'target', Number(e.target.value))}
-                                    style={{ width: 52, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 5,
-                                        padding: '8px 0', color: GOLD, fontFamily: F, fontSize: '1.1rem', textAlign: 'center', outline: 'none',
-                                        MozAppearance: 'textfield' as any, WebkitAppearance: 'none' }} />
+                            {/* Target input */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, letterSpacing: 1 }}>×</span>
+                                <input type="number" value={task.target}
+                                    onChange={(e) => onUpdateTask(idx, 'target', parseInt(e.target.value) || 1)}
+                                    style={{
+                                        width: 44, height: 36, textAlign: 'center', borderRadius: 8,
+                                        background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`,
+                                        color: GOLD, fontFamily: F, fontSize: '1rem', fontWeight: 700, outline: 'none',
+                                    }}
+                                />
                             </div>
 
                             {/* Delete */}
-                            <button onClick={() => removeTask(i)}
-                                style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.2)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', flexShrink: 0,
-                                    transition: 'color 0.15s' }}
-                                onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,40,40,0.8)'}
-                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.2)'}
-                            >&times;</button>
+                            <button onClick={(e) => { e.stopPropagation(); onRemoveTask(idx); }} style={{
+                                background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,60,60,0.3)',
+                                fontSize: '0.9rem', padding: '4px 6px', transition: 'color 0.2s',
+                            }} onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,60,60,0.8)')}
+                               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,60,60,0.3)')}>×</button>
                         </div>
                     );
                 })}
+
+                {/* Add task area */}
+                <div style={{ marginTop: 20, position: 'relative' }}>
+                    <button onClick={() => setAddMenuOpen(!addMenuOpen)} style={{
+                        width: '100%', padding: '14px', borderRadius: 12, cursor: 'pointer',
+                        border: `1px dashed ${addMenuOpen ? GOLD_DIM : BORDER}`,
+                        background: addMenuOpen ? 'rgba(197,160,89,0.03)' : 'transparent',
+                        color: addMenuOpen ? GOLD : TEXT_DIM, fontFamily: F, fontSize: '0.6rem', letterSpacing: 3,
+                        transition: 'all 0.25s ease',
+                    }}>+ ADD TASK</button>
+
+                    {addMenuOpen && (
+                        <div className="kh-fade" style={{
+                            marginTop: 8, padding: 16, borderRadius: 14, background: 'rgba(15,13,20,0.98)',
+                            border: `1px solid ${BORDER}`, display: 'flex', flexWrap: 'wrap', gap: 6,
+                        }}>
+                            {Object.entries(TASK_META).map(([type, meta]) => (
+                                <button key={type} onClick={() => { onAddTask(type); setAddMenuOpen(false); }} style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+                                    borderRadius: 8, border: `1px solid ${meta.color}25`, cursor: 'pointer',
+                                    background: `${meta.color}08`, color: `${meta.color}cc`,
+                                    fontFamily: F, fontSize: '0.55rem', fontWeight: 600, transition: 'all 0.2s',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = `${meta.color}18`; e.currentTarget.style.borderColor = `${meta.color}40`; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = `${meta.color}08`; e.currentTarget.style.borderColor = `${meta.color}25`; }}
+                                >
+                                    <span>{meta.icon}</span>
+                                    <span>{meta.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ══════════════════════════════════════════
+   CONFIG VIEW — Spin, Cards, Lines, etc.
+   ══════════════════════════════════════════ */
+function ConfigView({ configData, setConfigData, configSection, setConfigSection, onSave, saving }: any) {
+    const section = CONFIG_SECTIONS.find(s => s.key === configSection)!;
+    const data = configData[configSection] || [];
+
+    const updateItem = (idx: number, field: string, value: any) => {
+        const newData = [...data];
+        if (field === '_string') {
+            // Plain string arrays (lines_texts, body_writing)
+            newData[idx] = value;
+        } else {
+            newData[idx] = { ...newData[idx], [field]: value };
+        }
+        setConfigData({ ...configData, [configSection]: newData });
+    };
+
+    const addItem = () => {
+        const newData = [...data];
+        if (configSection === 'spin_wheel') newData.push({ label: 'New option', effect: 'nothing', value: 0, weight: 1 });
+        else if (configSection === 'card_deck') newData.push({ title: 'New card', description: '', category: 'control' });
+        else if (configSection === 'lines_texts') newData.push('New line text');
+        else if (configSection === 'body_writing') newData.push('WORD');
+        else if (configSection === 'quiz_questions') newData.push({ question: '', answer: '' });
+        else if (configSection === 'exercises') newData.push({ type: 'pushups', count: 20 });
+        setConfigData({ ...configData, [configSection]: newData });
+    };
+
+    const removeItem = (idx: number) => {
+        const newData = [...data];
+        newData.splice(idx, 1);
+        setConfigData({ ...configData, [configSection]: newData });
+    };
+
+    return (
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            {/* Left: Section selector */}
+            <div style={{ width: 240, borderRight: `1px solid ${BORDER}`, overflowY: 'auto', padding: '20px 0' }} className="kh-scroll">
+                {CONFIG_SECTIONS.map(s => (
+                    <div key={s.key} onClick={() => setConfigSection(s.key)} style={{
+                        padding: '14px 24px', cursor: 'pointer', borderLeft: `3px solid ${configSection === s.key ? GOLD : 'transparent'}`,
+                        background: configSection === s.key ? 'rgba(197,160,89,0.04)' : 'transparent',
+                        transition: 'all 0.2s ease',
+                    }}>
+                        <div style={{ fontFamily: FC, fontSize: '0.55rem', color: configSection === s.key ? GOLD : TEXT, letterSpacing: 3 }}>{s.title}</div>
+                        <div style={{ fontFamily: F, fontSize: '0.45rem', color: TEXT_DIM, marginTop: 2 }}>{s.desc}</div>
+                    </div>
+                ))}
             </div>
 
-            {/* ── ADD TASK ── */}
-            <div>
-                <div style={{ fontFamily: FC, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 5, marginBottom: 18 }}>ADD TASK</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {TASK_TYPES.map(tt => (
-                        <button key={tt.type} onClick={() => addTask(tt.type)} style={{
-                            padding: '10px 18px', borderRadius: 8, border: `1px solid ${BORDER}`,
-                            background: 'transparent', color: 'rgba(255,255,255,0.25)', fontFamily: F, fontSize: '0.8rem',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                            transition: 'all 0.15s', letterSpacing: 0.5,
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = 'rgba(197,160,89,0.65)'; e.currentTarget.style.background = 'rgba(197,160,89,0.03)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; e.currentTarget.style.background = 'transparent'; }}
-                        >
-                            <span style={{ fontSize: '1rem', opacity: 0.5 }}>{tt.icon}</span>
-                            {tt.label}
-                        </button>
+            {/* Right: Config editor */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }} className="kh-scroll">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <div>
+                        <div style={{ fontFamily: FC, fontSize: '0.75rem', color: GOLD, letterSpacing: 4 }}>{section?.title}</div>
+                        <div style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, marginTop: 2 }}>{section?.desc}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={addItem} style={{
+                            padding: '8px 20px', borderRadius: 8, border: `1px solid ${BORDER}`, cursor: 'pointer',
+                            background: SURFACE, color: TEXT, fontFamily: F, fontSize: '0.55rem', letterSpacing: 2,
+                        }}>+ ADD</button>
+                        <button onClick={() => onSave(configSection, data)} style={{
+                            padding: '8px 20px', borderRadius: 8, border: `1px solid ${GOLD_DIM}`, cursor: 'pointer',
+                            background: 'rgba(197,160,89,0.06)', color: GOLD, fontFamily: F, fontSize: '0.55rem', letterSpacing: 2,
+                        }}>{saving ? 'SAVING...' : 'SAVE'}</button>
+                    </div>
+                </div>
+
+                {/* Items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {data.map((item: any, idx: number) => (
+                        <ConfigItem key={idx} section={configSection} item={item} idx={idx}
+                            onUpdate={updateItem} onRemove={removeItem} />
                     ))}
                 </div>
             </div>
@@ -694,64 +689,244 @@ function DayDetail({ day, tasks, onChange, onSave, onJumpConfig, isMember, savin
     );
 }
 
-// ── Shared buttons ──
-function XBtn({ onClick }: { onClick: () => void }) {
-    return (
-        <button onClick={onClick}
-            style={{ background: 'none', border: 'none', color: 'rgba(139,0,0,0.3)', cursor: 'pointer', fontSize: '1rem', padding: '0 2px', transition: 'color 0.15s', flexShrink: 0 }}
-            onMouseEnter={e => e.currentTarget.style.color = 'rgba(200,40,40,0.8)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(139,0,0,0.3)'}
-        >&times;</button>
-    );
+function ConfigItem({ section, item, idx, onUpdate, onRemove }: any) {
+    const inputStyle: React.CSSProperties = {
+        background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px',
+        color: 'rgba(255,255,255,0.8)', fontFamily: F, fontSize: '0.7rem', outline: 'none', width: '100%',
+    };
+    const smallInput: React.CSSProperties = { ...inputStyle, width: 80, textAlign: 'center' as const, fontSize: '0.8rem', color: GOLD, fontWeight: 700 };
+
+    if (section === 'lines_texts' || section === 'body_writing') {
+        return (
+            <div className="kh-task-pill" style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}`,
+            }}>
+                <span style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, width: 20 }}>{idx + 1}</span>
+                <input value={item} onChange={(e) => onUpdate(idx, '_string', e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                <button onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,0.4)', cursor: 'pointer', fontSize: '1rem' }}>×</button>
+            </div>
+        );
+    }
+
+    if (section === 'spin_wheel') {
+        return (
+            <div className="kh-task-pill" style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}`,
+            }}>
+                <input value={item.label || ''} onChange={(e) => onUpdate(idx, 'label', e.target.value)} placeholder="Label" style={{ ...inputStyle, flex: 1 }} />
+                <input value={item.effect || ''} onChange={(e) => onUpdate(idx, 'effect', e.target.value)} placeholder="Effect" style={{ ...inputStyle, width: 120 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <span style={{ fontFamily: F, fontSize: '0.35rem', color: TEXT_DIM, letterSpacing: 1 }}>VAL</span>
+                    <input type="number" value={item.value ?? 0} onChange={(e) => onUpdate(idx, 'value', parseInt(e.target.value) || 0)} style={smallInput} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <span style={{ fontFamily: F, fontSize: '0.35rem', color: TEXT_DIM, letterSpacing: 1 }}>WT</span>
+                    <input type="number" value={item.weight ?? 1} onChange={(e) => onUpdate(idx, 'weight', parseInt(e.target.value) || 1)} style={smallInput} />
+                </div>
+                <button onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,0.4)', cursor: 'pointer', fontSize: '1rem' }}>×</button>
+            </div>
+        );
+    }
+
+    if (section === 'card_deck') {
+        return (
+            <div className="kh-task-pill" style={{
+                padding: '14px 18px', borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}`,
+            }}>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 8, alignItems: 'center' }}>
+                    <input value={item.title || ''} onChange={(e) => onUpdate(idx, 'title', e.target.value)} placeholder="Title" style={{ ...inputStyle, flex: 1, fontWeight: 700, fontSize: '0.75rem' }} />
+                    <input value={item.category || ''} onChange={(e) => onUpdate(idx, 'category', e.target.value)} placeholder="Category" style={{ ...inputStyle, width: 120, fontSize: '0.6rem' }} />
+                    <button onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,0.4)', cursor: 'pointer', fontSize: '1rem' }}>×</button>
+                </div>
+                <textarea value={item.description || ''} onChange={(e) => onUpdate(idx, 'description', e.target.value)} placeholder="Description..."
+                    rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: F, fontSize: '0.6rem', lineHeight: 1.5 }} />
+            </div>
+        );
+    }
+
+    if (section === 'quiz_questions') {
+        return (
+            <div className="kh-task-pill" style={{
+                display: 'flex', gap: 12, padding: '14px 18px', borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}`, alignItems: 'center',
+            }}>
+                <input value={item.question || ''} onChange={(e) => onUpdate(idx, 'question', e.target.value)} placeholder="Question" style={{ ...inputStyle, flex: 2 }} />
+                <input value={item.answer || ''} onChange={(e) => onUpdate(idx, 'answer', e.target.value)} placeholder="Answer" style={{ ...inputStyle, flex: 1 }} />
+                <button onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,0.4)', cursor: 'pointer', fontSize: '1rem' }}>×</button>
+            </div>
+        );
+    }
+
+    if (section === 'exercises') {
+        return (
+            <div className="kh-task-pill" style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                borderRadius: 12, background: SURFACE, border: `1px solid ${BORDER}`,
+            }}>
+                <input value={item.type || ''} onChange={(e) => onUpdate(idx, 'type', e.target.value)} placeholder="Type" style={{ ...inputStyle, flex: 1 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <span style={{ fontFamily: F, fontSize: '0.35rem', color: TEXT_DIM, letterSpacing: 1 }}>COUNT</span>
+                    <input type="number" value={item.count ?? 10} onChange={(e) => onUpdate(idx, 'count', parseInt(e.target.value) || 1)} style={smallInput} />
+                </div>
+                <button onClick={() => onRemove(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,0.4)', cursor: 'pointer', fontSize: '1rem' }}>×</button>
+            </div>
+        );
+    }
+
+    return null;
 }
 
-function AddBtn({ onClick, label }: { onClick: () => void; label: string }) {
+/* ══════════════════════════════════════════
+   MEMBER VIEW — Per-user program editor
+   ══════════════════════════════════════════ */
+function MemberView({ email, setEmail, program, selectedDay, setSelectedDay, info, lockedMembers, onLoad, onGenerate, onUpdateTask, onAddTask, onRemoveTask, onMoveTask, onSaveDay, saving, loading, dragIdx, setDragIdx }: any) {
     return (
-        <button onClick={onClick}
-            style={{ marginTop: 12, padding: '10px 20px', border: `1px dashed ${BORDER}`, borderRadius: 8, background: 'transparent',
-                color: TEXT_DIM, fontFamily: F, fontSize: '0.7rem', cursor: 'pointer', letterSpacing: 2, width: '100%', transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = BORDER_HOVER; e.currentTarget.style.color = GOLD; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT_DIM; }}
-        >{label}</button>
-    );
-}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Member selector — if no email yet, show locked member cards */}
+            {!email && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }} className="kh-scroll">
+                    <div style={{ fontFamily: FC, fontSize: '0.7rem', color: GOLD, letterSpacing: 4, marginBottom: 20 }}>SELECT MEMBER</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+                        {lockedMembers.map((m: any, i: number) => (
+                            <div key={m.memberId} className="kh-member-card kh-fade" onClick={() => { setEmail(m.memberId); setTimeout(onLoad, 50); }}
+                                style={{
+                                    borderRadius: 16, cursor: 'pointer', overflow: 'hidden', position: 'relative',
+                                    border: `1px solid ${BORDER}`,
+                                    background: `linear-gradient(145deg, rgba(20,18,25,0.95), rgba(12,10,16,0.98))`,
+                                    animationDelay: `${i * 0.06}s`,
+                                }}>
+                                <div style={{ height: 90, position: 'relative', overflow: 'hidden' }}>
+                                    {m.avatar ? (
+                                        <img src={m.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.35) saturate(0.5)' }} />
+                                    ) : (
+                                        <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, rgba(139,0,0,0.25), rgba(30,20,40,0.8))` }} />
+                                    )}
+                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 20%, rgba(12,10,16,0.95) 100%)' }} />
+                                    <div style={{ position: 'absolute', bottom: 10, left: 16 }}>
+                                        <div style={{ fontFamily: FC, fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)', letterSpacing: 2 }}>{m.name}</div>
+                                    </div>
+                                </div>
+                                <div style={{ padding: '10px 16px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: F, fontSize: '0.55rem', color: GOLD }}>Day {m.daysIn}/{m.lockDays}</span>
+                                    <span style={{ fontFamily: F, fontSize: '0.45rem', color: m.todayPerfect ? '#4caf50' : TEXT_DIM }}>
+                                        {m.todayPerfect ? 'PERFECT' : `${m.todayDone}/${m.todayTotal}`}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {lockedMembers.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: 60, color: TEXT_DIM, fontFamily: F, fontSize: '0.6rem' }}>
+                            No locked members
+                        </div>
+                    )}
+                </div>
+            )}
 
-// ── Local fallback generator ──
-function _localDefaultTasks(day: number): Task[] {
-    const kt = day <= 3 ? 4 : day <= 6 ? 6 : day <= 11 ? 8 : day <= 14 ? 10 : day <= 19 ? 12 : day <= 24 ? 14 : day <= 27 ? 16 : day <= 29 ? 18 : 20;
-    const tasks: Task[] = [
-        { type: 'kneel', target: kt, label: `Kneel ${kt} times` },
-        { type: 'chastity_check', target: 1, label: 'Chastity check photo' },
-    ];
-    if (day === 1) tasks.push({ type: 'journal', target: 1, label: 'Journal: "Why I submitted"' });
-    if (day === 2) tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' });
-    if (day === 3) tasks.push({ type: 'lines', target: 30, label: 'Write lines x30' });
-    if (day === 4) tasks.push({ type: 'tribute', target: 3, label: 'Tribute 3 coins' });
-    if (day === 5) tasks.push({ type: 'worship', target: 1, label: 'Worship message' });
-    if (day === 6) tasks.push({ type: 'card', target: 1, label: 'Draw a task card' });
-    if (day === 7) { tasks.push({ type: 'cold_shower', target: 60, label: 'Cold shower 60s' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); }
-    if (day === 8) { tasks.push({ type: 'edge', target: 3, label: 'Edge 3 times' }); tasks.push({ type: 'journal', target: 1, label: 'Journal entry' }); }
-    if (day === 9) { tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); tasks.push({ type: 'tribute', target: 5, label: 'Tribute 5 coins' }); }
-    if (day === 10) { tasks.push({ type: 'lines', target: 50, label: 'Write lines x50' }); tasks.push({ type: 'corner_time', target: 10, label: 'Corner time 10min' }); }
-    if (day === 11) tasks.push({ type: 'body_writing', target: 1, label: 'Body writing: OWNED' });
-    if (day === 12) { tasks.push({ type: 'card', target: 1, label: 'Draw a task card' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); }
-    if (day === 13) { tasks.push({ type: 'edge', target: 5, label: 'Edge 5 times' }); tasks.push({ type: 'gratitude', target: 5, label: 'Gratitude list (5 things)' }); }
-    if (day === 14) { tasks.push({ type: 'tribute', target: 10, label: 'Tribute 10 coins' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); }
-    if (day === 15) { tasks.push({ type: 'exercise', target: 50, label: 'Exercise: 50 pushups' }); tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); }
-    if (day === 16) { tasks.push({ type: 'edge', target: 5, label: 'Edge 5 times' }); tasks.push({ type: 'lines', target: 75, label: 'Write lines x75' }); }
-    if (day === 17) { tasks.push({ type: 'quiz', target: 1, label: "Quiz: Queen's rules" }); tasks.push({ type: 'journal', target: 1, label: 'Journal entry' }); }
-    if (day === 18) { tasks.push({ type: 'tribute', target: 10, label: 'Tribute 10 coins' }); tasks.push({ type: 'corner_time', target: 15, label: 'Corner time 15min' }); }
-    if (day === 19) { tasks.push({ type: 'body_writing', target: 1, label: 'Body writing photo' }); tasks.push({ type: 'card', target: 1, label: 'Draw a task card' }); }
-    if (day === 20) { tasks.push({ type: 'cold_shower', target: 90, label: 'Cold shower 90s' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); tasks.push({ type: 'edge', target: 5, label: 'Edge 5x' }); }
-    if (day === 21) { tasks.push({ type: 'denial', target: 1, label: 'Denial day (no touching 24h)' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); }
-    if (day === 22) { tasks.push({ type: 'tribute', target: 15, label: 'Tribute 15 coins' }); tasks.push({ type: 'gratitude', target: 10, label: 'Gratitude list (10 things)' }); }
-    if (day === 23) { tasks.push({ type: 'edge', target: 7, label: 'Edge 7 times' }); tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); tasks.push({ type: 'lines', target: 100, label: 'Write lines x100' }); }
-    if (day === 24) { tasks.push({ type: 'exercise', target: 75, label: 'Exercise: 75 pushups' }); tasks.push({ type: 'body_writing', target: 1, label: 'Body writing' }); tasks.push({ type: 'journal', target: 1, label: 'Journal entry' }); }
-    if (day === 25) { tasks.push({ type: 'card', target: 1, label: 'Draw a task card' }); tasks.push({ type: 'corner_time', target: 20, label: 'Corner time 20min' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); }
-    if (day === 26) { tasks.push({ type: 'cold_shower', target: 120, label: 'Cold shower 120s' }); tasks.push({ type: 'edge', target: 7, label: 'Edge 7x' }); tasks.push({ type: 'tribute', target: 10, label: 'Tribute 10 coins' }); }
-    if (day === 27) { tasks.push({ type: 'denial', target: 1, label: 'Denial day' }); tasks.push({ type: 'essay', target: 1, label: "Essay: What I've learned" }); }
-    if (day === 28) { tasks.push({ type: 'quiz', target: 1, label: 'Quiz' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); tasks.push({ type: 'lines', target: 100, label: 'Lines x100' }); }
-    if (day === 29) { tasks.push({ type: 'edge', target: 10, label: 'Edge 10 times' }); tasks.push({ type: 'tribute', target: 20, label: 'Tribute 20 coins' }); tasks.push({ type: 'exercise', target: 100, label: 'Exercise: 100 pushups' }); }
-    if (day === 30) { tasks.push({ type: 'journal', target: 1, label: 'Final devotion journal' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); tasks.push({ type: 'gratitude', target: 10, label: 'Gratitude (10 things)' }); tasks.push({ type: 'body_writing', target: 1, label: 'Body writing' }); tasks.push({ type: 'tribute', target: 25, label: 'Tribute 25 coins' }); }
-    return tasks;
+            {/* Member program view */}
+            {email && (
+                <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+                    {/* Header + day cards */}
+                    <div style={{ width: selectedDay ? '42%' : '100%', transition: 'width 0.4s ease', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        {/* Member header */}
+                        <div style={{ padding: '16px 24px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                            <button onClick={() => { setEmail(''); setSelectedDay(null); }} style={{
+                                background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', fontSize: '1rem',
+                            }}>←</button>
+                            {info?.avatar && (
+                                <img src={info.avatar} alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'cover', border: `1px solid ${BORDER}` }} />
+                            )}
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontFamily: FC, fontSize: '0.65rem', color: 'rgba(255,255,255,0.85)', letterSpacing: 2 }}>
+                                    {info?.name || email.split('@')[0]}
+                                </div>
+                                <div style={{ fontFamily: F, fontSize: '0.45rem', color: TEXT_DIM }}>
+                                    Day {info?.daysIn || '?'} of {info?.lockDays || '?'} • {info?.tier || 'vault'}
+                                </div>
+                            </div>
+                            {!program ? (
+                                <button onClick={onGenerate} style={{
+                                    padding: '8px 20px', borderRadius: 8, border: `1px solid ${RED}`, cursor: 'pointer',
+                                    background: RED_DIM, color: RED, fontFamily: F, fontSize: '0.55rem', letterSpacing: 2,
+                                }}>{saving ? 'GENERATING...' : 'GENERATE PROGRAM'}</button>
+                            ) : (
+                                <button onClick={() => { if (selectedDay) onSaveDay(selectedDay, program[String(selectedDay)] || []); }} style={{
+                                    padding: '8px 20px', borderRadius: 8, border: `1px solid ${GOLD_DIM}`, cursor: 'pointer',
+                                    background: 'rgba(197,160,89,0.06)', color: GOLD, fontFamily: F, fontSize: '0.55rem', letterSpacing: 2,
+                                    opacity: selectedDay ? 1 : 0.3,
+                                }}>{saving ? 'SAVING...' : 'SAVE DAY'}</button>
+                            )}
+                        </div>
+
+                        {/* Day cards */}
+                        {program ? (
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }} className="kh-scroll">
+                                {PHASES.map(phase => (
+                                    <div key={phase.name} style={{ marginBottom: 24 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingLeft: 4 }}>
+                                            <div style={{ width: 3, height: 18, borderRadius: 2, background: phase.color }} />
+                                            <span style={{ fontFamily: FC, fontSize: '0.5rem', color: phase.color, letterSpacing: 4 }}>{phase.name}</span>
+                                            <div style={{ flex: 1, height: 1, background: BORDER }} />
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: selectedDay ? '1fr 1fr' : 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
+                                            {phase.days.map(d => {
+                                                const tasks = program[String(d)] || [];
+                                                const isActive = selectedDay === d;
+                                                const isCurrent = info?.daysIn === d;
+                                                return (
+                                                    <div key={d} className="kh-day-card" onClick={() => setSelectedDay(isActive ? null : d)} style={{
+                                                        borderRadius: 12, cursor: 'pointer', overflow: 'hidden', padding: '12px 14px',
+                                                        border: `1px solid ${isActive ? GOLD_DIM : isCurrent ? 'rgba(139,0,0,0.4)' : BORDER}`,
+                                                        background: isActive ? 'rgba(197,160,89,0.04)' : isCurrent ? 'rgba(139,0,0,0.04)' : SURFACE,
+                                                    }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                            <span style={{ fontFamily: FC, fontSize: '0.9rem', color: isActive ? GOLD : isCurrent ? RED : 'rgba(255,255,255,0.5)' }}>{d}</span>
+                                                            {isCurrent && <span style={{ fontFamily: F, fontSize: '0.4rem', color: RED, letterSpacing: 2 }}>TODAY</span>}
+                                                            <span style={{ fontFamily: F, fontSize: '0.45rem', color: TEXT_DIM }}>{tasks.length}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                                                            {tasks.slice(0, 5).map((t: Task, i: number) => {
+                                                                const meta = TASK_META[t.type] || { icon: '•', color: '#666' };
+                                                                return <span key={i} style={{ fontSize: '0.5rem', color: `${meta.color}99` }}>{meta.icon}</span>;
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '2rem', marginBottom: 12, opacity: 0.2 }}>⛓</div>
+                                    <div style={{ fontFamily: F, fontSize: '0.6rem', color: TEXT_DIM, letterSpacing: 2 }}>
+                                        {loading ? 'LOADING...' : 'NO PROGRAM FOUND'}
+                                    </div>
+                                    <div style={{ fontFamily: F, fontSize: '0.5rem', color: TEXT_DIM, marginTop: 4 }}>
+                                        Generate a program from the master template
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right: Day detail */}
+                    {selectedDay && program && (
+                        <DayDetailPanel
+                            dayNum={selectedDay} tasks={program[String(selectedDay)] || []}
+                            onClose={() => setSelectedDay(null)}
+                            onUpdateTask={(i: number, f: string, v: any) => onUpdateTask(selectedDay, i, f, v)}
+                            onAddTask={(type: string) => onAddTask(selectedDay, type)}
+                            onRemoveTask={(i: number) => onRemoveTask(selectedDay, i)}
+                            onMoveTask={(from: number, to: number) => onMoveTask(selectedDay, from, to)}
+                            dragIdx={dragIdx} setDragIdx={setDragIdx}
+                        />
+                    )}
+                </div>
+            )}
+        </div>
+    );
 }
