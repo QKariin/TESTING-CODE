@@ -27,17 +27,14 @@ export async function POST(req: Request) {
 
         const memberId = session.member_id;
 
-        // ── ACCEPT (activate now) ──
+        // ── ACCEPT (send to video proof screen, same as self-lock) ──
         if (action === 'accept') {
-            const expiresAt = new Date(Date.now() + session.lock_days * 86400000).toISOString();
-
+            // Set to awaiting_video — lock only activates after video proof is submitted
             await supabaseAdmin.from('vault_sessions').update({
-                status: 'active',
-                started_at: new Date().toISOString(),
-                expires_at: expiresAt,
+                status: 'awaiting_video',
             }).eq('id', sessionId);
 
-            // Update profile
+            // Update profile — set vault_request to awaiting_video (no active_overlay yet)
             const { data: profile } = await supabaseAdmin
                 .from('profiles')
                 .select('ID, parameters')
@@ -46,30 +43,19 @@ export async function POST(req: Request) {
 
             if (profile) {
                 const params = profile.parameters || {};
-                params.vault_request = { ...params.vault_request, status: 'active', activatedAt: new Date().toISOString() };
-                params.active_overlay = 'vault';
+                params.vault_request = { ...params.vault_request, status: 'awaiting_video', sessionId, lockDays: session.lock_days };
                 await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
             }
-
-            // Create day 1 vault orders
-            try {
-                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
-                await fetch(`${baseUrl}/api/vault/session`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'create', memberId, tier: session.tier, lockDays: session.lock_days }),
-                });
-            } catch (_) {}
 
             // Notify user
             try {
                 await DbService.sendMessage(memberId,
-                    `YOUR LOCK HAS BEEN ACTIVATED. ${session.lock_days} days. There is no way out.`,
+                    `LOCK APPROVED — ${session.lock_days} days. Submit your video proof to begin.`,
                     'system');
-                await _pushToUser(memberId, 'Your lock has begun. Obey.');
+                await _pushToUser(memberId, 'Lock approved. Submit your video proof now.');
             } catch (_) {}
 
-            return NextResponse.json({ success: true, status: 'active' });
+            return NextResponse.json({ success: true, status: 'awaiting_video' });
         }
 
         // ── SCHEDULE ──

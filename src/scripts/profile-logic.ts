@@ -5965,7 +5965,10 @@ export async function checkVaultLockStatus() {
                     filter: `id=eq.${data.sessionId}`,
                 }, (payload: any) => {
                     const updated = payload.new;
-                    if (updated.status === 'active') {
+                    if (updated.status === 'awaiting_video') {
+                        _updateVaultLockButton({ active: true, status: 'awaiting_video', sessionId: updated.id, lockDays: updated.lock_days } as any);
+                        _showVideoProofUpload({ sessionId: updated.id, lockDays: updated.lock_days });
+                    } else if (updated.status === 'active') {
                         _updateVaultLockButton({ active: true, status: 'active', lockDays: updated.lock_days });
                         _showVaultConfirmation(true, updated.lock_days);
                     } else if (updated.status === 'denied') {
