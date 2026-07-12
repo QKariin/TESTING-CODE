@@ -5861,16 +5861,12 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             });
             const thumbFile = new File([thumbBlob], `vault-thumb-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-            // iOS Safari: Do NOT remove src, do NOT call load(), do NOT revoke URL.
-            // ANY of those triggers the native "Load failed" dialog.
-            // Just pause and swap the video for the static canvas thumbnail.
+            // Kill video element NOW — before uploads start.
+            // Do NOT call video.load() — iOS shows "Load failed" when loading with no src.
             video.pause();
-            video.style.display = 'none';
-            const videoParent = video.parentElement;
-            if (videoParent) {
-                canvas.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
-                videoParent.appendChild(canvas);
-            }
+            video.removeAttribute('src');
+            video.remove();
+            URL.revokeObjectURL(videoUrl);
 
             // 2. Upload video
             statusEl.textContent = 'UPLOADING VIDEO...';
