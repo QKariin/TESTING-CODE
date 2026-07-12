@@ -5,14 +5,14 @@ import { useState, useEffect, useRef } from 'react';
 const F = "'Rajdhani', sans-serif";
 const FC = "'Cinzel', serif";
 const GOLD = '#c5a059';
-const GOLD_DIM = 'rgba(197,160,89,0.25)';
-const RED = 'rgba(160,20,30,0.85)';
-const RED_DIM = 'rgba(139,0,0,0.15)';
-const BG = '#08080c';
-const SURFACE = 'rgba(255,255,255,0.02)';
-const BORDER = 'rgba(197,160,89,0.08)';
-const TEXT = 'rgba(255,255,255,0.7)';
-const TEXT_DIM = 'rgba(255,255,255,0.22)';
+const GOLD_DIM = 'rgba(197,160,89,0.4)';
+const RED = 'rgba(180,40,40,0.9)';
+const RED_DIM = 'rgba(139,0,0,0.25)';
+const BG = '#0a0a10';
+const SURFACE = 'rgba(255,255,255,0.07)';
+const BORDER = 'rgba(197,160,89,0.2)';
+const TEXT = 'rgba(255,255,255,0.92)';
+const TEXT_DIM = 'rgba(255,255,255,0.55)';
 
 /* ── TASK TYPES — no emojis, elegant symbols only ── */
 const TASK_META: Record<string, { label: string; icon: string; color: string; configKey?: string }> = {
@@ -101,11 +101,11 @@ function _genDefaults(): Record<string,Task[]> { const d: Record<string,Task[]>=
 const CSS = `
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
-.kscr::-webkit-scrollbar{width:3px}.kscr::-webkit-scrollbar-track{background:transparent}.kscr::-webkit-scrollbar-thumb{background:rgba(197,160,89,.1);border-radius:4px}
+.kscr::-webkit-scrollbar{width:3px}.kscr::-webkit-scrollbar-track{background:transparent}.kscr::-webkit-scrollbar-thumb{background:rgba(197,160,89,.2);border-radius:4px}
 .kdc{transition:all .3s ease;cursor:pointer}
-.kdc:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.4),inset 0 1px 0 rgba(197,160,89,.06)}
+.kdc:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.4),inset 0 1px 0 rgba(197,160,89,.15)}
 .ktc{transition:all .25s ease;cursor:grab}
-.ktc:hover{box-shadow:0 4px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(197,160,89,.04)}
+.ktc:hover{box-shadow:0 4px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(197,160,89,.12)}
 .ktc:active{cursor:grabbing;transform:scale(1.01)}
 .kmc{transition:all .3s ease;cursor:pointer}
 .kmc:hover{transform:translateY(-4px);box-shadow:0 10px 40px rgba(0,0,0,.5)}
@@ -161,15 +161,15 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
             <style>{CSS}</style>
 
             {/* HEADER */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 28px', borderBottom: `1px solid rgba(197,160,89,.06)`, gap: 16, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 28px', borderBottom: `1px solid rgba(197,160,89,.18)`, gap: 16, flexShrink: 0 }}>
                 <button onClick={onClose} style={{ background: 'none', border: 'none', color: GOLD, fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{'\u2190'}</button>
                 <h1 style={{ fontFamily: FC, fontSize: '.8rem', color: GOLD, letterSpacing: 8, margin: 0, flex: 1, textTransform: 'uppercase' }}>Keyholder Program</h1>
-                <div style={{ display: 'flex', gap: 0, background: 'rgba(197,160,89,.04)', borderRadius: 6, border: `1px solid rgba(197,160,89,.08)` }}>
+                <div style={{ display: 'flex', gap: 0, background: 'rgba(197,160,89,.08)', borderRadius: 6, border: `1px solid rgba(197,160,89,.2)` }}>
                     {(['program','config','member'] as ViewMode[]).map(v => (
                         <button key={v} onClick={() => setView(v)} style={{
                             padding: '9px 22px', border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: FC,
                             fontSize: '.5rem', letterSpacing: 3, transition: 'all .25s',
-                            background: view===v ? 'rgba(197,160,89,.1)' : 'transparent',
+                            background: view===v ? 'rgba(197,160,89,.18)' : 'transparent',
                             color: view===v ? GOLD : TEXT_DIM,
                         }}>{v.toUpperCase()}</button>
                     ))}
@@ -178,36 +178,38 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
 
             {/* LOCKED MEMBERS STRIP */}
             {lockedMembers.length > 0 && (
-                <div style={{ display: 'flex', gap: 16, padding: '16px 28px', overflowX: 'auto', borderBottom: `1px solid rgba(197,160,89,.06)`, flexShrink: 0 }} className="kscr">
+                <div style={{ display: 'flex', gap: 16, padding: '16px 28px', overflowX: 'auto', borderBottom: `1px solid rgba(197,160,89,.18)`, flexShrink: 0 }} className="kscr">
                     {lockedMembers.map((m: any) => (
                         <div key={m.memberId} className="kmc"
                             onClick={() => { setMemberEmail(m.memberId); setView('member'); setTimeout(()=>loadMemberProgram(),80); }}
                             style={{
-                                minWidth: 240, borderRadius: 12, overflow: 'hidden',
-                                border: `1px solid ${memberEmail===m.memberId ? 'rgba(197,160,89,.2)' : 'rgba(197,160,89,.06)'}`,
-                                background: 'linear-gradient(160deg, rgba(18,16,22,.98), rgba(8,8,12,.99))',
+                                minWidth: 260, height: 100, borderRadius: 14, overflow: 'hidden', position: 'relative',
+                                border: `1px solid ${memberEmail===m.memberId ? 'rgba(197,160,89,.35)' : 'rgba(197,160,89,.15)'}`,
                             }}>
-                            <div style={{ height: 85, position: 'relative', overflow: 'hidden' }}>
-                                {m.avatar ? (
-                                    <img src={m.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(.25) saturate(.4)' }} />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, rgba(139,0,0,.2), rgba(20,16,28,.9))' }} />
-                                )}
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 10%, rgba(8,8,12,.96) 100%)' }} />
-                                <div style={{ position: 'absolute', top: 10, right: 12, fontFamily: F, fontSize: '.55rem', color: GOLD, fontWeight: 700, letterSpacing: 2, background: 'rgba(0,0,0,.6)', padding: '2px 10px', borderRadius: 4, border: `1px solid rgba(197,160,89,.15)` }}>
-                                    DAY {m.daysIn}
-                                </div>
-                            </div>
-                            <div style={{ padding: '10px 16px 14px', marginTop: -20, position: 'relative' }}>
-                                <div style={{ fontFamily: FC, fontSize: '.65rem', color: 'rgba(255,255,255,.9)', letterSpacing: 3, marginBottom: 8 }}>{m.name}</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <div style={{ flex: 1, height: 2, background: 'rgba(197,160,89,.08)', borderRadius: 2, overflow: 'hidden' }}>
-                                        <div style={{ width: `${m.lockDays?(m.daysIn/m.lockDays)*100:0}%`, height: '100%', background: `linear-gradient(90deg, ${GOLD}, rgba(139,0,0,.7))`, borderRadius: 2 }} />
+                            {/* Photo as full background — matching sub list card pattern */}
+                            {m.avatar ? (
+                                <img src={m.avatar} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18, filter: 'blur(0px)', pointerEvents: 'none' }} />
+                            ) : (
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(139,0,0,.2), rgba(20,16,28,.9))' }} />
+                            )}
+                            {/* Content overlay */}
+                            <div style={{ position: 'relative', zIndex: 1, padding: '14px 18px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.95)', letterSpacing: 3 }}>{m.name}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.55rem', color: GOLD, fontWeight: 700, letterSpacing: 2, background: 'rgba(0,0,0,.5)', padding: '3px 10px', borderRadius: 4, border: `1px solid rgba(197,160,89,.25)` }}>
+                                        DAY {m.daysIn}
                                     </div>
-                                    <span style={{ fontFamily: F, fontSize: '.45rem', color: TEXT_DIM }}>{m.daysIn}/{m.lockDays}d</span>
                                 </div>
-                                <div style={{ fontFamily: F, fontSize: '.45rem', color: m.todayPerfect ? GOLD : TEXT_DIM, marginTop: 5, letterSpacing: 1 }}>
-                                    {m.todayPerfect ? '\u2726 PERFECT' : `${m.todayDone}/${m.todayTotal} today`}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <div style={{ flex: 1, height: 3, background: 'rgba(197,160,89,.15)', borderRadius: 2, overflow: 'hidden' }}>
+                                            <div style={{ width: `${m.lockDays?(m.daysIn/m.lockDays)*100:0}%`, height: '100%', background: `linear-gradient(90deg, ${GOLD}, rgba(139,0,0,.7))`, borderRadius: 2 }} />
+                                        </div>
+                                        <span style={{ fontFamily: F, fontSize: '.48rem', color: TEXT_DIM }}>{m.daysIn}/{m.lockDays}d</span>
+                                    </div>
+                                    <div style={{ fontFamily: F, fontSize: '.48rem', color: m.todayPerfect ? GOLD : TEXT_DIM, marginTop: 5, letterSpacing: 1 }}>
+                                        {m.todayPerfect ? '\u2726 PERFECT' : `${m.todayDone}/${m.todayTotal} today`}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -232,18 +234,18 @@ function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveT
             <div style={{ width: sel ? '32%' : '100%', transition: 'width .4s ease', overflowY: 'auto', padding: '20px 28px' }} className="kscr">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <div>
-                        <div style={{ fontFamily: FC, fontSize: '.55rem', color: 'rgba(255,255,255,.4)', letterSpacing: 5 }}>MASTER TEMPLATE</div>
+                        <div style={{ fontFamily: FC, fontSize: '.55rem', color: 'rgba(255,255,255,.6)', letterSpacing: 5 }}>MASTER TEMPLATE</div>
                         <div style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, marginTop: 4, letterSpacing: 1 }}>Chastity check auto-included. Click day to edit tasks.</div>
                     </div>
-                    <button onClick={saveTemplate} className="kbtn" style={{ padding: '10px 30px', borderRadius: 6, border: `1px solid rgba(197,160,89,.15)`, background: 'rgba(197,160,89,.04)', color: GOLD, fontFamily: FC, fontSize: '.45rem', letterSpacing: 4 }}>{saving ? 'SAVING...' : 'SAVE'}</button>
+                    <button onClick={saveTemplate} className="kbtn" style={{ padding: '10px 30px', borderRadius: 6, border: `1px solid rgba(197,160,89,.3)`, background: 'rgba(197,160,89,.1)', color: GOLD, fontFamily: FC, fontSize: '.45rem', letterSpacing: 4 }}>{saving ? 'SAVING...' : 'SAVE'}</button>
                 </div>
                 {PHASES.map(phase => (
                     <div key={phase.name} style={{ marginBottom: 28 }} className="kfade">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                            <div style={{ width: 3, height: 24, borderRadius: 2, background: phase.color, opacity: .6 }} />
-                            <span style={{ fontFamily: FC, fontSize: '.5rem', color: phase.color, letterSpacing: 6, opacity: .8 }}>{phase.name}</span>
+                            <div style={{ width: 3, height: 24, borderRadius: 2, background: phase.color, opacity: .8 }} />
+                            <span style={{ fontFamily: FC, fontSize: '.5rem', color: phase.color, letterSpacing: 6 }}>{phase.name}</span>
                             <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 2 }}>{phase.sub}</span>
-                            <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.04)' }} />
+                            <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.12)' }} />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: sel ? 'repeat(auto-fill,minmax(90px,1fr))' : 'repeat(auto-fill,minmax(160px,1fr))', gap: sel ? 8 : 12 }}>
                             {phase.days.map(d => {
@@ -252,18 +254,18 @@ function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveT
                                 return (
                                     <div key={d} className="kdc" onClick={() => setSel(isA?null:d)} style={{
                                         borderRadius: 10, padding: sel ? '10px 10px 8px' : '16px 18px 12px',
-                                        border: `1px solid ${isA ? 'rgba(197,160,89,.2)' : 'rgba(197,160,89,.06)'}`,
-                                        background: isA ? 'linear-gradient(145deg, rgba(197,160,89,.06), rgba(8,8,12,.99))' : 'linear-gradient(145deg, rgba(16,14,20,.98), rgba(8,8,12,.99))',
+                                        border: `1px solid ${isA ? 'rgba(197,160,89,.35)' : 'rgba(197,160,89,.15)'}`,
+                                        background: isA ? 'linear-gradient(145deg, rgba(197,160,89,.1), rgba(15,13,20,.95))' : 'linear-gradient(145deg, rgba(22,20,30,.95), rgba(12,10,18,.98))',
                                     }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: sel ? 4 : 8 }}>
-                                            <span style={{ fontFamily: FC, fontSize: sel ? '.75rem' : '1.1rem', color: isA ? GOLD : 'rgba(255,255,255,.45)', lineHeight: 1 }}>{d}</span>
+                                            <span style={{ fontFamily: FC, fontSize: sel ? '.75rem' : '1.1rem', color: isA ? GOLD : 'rgba(255,255,255,.6)', lineHeight: 1 }}>{d}</span>
                                             <span style={{ fontFamily: F, fontSize: '.4rem', color: isA ? GOLD : TEXT_DIM, fontWeight: 600 }}>{tasks.length + 1}</span>
                                         </div>
                                         {!sel && (
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                                                <span style={{ fontSize: '.6rem', color: 'rgba(139,0,0,.5)' }}>{'\u25C8'}</span>
+                                                <span style={{ fontSize: '.6rem', color: 'rgba(139,0,0,.7)' }}>{'\u25C8'}</span>
                                                 {tasks.slice(0, 5).map((t: Task, i: number) => (
-                                                    <span key={i} style={{ fontSize: '.55rem', color: `${TASK_META[t.type]?.color || '#666'}88` }}>{TASK_META[t.type]?.icon || '\u2022'}</span>
+                                                    <span key={i} style={{ fontSize: '.55rem', color: TASK_META[t.type]?.color || '#666', opacity: .7 }}>{TASK_META[t.type]?.icon || '\u2022'}</span>
                                                 ))}
                                                 {tasks.length > 5 && <span style={{ fontSize: '.35rem', color: TEXT_DIM, alignSelf: 'center' }}>+{tasks.length-5}</span>}
                                             </div>
@@ -286,34 +288,34 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
     const [addOpen, setAddOpen] = useState(false);
 
     return (
-        <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.06)`, display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, rgba(12,10,16,.99), ${BG})`, overflow: 'hidden' }}>
+        <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, rgba(14,12,20,.99), ${BG})`, overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ padding: '22px 32px 18px', borderBottom: `1px solid rgba(197,160,89,.06)`, display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+            <div style={{ padding: '22px 32px 18px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'flex-end', gap: 16 }}>
                 <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-                        <span style={{ fontFamily: FC, fontSize: '1.8rem', color: 'rgba(255,255,255,.85)', lineHeight: 1 }}>Day {dayNum}</span>
-                        <span style={{ fontFamily: FC, fontSize: '.45rem', color: phase?.color, letterSpacing: 5, opacity: .7 }}>{phase?.name}</span>
+                        <span style={{ fontFamily: FC, fontSize: '1.8rem', color: 'rgba(255,255,255,.92)', lineHeight: 1 }}>Day {dayNum}</span>
+                        <span style={{ fontFamily: FC, fontSize: '.45rem', color: phase?.color, letterSpacing: 5 }}>{phase?.name}</span>
                     </div>
                     <div style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, letterSpacing: 2, marginTop: 4 }}>
                         {phase?.sub} phase {'\u00B7'} drag to reorder {'\u00B7'} {tasks.length + 1} tasks
                     </div>
                 </div>
-                <button onClick={onClose} className="kbtn" style={{ background: 'rgba(197,160,89,.03)', border: `1px solid rgba(197,160,89,.1)`, borderRadius: 6, padding: '8px 20px', color: TEXT_DIM, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>CLOSE</button>
+                <button onClick={onClose} className="kbtn" style={{ background: 'rgba(197,160,89,.08)', border: `1px solid rgba(197,160,89,.2)`, borderRadius: 6, padding: '8px 20px', color: TEXT_DIM, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>CLOSE</button>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }} className="kscr">
                 {/* CHASTITY CHECK — constant */}
                 <div style={{
                     borderRadius: 12, marginBottom: 16, overflow: 'hidden', position: 'relative',
-                    border: '1px solid rgba(139,0,0,.15)',
-                    background: 'linear-gradient(135deg, rgba(139,0,0,.06), rgba(8,8,12,.98))',
+                    border: '1px solid rgba(139,0,0,.3)',
+                    background: 'linear-gradient(135deg, rgba(139,0,0,.12), rgba(15,12,20,.95))',
                 }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, rgba(139,0,0,.3), transparent)' }} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, rgba(139,0,0,.5), transparent)' }} />
                     <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 18 }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(139,0,0,.08)', border: '1px solid rgba(139,0,0,.12)', fontFamily: F, fontSize: '1.2rem', color: 'rgba(139,0,0,.6)' }}>{'\u25C8'}</div>
+                        <div style={{ width: 48, height: 48, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(139,0,0,.15)', border: '1px solid rgba(139,0,0,.3)', fontFamily: F, fontSize: '1.2rem', color: 'rgba(139,0,0,.8)' }}>{'\u25C8'}</div>
                         <div style={{ flex: 1 }}>
-                            <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.65)', letterSpacing: 3 }}>Chastity Check</div>
-                            <div style={{ fontFamily: F, fontSize: '.4rem', color: 'rgba(139,0,0,.4)', letterSpacing: 2, marginTop: 3 }}>Photo proof {'\u00B7'} every day {'\u00B7'} constant</div>
+                            <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.85)', letterSpacing: 3 }}>Chastity Check</div>
+                            <div style={{ fontFamily: F, fontSize: '.4rem', color: 'rgba(139,0,0,.6)', letterSpacing: 2, marginTop: 3 }}>Photo proof {'\u00B7'} every day {'\u00B7'} constant</div>
                         </div>
                     </div>
                 </div>
@@ -335,34 +337,34 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                             className="ktc"
                             style={{
                                 borderRadius: 12, marginBottom: 14, opacity: dragIdx===idx ? .2 : 1, overflow: 'hidden', position: 'relative',
-                                border: `1px solid rgba(197,160,89,.08)`,
-                                background: 'linear-gradient(135deg, rgba(16,14,20,.98), rgba(8,8,12,.99))',
+                                border: `1px solid rgba(197,160,89,.18)`,
+                                background: 'linear-gradient(135deg, rgba(22,20,30,.95), rgba(14,12,20,.98))',
                             }}>
                             {/* Top accent line */}
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: 80, height: 2, background: `linear-gradient(90deg, ${meta.color}40, transparent)` }} />
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: 80, height: 2, background: `linear-gradient(90deg, ${meta.color}, transparent)`, opacity: .6 }} />
 
                             {/* Main content */}
                             <div style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', gap: 18 }}>
                                 {/* Drag handle */}
-                                <div style={{ color: 'rgba(197,160,89,.15)', fontSize: '.7rem', userSelect: 'none' }}>{'\u2982'}</div>
+                                <div style={{ color: 'rgba(197,160,89,.35)', fontSize: '.7rem', userSelect: 'none' }}>{'\u2982'}</div>
 
                                 {/* Icon */}
                                 <div style={{
                                     width: 48, height: 48, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: `${meta.color}0a`, border: `1px solid ${meta.color}15`,
-                                    fontFamily: F, fontSize: '1.2rem', color: `${meta.color}88`, flexShrink: 0,
+                                    background: `rgba(${_hexToRgb(meta.color)},.12)`, border: `1px solid rgba(${_hexToRgb(meta.color)},.25)`,
+                                    fontFamily: F, fontSize: '1.2rem', color: meta.color, opacity: .85, flexShrink: 0,
                                 }}>{meta.icon}</div>
 
                                 {/* Label + type */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <input value={task.label} onChange={(e) => updateTask(idx,'label',e.target.value)} style={{
                                         background: 'transparent', border: 'none', outline: 'none', width: '100%',
-                                        fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.8)', letterSpacing: 1,
+                                        fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.9)', letterSpacing: 1,
                                     }} />
-                                    <div style={{ fontFamily: F, fontSize: '.38rem', color: `${meta.color}66`, letterSpacing: 3, marginTop: 3, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ fontFamily: F, fontSize: '.38rem', color: meta.color, opacity: .7, letterSpacing: 3, marginTop: 3, display: 'flex', alignItems: 'center', gap: 10 }}>
                                         {meta.label}
                                         {hasConfig && (
-                                            <span onClick={(e) => { e.stopPropagation(); setConfigSection(cfgKey); setView('config'); }} style={{ color: GOLD, cursor: 'pointer', letterSpacing: 2, borderBottom: `1px solid rgba(197,160,89,.2)`, paddingBottom: 1 }}>
+                                            <span onClick={(e) => { e.stopPropagation(); setConfigSection(cfgKey); setView('config'); }} style={{ color: GOLD, cursor: 'pointer', letterSpacing: 2, borderBottom: `1px solid rgba(197,160,89,.4)`, paddingBottom: 1 }}>
                                                 EDIT OPTIONS {'\u2192'}
                                             </span>
                                         )}
@@ -372,15 +374,15 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                 {/* Target */}
                                 <input type="number" value={task.target} onChange={(e) => updateTask(idx,'target',parseInt(e.target.value)||1)} style={{
                                     width: 48, height: 44, textAlign: 'center', borderRadius: 8,
-                                    background: 'rgba(0,0,0,.3)', border: `1px solid rgba(197,160,89,.1)`,
+                                    background: 'rgba(0,0,0,.4)', border: `1px solid rgba(197,160,89,.2)`,
                                     color: GOLD, fontFamily: FC, fontSize: '.9rem', outline: 'none',
                                 }} />
 
                                 {/* Delete */}
                                 <button onClick={(e) => { e.stopPropagation(); removeTask(idx); }} style={{
-                                    background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.1)',
+                                    background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.25)',
                                     fontFamily: F, fontSize: '1rem', padding: '4px 6px', transition: 'color .2s',
-                                }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.1)')}>{'\u00D7'}</button>
+                                }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
                             </div>
 
                             {/* Config preview */}
@@ -389,7 +391,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                         {cfgItems.slice(0, 8).map((item: any, i: number) => {
                                             const lbl = typeof item === 'string' ? item : (item.label || item.title || item.question || item.type || '');
-                                            return <span key={i} style={{ fontFamily: F, fontSize: '.4rem', color: `${meta.color}55`, background: `${meta.color}08`, padding: '4px 10px', borderRadius: 4, border: `1px solid ${meta.color}0c`, letterSpacing: 1 }}>{lbl}</span>;
+                                            return <span key={i} style={{ fontFamily: F, fontSize: '.4rem', color: meta.color, opacity: .85, background: `rgba(${_hexToRgb(meta.color)},.15)`, padding: '5px 12px', borderRadius: 5, border: `1px solid rgba(${_hexToRgb(meta.color)},.25)`, letterSpacing: 1 }}>{lbl}</span>;
                                         })}
                                         {cfgItems.length > 8 && <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, alignSelf: 'center' }}>+{cfgItems.length-8}</span>}
                                     </div>
@@ -402,8 +404,8 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                 {/* Add task */}
                 <div style={{ marginTop: 18 }}>
                     <button onClick={() => setAddOpen(!addOpen)} className="kbtn" style={{
-                        width: '100%', padding: '18px', borderRadius: 12, border: `1px dashed rgba(197,160,89,.1)`,
-                        background: addOpen ? 'rgba(197,160,89,.02)' : 'transparent',
+                        width: '100%', padding: '18px', borderRadius: 12, border: `1px dashed rgba(197,160,89,.25)`,
+                        background: addOpen ? 'rgba(197,160,89,.06)' : 'transparent',
                         color: addOpen ? GOLD : TEXT_DIM, fontFamily: FC, fontSize: '.45rem', letterSpacing: 4,
                     }}>+ Add Task</button>
 
@@ -412,11 +414,11 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                             {Object.entries(TASK_META).filter(([t]) => t!=='chastity_check').map(([type, meta]) => (
                                 <button key={type} onClick={() => { addTask(type); setAddOpen(false); }} className="kbtn" style={{
                                     display: 'flex', alignItems: 'center', gap: 10, padding: '16px 16px',
-                                    borderRadius: 10, border: `1px solid rgba(197,160,89,.06)`, textAlign: 'left',
-                                    background: 'linear-gradient(135deg, rgba(16,14,20,.98), rgba(8,8,12,.99))',
+                                    borderRadius: 10, border: `1px solid rgba(197,160,89,.15)`, textAlign: 'left',
+                                    background: 'linear-gradient(135deg, rgba(22,20,30,.95), rgba(14,12,20,.98))',
                                     fontFamily: F, fontSize: '.55rem', fontWeight: 600, color: TEXT,
                                 }}>
-                                    <span style={{ fontSize: '.9rem', color: `${meta.color}77` }}>{meta.icon}</span>
+                                    <span style={{ fontSize: '.9rem', color: meta.color, opacity: .8 }}>{meta.icon}</span>
                                     <span style={{ letterSpacing: 1 }}>{meta.label}</span>
                                 </button>
                             ))}
@@ -436,14 +438,14 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
     const add = () => { const n=[...data]; if(configSection==='spin_wheel') n.push({label:'New option',effect:'nothing',value:0,weight:1}); else if(configSection==='card_deck') n.push({title:'New card',description:'',category:'control'}); else if(configSection==='lines_texts') n.push('New line'); else if(configSection==='body_writing') n.push('WORD'); else if(configSection==='quiz_questions') n.push({question:'',answer:''}); else if(configSection==='exercises') n.push({type:'pushups',count:20}); setConfigData({...configData,[configSection]:n}); };
     const rem = (idx: number) => { const n=[...data]; n.splice(idx,1); setConfigData({...configData,[configSection]:n}); };
 
-    const inp: React.CSSProperties = { background: 'rgba(255,255,255,.03)', border: `1px solid rgba(197,160,89,.08)`, borderRadius: 8, padding: '12px 16px', color: 'rgba(255,255,255,.8)', fontFamily: F, fontSize: '.72rem', outline: 'none', width: '100%' };
+    const inp: React.CSSProperties = { background: 'rgba(255,255,255,.06)', border: `1px solid rgba(197,160,89,.18)`, borderRadius: 8, padding: '12px 16px', color: 'rgba(255,255,255,.9)', fontFamily: F, fontSize: '.72rem', outline: 'none', width: '100%' };
     const num: React.CSSProperties = { ...inp, width: 70, textAlign: 'center' as const, fontSize: '.85rem', color: GOLD, fontWeight: 700 };
 
     return (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-            <div style={{ width: 220, borderRight: `1px solid rgba(197,160,89,.06)`, overflowY: 'auto', padding: '20px 0' }} className="kscr">
+            <div style={{ width: 220, borderRight: `1px solid rgba(197,160,89,.18)`, overflowY: 'auto', padding: '20px 0' }} className="kscr">
                 {CONFIG_SECTIONS.map(s => (
-                    <div key={s.key} onClick={() => setConfigSection(s.key)} style={{ padding: '16px 24px', cursor: 'pointer', borderLeft: `3px solid ${configSection===s.key ? GOLD : 'transparent'}`, background: configSection===s.key ? 'rgba(197,160,89,.03)' : 'transparent', transition: 'all .2s' }}>
+                    <div key={s.key} onClick={() => setConfigSection(s.key)} style={{ padding: '16px 24px', cursor: 'pointer', borderLeft: `3px solid ${configSection===s.key ? GOLD : 'transparent'}`, background: configSection===s.key ? 'rgba(197,160,89,.08)' : 'transparent', transition: 'all .2s' }}>
                         <div style={{ fontFamily: FC, fontSize: '.45rem', color: configSection===s.key ? GOLD : TEXT, letterSpacing: 3 }}>{s.title}</div>
                         <div style={{ fontFamily: F, fontSize: '.36rem', color: TEXT_DIM, marginTop: 3 }}>{s.desc}</div>
                     </div>
@@ -456,18 +458,18 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
                         <div style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, marginTop: 3 }}>{section?.desc} {'\u00B7'} {data.length} items</div>
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
-                        <button onClick={add} className="kbtn" style={{ padding: '9px 20px', borderRadius: 6, border: `1px solid rgba(197,160,89,.08)`, background: SURFACE, color: TEXT, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>+ ADD</button>
-                        <button onClick={() => onSave(configSection,data)} className="kbtn" style={{ padding: '9px 20px', borderRadius: 6, border: `1px solid rgba(197,160,89,.15)`, background: 'rgba(197,160,89,.04)', color: GOLD, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>{saving?'SAVING...':'SAVE'}</button>
+                        <button onClick={add} className="kbtn" style={{ padding: '9px 20px', borderRadius: 6, border: `1px solid rgba(197,160,89,.2)`, background: SURFACE, color: TEXT, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>+ ADD</button>
+                        <button onClick={() => onSave(configSection,data)} className="kbtn" style={{ padding: '9px 20px', borderRadius: 6, border: `1px solid rgba(197,160,89,.3)`, background: 'rgba(197,160,89,.1)', color: GOLD, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>{saving?'SAVING...':'SAVE'}</button>
                     </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {data.map((item: any, idx: number) => {
-                        const cardStyle: React.CSSProperties = { padding: '16px 20px', borderRadius: 10, background: 'linear-gradient(135deg, rgba(16,14,20,.98), rgba(8,8,12,.99))', border: `1px solid rgba(197,160,89,.06)` };
+                        const cardStyle: React.CSSProperties = { padding: '16px 20px', borderRadius: 10, background: 'linear-gradient(135deg, rgba(22,20,30,.95), rgba(14,12,20,.98))', border: `1px solid rgba(197,160,89,.15)` };
                         if (configSection==='lines_texts' || configSection==='body_writing') {
                             return (<div key={idx} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 14 }}>
                                 <span style={{ fontFamily: FC, fontSize: '.45rem', color: TEXT_DIM, width: 22 }}>{idx+1}</span>
                                 <input value={item} onChange={e=>update(idx,'_s',e.target.value)} style={{ ...inp, flex: 1 }} />
-                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.1)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.1)')}>{'\u00D7'}</button>
+                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.25)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
                             </div>);
                         }
                         if (configSection==='spin_wheel') {
@@ -476,7 +478,7 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
                                 <input value={item.effect||''} onChange={e=>update(idx,'effect',e.target.value)} style={{ ...inp, width: 100, fontSize: '.55rem' }} />
                                 <div style={{ textAlign: 'center' }}><div style={{ fontFamily: F, fontSize: '.28rem', color: TEXT_DIM, letterSpacing: 1, marginBottom: 2 }}>VAL</div><input type="number" value={item.value??0} onChange={e=>update(idx,'value',parseInt(e.target.value)||0)} style={num} /></div>
                                 <div style={{ textAlign: 'center' }}><div style={{ fontFamily: F, fontSize: '.28rem', color: TEXT_DIM, letterSpacing: 1, marginBottom: 2 }}>WT</div><input type="number" value={item.weight??1} onChange={e=>update(idx,'weight',parseInt(e.target.value)||1)} style={num} /></div>
-                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.1)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.1)')}>{'\u00D7'}</button>
+                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.25)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
                             </div>);
                         }
                         if (configSection==='card_deck') {
@@ -484,7 +486,7 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
                                 <div style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'center' }}>
                                     <input value={item.title||''} onChange={e=>update(idx,'title',e.target.value)} style={{ ...inp, flex: 1, fontFamily: FC, fontSize: '.6rem', letterSpacing: 1 }} />
                                     <input value={item.category||''} onChange={e=>update(idx,'category',e.target.value)} style={{ ...inp, width: 100, fontSize: '.5rem' }} />
-                                    <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.1)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.1)')}>{'\u00D7'}</button>
+                                    <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.25)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
                                 </div>
                                 <textarea value={item.description||''} onChange={e=>update(idx,'description',e.target.value)} rows={2} style={{ ...inp, resize: 'vertical', fontSize: '.55rem', lineHeight: 1.6 }} />
                             </div>);
@@ -493,14 +495,14 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
                             return (<div key={idx} style={{ ...cardStyle, display: 'flex', gap: 10, alignItems: 'center' }}>
                                 <input value={item.question||''} onChange={e=>update(idx,'question',e.target.value)} placeholder="Question" style={{ ...inp, flex: 2 }} />
                                 <input value={item.answer||''} onChange={e=>update(idx,'answer',e.target.value)} placeholder="Answer" style={{ ...inp, flex: 1 }} />
-                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.1)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.1)')}>{'\u00D7'}</button>
+                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.25)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
                             </div>);
                         }
                         if (configSection==='exercises') {
                             return (<div key={idx} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <input value={item.type||''} onChange={e=>update(idx,'type',e.target.value)} style={{ ...inp, flex: 1 }} />
                                 <div style={{ textAlign: 'center' }}><div style={{ fontFamily: F, fontSize: '.28rem', color: TEXT_DIM, letterSpacing: 1, marginBottom: 2 }}>COUNT</div><input type="number" value={item.count??10} onChange={e=>update(idx,'count',parseInt(e.target.value)||1)} style={num} /></div>
-                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.1)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.1)')}>{'\u00D7'}</button>
+                                <button onClick={()=>rem(idx)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,.25)', cursor: 'pointer', fontSize: '.9rem' }} onMouseEnter={e=>(e.currentTarget.style.color='rgba(255,60,60,.7)')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,.25)')}>{'\u00D7'}</button>
                             </div>);
                         }
                         return null;
@@ -521,20 +523,22 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 18 }}>
                         {locked.map((m: any, i: number) => (
                             <div key={m.memberId} className="kmc kfade" onClick={() => { setEmail(m.memberId); setTimeout(onLoad,80); }} style={{
-                                borderRadius: 12, overflow: 'hidden', border: `1px solid rgba(197,160,89,.06)`,
-                                background: 'linear-gradient(145deg, rgba(18,16,22,.98), rgba(8,8,12,.99))', animationDelay: `${i*.05}s`,
+                                borderRadius: 14, overflow: 'hidden', position: 'relative', height: 130,
+                                border: `1px solid rgba(197,160,89,.15)`, animationDelay: `${i*.05}s`,
                             }}>
-                                <div style={{ height: 110, position: 'relative', overflow: 'hidden' }}>
-                                    {m.avatar ? <img src={m.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(.2) saturate(.4)' }} /> : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, rgba(139,0,0,.15), rgba(20,16,28,.9))' }} />}
-                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 10%, rgba(8,8,12,.96) 100%)' }} />
-                                    <div style={{ position: 'absolute', bottom: 14, left: 20 }}>
-                                        <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.9)', letterSpacing: 3 }}>{m.name}</div>
+                                {/* Photo background — matching sub list pattern */}
+                                {m.avatar ? (
+                                    <img src={m.avatar} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18, pointerEvents: 'none' }} />
+                                ) : (
+                                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(139,0,0,.2), rgba(20,16,28,.9))' }} />
+                                )}
+                                <div style={{ position: 'relative', zIndex: 1, padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.95)', letterSpacing: 3 }}>{m.name}</div>
                                         <div style={{ fontFamily: F, fontSize: '.42rem', color: GOLD, marginTop: 4, letterSpacing: 2 }}>Day {m.daysIn} / {m.lockDays}</div>
                                     </div>
-                                </div>
-                                <div style={{ padding: '12px 20px 16px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{ flex: 1, height: 2, background: 'rgba(197,160,89,.06)', borderRadius: 2, overflow: 'hidden' }}>
+                                        <div style={{ flex: 1, height: 3, background: 'rgba(197,160,89,.15)', borderRadius: 2, overflow: 'hidden' }}>
                                             <div style={{ width: `${m.lockDays?(m.daysIn/m.lockDays)*100:0}%`, height: '100%', background: `linear-gradient(90deg, ${GOLD}, rgba(139,0,0,.6))` }} />
                                         </div>
                                         <span style={{ fontFamily: F, fontSize: '.42rem', color: m.todayPerfect ? GOLD : TEXT_DIM }}>{m.todayPerfect ? '\u2726 PERFECT' : `${m.todayDone}/${m.todayTotal}`}</span>
@@ -548,17 +552,17 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
             ) : (
                 <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
                     <div style={{ width: sel?'32%':'100%', transition: 'width .4s ease', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div style={{ padding: '14px 24px', borderBottom: `1px solid rgba(197,160,89,.06)`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                        <div style={{ padding: '14px 24px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
                             <button onClick={() => { setEmail(''); setSel(null); }} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', fontSize: '1rem' }}>{'\u2190'}</button>
-                            {info?.avatar && <img src={info.avatar} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', border: `1px solid rgba(197,160,89,.1)` }} />}
+                            {info?.avatar && <img src={info.avatar} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', border: `1px solid rgba(197,160,89,.2)` }} />}
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontFamily: FC, fontSize: '.6rem', color: 'rgba(255,255,255,.85)', letterSpacing: 3 }}>{info?.name || email.split('@')[0]}</div>
+                                <div style={{ fontFamily: FC, fontSize: '.6rem', color: 'rgba(255,255,255,.92)', letterSpacing: 3 }}>{info?.name || email.split('@')[0]}</div>
                                 <div style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 1 }}>Day {info?.daysIn||'?'} of {info?.lockDays||'?'}</div>
                             </div>
                             {!program ? (
-                                <button onClick={onGenerate} className="kbtn" style={{ padding: '9px 22px', borderRadius: 6, border: `1px solid rgba(139,0,0,.2)`, background: RED_DIM, color: RED, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>{saving?'GENERATING...':'GENERATE'}</button>
+                                <button onClick={onGenerate} className="kbtn" style={{ padding: '9px 22px', borderRadius: 6, border: `1px solid rgba(139,0,0,.3)`, background: RED_DIM, color: RED, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3 }}>{saving?'GENERATING...':'GENERATE'}</button>
                             ) : (
-                                <button onClick={() => { if(sel) saveMemberDay(sel,program[String(sel)]||[]); }} className="kbtn" style={{ padding: '9px 22px', borderRadius: 6, border: `1px solid rgba(197,160,89,.15)`, background: 'rgba(197,160,89,.04)', color: GOLD, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3, opacity: sel?1:.3 }}>{saving?'SAVING...':'SAVE DAY'}</button>
+                                <button onClick={() => { if(sel) saveMemberDay(sel,program[String(sel)]||[]); }} className="kbtn" style={{ padding: '9px 22px', borderRadius: 6, border: `1px solid rgba(197,160,89,.3)`, background: 'rgba(197,160,89,.1)', color: GOLD, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3, opacity: sel?1:.3 }}>{saving?'SAVING...':'SAVE DAY'}</button>
                             )}
                         </div>
                         {program ? (
@@ -566,9 +570,9 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                                 {PHASES.map(phase => (
                                     <div key={phase.name} style={{ marginBottom: 22 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                            <div style={{ width: 3, height: 16, borderRadius: 2, background: phase.color, opacity: .5 }} />
-                                            <span style={{ fontFamily: FC, fontSize: '.4rem', color: phase.color, letterSpacing: 5, opacity: .7 }}>{phase.name}</span>
-                                            <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.04)' }} />
+                                            <div style={{ width: 3, height: 16, borderRadius: 2, background: phase.color, opacity: .7 }} />
+                                            <span style={{ fontFamily: FC, fontSize: '.4rem', color: phase.color, letterSpacing: 5 }}>{phase.name}</span>
+                                            <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.12)' }} />
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: sel?'1fr 1fr':'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
                                             {phase.days.map(d => {
@@ -577,11 +581,11 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                                                 const isC = info?.daysIn===d;
                                                 return (<div key={d} className="kdc" onClick={() => setSel(isA?null:d)} style={{
                                                     borderRadius: 8, padding: '10px 12px',
-                                                    border: `1px solid ${isA?'rgba(197,160,89,.2)':isC?'rgba(139,0,0,.2)':'rgba(197,160,89,.05)'}`,
-                                                    background: isA?'rgba(197,160,89,.04)':isC?'rgba(139,0,0,.03)':'rgba(16,14,20,.98)',
+                                                    border: `1px solid ${isA?'rgba(197,160,89,.35)':isC?'rgba(139,0,0,.3)':'rgba(197,160,89,.12)'}`,
+                                                    background: isA?'rgba(197,160,89,.1)':isC?'rgba(139,0,0,.08)':'rgba(22,20,30,.95)',
                                                 }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <span style={{ fontFamily: FC, fontSize: '.7rem', color: isA?GOLD:isC?RED:'rgba(255,255,255,.4)' }}>{d}</span>
+                                                        <span style={{ fontFamily: FC, fontSize: '.7rem', color: isA?GOLD:isC?RED:'rgba(255,255,255,.55)' }}>{d}</span>
                                                         {isC && <span style={{ fontFamily: F, fontSize: '.28rem', color: RED, letterSpacing: 2 }}>TODAY</span>}
                                                         <span style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM }}>{tasks.length+1}</span>
                                                     </div>
@@ -594,7 +598,7 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                         ) : (
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontFamily: FC, fontSize: '1.2rem', color: 'rgba(255,255,255,.06)', marginBottom: 14 }}>{'\u26D3'}</div>
+                                    <div style={{ fontFamily: FC, fontSize: '1.2rem', color: 'rgba(255,255,255,.15)', marginBottom: 14 }}>{'\u26D3'}</div>
                                     <div style={{ fontFamily: F, fontSize: '.5rem', color: TEXT_DIM, letterSpacing: 3 }}>{loading?'LOADING...':'NO PROGRAM'}</div>
                                 </div>
                             </div>
@@ -605,4 +609,14 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
             )}
         </div>
     );
+}
+
+/* ── Helper: hex color to rgb values string ── */
+function _hexToRgb(hex: string): string {
+    const h = hex.replace('#', '');
+    if (h.length !== 6) return '150,150,150';
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `${r},${g},${b}`;
 }
