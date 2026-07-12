@@ -284,10 +284,19 @@ export async function POST(req: NextRequest) {
 
     // ── COMPLETE ORDER ──
     if (action === 'complete_order') {
-        const { orderType, amount } = body;
+        const { orderType, amount, photoUrl } = body;
         const today = new Date().toISOString().split('T')[0];
 
         await _updateOrderDone(session.id, today, orderType, amount);
+
+        // Save chastity check photo URL to vault_daily
+        if (orderType === 'chastity_check' && photoUrl) {
+            try {
+                await supabaseAdmin.from('vault_daily').update({
+                    chastity_photo: photoUrl,
+                }).eq('session_id', session.id).eq('date', today);
+            } catch (_) {}
+        }
 
         return NextResponse.json({ success: true });
     }

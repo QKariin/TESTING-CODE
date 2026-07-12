@@ -2058,7 +2058,8 @@ export default function DashboardPage() {
                                     const todayPerfect = vs?.today?.perfect || false;
                                     const dailyRecords: any[] = vs?.dailyRecords || [];
                                     const begs: any[] = vs?.begs || [];
-                                    const orderLabels: Record<string, string> = { kneel: 'KNEEL', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
+                                    const orderLabels: Record<string, string> = { kneel: 'KNEEL', chastity_check: 'CHASTITY CHECK', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
+                                    const todayChastityPhoto = vs?.today?.chastity_photo || null;
                                     const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                                     return (
@@ -2115,6 +2116,17 @@ export default function DashboardPage() {
                                                 <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', textAlign: 'center' }}>{vaultSessionLoading ? 'Loading...' : 'No orders yet'}</div>
                                             )}
                                         </div>
+
+                                        {/* ── CHASTITY CHECK PHOTO ── */}
+                                        {todayChastityPhoto && (
+                                            <div style={{ margin: '0 4px 12px' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3, marginBottom: 8 }}>CHASTITY CHECK</div>
+                                                <a href={todayChastityPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.2)' }}>
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={todayChastityPhoto} alt="Chastity check" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                </a>
+                                            </div>
+                                        )}
 
                                         {/* ── STATS GRID ── */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, margin: '0 4px 12px' }}>

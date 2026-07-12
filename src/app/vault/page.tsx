@@ -150,6 +150,8 @@ export default function VaultPage() {
     const [trialOpen, setTrialOpen] = useState(false);
     const [trialText, setTrialText] = useState('');
     const [trialDone, setTrialDone] = useState(false);
+    const [chastityUploading, setChastityUploading] = useState(false);
+    const [chastityDone, setChastityDone] = useState(false);
     const [spinning, setSpinning] = useState(false);
     const [wheelAngle, setWheelAngle] = useState(0);
     const [wheelResult, setWheelResult] = useState<typeof WHEEL[0] | null>(null);
@@ -219,8 +221,12 @@ export default function VaultPage() {
     const adjustments = vaultData?.adjustments || [];
     const rawOrders = vaultData?.today?.orders;
     const todayOrdersBase = rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
-    // Sync kneel order with kneelToday so dots and list match
-    const todayOrders = todayOrdersBase.map((o: any) => o.type === 'kneel' ? { ...o, done: kneelToday } : o);
+    // Sync kneel order with kneelToday, and chastity with chastityDone
+    const todayOrders = todayOrdersBase.map((o: any) => {
+        if (o.type === 'kneel') return { ...o, done: kneelToday };
+        if (o.type === 'chastity_check' && chastityDone) return { ...o, done: o.target };
+        return o;
+    });
     const todayPerfect = vaultData?.today?.perfect ?? false;
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
@@ -326,6 +332,13 @@ export default function VaultPage() {
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
                             if (todayTrial && (todayTrial.status === 'submitted' || todayTrial.status === 'approved')) setTrialDone(true);
+                            // Check if chastity check already done today
+                            if (vd.today?.chastity_photo) setChastityDone(true);
+                            else {
+                                const todayOrd = vd.today?.orders ? (typeof vd.today.orders === 'string' ? JSON.parse(vd.today.orders) : vd.today.orders) : [];
+                                const cc = todayOrd.find((o: any) => o.type === 'chastity_check');
+                                if (cc && cc.done >= cc.target) setChastityDone(true);
+                            }
                             if (_cachedKneel) {
                                 if (_cachedKneel.todayKneeling) setKneelToday(_cachedKneel.todayKneeling);
                                 if (_cachedKneel.isLocked && _cachedKneel.minLeft > 0) setKneelCooldownUntil(Date.now() + _cachedKneel.minLeft * 60000);
@@ -1270,48 +1283,76 @@ export default function VaultPage() {
                                         letterSpacing: '0.5px',
                                     }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'chastity_check' ? 'Chastity check photo' : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
                                     {/* Chastity check — camera upload button */}
-                                    {o.type === 'chastity_check' && !completed && (
-                                        <label style={{
-                                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px',
-                                            color: `${R}0.65)`, background: `${R}0.06)`, border: `1px solid ${R}0.2)`,
-                                            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
-                                        }}>
-                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={`${R}0.6)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                                                <circle cx="12" cy="13" r="4" />
-                                            </svg>
-                                            SNAP
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                capture="environment"
-                                                style={{ display: 'none' }}
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (!file) return;
-                                                    e.target.value = '';
-                                                    try {
-                                                        const memberId = profile?.member_id || profile?.memberId || '';
-                                                        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-                                                        const fd = new FormData();
-                                                        fd.append('file', file);
-                                                        fd.append('folder', `vault/chastity/${memberId}`);
-                                                        fd.append('ext', ext === 'heic' ? 'jpg' : ext);
-                                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                        const data = await res.json();
-                                                        if (data.url && vaultData?.session?.id) {
-                                                            await fetch('/api/vault/session', {
-                                                                method: 'POST',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'chastity_check' }),
-                                                            });
-                                                            vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
+                                    {o.type === 'chastity_check' && !completed && !chastityDone && (
+                                        chastityUploading ? (
+                                            <div style={{
+                                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px',
+                                                color: 'rgba(197,160,89,0.6)', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                                                animation: 'vPulse 1s ease infinite',
+                                            }}>
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="2" strokeLinecap="round" style={{ animation: 'vSpin 1s linear infinite' }}>
+                                                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                                </svg>
+                                                UPLOADING...
+                                            </div>
+                                        ) : (
+                                            <label style={{
+                                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px',
+                                                color: `${R}0.7)`, background: `${R}0.08)`, border: `1px solid ${R}0.25)`,
+                                                borderRadius: 8, padding: '7px 14px', cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                                                WebkitTapHighlightColor: 'transparent',
+                                            }}>
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={`${R}0.65)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                                    <circle cx="12" cy="13" r="4" />
+                                                </svg>
+                                                SNAP
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    capture="environment"
+                                                    style={{ display: 'none' }}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        e.target.value = '';
+                                                        setChastityUploading(true);
+                                                        try {
+                                                            const memberId = profile?.member_id || profile?.memberId || '';
+                                                            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                            const fd = new FormData();
+                                                            fd.append('file', file);
+                                                            fd.append('folder', `vault/chastity/${memberId}`);
+                                                            fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                            const data = await res.json();
+                                                            if (data.url && vaultData?.session?.id) {
+                                                                await fetch('/api/vault/session', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'chastity_check', photoUrl: data.url }),
+                                                                });
+                                                                setChastityDone(true);
+                                                                vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
+                                                            }
+                                                        } catch {} finally {
+                                                            setChastityUploading(false);
                                                         }
-                                                    } catch {}
-                                                }}
-                                            />
-                                        </label>
+                                                    }}
+                                                />
+                                            </label>
+                                        )
+                                    )}
+                                    {o.type === 'chastity_check' && chastityDone && !completed && (
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0,
+                                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.6)',
+                                            letterSpacing: '2px', animation: 'vFadeIn 0.3s ease',
+                                        }}>
+                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                            SENT
+                                        </div>
                                     )}
                                     {!completed && o.done > 0 && o.type !== 'chastity_check' && (
                                         <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: `${R}0.7)` }}>{o.done}/{o.target}</span>
@@ -2350,6 +2391,7 @@ export default function VaultPage() {
                 @keyframes vFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
                 @keyframes vPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
                 @keyframes vCoinFlip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.05); } 100% { transform: scaleX(1); } }
+                @keyframes vSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 @keyframes vladPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(160,100,255,0.4); } 50% { box-shadow: 0 0 14px 4px rgba(160,100,255,0.25); } }
                 * { box-sizing: border-box; }
                 ::-webkit-scrollbar { display: none; }

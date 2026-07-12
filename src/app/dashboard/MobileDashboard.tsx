@@ -2407,6 +2407,18 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
     const vaultReq = user.parameters?.vault_request;
     const vaultActive = vaultReq && (vaultReq.status === 'active' || vaultReq.status === 'scheduled' || vaultReq.status === 'awaiting_video');
     const [releaseReason, setReleaseReason] = useState('');
+    const [vaultSession, setVaultSession] = useState<any>(null);
+
+    // Fetch vault session data when vault is active
+    useEffect(() => {
+        if (vaultActive && vaultReq?.status === 'active') {
+            const memberId = user.memberId;
+            fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`)
+                .then(r => r.json())
+                .then(d => { if (d.active) setVaultSession(d); })
+                .catch(() => {});
+        } else { setVaultSession(null); }
+    }, [vaultActive, vaultReq?.status, user.memberId]);
 
     // Wallet
     const [walletAmt, setWalletAmt] = useState('100');
@@ -2662,7 +2674,32 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                         </span>
                     </div>
                     <div className="luxury-card">
-                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.8rem', color: 'rgba(139,0,0,0.7)', textAlign: 'center', marginBottom: 10 }}>{vaultReq.lockDays}d sentence</div>
+                        <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.8rem', color: 'rgba(139,0,0,0.7)', textAlign: 'center', marginBottom: 10 }}>{vaultReq.lockDays}d sentence{vaultSession ? ` — Day ${(vaultSession.daysIn || 0) + 1}` : ''}</div>
+
+                        {/* Today's orders */}
+                        {vaultSession?.today?.orders && (() => {
+                            const orders = typeof vaultSession.today.orders === 'string' ? JSON.parse(vaultSession.today.orders) : vaultSession.today.orders;
+                            const labels: Record<string, string> = { kneel: 'KNEEL', chastity_check: 'CHASTITY CHECK', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
+                            return (
+                                <div style={{ background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.6rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3, marginBottom: 8 }}>TODAY&apos;S ORDERS</div>
+                                    {orders.map((o: any, i: number) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                                            <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.3)'}`, background: o.done >= o.target ? 'rgba(80,200,80,0.1)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', color: o.done >= o.target ? 'rgba(80,200,80,0.8)' : 'transparent' }}>✓</div>
+                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, flex: 1, textDecoration: o.done >= o.target ? 'line-through' : 'none', opacity: o.done >= o.target ? 0.5 : 1 }}>{labels[o.type] || o.type.toUpperCase()}</span>
+                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
+                                        </div>
+                                    ))}
+                                    {vaultSession.today.chastity_photo && (
+                                        <a href={vaultSession.today.chastity_photo} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 8, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.2)' }}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={vaultSession.today.chastity_photo} alt="Chastity check" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
+                                        </a>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
                         <textarea value={releaseReason} onChange={e => setReleaseReason(e.target.value)} placeholder="Reason for release (shown to user)..." style={{ width: '100%', minHeight: 50, padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.84rem', resize: 'vertical', marginBottom: 8 }} />
                         <button disabled={busy} onClick={async () => {
                             if (!confirm('Release this lock immediately?')) return;
