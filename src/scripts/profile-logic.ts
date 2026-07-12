@@ -3507,8 +3507,18 @@ export async function initChatSystem() {
                 // Paywall / silence activated or deactivated in realtime
                 _applyPaywall(fresh.parameters?.paywall ?? null, fresh.member_id || email);
                 _applySilence(fresh.silence === true, fresh.parameters?.silence_reason || '');
+                // Vault: awaiting_video — force video proof overlay instantly (like paywall)
+                const vr = fresh.parameters?.vault_request;
+                if (vr && vr.status === 'awaiting_video' && vr.sessionId) {
+                    _updateVaultLockButton({ active: true, status: 'awaiting_video', sessionId: vr.sessionId, lockDays: vr.lockDays } as any);
+                    _showVideoProofUpload({ sessionId: vr.sessionId, lockDays: vr.lockDays });
+                }
+                // Vault: active — redirect to vault
+                else if (fresh.parameters?.active_overlay === 'vault') {
+                    window.location.href = '/vault';
+                }
                 // Vault lock released — reset button if active_overlay removed
-                if (!fresh.parameters?.active_overlay && !fresh.parameters?.vault_request) {
+                else if (!fresh.parameters?.active_overlay && !vr) {
                     _updateVaultLockButton(null);
                 }
             })
