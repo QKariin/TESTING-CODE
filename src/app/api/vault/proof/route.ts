@@ -28,7 +28,7 @@ export async function POST(req: Request) {
             .from('vault_sessions')
             .select('*')
             .eq('id', sessionId)
-            .eq('member_id', memberId)
+            .ilike('member_id', memberId)
             .eq('status', 'awaiting_video')
             .maybeSingle();
 
