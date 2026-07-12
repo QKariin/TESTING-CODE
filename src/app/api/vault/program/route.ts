@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
             // Get profile name
             const { data: prof } = await supabaseAdmin
                 .from('profiles')
-                .select('name, avatar_url, profile_picture_url')
+                .select('name, title, avatar_url, profile_picture_url')
                 .ilike('member_id', s.member_id)
                 .maybeSingle();
 
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
             results.push({
                 memberId: s.member_id,
-                name: prof?.name || s.member_id.split('@')[0],
+                name: prof?.name || prof?.title || s.member_id.split('@')[0],
                 avatar: prof?.profile_picture_url || prof?.avatar_url || null,
                 daysIn,
                 lockDays: s.lock_days,
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     const { data: session } = await supabaseAdmin
         .from('vault_sessions')
         .select('id')
-        .eq('member_id', email)
+        .ilike('member_id', email)
         .eq('status', 'active')
         .order('started_at', { ascending: false })
         .limit(1)
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
         const { data: session } = await supabaseAdmin
             .from('vault_sessions')
             .select('id')
-            .eq('member_id', email)
+            .ilike('member_id', email)
             .eq('status', 'active')
             .order('started_at', { ascending: false })
             .limit(1)
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
         const { data: session } = await supabaseAdmin
             .from('vault_sessions')
             .select('id')
-            .eq('member_id', email)
+            .ilike('member_id', email)
             .eq('status', 'active')
             .order('started_at', { ascending: false })
             .limit(1)
