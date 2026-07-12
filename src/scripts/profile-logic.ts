@@ -5861,11 +5861,10 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             });
             const thumbFile = new File([thumbBlob], `vault-thumb-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-            // Kill video element NOW — before uploads start. iOS reclaims blob URLs
-            // during heavy async work and shows "Load failed" dialog if video is still in DOM.
+            // Kill video element NOW — before uploads start.
+            // Do NOT call video.load() — iOS shows "Load failed" when loading with no src.
             video.pause();
             video.removeAttribute('src');
-            video.load();
             video.remove();
             URL.revokeObjectURL(videoUrl);
 
