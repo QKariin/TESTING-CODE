@@ -11,6 +11,7 @@ import MobileDashboard from './MobileDashboard';
 import { ChallengesContent } from './challenges/page';
 import { VideoChallengesContent } from './video-challenges/page';
 import { GlobalContent } from './GlobalContent';
+import { KeyholderProgramContent } from './KeyholderProgram';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -764,6 +765,8 @@ export default function DashboardPage() {
     const [showChallenges, setShowChallenges] = useState(false);
     const [showVideoChallenges, setShowVideoChallenges] = useState(false);
     const [showGlobal, setShowGlobal] = useState(false);
+    const [showKeyholder, setShowKeyholder] = useState(false);
+    const [keyholderMember, setKeyholderMember] = useState('');
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const roleRef = useRef<'queen' | 'chatter'>('queen');
     const [queenOnlyChat, setQueenOnlyChat] = useState(false);
@@ -1079,12 +1082,13 @@ export default function DashboardPage() {
             // Additional Bindings from scripts
             (window as any).initDashboard = initDashboard;
             (window as any).handleLogout = handleLogout;
-            // Close any overlay panels (GLOBAL / CHALLENGES) — called from vanilla JS selUser
+            // Close any overlay panels (GLOBAL / CHALLENGES / KEYHOLDER) — called from vanilla JS selUser
             (window as any)._closeOverlays = () => {
                 (window as any).closeMobGlobal?.();
                 setShowGlobal(false);
                 setShowChallenges(false);
                 setShowVideoChallenges(false);
+                setShowKeyholder(false);
             };
         }
 
@@ -1455,13 +1459,17 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '0.5rem', color: '#666' }}>TODAY'S ID</div>
                     <div id="adminDailyCode" style={{ color: 'var(--gold)', fontWeight: 900, fontFamily: "'Rajdhani', sans-serif", fontSize: '1.1rem', letterSpacing: '2px' }}>----</div>
                 </div>
-                <div onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); (window as any).showHome(); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
+                <div onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); setShowKeyholder(false); (window as any).showHome(); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(197,160,89,0.04)' }}>
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: '#c5a059', letterSpacing: '3px', flex: 1 }}>DASHBOARD</span>
                     <span style={{ fontSize: '0.8rem', color: 'rgba(197,160,89,0.5)' }}>⌂</span>
                 </div>
-                <div onClick={() => { (window as any).showHome(); setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: showGlobal ? 'rgba(197,160,89,0.08)' : 'transparent' }}>
+                <div onClick={() => { (window as any).showHome(); setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: showGlobal ? 'rgba(197,160,89,0.08)' : 'transparent' }}>
                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.4)', letterSpacing: '3px', flex: 1 }}>GLOBAL</span>
                     <span style={{ fontSize: '0.8rem', color: showGlobal ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.2)' }}>⊕</span>
+                </div>
+                <div onClick={() => { (window as any).showHome(); setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 8, background: showKeyholder ? 'rgba(139,0,0,0.08)' : 'transparent' }}>
+                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: showKeyholder ? 'rgba(180,40,40,0.9)' : 'rgba(255,255,255,0.4)', letterSpacing: '3px', flex: 1 }}>KEYHOLDER</span>
+                    <span style={{ fontSize: '0.8rem', color: showKeyholder ? 'rgba(180,40,40,0.7)' : 'rgba(255,255,255,0.2)' }}>&#9919;</span>
                 </div>
                 <div className="sb-head">SUB LIST</div>
                 <div id="userList" className="user-list"></div>
@@ -1487,6 +1495,13 @@ export default function DashboardPage() {
                 {/* GLOBAL INLINE PANEL - overlays content area when open */}
                 {showGlobal && !isMobile && (
                     <GlobalContent onClose={() => setShowGlobal(false)} userEmail={userEmail} />
+                )}
+
+                {/* KEYHOLDER PROGRAM PANEL */}
+                {showKeyholder && !isMobile && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#08080c' }}>
+                        <KeyholderProgramContent onClose={() => { setShowKeyholder(false); setKeyholderMember(''); }} initialMember={keyholderMember} />
+                    </div>
                 )}
 
                 {/* 1. HOME VIEW */}
@@ -1524,11 +1539,17 @@ export default function DashboardPage() {
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.12)', fontSize: '1.1rem' }}>▶</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.45)' }}>GLOBAL</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⊕</div>
+                        </div>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
+                            <div className="vs-info">
+                                <div className="vs-label" style={{ color: showKeyholder ? 'rgba(180,40,40,0.9)' : 'rgba(180,40,40,0.6)' }}>KEYHOLDER</div>
+                            </div>
+                            <div className="vs-icon" style={{ background: 'rgba(139,0,0,0.12)', fontSize: '1.1rem' }}>&#9919;</div>
                         </div>
                     </div>
 
@@ -2115,6 +2136,11 @@ export default function DashboardPage() {
                                             )) : (
                                                 <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', textAlign: 'center' }}>{vaultSessionLoading ? 'Loading...' : 'No orders yet'}</div>
                                             )}
+                                        </div>
+
+                                        {/* ── VIEW FULL PROGRAM BUTTON ── */}
+                                        <div style={{ margin: '0 4px 12px', textAlign: 'center' }}>
+                                            <button onClick={() => { setKeyholderMember(currId || ''); setShowKeyholder(true); }} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(139,0,0,0.25)', background: 'rgba(139,0,0,0.06)', color: 'rgba(180,40,40,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>VIEW FULL PROGRAM</button>
                                         </div>
 
                                         {/* ── CHASTITY CHECK PHOTO ── */}

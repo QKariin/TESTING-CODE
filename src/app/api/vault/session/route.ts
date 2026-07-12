@@ -45,9 +45,28 @@ export async function GET(req: NextRequest) {
         .eq('session_id', session.id)
         .order('day_number', { ascending: true });
 
-    // 3. Get today's record
+    // 3. Get today's record — auto-create if missing
     const today = new Date().toISOString().split('T')[0];
-    const todayRecord = (dailyRecords || []).find((d: any) => d.date === today);
+    let todayRecord = (dailyRecords || []).find((d: any) => d.date === today);
+
+    if (!todayRecord && session) {
+        const startDate2 = new Date(session.started_at);
+        const daysIn2 = Math.floor((Date.now() - startDate2.getTime()) / 86400000) + 1;
+        // Try to read from member's custom program first
+        const orders = await _getOrdersForDay(session.id, daysIn2);
+        const { data: inserted } = await supabaseAdmin.from('vault_daily').insert({
+            session_id: session.id,
+            member_id: email,
+            day_number: daysIn2,
+            date: today,
+            orders: JSON.stringify(orders),
+            orders_total: orders.length,
+        }).select('*').single();
+        if (inserted) {
+            todayRecord = inserted;
+            (dailyRecords || []).push(inserted);
+        }
+    }
 
     // 4. Get adjustments log
     const { data: adjustments } = await supabaseAdmin
@@ -358,7 +377,7 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
         if (!existing) {
-            const orders = _generateDailyOrders(daysIn);
+            const orders = await _getOrdersForDay(session.id, daysIn);
             await supabaseAdmin.from('vault_daily').insert({
                 session_id: session.id,
                 member_id: email,
@@ -375,7 +394,7 @@ export async function POST(req: NextRequest) {
                 .from('vault_trials').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
             if (!todaySpin && !todayTrial) {
                 // No real activity — reset pre-seeded record
-                const orders = _generateDailyOrders(daysIn);
+                const orders = await _getOrdersForDay(session.id, daysIn);
                 await supabaseAdmin.from('vault_daily').update({
                     orders: JSON.stringify(orders),
                     orders_total: orders.length,
@@ -393,6 +412,27 @@ export async function POST(req: NextRequest) {
 }
 
 // ── HELPERS ──
+
+// Read orders from member's custom program, fall back to hardcoded
+async function _getOrdersForDay(sessionId: string, dayNumber: number) {
+    try {
+        const { data: prog } = await supabaseAdmin
+            .from('vault_member_program')
+            .select('program')
+            .eq('session_id', sessionId)
+            .maybeSingle();
+        if (prog?.program) {
+            const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
+            const dayTasks = program[String(dayNumber)];
+            if (dayTasks && Array.isArray(dayTasks) && dayTasks.length > 0) {
+                // Convert to orders format (add done: 0)
+                return dayTasks.map((t: any) => ({ type: t.type, target: t.target || 1, done: 0 }));
+            }
+        }
+    } catch { }
+    // Fallback to hardcoded
+    return _generateDailyOrders(dayNumber);
+}
 
 function _generateDailyOrders(dayNumber: number) {
     const orders: { type: string; target: number; done: number }[] = [
