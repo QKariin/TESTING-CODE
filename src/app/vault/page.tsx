@@ -1230,33 +1230,6 @@ export default function VaultPage() {
                     </div>
                 </div>
 
-                {/* ── LOCK STATS ROW (days / denied / streak / trials) ── */}
-                <div style={{
-                    width: '100%', display: 'flex', justifyContent: 'space-around',
-                    padding: '0 20px 24px',
-                    borderBottom: '1px solid rgba(160,20,20,0.2)',
-                    marginBottom: 12,
-                }}>
-                    {[
-                        { v: daysIn, l: 'DAYS LOCKED' },
-                        { v: vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? 0, l: 'DENIED' },
-                        { v: vaultData?.session?.current_streak ?? 0, l: 'STREAK' },
-                        { v: vaultData?.trials?.length ?? 0, l: 'TRIALS' },
-                    ].map(s => (
-                        <div key={s.l} style={{ textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.3rem', color: `${R}0.7)`, fontWeight: 700 }}>{s.v}</div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '1.5px', marginTop: 4 }}>{s.l}</div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* ── LOCKED X DAYS AGO ── */}
-                <div style={{ textAlign: 'center', padding: '8px 0 12px' }}>
-                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>LOCKED </span>
-                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.95rem', color: `${R}0.75)`, letterSpacing: '1px' }}>{elapsed.d}</span>
-                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
-                </div>
-
                 {/* ── OBEDIENCE CALENDAR ── */}
                 <div style={{ width: '100%', padding: '0 16px 28px' }}>
                     <button onClick={() => setCalendarOpen(!calendarOpen)} style={{
@@ -1562,6 +1535,33 @@ export default function VaultPage() {
                             )}
                         </div>
                     )}
+                </div>
+
+                {/* ── LOCK STATS ROW (days / denied / streak / trials) ── */}
+                <div style={{
+                    width: '100%', display: 'flex', justifyContent: 'space-around',
+                    padding: '24px 20px',
+                    borderTop: '1px solid rgba(160,20,20,0.2)',
+                    marginTop: 12,
+                }}>
+                    {[
+                        { v: daysIn, l: 'DAYS LOCKED' },
+                        { v: vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? 0, l: 'DENIED' },
+                        { v: vaultData?.session?.current_streak ?? 0, l: 'STREAK' },
+                        { v: vaultData?.trials?.length ?? 0, l: 'TRIALS' },
+                    ].map(s => (
+                        <div key={s.l} style={{ textAlign: 'center' }}>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.3rem', color: `${R}0.7)`, fontWeight: 700 }}>{s.v}</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '1.5px', marginTop: 4 }}>{s.l}</div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ── LOCKED X DAYS AGO ── */}
+                <div style={{ textAlign: 'center', padding: '0 0 24px' }}>
+                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>LOCKED </span>
+                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.95rem', color: `${R}0.75)`, letterSpacing: '1px' }}>{elapsed.d}</span>
+                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
                 </div>
 
                 {/* ── TRIBUTE BUTTON — opens real tribute overlay ── */}
