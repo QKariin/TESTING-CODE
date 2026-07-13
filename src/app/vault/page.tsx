@@ -2126,73 +2126,159 @@ export default function VaultPage() {
                                 <div id="mobSystemLogContainer" style={{ display: 'none' }}></div>
                             </div>
                         ) : t === 'challenge' ? (
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 100px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.65)`, letterSpacing: '4px', textAlign: 'center' }}>
+                                    DAY {daysIn + 1} ORDERS
+                                </div>
 
-                                {/* ── DAILY TRIAL ── */}
-                                <div style={{ width: '100%', padding: '0 4px 36px' }}>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.65)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>
-                                        DAILY TRIAL &middot; DAY {daysIn + 1}
-                                    </div>
-                                    <div style={{ background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 12, padding: '22px 20px' }}>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
-                                            {vaultData?.today?.trial_prompt || 'No trial assigned yet.'}
-                                        </div>
-                                        {!trialDone && !trialOpen && (
-                                            <button onClick={() => setTrialOpen(true)} style={{
-                                                marginTop: 14, width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px',
-                                                color: `${R}0.55)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 8, cursor: 'pointer',
-                                            }}>SUBMIT TRIAL</button>
-                                        )}
-                                        {trialOpen && !trialDone && (
-                                            <>
-                                                <textarea value={trialText} onChange={e => setTrialText(e.target.value)} placeholder="Write here..."
-                                                    style={{ width: '100%', minHeight: 100, marginTop: 14, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.1)`, borderRadius: 8, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>{trialText.split(/\s+/).filter(Boolean).length} / 200</span>
-                                                    <button onClick={() => {
-                                                        setTrialDone(true); setTrialOpen(false);
-                                                        if (vaultData?.session?.id) {
-                                                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: vaultData?.today?.trial_prompt || 'Daily trial', response: trialText }) }).catch(() => {});
-                                                        }
-                                                    }} style={{ padding: '10px 24px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 6, cursor: 'pointer' }}>SUBMIT</button>
+                                {/* ── Incomplete tasks first ── */}
+                                {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.done < o.target).map((o: any, i: number) => {
+                                    const label = o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type === 'corner_time' ? 'Corner time' : o.type === 'cold_shower' ? 'Cold shower proof' : o.type === 'silence' ? 'No messages today' : o.type);
+                                    const icon = o.type === 'kneel' ? '\u{1F9CE}' : o.type === 'spin' ? '\u265B' : o.type === 'trial' ? '\u270E' : o.type === 'tribute' ? '\u2605' : o.type === 'corner_time' ? '\u23F1' : o.type === 'cold_shower' ? '\u2744' : o.type === 'silence' ? '\u{1F910}' : '\u25C6';
+                                    return (
+                                        <div key={`todo-${o.type}-${i}`} style={{ background: `${R}0.06)`, border: `1px solid ${R}0.18)`, borderRadius: 14, overflow: 'hidden', animation: 'vFadeIn 0.3s ease' }}>
+                                            {/* Card header */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', borderBottom: `1px solid ${R}0.1)` }}>
+                                                <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>{icon}</span>
+                                                <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px' }}>{label}</span>
+                                                {o.done > 0 && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: `${R}0.7)` }}>{o.done}/{o.target}</span>}
+                                            </div>
+
+                                            {/* ── KNEEL ── */}
+                                            {o.type === 'kneel' && (
+                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
+                                                        {Array.from({ length: o.target }).map((_, j) => (
+                                                            <div key={j} style={{ width: 10, height: 10, borderRadius: '50%', background: j < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)', border: `1px solid ${j < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`, transition: 'all 0.3s' }} />
+                                                        ))}
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px' }}>USE KNEEL BAR ON VAULT PAGE</div>
                                                 </div>
-                                            </>
-                                        )}
-                                        {trialDone && (
-                                            <div style={{ marginTop: 14, textAlign: 'center' }}>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '3px' }}>TRIAL COMPLETE</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'center', gap: 5, marginTop: 12, flexWrap: 'wrap' }}>
-                                        {(vaultData?.trials || []).map((t: any, i: number) => <div key={i} style={{ width: 9, height: 9, borderRadius: '50%', background: (t === true || t.status === 'submitted' || t.status === 'approved') ? 'rgba(80,200,120,0.45)' : `${R}0.3)` }} />)}
-                                        <div style={{ width: 9, height: 9, borderRadius: '50%', background: trialDone ? 'rgba(80,200,120,0.45)' : 'rgba(197,160,89,0.3)', boxShadow: trialDone ? 'none' : '0 0 4px rgba(197,160,89,0.15)' }} />
-                                    </div>
-                                </div>
+                                            )}
 
-                                {/* ── TEMPTATION WHEEL ── */}
-                                <div style={{ width: '100%', padding: '0 4px 36px', textAlign: 'center' }}>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '4px', marginBottom: 16 }}>TEMPTATION WHEEL</div>
-                                    <div style={{ position: 'relative', width: 220, height: 220, margin: '0 auto 16px' }}>
-                                        <div style={{ position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: `12px solid ${R}0.6)` }} />
-                                        <div style={{ width: 220, height: 220, borderRadius: '50%', border: `1.5px solid ${R}0.15)`, transform: `rotate(${wheelAngle}deg)`, transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
-                                            {WHEEL.map((_, i) => { const seg = 360 / WHEEL.length; return <div key={i} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${i * seg - 90}deg) skewY(-${90 - seg}deg)`, background: i % 2 === 0 ? `${R}0.04)` : 'rgba(255,255,255,0.015)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
-                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 44, height: 44, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                                                <span style={{ fontSize: '0.7rem', color: `${R}0.65)` }}>&#9819;</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button onClick={spin} disabled={spinning || wheelUsed} style={{ padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '4px', color: wheelUsed ? 'rgba(255,255,255,0.15)' : `${R}0.55)`, background: 'transparent', border: `1px solid ${wheelUsed ? 'rgba(255,255,255,0.06)' : `${R}0.15)`}`, borderRadius: 8, cursor: wheelUsed ? 'default' : 'pointer' }}>
-                                        {wheelUsed ? 'USED TODAY' : spinning ? 'SPINNING...' : 'SPIN'}
-                                    </button>
-                                    {wheelResult && (
-                                        <div style={{ marginTop: 16, padding: '14px 20px', background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 10, animation: 'vFadeIn 0.5s ease' }}>
-                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: `${R}0.75)`, lineHeight: 1.5 }}>{wheelResult.text}</div>
-                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px', marginTop: 6, textTransform: 'uppercase' }}>{wheelResult.type}</div>
-                                        </div>
-                                    )}
-                                </div>
+                                            {/* ── SPIN ── */}
+                                            {o.type === 'spin' && (
+                                                <div style={{ padding: '20px 18px', textAlign: 'center' }}>
+                                                    <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto 16px' }}>
+                                                        <div style={{ position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: `12px solid ${R}0.6)` }} />
+                                                        <div style={{ width: 200, height: 200, borderRadius: '50%', border: `1.5px solid ${R}0.15)`, transform: `rotate(${wheelAngle}deg)`, transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
+                                                            {WHEEL.map((_, wi) => { const seg = 360 / WHEEL.length; return <div key={wi} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${wi * seg - 90}deg) skewY(-${90 - seg}deg)`, background: wi % 2 === 0 ? `${R}0.04)` : 'rgba(255,255,255,0.015)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
+                                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 40, height: 40, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                                                                <span style={{ fontSize: '0.7rem', color: `${R}0.65)` }}>&#9819;</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={spin} disabled={spinning || wheelUsed} style={{ padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '4px', color: wheelUsed ? 'rgba(255,255,255,0.15)' : `${R}0.55)`, background: 'transparent', border: `1px solid ${wheelUsed ? 'rgba(255,255,255,0.06)' : `${R}0.15)`}`, borderRadius: 8, cursor: wheelUsed ? 'default' : 'pointer' }}>
+                                                        {spinning ? 'SPINNING...' : 'SPIN'}
+                                                    </button>
+                                                </div>
+                                            )}
 
+                                            {/* ── TRIAL ── */}
+                                            {o.type === 'trial' && (
+                                                <div style={{ padding: '16px 18px' }}>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 14 }}>
+                                                        {vaultData?.today?.trial_prompt || 'No trial assigned yet.'}
+                                                    </div>
+                                                    {!trialDone && !trialOpen && (
+                                                        <button onClick={() => setTrialOpen(true)} style={{
+                                                            width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px',
+                                                            color: `${R}0.55)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 8, cursor: 'pointer',
+                                                        }}>BEGIN TRIAL</button>
+                                                    )}
+                                                    {trialOpen && !trialDone && (
+                                                        <>
+                                                            <textarea value={trialText} onChange={e => setTrialText(e.target.value)} placeholder="Write here..."
+                                                                style={{ width: '100%', minHeight: 100, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.1)`, borderRadius: 8, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                                                                <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>{trialText.split(/\s+/).filter(Boolean).length} / 200</span>
+                                                                <button onClick={() => {
+                                                                    setTrialDone(true); setTrialOpen(false);
+                                                                    if (vaultData?.session?.id) {
+                                                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: vaultData?.today?.trial_prompt || 'Daily trial', response: trialText }) }).catch(() => {});
+                                                                    }
+                                                                }} style={{ padding: '10px 24px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 6, cursor: 'pointer' }}>SUBMIT</button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* ── TRIBUTE ── */}
+                                            {o.type === 'tribute' && (
+                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                                    <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
+                                                        width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px',
+                                                        color: `${R}0.55)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 8, cursor: 'pointer',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                    }}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="8" width="18" height="12" rx="1" /><path d="M12 8v12" /><path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8" /></svg>
+                                                        TRIBUTE {o.target} COINS
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* ── CORNER TIME ── */}
+                                            {o.type === 'corner_time' && (
+                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 14 }}>
+                                                        Stand in the corner. Stay on this screen.
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>COMING SOON</div>
+                                                </div>
+                                            )}
+
+                                            {/* ── COLD SHOWER ── */}
+                                            {o.type === 'cold_shower' && (
+                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 14 }}>
+                                                        Take a cold shower. Upload video proof.
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>COMING SOON</div>
+                                                </div>
+                                            )}
+
+                                            {/* ── SILENCE ── */}
+                                            {o.type === 'silence' && (
+                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
+                                                        You are forbidden from messaging today. Endure.
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                {/* ── Completed tasks — done cards ── */}
+                                {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.done >= o.target).map((o: any, i: number) => {
+                                    const label = o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type === 'corner_time' ? 'Corner time' : o.type === 'cold_shower' ? 'Cold shower' : o.type === 'silence' ? 'Silence' : o.type);
+                                    const resultText = o.type === 'spin' && wheelResult ? wheelResult.text : o.type === 'trial' && trialDone ? 'Submitted' : null;
+                                    return (
+                                        <div key={`done-${o.type}-${i}`} style={{
+                                            display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px',
+                                            background: 'rgba(80,200,120,0.03)', border: '1px solid rgba(80,200,120,0.12)', borderRadius: 12,
+                                            animation: 'vFadeIn 0.3s ease',
+                                        }}>
+                                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '0.5px', textDecoration: 'line-through' }}>{label}</div>
+                                                {resultText && (
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginTop: 2 }}>{resultText}</div>
+                                                )}
+                                            </div>
+                                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px' }}>DONE</span>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* All complete message */}
+                                {todayOrders.filter((o: any) => o.type !== 'chastity_check').every((o: any) => o.done >= o.target) && (
+                                    <div style={{ textAlign: 'center', padding: '20px 0', animation: 'vFadeIn 0.5s ease' }}>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '3px' }}>ALL ORDERS COMPLETE</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', marginTop: 6 }}>RETURN TO VAULT</div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
