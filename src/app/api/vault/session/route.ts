@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     if (!caller && !isLocal) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const memberId = req.nextUrl.searchParams.get('memberId');
+    const tz = req.nextUrl.searchParams.get('tz') || 'UTC';
     if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
     // Resolve UUID → email if needed (vault_sessions stores email as member_id)
@@ -107,6 +108,14 @@ export async function GET(req: NextRequest) {
     // 10. Calculate total penalty hours
     const totalPenaltyHours = (adjustments || []).reduce((sum: number, a: any) => sum + a.hours, 0);
 
+    // Calculate chastity check window (6-10 AM in member's local time)
+    let chastityWindow: { open: boolean; before: boolean; localHour: number; localMinute: number } = { open: false, before: false, localHour: 0, localMinute: 0 };
+    try {
+        const localHour = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
+        const localMinute = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(new Date()), 10);
+        chastityWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
+    } catch (_) {}
+
     return NextResponse.json({
         active: true,
         session,
@@ -120,6 +129,7 @@ export async function GET(req: NextRequest) {
         trials: trials || [],
         begs: begs || [],
         totalPenaltyHours,
+        chastityWindow,
     });
 }
 
@@ -315,14 +325,29 @@ export async function POST(req: NextRequest) {
         const { orderType, amount, photoUrl } = body;
         const today = new Date().toISOString().split('T')[0];
 
-        // Chastity check: save photo but DON'T mark as done — needs Queen's approval
+        // Chastity check: enforce 6-10 AM window, save photo, DON'T mark as done — needs Queen's approval
         if (orderType === 'chastity_check' && photoUrl) {
+            const tz = body.tz || 'UTC';
+            const localHour = parseInt(
+                new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()),
+                10
+            );
+
             try {
-                // Save photo URL and set status to pending in the daily record
                 const { data: daily } = await supabaseAdmin.from('vault_daily')
-                    .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
+                    .select('id, orders, chastity_photo').eq('session_id', session.id).eq('date', today).maybeSingle();
                 if (daily) {
                     const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    const cc = orders.find((o: any) => o.type === 'chastity_check');
+                    // Block duplicate: if already pending or approved, reject
+                    if (cc && (cc.status === 'pending' || cc.status === 'approved')) {
+                        return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: cc.status }, { status: 400 });
+                    }
+                    // Enforce 6-10 AM window — but allow resubmit anytime if Queen rejected
+                    const isRejectedRetry = cc?.status === 'rejected';
+                    if (!isRejectedRetry && (localHour < 6 || localHour >= 10)) {
+                        return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
+                    }
                     for (const o of orders) {
                         if (o.type === 'chastity_check') { o.status = 'pending'; o.photoUrl = photoUrl; break; }
                     }
@@ -332,6 +357,30 @@ export async function POST(req: NextRequest) {
                     }).eq('id', daily.id);
                 }
             } catch (_) {}
+
+            // Send push notification to Queen
+            try {
+                const { data: prof } = await supabaseAdmin.from('profiles').select('name').ilike('member_id', email).maybeSingle();
+                const name = prof?.name || 'A subject';
+                const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+                const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
+                if (ONESIGNAL_KEY) {
+                    fetch('https://api.onesignal.com/notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Key ${ONESIGNAL_KEY}` },
+                        body: JSON.stringify({
+                            app_id: ONESIGNAL_APP_ID,
+                            target_channel: 'push',
+                            include_aliases: { external_id: ['ceo@qkarin.com'] },
+                            headings: { en: 'Chastity Check Submitted' },
+                            subtitle: { en: 'Vault' },
+                            contents: { en: `${name} submitted their daily chastity check photo` },
+                            url: 'https://throne.qkarin.com/dashboard',
+                        }),
+                    }).catch(() => {});
+                }
+            } catch (_) {}
+
             return NextResponse.json({ success: true, chastityStatus: 'pending' });
         }
 
@@ -456,7 +505,8 @@ export async function POST(req: NextRequest) {
 
         if (!existing) {
             // Check if yesterday's chastity check was approved — if not, end the program
-            if (daysIn > 1) {
+            // Skip day 1 (video submission day) — chastity check starts from day 2
+            if (daysIn > 2) {
                 const { data: yesterday } = await supabaseAdmin
                     .from('vault_daily')
                     .select('orders')
