@@ -1230,120 +1230,17 @@ export default function VaultPage() {
                     </div>
                 </div>
 
-                {/* ── OBEDIENCE CALENDAR ── */}
-                <div style={{ width: '100%', padding: '0 16px 28px' }}>
-                    <button onClick={() => setCalendarOpen(!calendarOpen)} style={{
-                        width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '14px 18px', background: `${R}0.07)`, border: `1px solid ${R}0.22)`, borderRadius: 12,
-                        cursor: 'pointer', outline: 'none',
-                    }}>
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.7)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)' }}>
-                                {(dailyRecords.filter((d: any) => d.perfect).length)}/{daysIn} PERFECT
-                            </span>
-                            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', transform: calendarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>&#9662;</span>
-                        </div>
-                    </button>
-
-                    {calendarOpen && (() => {
-                        const lockStart = new Date(vaultData?.session?.started_at || new Date().toISOString());
-                        const startDay = (lockStart.getUTCDay() + 6) % 7; // 0=Mon
-                        const totalCells = startDay + lockDays;
-                        const rows = Math.ceil(totalCells / 7);
-
-                        return (
-                            <div style={{ marginTop: 10, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 12, padding: '16px 12px 12px', animation: 'vFadeIn 0.3s ease' }}>
-                                {/* Weekday headers */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, marginBottom: 8 }}>
-                                    {WEEKDAYS.map(d => (
-                                        <div key={d} style={{ textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px' }}>{d}</div>
-                                    ))}
-                                </div>
-                                {/* Calendar grid */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
-                                    {Array.from({ length: rows * 7 }).map((_, cellIdx) => {
-                                        const dayIdx = cellIdx - startDay;
-                                        const isValid = dayIdx >= 0 && dayIdx < lockDays;
-                                        if (!isValid) return <div key={cellIdx} />;
-
-                                        const isToday = dayIdx === daysIn;
-                                        const isPast = dayIdx < daysIn;
-                                        const obedient = isPast ? (dailyRecords[dayIdx]?.perfect ?? undefined) : undefined;
-                                        const dayLog = dailyRecords[dayIdx] ? _toDayLog(dailyRecords[dayIdx]) : null;
-                                        const cellDate = new Date(lockStart.getTime() + dayIdx * 86400000);
-                                        const clickable = (isPast || isToday) && dayLog;
-
-                                        return (
-                                            <div key={cellIdx}
-                                                onClick={clickable ? () => setSelectedDay(dayLog) : undefined}
-                                                style={{
-                                                    aspectRatio: '1', borderRadius: 4, display: 'flex', flexDirection: 'column',
-                                                    alignItems: 'center', justifyContent: 'center', gap: 1,
-                                                    cursor: clickable ? 'pointer' : 'default',
-                                                    background: isToday
-                                                        ? 'rgba(197,160,89,0.08)'
-                                                        : obedient === true
-                                                            ? `${R}0.06)`
-                                                            : obedient === false
-                                                                ? 'rgba(255,40,40,0.04)'
-                                                                : 'rgba(255,255,255,0.01)',
-                                                    border: `1px solid ${
-                                                        isToday
-                                                            ? 'rgba(197,160,89,0.25)'
-                                                            : obedient === true
-                                                                ? `${R}0.15)`
-                                                                : obedient === false
-                                                                    ? 'rgba(255,40,40,0.12)'
-                                                                    : 'rgba(255,255,255,0.03)'
-                                                    }`,
-                                                    transition: 'all 0.2s ease',
-                                                    animation: isToday ? 'vPulse 2s ease-in-out infinite' : 'none',
-                                                    position: 'relative',
-                                                }}>
-                                                <span style={{
-                                                    fontFamily: 'Orbitron, monospace', fontSize: '0.8rem',
-                                                    color: isToday
-                                                        ? 'rgba(197,160,89,0.8)'
-                                                        : obedient === true
-                                                            ? `${R}0.65)`
-                                                            : obedient === false
-                                                                ? 'rgba(255,40,40,0.5)'
-                                                                : 'rgba(255,255,255,0.12)',
-                                                }}>{cellDate.getUTCDate()}</span>
-                                                {isPast && (
-                                                    <div style={{
-                                                        width: 5, height: 5, borderRadius: '50%',
-                                                        background: obedient ? '#a01010' : 'rgba(255,40,40,0.4)',
-                                                    }} />
-                                                )}
-                                                {/* Seal badge on milestone days */}
-                                                {dayLog?.seal && (
-                                                    <div style={{
-                                                        position: 'absolute', top: 1, right: 1, width: 6, height: 6, borderRadius: '50%',
-                                                        background: dayLog.seal === 'bronze' ? '#cd7f32' : dayLog.seal === 'silver' ? '#c0c0c0' : dayLog.seal === 'gold' ? '#c5a059' : '#b9f2ff',
-                                                    }} />
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                {/* Legend */}
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(139,0,0,0.1)' }}>
-                                    {[
-                                        { color: '#a01010', label: 'PERFECT' },
-                                        { color: 'rgba(255,40,40,0.4)', label: 'FAILED' },
-                                        { color: 'rgba(197,160,89,0.6)', label: 'TODAY' },
-                                    ].map(l => (
-                                        <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: l.color }} />
-                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{l.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })()}
+                {/* Kneel progress dots — under release */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '0 0 24px' }}>
+                    {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 8 }).map((_, i) => (
+                        <div key={i} style={{
+                            width: 10, height: 10, borderRadius: '50%',
+                            background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
+                            border: `1px solid ${i < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`,
+                            boxShadow: i < kneelToday ? '0 0 6px rgba(184,32,32,0.3)' : 'none',
+                            transition: 'all 0.3s ease',
+                        }} />
+                    ))}
                 </div>
 
                 {/* ── KNEEL BAR ── */}
@@ -1400,18 +1297,26 @@ export default function VaultPage() {
                             </div>
                         </div>
                     </div>
-                    {/* Kneel progress dots */}
-                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 8 }).map((_, i) => (
-                            <div key={i} style={{
-                                width: 10, height: 10, borderRadius: '50%',
-                                background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
-                                border: `1px solid ${i < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`,
-                                boxShadow: i < kneelToday ? '0 0 6px rgba(184,32,32,0.3)' : 'none',
-                                transition: 'all 0.3s ease',
-                            }} />
-                        ))}
-                    </div>
+                </div>
+
+                {/* ── TRIBUTE BUTTON — opens real tribute overlay ── */}
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '12px 20px 32px' }}>
+                    <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
+                        width: 240, height: 48,
+                        background: `${R}0.08)`,
+                        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                        border: `1px solid ${R}0.35)`, borderRadius: 12,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                    }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                            <path d="M12 8v12"></path>
+                            <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                        </svg>
+                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#8b0000', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
+                    </button>
                 </div>
 
                 {/* ── SHAME OVERLAY — shown when cancelling ── */}
@@ -1564,24 +1469,120 @@ export default function VaultPage() {
                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
                 </div>
 
-                {/* ── TRIBUTE BUTTON — opens real tribute overlay ── */}
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '0 20px 32px' }}>
-                    <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
-                        width: 240, height: 48,
-                        background: `${R}0.08)`,
-                        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                        border: `1px solid ${R}0.35)`, borderRadius: 12,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                {/* ── OBEDIENCE CALENDAR ── */}
+                <div style={{ width: '100%', padding: '0 16px 28px' }}>
+                    <button onClick={() => setCalendarOpen(!calendarOpen)} style={{
+                        width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '14px 18px', background: `${R}0.07)`, border: `1px solid ${R}0.22)`, borderRadius: 12,
+                        cursor: 'pointer', outline: 'none',
                     }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="8" width="18" height="12" rx="1"></rect>
-                            <path d="M12 8v12"></path>
-                            <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
-                        </svg>
-                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#8b0000', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.7)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)' }}>
+                                {(dailyRecords.filter((d: any) => d.perfect).length)}/{daysIn} PERFECT
+                            </span>
+                            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', transform: calendarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>&#9662;</span>
+                        </div>
                     </button>
+
+                    {calendarOpen && (() => {
+                        const lockStart = new Date(vaultData?.session?.started_at || new Date().toISOString());
+                        const startDay = (lockStart.getUTCDay() + 6) % 7; // 0=Mon
+                        const totalCells = startDay + lockDays;
+                        const rows = Math.ceil(totalCells / 7);
+
+                        return (
+                            <div style={{ marginTop: 10, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 12, padding: '16px 12px 12px', animation: 'vFadeIn 0.3s ease' }}>
+                                {/* Weekday headers */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, marginBottom: 8 }}>
+                                    {WEEKDAYS.map(d => (
+                                        <div key={d} style={{ textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px' }}>{d}</div>
+                                    ))}
+                                </div>
+                                {/* Calendar grid */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+                                    {Array.from({ length: rows * 7 }).map((_, cellIdx) => {
+                                        const dayIdx = cellIdx - startDay;
+                                        const isValid = dayIdx >= 0 && dayIdx < lockDays;
+                                        if (!isValid) return <div key={cellIdx} />;
+
+                                        const isToday = dayIdx === daysIn;
+                                        const isPast = dayIdx < daysIn;
+                                        const obedient = isPast ? (dailyRecords[dayIdx]?.perfect ?? undefined) : undefined;
+                                        const dayLog = dailyRecords[dayIdx] ? _toDayLog(dailyRecords[dayIdx]) : null;
+                                        const cellDate = new Date(lockStart.getTime() + dayIdx * 86400000);
+                                        const clickable = (isPast || isToday) && dayLog;
+
+                                        return (
+                                            <div key={cellIdx}
+                                                onClick={clickable ? () => setSelectedDay(dayLog) : undefined}
+                                                style={{
+                                                    aspectRatio: '1', borderRadius: 4, display: 'flex', flexDirection: 'column',
+                                                    alignItems: 'center', justifyContent: 'center', gap: 1,
+                                                    cursor: clickable ? 'pointer' : 'default',
+                                                    background: isToday
+                                                        ? 'rgba(197,160,89,0.08)'
+                                                        : obedient === true
+                                                            ? `${R}0.06)`
+                                                            : obedient === false
+                                                                ? 'rgba(255,40,40,0.04)'
+                                                                : 'rgba(255,255,255,0.01)',
+                                                    border: `1px solid ${
+                                                        isToday
+                                                            ? 'rgba(197,160,89,0.25)'
+                                                            : obedient === true
+                                                                ? `${R}0.15)`
+                                                                : obedient === false
+                                                                    ? 'rgba(255,40,40,0.12)'
+                                                                    : 'rgba(255,255,255,0.03)'
+                                                    }`,
+                                                    transition: 'all 0.2s ease',
+                                                    animation: isToday ? 'vPulse 2s ease-in-out infinite' : 'none',
+                                                    position: 'relative',
+                                                }}>
+                                                <span style={{
+                                                    fontFamily: 'Orbitron, monospace', fontSize: '0.8rem',
+                                                    color: isToday
+                                                        ? 'rgba(197,160,89,0.8)'
+                                                        : obedient === true
+                                                            ? `${R}0.65)`
+                                                            : obedient === false
+                                                                ? 'rgba(255,40,40,0.5)'
+                                                                : 'rgba(255,255,255,0.12)',
+                                                }}>{cellDate.getUTCDate()}</span>
+                                                {isPast && (
+                                                    <div style={{
+                                                        width: 5, height: 5, borderRadius: '50%',
+                                                        background: obedient ? '#a01010' : 'rgba(255,40,40,0.4)',
+                                                    }} />
+                                                )}
+                                                {/* Seal badge on milestone days */}
+                                                {dayLog?.seal && (
+                                                    <div style={{
+                                                        position: 'absolute', top: 1, right: 1, width: 6, height: 6, borderRadius: '50%',
+                                                        background: dayLog.seal === 'bronze' ? '#cd7f32' : dayLog.seal === 'silver' ? '#c0c0c0' : dayLog.seal === 'gold' ? '#c5a059' : '#b9f2ff',
+                                                    }} />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {/* Legend */}
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(139,0,0,0.1)' }}>
+                                    {[
+                                        { color: '#a01010', label: 'PERFECT' },
+                                        { color: 'rgba(255,40,40,0.4)', label: 'FAILED' },
+                                        { color: 'rgba(197,160,89,0.6)', label: 'TODAY' },
+                                    ].map(l => (
+                                        <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: l.color }} />
+                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>{l.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Standalone tribute overlay shell — populated by tribute-game.ts */}
