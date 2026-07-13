@@ -223,6 +223,36 @@ export async function POST(req: NextRequest) {
             program: JSON.stringify(program),
         }).eq('id', prog.id);
 
+        // If editing today's day, also update the live vault_daily record
+        try {
+            const { data: fullSession } = await supabaseAdmin
+                .from('vault_sessions').select('started_at').eq('id', session.id).single();
+            if (fullSession?.started_at) {
+                const daysIn = Math.floor((Date.now() - new Date(fullSession.started_at).getTime()) / 86400000) + 1;
+                if (daysIn === dayNumber) {
+                    const today = new Date().toISOString().split('T')[0];
+                    const { data: daily } = await supabaseAdmin
+                        .from('vault_daily').select('id, orders')
+                        .eq('session_id', session.id).eq('date', today).maybeSingle();
+                    if (daily) {
+                        // Merge new tasks while preserving progress (done counts)
+                        const oldOrders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                        const newOrders = tasks.map((t: any) => {
+                            const existing = oldOrders.find((o: any) => o.type === t.type);
+                            return { type: t.type, target: t.target || 1, done: existing?.done || 0 };
+                        });
+                        const completed = newOrders.filter((o: any) => o.done >= o.target).length;
+                        await supabaseAdmin.from('vault_daily').update({
+                            orders: JSON.stringify(newOrders),
+                            orders_total: newOrders.length,
+                            orders_completed: completed,
+                            perfect: completed >= newOrders.length,
+                        }).eq('id', daily.id);
+                    }
+                }
+            }
+        } catch (_) {}
+
         return NextResponse.json({ success: true });
     }
 
