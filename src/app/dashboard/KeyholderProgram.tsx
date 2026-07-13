@@ -158,10 +158,25 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const getSel = () => view==='member'?memberSelectedDay:selectedDay;
     const setSel = (d: number|null) => { if(view==='member') setMemberSelectedDay(d); else setSelectedDay(d); };
 
-    const updateTask = (dn: number,idx: number,field: string,val: any) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t[idx]={...t[idx],[field]:val}; d[String(dn)]=t; setDays(d); };
-    const addTask = (dn: number,type: string) => { const meta=TASK_META[type]; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.push({type,target:1,label:meta?.label||type}); d[String(dn)]=t; setDays(d); };
-    const removeTask = (dn: number,idx: number) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.splice(idx,1); d[String(dn)]=t; setDays(d); };
-    const moveTask = (dn: number,from: number,to: number) => { if(from===to) return; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const[m]=t.splice(from,1); t.splice(to,0,m); d[String(dn)]=t; setDays(d); };
+    // Auto-save member program when edited (debounced)
+    const saveTimerRef = useRef<ReturnType<typeof setTimeout>|null>(null);
+    const memberProgramRef = useRef(memberProgram);
+    memberProgramRef.current = memberProgram;
+    const memberEmailRef = useRef(memberEmail);
+    memberEmailRef.current = memberEmail;
+
+    const autoSaveMemberDay = (dn: number, tasks: Task[]) => {
+        if(view!=='member' || !memberEmailRef.current) return;
+        if(saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(async () => {
+            try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update_day',memberId:memberEmailRef.current,dayNumber:dn,tasks})}); } catch{}
+        }, 600);
+    };
+
+    const updateTask = (dn: number,idx: number,field: string,val: any) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t[idx]={...t[idx],[field]:val}; d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
+    const addTask = (dn: number,type: string) => { const meta=TASK_META[type]; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.push({type,target:1,label:meta?.label||type}); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
+    const removeTask = (dn: number,idx: number) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.splice(idx,1); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
+    const moveTask = (dn: number,from: number,to: number) => { if(from===to) return; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const[m]=t.splice(from,1); t.splice(to,0,m); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
 
     const sel = getSel();
 
