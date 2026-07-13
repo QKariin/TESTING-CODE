@@ -151,7 +151,7 @@ export default function VaultPage() {
     const [trialText, setTrialText] = useState('');
     const [trialDone, setTrialDone] = useState(false);
     const [chastityUploading, setChastityUploading] = useState(false);
-    const [chastityDone, setChastityDone] = useState(false);
+    const [chastityStatus, setChastityStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
     const [spinning, setSpinning] = useState(false);
     const [wheelAngle, setWheelAngle] = useState(0);
     const [wheelResult, setWheelResult] = useState<typeof WHEEL[0] | null>(null);
@@ -221,10 +221,10 @@ export default function VaultPage() {
     const adjustments = vaultData?.adjustments || [];
     const rawOrders = vaultData?.today?.orders;
     const todayOrdersBase = rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
-    // Sync kneel order with kneelToday, and chastity with chastityDone
+    // Sync kneel order with kneelToday, and chastity with chastityStatus
     const todayOrders = todayOrdersBase.map((o: any) => {
         if (o.type === 'kneel') return { ...o, done: kneelToday };
-        if (o.type === 'chastity_check' && chastityDone) return { ...o, done: o.target };
+        if (o.type === 'chastity_check') return { ...o, done: chastityStatus === 'approved' ? o.target : 0, status: chastityStatus };
         return o;
     });
     const todayPerfect = vaultData?.today?.perfect ?? false;
@@ -332,12 +332,14 @@ export default function VaultPage() {
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
                             if (todayTrial && (todayTrial.status === 'submitted' || todayTrial.status === 'approved')) setTrialDone(true);
-                            // Check if chastity check already done today
-                            if (vd.today?.chastity_photo) setChastityDone(true);
-                            else {
+                            // Check chastity check status for today
+                            {
                                 const todayOrd = vd.today?.orders ? (typeof vd.today.orders === 'string' ? JSON.parse(vd.today.orders) : vd.today.orders) : [];
                                 const cc = todayOrd.find((o: any) => o.type === 'chastity_check');
-                                if (cc && cc.done >= cc.target) setChastityDone(true);
+                                if (cc?.status === 'approved' || (cc && cc.done >= cc.target)) setChastityStatus('approved');
+                                else if (cc?.status === 'pending' || vd.today?.chastity_photo) setChastityStatus('pending');
+                                else if (cc?.status === 'rejected') setChastityStatus('rejected');
+                                else setChastityStatus('none');
                             }
                             if (_cachedKneel) {
                                 if (_cachedKneel.todayKneeling) setKneelToday(_cachedKneel.todayKneeling);
@@ -351,9 +353,18 @@ export default function VaultPage() {
                                     }).catch(() => {});
                             }
                             fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) })
-                                .then(() => fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`))
                                 .then(r => r.json())
-                                .then(vd2 => { if (vd2.active) setVaultData(vd2); })
+                                .then(ensureRes => {
+                                    if (ensureRes.ended) {
+                                        // Chastity check failed — program terminated
+                                        try { localStorage.removeItem('vault_cooldowns'); } catch {}
+                                        setReleaseOverlay({ reason: 'Chastity check not submitted or approved. Program terminated.' });
+                                        return;
+                                    }
+                                    return fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`)
+                                        .then(r2 => r2.json())
+                                        .then(vd2 => { if (vd2.active) setVaultData(vd2); });
+                                })
                                 .catch(() => {});
 
                             // Realtime: listen for release/completion — show overlay
@@ -374,6 +385,27 @@ export default function VaultPage() {
                                 })
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
+
+                            // Realtime: listen for vault_daily changes (chastity approval/rejection)
+                            if (vd.today?.id) {
+                                const dailySub = supabase
+                                    .channel('vault_daily_watch')
+                                    .on('postgres_changes', {
+                                        event: 'UPDATE',
+                                        schema: 'public',
+                                        table: 'vault_daily',
+                                        filter: `id=eq.${vd.today.id}`,
+                                    }, (payload: any) => {
+                                        const d = payload.new;
+                                        const orders = typeof d.orders === 'string' ? JSON.parse(d.orders) : (d.orders || []);
+                                        const cc = orders.find((o: any) => o.type === 'chastity_check');
+                                        if (cc?.status === 'approved') setChastityStatus('approved');
+                                        else if (cc?.status === 'rejected') setChastityStatus('rejected');
+                                        else if (cc?.status === 'pending') setChastityStatus('pending');
+                                    })
+                                    .subscribe();
+                                (window as any)._vaultDailySub = dailySub;
+                            }
                         }
 
                         // ALL state set — NOW dismiss splash
@@ -1229,6 +1261,132 @@ export default function VaultPage() {
                     </div>
                 )}
 
+                {/* ── CHASTITY CHECK — MANDATORY DAILY PROOF ── */}
+                {todayOrders.some((o: any) => o.type === 'chastity_check') && (
+                    <div style={{ width: '100%', padding: '0 20px 20px' }}>
+                        <div style={{
+                            background: chastityStatus === 'approved'
+                                ? 'rgba(80,200,120,0.04)'
+                                : chastityStatus === 'rejected'
+                                    ? 'rgba(255,40,40,0.04)'
+                                    : `${R}0.06)`,
+                            border: `1px solid ${chastityStatus === 'approved' ? 'rgba(80,200,120,0.25)' : chastityStatus === 'rejected' ? 'rgba(255,40,40,0.2)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.3)' : `${R}0.3)`}`,
+                            borderRadius: 14, padding: '20px 18px', position: 'relative', overflow: 'hidden',
+                            boxShadow: chastityStatus === 'none' ? `0 0 30px ${R}0.15), inset 0 0 40px ${R}0.05)` : '0 4px 20px rgba(0,0,0,0.2)',
+                        }}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={chastityStatus === 'approved' ? 'rgba(80,200,120,0.7)' : `${R}0.6)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: chastityStatus === 'approved' ? 'rgba(80,200,120,0.8)' : 'rgba(255,255,255,0.8)', letterSpacing: '3px', fontWeight: 600 }}>
+                                        CHASTITY CHECK
+                                    </span>
+                                </div>
+                                <span style={{
+                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', letterSpacing: '2px',
+                                    color: chastityStatus === 'approved' ? 'rgba(80,200,120,0.8)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.8)' : chastityStatus === 'rejected' ? 'rgba(255,60,60,0.7)' : `${R}0.5)`,
+                                    background: chastityStatus === 'approved' ? 'rgba(80,200,120,0.1)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.1)' : chastityStatus === 'rejected' ? 'rgba(255,60,60,0.08)' : `${R}0.08)`,
+                                    padding: '4px 10px', borderRadius: 20,
+                                    border: `1px solid ${chastityStatus === 'approved' ? 'rgba(80,200,120,0.2)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.2)' : chastityStatus === 'rejected' ? 'rgba(255,60,60,0.15)' : `${R}0.15)`}`,
+                                }}>
+                                    {chastityStatus === 'approved' ? '✓ APPROVED' : chastityStatus === 'pending' ? '⏳ AWAITING REVIEW' : chastityStatus === 'rejected' ? '✕ REJECTED' : 'REQUIRED'}
+                                </span>
+                            </div>
+
+                            {/* Mandatory warning */}
+                            {chastityStatus === 'none' && (
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: 16, lineHeight: 1.5 }}>
+                                    Submit daily proof to continue your program. Failure to submit ends your vault session.
+                                </div>
+                            )}
+
+                            {chastityStatus === 'rejected' && (
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,60,60,0.5)', letterSpacing: '1px', marginBottom: 16, lineHeight: 1.5 }}>
+                                    Queen rejected your submission. Upload a new photo immediately.
+                                </div>
+                            )}
+
+                            {chastityStatus === 'pending' && (
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', marginBottom: 4, lineHeight: 1.5 }}>
+                                    Photo submitted. Awaiting Queen&apos;s approval.
+                                </div>
+                            )}
+
+                            {chastityStatus === 'approved' && (
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.5)', letterSpacing: '1px', lineHeight: 1.5 }}>
+                                    Verified. You may continue today&apos;s orders.
+                                </div>
+                            )}
+
+                            {/* Upload button for none/rejected */}
+                            {(chastityStatus === 'none' || chastityStatus === 'rejected') && (
+                                chastityUploading ? (
+                                    <div style={{
+                                        textAlign: 'center', padding: '14px 0', fontFamily: 'Orbitron, sans-serif',
+                                        fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(197,160,89,0.6)',
+                                        animation: 'vPulse 1s ease infinite',
+                                    }}>
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="2" strokeLinecap="round" style={{ animation: 'vSpin 1s linear infinite', display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }}>
+                                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                        </svg>
+                                        UPLOADING...
+                                    </div>
+                                ) : (
+                                    <label style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                                        marginTop: 8, padding: '14px 20px', cursor: 'pointer',
+                                        background: `${R}0.1)`, border: `1px solid ${R}0.35)`, borderRadius: 10,
+                                        fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '3px',
+                                        color: `${R}0.8)`, WebkitTapHighlightColor: 'transparent',
+                                        transition: 'all 0.2s ease',
+                                    }}>
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={`${R}0.7)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                            <circle cx="12" cy="13" r="4" />
+                                        </svg>
+                                        {chastityStatus === 'rejected' ? 'RESUBMIT PHOTO' : 'SUBMIT PROOF'}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            capture="environment"
+                                            style={{ display: 'none' }}
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                e.target.value = '';
+                                                setChastityUploading(true);
+                                                try {
+                                                    const mid = profile?.member_id || profile?.memberId || '';
+                                                    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                    const fd = new FormData();
+                                                    fd.append('file', file);
+                                                    fd.append('folder', `vault/chastity/${mid}`);
+                                                    fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                    const data = await res.json();
+                                                    if (data.url && vaultData?.session?.id) {
+                                                        await fetch('/api/vault/session', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url }),
+                                                        });
+                                                        setChastityStatus('pending');
+                                                        vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
+                                                    }
+                                                } catch {} finally {
+                                                    setChastityUploading(false);
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                )
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* ── TODAY'S ORDERS ── */}
                 <div style={{ width: '100%', padding: '0 20px 36px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -1263,7 +1421,7 @@ export default function VaultPage() {
                                         letterSpacing: '0.5px',
                                     }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'chastity_check' ? 'Chastity check photo' : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
                                     {/* Chastity check — camera upload button */}
-                                    {o.type === 'chastity_check' && !completed && !chastityDone && (
+                                    {o.type === 'chastity_check' && !completed && chastityStatus === 'none' && (
                                         chastityUploading ? (
                                             <div style={{
                                                 fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px',
@@ -1313,7 +1471,7 @@ export default function VaultPage() {
                                                                     headers: { 'Content-Type': 'application/json' },
                                                                     body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'chastity_check', photoUrl: data.url }),
                                                                 });
-                                                                setChastityDone(true);
+                                                                setChastityStatus('pending');
                                                                 vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
                                                             }
                                                         } catch {} finally {
@@ -1324,14 +1482,62 @@ export default function VaultPage() {
                                             </label>
                                         )
                                     )}
-                                    {o.type === 'chastity_check' && chastityDone && !completed && (
+                                    {o.type === 'chastity_check' && chastityStatus === 'pending' && !completed && (
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0,
-                                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.6)',
-                                            letterSpacing: '2px', animation: 'vFadeIn 0.3s ease',
+                                            fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.7)',
+                                            letterSpacing: '2px', animation: 'vPulse 2s ease infinite',
                                         }}>
-                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                            SENT
+                                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(197,160,89,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                            AWAITING
+                                        </div>
+                                    )}
+                                    {o.type === 'chastity_check' && chastityStatus === 'rejected' && !completed && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                            <div style={{
+                                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,60,60,0.7)',
+                                                letterSpacing: '2px',
+                                            }}>REJECTED</div>
+                                            <label style={{
+                                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '1px',
+                                                color: `${R}0.7)`, background: `${R}0.08)`, border: `1px solid ${R}0.25)`,
+                                                borderRadius: 6, padding: '5px 10px', cursor: 'pointer',
+                                                WebkitTapHighlightColor: 'transparent',
+                                            }}>
+                                                RETRY
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    capture="environment"
+                                                    style={{ display: 'none' }}
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+                                                        e.target.value = '';
+                                                        setChastityUploading(true);
+                                                        try {
+                                                            const mid = profile?.member_id || profile?.memberId || '';
+                                                            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                            const fd = new FormData();
+                                                            fd.append('file', file);
+                                                            fd.append('folder', `vault/chastity/${mid}`);
+                                                            fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                            const data = await res.json();
+                                                            if (data.url && vaultData?.session?.id) {
+                                                                await fetch('/api/vault/session', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url }),
+                                                                });
+                                                                setChastityStatus('pending');
+                                                            }
+                                                        } catch {} finally {
+                                                            setChastityUploading(false);
+                                                        }
+                                                    }}
+                                                />
+                                            </label>
                                         </div>
                                     )}
                                     {!completed && o.done > 0 && o.type !== 'chastity_check' && (

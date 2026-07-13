@@ -2081,6 +2081,8 @@ export default function DashboardPage() {
                                     const begs: any[] = vs?.begs || [];
                                     const orderLabels: Record<string, string> = { kneel: 'KNEEL', chastity_check: 'CHASTITY CHECK', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
                                     const todayChastityPhoto = vs?.today?.chastity_photo || null;
+                                    const chastityOrder = todayOrders.find((o: any) => o.type === 'chastity_check');
+                                    const chastityStatus = chastityOrder?.status || (chastityOrder?.done >= chastityOrder?.target ? 'approved' : todayChastityPhoto ? 'pending' : 'none');
                                     const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                                     return (
@@ -2143,16 +2145,46 @@ export default function DashboardPage() {
                                             <button onClick={() => { setKeyholderMember(currId || ''); setShowKeyholder(true); }} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(139,0,0,0.25)', background: 'rgba(139,0,0,0.06)', color: 'rgba(180,40,40,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>VIEW FULL PROGRAM</button>
                                         </div>
 
-                                        {/* ── CHASTITY CHECK PHOTO ── */}
-                                        {todayChastityPhoto && (
-                                            <div style={{ margin: '0 4px 12px' }}>
-                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3, marginBottom: 8 }}>CHASTITY CHECK</div>
-                                                <a href={todayChastityPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.2)' }}>
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={todayChastityPhoto} alt="Chastity check" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
-                                                </a>
+                                        {/* ── CHASTITY CHECK — PRIMARY TASK ── */}
+                                        <div style={{ margin: '0 4px 12px', background: chastityStatus === 'approved' ? 'rgba(80,200,80,0.04)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.06)' : 'rgba(139,0,0,0.04)', border: `1px solid ${chastityStatus === 'approved' ? 'rgba(80,200,80,0.2)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.25)' : 'rgba(139,0,0,0.12)'}`, borderRadius: 8, padding: 12 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: todayChastityPhoto ? 8 : 0 }}>
+                                                <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: chastityStatus === 'approved' ? 'rgba(80,200,80,0.8)' : 'rgba(180,40,40,0.7)', letterSpacing: 3 }}>CHASTITY CHECK</span>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.4rem', letterSpacing: 2, color: chastityStatus === 'approved' ? 'rgba(80,200,80,0.8)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.8)' : chastityStatus === 'rejected' ? 'rgba(255,60,60,0.7)' : 'rgba(255,255,255,0.25)' }}>
+                                                    {chastityStatus === 'approved' ? '✓ APPROVED' : chastityStatus === 'pending' ? '⏳ PENDING' : chastityStatus === 'rejected' ? '✕ REJECTED' : 'NOT SUBMITTED'}
+                                                </span>
                                             </div>
-                                        )}
+                                            {todayChastityPhoto && (
+                                                <>
+                                                    <a href={todayChastityPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.15)', marginBottom: chastityStatus === 'pending' ? 8 : 0 }}>
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img src={todayChastityPhoto} alt="Chastity check" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                    </a>
+                                                    {chastityStatus === 'pending' && (
+                                                        <div style={{ display: 'flex', gap: 8 }}>
+                                                            <button disabled={vaultLoading} onClick={async () => {
+                                                                setVaultLoading(true);
+                                                                try {
+                                                                    await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_chastity', memberId: currId }) });
+                                                                    // Refresh vault data
+                                                                    const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                    const d = await r.json();
+                                                                    if (d.active) setVaultSession(d);
+                                                                } catch (_) {} finally { setVaultLoading(false); }
+                                                            }} style={{ flex: 1, padding: '8px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.45rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
+                                                            <button disabled={vaultLoading} onClick={async () => {
+                                                                setVaultLoading(true);
+                                                                try {
+                                                                    await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_chastity', memberId: currId, reason: 'Rejected' }) });
+                                                                    const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                    const d = await r.json();
+                                                                    if (d.active) setVaultSession(d);
+                                                                } catch (_) {} finally { setVaultLoading(false); }
+                                                            }} style={{ padding: '8px 14px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
 
                                         {/* ── STATS GRID ── */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, margin: '0 4px 12px' }}>
