@@ -2931,7 +2931,25 @@ export async function handleChatMediaUpload(input: HTMLInputElement) {
     const isVid = file.type.startsWith('video/');
     const type = isVid ? 'video' : 'photo';
 
-    // Show preview modal - let server enforce rank, don't block client-side
+    // Enforce rank-based video duration limit on chat uploads
+    if (isVid) {
+        const { getVideoDuration } = await import('./mediaSupabase');
+        const _raw = (window as any).__currentProfileRaw || getState().raw || getState();
+        const _rank = ((getState() as any).rank || _raw?.hierarchy || 'Hall Boy').toLowerCase().trim();
+        let maxSecs = 120;
+        if (_rank === 'hall boy') maxSecs = 30;
+        else if (_rank === 'footman') maxSecs = 45;
+        else if (_rank === 'silverman') maxSecs = 60;
+        const duration = await getVideoDuration(file);
+        if (duration > maxSecs) {
+            const mins = Math.floor(duration / 60);
+            const secs = Math.round(duration % 60);
+            const limitStr = maxSecs >= 60 ? `${maxSecs / 60} min` : `${maxSecs}s`;
+            alert(`Video is ${mins}m ${secs}s — your rank allows max ${limitStr}. Trim it.`);
+            return;
+        }
+    }
+
     _showMediaPreviewModal(file, isVid, async (sendBtn: HTMLButtonElement, statusEl: HTMLElement) => {
         sendBtn.disabled = true;
         sendBtn.textContent = 'UPLOADING...';
