@@ -119,7 +119,7 @@ export async function claimKneelReward(type: 'coins' | 'points') {
         const res = await fetch('/api/claim-reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ choice: type, memberId: pid })
+            body: JSON.stringify({ choice: type, memberId: pid, source: 'kneel' })
         });
 
         const data = await res.json();
@@ -1041,7 +1041,7 @@ async function _claimInstallReward() {
         await fetch('/api/claim-reward', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ memberId: userId, choice: 'coins' })
+            body: JSON.stringify({ memberId: userId, choice: 'coins', source: 'install' })
         });
         // Set appInstallClaimed + send dashboard notification (idempotent)
         await fetch('/api/app-install-notify', {

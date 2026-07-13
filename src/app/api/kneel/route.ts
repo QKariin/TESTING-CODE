@@ -134,6 +134,16 @@ export async function POST(req: Request) {
             if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
         }
 
+        // Mark reward as claimable (prevents direct API abuse)
+        try {
+            const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', taskEmail).maybeSingle();
+            if (prof) {
+                const params = prof.parameters || {};
+                params.reward_pending = true;
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
+            }
+        } catch (_) {}
+
         try { await DbService.sendMessage(memberId, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
 
         // Check if user now qualifies for promotion

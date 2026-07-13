@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { choice, memberId, memberEmail } = await req.json();
+        const { choice, memberId, memberEmail, source } = await req.json();
         // Accept memberId (UUID) as primary, fall back to legacy memberEmail
         const profileId = memberId || memberEmail;
 
@@ -28,11 +28,20 @@ export async function POST(req: Request) {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('ID, wallet, score, member_id')
+            .select('ID, wallet, score, member_id, parameters')
             .eq(isUUID ? 'ID' : 'member_id', profileId)
             .single();
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+
+        // Verify reward is actually pending (prevents direct API abuse)
+        // Only kneel rewards (source === 'kneel' or no source) require the check
+        if (source !== 'install') {
+            const params = profile.parameters || {};
+            if (!params.reward_pending) {
+                return NextResponse.json({ error: 'No reward pending' }, { status: 403 });
+            }
+        }
 
         let updateData: any = {};
 
@@ -44,6 +53,13 @@ export async function POST(req: Request) {
             await DbService.awardPoints(profile.member_id || profileId, POINT_REWARD);
             updateData = { score: (profile.score || 0) + POINT_REWARD };
         }
+
+        // Clear reward_pending flag so it can't be claimed again
+        try {
+            const params = profile.parameters || {};
+            delete params.reward_pending;
+            await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+        } catch (_) {}
 
         const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(profileId, logMsg, 'system'); } catch (_) { }
