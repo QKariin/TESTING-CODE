@@ -910,9 +910,25 @@ export default function VaultPage() {
                         : '#c03030';
 
                     return (
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px 0' }}>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px 0' }}>
 
-                    {/* Big circle */}
+                    {/* Concentric rings — outermost */}
+                    <div style={{
+                        position: 'relative', zIndex: 1,
+                        width: 340, height: 340, borderRadius: '50%',
+                        border: `1px solid ${borderColor}15`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'border-color 0.6s ease',
+                    }}>
+                    {/* Middle ring */}
+                    <div style={{
+                        position: 'relative',
+                        width: 320, height: 320, borderRadius: '50%',
+                        border: `1px solid ${borderColor}30`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'border-color 0.6s ease',
+                    }}>
+                    {/* Main circle */}
                     <div style={{
                         position: 'relative', zIndex: 2,
                         width: 300, height: 300, borderRadius: '50%',
@@ -1149,6 +1165,10 @@ export default function VaultPage() {
                                 </label>
                             )
                         )}
+                    </div>
+                    {/* Close middle ring */}
+                    </div>
+                    {/* Close outer ring */}
                     </div>
 
                     {/* Stats pill — overlapping the circle (matches profile layout) */}
@@ -1408,7 +1428,7 @@ export default function VaultPage() {
                     </div>
                     {/* Kneel progress dots */}
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        {Array.from({ length: 8 }).map((_, i) => (
+                        {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 8 }).map((_, i) => (
                             <div key={i} style={{
                                 width: 10, height: 10, borderRadius: '50%',
                                 background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
