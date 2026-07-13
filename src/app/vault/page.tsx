@@ -372,26 +372,6 @@ export default function VaultPage() {
                                         setReleaseOverlay({ reason: s.release_reason || '' });
                                     }
                                 })
-                                .on('postgres_changes', {
-                                    event: 'UPDATE',
-                                    schema: 'public',
-                                    table: 'profiles',
-                                }, (payload: any) => {
-                                    const row = payload.new;
-                                    if (!row) return;
-                                    const rowEmail = (row.member_id || '').toLowerCase();
-                                    if (rowEmail !== memberId.toLowerCase()) return;
-                                    // active_overlay removed = released
-                                    if (!row.parameters?.active_overlay && !row.parameters?.vault_request) {
-                                        try { localStorage.removeItem('vault_cooldowns'); } catch {}
-                                        // Fetch the session to get reason
-                                        fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}`).then(r => r.json()).then(d => {
-                                            setReleaseOverlay({ reason: d?.session?.release_reason || '' });
-                                        }).catch(() => {
-                                            setReleaseOverlay({ reason: '' });
-                                        });
-                                    }
-                                })
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
                         }
