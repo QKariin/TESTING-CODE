@@ -153,6 +153,7 @@ export default function VaultPage() {
     const [chastityUploading, setChastityUploading] = useState(false);
     const [chastityStatus, setChastityStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
     const [chastityWindow, setChastityWindow] = useState<{ open: boolean; before: boolean; localHour: number; localMinute: number }>({ open: false, before: false, localHour: 0, localMinute: 0 });
+    const [chastityPhotoUrl, setChastityPhotoUrl] = useState<string | null>(null);
     const [spinning, setSpinning] = useState(false);
     const [wheelAngle, setWheelAngle] = useState(0);
     const [wheelResult, setWheelResult] = useState<typeof WHEEL[0] | null>(null);
@@ -357,6 +358,8 @@ export default function VaultPage() {
                                 else if (cc?.status === 'pending' || vd.today?.chastity_photo) setChastityStatus('pending');
                                 else if (cc?.status === 'rejected') setChastityStatus('rejected');
                                 else setChastityStatus('none');
+                                if (vd.today?.chastity_photo) setChastityPhotoUrl(vd.today.chastity_photo);
+                                else if (cc?.photoUrl) setChastityPhotoUrl(cc.photoUrl);
                             }
                             // Chastity window state (6-10 AM local time)
                             if (vd.chastityWindow) setChastityWindow(vd.chastityWindow);
@@ -877,33 +880,91 @@ export default function VaultPage() {
             <div style={{ display: tab === 'vault' ? 'flex' : 'none', flexDirection: 'column', alignItems: 'center', paddingBottom: 100, position: 'relative', zIndex: 1, minHeight: '100vh' }}>
 
                 {/* ── HALO HERO SECTION ── */}
+                {(() => {
+                    const hasChastityTask = todayOrders.some((o: any) => o.type === 'chastity_check') && daysIn >= 1;
+                    const cWindowOpen = chastityWindow.open;
+                    const cBeforeWindow = chastityWindow.before;
+                    const cMissed = !cWindowOpen && !cBeforeWindow && chastityStatus === 'none' && hasChastityTask;
+                    const cMinsLeft = cWindowOpen ? (10 - chastityWindow.localHour) * 60 - chastityWindow.localMinute : 0;
+                    const cCanUpload = hasChastityTask && (cWindowOpen || chastityStatus === 'rejected') && chastityStatus !== 'pending' && chastityStatus !== 'approved';
+
+                    // Color scheme based on chastity status
+                    const borderColor = !hasChastityTask ? '#a01020'
+                        : chastityStatus === 'approved' ? 'rgba(197,160,89,0.8)'
+                        : chastityStatus === 'pending' ? 'rgba(197,160,89,0.6)'
+                        : chastityStatus === 'rejected' ? 'rgba(255,50,50,0.6)'
+                        : cWindowOpen ? '#a01020'
+                        : 'rgba(80,60,60,0.5)';
+                    const glowColor = !hasChastityTask ? '0 0 60px rgba(160,16,32,0.3), 0 0 120px rgba(139,0,0,0.15), inset 0 0 30px rgba(139,0,0,0.2)'
+                        : chastityStatus === 'approved' ? '0 0 60px rgba(197,160,89,0.25), 0 0 120px rgba(197,160,89,0.1), inset 0 0 30px rgba(197,160,89,0.15)'
+                        : chastityStatus === 'pending' ? '0 0 60px rgba(197,160,89,0.2), 0 0 100px rgba(197,160,89,0.08), inset 0 0 25px rgba(197,160,89,0.1)'
+                        : chastityStatus === 'rejected' ? '0 0 60px rgba(255,50,50,0.2), inset 0 0 30px rgba(255,50,50,0.1)'
+                        : '0 0 60px rgba(160,16,32,0.3), 0 0 120px rgba(139,0,0,0.15), inset 0 0 30px rgba(139,0,0,0.2)';
+                    const lockStroke = !hasChastityTask ? 'rgba(180,30,30,0.7)'
+                        : chastityStatus === 'approved' ? 'rgba(197,160,89,0.8)'
+                        : chastityStatus === 'pending' ? 'rgba(197,160,89,0.6)'
+                        : 'rgba(180,30,30,0.7)';
+                    const sealedColor = !hasChastityTask ? '#c03030'
+                        : chastityStatus === 'approved' ? 'rgba(197,160,89,0.85)'
+                        : chastityStatus === 'pending' ? 'rgba(197,160,89,0.65)'
+                        : '#c03030';
+
+                    return (
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px 0' }}>
 
                     {/* Big circle */}
                     <div style={{
                         position: 'relative', zIndex: 2,
                         width: 300, height: 300, borderRadius: '50%',
-                        border: '2px solid #a01020',
-                        boxShadow: '0 0 60px rgba(160,16,32,0.3), 0 0 120px rgba(139,0,0,0.15), inset 0 0 30px rgba(139,0,0,0.2)',
+                        border: `2px solid ${borderColor}`,
+                        boxShadow: glowColor,
                         background: 'rgba(10,5,8,0.7)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         gap: 0, overflow: 'hidden',
+                        transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
                     }}>
+                        {/* Background: chastity photo (day 2+) or video thumbnail (day 1) */}
+                        {(() => {
+                            const bgUrl = chastityPhotoUrl && (chastityStatus === 'pending' || chastityStatus === 'approved')
+                                ? chastityPhotoUrl
+                                : daysIn === 0
+                                    ? (vaultData?.session?.video_thumb_url || vaultData?.session?.video_proof_url || null)
+                                    : null;
+                            if (!bgUrl) return null;
+                            const isVideo = daysIn === 0 && bgUrl === vaultData?.session?.video_proof_url && !vaultData?.session?.video_thumb_url;
+                            return isVideo ? (
+                                <video src={bgUrl} muted playsInline autoPlay loop style={{
+                                    position: 'absolute', inset: 0, width: '100%', height: '100%',
+                                    objectFit: 'cover', borderRadius: '50%',
+                                    opacity: 0.18, filter: 'blur(1px)',
+                                }} />
+                            ) : (
+                                <div style={{
+                                    position: 'absolute', inset: 0, borderRadius: '50%',
+                                    backgroundImage: `url(${bgUrl})`,
+                                    backgroundSize: 'cover', backgroundPosition: 'center',
+                                    opacity: chastityStatus === 'approved' ? 0.2 : 0.18,
+                                    filter: 'blur(1px)',
+                                    transition: 'opacity 0.6s ease',
+                                }} />
+                            );
+                        })()}
+
                         {/* Lock icon */}
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(180,30,30,0.7)" strokeWidth="1.5" style={{ marginBottom: 8 }}>
+                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke={lockStroke} strokeWidth="1.5" style={{ marginBottom: 8, position: 'relative', zIndex: 1, transition: 'stroke 0.6s ease' }}>
                             <rect x="3" y="11" width="18" height="11" rx="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
-                            <circle cx="12" cy="16" r="1.5" fill="rgba(180,30,30,0.7)" />
+                            <circle cx="12" cy="16" r="1.5" fill={lockStroke} />
                         </svg>
 
                         {/* Name */}
                         <div style={{
                             fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: '#fff',
                             textTransform: 'uppercase', letterSpacing: '2px',
-                            textShadow: '0 0 20px rgba(139,0,0,0.3)',
+                            textShadow: chastityStatus === 'approved' ? '0 0 20px rgba(197,160,89,0.3)' : '0 0 20px rgba(139,0,0,0.3)',
                             lineHeight: 1, textAlign: 'center', maxWidth: '85%',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            marginBottom: 5,
+                            marginBottom: 5, position: 'relative', zIndex: 1,
                         }}>
                             {profile?.name || ''}
                         </div>
@@ -911,11 +972,42 @@ export default function VaultPage() {
                         {/* Rank / Status */}
                         <div style={{
                             fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem',
-                            color: '#c03030', letterSpacing: '4px', textTransform: 'uppercase',
-                            textShadow: '0 0 12px rgba(180,30,30,0.4)',
+                            color: sealedColor, letterSpacing: '4px', textTransform: 'uppercase',
+                            textShadow: `0 0 12px ${sealedColor}40`,
+                            position: 'relative', zIndex: 1,
+                            transition: 'color 0.6s ease',
                         }}>
                             SEALED
                         </div>
+
+                        {/* Chastity status badge inside circle */}
+                        {hasChastityTask && (
+                            <div style={{
+                                position: 'relative', zIndex: 1, marginTop: 6,
+                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: '2px',
+                                color: chastityStatus === 'approved' ? 'rgba(197,160,89,0.9)'
+                                    : chastityStatus === 'pending' ? 'rgba(197,160,89,0.7)'
+                                    : chastityStatus === 'rejected' ? 'rgba(255,60,60,0.7)'
+                                    : cMissed ? 'rgba(255,60,60,0.5)'
+                                    : cBeforeWindow ? 'rgba(255,255,255,0.25)'
+                                    : cWindowOpen ? `${R}0.6)`
+                                    : 'rgba(255,255,255,0.2)',
+                                padding: '3px 10px', borderRadius: 12,
+                                background: chastityStatus === 'approved' ? 'rgba(197,160,89,0.1)'
+                                    : chastityStatus === 'pending' ? 'rgba(197,160,89,0.08)'
+                                    : chastityStatus === 'rejected' ? 'rgba(255,60,60,0.08)'
+                                    : 'rgba(255,255,255,0.03)',
+                                animation: chastityStatus === 'pending' ? 'vPulse 2s ease infinite' : cWindowOpen && chastityStatus === 'none' ? 'vPulse 2s ease infinite' : 'none',
+                            }}>
+                                {chastityStatus === 'approved' ? '✓ VERIFIED'
+                                    : chastityStatus === 'pending' ? '⏳ AWAITING REVIEW'
+                                    : chastityStatus === 'rejected' ? '✕ REJECTED'
+                                    : cMissed ? '✕ MISSED'
+                                    : cBeforeWindow ? 'CHECK OPENS 6 AM'
+                                    : cWindowOpen ? `CHECK · ${cMinsLeft}MIN LEFT`
+                                    : ''}
+                            </div>
+                        )}
 
                         {/* Lock calendar — one lock per day of sentence */}
                         <div style={{
@@ -984,6 +1076,79 @@ export default function VaultPage() {
                                 );
                             })}
                         </div>
+
+                        {/* Chastity upload button inside circle */}
+                        {cCanUpload && (
+                            chastityUploading ? (
+                                <div style={{
+                                    position: 'relative', zIndex: 1, marginTop: 4,
+                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px',
+                                    color: 'rgba(197,160,89,0.6)', display: 'flex', alignItems: 'center', gap: 6,
+                                    animation: 'vPulse 1s ease infinite',
+                                }}>
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="2" strokeLinecap="round" style={{ animation: 'vSpin 1s linear infinite' }}>
+                                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                    </svg>
+                                    UPLOADING...
+                                </div>
+                            ) : (
+                                <label style={{
+                                    position: 'relative', zIndex: 1, marginTop: 6,
+                                    display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px',
+                                    color: chastityStatus === 'rejected' ? 'rgba(255,200,200,0.8)' : `${R}0.8)`,
+                                    background: chastityStatus === 'rejected' ? 'rgba(255,60,60,0.12)' : `${R}0.12)`,
+                                    border: `1px solid ${chastityStatus === 'rejected' ? 'rgba(255,60,60,0.3)' : `${R}0.35)`}`,
+                                    borderRadius: 20, padding: '6px 14px',
+                                    WebkitTapHighlightColor: 'transparent',
+                                }}>
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                        <circle cx="12" cy="13" r="4" />
+                                    </svg>
+                                    {chastityStatus === 'rejected' ? 'RETRY' : 'SUBMIT CHECK'}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        style={{ display: 'none' }}
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            e.target.value = '';
+                                            setChastityUploading(true);
+                                            try {
+                                                const mid = profile?.member_id || profile?.memberId || '';
+                                                const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                const fd = new FormData();
+                                                fd.append('file', file);
+                                                fd.append('folder', `vault/chastity/${mid}`);
+                                                fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                const data = await res.json();
+                                                if (data.url && vaultData?.session?.id) {
+                                                    const submitRes = await fetch('/api/vault/session', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+                                                    });
+                                                    if (submitRes.ok) {
+                                                        setChastityStatus('pending');
+                                                        setChastityPhotoUrl(data.url);
+                                                        vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
+                                                    } else {
+                                                        const err = await submitRes.json().catch(() => ({}));
+                                                        if (err.windowClosed) setChastityWindow(w => ({ ...w, open: false, before: false }));
+                                                    }
+                                                }
+                                            } catch {} finally {
+                                                setChastityUploading(false);
+                                            }
+                                        }}
+                                    />
+                                </label>
+                            )
+                        )}
                     </div>
 
                     {/* Stats pill — overlapping the circle (matches profile layout) */}
@@ -991,11 +1156,12 @@ export default function VaultPage() {
                         position: 'relative', zIndex: 3,
                         marginTop: -55, width: '94%',
                         background: 'rgba(18,12,14,0.92)',
-                        border: '1px solid rgba(160,20,20,0.25)',
+                        border: `1px solid ${hasChastityTask && chastityStatus === 'approved' ? 'rgba(197,160,89,0.2)' : hasChastityTask && chastityStatus === 'pending' ? 'rgba(197,160,89,0.15)' : 'rgba(160,20,20,0.25)'}`,
                         borderRadius: 12, padding: '16px 10px',
                         display: 'flex', alignItems: 'center', justifyContent: 'space-around',
                         boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(139,0,0,0.06)',
                         marginBottom: 30,
+                        transition: 'border-color 0.6s ease',
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -1014,6 +1180,8 @@ export default function VaultPage() {
                         </div>
                     </div>
                 </div>
+                    );
+                })()}
 
                 {/* ── LOCK STATS ROW (days / denied / streak / trials) ── */}
                 <div style={{
@@ -1280,165 +1448,6 @@ export default function VaultPage() {
                     </div>
                 )}
 
-                {/* ── CHASTITY CHECK — MANDATORY DAILY PROOF (from day 2+) ── */}
-                {todayOrders.some((o: any) => o.type === 'chastity_check') && daysIn >= 1 && (() => {
-                    const windowOpen = chastityWindow.open;
-                    const beforeWindow = chastityWindow.before;
-                    const missedWindow = !windowOpen && !beforeWindow && chastityStatus === 'none';
-                    const minsLeft = windowOpen ? (10 - chastityWindow.localHour) * 60 - chastityWindow.localMinute : 0;
-                    const canUpload = (windowOpen || chastityStatus === 'rejected') && chastityStatus !== 'pending' && chastityStatus !== 'approved';
-
-                    return (
-                    <div style={{ width: '100%', padding: '0 20px 20px' }}>
-                        <div style={{
-                            background: chastityStatus === 'approved'
-                                ? 'rgba(80,200,120,0.04)'
-                                : chastityStatus === 'rejected'
-                                    ? 'rgba(255,40,40,0.04)'
-                                    : missedWindow
-                                        ? 'rgba(255,40,40,0.03)'
-                                        : `${R}0.06)`,
-                            border: `1px solid ${chastityStatus === 'approved' ? 'rgba(80,200,120,0.25)' : chastityStatus === 'rejected' || missedWindow ? 'rgba(255,40,40,0.2)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.3)' : `${R}0.3)`}`,
-                            borderRadius: 14, padding: '20px 18px', position: 'relative', overflow: 'hidden',
-                            boxShadow: chastityStatus === 'none' && windowOpen ? `0 0 30px ${R}0.15), inset 0 0 40px ${R}0.05)` : '0 4px 20px rgba(0,0,0,0.2)',
-                        }}>
-                            {/* Header */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={chastityStatus === 'approved' ? 'rgba(80,200,120,0.7)' : `${R}0.6)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                    </svg>
-                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: chastityStatus === 'approved' ? 'rgba(80,200,120,0.8)' : 'rgba(255,255,255,0.8)', letterSpacing: '3px', fontWeight: 600 }}>
-                                        CHASTITY CHECK
-                                    </span>
-                                </div>
-                                <span style={{
-                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', letterSpacing: '2px',
-                                    color: chastityStatus === 'approved' ? 'rgba(80,200,120,0.8)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.8)' : chastityStatus === 'rejected' || missedWindow ? 'rgba(255,60,60,0.7)' : `${R}0.5)`,
-                                    background: chastityStatus === 'approved' ? 'rgba(80,200,120,0.1)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.1)' : chastityStatus === 'rejected' || missedWindow ? 'rgba(255,60,60,0.08)' : `${R}0.08)`,
-                                    padding: '4px 10px', borderRadius: 20,
-                                    border: `1px solid ${chastityStatus === 'approved' ? 'rgba(80,200,120,0.2)' : chastityStatus === 'pending' ? 'rgba(197,160,89,0.2)' : chastityStatus === 'rejected' || missedWindow ? 'rgba(255,60,60,0.15)' : `${R}0.15)`}`,
-                                }}>
-                                    {chastityStatus === 'approved' ? '✓ APPROVED' : chastityStatus === 'pending' ? '⏳ AWAITING REVIEW' : chastityStatus === 'rejected' ? '✕ REJECTED' : missedWindow ? '✕ MISSED' : beforeWindow ? 'OPENS 6:00 AM' : 'REQUIRED'}
-                                </span>
-                            </div>
-
-                            {/* Status messages */}
-                            {chastityStatus === 'none' && beforeWindow && (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', lineHeight: 1.5 }}>
-                                    Upload window opens at 6:00 AM. Submit your chastity proof between 6:00 - 10:00 AM.
-                                </div>
-                            )}
-
-                            {chastityStatus === 'none' && windowOpen && (
-                                <>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: 16, lineHeight: 1.5 }}>
-                                        Submit daily proof to continue your program. Failure to submit ends your vault session.
-                                    </div>
-                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '2px', marginBottom: 12, textAlign: 'center' }}>
-                                        WINDOW CLOSES IN {minsLeft}MIN
-                                    </div>
-                                </>
-                            )}
-
-                            {missedWindow && (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,60,60,0.5)', letterSpacing: '1px', lineHeight: 1.5 }}>
-                                    You missed today&apos;s chastity check window (6:00 - 10:00 AM). Your program will be terminated.
-                                </div>
-                            )}
-
-                            {chastityStatus === 'rejected' && (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,60,60,0.5)', letterSpacing: '1px', marginBottom: 16, lineHeight: 1.5 }}>
-                                    Queen rejected your submission. Upload a new photo immediately.
-                                </div>
-                            )}
-
-                            {chastityStatus === 'pending' && (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '1px', marginBottom: 4, lineHeight: 1.5 }}>
-                                    Photo submitted. Awaiting Queen&apos;s approval.
-                                </div>
-                            )}
-
-                            {chastityStatus === 'approved' && (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.5)', letterSpacing: '1px', lineHeight: 1.5 }}>
-                                    Verified. You may continue today&apos;s orders.
-                                </div>
-                            )}
-
-                            {/* Upload button — only when window open (or rejected anytime) */}
-                            {canUpload && (
-                                chastityUploading ? (
-                                    <div style={{
-                                        textAlign: 'center', padding: '14px 0', fontFamily: 'Orbitron, sans-serif',
-                                        fontSize: '0.7rem', letterSpacing: '2px', color: 'rgba(197,160,89,0.6)',
-                                        animation: 'vPulse 1s ease infinite',
-                                    }}>
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="2" strokeLinecap="round" style={{ animation: 'vSpin 1s linear infinite', display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }}>
-                                            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                                        </svg>
-                                        UPLOADING...
-                                    </div>
-                                ) : (
-                                    <label style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                                        marginTop: 8, padding: '14px 20px', cursor: 'pointer',
-                                        background: `${R}0.1)`, border: `1px solid ${R}0.35)`, borderRadius: 10,
-                                        fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '3px',
-                                        color: `${R}0.8)`, WebkitTapHighlightColor: 'transparent',
-                                        transition: 'all 0.2s ease',
-                                    }}>
-                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={`${R}0.7)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                                            <circle cx="12" cy="13" r="4" />
-                                        </svg>
-                                        {chastityStatus === 'rejected' ? 'RESUBMIT PHOTO' : 'SUBMIT PROOF'}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            capture="environment"
-                                            style={{ display: 'none' }}
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (!file) return;
-                                                e.target.value = '';
-                                                setChastityUploading(true);
-                                                try {
-                                                    const mid = profile?.member_id || profile?.memberId || '';
-                                                    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-                                                    const fd = new FormData();
-                                                    fd.append('file', file);
-                                                    fd.append('folder', `vault/chastity/${mid}`);
-                                                    fd.append('ext', ext === 'heic' ? 'jpg' : ext);
-                                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                    const data = await res.json();
-                                                    if (data.url && vaultData?.session?.id) {
-                                                        const submitRes = await fetch('/api/vault/session', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
-                                                        });
-                                                        if (submitRes.ok) {
-                                                            setChastityStatus('pending');
-                                                            vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
-                                                        } else {
-                                                            const err = await submitRes.json().catch(() => ({}));
-                                                            if (err.windowClosed) {
-                                                                setChastityWindow(w => ({ ...w, open: false, before: false }));
-                                                            }
-                                                        }
-                                                    }
-                                                } catch {} finally {
-                                                    setChastityUploading(false);
-                                                }
-                                            }}
-                                        />
-                                    </label>
-                                )
-                            )}
-                        </div>
-                    </div>
-                    );
-                })()}
 
                 {/* ── TODAY'S ORDERS ── */}
                 <div style={{ width: '100%', padding: '0 20px 36px' }}>
