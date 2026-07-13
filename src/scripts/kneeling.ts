@@ -177,10 +177,11 @@ export function attachKneelListeners() {
         console.log('[KNEEL] Connected to State & DOM:', btn.id);
     });
 
-    // Sync UI with initial in-memory state first
+    // Lock button until server sync completes (prevents kneel-before-sync race)
+    setState({ isLocked: true });
     updateKneelingUI();
 
-    // Then fetch real server state (bypasses RLS) and update
+    // Then fetch real server state — will unlock if cooldown expired
     syncKneelStatusFromServer();
 }
 
@@ -289,6 +290,7 @@ async function completeKneelAction() {
     const userId = memberId || id;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+    let kneelSuccess = false;
     if (userId) {
         try {
             const res = await fetch('/api/kneel', {
@@ -297,16 +299,35 @@ async function completeKneelAction() {
                 body: JSON.stringify({ memberId: userId, tz })
             });
             const data = await res.json();
-            if (res.ok && typeof data.todayKneeling === 'number') {
-                updateKneelingHoursUI(data.todayKneeling);
-                renderKneelDots(data.kneelHours || []);
+            if (res.ok && data.success) {
+                kneelSuccess = true;
+                if (typeof data.todayKneeling === 'number') {
+                    updateKneelingHoursUI(data.todayKneeling);
+                    renderKneelDots(data.kneelHours || []);
+                }
+            } else if (res.status === 429) {
+                // Server says cooldown active — sync lock state
+                console.warn('[KNEEL] Server cooldown active:', data.minLeft, 'min left');
+                setState({ isLocked: true, lastWorshipTime: Date.now() - (60 * 60 * 1000) + (data.minLeft || 1) * 60000 });
+                updateKneelingUI();
+                return;
+            } else {
+                console.error('[KNEEL] Server rejected:', data.error);
+                resetUI();
+                setState({ isLocked: false });
+                return;
             }
         } catch (err) {
             console.warn('[KNEEL] DB write failed:', err);
+            resetUI();
+            setState({ isLocked: false });
+            return;
         }
     }
 
-    // Show reward overlay
+    // Only show reward overlay if server confirmed the kneel
+    if (!kneelSuccess) { resetUI(); return; }
+
     const deskReward = document.getElementById('kneelRewardOverlay');
     const mobReward = document.getElementById('mobKneelReward');
     if (deskReward) { deskReward.classList.remove('hidden'); deskReward.style.display = 'flex'; }
