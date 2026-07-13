@@ -3513,9 +3513,11 @@ export async function initChatSystem() {
                     _updateVaultLockButton({ active: true, status: 'awaiting_video', sessionId: vr.sessionId, lockDays: vr.lockDays } as any);
                     _showVideoProofUpload({ sessionId: vr.sessionId, lockDays: vr.lockDays });
                 }
-                // Vault: active — redirect to vault
+                // Vault: active — redirect to vault (but not if proof upload is in progress — it handles its own redirect)
                 else if (fresh.parameters?.active_overlay === 'vault') {
-                    window.location.href = '/vault';
+                    if (!document.getElementById('_vaultVideoOverlay')) {
+                        window.location.href = '/vault';
+                    }
                 }
                 // Vault lock released — reset button if active_overlay removed
                 else if (!fresh.parameters?.active_overlay && !vr) {
@@ -5940,6 +5942,11 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
             // Redirect to vault after a moment
             setTimeout(() => { window.location.href = '/vault'; }, 2500);
         } catch (err: any) {
+            // iOS Safari throws "Load failed" when fetch is cancelled by page navigation.
+            // The realtime handler redirects to /vault which kills in-flight fetches.
+            // If the proof overlay is gone (redirect happened), don't show error.
+            if (!document.getElementById('_vaultVideoOverlay')) return;
+            if (err.message === 'Load failed' || err.message === 'cancelled') return;
             alert(err.message || 'Connection error. Try again.');
             submitBtn.disabled = false;
             submitBtn.textContent = 'SUBMIT PROOF';
