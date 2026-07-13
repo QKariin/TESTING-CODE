@@ -16,14 +16,12 @@ async function syncKneelStatusFromServer() {
         const data = await res.json();
 
         // ── Update lock state ──
-        if (data.lastWorshipMs) {
-            setState({
-                lastWorshipTime: data.lastWorshipMs,
-                isLocked: data.isLocked,
-            });
-            console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m, todayKneeling=${data.todayKneeling}`);
-            updateKneelingUI();
-        }
+        setState({
+            lastWorshipTime: data.lastWorshipMs || 0,
+            isLocked: !!data.isLocked,
+        });
+        console.log(`[KNEEL] Server sync: isLocked=${data.isLocked}, minLeft=${data.minLeft}m, todayKneeling=${data.todayKneeling}`);
+        updateKneelingUI();
 
         // ── Update Kneeling Hours bars + dot grid ──
         updateKneelingHoursUI(data.todayKneeling || 0);
