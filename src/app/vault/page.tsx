@@ -706,7 +706,8 @@ export default function VaultPage() {
                                 body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'kneel', amount: 1 }),
                             }).catch(() => {});
                         }
-                        vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${data.todayKneeling >= 8 ? 'They hit the daily target!' : `${8 - data.todayKneeling} more to go.`}`);
+                        const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 8;
+                        vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${data.todayKneeling >= kTarget ? 'They hit the daily target!' : `${kTarget - data.todayKneeling} more to go.`}`);
                     } else if (data.error === 'COOLDOWN') {
                         setKneelCooldownUntil(Date.now() + data.minLeft * 60000);
                     }
@@ -1203,6 +1204,32 @@ export default function VaultPage() {
                     );
                 })()}
 
+                {/* ── RELEASE COUNTDOWN — under merit/coins ── */}
+                <div style={{ width: '100%', padding: '8px 20px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: `${R}0.7)`, letterSpacing: '5px', marginBottom: 14 }}>RELEASE IN</div>
+                    {penaltyHours > 0 && (
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '2px', marginBottom: 10 }}>
+                            +{penaltyHours}h ADDED
+                        </div>
+                    )}
+                    <div className="card-timer-row" style={{ gap: 12 }}>
+                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
+                            {String(remaining.d).padStart(2, '0')}
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>DAYS</div>
+                        </div>
+                        <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
+                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
+                            {String(remaining.h).padStart(2, '0')}
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>HRS</div>
+                        </div>
+                        <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
+                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
+                            {String(remaining.m).padStart(2, '0')}
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>MIN</div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* ── LOCK STATS ROW (days / denied / streak / trials) ── */}
                 <div style={{
                     width: '100%', display: 'flex', justifyContent: 'space-around',
@@ -1228,32 +1255,6 @@ export default function VaultPage() {
                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>LOCKED </span>
                     <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.95rem', color: `${R}0.75)`, letterSpacing: '1px' }}>{elapsed.d}</span>
                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
-                </div>
-
-                {/* ── RELEASE COUNTDOWN — profile task timer style ── */}
-                <div style={{ width: '100%', padding: '8px 20px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: `${R}0.7)`, letterSpacing: '5px', marginBottom: 14 }}>RELEASE IN</div>
-                    {penaltyHours > 0 && (
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '2px', marginBottom: 10 }}>
-                            +{penaltyHours}h ADDED
-                        </div>
-                    )}
-                    <div className="card-timer-row" style={{ gap: 12 }}>
-                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
-                            {String(remaining.d).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>DAYS</div>
-                        </div>
-                        <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
-                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
-                            {String(remaining.h).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>HRS</div>
-                        </div>
-                        <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
-                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
-                            {String(remaining.m).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>MIN</div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* ── OBEDIENCE CALENDAR ── */}
