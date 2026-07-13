@@ -34,6 +34,20 @@ export async function POST(req: Request) {
                 status: 'awaiting_video',
             }).eq('id', sessionId);
 
+            // Generate program from template immediately so it's ready when keyholder views member
+            try {
+                const { data: existing } = await supabaseAdmin
+                    .from('vault_member_program').select('id').eq('session_id', sessionId).maybeSingle();
+                if (!existing) {
+                    const program = await _generateProgram();
+                    await supabaseAdmin.from('vault_member_program').insert({
+                        session_id: sessionId,
+                        member_id: memberId,
+                        program: JSON.stringify(program),
+                    });
+                }
+            } catch (_) {}
+
             // Update profile — set vault_request to awaiting_video (no active_overlay yet)
             const { data: profile } = await supabaseAdmin
                 .from('profiles')
@@ -192,6 +206,28 @@ export async function POST(req: Request) {
         console.error('[VAULT MANAGE] Error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
+}
+
+async function _generateProgram(): Promise<Record<string, any[]>> {
+    const program: Record<string, any[]> = {};
+    try {
+        const { data: template } = await supabaseAdmin
+            .from('vault_program_template').select('*').order('day_number');
+        if (template && template.length > 0) {
+            for (const row of template) {
+                program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+            }
+            return program;
+        }
+    } catch {}
+    // Fallback defaults
+    for (let d = 1; d <= 30; d++) {
+        program[String(d)] = [
+            { type: 'kneel', target: Math.min(4 + Math.floor(d / 3) * 2, 20), label: 'Kneel' },
+            { type: 'chastity_check', target: 1, label: 'Chastity check' },
+        ];
+    }
+    return program;
 }
 
 async function _pushToUser(memberId: string, message: string) {

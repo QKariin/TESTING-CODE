@@ -63,14 +63,21 @@ export async function POST(req: Request) {
             }
         } catch (_) {}
 
-        // Create day 1 orders
+        // Create day 1 orders from member's program
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
-            await fetch(`${baseUrl}/api/vault/session`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'init-day', memberId, sessionId }),
-            });
+            const { data: prog } = await supabaseAdmin
+                .from('vault_member_program').select('program').eq('session_id', sessionId).maybeSingle();
+            if (prog) {
+                const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
+                const day1Tasks = program['1'] || [];
+                const orders = day1Tasks.map((t: any) => ({ type: t.type, target: t.target || 1, done: 0 }));
+                const today = new Date().toISOString().split('T')[0];
+                await supabaseAdmin.from('vault_daily').insert({
+                    session_id: sessionId, day_number: 1, date: today,
+                    orders: JSON.stringify(orders), orders_total: orders.length,
+                    orders_completed: 0, perfect: false,
+                });
+            }
         } catch (_) {}
 
         // System message

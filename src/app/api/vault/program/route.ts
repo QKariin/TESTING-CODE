@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
         const { data: sessions } = await supabaseAdmin
             .from('vault_sessions')
             .select('id, member_id, started_at, lock_days, expires_at, current_streak, total_perfect_days, tier, status')
-            .eq('status', 'active')
+            .in('status', ['active', 'awaiting_video'])
             .order('started_at', { ascending: false });
 
         if (!sessions || sessions.length === 0) return NextResponse.json({ locked: [] });
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         .from('vault_sessions')
         .select('id')
         .ilike('member_id', email)
-        .eq('status', 'active')
+        .in('status', ['active', 'awaiting_video'])
         .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest) {
             .from('vault_sessions')
             .select('id')
             .ilike('member_id', email)
-            .eq('status', 'active')
+            .in('status', ['active', 'awaiting_video'])
             .order('started_at', { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
             .from('vault_sessions')
             .select('id')
             .ilike('member_id', email)
-            .eq('status', 'active')
+            .in('status', ['active', 'awaiting_video'])
             .order('started_at', { ascending: false })
             .limit(1)
             .maybeSingle();
