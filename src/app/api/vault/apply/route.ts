@@ -106,6 +106,9 @@ export async function POST(req: Request) {
 
             if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+            // Auto-generate program from template
+            try { await _generateMemberProgram(session.id, memberId); } catch (_) {}
+
             // Clear the chastity purchase marker
             delete params.chastity_tier;
             delete params.chastity_days;
@@ -153,6 +156,9 @@ export async function POST(req: Request) {
             .single();
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+        // Auto-generate program from template
+        try { await _generateMemberProgram(session.id, memberId); } catch (_) {}
 
         // Deduct coins
         const newWallet = wallet - tier.coins;
@@ -261,6 +267,33 @@ export async function GET(req: Request) {
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
+}
+
+async function _generateMemberProgram(sessionId: string, memberId: string) {
+    const admin = getAdmin();
+    const program: Record<string, any[]> = {};
+    try {
+        const { data: template } = await admin
+            .from('vault_program_template').select('*').order('day_number');
+        if (template && template.length > 0) {
+            for (const row of template) {
+                program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+            }
+        }
+    } catch {}
+    if (Object.keys(program).length === 0) {
+        for (let d = 1; d <= 30; d++) {
+            program[String(d)] = [
+                { type: 'kneel', target: Math.min(4 + Math.floor(d / 3) * 2, 20), label: 'Kneel' },
+                { type: 'chastity_check', target: 1, label: 'Chastity check' },
+            ];
+        }
+    }
+    await admin.from('vault_member_program').insert({
+        session_id: sessionId,
+        member_id: memberId,
+        program: JSON.stringify(program),
+    });
 }
 
 async function _notifyQueen(name: string, days: number, type: string) {
