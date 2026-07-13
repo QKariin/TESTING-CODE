@@ -1452,7 +1452,7 @@ export default function VaultPage() {
                         </div>
                     )}
                     <div style={{ background: `${R}0.08)`, border: `1px solid ${R}0.22)`, borderRadius: 14, padding: '8px 0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                        {todayOrders.map((o: any, i: number) => {
+                        {todayOrders.filter((o: any) => o.type !== 'chastity_check').map((o: any, i: number) => {
                             const completed = o.done >= o.target;
                             return (
                                 <div key={i} style={{
@@ -1473,30 +1473,14 @@ export default function VaultPage() {
                                         textDecoration: completed ? 'line-through' : 'none',
                                         letterSpacing: '0.5px',
                                     }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'chastity_check' ? 'Chastity check photo' : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
-                                    {/* Chastity check — inline status (upload is in the prominent section above) */}
-                                    {o.type === 'chastity_check' && !completed && chastityStatus === 'none' && (
-                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px', color: `${R}0.5)`, flexShrink: 0 }}>
-                                            {chastityWindow.open ? '6-10 AM' : chastityWindow.before ? 'OPENS 6AM' : 'MISSED'}
-                                        </span>
-                                    )}
-                                    {o.type === 'chastity_check' && chastityStatus === 'pending' && !completed && (
-                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px', color: 'rgba(197,160,89,0.7)', flexShrink: 0, animation: 'vPulse 2s ease infinite' }}>
-                                            AWAITING
-                                        </span>
-                                    )}
-                                    {o.type === 'chastity_check' && chastityStatus === 'rejected' && !completed && (
-                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px', color: 'rgba(255,60,60,0.7)', flexShrink: 0 }}>
-                                            REJECTED
-                                        </span>
-                                    )}
-                                    {!completed && o.done > 0 && o.type !== 'chastity_check' && (
+                                    {!completed && o.done > 0 && (
                                         <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: `${R}0.7)` }}>{o.done}/{o.target}</span>
                                     )}
                                 </div>
                             );
                         })}
                     </div>
-                    {todayOrders.every((o: any) => o.done >= o.target) && (
+                    {todayOrders.filter((o: any) => o.type !== 'chastity_check').every((o: any) => o.done >= o.target) && (
                         <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '3px' }}>
                                 ALL ORDERS COMPLETE
