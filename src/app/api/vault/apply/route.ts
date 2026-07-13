@@ -243,16 +243,14 @@ export async function GET(req: Request) {
 
         if (!session) return NextResponse.json({ active: false });
 
-        // Self-heal: if session says active but profile has no vault_request/active_overlay,
-        // the release update failed (e.g. missing column). Fix the stale session now.
+        // If session is active but profile missing vault markers, fix the profile (not the session)
         const profileParams = getProfile?.parameters || {};
-        if (session.status === 'active' && !profileParams.vault_request && !profileParams.active_overlay) {
-            console.warn('[VAULT APPLY GET] Stale active session detected — auto-releasing:', session.id);
-            await getAdmin().from('vault_sessions').update({
-                status: 'released_early',
-                released_at: new Date().toISOString(),
-            }).eq('id', session.id);
-            return NextResponse.json({ active: false });
+        if (session.status === 'active' && !profileParams.active_overlay && getProfile) {
+            try {
+                const params = { ...profileParams, active_overlay: 'vault' };
+                if (!params.vault_request) params.vault_request = { sessionId: session.id, status: 'active' };
+                await getAdmin().from('profiles').update({ parameters: params }).ilike('member_id', memberId);
+            } catch (_) {}
         }
 
         return NextResponse.json({
