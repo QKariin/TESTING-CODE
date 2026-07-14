@@ -215,6 +215,7 @@ export default function VaultPage() {
     const [rouletteResult, setRouletteResult] = useState<string | null>(null);
     const [mechDone, setMechDone] = useState(false);
     const [wheelSpinning, setWheelSpinning] = useState(false);
+    const [wheelPreview, setWheelPreview] = useState<string | null>(null);
     const [truthDareChoice, setTruthDareChoice] = useState<'truth' | 'dare' | null>(null);
     const [simonStep, setSimonStep] = useState(0);
     const [greedCoins, setGreedCoins] = useState(0);
@@ -2665,18 +2666,22 @@ export default function VaultPage() {
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 {!wheelResult ? (
                                                                                     <>
-                                                                                        <div style={{ width: 100, height: 100, margin: '12px auto 20px', borderRadius: '50%', border: `2px solid ${wheelSpinning ? 'rgba(197,160,89,0.5)' : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${R}0.04)`, animation: wheelSpinning ? 'vPulse 0.08s linear infinite' : 'none' }}>
-                                                                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: `${R}0.3)` }}>{'\u25CE'}</span>
+                                                                                        <div style={{ width: 100, height: 100, margin: '12px auto 20px', borderRadius: '50%', border: `2px solid ${wheelSpinning ? 'rgba(197,160,89,0.5)' : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: wheelSpinning ? 'rgba(197,160,89,0.06)' : `${R}0.04)`, animation: wheelSpinning ? 'vPulse 0.08s linear infinite' : 'none', transition: 'all 0.2s' }}>
+                                                                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: wheelSpinning ? 'rgba(197,160,89,0.6)' : `${R}0.3)` }}>{'\u25CE'}</span>
                                                                                         </div>
+                                                                                        {wheelSpinning && wheelPreview && (
+                                                                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.4)', minHeight: 24, marginBottom: 12, animation: 'vPulse 0.15s linear infinite' }}>{wheelPreview}</div>
+                                                                                        )}
                                                                                         <button disabled={wheelSpinning} onClick={() => {
                                                                                             if (segments.length === 0) return;
-                                                                                            setWheelSpinning(true);
-                                                                                            let count = 0;
+                                                                                            setWheelSpinning(true); setWheelPreview(null);
+                                                                                            let count = 0; let finalSeg: any = null;
                                                                                             const iv = setInterval(() => {
-                                                                                                setWheelResult(segments[Math.floor(Math.random() * segments.length)]);
+                                                                                                finalSeg = segments[Math.floor(Math.random() * segments.length)];
+                                                                                                setWheelPreview(finalSeg.text);
                                                                                                 count++;
-                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setMechDone(true); }
-                                                                                            }, 100 + count * 15);
+                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setWheelPreview(null); setWheelResult(finalSeg); setMechDone(true); }
+                                                                                            }, 100);
                                                                                         }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                             {wheelSpinning ? 'SPINNING...' : 'SPIN'}
                                                                                         </button>
@@ -2929,41 +2934,45 @@ export default function VaultPage() {
                     } catch (e: any) { alert('Submit failed: ' + e?.message); }
                 };
                 return (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(2,5,10,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 } as React.CSSProperties}>
-                        <div style={{ width: '100%', maxWidth: 400, background: '#0a0a0e', border: `1px solid ${R}0.15)`, borderRadius: 16, padding: '32px 24px', position: 'relative' }}>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#050508', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
+                        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px 100px', position: 'relative', zIndex: 1 }}>
                             {/* Source label */}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, textAlign: 'center', marginBottom: 6 }}>{followUp.source.toUpperCase()} RESULT</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, textAlign: 'center', marginBottom: 20 }}>{followUp.source.toUpperCase()}</div>
+                            {/* Thin gold line */}
+                            <div style={{ width: 40, height: 1, background: `${R}0.2)`, marginBottom: 24 }} />
                             {/* What they got */}
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 3, textAlign: 'center', marginBottom: 16 }}>YOUR TASK</div>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, textAlign: 'center', marginBottom: 8, padding: '16px 20px', background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10 }}>{followUp.resultText}</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.8, textAlign: 'center', marginBottom: 12, maxWidth: 320 }}>{followUp.resultText}</div>
                             {/* Follow-up instruction */}
                             {(followUp.prompt || followUp.instruction) && (
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, textAlign: 'center', marginBottom: 16, fontStyle: 'italic' }}>{followUp.prompt || followUp.instruction}</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, textAlign: 'center', marginBottom: 20, maxWidth: 300, fontStyle: 'italic' }}>{followUp.prompt || followUp.instruction}</div>
                             )}
                             {followUp.duration && (
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2, textAlign: 'center', marginBottom: 16 }}>{Math.floor(followUp.duration / 60)}:{String(followUp.duration % 60).padStart(2, '0')} DURATION</div>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, textAlign: 'center', marginBottom: 24 }}>{Math.floor(followUp.duration / 60)}:{String(followUp.duration % 60).padStart(2, '0')} DURATION</div>
                             )}
+                            {/* Another thin line */}
+                            <div style={{ width: 60, height: 1, background: `${R}0.1)`, marginBottom: 28 }} />
 
                             {/* WRITING follow-up */}
                             {followUp.type === 'writing' && (
-                                <div style={{ marginTop: 16 }}>
+                                <div style={{ width: '100%', maxWidth: 340 }}>
                                     <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Write here..."
-                                        style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.4)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)' }}>{followUpText.split(/\s+/).filter(Boolean).length} words</span>
+                                        style={{ width: '100%', minHeight: 140, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)' }}>{followUpText.split(/\s+/).filter(Boolean).length} words</span>
                                         <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!followUpText.trim()}
-                                            style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: followUpText.trim() ? '#050508' : 'rgba(255,255,255,0.1)', background: followUpText.trim() ? 'rgba(80,200,120,0.5)' : 'transparent', border: `1px solid ${followUpText.trim() ? 'rgba(80,200,120,0.3)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: followUpText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: followUpText.trim() ? '#050508' : 'rgba(255,255,255,0.08)', background: followUpText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${followUpText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: followUpText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
                                     </div>
                                 </div>
                             )}
 
                             {/* PHOTO / VIDEO follow-up */}
                             {(followUp.type === 'photo' || followUp.type === 'video') && (
-                                <div style={{ marginTop: 16 }}>
+                                <div style={{ width: '100%', maxWidth: 340 }}>
                                     <label style={{ cursor: 'pointer', display: 'block' }}>
-                                        <div style={{ padding: '18px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: followUpUploading ? 'rgba(255,255,255,0.2)' : `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                        <div style={{ padding: '20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : `${R}0.5)`, background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                                            {followUpUploading ? 'UPLOADING...' : (followUp.type === 'video' ? 'UPLOAD VIDEO PROOF' : 'UPLOAD PHOTO PROOF')}
+                                            {followUpUploading ? 'UPLOADING...' : (followUp.type === 'video' ? 'UPLOAD VIDEO' : 'UPLOAD PHOTO')}
                                         </div>
                                         <input type="file" accept={followUp.type === 'video' ? 'video/*' : 'image/*,video/*'} capture="environment" style={{ display: 'none' }} onChange={async (e) => {
                                             const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
@@ -2982,9 +2991,9 @@ export default function VaultPage() {
 
                             {/* ENDURANCE follow-up — confirm with optional proof */}
                             {followUp.type === 'endurance' && (
-                                <div style={{ marginTop: 16 }}>
+                                <div style={{ width: '100%', maxWidth: 340 }}>
                                     <label style={{ cursor: 'pointer', display: 'block', marginBottom: 12 }}>
-                                        <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '2px', color: followUpUploading ? 'rgba(255,255,255,0.2)' : `${R}0.4)`, background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 8, textAlign: 'center' }}>
+                                        <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : `${R}0.3)`, background: `${R}0.02)`, border: `1px solid ${R}0.08)`, borderRadius: 8, textAlign: 'center' }}>
                                             {followUpUploading ? 'UPLOADING...' : '+ ATTACH PROOF (OPTIONAL)'}
                                         </div>
                                         <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={async (e) => {
@@ -3000,16 +3009,14 @@ export default function VaultPage() {
                                         }} />
                                     </label>
                                     <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — completed` })}
-                                        style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>CONFIRM DONE</button>
+                                        style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>CONFIRM DONE</button>
                                 </div>
                             )}
 
                             {/* INSTANT follow-up — auto-acknowledged */}
                             {followUp.type === 'instant' && (
-                                <div style={{ marginTop: 16, textAlign: 'center' }}>
-                                    <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}` })}
-                                        style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
-                                </div>
+                                <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}` })}
+                                    style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
                             )}
                         </div>
                     </div>
