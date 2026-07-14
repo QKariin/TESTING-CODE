@@ -2447,38 +2447,79 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* ── PENDING REVIEW — vault submissions when locked, regular queue otherwise ── */}
-                                {vaultRequest?.status === 'active' && vaultSession ? (() => {
+                                {/* ── PENDING REVIEW — regular queue (hidden by vanilla JS when vault active) ── */}
+                                <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
+
+                                {/* ── VAULT PENDING REVIEW — same card-stack look, replaces regular queue ── */}
+                                {vaultRequest?.status === 'active' && vaultSession && (() => {
                                     const subs: any[] = vaultSession?.submissions || [];
                                     const pending = subs.filter((s: any) => s.status === 'pending');
-                                    if (pending.length === 0) return <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>;
+                                    if (pending.length === 0) return null;
+                                    const count = pending.length;
                                     return (
-                                        <div className="dp-section" style={{ margin: '0 0 12px' }}>
+                                        <div className="dp-section">
                                             <div className="dp-divider-label" style={{ marginBottom: 16 }}>
                                                 <span className="dp-divider-text" style={{ fontFamily: "'Cinzel',serif" }}>PENDING REVIEW</span>
-                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700, letterSpacing: 2 }}>{pending.length}</span>
+                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700, letterSpacing: 2 }}>{count}</span>
                                             </div>
+                                            <div className="cs-stage">
+                                                {pending.map((sub: any, i: number) => {
+                                                    const isVideo = !!sub.video_url;
+                                                    const hasPreview = !!(sub.photo_url || sub.video_url);
+                                                    const mid2 = (count - 1) / 2;
+                                                    const off = i - mid2;
+                                                    const absOff = Math.abs(off);
+                                                    const zIdx = 10 - Math.round(absOff);
+                                                    const dateStr = sub.submitted_at ? new Date(sub.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                                                    return (
+                                                        <div key={sub.id} className="cs-card" style={{ '--off': off, '--abs': absOff, zIndex: zIdx, cursor: 'pointer' } as any}
+                                                            onClick={() => {
+                                                                const el = document.getElementById(`vaultSubExpand-${sub.id}`);
+                                                                if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                                                            }}>
+                                                            <div className="cs-card-bg" style={hasPreview ? { display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } : {}}>
+                                                                {sub.photo_url ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={sub.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                ) : sub.video_url ? (
+                                                                    <>
+                                                                        <video src={sub.video_url} preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}><path d="M8 5v14l11-7z" /></svg>
+                                                                        </div>
+                                                                    </>
+                                                                ) : sub.text ? (
+                                                                    <div style={{ padding: 10, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', maxHeight: '100%' }}>{sub.text.slice(0, 120)}</div>
+                                                                ) : (
+                                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(197,160,89,0.35)"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" /></svg>
+                                                                )}
+                                                            </div>
+                                                            <div className="cs-card-overlay">
+                                                                <div className="cs-card-type" style={{ color: '#c5a059' }}>{(sub.label || sub.order_type || 'TASK').toUpperCase()}</div>
+                                                                <div className="cs-card-date">{dateStr}</div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            {/* Expanded view for approve/reject — shown when card is tapped */}
                                             {pending.map((sub: any) => (
-                                                <div key={sub.id} style={{ marginBottom: 10, padding: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
+                                                <div key={`exp-${sub.id}`} id={`vaultSubExpand-${sub.id}`} style={{ display: 'none', marginTop: 12, padding: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                                                         <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>{sub.label || sub.order_type}</span>
-                                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1 }}>
+                                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)' }}>
                                                             {sub.submitted_at ? new Date(sub.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                                         </span>
                                                     </div>
                                                     {sub.photo_url && (
                                                         <a href={sub.photo_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.15)', marginBottom: 8 }}>
                                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                            <img src={sub.photo_url} alt="Submission" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                            <img src={sub.photo_url} alt="Proof" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
                                                         </a>
                                                     )}
-                                                    {sub.video_url && (
-                                                        <video src={sub.video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />
-                                                    )}
+                                                    {sub.video_url && <video src={sub.video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />}
                                                     {sub.text && (
-                                                        <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>
-                                                            {sub.text}
-                                                        </div>
+                                                        <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>{sub.text}</div>
                                                     )}
                                                     <textarea id={`pendingSubComment-${sub.id}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginBottom: 6 }} />
                                                     <div style={{ display: 'flex', gap: 8 }}>
@@ -2509,9 +2550,7 @@ export default function DashboardPage() {
                                             ))}
                                         </div>
                                     );
-                                })() : (
-                                    <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
-                                )}
+                                })()}
 
                                 {/* kneeling is in the header now */}
                                 <div id="admin_KneelSection" style={{ display: 'none' }}></div>

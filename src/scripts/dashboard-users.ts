@@ -565,7 +565,7 @@ async function updateReviewQueue(u: any) {
     if (!qSec) return;
 
     // Hide regular review queue for vault-locked members — vault has its own submissions panel
-    if ((window as any)._isVaultActive) {
+    if ((window as any)._isVaultActive || u?.parameters?.vault_request?.status === 'active') {
         qSec.style.display = 'none';
         return;
     }
