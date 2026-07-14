@@ -2559,7 +2559,7 @@ export default function VaultPage() {
                                                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: coinResult ? '0.9rem' : '1.5rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.9)' : coinResult === 'tails' ? 'rgba(255,80,80,0.8)' : `${R}0.3)`, letterSpacing: 2, fontWeight: 700 }}>{coinResult ? coinResult.charAt(0).toUpperCase() + coinResult.slice(1) : '$'}</span>
                                                                                 </div>
                                                                                 {coinResult && !coinFlipping && (() => {
-                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Heads') : (o.config?.tailsText || 'Tails');
+                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Write a 200-word confession about your weakness') : (o.config?.tailsText || 'Hold a plank for 60 seconds — photo proof');
                                                                                     return (<>
                                                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.8)' : 'rgba(255,80,80,0.8)', letterSpacing: 4, marginBottom: 8 }}>{coinResult.toUpperCase()}</div>
                                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.7)' : 'rgba(255,80,80,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: coinResult === 'heads' ? 'rgba(197,160,89,0.06)' : 'rgba(255,80,80,0.06)', border: `1px solid ${coinResult === 'heads' ? 'rgba(197,160,89,0.15)' : 'rgba(255,80,80,0.15)'}`, borderRadius: 8 }}>{consequenceText}</div>
@@ -2579,7 +2579,7 @@ export default function VaultPage() {
                                                                                         {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
                                                                                     </button>
                                                                                 ) : mechDone ? (() => {
-                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Heads') : (o.config?.tailsText || 'Tails');
+                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Write a 200-word confession about your weakness') : (o.config?.tailsText || 'Hold a plank for 60 seconds — photo proof');
                                                                                     const lower = consequenceText.toLowerCase();
                                                                                     const inferredType = /proof|video|selfie|photo|picture|body writing/.test(lower) ? 'photo'
                                                                                         : /write|essay|confession|journal|list|lines|letter|words|grateful/.test(lower) ? 'writing'
