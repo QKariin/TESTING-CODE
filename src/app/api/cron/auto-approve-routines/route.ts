@@ -224,6 +224,60 @@ export async function GET(req: Request) {
         console.error('[cron/auto-approve] vault tasks error:', err.message);
     }
 
-    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines, ${chastityApproved} chastity checks, ${tasksApproved} vault tasks`);
-    return NextResponse.json({ success: true, approved: stale.length, chastityApproved, tasksApproved });
+    // ── 6 AM CHASTITY CHECK REMINDER (push notification) ──
+    // Cron runs every 30 min. For each active vault session, check if it's ~6 AM
+    // in the member's saved timezone. If so, send a push reminder.
+    let reminders = 0;
+    try {
+        const { data: activeSessions } = await supabaseAdmin
+            .from('vault_sessions')
+            .select('id, member_id')
+            .eq('status', 'active');
+
+        for (const sess of (activeSessions || [])) {
+            try {
+                const { data: prof } = await supabaseAdmin.from('profiles')
+                    .select('timezone').ilike('member_id', sess.member_id).maybeSingle();
+                const tz = prof?.timezone || 'UTC';
+
+                // Get current hour in member's timezone
+                const localHour = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
+                const localMinute = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(new Date()), 10);
+
+                // Send at 6:00-6:29 (cron runs every 30 min so this catches once)
+                if (localHour === 6 && localMinute < 30) {
+                    // Check they haven't already submitted today
+                    const todayLocal = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date()); // YYYY-MM-DD
+                    const { data: existing } = await supabaseAdmin.from('vault_check_log')
+                        .select('id').eq('session_id', sess.id).eq('date', todayLocal).eq('type', 'chastity_check').maybeSingle();
+
+                    if (!existing) {
+                        const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+                        const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
+                        if (ONESIGNAL_KEY) {
+                            fetch('https://api.onesignal.com/notifications', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Authorization: `Key ${ONESIGNAL_KEY}` },
+                                body: JSON.stringify({
+                                    app_id: ONESIGNAL_APP_ID,
+                                    target_channel: 'push',
+                                    include_aliases: { external_id: [sess.member_id.toLowerCase()] },
+                                    headings: { en: 'Chastity Check Time' },
+                                    subtitle: { en: 'Vault' },
+                                    contents: { en: 'Your chastity check window is open. Submit your proof now.' },
+                                    url: 'https://throne.qkarin.com/vault',
+                                }),
+                            }).catch(() => {});
+                            reminders++;
+                        }
+                    }
+                }
+            } catch (_) {}
+        }
+    } catch (err: any) {
+        console.error('[cron/auto-approve] reminder error:', err.message);
+    }
+
+    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines, ${chastityApproved} chastity checks, ${tasksApproved} vault tasks, ${reminders} reminders sent`);
+    return NextResponse.json({ success: true, approved: stale.length, chastityApproved, tasksApproved, reminders });
 }

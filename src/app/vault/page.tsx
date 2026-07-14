@@ -101,14 +101,8 @@ const MECH_ICON: Record<string, { icon: string; label: string }> = {
     silence:          { icon: '\u{1F910}', label: 'Silence' },
 };
 
-// Today's orders (mock — will be generated/set from vault_daily)
-const TODAYS_ORDERS = [
-    { type: 'kneel', label: 'Kneel 8 times', target: 8, done: 0 },
-    { type: 'chastity_check', label: 'Chastity check photo', target: 1, done: 0 },
-    { type: 'spin', label: 'Spin the wheel', target: 1, done: 0 },
-    { type: 'trial', label: 'Complete daily trial', target: 1, done: 0 },
-    { type: 'tribute', label: 'Tribute 5 coins', target: 5, done: 0 },
-];
+// No hardcoded fallback — orders come only from vault_daily (the database)
+const TODAYS_ORDERS: any[] = [];
 
 const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
@@ -459,25 +453,24 @@ export default function VaultPage() {
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
 
-                            // Realtime: listen for vault_daily changes (chastity approval/rejection)
-                            if (vd.today?.id) {
-                                const dailySub = supabase
-                                    .channel('vault_daily_watch')
-                                    .on('postgres_changes', {
-                                        event: 'UPDATE',
-                                        schema: 'public',
-                                        table: 'vault_daily',
-                                        filter: `id=eq.${vd.today.id}`,
-                                    }, (payload: any) => {
-                                        const d = payload.new;
-                                        const orders = typeof d.orders === 'string' ? JSON.parse(d.orders) : (d.orders || []);
-                                        const cc = orders.find((o: any) => o.type === 'chastity_check');
-                                        if (cc?.status === 'approved') setChastityStatus('approved');
-                                        else if (cc?.status === 'rejected') setChastityStatus('rejected');
-                                        else if (cc?.status === 'pending') setChastityStatus('pending');
+                            // Realtime: listen for Queen's review actions (broadcast from API)
+                            if (_cachedProfile?.ID) {
+                                const notifySub = supabase
+                                    .channel(`vault-notify-${_cachedProfile.ID}`)
+                                    .on('broadcast', { event: 'chastity_reviewed' }, (msg: any) => {
+                                        const s = msg?.payload?.status;
+                                        if (s === 'approved') setChastityStatus('approved');
+                                        else if (s === 'rejected') setChastityStatus('rejected');
+                                        // Also refresh full vault data so orders/streaks update
+                                        const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
+                                        if (mid) {
+                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                                if (vd2.active) setVaultData(vd2);
+                                            }).catch(() => {});
+                                        }
                                     })
                                     .subscribe();
-                                (window as any)._vaultDailySub = dailySub;
+                                (window as any)._vaultDailySub = notifySub;
                             }
                         }
 
@@ -1413,12 +1406,17 @@ export default function VaultPage() {
                         </div>
                     )}
                     <div style={{ background: `${R}0.08)`, border: `1px solid ${R}0.22)`, borderRadius: 14, padding: '8px 0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
-                        {todayOrders.filter((o: any) => o.type !== 'chastity_check').map((o: any, i: number) => {
+                        {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length === 0 && (
+                            <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>
+                                {vaultData?.today ? 'NO ADDITIONAL TASKS' : 'LOADING...'}
+                            </div>
+                        )}
+                        {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').map((o: any, i: number, arr: any[]) => {
                             const completed = o.done >= o.target;
                             return (
                                 <div key={i} style={{
                                     display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px',
-                                    borderBottom: i < todayOrders.length - 1 ? `1px solid ${R}0.12)` : 'none',
+                                    borderBottom: i < arr.length - 1 ? `1px solid ${R}0.12)` : 'none',
                                 }}>
                                     <div style={{
                                         width: 24, height: 24, borderRadius: 6, flexShrink: 0,
@@ -1441,7 +1439,7 @@ export default function VaultPage() {
                             );
                         })}
                     </div>
-                    {todayOrders.filter((o: any) => o.type !== 'chastity_check').every((o: any) => o.done >= o.target) && (
+                    {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length > 0 && todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').every((o: any) => o.done >= o.target) && (
                         <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '3px' }}>
                                 ALL ORDERS COMPLETE
@@ -2181,7 +2179,7 @@ export default function VaultPage() {
                         ) : t === 'challenge' ? (
                             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 100px', display: 'flex', flexDirection: 'column' }}>
                                 {(() => {
-                                    const tasks = todayOrders.filter((o: any) => o.type !== 'chastity_check');
+                                    const tasks = todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel');
                                     const doneCount = tasks.filter((o: any) => o.done >= o.target).length;
                                     const allDone = doneCount >= tasks.length;
                                     const currentTask = tasks.find((o: any) => o.done < o.target);
@@ -2267,18 +2265,6 @@ export default function VaultPage() {
 
                                                         {/* Task-specific content */}
                                                         <div style={{ padding: '20px 22px' }}>
-                                                            {/* KNEEL */}
-                                                            {o.type === 'kneel' && (
-                                                                <div style={{ textAlign: 'center' }}>
-                                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-                                                                        {Array.from({ length: Math.min(o.target, 24) }).map((_, j) => (
-                                                                            <div key={j} style={{ width: 12, height: 12, borderRadius: '50%', background: j < kneelToday ? `${R}0.7)` : 'rgba(255,255,255,0.06)', border: `1.5px solid ${j < kneelToday ? `${R}0.5)` : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.3s' }} />
-                                                                        ))}
-                                                                    </div>
-                                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>USE KNEEL BAR ON VAULT PAGE</div>
-                                                                </div>
-                                                            )}
-
                                                             {/* SPIN (old type) */}
                                                             {o.type === 'spin' && (
                                                                 <div style={{ textAlign: 'center' }}>

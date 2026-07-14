@@ -64,9 +64,8 @@ export async function GET(req: NextRequest) {
     if (!todayRecord && session) {
         const startDate2 = new Date(session.started_at);
         const daysIn2 = Math.floor((Date.now() - startDate2.getTime()) / 86400000) + 1;
-        // Try to read from member's custom program first
         const orders = await _getOrdersForDay(session.id, daysIn2);
-        const { data: inserted } = await supabaseAdmin.from('vault_daily').insert({
+        const { data: inserted, error: insertErr } = await supabaseAdmin.from('vault_daily').insert({
             session_id: session.id,
             member_id: email,
             day_number: daysIn2,
@@ -77,6 +76,12 @@ export async function GET(req: NextRequest) {
         if (inserted) {
             todayRecord = inserted;
             (dailyRecords || []).push(inserted);
+        } else if (insertErr) {
+            // Duplicate — row exists but wasn't found (race condition), re-fetch
+            console.error('[vault/session] insert daily error:', insertErr.message);
+            const { data: existing } = await supabaseAdmin.from('vault_daily')
+                .select('*').eq('session_id', session.id).eq('date', today).maybeSingle();
+            if (existing) todayRecord = existing;
         }
     }
 
@@ -436,15 +441,18 @@ export async function POST(req: NextRequest) {
         const { date: targetDate, comment } = body;
         const date = targetDate || new Date().toISOString().split('T')[0];
 
-        // Update vault_check_log (source of truth)
         await supabaseAdmin.from('vault_check_log').update({
             status: 'approved',
             reviewed_at: new Date().toISOString(),
             queen_comment: comment || null,
         }).eq('session_id', session.id).eq('date', date).eq('type', 'chastity_check');
 
-        // Also sync vault_daily order
         await _syncChastityOrder(session.id, date, 'approved');
+
+        // Broadcast to member so their vault page updates instantly
+        _notifyMember(email, 'chastity_reviewed', { status: 'approved', date });
+        // Push notification
+        _pushToMember(email, 'Chastity Approved', 'Your chastity check has been approved by Queen.');
 
         return NextResponse.json({ success: true, approved: true });
     }
@@ -454,15 +462,16 @@ export async function POST(req: NextRequest) {
         const { date: targetDate, reason } = body;
         const date = targetDate || new Date().toISOString().split('T')[0];
 
-        // Update vault_check_log (source of truth)
         await supabaseAdmin.from('vault_check_log').update({
             status: 'rejected',
             reviewed_at: new Date().toISOString(),
             queen_comment: reason || null,
         }).eq('session_id', session.id).eq('date', date).eq('type', 'chastity_check');
 
-        // Sync vault_daily order
         await _syncChastityOrder(session.id, date, 'rejected');
+
+        _notifyMember(email, 'chastity_reviewed', { status: 'rejected', date });
+        _pushToMember(email, 'Chastity Rejected', reason || 'Your chastity check was rejected. Resubmit.');
 
         return NextResponse.json({ success: true, rejected: true });
     }
@@ -929,5 +938,39 @@ async function _syncChastityOrder(sessionId: string, date: string, status: 'appr
                 }).eq('id', sessionId);
             }
         }
+    } catch (_) {}
+}
+
+// Broadcast realtime event to member's vault page so it refreshes instantly
+async function _notifyMember(memberEmail: string, event: string, payload: any) {
+    try {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberEmail).maybeSingle();
+        if (!prof) return;
+        const ch = supabaseAdmin.channel(`vault-notify-${prof.ID}`);
+        await ch.subscribe();
+        await ch.send({ type: 'broadcast', event, payload });
+        setTimeout(() => supabaseAdmin.removeChannel(ch), 1500);
+    } catch (_) {}
+}
+
+// Send push notification to member via OneSignal
+function _pushToMember(memberEmail: string, title: string, message: string) {
+    try {
+        const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+        const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
+        if (!ONESIGNAL_KEY) return;
+        fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Key ${ONESIGNAL_KEY}` },
+            body: JSON.stringify({
+                app_id: ONESIGNAL_APP_ID,
+                target_channel: 'push',
+                include_aliases: { external_id: [memberEmail.toLowerCase()] },
+                headings: { en: title },
+                subtitle: { en: 'Vault' },
+                contents: { en: message },
+                url: 'https://throne.qkarin.com/vault',
+            }),
+        }).catch(() => {});
     } catch (_) {}
 }
