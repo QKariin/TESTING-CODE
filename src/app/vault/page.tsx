@@ -2509,14 +2509,9 @@ export default function VaultPage() {
                                                                                 <div style={{ width: 80, height: 80, margin: '16px auto 24px', border: `2px solid ${diceResult ? 'rgba(197,160,89,0.4)' : `${R}0.2)`}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: diceResult ? 'rgba(197,160,89,0.06)' : `${R}0.04)`, animation: diceRolling ? 'vPulse 0.15s linear infinite' : 'none' }}>
                                                                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2.5rem', color: diceResult ? 'rgba(197,160,89,0.9)' : `${R}0.3)` }}>{diceResult || '?'}</span>
                                                                                 </div>
-                                                                                {diceResult && !diceRolling && (() => {
-                                                                                    const outcomes = diceOutcomes;
-                                                                                    const outcomeText = outcomes[diceResult - 1]?.text || `Face ${diceResult}`;
-                                                                                    return (<>
-                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 4, marginBottom: 8 }}>YOU ROLLED: {diceResult}</div>
-                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{outcomeText}</div>
-                                                                                    </>);
-                                                                                })()}
+                                                                                {diceResult && !diceRolling && (
+                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 20px', padding: '14px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{diceOutcomes[diceResult - 1]?.text || `Face ${diceResult}`}</div>
+                                                                                )}
                                                                                 {!diceResult || diceRolling ? (
                                                                                     <button disabled={diceRolling} onClick={() => {
                                                                                         setDiceRolling(true); setDiceResult(null);
@@ -2533,18 +2528,14 @@ export default function VaultPage() {
                                                                                     </button>
                                                                                 ) : mechDone ? (() => {
                                                                                     const outcome = diceOutcomes[diceResult! - 1];
-                                                                                    const hasFollowUp = outcome?.followUpType && outcome.followUpType !== 'instant';
+                                                                                    const fuType = outcome?.followUpType || 'writing';
                                                                                     return (
                                                                                     <button onClick={() => {
-                                                                                        if (hasFollowUp) {
-                                                                                            setFollowUp({ orderType: o.type, source: `Dice Roll — ${diceResult}`, resultText: outcome.text, type: outcome.followUpType, prompt: outcome.followUpPrompt, instruction: outcome.followUpInstruction, duration: outcome.followUpDuration, target: outcome.followUpTarget });
-                                                                                        } else {
-                                                                                            submitTask({ text: `Dice roll: ${diceResult} — ${outcome?.text || `Face ${diceResult}`}` });
-                                                                                        }
+                                                                                        setFollowUp({ orderType: o.type, source: `Dice Roll — ${diceResult}`, resultText: outcome?.text || `Face ${diceResult}`, type: fuType, prompt: outcome?.followUpPrompt, instruction: outcome?.followUpInstruction, duration: outcome?.followUpDuration, target: outcome?.followUpTarget });
                                                                                         setDiceResult(null); setMechDone(false); clearGambleResults();
                                                                                     }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        ACCEPT FATE
                                                                                     </button>
                                                                                     );
                                                                                 })() : null}
@@ -2553,18 +2544,25 @@ export default function VaultPage() {
                                                                         })()}
 
                                                                         {/* COINFLIP */}
-                                                                        {o.type === 'coinflip' && (
+                                                                        {o.type === 'coinflip' && (() => {
+                                                                            const hRaw = o.config?.headsText;
+                                                                            const tRaw = o.config?.tailsText;
+                                                                            const headsTask = (hRaw && !/^heads?$/i.test(hRaw.trim())) ? hRaw : 'Write a 200-word confession about your weakness';
+                                                                            const tailsTask = (tRaw && !/^tails?$/i.test(tRaw.trim())) ? tRaw : 'Hold a plank for 60 seconds — photo proof';
+                                                                            const taskText = coinResult === 'heads' ? headsTask : coinResult === 'tails' ? tailsTask : '';
+                                                                            const lower = taskText.toLowerCase();
+                                                                            const inferredType = /proof|video|selfie|photo|picture|body writing/.test(lower) ? 'photo'
+                                                                                : /write|essay|confession|journal|list|lines|letter|words|grateful/.test(lower) ? 'writing'
+                                                                                : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera|edge|ice/.test(lower) ? 'endurance'
+                                                                                : 'writing';
+                                                                            return (
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                                                                                <div style={{ width: 90, height: 90, margin: '16px auto 24px', borderRadius: '50%', border: `2px solid ${coinResult ? (coinResult === 'heads' ? 'rgba(197,160,89,0.5)' : 'rgba(255,80,80,0.4)') : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: coinResult === 'heads' ? 'rgba(197,160,89,0.08)' : coinResult === 'tails' ? 'rgba(255,80,80,0.06)' : `${R}0.04)`, animation: coinFlipping ? 'vPulse 0.12s linear infinite' : 'none' }}>
-                                                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: coinResult ? '0.9rem' : '1.5rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.9)' : coinResult === 'tails' ? 'rgba(255,80,80,0.8)' : `${R}0.3)`, letterSpacing: 2, fontWeight: 700 }}>{coinResult ? coinResult.charAt(0).toUpperCase() + coinResult.slice(1) : '$'}</span>
+                                                                                <div style={{ width: 90, height: 90, margin: '16px auto 20px', borderRadius: '50%', border: `2px solid ${coinResult ? (coinResult === 'heads' ? 'rgba(197,160,89,0.5)' : 'rgba(255,80,80,0.4)') : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: coinResult === 'heads' ? 'rgba(197,160,89,0.08)' : coinResult === 'tails' ? 'rgba(255,80,80,0.06)' : `${R}0.04)`, animation: coinFlipping ? 'vPulse 0.12s linear infinite' : 'none' }}>
+                                                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: coinResult ? '0.85rem' : '1.5rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.9)' : coinResult === 'tails' ? 'rgba(255,80,80,0.8)' : `${R}0.3)`, letterSpacing: 2, fontWeight: 700 }}>{coinResult ? coinResult.toUpperCase() : '$'}</span>
                                                                                 </div>
-                                                                                {coinResult && !coinFlipping && (() => {
-                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Write a 200-word confession about your weakness') : (o.config?.tailsText || 'Hold a plank for 60 seconds — photo proof');
-                                                                                    return (<>
-                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.8)' : 'rgba(255,80,80,0.8)', letterSpacing: 4, marginBottom: 8 }}>{coinResult.toUpperCase()}</div>
-                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.7)' : 'rgba(255,80,80,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: coinResult === 'heads' ? 'rgba(197,160,89,0.06)' : 'rgba(255,80,80,0.06)', border: `1px solid ${coinResult === 'heads' ? 'rgba(197,160,89,0.15)' : 'rgba(255,80,80,0.15)'}`, borderRadius: 8 }}>{consequenceText}</div>
-                                                                                    </>);
-                                                                                })()}
+                                                                                {coinResult && !coinFlipping && (
+                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 20px', padding: '14px 18px', background: coinResult === 'heads' ? 'rgba(197,160,89,0.06)' : 'rgba(255,80,80,0.06)', border: `1px solid ${coinResult === 'heads' ? 'rgba(197,160,89,0.15)' : 'rgba(255,80,80,0.15)'}`, borderRadius: 8 }}>{taskText}</div>
+                                                                                )}
                                                                                 {!coinResult || coinFlipping ? (
                                                                                     <button disabled={coinFlipping} onClick={() => {
                                                                                         setCoinFlipping(true); setCoinResult(null);
@@ -2578,30 +2576,18 @@ export default function VaultPage() {
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
                                                                                     </button>
-                                                                                ) : mechDone ? (() => {
-                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Write a 200-word confession about your weakness') : (o.config?.tailsText || 'Hold a plank for 60 seconds — photo proof');
-                                                                                    const lower = consequenceText.toLowerCase();
-                                                                                    const inferredType = /proof|video|selfie|photo|picture|body writing/.test(lower) ? 'photo'
-                                                                                        : /write|essay|confession|journal|list|lines|letter|words|grateful/.test(lower) ? 'writing'
-                                                                                        : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera|edge|ice/.test(lower) ? 'endurance'
-                                                                                        : 'instant';
-                                                                                    const hasFollowUp = inferredType !== 'instant';
-                                                                                    return (
+                                                                                ) : mechDone ? (
                                                                                     <button onClick={() => {
-                                                                                        if (hasFollowUp) {
-                                                                                            setFollowUp({ orderType: o.type, source: `Coinflip — ${coinResult!.toUpperCase()}`, resultText: consequenceText, type: inferredType });
-                                                                                        } else {
-                                                                                            submitTask({ text: `Coinflip: ${coinResult} — ${consequenceText}` });
-                                                                                        }
+                                                                                        setFollowUp({ orderType: o.type, source: `Coinflip — ${coinResult!.toUpperCase()}`, resultText: taskText, type: inferredType });
                                                                                         setCoinResult(null); setMechDone(false); clearGambleResults();
                                                                                     }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        ACCEPT FATE
                                                                                     </button>
-                                                                                    );
-                                                                                })() : null}
+                                                                                ) : null}
                                                                             </div>
-                                                                        )}
+                                                                            );
+                                                                        })()}
 
                                                                         {/* CARD PICK */}
                                                                         {o.type === 'card_pick' && (() => {
@@ -2632,22 +2618,16 @@ export default function VaultPage() {
                                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', lineHeight: 1.6, margin: '16px 0 20px', padding: '16px 20px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
                                                                                             {cardResult?.text || cardResult}
                                                                                         </div>
-                                                                                        {mechDone && (() => {
-                                                                                            const hasFollowUp = cardResult?.followUpType && cardResult.followUpType !== 'instant';
-                                                                                            return (
+                                                                                        {mechDone && (
                                                                                             <button onClick={() => {
-                                                                                                if (hasFollowUp) {
-                                                                                                    setFollowUp({ orderType: o.type, source: 'Card Draw', resultText: cardResult.text, type: cardResult.followUpType, prompt: cardResult.followUpPrompt, instruction: cardResult.followUpInstruction, duration: cardResult.followUpDuration, target: cardResult.followUpTarget });
-                                                                                                } else {
-                                                                                                    submitTask({ text: `Card drawn: ${cardResult?.text || cardResult}` });
-                                                                                                }
+                                                                                                const fuType = cardResult?.followUpType || 'writing';
+                                                                                                setFollowUp({ orderType: o.type, source: 'Card Draw', resultText: cardResult?.text || cardResult, type: fuType === 'instant' ? 'writing' : fuType, prompt: cardResult?.followUpPrompt, instruction: cardResult?.followUpInstruction, duration: cardResult?.followUpDuration, target: cardResult?.followUpTarget });
                                                                                                 setCardResult(null); setMechDone(false); clearGambleResults();
                                                                                             }}
-                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                                {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
+                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                                ACCEPT FATE
                                                                                             </button>
-                                                                                            );
-                                                                                        })()}
+                                                                                        )}
                                                                                     </>
                                                                                 )}
                                                                             </div>
@@ -2661,15 +2641,12 @@ export default function VaultPage() {
                                                                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: rouletteResult ? '0.7rem' : '1.2rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.8)' : 'rgba(255,60,60,0.4)', letterSpacing: 2 }}>{rouletteResult === 'bang' ? 'BANG' : rouletteResult === 'click' ? 'CLICK' : '\u2295'}</span>
                                                                                 </div>
                                                                                 {rouletteResult && !rouletteSpinning && (() => {
-                                                                                    const punishmentText = o.config?.punishment || 'Penalty triggered';
-                                                                                    return (<>
-                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 8 }}>
-                                                                                            {rouletteResult === 'bang' ? 'BANG' : 'YOU SURVIVED'}
+                                                                                    const punishmentText = o.config?.punishment || 'Write 100 lines: "I pulled the trigger and paid the price"';
+                                                                                    return (
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: rouletteResult === 'bang' ? 'rgba(255,80,80,0.7)' : 'rgba(80,200,120,0.7)', lineHeight: 1.6, margin: '0 0 20px', padding: '14px 18px', background: rouletteResult === 'bang' ? 'rgba(255,60,60,0.06)' : 'rgba(80,200,120,0.06)', border: `1px solid ${rouletteResult === 'bang' ? 'rgba(255,60,60,0.15)' : 'rgba(80,200,120,0.15)'}`, borderRadius: 8 }}>
+                                                                                            {rouletteResult === 'bang' ? punishmentText : 'You survived. Describe the fear you felt.'}
                                                                                         </div>
-                                                                                        {rouletteResult === 'bang' && (
-                                                                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,80,80,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.15)', borderRadius: 8 }}>{punishmentText}</div>
-                                                                                        )}
-                                                                                    </>);
+                                                                                    );
                                                                                 })()}
                                                                                 {!rouletteResult ? (
                                                                                     <button disabled={rouletteSpinning} onClick={() => {
@@ -2686,19 +2663,17 @@ export default function VaultPage() {
                                                                                     </button>
                                                                                 ) : null}
                                                                                 {rouletteResult && !rouletteSpinning && mechDone && (() => {
-                                                                                    const pt = o.config?.punishment || 'Penalty triggered';
+                                                                                    const pt = o.config?.punishment || 'Write 100 lines: "I pulled the trigger and paid the price"';
                                                                                     const isBang = rouletteResult === 'bang';
                                                                                     const lo = pt.toLowerCase();
-                                                                                    const inf = isBang ? (/proof|video|selfie|photo|picture|body writing/.test(lo) ? 'photo' : /write|essay|confession|journal|list|lines|grateful/.test(lo) ? 'writing' : /shower|plank|hold|sit|pushup|squat|camera|edge|ice/.test(lo) ? 'endurance' : 'instant') : 'instant';
-                                                                                    const hasFU = isBang && inf !== 'instant';
+                                                                                    const inf = isBang ? (/proof|video|selfie|photo|picture|body writing/.test(lo) ? 'photo' : /write|essay|confession|journal|list|lines|grateful/.test(lo) ? 'writing' : /shower|plank|hold|sit|pushup|squat|camera|edge|ice/.test(lo) ? 'endurance' : 'writing') : 'writing';
                                                                                     return (
                                                                                         <button onClick={() => {
-                                                                                            if (hasFU) { setFollowUp({ orderType: o.type, source: 'Russian Roulette — BANG', resultText: pt, type: inf }); }
-                                                                                            else { submitTask({ text: `Russian roulette: ${isBang ? `BANG — ${pt}` : 'CLICK — survived'}` }); }
+                                                                                            setFollowUp({ orderType: o.type, source: `Russian Roulette — ${isBang ? 'BANG' : 'SURVIVED'}`, resultText: isBang ? pt : 'You survived. Describe the fear you felt.', type: inf });
                                                                                             setRouletteResult(null); setMechDone(false); clearGambleResults();
                                                                                         }}
-                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFU ? 'rgba(255,60,60,0.5)' : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                            {hasFU ? 'ACCEPT PUNISHMENT' : 'SUBMIT RESULT'}
+                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: isBang ? 'rgba(255,60,60,0.5)' : `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                            {isBang ? 'ACCEPT PUNISHMENT' : 'ACCEPT FATE'}
                                                                                         </button>
                                                                                     );
                                                                                 })()}
@@ -2736,22 +2711,14 @@ export default function VaultPage() {
                                                                                     <>
                                                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 3, marginBottom: 8 }}>YOU LANDED ON</div>
                                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', lineHeight: 1.6, margin: '0 0 16px', padding: '14px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{wheelResult.text}</div>
-                                                                                        {(() => {
-                                                                                            const hasFollowUp = wheelResult.followUpType && wheelResult.followUpType !== 'instant';
-                                                                                            return (
-                                                                                            <button onClick={() => {
-                                                                                                if (hasFollowUp) {
-                                                                                                    setFollowUp({ orderType: o.type, source: 'Spin Wheel', resultText: wheelResult.text, type: wheelResult.followUpType, prompt: wheelResult.followUpPrompt, instruction: wheelResult.followUpInstruction, duration: wheelResult.followUpDuration, target: wheelResult.followUpTarget });
-                                                                                                } else {
-                                                                                                    submitTask({ text: `Wheel result: ${wheelResult.text}` });
-                                                                                                }
-                                                                                                setWheelResult(null); setMechDone(false); clearGambleResults();
-                                                                                            }}
-                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                                {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
-                                                                                            </button>
-                                                                                            );
-                                                                                        })()}
+                                                                                        <button onClick={() => {
+                                                                                            const fuType = wheelResult.followUpType || 'writing';
+                                                                                            setFollowUp({ orderType: o.type, source: 'Spin Wheel', resultText: wheelResult.text, type: fuType === 'instant' ? 'writing' : fuType, prompt: wheelResult.followUpPrompt, instruction: wheelResult.followUpInstruction, duration: wheelResult.followUpDuration, target: wheelResult.followUpTarget });
+                                                                                            setWheelResult(null); setMechDone(false); clearGambleResults();
+                                                                                        }}
+                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                            ACCEPT FATE
+                                                                                        </button>
                                                                                     </>
                                                                                 )}
                                                                             </div>
@@ -2769,7 +2736,7 @@ export default function VaultPage() {
                                                                                             style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(255,80,80,0.8)', background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>DARE</button>
                                                                                     </div>
                                                                                 ) : (() => {
-                                                                                    const choiceText = truthDareChoice === 'truth' ? (o.config?.truthText || 'Tell the truth') : (o.config?.dareText || 'Complete the dare');
+                                                                                    const choiceText = truthDareChoice === 'truth' ? (o.config?.truthText || 'Confess your deepest weakness to Queen Karin — at least 150 words') : (o.config?.dareText || 'Take a cold shower for 60 seconds — upload photo proof');
                                                                                     const tdFollowUp = truthDareChoice === 'truth' ? (o.config?.truthFollowUp || 'writing') : (o.config?.dareFollowUp || 'endurance');
                                                                                     return (
                                                                                         <>
