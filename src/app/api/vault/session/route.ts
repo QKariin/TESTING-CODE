@@ -127,6 +127,10 @@ export async function GET(req: NextRequest) {
         chastityWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
     } catch (_) {}
 
+    // Read chastity check from vault_check_log (proper table)
+    const { data: chastityCheck } = await supabaseAdmin.from('vault_check_log')
+        .select('*').eq('session_id', session.id).eq('date', today).eq('type', 'chastity_check').maybeSingle();
+
     return NextResponse.json({
         active: true,
         session,
@@ -141,6 +145,7 @@ export async function GET(req: NextRequest) {
         begs: begs || [],
         totalPenaltyHours,
         chastityWindow,
+        chastityCheck: chastityCheck || null,
     });
 }
 
@@ -344,36 +349,55 @@ export async function POST(req: NextRequest) {
                 10
             );
 
-            const { data: daily } = await supabaseAdmin.from('vault_daily')
-                .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
-            if (!daily) return NextResponse.json({ error: 'No daily record for today' }, { status: 404 });
+            // Check existing submission in vault_check_log (proper table, not JSON)
+            const { data: existing } = await supabaseAdmin.from('vault_check_log')
+                .select('id, status').eq('session_id', session.id).eq('date', today).eq('type', 'chastity_check').maybeSingle();
 
-            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-            const cc = orders.find((o: any) => o.type === 'chastity_check');
-            // Block duplicate: if already pending or approved, reject
-            if (cc && (cc.status === 'pending' || cc.status === 'approved')) {
-                return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: cc.status }, { status: 400 });
+            if (existing && (existing.status === 'pending' || existing.status === 'approved')) {
+                return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: existing.status }, { status: 400 });
             }
-            // Enforce 6-10 AM window — but allow resubmit anytime if Queen rejected
-            const isRejectedRetry = cc?.status === 'rejected';
+            // Enforce 6-10 AM window — allow resubmit anytime if Queen rejected
+            const isRejectedRetry = existing?.status === 'rejected';
             if (!isRejectedRetry && (localHour < 6 || localHour >= 10)) {
                 return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
             }
-            for (const o of orders) {
-                if (o.type === 'chastity_check') { o.status = 'pending'; o.photoUrl = photoUrl; o.submittedAt = new Date().toISOString(); break; }
-            }
-            // Save orders JSON first (this column always exists)
-            const { error: ordErr } = await supabaseAdmin.from('vault_daily').update({
-                orders: JSON.stringify(orders),
-            }).eq('id', daily.id);
-            if (ordErr) {
-                console.error('[vault] Failed to save chastity orders:', ordErr);
-                return NextResponse.json({ error: 'Failed to save submission' }, { status: 500 });
-            }
-            // Try saving to chastity_photo column too (may not exist in all DBs)
-            try { await supabaseAdmin.from('vault_daily').update({ chastity_photo: photoUrl }).eq('id', daily.id); } catch (_) {}
 
-            // Send push notification to Queen
+            // Write to vault_check_log (proper table — same pattern as user_routines)
+            if (existing) {
+                // Re-submit after rejection
+                await supabaseAdmin.from('vault_check_log').update({
+                    proof_url: photoUrl,
+                    status: 'pending',
+                    submitted_at: new Date().toISOString(),
+                    reviewed_at: null,
+                    queen_comment: null,
+                }).eq('id', existing.id);
+            } else {
+                await supabaseAdmin.from('vault_check_log').insert({
+                    session_id: session.id,
+                    member_id: email,
+                    date: today,
+                    type: 'chastity_check',
+                    proof_url: photoUrl,
+                    status: 'pending',
+                    submitted_at: new Date().toISOString(),
+                });
+            }
+
+            // Also mark vault_daily order as pending (for task list display)
+            try {
+                const { data: daily } = await supabaseAdmin.from('vault_daily')
+                    .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
+                if (daily) {
+                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    for (const o of orders) {
+                        if (o.type === 'chastity_check') { o.status = 'pending'; break; }
+                    }
+                    await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+                }
+            } catch (_) {}
+
+            // Push notification to Queen
             try {
                 const { data: prof } = await supabaseAdmin.from('profiles').select('name').ilike('member_id', email).maybeSingle();
                 const name = prof?.name || 'A subject';
@@ -405,38 +429,18 @@ export async function POST(req: NextRequest) {
 
     // ── APPROVE CHASTITY CHECK ──
     if (action === 'approve_chastity') {
-        const { date: targetDate } = body;
+        const { date: targetDate, comment } = body;
         const date = targetDate || new Date().toISOString().split('T')[0];
 
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders, orders_completed, orders_total').eq('session_id', session.id).eq('date', date).maybeSingle();
-        if (!daily) return NextResponse.json({ error: 'No daily record' }, { status: 404 });
+        // Update vault_check_log (source of truth)
+        await supabaseAdmin.from('vault_check_log').update({
+            status: 'approved',
+            reviewed_at: new Date().toISOString(),
+            queen_comment: comment || null,
+        }).eq('session_id', session.id).eq('date', date).eq('type', 'chastity_check');
 
-        const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-        for (const o of orders) {
-            if (o.type === 'chastity_check') { o.done = o.target; o.status = 'approved'; break; }
-        }
-        const completed = orders.filter((o: any) => o.done >= o.target).length;
-        const perfect = completed >= orders.length;
-
-        await supabaseAdmin.from('vault_daily').update({
-            orders: JSON.stringify(orders),
-            orders_completed: completed,
-            perfect,
-        }).eq('id', daily.id);
-
-        // Update streak if day became perfect
-        if (perfect) {
-            const { data: sess } = await supabaseAdmin.from('vault_sessions')
-                .select('current_streak, best_streak, total_perfect_days').eq('id', session.id).single();
-            if (sess) {
-                const ns = (sess.current_streak || 0) + 1;
-                await supabaseAdmin.from('vault_sessions').update({
-                    current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
-                    total_perfect_days: (sess.total_perfect_days || 0) + 1,
-                }).eq('id', session.id);
-            }
-        }
+        // Also sync vault_daily order
+        await _syncChastityOrder(session.id, date, 'approved');
 
         return NextResponse.json({ success: true, approved: true });
     }
@@ -446,18 +450,15 @@ export async function POST(req: NextRequest) {
         const { date: targetDate, reason } = body;
         const date = targetDate || new Date().toISOString().split('T')[0];
 
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders').eq('session_id', session.id).eq('date', date).maybeSingle();
-        if (!daily) return NextResponse.json({ error: 'No daily record' }, { status: 404 });
+        // Update vault_check_log (source of truth)
+        await supabaseAdmin.from('vault_check_log').update({
+            status: 'rejected',
+            reviewed_at: new Date().toISOString(),
+            queen_comment: reason || null,
+        }).eq('session_id', session.id).eq('date', date).eq('type', 'chastity_check');
 
-        const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-        for (const o of orders) {
-            if (o.type === 'chastity_check') { o.done = 0; o.status = 'rejected'; o.rejectReason = reason || ''; delete o.photoUrl; break; }
-        }
-        await supabaseAdmin.from('vault_daily').update({
-            orders: JSON.stringify(orders),
-        }).eq('id', daily.id);
-        try { await supabaseAdmin.from('vault_daily').update({ chastity_photo: null }).eq('id', daily.id); } catch (_) {}
+        // Sync vault_daily order
+        await _syncChastityOrder(session.id, date, 'rejected');
 
         return NextResponse.json({ success: true, rejected: true });
     }
@@ -647,22 +648,20 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
         if (!existing) {
-            // Check if yesterday's chastity check was done — if not, end the program
+            // Check if yesterday's chastity check was submitted — read from vault_check_log table
             // Skip day 1 (video submission day) — chastity check starts from day 2
             if (daysIn > 2) {
-                const { data: yesterday } = await supabaseAdmin
-                    .from('vault_daily')
-                    .select('orders')
-                    .eq('session_id', session.id)
-                    .eq('day_number', daysIn - 1)
-                    .maybeSingle();
-                if (yesterday) {
-                    const yOrders: any[] = typeof yesterday.orders === 'string' ? JSON.parse(yesterday.orders) : (yesterday.orders || []);
-                    const yChastity = yOrders.find((o: any) => o.type === 'chastity_check');
-                    // Only terminate if chastity was never submitted at all (done=0 AND no pending/approved status)
-                    // If status is 'pending', Queen hasn't reviewed yet — don't terminate
-                    if (yChastity && !(yChastity.done >= yChastity.target) && yChastity.status !== 'pending' && yChastity.status !== 'approved') {
-                        // Chastity check not submitted — end the session
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const { data: yCheck } = await supabaseAdmin.from('vault_check_log')
+                    .select('status').eq('session_id', session.id).eq('date', yesterday).eq('type', 'chastity_check').maybeSingle();
+                // Only terminate if no submission exists at all — pending/approved are fine
+                if (!yCheck) {
+                    // Check if yesterday even had a chastity_check order
+                    const { data: yDaily } = await supabaseAdmin.from('vault_daily')
+                        .select('orders').eq('session_id', session.id).eq('day_number', daysIn - 1).maybeSingle();
+                    const yOrders: any[] = yDaily ? (typeof yDaily.orders === 'string' ? JSON.parse(yDaily.orders) : (yDaily.orders || [])) : [];
+                    const hadChastity = yOrders.some((o: any) => o.type === 'chastity_check');
+                    if (hadChastity) {
                         await supabaseAdmin.from('vault_sessions').update({
                             status: 'completed',
                             release_reason: 'Chastity check not submitted. Program terminated.',
@@ -905,4 +904,43 @@ async function _updateOrderDone(sessionId: string, date: string, orderType: stri
             }).eq('id', sessionId);
         }
     }
+}
+
+// Sync vault_daily order status when chastity check is approved/rejected via vault_check_log
+async function _syncChastityOrder(sessionId: string, date: string, status: 'approved' | 'rejected') {
+    try {
+        const { data: daily } = await supabaseAdmin.from('vault_daily')
+            .select('id, orders, orders_completed, orders_total').eq('session_id', sessionId).eq('date', date).maybeSingle();
+        if (!daily) return;
+
+        const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+        for (const o of orders) {
+            if (o.type === 'chastity_check') {
+                o.status = status;
+                o.done = status === 'approved' ? o.target : 0;
+                break;
+            }
+        }
+        const completed = orders.filter((o: any) => o.done >= o.target).length;
+        const perfect = completed >= orders.length;
+
+        await supabaseAdmin.from('vault_daily').update({
+            orders: JSON.stringify(orders),
+            orders_completed: completed,
+            perfect,
+        }).eq('id', daily.id);
+
+        // Update streak if perfect
+        if (perfect) {
+            const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                .select('current_streak, best_streak, total_perfect_days').eq('id', sessionId).single();
+            if (sess) {
+                const ns = (sess.current_streak || 0) + 1;
+                await supabaseAdmin.from('vault_sessions').update({
+                    current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
+                    total_perfect_days: (sess.total_perfect_days || 0) + 1,
+                }).eq('id', sessionId);
+            }
+        }
+    } catch (_) {}
 }

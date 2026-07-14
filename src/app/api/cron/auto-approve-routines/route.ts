@@ -121,51 +121,53 @@ export async function GET(req: Request) {
         checkAndPromote(ur.member_id).catch(() => {});
     }
 
-    // ── AUTO-APPROVE VAULT CHASTITY CHECKS (from vault_daily orders) ──
+    // ── AUTO-APPROVE VAULT CHASTITY CHECKS (from vault_check_log table) ──
     let chastityApproved = 0;
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const { data: dailyRows } = await supabaseAdmin
-            .from('vault_daily')
-            .select('id, session_id, orders, orders_completed, orders_total')
-            .eq('date', today);
+        const { data: pendingChecks } = await supabaseAdmin
+            .from('vault_check_log')
+            .select('*')
+            .eq('status', 'pending')
+            .lt('submitted_at', twoHoursAgo);
 
-        for (const daily of (dailyRows || [])) {
-            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-            const cc = orders.find((o: any) => o.type === 'chastity_check' && o.status === 'pending');
-            if (!cc || !cc.submittedAt) continue;
+        for (const chk of (pendingChecks || [])) {
+            // Update vault_check_log
+            await supabaseAdmin.from('vault_check_log').update({
+                status: 'approved',
+                reviewed_at: now,
+            }).eq('id', chk.id);
 
-            const age = Date.now() - new Date(cc.submittedAt).getTime();
-            if (age < 2 * 60 * 60 * 1000) continue; // Less than 2 hours old
+            // Sync vault_daily order
+            try {
+                const { data: daily } = await supabaseAdmin.from('vault_daily')
+                    .select('id, session_id, orders, orders_completed, orders_total')
+                    .eq('session_id', chk.session_id).eq('date', chk.date).maybeSingle();
+                if (daily) {
+                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    for (const o of orders) {
+                        if (o.type === 'chastity_check') { o.done = o.target; o.status = 'approved'; break; }
+                    }
+                    const completed = orders.filter((o: any) => o.done >= o.target).length;
+                    const perfect = completed >= orders.length;
+                    await supabaseAdmin.from('vault_daily').update({
+                        orders: JSON.stringify(orders), orders_completed: completed, perfect,
+                    }).eq('id', daily.id);
 
-            // Auto-approve
-            cc.done = cc.target;
-            cc.status = 'approved';
-            const completed = orders.filter((o: any) => o.done >= o.target).length;
-            const perfect = completed >= orders.length;
-
-            await supabaseAdmin.from('vault_daily').update({
-                orders: JSON.stringify(orders),
-                orders_completed: completed,
-                perfect,
-            }).eq('id', daily.id);
+                    if (perfect) {
+                        const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                            .select('current_streak, best_streak, total_perfect_days').eq('id', chk.session_id).single();
+                        if (sess) {
+                            const ns = (sess.current_streak || 0) + 1;
+                            await supabaseAdmin.from('vault_sessions').update({
+                                current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
+                                total_perfect_days: (sess.total_perfect_days || 0) + 1,
+                            }).eq('id', chk.session_id);
+                        }
+                    }
+                }
+            } catch (_) {}
 
             chastityApproved++;
-
-            // Update session streak if perfect
-            if (perfect) {
-                try {
-                    const { data: sess } = await supabaseAdmin.from('vault_sessions')
-                        .select('current_streak, best_streak, total_perfect_days').eq('id', daily.session_id).single();
-                    if (sess) {
-                        const ns = (sess.current_streak || 0) + 1;
-                        await supabaseAdmin.from('vault_sessions').update({
-                            current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
-                            total_perfect_days: (sess.total_perfect_days || 0) + 1,
-                        }).eq('id', daily.session_id);
-                    }
-                } catch (_) {}
-            }
         }
     } catch (err: any) {
         console.error('[cron/auto-approve] chastity error:', err.message);

@@ -26,8 +26,27 @@ CREATE TABLE IF NOT EXISTS vault_config (
     updated_at timestamptz DEFAULT now()
 );
 
--- 4. Add chastity_photo column to vault_daily if not exists
-ALTER TABLE vault_daily ADD COLUMN IF NOT EXISTS chastity_photo text;
+-- 4. Vault check log — proper table for chastity checks + all vault submissions
+-- Same pattern as user_routines: one row per submission, proper columns, no JSON
+CREATE TABLE IF NOT EXISTS vault_check_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES vault_sessions(id) ON DELETE CASCADE,
+    member_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    type TEXT NOT NULL DEFAULT 'chastity_check',
+    proof_url TEXT,
+    proof_type TEXT DEFAULT 'image',
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL DEFAULT 'pending',
+    reviewed_at TIMESTAMPTZ,
+    queen_comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(session_id, date, type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_vault_check_log_session ON vault_check_log(session_id, date);
+CREATE INDEX IF NOT EXISTS idx_vault_check_log_status ON vault_check_log(status);
+CREATE INDEX IF NOT EXISTS idx_vault_check_log_member ON vault_check_log(member_id, date);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_vault_member_program_session ON vault_member_program(session_id);

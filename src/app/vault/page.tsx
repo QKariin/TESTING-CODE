@@ -390,11 +390,13 @@ export default function VaultPage() {
                             {
                                 const todayOrd = vd.today?.orders ? (typeof vd.today.orders === 'string' ? JSON.parse(vd.today.orders) : vd.today.orders) : [];
                                 const cc = todayOrd.find((o: any) => o.type === 'chastity_check');
-                                if (cc?.status === 'approved' || (cc && cc.done >= cc.target)) setChastityStatus('approved');
-                                else if (cc?.status === 'pending') setChastityStatus('pending');
-                                else if (cc?.status === 'rejected') setChastityStatus('rejected');
+                                // Read chastity status from vault_check_log table (source of truth)
+                                const chk = vd.chastityCheck;
+                                if (chk?.status === 'approved') setChastityStatus('approved');
+                                else if (chk?.status === 'pending') setChastityStatus('pending');
+                                else if (chk?.status === 'rejected') setChastityStatus('rejected');
                                 else setChastityStatus('none');
-                                if (cc?.photoUrl) setChastityPhotoUrl(cc.photoUrl);
+                                if (chk?.proof_url) setChastityPhotoUrl(chk.proof_url);
                             }
                             // Chastity window from fresh API (same pattern as routine-status)
                             if (vd.chastityWindow && !_cachedSession) setChastityWindow(vd.chastityWindow);
@@ -427,11 +429,12 @@ export default function VaultPage() {
                                                 // Re-read chastity status from fresh data
                                                 const freshOrd = vd2.today?.orders ? (typeof vd2.today.orders === 'string' ? JSON.parse(vd2.today.orders) : vd2.today.orders) : [];
                                                 const fcc = freshOrd.find((o: any) => o.type === 'chastity_check');
-                                                if (fcc?.status === 'approved' || (fcc && fcc.done >= fcc.target)) setChastityStatus('approved');
-                                                else if (fcc?.status === 'pending') setChastityStatus('pending');
-                                                else if (fcc?.status === 'rejected') setChastityStatus('rejected');
+                                                const chk2 = vd2.chastityCheck;
+                                                if (chk2?.status === 'approved') setChastityStatus('approved');
+                                                else if (chk2?.status === 'pending') setChastityStatus('pending');
+                                                else if (chk2?.status === 'rejected') setChastityStatus('rejected');
                                                 else setChastityStatus('none');
-                                                if (fcc?.photoUrl) setChastityPhotoUrl(fcc.photoUrl);
+                                                if (chk2?.proof_url) setChastityPhotoUrl(chk2.proof_url);
                                             }
                                         });
                                 })
