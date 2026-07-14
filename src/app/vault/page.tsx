@@ -389,7 +389,13 @@ export default function VaultPage() {
                                 if (chk?.status === 'approved') setChastityStatus('approved');
                                 else if (chk?.status === 'pending') setChastityStatus('pending');
                                 else if (chk?.status === 'rejected') setChastityStatus('rejected');
-                                else setChastityStatus('none');
+                                else {
+                                    // Fallback: check orders JSON for legacy approved chastity (before vault_check_log existed)
+                                    const todayOrd = vd.today?.orders ? (typeof vd.today.orders === 'string' ? JSON.parse(vd.today.orders) : vd.today.orders) : [];
+                                    const cc = todayOrd.find((o: any) => o.type === 'chastity_check');
+                                    if (cc && cc.done >= cc.target) setChastityStatus('approved');
+                                    else setChastityStatus('none');
+                                }
                                 if (chk?.proof_url) setChastityPhotoUrl(chk.proof_url);
                             }
                             // Chastity window from fresh API (same pattern as routine-status)

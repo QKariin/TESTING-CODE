@@ -85,6 +85,31 @@ export async function GET(req: NextRequest) {
         }
     }
 
+    // Sync today's orders with the current program (handles program edits after daily row was created)
+    if (todayRecord && session) {
+        const currentOrders: any[] = typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : (todayRecord.orders || []);
+        const startDate3 = new Date(session.started_at);
+        const daysIn3 = Math.floor((Date.now() - startDate3.getTime()) / 86400000) + 1;
+        const programOrders = await _getOrdersForDay(session.id, daysIn3);
+
+        // Compare task types from program vs current orders
+        const programTypes = programOrders.map((o: any) => o.type).sort().join(',');
+        const currentTypes = currentOrders.map((o: any) => o.type).sort().join(',');
+
+        if (programTypes !== currentTypes) {
+            // Merge: keep done counts for tasks that still exist, add new ones, remove old ones
+            const merged = programOrders.map((po: any) => {
+                const existing = currentOrders.find((co: any) => co.type === po.type);
+                return existing ? { ...po, done: existing.done } : po;
+            });
+            await supabaseAdmin.from('vault_daily').update({
+                orders: JSON.stringify(merged),
+                orders_total: merged.length,
+            }).eq('id', todayRecord.id);
+            todayRecord = { ...todayRecord, orders: JSON.stringify(merged), orders_total: merged.length };
+        }
+    }
+
     // 4. Get adjustments log
     const { data: adjustments } = await supabaseAdmin
         .from('vault_adjustments')
