@@ -421,7 +421,20 @@ export default function VaultPage() {
                                     }
                                     return fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`)
                                         .then(r2 => r2.json())
-                                        .then(vd2 => { if (vd2.active) { setVaultData(vd2); if (vd2.chastityWindow) setChastityWindow(vd2.chastityWindow); } });
+                                        .then(vd2 => {
+                                            if (vd2.active) {
+                                                setVaultData(vd2);
+                                                if (vd2.chastityWindow) setChastityWindow(vd2.chastityWindow);
+                                                // Re-read chastity status from fresh data
+                                                const freshOrd = vd2.today?.orders ? (typeof vd2.today.orders === 'string' ? JSON.parse(vd2.today.orders) : vd2.today.orders) : [];
+                                                const fcc = freshOrd.find((o: any) => o.type === 'chastity_check');
+                                                if (fcc?.status === 'approved' || (fcc && fcc.done >= fcc.target)) setChastityStatus('approved');
+                                                else if (fcc?.status === 'pending' || vd2.today?.chastity_photo) setChastityStatus('pending');
+                                                else if (fcc?.status === 'rejected') setChastityStatus('rejected');
+                                                if (vd2.today?.chastity_photo) setChastityPhotoUrl(vd2.today.chastity_photo);
+                                                else if (fcc?.photoUrl) setChastityPhotoUrl(fcc.photoUrl);
+                                            }
+                                        });
                                 })
                                 .catch(() => {});
 
