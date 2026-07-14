@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
 
         if (!session) return NextResponse.json({ error: 'No active session' }, { status: 400 });
 
-        const { data: prog } = await supabaseAdmin
+        let { data: prog } = await supabaseAdmin
             .from('vault_member_program')
             .select('*')
             .eq('session_id', session.id)
