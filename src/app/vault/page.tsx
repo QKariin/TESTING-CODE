@@ -74,31 +74,41 @@ const KNEELS_NEEDED = 5;
 const R = 'rgba(139,0,0,'; // red accent base
 
 /* ── Mechanism icon + label lookup ── */
-const MECH_ICON: Record<string, { icon: string; label: string }> = {
-    kneel:            { icon: '\u25C7', label: 'Kneel' },
-    spin:             { icon: '\u265B', label: 'Spin the Wheel' },
-    spin_wheel:       { icon: '\u25CE', label: 'Spin the Wheel' },
-    coinflip:         { icon: '$',      label: 'Coinflip' },
-    card_pick:        { icon: '\u2660', label: 'Card Pick' },
-    dice_roll:        { icon: '\u2684', label: 'Dice Roll' },
-    russian_roulette: { icon: '\u2295', label: 'Russian Roulette' },
-    quiz:             { icon: '\u2753', label: 'Quiz' },
-    writing:          { icon: '\u270E', label: 'Writing' },
-    multi_video:      { icon: '\u2736', label: 'Video Proof' },
-    photo_proof:      { icon: '\u270D', label: 'Photo Proof' },
-    timed_photo:      { icon: '\u25C7', label: 'Timed Photo' },
-    ambush_snap:      { icon: '!',      label: 'Ambush Snap' },
-    endurance:        { icon: '\u25A2', label: 'Endurance' },
-    greed_game:       { icon: '\u2191', label: 'Greed Game' },
-    truth_dare:       { icon: '?',      label: 'Truth or Dare' },
-    simon_says:       { icon: '\u26A1', label: 'Simon Says' },
-    payment:          { icon: '\u25C6', label: 'Payment' },
-    trial:            { icon: '\u270E', label: 'Daily Trial' },
-    tribute:          { icon: '\u2605', label: 'Tribute' },
-    chastity_check:   { icon: '\u25C8', label: 'Chastity Check' },
-    corner_time:      { icon: '\u23F1', label: 'Corner Time' },
-    cold_shower:      { icon: '\u2744', label: 'Cold Shower' },
-    silence:          { icon: '\u{1F910}', label: 'Silence' },
+const MECH_ICON: Record<string, { icon: string; label: string; desc?: string }> = {
+    kneel:            { icon: '\u25C7', label: 'Kneel', desc: 'Complete your required kneeling sessions.' },
+    spin:             { icon: '\u265B', label: 'Spin the Wheel', desc: 'Spin the wheel of fate. Whatever it lands on, you obey.' },
+    spin_wheel:       { icon: '\u25CE', label: 'Spin the Wheel', desc: 'Spin the wheel of fate. Whatever it lands on, you obey.' },
+    coinflip:         { icon: '$',      label: 'Coinflip', desc: 'Heads or tails — fate decides your punishment or reward. No take-backs.' },
+    card_pick:        { icon: '\u2660', label: 'Card Pick', desc: 'Draw a card from Queen\'s deck. Each card holds a task or consequence. Accept it.' },
+    dice_roll:        { icon: '\u2684', label: 'Dice Roll', desc: 'Roll the dice. The number determines your punishment intensity.' },
+    russian_roulette: { icon: '\u2295', label: 'Russian Roulette', desc: 'One chamber holds a penalty. Pull the trigger and hope for the best.' },
+    quiz:             { icon: '\u2753', label: 'Quiz', desc: 'Answer Queen\'s question correctly. Wrong answers have consequences.' },
+    writing:          { icon: '\u270E', label: 'Writing', desc: 'Write as instructed by Queen. Quality and obedience will be judged.' },
+    multi_video:      { icon: '\u2736', label: 'Video Proof', desc: 'Record a video as instructed. Show clear proof of completion.' },
+    photo_proof:      { icon: '\u270D', label: 'Photo Proof', desc: 'Take a clear photo as proof of task completion. No filters.' },
+    timed_photo:      { icon: '\u25C7', label: 'Timed Photo', desc: 'Take a photo within the time limit. Speed and obedience matter.' },
+    ambush_snap:      { icon: '!',      label: 'Ambush Snap', desc: 'Take a photo RIGHT NOW. No preparation, no posing, no delay. Show exactly where you are and what you\'re doing this instant.' },
+    endurance:        { icon: '\u25A2', label: 'Endurance', desc: 'Endure the challenge for the full duration. Film yourself as proof.' },
+    greed_game:       { icon: '\u2191', label: 'Greed Game', desc: 'Push your luck — the more you risk, the more you could win or lose.' },
+    truth_dare:       { icon: '?',      label: 'Truth or Dare', desc: 'Choose truth or dare. Both will test you. Write your honest response.' },
+    simon_says:       { icon: '\u26A1', label: 'Simon Says', desc: 'Follow the instructions exactly as given. One mistake and you fail.' },
+    payment:          { icon: '\u25C6', label: 'Payment', desc: 'Complete the required payment or tribute as ordered.' },
+    trial:            { icon: '\u270E', label: 'Daily Trial', desc: 'Your daily written trial. Write from the heart.' },
+    tribute:          { icon: '\u2605', label: 'Tribute', desc: 'Send your tribute to Queen as ordered.' },
+    chastity_check:   { icon: '\u25C8', label: 'Chastity Check', desc: 'Submit photo proof that your device is locked and secure.' },
+    corner_time:      { icon: '\u23F1', label: 'Corner Time', desc: 'Stand in the corner facing the wall. No phone. No distractions. Report when done.' },
+    cold_shower:      { icon: '\u2744', label: 'Cold Shower', desc: 'Take a cold shower. Film or photograph yourself as proof.' },
+    silence:          { icon: '\u{1F910}', label: 'Silence', desc: 'You are forbidden from messaging today. Endure the silence.' },
+    journal:          { icon: '\u270E', label: 'Journal', desc: 'Write your daily journal entry as instructed.' },
+    confession:       { icon: '\u270E', label: 'Confession', desc: 'Confess honestly. Queen sees everything.' },
+    worship:          { icon: '\u2605', label: 'Worship', desc: 'Write a worship message to Queen Karin.' },
+    gratitude:        { icon: '\u2605', label: 'Gratitude', desc: 'List what you are grateful for.' },
+    essay:            { icon: '\u270E', label: 'Essay', desc: 'Write your essay as assigned.' },
+    lines:            { icon: '\u270E', label: 'Lines', desc: 'Write the assigned line repeatedly as punishment.' },
+    exercise:         { icon: '\u25A2', label: 'Exercise', desc: 'Complete the required exercise reps. Photo or video proof required.' },
+    body_writing:     { icon: '\u270D', label: 'Body Writing', desc: 'Write the required word on your body. Take a clear photo.' },
+    edge:             { icon: '\u25C6', label: 'Edge', desc: 'Edge as instructed. Do not release. Report when done.' },
+    denial:           { icon: '\u25C6', label: 'Denial', desc: 'Full denial. No touching for 24 hours. Report compliance.' },
 };
 
 // No hardcoded fallback — orders come only from vault_daily (the database)
@@ -2280,12 +2290,11 @@ export default function VaultPage() {
                                                 const o = currentTask;
                                                 const meta = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
                                                 const label = o.label || meta.label;
-                                                const isMech = ['spin_wheel','coinflip','card_pick','dice_roll','russian_roulette','quiz','writing','multi_video','photo_proof','timed_photo','ambush_snap','endurance','greed_game','truth_dare','simon_says','payment'].includes(o.type);
+                                                const isMech = false; // All types now handled by generic submission below
 
                                                 return (
                                                     <div
-                                                        onClick={() => isMech ? setMechOverlay({ order: o, idx: tasks.indexOf(o) }) : undefined}
-                                                        style={{ background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 16, overflow: 'hidden', animation: 'vFadeIn 0.3s ease', cursor: isMech ? 'pointer' : undefined }}>
+                                                        style={{ background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 16, overflow: 'hidden', animation: 'vFadeIn 0.3s ease' }}>
 
                                                         {/* Card header */}
                                                         <div style={{ padding: '20px 22px 16px', borderBottom: `1px solid ${R}0.08)` }}>
@@ -2377,24 +2386,12 @@ export default function VaultPage() {
                                                                 </div>
                                                             )}
 
-                                                            {/* Mechanism types — tap to start */}
-                                                            {isMech && (
-                                                                <div style={{ textAlign: 'center' }}>
-                                                                    {o.config?.instruction && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config.instruction}</div>}
-                                                                    {o.config?.prompt && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config.prompt}</div>}
-                                                                    {o.config?.question && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config.question}</div>}
-                                                                    {o.config?.duration && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 12 }}>{Math.floor(o.config.duration / 60)}:{String(o.config.duration % 60).padStart(2, '0')} DURATION</div>}
-                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: `${R}0.45)`, letterSpacing: '3px', padding: '16px', border: `1px solid ${R}0.12)`, borderRadius: 8, background: `${R}0.03)` }}>
-                                                                        TAP TO START
-                                                                    </div>
-                                                                </div>
-                                                            )}
 
                                                             {/* ── GENERIC TASK SUBMISSION (all non-handled types) ── */}
-                                                            {!isMech && !['spin','trial','tribute','silence'].includes(o.type) && (() => {
-                                                                const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof'].includes(o.type);
-                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing'].includes(o.type);
-                                                                const isSelfReport = ['edge','corner_time','denial'].includes(o.type);
+                                                            {!['spin','trial','tribute','silence'].includes(o.type) && (() => {
+                                                                const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof','ambush_snap','timed_photo','multi_video','endurance'].includes(o.type);
+                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing','quiz','truth_dare'].includes(o.type);
+                                                                const isSelfReport = ['edge','corner_time','denial','spin_wheel','coinflip','card_pick','dice_roll','russian_roulette','greed_game','simon_says','payment','kneel'].includes(o.type);
                                                                 const alreadySubmitted = taskSubmitted[o.type];
                                                                 const existingSub = (vaultData?.submissions || []).find((s: any) => s.order_type === o.type);
                                                                 const isPending = existingSub?.status === 'pending' || alreadySubmitted || o.submitted === 'pending';
@@ -2432,22 +2429,11 @@ export default function VaultPage() {
 
                                                                 return (
                                                                     <div>
-                                                                        {/* Task description / instruction */}
-                                                                        {o.config?.instruction && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config.instruction}</div>}
-
-                                                                        {/* Specific prompts per type */}
-                                                                        {o.type === 'cold_shower' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Take a cold shower for {o.target} seconds. Film or photograph yourself as proof.</div>}
-                                                                        {o.type === 'body_writing' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Write the required word on your body. Take a clear photo.</div>}
-                                                                        {o.type === 'exercise' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Complete {o.target} reps. Video or photo proof required.</div>}
-                                                                        {o.type === 'journal' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config?.prompt || 'Write your journal entry.'}</div>}
-                                                                        {o.type === 'confession' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Confess. Be honest. Queen sees everything.</div>}
-                                                                        {o.type === 'worship' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Write a worship message to Queen Karin.</div>}
-                                                                        {o.type === 'gratitude' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>List {o.target} things you are grateful for.</div>}
-                                                                        {o.type === 'essay' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config?.prompt || 'Write your essay.'}</div>}
-                                                                        {o.type === 'lines' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Write the assigned line {o.target} times. Screenshot your work.</div>}
-                                                                        {o.type === 'edge' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Edge {o.target} time{o.target > 1 ? 's' : ''}. Do not release. Report when done.</div>}
-                                                                        {o.type === 'corner_time' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Stand in the corner for {o.target} minutes. No phone. No distractions.</div>}
-                                                                        {o.type === 'denial' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Full denial. No touching for 24 hours. Report compliance.</div>}
+                                                                        {/* Task description — priority: config instruction > config prompt > config question > MECH_ICON desc */}
+                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>
+                                                                            {o.config?.instruction || o.config?.prompt || o.config?.question || meta.desc || 'Complete this task as ordered.'}
+                                                                        </div>
+                                                                        {o.config?.duration && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 12 }}>{Math.floor(o.config.duration / 60)}:{String(o.config.duration % 60).padStart(2, '0')} DURATION</div>}
 
                                                                         {/* Text input for writing tasks */}
                                                                         {isTextTask && (
