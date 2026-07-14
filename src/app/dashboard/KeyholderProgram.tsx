@@ -46,6 +46,206 @@ const TASK_META: Record<string, { label: string; icon: string; color: string; co
     quiz:           { label: 'QUIZ',         icon: '\u2753', color: C_BLACK, configKey: 'quiz_questions' },
 };
 
+/* ── MECHANISMS — the actual interactive UIs we built ── */
+const MECH_LIST = [
+    { id: 'spin_wheel',       name: 'Spin Wheel',        icon: '\u25CE', color: C_BLACK,  desc: 'Spin and land on a random outcome' },
+    { id: 'coinflip',         name: 'Coinflip',           icon: '$',      color: C_BLACK,  desc: 'Heads or tails — two outcomes' },
+    { id: 'card_pick',        name: 'Card Pick',          icon: '\u2660', color: C_BLACK,  desc: 'Pick from face-down cards' },
+    { id: 'dice_roll',        name: 'Dice Roll',          icon: '\u2684', color: C_BLACK,  desc: 'Roll for a random outcome' },
+    { id: 'russian_roulette', name: 'Russian Roulette',   icon: '\u2295', color: C_RED,    desc: '6 chambers, 1 loaded' },
+    { id: 'quiz',             name: 'Quiz / Riddle',      icon: '\u2753', color: C_BLACK,  desc: 'Answer correctly or face consequences' },
+    { id: 'writing',          name: 'Writing Prompt',     icon: '\u270E', color: C_GOLD,   desc: 'Essay, journal, confession, gratitude' },
+    { id: 'multi_video',      name: 'Multi-Stage Video',  icon: '\u2736', color: C_RED,    desc: 'Record X video proofs in sequence' },
+    { id: 'photo_proof',      name: 'Photo Proof',        icon: '\u270D', color: C_SILVER, desc: 'Single photo evidence' },
+    { id: 'timed_photo',      name: 'Timed Photo',        icon: '\u25C7', color: C_SILVER, desc: 'Photo within a time window' },
+    { id: 'ambush_snap',      name: 'Ambush Snap',        icon: '!',      color: C_RED,    desc: 'Random timed snaps throughout the day' },
+    { id: 'endurance',        name: 'Endurance Timer',    icon: '\u25A2', color: C_SILVER, desc: 'Camera + timer run together' },
+    { id: 'greed_game',       name: 'Greed Game',         icon: '\u2191', color: C_BLACK,  desc: 'Push your luck — cash out or lose' },
+    { id: 'truth_dare',       name: 'Truth or Dare',      icon: '?',      color: C_BLACK,  desc: 'Choose blind between two fates' },
+    { id: 'simon_says',       name: 'Simon Says',         icon: '\u26A1', color: C_RED,    desc: 'Random timed tasks via push notifications' },
+    { id: 'payment',          name: 'Payment / Tribute',  icon: '\u25C6', color: C_GOLD,   desc: 'Pay coins to complete' },
+];
+
+/* ── PRESET TASK DATABASE per mechanism ── */
+const MECH_PRESETS: Record<string, { name: string; desc: string; config: any }[]> = {
+    spin_wheel: [
+        { name: 'Punishment Roulette', desc: '6 punishments — random fate', config: { label: 'Punishment Roulette', segments: [
+            { text: 'Cold shower 60s', followUpType: 'endurance', followUpDuration: 60 },
+            { text: 'Corner time 10min', followUpType: 'endurance', followUpDuration: 600 },
+            { text: 'Write lines x50', followUpType: 'writing', followUpPrompt: 'I will obey without question' },
+            { text: 'Edge & deny', followUpType: 'video', followUpTarget: 1 },
+            { text: 'Body writing photo', followUpType: 'photo', followUpInstruction: 'Write OWNED on your body' },
+            { text: 'Confession essay', followUpType: 'writing', followUpPrompt: 'Confess your deepest weakness' },
+        ]}},
+        { name: 'Reward vs Risk', desc: 'Win coins or get punished', config: { label: 'Reward vs Risk', segments: [
+            { text: '+50 coins', followUpType: 'instant' },
+            { text: '+1 day locked', followUpType: 'instant' },
+            { text: 'Skip a task today', followUpType: 'instant' },
+            { text: 'Double next task', followUpType: 'instant' },
+            { text: '+100 coins', followUpType: 'instant' },
+            { text: '3 min cold shower', followUpType: 'endurance', followUpDuration: 180 },
+        ]}},
+        { name: 'Writing Wheel', desc: 'Land on a writing task', config: { label: 'Writing Wheel', segments: [
+            { text: 'Gratitude list (10)', followUpType: 'writing', followUpPrompt: 'List 10 things you are grateful for about your Queen' },
+            { text: 'Journal entry', followUpType: 'writing', followUpPrompt: 'Write about your journey today' },
+            { text: 'Confession', followUpType: 'writing', followUpPrompt: 'Confess something you have been hiding' },
+            { text: 'Love letter', followUpType: 'writing', followUpPrompt: 'Write a devotion letter to your Queen' },
+            { text: 'Self-reflection', followUpType: 'writing', followUpPrompt: 'What have you learned about yourself this week?' },
+        ]}},
+        { name: 'Physical Challenge', desc: 'Random body tasks', config: { label: 'Physical Challenge', segments: [
+            { text: '50 pushups', followUpType: 'video', followUpTarget: 1 },
+            { text: '100 squats', followUpType: 'video', followUpTarget: 1 },
+            { text: '2 min plank', followUpType: 'endurance', followUpDuration: 120 },
+            { text: 'Cold shower 90s', followUpType: 'endurance', followUpDuration: 90 },
+            { text: '30 burpees', followUpType: 'video', followUpTarget: 1 },
+            { text: 'Wall sit 3 min', followUpType: 'endurance', followUpDuration: 180 },
+        ]}},
+    ],
+    coinflip: [
+        { name: 'Coins or Lock', desc: 'Win coins or extend lock', config: { label: 'Coins or Lock', headsText: '+50 coins', tailsText: '+1 day locked' }},
+        { name: 'Mercy or Punishment', desc: 'Skip a task or double it', config: { label: 'Mercy or Punishment', headsText: 'Skip one task today', tailsText: 'Double your next task' }},
+        { name: 'Easy or Hard', desc: 'Simple writing or endurance', config: { label: 'Easy or Hard', headsText: 'Write 5 things you love about Queen', tailsText: '3 min cold shower on camera' }},
+        { name: 'Reward Flip', desc: 'Small or big reward', config: { label: 'Reward Flip', headsText: '+20 coins', tailsText: '+200 coins' }},
+        { name: 'Photo or Essay', desc: 'Proof type decided by fate', config: { label: 'Photo or Essay', headsText: 'Submit a devotion selfie', tailsText: 'Write a 200-word essay on obedience' }},
+    ],
+    card_pick: [
+        { name: 'Devotion Deck', desc: 'Worship & gratitude tasks', config: { label: 'Devotion Deck', cards: [
+            { text: 'Write a worship message', followUpType: 'writing', followUpPrompt: 'Express your devotion in at least 100 words' },
+            { text: 'Gratitude list (10 items)', followUpType: 'writing', followUpPrompt: 'List 10 things you are grateful for' },
+            { text: 'Devotion photo', followUpType: 'photo', followUpInstruction: 'Photo showing your devotion pose' },
+            { text: 'Journal entry', followUpType: 'writing', followUpPrompt: 'Reflect on your obedience today' },
+            { text: 'Tribute 10 coins', followUpType: 'instant' },
+        ]}},
+        { name: 'Punishment Deck', desc: 'Random punishment cards', config: { label: 'Punishment Deck', cards: [
+            { text: 'Cold shower 2 min', followUpType: 'endurance', followUpDuration: 120 },
+            { text: 'Edge and deny', followUpType: 'video', followUpTarget: 1 },
+            { text: 'Corner time 15 min', followUpType: 'endurance', followUpDuration: 900 },
+            { text: 'Write lines x100', followUpType: 'writing', followUpPrompt: 'I exist to serve and obey' },
+            { text: 'Body writing: SLAVE', followUpType: 'photo', followUpInstruction: 'Write SLAVE on your chest and photograph' },
+            { text: '75 pushups on camera', followUpType: 'video', followUpTarget: 1 },
+        ]}},
+        { name: 'Mixed Fate', desc: 'Rewards and punishments mixed', config: { label: 'Mixed Fate', cards: [
+            { text: '+100 coins!', followUpType: 'instant' },
+            { text: 'Cold shower 60s', followUpType: 'endurance', followUpDuration: 60 },
+            { text: 'Skip next task', followUpType: 'instant' },
+            { text: 'Write 200-word confession', followUpType: 'writing', followUpPrompt: 'Confess your failures this week' },
+            { text: '+1 day locked', followUpType: 'instant' },
+            { text: '-1 day off lock!', followUpType: 'instant' },
+        ]}},
+    ],
+    dice_roll: [
+        { name: 'Punishment Dice', desc: '6 punishments, 1 per face', config: { label: 'Punishment Dice', outcomes: [
+            { text: 'Write lines x30', followUpType: 'writing', followUpPrompt: 'I will never disobey' },
+            { text: 'Cold shower 60s', followUpType: 'endurance', followUpDuration: 60 },
+            { text: 'Edge 3 times on camera', followUpType: 'video', followUpTarget: 3 },
+            { text: 'Corner time 10 min', followUpType: 'endurance', followUpDuration: 600 },
+            { text: 'Body writing photo', followUpType: 'photo', followUpInstruction: 'Write OBEY on your body' },
+            { text: '50 pushups on camera', followUpType: 'video', followUpTarget: 1 },
+        ]}},
+        { name: 'Time Multiplier', desc: 'Roll decides duration', config: { label: 'Time Multiplier', outcomes: [
+            { text: '1 minute endurance', followUpType: 'endurance', followUpDuration: 60 },
+            { text: '2 minutes endurance', followUpType: 'endurance', followUpDuration: 120 },
+            { text: '3 minutes endurance', followUpType: 'endurance', followUpDuration: 180 },
+            { text: '4 minutes endurance', followUpType: 'endurance', followUpDuration: 240 },
+            { text: '5 minutes endurance', followUpType: 'endurance', followUpDuration: 300 },
+            { text: '10 minutes endurance', followUpType: 'endurance', followUpDuration: 600 },
+        ]}},
+        { name: 'Coin Dice', desc: 'Roll for coin reward', config: { label: 'Coin Dice', outcomes: [
+            { text: '+10 coins', followUpType: 'instant' },
+            { text: '+20 coins', followUpType: 'instant' },
+            { text: '+30 coins', followUpType: 'instant' },
+            { text: '+50 coins', followUpType: 'instant' },
+            { text: '+100 coins!', followUpType: 'instant' },
+            { text: 'NOTHING — lost it all', followUpType: 'instant' },
+        ]}},
+    ],
+    russian_roulette: [
+        { name: 'Classic', desc: '6 chambers, 1 loaded', config: { label: 'Russian Roulette' }},
+        { name: 'Punishment Shot', desc: 'Loaded = cold shower', config: { label: 'Punishment Roulette', punishment: 'Cold shower 2 minutes' }},
+        { name: 'Lock Extension', desc: 'Loaded = +3 days', config: { label: 'Lock Roulette', punishment: '+3 days added to lock' }},
+    ],
+    quiz: [
+        { name: 'Obedience Rules', desc: 'Test knowledge of the rules', config: { label: 'Obedience Quiz', question: 'What is the first rule of service?', answers: ['Always obey immediately', 'Ask questions first', 'Negotiate terms', 'Wait for instructions'], correctIdx: 0, timeLimit: 30 }},
+        { name: 'Devotion Test', desc: 'How well do you know your Queen?', config: { label: 'Devotion Quiz', question: 'What is the most important quality in a devoted servant?', answers: ['Consistency', 'Obedience', 'Patience', 'All of the above'], correctIdx: 3, timeLimit: 45 }},
+        { name: 'Protocol Check', desc: 'Do you know proper protocol?', config: { label: 'Protocol Quiz', question: 'When addressed by your Queen, what is the correct first response?', answers: ['Yes, my Queen', 'What do you need?', 'Hello', 'One moment'], correctIdx: 0, timeLimit: 20 }},
+    ],
+    writing: [
+        { name: 'Daily Journal', desc: 'Reflect on the day', config: { label: 'Daily Journal', prompt: 'Write about your service today. What did you do well? Where can you improve?', minWords: 100 }},
+        { name: 'Gratitude Letter', desc: '10 things grateful for', config: { label: 'Gratitude Letter', prompt: 'List and explain 10 things you are grateful for about your Queen and your dynamic', minWords: 150 }},
+        { name: 'Confession', desc: 'Honest confession', config: { label: 'Confession', prompt: 'Confess something you have been holding back. Be completely honest.', minWords: 80 }},
+        { name: 'Devotion Essay', desc: 'Why you serve', config: { label: 'Devotion Essay', prompt: 'Write about why you chose to serve and what it means to you. Be vulnerable.', minWords: 200 }},
+        { name: 'Punishment Reflection', desc: 'Reflect on discipline', config: { label: 'Punishment Reflection', prompt: 'Reflect on your recent punishment. What did you learn? How will you be better?', minWords: 100 }},
+        { name: 'Rules Recitation', desc: 'Write out the rules', config: { label: 'Rules Recitation', prompt: 'Write out every rule you must follow, and explain why each one matters.', minWords: 150 }},
+        { name: 'Write Lines', desc: 'Repetitive obedience lines', config: { label: 'Write Lines', prompt: 'I will obey my Queen without hesitation.', minWords: 50 }},
+    ],
+    multi_video: [
+        { name: 'Edge Series', desc: 'Record multiple edges', config: { label: 'Edge Series', instruction: 'Record yourself edging. Each recording = 1 edge. Stay on camera.', target: 3 }},
+        { name: 'Exercise Proof', desc: 'Multi-set workout video', config: { label: 'Exercise Proof', instruction: 'Record each exercise set separately. Full form visible on camera.', target: 3 }},
+        { name: 'Devotion Clips', desc: 'Multiple worship recordings', config: { label: 'Devotion Clips', instruction: 'Record a devotion message in each clip. Say what you are grateful for.', target: 2 }},
+    ],
+    photo_proof: [
+        { name: 'Body Writing', desc: 'Write a word on body', config: { label: 'Body Writing Photo', instruction: 'Write OWNED on your body clearly and photograph it' }},
+        { name: 'Devotion Selfie', desc: 'On your knees', config: { label: 'Devotion Selfie', instruction: 'Take a photo on your knees, head bowed, showing devotion' }},
+        { name: 'Chastity Proof', desc: 'Prove device is on', config: { label: 'Chastity Proof', instruction: 'Photograph your chastity device clearly showing it is locked' }},
+        { name: 'Clean Space', desc: 'Prove area is clean', config: { label: 'Clean Space Photo', instruction: 'Photograph your cleaned living space — bed made, floor clear' }},
+        { name: 'Outfit Check', desc: 'Show required outfit', config: { label: 'Outfit Check', instruction: 'Show your full outfit as instructed by your Queen' }},
+    ],
+    timed_photo: [
+        { name: 'Morning Check-in', desc: 'Photo within 5 min of waking', config: { label: 'Morning Check-in', instruction: 'Take a photo within 5 minutes of your alarm. Show you are awake and ready to serve.' }},
+        { name: 'Surprise Snap', desc: 'Photo right now', config: { label: 'Surprise Snap', instruction: 'Take a photo of exactly what you are doing right now. No preparation allowed.' }},
+        { name: 'Pose on Command', desc: 'Strike the required pose', config: { label: 'Pose on Command', instruction: 'Get on your knees, hands behind your back, head bowed. Photo within 60 seconds.' }},
+    ],
+    ambush_snap: [
+        { name: 'Light Surveillance', desc: '3 random snaps', config: { label: 'Light Surveillance', target: 3 }},
+        { name: 'Heavy Watch', desc: '6 random snaps', config: { label: 'Heavy Surveillance', target: 6 }},
+        { name: 'Full Monitoring', desc: '10 snaps throughout the day', config: { label: 'Full Monitoring', target: 10 }},
+    ],
+    endurance: [
+        { name: 'Cold Shower 60s', desc: '1 minute cold shower', config: { label: 'Cold Shower', instruction: 'Stand under cold water. Camera must show water running on you.', duration: 60, target: 60 }},
+        { name: 'Cold Shower 3min', desc: '3 minute cold shower', config: { label: 'Cold Shower Extended', instruction: 'Full 3 minutes under cold water. No breaks. Camera on.', duration: 180, target: 180 }},
+        { name: 'Corner Time 10min', desc: 'Stand in corner', config: { label: 'Corner Time', instruction: 'Stand in the corner, nose touching the wall, hands behind your back. No moving.', duration: 600, target: 600 }},
+        { name: 'Plank Hold', desc: '2 min plank on camera', config: { label: 'Plank Hold', instruction: 'Hold a plank position. Proper form. Camera shows full body.', duration: 120, target: 120 }},
+        { name: 'Wall Sit', desc: '3 min wall sit', config: { label: 'Wall Sit', instruction: 'Wall sit position, thighs parallel to floor. No cheating.', duration: 180, target: 180 }},
+        { name: 'Kneeling Hold', desc: '5 min kneeling still', config: { label: 'Kneeling Hold', instruction: 'Kneel perfectly still, hands on thighs, head bowed. Do not move.', duration: 300, target: 300 }},
+    ],
+    greed_game: [
+        { name: 'Low Stakes', desc: 'Max 20 coins', config: { label: 'Greed Game', ceiling: 20 }},
+        { name: 'Medium Stakes', desc: 'Max 50 coins', config: { label: 'Greed Game', ceiling: 50 }},
+        { name: 'High Stakes', desc: 'Max 200 coins', config: { label: 'High Stakes Greed', ceiling: 200 }},
+    ],
+    truth_dare: [
+        { name: 'Confession or Challenge', desc: 'Write confession or physical task', config: { label: 'Truth or Dare', truthText: 'Write a 150-word confession about your deepest fantasy', truthFollowUp: 'writing', dareText: '2 minute cold shower on camera', dareFollowUp: 'endurance' }},
+        { name: 'Reveal or Endure', desc: 'Share a secret or suffer', config: { label: 'Reveal or Endure', truthText: 'Reveal something embarrassing about yourself in writing', truthFollowUp: 'writing', dareText: '3 min plank hold on camera', dareFollowUp: 'endurance' }},
+        { name: 'Words or Proof', desc: 'Essay or photo proof', config: { label: 'Words or Proof', truthText: 'Why do you need to be controlled? 200 words.', truthFollowUp: 'writing', dareText: 'Body writing photo — write PROPERTY on your chest', dareFollowUp: 'photo' }},
+    ],
+    simon_says: [
+        { name: 'Quick Obedience', desc: '3 fast tasks, 30s each', config: { label: 'Quick Obedience', chainTasks: [
+            { text: 'Drop and do 10 pushups', timeLimit: 30 },
+            { text: 'Take a selfie on your knees', timeLimit: 30 },
+            { text: 'Write "I obey" 5 times', timeLimit: 30 },
+        ]}},
+        { name: 'Endurance Chain', desc: '4 longer tasks', config: { label: 'Endurance Chain', chainTasks: [
+            { text: 'Hold plank position', timeLimit: 60 },
+            { text: '20 squats — go', timeLimit: 45 },
+            { text: 'Wall sit — hold it', timeLimit: 60 },
+            { text: '15 burpees — no breaks', timeLimit: 60 },
+        ]}},
+        { name: 'Devotion Drill', desc: 'Rapid devotion tasks', config: { label: 'Devotion Drill', chainTasks: [
+            { text: 'Say "I serve my Queen" out loud 5 times', timeLimit: 20 },
+            { text: 'Bow your head and count to 10', timeLimit: 15 },
+            { text: 'Write 3 things you are grateful for', timeLimit: 45 },
+            { text: 'Photo of yourself in devotion pose', timeLimit: 30 },
+        ]}},
+    ],
+    payment: [
+        { name: 'Small Tribute', desc: '5 coins', config: { label: 'Small Tribute', amount: 5, target: 5 }},
+        { name: 'Standard Tribute', desc: '10 coins', config: { label: 'Tribute', amount: 10, target: 10 }},
+        { name: 'Heavy Tribute', desc: '25 coins', config: { label: 'Heavy Tribute', amount: 25, target: 25 }},
+        { name: 'Grand Tribute', desc: '50 coins', config: { label: 'Grand Tribute', amount: 50, target: 50 }},
+        { name: 'Ultimate Offering', desc: '100 coins', config: { label: 'Ultimate Offering', amount: 100, target: 100 }},
+    ],
+};
+
 const PHASES = [
     { name: 'OBEDIENCE', sub: 'Foundation', days: [1,2,3,4,5,6,7], color: GOLD },
     { name: 'DISCIPLINE', sub: 'Building', days: [8,9,10,11,12,13,14], color: '#8b0000' },
@@ -67,41 +267,447 @@ type ViewMode = 'program' | 'config' | 'member';
 
 /* ── DEFAULT 30-DAY FORMULA ── */
 function _kt(d: number): number {
-    if (d<=3) return 4; if (d<=6) return 6; if (d<=11) return 8; if (d<=14) return 10;
-    if (d<=19) return 12; if (d<=24) return 14; if (d<=27) return 16; if (d<=29) return 18; return 20;
+    if (d<=3) return 4; if (d<=5) return 5; if (d<=7) return 6;
+    if (d<=10) return 8; if (d<=14) return 10;
+    if (d<=17) return 12; if (d<=21) return 14;
+    if (d<=25) return 16; if (d<=28) return 18; return 20;
 }
 function _ddt(d: number): Task[] {
-    const t: Task[] = [{ type: 'kneel', target: _kt(d), label: `Kneel ${_kt(d)} times` }];
-    if(d===1) t.push({type:'journal',target:1,label:'Journal: "Why I submitted"'});
-    if(d===2) t.push({type:'spin',target:1,label:'Spin the wheel'});
-    if(d===3) t.push({type:'lines',target:30,label:'Write lines x30'});
-    if(d===4) t.push({type:'tribute',target:3,label:'Tribute 3 coins'});
-    if(d===5) t.push({type:'worship',target:1,label:'Worship message'});
-    if(d===6) t.push({type:'card',target:1,label:'Draw a task card'});
-    if(d===7){t.push({type:'cold_shower',target:60,label:'Cold shower 60s'});t.push({type:'confession',target:1,label:'Weekly confession'});}
-    if(d===8){t.push({type:'edge',target:3,label:'Edge 3 times'});t.push({type:'journal',target:1,label:'Journal entry'});}
-    if(d===9){t.push({type:'spin',target:1,label:'Spin the wheel'});t.push({type:'tribute',target:5,label:'Tribute 5 coins'});}
-    if(d===10){t.push({type:'lines',target:50,label:'Write lines x50'});t.push({type:'corner_time',target:10,label:'Corner time 10min'});}
-    if(d===11) t.push({type:'body_writing',target:1,label:'Body writing: OWNED'});
-    if(d===12){t.push({type:'card',target:1,label:'Draw a task card'});t.push({type:'worship',target:1,label:'Worship message'});}
-    if(d===13){t.push({type:'edge',target:5,label:'Edge 5 times'});t.push({type:'gratitude',target:5,label:'Gratitude list (5)'});}
-    if(d===14){t.push({type:'tribute',target:10,label:'Tribute 10 coins'});t.push({type:'confession',target:1,label:'Confession'});}
-    if(d===15){t.push({type:'exercise',target:50,label:'50 pushups'});t.push({type:'spin',target:1,label:'Spin the wheel'});}
-    if(d===16){t.push({type:'edge',target:5,label:'Edge 5 times'});t.push({type:'lines',target:75,label:'Write lines x75'});}
-    if(d===17){t.push({type:'quiz',target:1,label:"Quiz: Queen's rules"});t.push({type:'journal',target:1,label:'Journal entry'});}
-    if(d===18){t.push({type:'tribute',target:10,label:'Tribute 10 coins'});t.push({type:'corner_time',target:15,label:'Corner time 15min'});}
-    if(d===19){t.push({type:'body_writing',target:1,label:'Body writing photo'});t.push({type:'card',target:1,label:'Draw a task card'});}
-    if(d===20){t.push({type:'cold_shower',target:90,label:'Cold shower 90s'});t.push({type:'worship',target:1,label:'Worship message'});t.push({type:'edge',target:5,label:'Edge 5x'});}
-    if(d===21){t.push({type:'denial',target:1,label:'Denial day (24h)'});t.push({type:'confession',target:1,label:'Confession'});}
-    if(d===22){t.push({type:'tribute',target:15,label:'Tribute 15 coins'});t.push({type:'gratitude',target:10,label:'Gratitude (10)'});}
-    if(d===23){t.push({type:'edge',target:7,label:'Edge 7 times'});t.push({type:'spin',target:1,label:'Spin the wheel'});t.push({type:'lines',target:100,label:'Lines x100'});}
-    if(d===24){t.push({type:'exercise',target:75,label:'75 pushups'});t.push({type:'body_writing',target:1,label:'Body writing'});t.push({type:'journal',target:1,label:'Journal'});}
-    if(d===25){t.push({type:'card',target:1,label:'Task card'});t.push({type:'corner_time',target:20,label:'Corner 20min'});t.push({type:'worship',target:1,label:'Worship'});}
-    if(d===26){t.push({type:'cold_shower',target:120,label:'Cold shower 120s'});t.push({type:'edge',target:7,label:'Edge 7x'});t.push({type:'tribute',target:10,label:'Tribute 10'});}
-    if(d===27){t.push({type:'denial',target:1,label:'Denial day'});t.push({type:'essay',target:1,label:'Essay: "What I learned"'});}
-    if(d===28){t.push({type:'quiz',target:1,label:'Quiz'});t.push({type:'confession',target:1,label:'Confession'});t.push({type:'spin',target:1,label:'Spin'});t.push({type:'lines',target:100,label:'Lines x100'});}
-    if(d===29){t.push({type:'edge',target:10,label:'Edge 10x'});t.push({type:'tribute',target:20,label:'Tribute 20'});t.push({type:'exercise',target:100,label:'100 pushups'});}
-    if(d===30){t.push({type:'journal',target:1,label:'Final devotion'});t.push({type:'worship',target:1,label:'Worship'});t.push({type:'gratitude',target:10,label:'Gratitude (10)'});t.push({type:'body_writing',target:1,label:'Body writing'});t.push({type:'tribute',target:25,label:'Tribute 25'});}
+    const t: any[] = [{ type: 'kneel', target: _kt(d), label: `Kneel ${_kt(d)} times` }];
+
+    /* ═══════ PHASE 1 · OBEDIENCE · Foundation (Days 1–7) ═══════
+       Gentle introduction. One new mechanism per day. Learn the system. */
+
+    if (d===1) {
+        // Day 1 — ARRIVAL: First writing, first photo. Simple.
+        t.push({ type: 'writing', target: 1, label: 'Why I submitted', config: {
+            prompt: 'Write about why you chose to submit. What brought you here? What do you hope to become? Be honest and vulnerable.', minWords: 100,
+        }});
+        t.push({ type: 'photo_proof', target: 1, label: 'First devotion photo', config: {
+            instruction: 'Take a photo on your knees, head bowed. Your first act of visible submission.',
+        }});
+    }
+    if (d===2) {
+        // Day 2 — FATE: First taste of chance. Coinflip decides.
+        t.push({ type: 'coinflip', target: 1, label: 'Mercy or punishment', config: {
+            headsText: '+20 coins — Queen shows mercy', tailsText: 'Write 30 lines: "I will obey without question"',
+        }});
+        t.push({ type: 'payment', target: 5, label: 'First tribute', config: { amount: 5 }});
+    }
+    if (d===3) {
+        // Day 3 — THE WHEEL: First spin. Fate is out of your hands.
+        t.push({ type: 'spin_wheel', target: 1, label: 'Spin the Wheel of Fate', config: {
+            segments: [
+                { text: '+30 coins', followUpType: 'instant' },
+                { text: 'Gratitude list (5 items)', followUpType: 'writing', followUpPrompt: 'List 5 things you are grateful for about your Queen' },
+                { text: 'Devotion selfie', followUpType: 'photo', followUpInstruction: 'Photo on your knees showing devotion' },
+                { text: '30 second plank', followUpType: 'endurance', followUpDuration: 30 },
+                { text: 'Write 20 lines', followUpType: 'writing', followUpPrompt: 'I am learning to obey' },
+                { text: 'Lucky — nothing extra', followUpType: 'instant' },
+            ],
+        }});
+    }
+    if (d===4) {
+        // Day 4 — ENDURANCE: First timed challenge. Camera on.
+        t.push({ type: 'endurance', target: 60, label: 'Kneeling hold — 60s on camera', config: {
+            instruction: 'Kneel perfectly still, hands on thighs, head bowed. Do not move for 60 seconds. Camera must show you.', duration: 60,
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Evening journal', config: {
+            prompt: 'How did today feel? What was hard? What are you learning about yourself?', minWords: 80,
+        }});
+    }
+    if (d===5) {
+        // Day 5 — TESTED: First quiz. Do you know the rules?
+        t.push({ type: 'quiz', target: 1, label: "Queen's rules quiz", config: {
+            question: 'What is the first thing you must do each morning in the program?', answers: ['Check phone', 'Complete your kneeling', 'Send a message', 'Wait for instructions'], correctIdx: 1, timeLimit: 30,
+        }});
+        t.push({ type: 'photo_proof', target: 1, label: 'Clean space photo', config: {
+            instruction: 'Photograph your clean, organized space — bed made, floor clear. Order reflects discipline.',
+        }});
+    }
+    if (d===6) {
+        // Day 6 — CARDS: Draw your fate from the deck.
+        t.push({ type: 'card_pick', target: 1, label: 'Draw from the Devotion Deck', config: {
+            cards: [
+                { text: 'Write a worship message', followUpType: 'writing', followUpPrompt: 'Express your devotion in at least 100 words' },
+                { text: 'Gratitude list (5 items)', followUpType: 'writing', followUpPrompt: 'List 5 things you are grateful for' },
+                { text: 'Devotion photo', followUpType: 'photo', followUpInstruction: 'Photo showing your devotion pose' },
+                { text: 'Tribute 5 coins', followUpType: 'instant' },
+                { text: '1 min plank on camera', followUpType: 'endurance', followUpDuration: 60 },
+            ],
+        }});
+        t.push({ type: 'payment', target: 5, label: 'Daily tribute', config: { amount: 5 }});
+    }
+    if (d===7) {
+        // Day 7 — WEEK 1 REVIEW: Truth or Dare + confession. The first reckoning.
+        t.push({ type: 'truth_dare', target: 1, label: 'Truth or Dare', config: {
+            truthText: 'What is one thing you failed at this week? Confess completely.', truthFollowUp: 'writing',
+            dareText: 'Cold water on your face for 30 seconds — on camera', dareFollowUp: 'endurance',
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Week 1 confession', config: {
+            prompt: 'Confess every moment this week where you hesitated, questioned, or resisted. Hold nothing back.', minWords: 150,
+        }});
+    }
+
+    /* ═══════ PHASE 2 · DISCIPLINE · Building (Days 8–14) ═══════
+       Intensity increases. Multiple mechanisms per day. Stacking begins. */
+
+    if (d===8) {
+        // Day 8 — DICE: Fate rolls harder now. First video proof.
+        t.push({ type: 'dice_roll', target: 1, label: 'Roll the Punishment Dice', config: {
+            outcomes: [
+                { text: 'Write lines x40', followUpType: 'writing', followUpPrompt: 'I exist to serve' },
+                { text: 'Cold shower 30s', followUpType: 'endurance', followUpDuration: 30 },
+                { text: '20 pushups on camera', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Body writing: OBEY', followUpType: 'photo', followUpInstruction: 'Write OBEY on your wrist and photograph it' },
+                { text: 'Gratitude essay (100 words)', followUpType: 'writing', followUpPrompt: 'Why are you grateful for discipline?' },
+                { text: '2 min wall sit on camera', followUpType: 'endurance', followUpDuration: 120 },
+            ],
+        }});
+        t.push({ type: 'multi_video', target: 2, label: 'Record 2 devotion clips', config: {
+            instruction: 'In each clip, say one thing you have learned about obedience. Look at the camera.', target: 2,
+        }});
+    }
+    if (d===9) {
+        // Day 9 — GREED: First greed game. How far will you push?
+        t.push({ type: 'greed_game', target: 1, label: 'Greed Game — push your luck', config: { ceiling: 30 }});
+        t.push({ type: 'endurance', target: 90, label: 'Corner time 90s', config: {
+            instruction: 'Stand in the corner, nose to the wall, hands behind your back. No moving. Camera on.', duration: 90,
+        }});
+        t.push({ type: 'payment', target: 8, label: 'Tribute 8 coins', config: { amount: 8 }});
+    }
+    if (d===10) {
+        // Day 10 — SURVEILLANCE: First timed photo. Queen watches.
+        t.push({ type: 'timed_photo', target: 1, label: 'Morning check-in photo', config: {
+            instruction: 'Take a photo within 5 minutes of waking. Show you are alert and ready to serve.',
+        }});
+        t.push({ type: 'spin_wheel', target: 1, label: 'Spin for your punishment', config: {
+            segments: [
+                { text: 'Cold shower 45s', followUpType: 'endurance', followUpDuration: 45 },
+                { text: '40 squats on camera', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Write 50 lines', followUpType: 'writing', followUpPrompt: 'I belong to my Queen' },
+                { text: 'Edge and deny', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Body writing photo', followUpType: 'photo', followUpInstruction: 'Write OWNED on your chest' },
+                { text: '+1 day added to lock', followUpType: 'instant' },
+            ],
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Discipline journal', config: {
+            prompt: 'How has your behavior changed since day 1? What habits are forming?', minWords: 100,
+        }});
+    }
+    if (d===11) {
+        // Day 11 — SIMON SAYS: First rapid-fire obedience drill.
+        t.push({ type: 'simon_says', target: 1, label: 'Obedience drill', config: {
+            chainTasks: [
+                { text: 'Drop and do 10 pushups — NOW', timeLimit: 30 },
+                { text: 'Take a selfie on your knees', timeLimit: 20 },
+                { text: 'Write "I obey" 10 times', timeLimit: 40 },
+                { text: 'Stand at attention for 15 seconds', timeLimit: 20 },
+            ],
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Obedience reflection', config: {
+            prompt: 'How did it feel to obey instantly without thinking? What did the drill teach you?', minWords: 80,
+        }});
+    }
+    if (d===12) {
+        // Day 12 — STACKED: Card pick + endurance. Layers build.
+        t.push({ type: 'card_pick', target: 1, label: 'Punishment Deck draw', config: {
+            cards: [
+                { text: 'Cold shower 60s', followUpType: 'endurance', followUpDuration: 60 },
+                { text: 'Edge 3 times on camera', followUpType: 'video', followUpTarget: 3 },
+                { text: 'Write lines x60', followUpType: 'writing', followUpPrompt: 'I will never disobey my Queen' },
+                { text: 'Corner time 5 min', followUpType: 'endurance', followUpDuration: 300 },
+                { text: 'Body writing: SLAVE', followUpType: 'photo', followUpInstruction: 'Write SLAVE on your inner thigh and photograph' },
+                { text: '50 pushups on camera', followUpType: 'video', followUpTarget: 1 },
+            ],
+        }});
+        t.push({ type: 'endurance', target: 120, label: 'Plank hold — 2 min', config: {
+            instruction: 'Hold plank position for the full duration. Proper form. Camera shows full body.', duration: 120,
+        }});
+        t.push({ type: 'payment', target: 10, label: 'Tribute 10 coins', config: { amount: 10 }});
+    }
+    if (d===13) {
+        // Day 13 — AMBUSH: First ambush snaps. You are being watched.
+        t.push({ type: 'ambush_snap', target: 3, label: '3 ambush snaps today', config: { target: 3 }});
+        t.push({ type: 'coinflip', target: 1, label: 'Double or nothing', config: {
+            headsText: 'Skip the evening writing task', tailsText: 'Writing task doubled — 200 words minimum',
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Gratitude letter', config: {
+            prompt: 'Write a letter of gratitude to your Queen. What has she given you through this structure?', minWords: 100,
+        }});
+    }
+    if (d===14) {
+        // Day 14 — WEEK 2 RECKONING: Quiz + truth or dare + confession. Halfway point.
+        t.push({ type: 'quiz', target: 1, label: 'Discipline quiz', config: {
+            question: 'What is the purpose of punishment in your training?', answers: ['To cause pain', 'To correct behavior and build discipline', 'Entertainment', 'Random'], correctIdx: 1, timeLimit: 30,
+        }});
+        t.push({ type: 'truth_dare', target: 1, label: 'Halfway Truth or Dare', config: {
+            truthText: 'What is the hardest thing you have done so far and why did it matter?', truthFollowUp: 'writing',
+            dareText: 'Cold shower 60 seconds — full body, on camera', dareFollowUp: 'endurance',
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Halfway confession', config: {
+            prompt: 'You are halfway through. Confess your failures. Where did you cheat, hesitate, or resist? What will you do differently?', minWords: 200,
+        }});
+        t.push({ type: 'payment', target: 10, label: 'Tribute 10 coins', config: { amount: 10 }});
+    }
+
+    /* ═══════ PHASE 3 · ENDURANCE · Testing (Days 15–21) ═══════
+       Peak difficulty. Russian roulette enters. Heavy stacking. Real suffering. */
+
+    if (d===15) {
+        // Day 15 — THE CHAMBER: Russian roulette enters. Real stakes.
+        t.push({ type: 'russian_roulette', target: 1, label: 'Russian Roulette', config: {
+            punishment: 'Cold shower 2 minutes + 50 lines: "I accept my fate"',
+        }});
+        t.push({ type: 'spin_wheel', target: 1, label: 'Spin for extra punishment', config: {
+            segments: [
+                { text: 'Edge 3 times on camera', followUpType: 'video', followUpTarget: 3 },
+                { text: 'Cold shower 60s', followUpType: 'endurance', followUpDuration: 60 },
+                { text: '3 min wall sit', followUpType: 'endurance', followUpDuration: 180 },
+                { text: 'Write 75 lines', followUpType: 'writing', followUpPrompt: 'I am nothing without discipline' },
+                { text: 'Body writing: PROPERTY', followUpType: 'photo', followUpInstruction: 'Write PROPERTY across your chest' },
+                { text: 'Lucky — you escape', followUpType: 'instant' },
+            ],
+        }});
+        t.push({ type: 'payment', target: 10, label: 'Tribute 10 coins', config: { amount: 10 }});
+    }
+    if (d===16) {
+        // Day 16 — HEAVY: Long endurance + greed game + body writing.
+        t.push({ type: 'endurance', target: 180, label: 'Corner time — 3 minutes', config: {
+            instruction: 'Nose to the wall. Hands behind your back. Do not move. Camera records everything.', duration: 180,
+        }});
+        t.push({ type: 'greed_game', target: 1, label: 'High stakes Greed Game', config: { ceiling: 50 }});
+        t.push({ type: 'photo_proof', target: 1, label: 'Body writing: OWNED', config: {
+            instruction: 'Write OWNED across your lower stomach. Clear photograph.',
+        }});
+    }
+    if (d===17) {
+        // Day 17 — FULL WATCH: Heavy ambush + multi-video + quiz.
+        t.push({ type: 'ambush_snap', target: 5, label: '5 ambush snaps — heavy watch', config: { target: 5 }});
+        t.push({ type: 'multi_video', target: 3, label: 'Record 3 proof clips', config: {
+            instruction: 'Three separate clips. Each one: state your name, day number, and one rule you follow. On your knees.', target: 3,
+        }});
+        t.push({ type: 'quiz', target: 1, label: 'Protocol quiz', config: {
+            question: 'When your Queen gives an order, what is the correct first response?', answers: ['Why?', 'Yes, my Queen', 'Can we discuss it?', 'One moment'], correctIdx: 1, timeLimit: 15,
+        }});
+    }
+    if (d===18) {
+        // Day 18 — DRILL + TRIBUTE: Simon says + dice + heavy payment.
+        t.push({ type: 'simon_says', target: 1, label: 'Endurance drill', config: {
+            chainTasks: [
+                { text: 'Plank — hold it', timeLimit: 45 },
+                { text: '20 squats — no breaks', timeLimit: 40 },
+                { text: 'Wall sit — hold', timeLimit: 45 },
+                { text: '15 pushups — full form', timeLimit: 35 },
+                { text: 'Stand at attention 10 seconds', timeLimit: 15 },
+            ],
+        }});
+        t.push({ type: 'dice_roll', target: 1, label: 'Roll for tribute amount', config: {
+            outcomes: [
+                { text: 'Tribute 5 coins', followUpType: 'instant' },
+                { text: 'Tribute 10 coins', followUpType: 'instant' },
+                { text: 'Tribute 15 coins', followUpType: 'instant' },
+                { text: 'Tribute 20 coins', followUpType: 'instant' },
+                { text: 'Tribute 25 coins', followUpType: 'instant' },
+                { text: 'Tribute 30 coins!', followUpType: 'instant' },
+            ],
+        }});
+        t.push({ type: 'payment', target: 15, label: 'Base tribute 15', config: { amount: 15 }});
+    }
+    if (d===19) {
+        // Day 19 — LAYERED: Card pick + endurance + timed photo. No mercy.
+        t.push({ type: 'card_pick', target: 1, label: 'Draw from the Punishment Deck', config: {
+            cards: [
+                { text: 'Cold shower 90s', followUpType: 'endurance', followUpDuration: 90 },
+                { text: 'Edge 5 times on camera', followUpType: 'video', followUpTarget: 5 },
+                { text: 'Write lines x100', followUpType: 'writing', followUpPrompt: 'My body belongs to my Queen' },
+                { text: 'Corner time 10 min', followUpType: 'endurance', followUpDuration: 600 },
+                { text: '100 squats on camera', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Body writing full set', followUpType: 'photo', followUpInstruction: 'Write OBEY, SERVE, SUBMIT — one word on each limb' },
+            ],
+        }});
+        t.push({ type: 'endurance', target: 120, label: 'Kneeling hold — 2 min', config: {
+            instruction: 'Kneel perfectly still. Hands on thighs. Head bowed. Do not move until the timer ends.', duration: 120,
+        }});
+        t.push({ type: 'timed_photo', target: 1, label: 'Surprise pose', config: {
+            instruction: 'Get on your knees, hands behind your back, head down. Photo within 60 seconds of notification.',
+        }});
+    }
+    if (d===20) {
+        // Day 20 — THE GAUNTLET: Maximum mechanisms. Everything at once.
+        t.push({ type: 'russian_roulette', target: 1, label: 'Russian Roulette', config: {
+            punishment: 'Edge 5 times then deny + cold shower 90 seconds',
+        }});
+        t.push({ type: 'spin_wheel', target: 1, label: 'Wheel of Suffering', config: {
+            segments: [
+                { text: 'Cold shower 2 min', followUpType: 'endurance', followUpDuration: 120 },
+                { text: '75 pushups on camera', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Write 100 lines', followUpType: 'writing', followUpPrompt: 'Suffering is the path to devotion' },
+                { text: 'Edge 5x on camera', followUpType: 'video', followUpTarget: 5 },
+                { text: '5 min corner time', followUpType: 'endurance', followUpDuration: 300 },
+                { text: 'Body writing: full torso', followUpType: 'photo', followUpInstruction: 'Cover your torso in devotion words — OWNED, SLAVE, OBEY, PROPERTY. Photograph.' },
+            ],
+        }});
+        t.push({ type: 'multi_video', target: 2, label: '2 suffering clips', config: {
+            instruction: 'Two clips. Each one: describe what you are enduring today and why you accept it.', target: 2,
+        }});
+        t.push({ type: 'payment', target: 15, label: 'Tribute 15 coins', config: { amount: 15 }});
+    }
+    if (d===21) {
+        // Day 21 — DENIAL DAY: The ultimate test. Full denial + deep writing.
+        t.push({ type: 'truth_dare', target: 1, label: 'Final test — Truth or Dare', config: {
+            truthText: 'What is the one thing about yourself you are most afraid to admit? Write it completely.', truthFollowUp: 'writing',
+            dareText: 'Cold shower 2 minutes. Full body. No flinching. On camera.', dareFollowUp: 'endurance',
+        }});
+        t.push({ type: 'endurance', target: 300, label: 'Kneeling meditation — 5 min', config: {
+            instruction: 'Kneel in silence for 5 full minutes. Eyes closed. Reflect on everything. Camera on.', duration: 300,
+        }});
+        t.push({ type: 'writing', target: 1, label: 'Endurance phase confession', config: {
+            prompt: 'The hardest phase is over. What broke you? What built you? What do you understand now that you did not on Day 1?', minWords: 250,
+        }});
+    }
+
+    /* ═══════ PHASE 4 · DEVOTION · Proving (Days 22–30) ═══════
+       Full commitment. Heavy tributes. Deep writing. All mechanisms in play.
+       This is not punishment — this is proof of transformation. */
+
+    if (d===22) {
+        // Day 22 — RENEWED: Devotion phase begins. Gratitude + greed.
+        t.push({ type: 'writing', target: 1, label: 'Devotion letter', config: {
+            prompt: 'Write a letter to your Queen. Tell her what this journey has meant. What you have become. What you are willing to give.', minWords: 200,
+        }});
+        t.push({ type: 'greed_game', target: 1, label: 'Greed Game — high stakes', config: { ceiling: 75 }});
+        t.push({ type: 'payment', target: 15, label: 'Tribute 15 coins', config: { amount: 15 }});
+    }
+    if (d===23) {
+        // Day 23 — FATE STACKED: Spin + dice + card. Triple chance.
+        t.push({ type: 'spin_wheel', target: 1, label: 'Wheel of Devotion', config: {
+            segments: [
+                { text: 'Write a love letter to Queen', followUpType: 'writing', followUpPrompt: 'Pour your heart out. No holding back.' },
+                { text: 'Record a devotion video', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Body writing: HER NAME', followUpType: 'photo', followUpInstruction: "Write your Queen's title over your heart" },
+                { text: 'Gratitude list (10)', followUpType: 'writing', followUpPrompt: 'List 10 transformations you have experienced' },
+                { text: '3 min plank of devotion', followUpType: 'endurance', followUpDuration: 180 },
+                { text: '+50 coins for loyalty', followUpType: 'instant' },
+            ],
+        }});
+        t.push({ type: 'dice_roll', target: 1, label: 'Roll for endurance', config: {
+            outcomes: [
+                { text: '1 min kneeling', followUpType: 'endurance', followUpDuration: 60 },
+                { text: '2 min kneeling', followUpType: 'endurance', followUpDuration: 120 },
+                { text: '3 min kneeling', followUpType: 'endurance', followUpDuration: 180 },
+                { text: '4 min kneeling', followUpType: 'endurance', followUpDuration: 240 },
+                { text: '5 min kneeling', followUpType: 'endurance', followUpDuration: 300 },
+                { text: '7 min kneeling!', followUpType: 'endurance', followUpDuration: 420 },
+            ],
+        }});
+        t.push({ type: 'payment', target: 15, label: 'Tribute 15 coins', config: { amount: 15 }});
+    }
+    if (d===24) {
+        // Day 24 — FULL SURVEILLANCE: Ambush + simon says + timed photo.
+        t.push({ type: 'ambush_snap', target: 6, label: '6 ambush snaps — full watch', config: { target: 6 }});
+        t.push({ type: 'simon_says', target: 1, label: 'Devotion drill', config: {
+            chainTasks: [
+                { text: 'Say "I serve my Queen" out loud 5 times', timeLimit: 20 },
+                { text: 'Bow your head and hold for 10 seconds', timeLimit: 15 },
+                { text: 'Write 5 things you are grateful for', timeLimit: 45 },
+                { text: 'Photo in devotion pose', timeLimit: 30 },
+                { text: '15 pushups — full form', timeLimit: 35 },
+            ],
+        }});
+        t.push({ type: 'timed_photo', target: 1, label: 'Outfit check', config: {
+            instruction: 'Show your full outfit or state of dress as instructed. Photo within 60 seconds.',
+        }});
+    }
+    if (d===25) {
+        // Day 25 — TRUTH: Deep truth or dare + confession + card pick.
+        t.push({ type: 'truth_dare', target: 1, label: 'Deep Truth or Dare', config: {
+            truthText: 'Write about the moment you realized you truly wanted to be controlled. Every detail.', truthFollowUp: 'writing',
+            dareText: 'Full body writing session — 5 words of devotion on your body, photographed', dareFollowUp: 'photo',
+        }});
+        t.push({ type: 'card_pick', target: 1, label: 'Draw from the Devotion Deck', config: {
+            cards: [
+                { text: 'Record a worship video', followUpType: 'video', followUpTarget: 1 },
+                { text: 'Write an apology for past disobedience', followUpType: 'writing', followUpPrompt: 'Apologize for every time you resisted or hesitated' },
+                { text: 'Devotion photo — forehead on the ground', followUpType: 'photo', followUpInstruction: 'Full prostration. Forehead touching the floor. Photograph.' },
+                { text: '+30 coins — reward for loyalty', followUpType: 'instant' },
+                { text: '3 min plank', followUpType: 'endurance', followUpDuration: 180 },
+            ],
+        }});
+        t.push({ type: 'payment', target: 20, label: 'Heavy tribute 20 coins', config: { amount: 20 }});
+    }
+    if (d===26) {
+        // Day 26 — ENDURANCE PEAK: Cold shower + russian roulette + greed.
+        t.push({ type: 'endurance', target: 120, label: 'Cold shower — 2 min', config: {
+            instruction: 'Full body under cold water for 2 minutes. No flinching. Camera on.', duration: 120,
+        }});
+        t.push({ type: 'russian_roulette', target: 1, label: 'Russian Roulette', config: {
+            punishment: 'Additional 2 minutes cold shower + write 100 lines',
+        }});
+        t.push({ type: 'greed_game', target: 1, label: 'Ultimate Greed Game', config: { ceiling: 100 }});
+        t.push({ type: 'payment', target: 20, label: 'Tribute 20 coins', config: { amount: 20 }});
+    }
+    if (d===27) {
+        // Day 27 — DEEP WRITING: Essay + multi-video + confession. Reflective day.
+        t.push({ type: 'writing', target: 1, label: 'Essay: What I have become', config: {
+            prompt: 'Write a full essay about your transformation. Who were you on Day 1? Who are you now? What has obedience taught you? What will you carry forward?', minWords: 300,
+        }});
+        t.push({ type: 'multi_video', target: 3, label: '3 reflection clips', config: {
+            instruction: 'Three clips. Clip 1: What you learned about obedience. Clip 2: What you learned about yourself. Clip 3: What you promise going forward.', target: 3,
+        }});
+        t.push({ type: 'payment', target: 20, label: 'Tribute 20 coins', config: { amount: 20 }});
+    }
+    if (d===28) {
+        // Day 28 — EVERYTHING: All chance mechanisms in one day. Fate decides everything.
+        t.push({ type: 'spin_wheel', target: 1, label: 'Final Spin', config: {
+            segments: [
+                { text: 'Cold shower 90s', followUpType: 'endurance', followUpDuration: 90 },
+                { text: 'Edge 5x on camera', followUpType: 'video', followUpTarget: 5 },
+                { text: '5 min corner time', followUpType: 'endurance', followUpDuration: 300 },
+                { text: 'Write 100 lines', followUpType: 'writing', followUpPrompt: 'I am forever devoted' },
+                { text: '100 pushups', followUpType: 'video', followUpTarget: 1 },
+                { text: 'MERCY — Queen forgives you', followUpType: 'instant' },
+            ],
+        }});
+        t.push({ type: 'coinflip', target: 1, label: 'Final coin flip', config: {
+            headsText: '+100 coins — loyalty rewarded', tailsText: '+2 days added to lock',
+        }});
+        t.push({ type: 'russian_roulette', target: 1, label: 'Final Roulette', config: {
+            punishment: 'Write a 500-word essay on total surrender',
+        }});
+        t.push({ type: 'quiz', target: 1, label: 'Final protocol quiz', config: {
+            question: 'After 28 days, what is the true meaning of submission?', answers: ['Following orders', 'Giving up control willingly as an act of trust and devotion', 'Being punished', 'Doing tasks'], correctIdx: 1, timeLimit: 45,
+        }});
+    }
+    if (d===29) {
+        // Day 29 — PROOF: Physical + video + photo. Prove what you have become.
+        t.push({ type: 'endurance', target: 300, label: '5 min kneeling hold', config: {
+            instruction: 'Kneel in perfect stillness for 5 full minutes. This is the body you have built. Show it.', duration: 300,
+        }});
+        t.push({ type: 'multi_video', target: 3, label: '3 proof-of-devotion clips', config: {
+            instruction: 'Three final clips. Show your discipline, your control, your transformation. Make them count.', target: 3,
+        }});
+        t.push({ type: 'photo_proof', target: 1, label: 'Final body writing', config: {
+            instruction: 'Write DEVOTED across your chest. This is your mark. Photograph it with pride.',
+        }});
+        t.push({ type: 'payment', target: 25, label: 'Grand tribute 25 coins', config: { amount: 25 }});
+    }
+    if (d===30) {
+        // Day 30 — GRADUATION: Deep devotion. Final writing. Final tribute. You made it.
+        t.push({ type: 'writing', target: 1, label: 'Final devotion letter', config: {
+            prompt: 'This is your last writing. Write to your Queen — tell her everything. The pain, the growth, the gratitude. What you were. What you are. What you will be. Hold nothing back.', minWords: 400,
+        }});
+        t.push({ type: 'truth_dare', target: 1, label: 'Final Truth or Dare', config: {
+            truthText: 'The deepest truth: What do you need? Write it without shame.', truthFollowUp: 'writing',
+            dareText: 'Full prostration photo — forehead on the floor, arms extended, total surrender', dareFollowUp: 'photo',
+        }});
+        t.push({ type: 'photo_proof', target: 1, label: 'Graduation photo', config: {
+            instruction: 'Your final photo. On your knees, looking at the camera. Show the person you have become.',
+        }});
+        t.push({ type: 'greed_game', target: 1, label: 'Final Greed Game', config: { ceiling: 200 }});
+        t.push({ type: 'payment', target: 30, label: 'Final tribute — 30 coins', config: { amount: 30 }});
+    }
+
     return t;
 }
 function _genDefaults(): Record<string,Task[]> { const d: Record<string,Task[]>={}; for(let i=1;i<=30;i++) d[String(i)]=_ddt(i); return d; }
@@ -174,7 +780,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     };
 
     const updateTask = (dn: number,idx: number,field: string,val: any) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t[idx]={...t[idx],[field]:val}; d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
-    const addTask = (dn: number,type: string) => { const meta=TASK_META[type]; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.push({type,target:1,label:meta?.label||type}); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
+    const addTask = (dn: number,type: string, label?: string, target?: number, config?: any) => { const meta=TASK_META[type]; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const task: any = {type, target: target||1, label: label||meta?.label||type}; if(config) task.config = config; t.push(task); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
     const removeTask = (dn: number,idx: number) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.splice(idx,1); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
     const moveTask = (dn: number,from: number,to: number) => { if(from===to) return; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const[m]=t.splice(from,1); t.splice(to,0,m); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
 
@@ -301,7 +907,7 @@ function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveT
                     </div>
                 ))}
             </div>
-            {sel && <TaskPanel dayNum={sel} tasks={days[String(sel)]||[]} onClose={() => setSel(null)} updateTask={(i:number,f:string,v:any) => updateTask(sel,i,f,v)} addTask={(t:string) => addTask(sel,t)} removeTask={(i:number) => removeTask(sel,i)} moveTask={(a:number,b:number) => moveTask(sel,a,b)} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
+            {sel && <TaskPanel dayNum={sel} tasks={days[String(sel)]||[]} onClose={() => setSel(null)} updateTask={(i:number,f:string,v:any) => updateTask(sel,i,f,v)} addTask={(t:string,l?:string,tgt?:number,cfg?:any) => addTask(sel,t,l,tgt,cfg)} removeTask={(i:number) => removeTask(sel,i)} moveTask={(a:number,b:number) => moveTask(sel,a,b)} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
         </div>
     );
 }
@@ -311,7 +917,9 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
     const phase = PHASES.find(p => p.days.includes(dayNum));
     const [addOpen, setAddOpen] = useState(false);
     const [editIdx, setEditIdx] = useState<number|null>(null);
-    const [adjustIdx, setAdjustIdx] = useState<number|null>(null);
+    // Mechanism-first add flow
+    const [addMech, setAddMech] = useState<string|null>(null);
+    const [addConfig, setAddConfig] = useState<any>({});
 
     return (
         <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', position: 'relative' }}>
@@ -347,15 +955,14 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                 {/* TASK CARDS GRID */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 18 }}>
-                    {tasks.map((task: Task, idx: number) => {
-                        const meta = TASK_META[task.type] || { label: task.type, icon: '\u2022', color: '#666' };
-                        const hasConfig = !!(meta as any).configKey;
-                        const cfgKey = (meta as any).configKey;
-                        const cfgItems = hasConfig ? (configData[cfgKey] || []) : [];
+                    {tasks.map((task: any, idx: number) => {
+                        const mechMeta = MECH_LIST.find(m => m.id === task.type);
+                        const oldMeta = TASK_META[task.type];
+                        const icon = mechMeta?.icon || oldMeta?.icon || '\u2022';
+                        const color = mechMeta?.color || oldMeta?.color || '#666';
+                        const typeName = mechMeta?.name || oldMeta?.label || task.type;
+                        const rgb = _hexToRgb(color);
                         const isEditing = editIdx === idx;
-                        const isAdjusting = adjustIdx === idx;
-                        const rgb = _hexToRgb(meta.color);
-                        const highlighted = isEditing || isAdjusting;
 
                         return (
                             <div key={idx}
@@ -365,21 +972,23 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                 onDrop={(e) => { e.currentTarget.classList.remove('kdrag'); if(dragIdx!==null) moveTask(dragIdx,idx); setDragIdx(null); }}
                                 onDragEnd={() => setDragIdx(null)}
                                 className="ktc"
-                                onClick={() => setEditIdx(isEditing ? null : idx)}
+                                onClick={() => {
+                                    if (isEditing) { setEditIdx(null); setAddConfig({}); }
+                                    else { setEditIdx(idx); setAddConfig({ ...task.config, label: task.label, target: task.target, _customMode: true }); setAddOpen(false); setAddMech(null); }
+                                }}
                                 style={{
                                     borderRadius: 16, opacity: dragIdx===idx ? .15 : 1, overflow: 'hidden', position: 'relative',
                                     display: 'flex', flexDirection: 'column',
                                     background: 'rgba(15,15,20,0.85)',
                                     backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                                    border: `1px solid ${highlighted ? `rgba(${rgb},.5)` : 'rgba(197,160,89,.12)'}`,
-                                    boxShadow: highlighted
+                                    border: `1px solid ${isEditing ? `rgba(${rgb},.5)` : 'rgba(197,160,89,.12)'}`,
+                                    boxShadow: isEditing
                                         ? `0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(${rgb},.3), 0 0 20px rgba(${rgb},.1)`
                                         : '0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.03)',
-                                    transform: isAdjusting ? 'scale(1.02)' : undefined,
                                     transition: 'all .25s ease',
                                 }}>
                                 {/* Left accent bar */}
-                                <div style={{ position: 'absolute', top: 12, left: 0, width: 3, height: 40, borderRadius: '0 3px 3px 0', background: meta.color, opacity: .7 }} />
+                                <div style={{ position: 'absolute', top: 12, left: 0, width: 3, height: 40, borderRadius: '0 3px 3px 0', background: color, opacity: .7 }} />
 
                                 {/* Delete */}
                                 <button onClick={(e) => { e.stopPropagation(); removeTask(idx); }} style={{
@@ -389,43 +998,57 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                                 {/* Card body */}
                                 <div style={{ padding: '24px 20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
-                                    {/* Label — big, top, Rajdhani */}
-                                    {isEditing ? (
-                                        <input value={task.label} onClick={e => e.stopPropagation()} onChange={(e) => updateTask(idx,'label',e.target.value)} style={{
-                                            background: 'rgba(0,0,0,.4)', border: `1px solid rgba(${rgb},.35)`, borderRadius: 8, outline: 'none', width: '100%',
-                                            fontFamily: F, fontSize: '.75rem', color: '#fff', fontWeight: 700, letterSpacing: 1, padding: '8px 12px', textAlign: 'center',
-                                        }} />
-                                    ) : (
-                                        <div style={{ fontFamily: F, fontSize: '.8rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textAlign: 'center', lineHeight: 1.3 }}>{task.label}</div>
-                                    )}
+                                    <div style={{ fontFamily: F, fontSize: '.8rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textAlign: 'center', lineHeight: 1.3 }}>{task.label}</div>
+                                    <div style={{ fontSize: '2.2rem', color, lineHeight: 1, margin: '8px 0' }}>{icon}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM, letterSpacing: 2 }}>{typeName}</div>
+                                    {/* Gamble outcomes — show all possibilities */}
+                                    {task.config && (() => {
+                                        const c = task.config;
+                                        const pillS: React.CSSProperties = { fontFamily: F, fontSize: '.38rem', color: 'rgba(255,255,255,.55)', padding: '4px 10px', background: `rgba(${rgb},.06)`, border: `1px solid rgba(${rgb},.12)`, borderRadius: 6, lineHeight: 1.4, textAlign: 'center' as const };
+                                        const items: string[] = [];
+                                        // Spin wheel segments
+                                        if (c.segments) c.segments.forEach((s: any) => items.push(s.text));
+                                        // Card pick
+                                        if (c.cards) c.cards.forEach((s: any) => items.push(s.text));
+                                        // Dice outcomes
+                                        if (c.outcomes) c.outcomes.forEach((s: any) => items.push(s.text));
+                                        // Coinflip
+                                        if (c.headsText) { items.push('\u{1FA99} ' + c.headsText); items.push('\u{1FA99} ' + c.tailsText); }
+                                        // Truth or dare
+                                        if (c.truthText) { items.push('\u2623 ' + c.truthText); items.push('\u2694 ' + c.dareText); }
+                                        // Russian roulette
+                                        if (c.punishment) { items.push('\u2022 5 empty chambers'); items.push('\u2620 ' + c.punishment); }
 
-                                    {/* Icon — no box, just the symbol */}
-                                    <div style={{ fontSize: '2.2rem', color: meta.color, lineHeight: 1, margin: '8px 0' }}>{meta.icon}</div>
+                                        if (items.length > 0) return (
+                                            <div style={{ marginTop: 8, width: '100%', display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'stretch' }}>
+                                                <div style={{ fontFamily: F, fontSize: '.3rem', color: `rgba(${rgb},.4)`, letterSpacing: 3, textAlign: 'center', marginBottom: 2 }}>POSSIBLE OUTCOMES</div>
+                                                {items.map((txt, ii) => <div key={ii} style={pillS}>{txt}</div>)}
+                                            </div>
+                                        );
+
+                                        // Non-gamble config info
+                                        const info: string[] = [];
+                                        if (c.duration) info.push(`${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')} duration`);
+                                        if (c.minWords) info.push(`${c.minWords}+ words`);
+                                        if (c.amount) info.push(`${c.amount} coins`);
+                                        if (c.ceiling) info.push(`max ${c.ceiling}`);
+                                        if (c.chainTasks) info.push(`${c.chainTasks.length} tasks`);
+                                        if (c.prompt) info.push(c.prompt.length > 50 ? c.prompt.slice(0,50) + '...' : c.prompt);
+                                        if (c.instruction) info.push(c.instruction.length > 50 ? c.instruction.slice(0,50) + '...' : c.instruction);
+                                        if (c.question) info.push(c.question.length > 50 ? c.question.slice(0,50) + '...' : c.question);
+                                        if (info.length > 0) return (
+                                            <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
+                                                {info.map((txt, ii) => <span key={ii} style={{ fontFamily: F, fontSize: '.35rem', color: `rgba(${rgb},.5)`, padding: '3px 8px', background: `rgba(${rgb},.06)`, borderRadius: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{txt}</span>)}
+                                            </div>
+                                        );
+                                        return null;
+                                    })()}
                                 </div>
 
-                                {/* Bottom bar: goal left, number right, adjust if configurable */}
+                                {/* Bottom bar */}
                                 <div style={{ padding: '12px 20px', borderTop: `1px solid rgba(255,255,255,.06)`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,.2)' }}>
-                                    <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, letterSpacing: 2 }}>GOAL</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        {hasConfig && (
-                                            <span onClick={(e) => { e.stopPropagation(); setAdjustIdx(adjustIdx === idx ? null : idx); setAddOpen(false); }} style={{
-                                                fontFamily: F, fontSize: '.38rem', color: isAdjusting ? '#fff' : GOLD, cursor: 'pointer', letterSpacing: 2,
-                                                padding: '4px 12px', borderRadius: 6, border: `1px solid rgba(197,160,89,.25)`,
-                                                background: isAdjusting ? 'rgba(197,160,89,.25)' : 'rgba(197,160,89,.06)',
-                                            }}>
-                                                ADJUST
-                                            </span>
-                                        )}
-                                        {isEditing ? (
-                                            <input type="number" value={task.target} onClick={e => e.stopPropagation()} onChange={(e) => updateTask(idx,'target',parseInt(e.target.value)||1)} style={{
-                                                width: 50, height: 32, textAlign: 'center', borderRadius: 6,
-                                                background: 'rgba(0,0,0,.5)', border: `1px solid rgba(197,160,89,.3)`,
-                                                color: GOLD, fontFamily: F, fontSize: '.85rem', fontWeight: 700, outline: 'none',
-                                            }} />
-                                        ) : (
-                                            <span style={{ fontFamily: F, fontSize: '1rem', color: GOLD, fontWeight: 700 }}>{task.target}</span>
-                                        )}
-                                    </div>
+                                    <span style={{ fontFamily: F, fontSize: '.38rem', color: isEditing ? GOLD : TEXT_DIM, letterSpacing: 2 }}>{isEditing ? 'EDITING — CLICK TO CLOSE' : 'CLICK TO EDIT'}</span>
+                                    <span style={{ fontFamily: F, fontSize: '1rem', color: GOLD, fontWeight: 700 }}>{task.target}</span>
                                 </div>
                             </div>
                         );
@@ -433,72 +1056,428 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                 </div>
 
+                {/* ── EDIT EXISTING TASK — full config form ── */}
+                {editIdx !== null && tasks[editIdx] && (() => {
+                    const task = tasks[editIdx] as any;
+                    const mechId = task.type;
+                    const mech = MECH_LIST.find(m => m.id === mechId) || { id: mechId, name: mechId, icon: '\u2022', color: '#666', desc: '' };
+                    const rgb = _hexToRgb(mech.color);
+                    const inp: React.CSSProperties = { background: 'rgba(255,255,255,.06)', border: `1px solid rgba(${rgb},.25)`, borderRadius: 8, padding: '12px 16px', color: 'rgba(255,255,255,.9)', fontFamily: F, fontSize: '.72rem', outline: 'none', width: '100%', boxSizing: 'border-box' };
+                    const lbl: React.CSSProperties = { fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 4 };
+                    const ta: React.CSSProperties = { ...inp, resize: 'vertical' as const };
+                    const addBtnS: React.CSSProperties = { width: '100%', padding: '10px', fontFamily: F, fontSize: '.42rem', letterSpacing: 2, color: `rgba(${rgb},.5)`, background: `rgba(${rgb},.04)`, border: `1px dashed rgba(${rgb},.2)`, borderRadius: 8, cursor: 'pointer' };
+                    const fuSelect = (val: string, onChange: (v: string) => void) => (
+                        <select value={val} onChange={e => onChange(e.target.value)} style={{ ...inp, width: 'auto', padding: '4px 8px', fontSize: '.55rem', display: 'inline' }}>
+                            <option value="instant">Instant (no action)</option>
+                            <option value="writing">Writing Prompt</option>
+                            <option value="photo">Photo Proof</option>
+                            <option value="video">Video Recording</option>
+                            <option value="endurance">Endurance Timer</option>
+                        </select>
+                    );
+                    const fuExtra = (item: any, update: (k: string, v: any) => void) => (
+                        <>
+                            {item.followUpType === 'writing' && <input value={item.followUpPrompt || ''} onChange={e => update('followUpPrompt', e.target.value)} placeholder="Prompt..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
+                            {item.followUpType === 'endurance' && <input type="number" value={item.followUpDuration || 60} onChange={e => update('followUpDuration', +e.target.value)} placeholder="Seconds" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
+                            {item.followUpType === 'video' && <input type="number" value={item.followUpTarget || 1} onChange={e => update('followUpTarget', +e.target.value)} placeholder="Recordings" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
+                            {item.followUpType === 'photo' && <input value={item.followUpInstruction || ''} onChange={e => update('followUpInstruction', e.target.value)} placeholder="Photo instruction..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
+                        </>
+                    );
+                    const ec = addConfig; // edit config state
+                    const setEc = (v: any) => setAddConfig(v);
+
+                    const listBuilder = (key: string, itemLabel: string) => {
+                        const items = ec[key] || [{ text: '', followUpType: 'instant' }];
+                        const updateItem = (idx2: number, field: string, val: any) => { const n = [...items]; n[idx2] = { ...n[idx2], [field]: val }; setEc({ ...ec, [key]: n }); };
+                        const removeItem = (idx2: number) => { const n = [...items]; n.splice(idx2, 1); setEc({ ...ec, [key]: n }); };
+                        const addItemFn = () => setEc({ ...ec, [key]: [...items, { text: '', followUpType: 'instant' }] });
+                        return (
+                            <div>
+                                {items.map((item: any, i: number) => (
+                                    <div key={i} style={{ padding: '10px 12px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, marginBottom: 8 }}>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                            <input value={item.text} onChange={e => updateItem(i, 'text', e.target.value)} placeholder={`${itemLabel} text...`} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                            {items.length > 1 && <button onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                        </div>
+                                        <div style={{ marginTop: 6 }}>
+                                            <span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>
+                                            {fuSelect(item.followUpType || 'instant', v => updateItem(i, 'followUpType', v))}
+                                        </div>
+                                        {fuExtra(item, (k, v) => updateItem(i, k, v))}
+                                    </div>
+                                ))}
+                                <button onClick={addItemFn} style={addBtnS}>+ ADD {itemLabel.toUpperCase()}</button>
+                            </div>
+                        );
+                    };
+
+                    const saveEdit = () => {
+                        const { _customMode, label, target, ...cleanConfig } = ec;
+                        updateTask(editIdx, 'label', label || task.label);
+                        updateTask(editIdx, 'target', target || task.target);
+                        updateTask(editIdx, 'config', cleanConfig);
+                        setEditIdx(null); setAddConfig({});
+                    };
+
+                    return (
+                        <div className="kfade" style={{ marginTop: 18, padding: '20px 24px', borderRadius: 16, background: 'rgba(15,15,20,0.9)', border: `1px solid rgba(${rgb},.25)`, backdropFilter: 'blur(12px)', boxShadow: `0 8px 32px rgba(0,0,0,.5), 0 0 20px rgba(${rgb},.08)` }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+                                <button onClick={() => { setEditIdx(null); setAddConfig({}); }} style={{ background: 'none', border: 'none', color: TEXT_DIM, fontFamily: F, fontSize: '.9rem', cursor: 'pointer', padding: '0 4px' }}>{'\u2190'}</button>
+                                <span style={{ fontSize: '1.2rem', color: mech.color }}>{mech.icon}</span>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: FC, fontSize: '.55rem', color: '#fff', letterSpacing: 3 }}>EDITING: {mech.name || task.type}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM, marginTop: 2 }}>{mech.desc}</div>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                <div><div style={lbl}>TASK LABEL</div><input value={ec.label || ''} onChange={e => setEc({ ...ec, label: e.target.value })} style={inp} /></div>
+
+                                {mechId === 'spin_wheel' && (<><div style={lbl}>WHEEL SEGMENTS</div>{listBuilder('segments', 'Segment')}</>)}
+                                {mechId === 'coinflip' && (<>
+                                    <div><div style={lbl}>HEADS</div><input value={ec.headsText || ''} onChange={e => setEc({ ...ec, headsText: e.target.value })} style={inp} /></div>
+                                    <div><div style={lbl}>TAILS</div><input value={ec.tailsText || ''} onChange={e => setEc({ ...ec, tailsText: e.target.value })} style={inp} /></div>
+                                </>)}
+                                {mechId === 'card_pick' && (<><div style={lbl}>CARDS</div>{listBuilder('cards', 'Card')}</>)}
+                                {mechId === 'dice_roll' && (<><div style={lbl}>DICE FACES / OUTCOMES</div>{listBuilder('outcomes', 'Outcome')}</>)}
+                                {mechId === 'russian_roulette' && (
+                                    <div><div style={lbl}>PUNISHMENT IF LOADED</div><input value={ec.punishment || ''} onChange={e => setEc({ ...ec, punishment: e.target.value })} style={inp} /></div>
+                                )}
+                                {mechId === 'quiz' && (<>
+                                    <div><div style={lbl}>QUESTION</div><textarea value={ec.question || ''} onChange={e => setEc({ ...ec, question: e.target.value })} rows={2} style={ta as any} /></div>
+                                    <div style={lbl}>ANSWERS (click circle = correct)</div>
+                                    {(ec.answers || ['']).map((ans: string, i: number) => (
+                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                                            <button onClick={() => setEc({ ...ec, correctIdx: i })} style={{ width: 24, height: 24, borderRadius: '50%', background: ec.correctIdx === i ? 'rgba(80,200,120,.2)' : 'rgba(255,255,255,.04)', border: `1px solid ${ec.correctIdx === i ? 'rgba(80,200,120,.4)' : 'rgba(255,255,255,.1)'}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {ec.correctIdx === i && <span style={{ color: 'rgba(80,200,120,.7)', fontSize: '.7rem' }}>{'\u2713'}</span>}
+                                            </button>
+                                            <input value={ans} onChange={e => { const a = [...(ec.answers || [''])]; a[i] = e.target.value; setEc({ ...ec, answers: a }); }} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setEc({ ...ec, answers: [...(ec.answers || ['']), ''] })} style={addBtnS}>+ ADD ANSWER</button>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>TIME LIMIT (SEC)</span><input type="number" value={ec.timeLimit || 60} onChange={e => setEc({ ...ec, timeLimit: +e.target.value })} style={{ ...inp, width: 70, padding: '8px 12px' }} /></div>
+                                </>)}
+                                {mechId === 'writing' && (<>
+                                    <div><div style={lbl}>PROMPT</div><textarea value={ec.prompt || ''} onChange={e => setEc({ ...ec, prompt: e.target.value })} rows={3} style={ta as any} /></div>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MIN WORDS</span><input type="number" value={ec.minWords || 50} onChange={e => setEc({ ...ec, minWords: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
+                                </>)}
+                                {mechId === 'multi_video' && (<>
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={ec.instruction || ''} onChange={e => setEc({ ...ec, instruction: e.target.value })} rows={2} style={ta as any} /></div>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>RECORDINGS</span><input type="number" value={ec.target || 1} onChange={e => setEc({ ...ec, target: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
+                                </>)}
+                                {mechId === 'photo_proof' && (
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={ec.instruction || ''} onChange={e => setEc({ ...ec, instruction: e.target.value })} rows={2} style={ta as any} /></div>
+                                )}
+                                {mechId === 'timed_photo' && (<>
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={ec.instruction || ''} onChange={e => setEc({ ...ec, instruction: e.target.value })} rows={2} style={ta as any} /></div>
+                                </>)}
+                                {mechId === 'ambush_snap' && (
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>NUMBER OF SNAPS</span><input type="number" value={ec.target || 3} onChange={e => setEc({ ...ec, target: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
+                                )}
+                                {mechId === 'endurance' && (<>
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={ec.instruction || ''} onChange={e => setEc({ ...ec, instruction: e.target.value })} rows={2} style={ta as any} /></div>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>DURATION (SEC)</span><input type="number" value={ec.duration || 60} onChange={e => setEc({ ...ec, duration: +e.target.value, target: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
+                                </>)}
+                                {mechId === 'greed_game' && (
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MAX CEILING</span><input type="number" value={ec.ceiling || 50} onChange={e => setEc({ ...ec, ceiling: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
+                                )}
+                                {mechId === 'truth_dare' && (<>
+                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
+                                        <div style={lbl}>TRUTH</div><input value={ec.truthText || ''} onChange={e => setEc({ ...ec, truthText: e.target.value })} style={{ ...inp, marginBottom: 6 }} />
+                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(ec.truthFollowUp || 'writing', v => setEc({ ...ec, truthFollowUp: v }))}</div>
+                                    </div>
+                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
+                                        <div style={lbl}>DARE</div><input value={ec.dareText || ''} onChange={e => setEc({ ...ec, dareText: e.target.value })} style={{ ...inp, marginBottom: 6 }} />
+                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(ec.dareFollowUp || 'endurance', v => setEc({ ...ec, dareFollowUp: v }))}</div>
+                                    </div>
+                                </>)}
+                                {mechId === 'simon_says' && (<>
+                                    <div style={lbl}>TASKS IN CHAIN</div>
+                                    {(ec.chainTasks || [{ text: '', timeLimit: 60 }]).map((ct: any, i: number) => (
+                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                            <input value={ct.text} onChange={e => { const n = [...(ec.chainTasks || [])]; n[i] = { ...n[i], text: e.target.value }; setEc({ ...ec, chainTasks: n }); }} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                            <input type="number" value={ct.timeLimit} onChange={e => { const n = [...ec.chainTasks]; n[i] = { ...n[i], timeLimit: +e.target.value }; setEc({ ...ec, chainTasks: n }); }} style={{ ...inp, width: 55, padding: '8px', fontSize: '.55rem' }} />
+                                            <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>s</span>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setEc({ ...ec, chainTasks: [...(ec.chainTasks || []), { text: '', timeLimit: 60 }] })} style={addBtnS}>+ ADD TASK</button>
+                                </>)}
+                                {mechId === 'payment' && (
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>COIN AMOUNT</span><input type="number" value={ec.amount || 10} onChange={e => setEc({ ...ec, amount: +e.target.value, target: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
+                                )}
+                            </div>
+
+                            <button onClick={saveEdit} className="kbtn" style={{
+                                marginTop: 20, width: '100%', padding: '14px', fontFamily: FC, fontSize: '.5rem', letterSpacing: 4,
+                                color: GOLD, background: 'rgba(197,160,89,.08)', border: `1px solid rgba(197,160,89,.25)`, borderRadius: 10, cursor: 'pointer',
+                            }}>SAVE CHANGES</button>
+                        </div>
+                    );
+                })()}
+
                 {/* Divider — add more tasks */}
-                <div onClick={() => { setAddOpen(!addOpen); setAdjustIdx(null); }} style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '28px 0', cursor: 'pointer' }}>
+                <div onClick={() => { setAddOpen(!addOpen); setEditIdx(null); setAddConfig({}); }} style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '28px 0', cursor: 'pointer' }}>
                     <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.15)' }} />
                     <span style={{ fontFamily: FC, fontSize: '.45rem', color: addOpen ? GOLD : TEXT_DIM, letterSpacing: 5, transition: 'color .2s' }}>ADD MORE TASKS</span>
                     <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.15)' }} />
                 </div>
 
-                {/* Adjust options for selected task */}
-                {adjustIdx !== null && (() => {
-                    const task = tasks[adjustIdx];
-                    if (!task) return null;
-                    const meta = TASK_META[task.type] || { label: task.type, icon: '\u2022', color: '#666' };
-                    const cfgKey = (meta as any).configKey;
-                    if (!cfgKey) return null;
-                    const cfgItems = configData[cfgKey] || [];
-                    const rgb = _hexToRgb(meta.color);
-                    return (
-                        <div className="kfade" style={{ marginBottom: 24 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <span style={{ fontSize: '1rem', color: meta.color }}>{meta.icon}</span>
-                                    <span style={{ fontFamily: FC, fontSize: '.5rem', color: '#fff', letterSpacing: 3 }}>{meta.label} OPTIONS</span>
-                                    <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>{cfgItems.length} items</span>
-                                </div>
-                                <span onClick={() => { setConfigSection(cfgKey); setView('config'); }} style={{
-                                    fontFamily: F, fontSize: '.38rem', color: GOLD, cursor: 'pointer', letterSpacing: 2,
-                                    padding: '5px 14px', borderRadius: 6, border: `1px solid rgba(197,160,89,.2)`, background: 'rgba(197,160,89,.06)',
+                {/* Mechanism picker — step 1 */}
+                {addOpen && !addMech && (
+                    <div className="kfade">
+                        <div style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 14 }}>PICK A MECHANISM</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                            {MECH_LIST.map(m => (
+                                <button key={m.id} onClick={() => { setAddMech(m.id); setAddConfig({ label: m.name, target: 1 }); }} className="kbtn" style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '18px 12px',
+                                    borderRadius: 12, border: `1px solid rgba(${_hexToRgb(m.color)},.18)`, textAlign: 'center',
+                                    background: 'rgba(15,15,20,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,.3)',
                                 }}>
-                                    EDIT ALL {'\u2192'}
-                                </span>
+                                    <span style={{ fontSize: '1.2rem', color: m.color, lineHeight: 1 }}>{m.icon}</span>
+                                    <span style={{ fontFamily: F, fontSize: '.5rem', fontWeight: 600, color: '#fff', letterSpacing: 1 }}>{m.name}</span>
+                                    <span style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM, lineHeight: 1.3 }}>{m.desc}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Mechanism config — step 2 */}
+                {addOpen && addMech && (() => {
+                    const mech = MECH_LIST.find(m => m.id === addMech) || { id: addMech, name: addMech, icon: '\u2022', color: '#666', desc: '' };
+                    const rgb = _hexToRgb(mech.color);
+                    const inp: React.CSSProperties = { background: 'rgba(255,255,255,.06)', border: `1px solid rgba(${rgb},.25)`, borderRadius: 8, padding: '12px 16px', color: 'rgba(255,255,255,.9)', fontFamily: F, fontSize: '.72rem', outline: 'none', width: '100%', boxSizing: 'border-box' };
+                    const lbl: React.CSSProperties = { fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 4 };
+                    const ta: React.CSSProperties = { ...inp, resize: 'vertical' as const };
+                    const addBtn: React.CSSProperties = { width: '100%', padding: '10px', fontFamily: F, fontSize: '.42rem', letterSpacing: 2, color: `rgba(${rgb},.5)`, background: `rgba(${rgb},.04)`, border: `1px dashed rgba(${rgb},.2)`, borderRadius: 8, cursor: 'pointer' };
+                    const fuSelect = (val: string, onChange: (v: string) => void) => (
+                        <select value={val} onChange={e => onChange(e.target.value)} style={{ ...inp, width: 'auto', padding: '4px 8px', fontSize: '.55rem', display: 'inline' }}>
+                            <option value="instant">Instant (no action)</option>
+                            <option value="writing">Writing Prompt</option>
+                            <option value="photo">Photo Proof</option>
+                            <option value="video">Video Recording</option>
+                            <option value="endurance">Endurance Timer</option>
+                        </select>
+                    );
+                    const fuExtra = (item: any, update: (k: string, v: any) => void) => (
+                        <>
+                            {item.followUpType === 'writing' && <input value={item.followUpPrompt || ''} onChange={e => update('followUpPrompt', e.target.value)} placeholder="Prompt..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
+                            {item.followUpType === 'endurance' && <input type="number" value={item.followUpDuration || 60} onChange={e => update('followUpDuration', +e.target.value)} placeholder="Seconds" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
+                            {item.followUpType === 'video' && <input type="number" value={item.followUpTarget || 1} onChange={e => update('followUpTarget', +e.target.value)} placeholder="Recordings" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
+                            {item.followUpType === 'photo' && <input value={item.followUpInstruction || ''} onChange={e => update('followUpInstruction', e.target.value)} placeholder="Photo instruction..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
+                        </>
+                    );
+
+                    const confirmAdd = () => {
+                        const taskType = mech.id;
+                        const { _customMode, ...cleanConfig } = addConfig;
+                        addTask(taskType, cleanConfig.label || mech.name, cleanConfig.target || 1, cleanConfig);
+                        setAddMech(null); setAddConfig({}); setAddOpen(false);
+                    };
+
+                    // List builder helper for segments / cards / outcomes
+                    const listBuilder = (key: string, itemLabel: string) => {
+                        const items = addConfig[key] || [{ text: '', followUpType: 'instant' }];
+                        const updateItem = (idx: number, field: string, val: any) => { const n = [...items]; n[idx] = { ...n[idx], [field]: val }; setAddConfig({ ...addConfig, [key]: n }); };
+                        const removeItem = (idx: number) => { const n = [...items]; n.splice(idx, 1); setAddConfig({ ...addConfig, [key]: n }); };
+                        const addItem = () => setAddConfig({ ...addConfig, [key]: [...items, { text: '', followUpType: 'instant' }] });
+                        return (
+                            <div>
+                                {items.map((item: any, i: number) => (
+                                    <div key={i} style={{ padding: '10px 12px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, marginBottom: 8 }}>
+                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                            <input value={item.text} onChange={e => updateItem(i, 'text', e.target.value)} placeholder={`${itemLabel} text...`} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                            {items.length > 1 && <button onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                        </div>
+                                        <div style={{ marginTop: 6 }}>
+                                            <span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>
+                                            {fuSelect(item.followUpType || 'instant', v => updateItem(i, 'followUpType', v))}
+                                        </div>
+                                        {fuExtra(item, (k, v) => updateItem(i, k, v))}
+                                    </div>
+                                ))}
+                                <button onClick={addItem} style={addBtn}>+ ADD {itemLabel.toUpperCase()}</button>
                             </div>
-                            {cfgItems.length > 0 ? (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                    {cfgItems.map((item: any, i: number) => {
-                                        const lbl = typeof item === 'string' ? item : (item.label || item.title || item.question || item.type || '');
-                                        return <span key={i} style={{
-                                            fontFamily: F, fontSize: '.45rem', color: '#fff', background: `rgba(${rgb},.3)`,
-                                            padding: '8px 16px', borderRadius: 8, letterSpacing: 1,
-                                            border: `1px solid rgba(${rgb},.2)`,
-                                        }}>{lbl}</span>;
-                                    })}
+                        );
+                    };
+
+                    return (
+                        <div className="kfade" style={{ padding: '20px 24px', borderRadius: 16, background: 'rgba(15,15,20,0.9)', border: `1px solid rgba(${rgb},.25)`, backdropFilter: 'blur(12px)', boxShadow: `0 8px 32px rgba(0,0,0,.5), 0 0 20px rgba(${rgb},.08)` }}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+                                <button onClick={() => { setAddMech(null); setAddConfig({}); }} style={{ background: 'none', border: 'none', color: TEXT_DIM, fontFamily: F, fontSize: '.9rem', cursor: 'pointer', padding: '0 4px' }}>{'\u2190'}</button>
+                                <span style={{ fontSize: '1.2rem', color: mech.color }}>{mech.icon}</span>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: FC, fontSize: '.55rem', color: '#fff', letterSpacing: 3 }}>{mech.name}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM, marginTop: 2 }}>{mech.desc}</div>
                                 </div>
-                            ) : (
-                                <div style={{ fontFamily: F, fontSize: '.42rem', color: TEXT_DIM, letterSpacing: 2 }}>No options configured yet. Click EDIT ALL to add.</div>
+                            </div>
+
+                            {/* ── PRESET PICKER ── */}
+                            {!addConfig._customMode && (MECH_PRESETS[addMech] || []).length > 0 && (
+                                <div style={{ marginBottom: 18 }}>
+                                    <div style={{ ...lbl, marginBottom: 10 }}>PRESETS — PICK ONE OR GO CUSTOM</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                                        {(MECH_PRESETS[addMech] || []).map((p, pi) => (
+                                            <button key={pi} onClick={() => setAddConfig({ ...p.config, _customMode: true })} className="kbtn" style={{
+                                                padding: '14px 16px', borderRadius: 10, textAlign: 'left',
+                                                background: 'rgba(255,255,255,.03)', border: `1px solid rgba(${rgb},.15)`,
+                                                display: 'flex', flexDirection: 'column', gap: 4,
+                                            }}>
+                                                <span style={{ fontFamily: F, fontSize: '.55rem', fontWeight: 700, color: '#fff', letterSpacing: 1 }}>{p.name}</span>
+                                                <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, lineHeight: 1.4 }}>{p.desc}</span>
+                                            </button>
+                                        ))}
+                                        <button onClick={() => setAddConfig({ ...addConfig, _customMode: true })} className="kbtn" style={{
+                                            padding: '14px 16px', borderRadius: 10, textAlign: 'left',
+                                            background: 'rgba(197,160,89,.04)', border: `1px dashed rgba(197,160,89,.2)`,
+                                            display: 'flex', flexDirection: 'column', gap: 4,
+                                        }}>
+                                            <span style={{ fontFamily: F, fontSize: '.55rem', fontWeight: 700, color: GOLD, letterSpacing: 1 }}>CUSTOM</span>
+                                            <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, lineHeight: 1.4 }}>Build from scratch</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ── CONFIG FORM (shows after preset pick or if no presets) ── */}
+                            {(addConfig._customMode || !(MECH_PRESETS[addMech] || []).length) && <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                {/* Label — always */}
+                                <div>
+                                    <div style={lbl}>TASK LABEL</div>
+                                    <input value={addConfig.label || ''} onChange={e => setAddConfig({ ...addConfig, label: e.target.value })} style={inp} />
+                                </div>
+
+                                {/* ── SPIN WHEEL ── */}
+                                {addMech === 'spin_wheel' && (<><div style={lbl}>WHEEL SEGMENTS</div>{listBuilder('segments', 'Segment')}</>)}
+
+                                {/* ── COINFLIP ── */}
+                                {addMech === 'coinflip' && (<>
+                                    <div><div style={lbl}>HEADS</div><input value={addConfig.headsText || ''} onChange={e => setAddConfig({ ...addConfig, headsText: e.target.value })} placeholder="e.g. 50 coins" style={inp} /></div>
+                                    <div><div style={lbl}>TAILS</div><input value={addConfig.tailsText || ''} onChange={e => setAddConfig({ ...addConfig, tailsText: e.target.value })} placeholder="e.g. +1 day locked" style={inp} /></div>
+                                </>)}
+
+                                {/* ── CARD PICK ── */}
+                                {addMech === 'card_pick' && (<><div style={lbl}>CARDS</div>{listBuilder('cards', 'Card')}</>)}
+
+                                {/* ── DICE ROLL ── */}
+                                {addMech === 'dice_roll' && (<><div style={lbl}>DICE FACES / OUTCOMES</div>{listBuilder('outcomes', 'Outcome')}</>)}
+
+                                {/* ── RUSSIAN ROULETTE ── */}
+                                {addMech === 'russian_roulette' && (
+                                    <div style={{ fontFamily: F, fontSize: '.42rem', color: TEXT_DIM, lineHeight: 1.6 }}>6 chambers, 1 loaded. They pull until they hit or survive.</div>
+                                )}
+
+                                {/* ── QUIZ / RIDDLE ── */}
+                                {addMech === 'quiz' && (<>
+                                    <div><div style={lbl}>QUESTION</div><textarea value={addConfig.question || ''} onChange={e => setAddConfig({ ...addConfig, question: e.target.value })} placeholder="Ask something..." rows={2} style={ta as any} /></div>
+                                    <div style={lbl}>ANSWERS (click circle = correct)</div>
+                                    {(addConfig.answers || ['']).map((ans: string, i: number) => (
+                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                                            <button onClick={() => setAddConfig({ ...addConfig, correctIdx: i })} style={{ width: 24, height: 24, borderRadius: '50%', background: addConfig.correctIdx === i ? 'rgba(80,200,120,.2)' : 'rgba(255,255,255,.04)', border: `1px solid ${addConfig.correctIdx === i ? 'rgba(80,200,120,.4)' : 'rgba(255,255,255,.1)'}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {addConfig.correctIdx === i && <span style={{ color: 'rgba(80,200,120,.7)', fontSize: '.7rem' }}>{'\u2713'}</span>}
+                                            </button>
+                                            <input value={ans} onChange={e => { const a = [...(addConfig.answers || [''])]; a[i] = e.target.value; setAddConfig({ ...addConfig, answers: a }); }} placeholder={`Answer ${i + 1}...`} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                            {(addConfig.answers || []).length > 1 && <button onClick={() => { const a = [...addConfig.answers]; a.splice(i, 1); setAddConfig({ ...addConfig, answers: a }); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setAddConfig({ ...addConfig, answers: [...(addConfig.answers || ['']), ''] })} style={addBtn}>+ ADD ANSWER</button>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>TIME LIMIT (SEC)</span><input type="number" value={addConfig.timeLimit || 60} onChange={e => setAddConfig({ ...addConfig, timeLimit: +e.target.value })} style={{ ...inp, width: 70, padding: '8px 12px' }} /></div>
+                                </>)}
+
+                                {/* ── WRITING PROMPT ── */}
+                                {addMech === 'writing' && (<>
+                                    <div><div style={lbl}>PROMPT</div><textarea value={addConfig.prompt || ''} onChange={e => setAddConfig({ ...addConfig, prompt: e.target.value })} placeholder="What to write about..." rows={3} style={ta as any} /></div>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MIN WORDS</span><input type="number" value={addConfig.minWords || 50} onChange={e => setAddConfig({ ...addConfig, minWords: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
+                                </>)}
+
+                                {/* ── MULTI-STAGE VIDEO ── */}
+                                {addMech === 'multi_video' && (<>
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={addConfig.instruction || ''} onChange={e => setAddConfig({ ...addConfig, instruction: e.target.value })} placeholder="What to record..." rows={2} style={ta as any} /></div>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>RECORDINGS NEEDED</span><input type="number" value={addConfig.target || 1} onChange={e => setAddConfig({ ...addConfig, target: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
+                                </>)}
+
+                                {/* ── PHOTO PROOF ── */}
+                                {addMech === 'photo_proof' && (
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={addConfig.instruction || ''} onChange={e => setAddConfig({ ...addConfig, instruction: e.target.value })} placeholder="What photo to take..." rows={2} style={ta as any} /></div>
+                                )}
+
+                                {/* ── TIMED PHOTO ── */}
+                                {addMech === 'timed_photo' && (<>
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={addConfig.instruction || ''} onChange={e => setAddConfig({ ...addConfig, instruction: e.target.value })} placeholder="What photo to submit..." rows={2} style={ta as any} /></div>
+                                    <div><div style={lbl}>REFERENCE IMAGE (optional)</div><input value={addConfig.referenceImg || ''} onChange={e => setAddConfig({ ...addConfig, referenceImg: e.target.value })} placeholder="URL or leave empty" style={inp} /></div>
+                                </>)}
+
+                                {/* ── AMBUSH SNAP ── */}
+                                {addMech === 'ambush_snap' && (
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>NUMBER OF SNAPS</span><input type="number" value={addConfig.target || 3} onChange={e => setAddConfig({ ...addConfig, target: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
+                                )}
+
+                                {/* ── ENDURANCE TIMER ── */}
+                                {addMech === 'endurance' && (<>
+                                    <div><div style={lbl}>INSTRUCTION</div><textarea value={addConfig.instruction || ''} onChange={e => setAddConfig({ ...addConfig, instruction: e.target.value })} placeholder="What to endure..." rows={2} style={ta as any} /></div>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>DURATION (SEC)</span><input type="number" value={addConfig.duration || 60} onChange={e => setAddConfig({ ...addConfig, duration: +e.target.value, target: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
+                                    <div style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>Camera opens + timer runs simultaneously</div>
+                                </>)}
+
+                                {/* ── GREED GAME ── */}
+                                {addMech === 'greed_game' && (
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MAX CEILING</span><input type="number" value={addConfig.ceiling || 50} onChange={e => setAddConfig({ ...addConfig, ceiling: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
+                                )}
+
+                                {/* ── TRUTH OR DARE ── */}
+                                {addMech === 'truth_dare' && (<>
+                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
+                                        <div style={lbl}>TRUTH</div><input value={addConfig.truthText || ''} onChange={e => setAddConfig({ ...addConfig, truthText: e.target.value })} placeholder="Confession prompt..." style={{ ...inp, marginBottom: 6 }} />
+                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(addConfig.truthFollowUp || 'writing', v => setAddConfig({ ...addConfig, truthFollowUp: v }))}</div>
+                                    </div>
+                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
+                                        <div style={lbl}>DARE</div><input value={addConfig.dareText || ''} onChange={e => setAddConfig({ ...addConfig, dareText: e.target.value })} placeholder="Physical challenge..." style={{ ...inp, marginBottom: 6 }} />
+                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(addConfig.dareFollowUp || 'endurance', v => setAddConfig({ ...addConfig, dareFollowUp: v }))}</div>
+                                    </div>
+                                </>)}
+
+                                {/* ── SIMON SAYS ── */}
+                                {addMech === 'simon_says' && (<>
+                                    <div style={lbl}>RANDOM TASKS</div>
+                                    {(addConfig.chainTasks || [{ text: '', timeLimit: 60 }]).map((t: any, i: number) => (
+                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                            <input value={t.text} onChange={e => { const n = [...(addConfig.chainTasks || [{ text: '', timeLimit: 60 }])]; n[i] = { ...n[i], text: e.target.value }; setAddConfig({ ...addConfig, chainTasks: n }); }} placeholder="Task..." style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                            <input type="number" value={t.timeLimit} onChange={e => { const n = [...addConfig.chainTasks]; n[i] = { ...n[i], timeLimit: +e.target.value }; setAddConfig({ ...addConfig, chainTasks: n }); }} style={{ ...inp, width: 55, padding: '8px', fontSize: '.55rem' }} />
+                                            <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>s</span>
+                                            {(addConfig.chainTasks || []).length > 1 && <button onClick={() => { const n = [...addConfig.chainTasks]; n.splice(i, 1); setAddConfig({ ...addConfig, chainTasks: n }); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setAddConfig({ ...addConfig, chainTasks: [...(addConfig.chainTasks || [{ text: '', timeLimit: 60 }]), { text: '', timeLimit: 60 }] })} style={addBtn}>+ ADD TASK</button>
+                                </>)}
+
+                                {/* ── PAYMENT ── */}
+                                {addMech === 'payment' && (
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>COIN AMOUNT</span><input type="number" value={addConfig.amount || 10} onChange={e => setAddConfig({ ...addConfig, amount: +e.target.value, target: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
+                                )}
+
+                                {/* Back to presets link */}
+                                {(MECH_PRESETS[addMech] || []).length > 0 && (
+                                    <button onClick={() => setAddConfig({ label: mech.name, target: 1 })} style={{ background: 'none', border: 'none', color: TEXT_DIM, fontFamily: F, fontSize: '.38rem', letterSpacing: 2, cursor: 'pointer', padding: '8px 0', textAlign: 'left' }}>
+                                        {'\u2190'} BACK TO PRESETS
+                                    </button>
+                                )}
+                            </div>}
+
+                            {(addConfig._customMode || !(MECH_PRESETS[addMech] || []).length) && (
+                                <button onClick={confirmAdd} className="kbtn" style={{
+                                    marginTop: 20, width: '100%', padding: '14px', fontFamily: FC, fontSize: '.5rem', letterSpacing: 4,
+                                    color: GOLD, background: 'rgba(197,160,89,.08)', border: `1px solid rgba(197,160,89,.25)`, borderRadius: 10, cursor: 'pointer',
+                                }}>ADD TO DAY {dayNum}</button>
                             )}
                         </div>
                     );
                 })()}
-
-                {/* Task picker */}
-                {addOpen && (
-                    <div className="kfade" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                        {Object.entries(TASK_META).filter(([t]) => t!=='chastity_check').map(([type, meta]) => (
-                            <button key={type} onClick={() => { addTask(type); setAddOpen(false); }} className="kbtn" style={{
-                                display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px',
-                                borderRadius: 12, border: `1px solid rgba(197,160,89,.12)`, textAlign: 'left',
-                                background: 'rgba(15,15,20,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                                boxShadow: '0 4px 16px rgba(0,0,0,.3)',
-                                fontFamily: F, fontSize: '.55rem', fontWeight: 600, color: '#fff',
-                            }}>
-                                <span style={{ fontSize: '1rem', color: meta.color }}>{meta.icon}</span>
-                                <span style={{ letterSpacing: 1 }}>{meta.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
         </div>
     );

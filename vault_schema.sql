@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS vault_daily (
     perfect BOOLEAN DEFAULT FALSE,                  -- all orders done = true
     reward_claimed BOOLEAN DEFAULT FALSE,           -- 1h freedom claimed for this day
     streak_at_end INTEGER DEFAULT 0,                -- running streak after this day
+    submissions JSONB DEFAULT '[]',                 -- [{orderIdx,text,photoUrl,videoUrl,submittedAt,status,comment}]
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(session_id, day_number),
     UNIQUE(session_id, date)

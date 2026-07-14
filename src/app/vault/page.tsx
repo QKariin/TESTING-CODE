@@ -73,6 +73,34 @@ const SEALS = [
 const KNEELS_NEEDED = 5;
 const R = 'rgba(139,0,0,'; // red accent base
 
+/* ── Mechanism icon + label lookup ── */
+const MECH_ICON: Record<string, { icon: string; label: string }> = {
+    kneel:            { icon: '\u25C7', label: 'Kneel' },
+    spin:             { icon: '\u265B', label: 'Spin the Wheel' },
+    spin_wheel:       { icon: '\u25CE', label: 'Spin the Wheel' },
+    coinflip:         { icon: '$',      label: 'Coinflip' },
+    card_pick:        { icon: '\u2660', label: 'Card Pick' },
+    dice_roll:        { icon: '\u2684', label: 'Dice Roll' },
+    russian_roulette: { icon: '\u2295', label: 'Russian Roulette' },
+    quiz:             { icon: '\u2753', label: 'Quiz' },
+    writing:          { icon: '\u270E', label: 'Writing' },
+    multi_video:      { icon: '\u2736', label: 'Video Proof' },
+    photo_proof:      { icon: '\u270D', label: 'Photo Proof' },
+    timed_photo:      { icon: '\u25C7', label: 'Timed Photo' },
+    ambush_snap:      { icon: '!',      label: 'Ambush Snap' },
+    endurance:        { icon: '\u25A2', label: 'Endurance' },
+    greed_game:       { icon: '\u2191', label: 'Greed Game' },
+    truth_dare:       { icon: '?',      label: 'Truth or Dare' },
+    simon_says:       { icon: '\u26A1', label: 'Simon Says' },
+    payment:          { icon: '\u25C6', label: 'Payment' },
+    trial:            { icon: '\u270E', label: 'Daily Trial' },
+    tribute:          { icon: '\u2605', label: 'Tribute' },
+    chastity_check:   { icon: '\u25C8', label: 'Chastity Check' },
+    corner_time:      { icon: '\u23F1', label: 'Corner Time' },
+    cold_shower:      { icon: '\u2744', label: 'Cold Shower' },
+    silence:          { icon: '\u{1F910}', label: 'Silence' },
+};
+
 // Today's orders (mock — will be generated/set from vault_daily)
 const TODAYS_ORDERS = [
     { type: 'kneel', label: 'Kneel 8 times', target: 8, done: 0 },
@@ -164,6 +192,7 @@ export default function VaultPage() {
     const [tab, setTab] = useState<'vault' | 'chat' | 'queen' | 'global' | 'challenge'>('vault');
     const [selectedDay, setSelectedDay] = useState<DayLog | null>(null);
     const [calendarOpen, setCalendarOpen] = useState(false);
+    const [mechOverlay, setMechOverlay] = useState<{ order: any; idx: number } | null>(null);
     const [attnHolding, setAttnHolding] = useState(false);
     const [attnFill, setAttnFill] = useState(0);
     const [attnResult, setAttnResult] = useState<typeof ATTENTION_TASKS[0] | null>(null);
@@ -2133,22 +2162,28 @@ export default function VaultPage() {
 
                                 {/* ── Incomplete tasks first ── */}
                                 {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.done < o.target).map((o: any, i: number) => {
-                                    const label = o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type === 'corner_time' ? 'Corner time' : o.type === 'cold_shower' ? 'Cold shower proof' : o.type === 'silence' ? 'No messages today' : o.type);
-                                    const icon = o.type === 'kneel' ? '\u{1F9CE}' : o.type === 'spin' ? '\u265B' : o.type === 'trial' ? '\u270E' : o.type === 'tribute' ? '\u2605' : o.type === 'corner_time' ? '\u23F1' : o.type === 'cold_shower' ? '\u2744' : o.type === 'silence' ? '\u{1F910}' : '\u25C6';
+                                    const meta = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
+                                    const label = o.label || meta.label;
+                                    const icon = meta.icon;
+                                    // Types that open the mechanism overlay on tap
+                                    const isMech = ['spin_wheel','coinflip','card_pick','dice_roll','russian_roulette','quiz','writing','multi_video','photo_proof','timed_photo','ambush_snap','endurance','greed_game','truth_dare','simon_says','payment'].includes(o.type);
                                     return (
-                                        <div key={`todo-${o.type}-${i}`} style={{ background: `${R}0.06)`, border: `1px solid ${R}0.18)`, borderRadius: 14, overflow: 'hidden', animation: 'vFadeIn 0.3s ease' }}>
+                                        <div key={`todo-${o.type}-${i}`}
+                                            onClick={() => isMech ? setMechOverlay({ order: o, idx: i }) : undefined}
+                                            style={{ background: `${R}0.06)`, border: `1px solid ${R}0.18)`, borderRadius: 14, overflow: 'hidden', animation: 'vFadeIn 0.3s ease', cursor: isMech ? 'pointer' : undefined }}>
                                             {/* Card header */}
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', borderBottom: `1px solid ${R}0.1)` }}>
                                                 <span style={{ fontSize: '1.2rem', opacity: 0.5 }}>{icon}</span>
                                                 <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.5px' }}>{label}</span>
                                                 {o.done > 0 && <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: `${R}0.7)` }}>{o.done}/{o.target}</span>}
+                                                {isMech && <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: `${R}0.4)`, letterSpacing: '2px' }}>TAP TO START {'\u203A'}</span>}
                                             </div>
 
-                                            {/* ── KNEEL ── */}
+                                            {/* ── KNEEL — inline, no overlay ── */}
                                             {o.type === 'kneel' && (
                                                 <div style={{ padding: '16px 18px', textAlign: 'center' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 10 }}>
-                                                        {Array.from({ length: o.target }).map((_, j) => (
+                                                        {Array.from({ length: Math.min(o.target, 24) }).map((_, j) => (
                                                             <div key={j} style={{ width: 10, height: 10, borderRadius: '50%', background: j < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)', border: `1px solid ${j < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`, transition: 'all 0.3s' }} />
                                                         ))}
                                                     </div>
@@ -2156,7 +2191,7 @@ export default function VaultPage() {
                                                 </div>
                                             )}
 
-                                            {/* ── SPIN ── */}
+                                            {/* ── SPIN (old type) — keep for backward compat ── */}
                                             {o.type === 'spin' && (
                                                 <div style={{ padding: '20px 18px', textAlign: 'center' }}>
                                                     <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto 16px' }}>
@@ -2174,7 +2209,7 @@ export default function VaultPage() {
                                                 </div>
                                             )}
 
-                                            {/* ── TRIAL ── */}
+                                            {/* ── TRIAL — inline writing ── */}
                                             {o.type === 'trial' && (
                                                 <div style={{ padding: '16px 18px' }}>
                                                     <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 14 }}>
@@ -2204,7 +2239,7 @@ export default function VaultPage() {
                                                 </div>
                                             )}
 
-                                            {/* ── TRIBUTE ── */}
+                                            {/* ── TRIBUTE — inline ── */}
                                             {o.type === 'tribute' && (
                                                 <div style={{ padding: '16px 18px', textAlign: 'center' }}>
                                                     <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
@@ -2218,27 +2253,7 @@ export default function VaultPage() {
                                                 </div>
                                             )}
 
-                                            {/* ── CORNER TIME ── */}
-                                            {o.type === 'corner_time' && (
-                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 14 }}>
-                                                        Stand in the corner. Stay on this screen.
-                                                    </div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>COMING SOON</div>
-                                                </div>
-                                            )}
-
-                                            {/* ── COLD SHOWER ── */}
-                                            {o.type === 'cold_shower' && (
-                                                <div style={{ padding: '16px 18px', textAlign: 'center' }}>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 14 }}>
-                                                        Take a cold shower. Upload video proof.
-                                                    </div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>COMING SOON</div>
-                                                </div>
-                                            )}
-
-                                            {/* ── SILENCE ── */}
+                                            {/* ── SILENCE — inline ── */}
                                             {o.type === 'silence' && (
                                                 <div style={{ padding: '16px 18px', textAlign: 'center' }}>
                                                     <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7 }}>
@@ -2246,6 +2261,35 @@ export default function VaultPage() {
                                                     </div>
                                                 </div>
                                             )}
+
+                                            {/* ── Mechanism types — show outcomes + description ── */}
+                                            {isMech && o.config && (() => {
+                                                const c = o.config;
+                                                const items: string[] = [];
+                                                if (c.segments) c.segments.forEach((s: any) => items.push(s.text));
+                                                if (c.cards) c.cards.forEach((s: any) => items.push(s.text));
+                                                if (c.outcomes) c.outcomes.forEach((s: any) => items.push(s.text));
+                                                if (c.headsText) { items.push('\u{1FA99} ' + c.headsText); items.push('\u{1FA99} ' + c.tailsText); }
+                                                if (c.truthText) { items.push('\u2623 ' + c.truthText); items.push('\u2694 ' + c.dareText); }
+                                                if (c.punishment) { items.push('\u2022 5 empty chambers'); items.push('\u2620 ' + c.punishment); }
+                                                return (
+                                                    <div style={{ padding: '14px 18px' }}>
+                                                        {items.length > 0 && (
+                                                            <div style={{ marginBottom: 10 }}>
+                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.35)`, letterSpacing: '3px', marginBottom: 6 }}>POSSIBLE OUTCOMES</div>
+                                                                {items.map((txt, ii) => (
+                                                                    <div key={ii} style={{ padding: '6px 12px', marginBottom: 3, background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 6, fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{txt}</div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {!items.length && c.instruction && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 8 }}>{c.instruction}</div>}
+                                                        {!items.length && c.prompt && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 8 }}>{c.prompt}</div>}
+                                                        {!items.length && c.question && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 8 }}>{c.question}</div>}
+                                                        {c.duration && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{Math.floor(c.duration / 60)}:{String(c.duration % 60).padStart(2, '0')} DURATION</div>}
+                                                        {c.amount && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{c.amount} COINS</div>}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     );
                                 })}
