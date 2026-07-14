@@ -672,20 +672,29 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
         if (!existing) {
-            // Check if yesterday's chastity check was submitted — read from vault_check_log table
-            // Skip day 1 (video submission day) — chastity check starts from day 2
+            // Check if yesterday's chastity check was submitted
+            // Skip day 1-2 (video submission day) — chastity check starts from day 3
             if (daysIn > 2) {
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                const { data: yCheck } = await supabaseAdmin.from('vault_check_log')
-                    .select('status').eq('session_id', session.id).eq('date', yesterday).eq('type', 'chastity_check').maybeSingle();
-                // Only terminate if no submission exists at all — pending/approved are fine
-                if (!yCheck) {
-                    // Check if yesterday even had a chastity_check order
+
+                // Check vault_check_log first (proper table)
+                let chastitySubmitted = false;
+                try {
+                    const { data: yCheck } = await supabaseAdmin.from('vault_check_log')
+                        .select('status').eq('session_id', session.id).eq('date', yesterday).eq('type', 'chastity_check').maybeSingle();
+                    if (yCheck) chastitySubmitted = true;
+                } catch {}
+
+                // Fallback: check orders JSON done count (for when vault_check_log doesn't exist yet)
+                if (!chastitySubmitted) {
                     const { data: yDaily } = await supabaseAdmin.from('vault_daily')
                         .select('orders').eq('session_id', session.id).eq('day_number', daysIn - 1).maybeSingle();
                     const yOrders: any[] = yDaily ? (typeof yDaily.orders === 'string' ? JSON.parse(yDaily.orders) : (yDaily.orders || [])) : [];
-                    const hadChastity = yOrders.some((o: any) => o.type === 'chastity_check');
-                    if (hadChastity) {
+                    const cc = yOrders.find((o: any) => o.type === 'chastity_check');
+                    if (cc && cc.done >= cc.target) chastitySubmitted = true;
+
+                    // Only terminate if yesterday HAD a chastity order AND it wasn't done
+                    if (cc && !chastitySubmitted) {
                         await supabaseAdmin.from('vault_sessions').update({
                             status: 'completed',
                             release_reason: 'Chastity check not submitted. Program terminated.',
