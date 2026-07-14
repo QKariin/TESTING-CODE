@@ -287,6 +287,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Admin only' }, { status: 403 });
         }
 
+        // Deactivate any previous active sessions for this member
+        await supabaseAdmin
+            .from('vault_sessions')
+            .update({ status: 'ended' })
+            .eq('member_id', email)
+            .in('status', ['active', 'awaiting_video']);
+
         const expiresAt = new Date(Date.now() + lockDays * 86400000).toISOString();
 
         const { data: session, error } = await supabaseAdmin
