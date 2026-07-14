@@ -314,21 +314,24 @@ export default function VaultPage() {
         return () => clearInterval(iv);
     }, []);
 
-    // Update chastity window state every minute (track 6-10 AM local time)
+    // Poll chastity window from server every 30s (same pattern as routine-status)
     useEffect(() => {
-        const update = () => {
-            try {
-                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const now = new Date();
-                const h = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now), 10);
-                const m = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(now), 10);
-                setChastityWindow({ open: h >= 6 && h < 10, before: h < 6, localHour: h, localMinute: m });
-            } catch (_) {}
+        if (!profile) return;
+        const memberId = profile.member_id || profile.email;
+        if (!memberId) return;
+        const poll = () => {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}&tz=${encodeURIComponent(tz)}`)
+                .then(r => r.json())
+                .then(vd => {
+                    if (vd.chastityWindow) setChastityWindow(vd.chastityWindow);
+                    if (vd.active) setVaultData(vd);
+                })
+                .catch(() => {});
         };
-        update();
-        const iv = setInterval(update, 60000);
+        const iv = setInterval(poll, 30000);
         return () => clearInterval(iv);
-    }, []);
+    }, [profile]);
 
     // Init profile state from real DB + tribute system
     useEffect(() => {
@@ -398,7 +401,8 @@ export default function VaultPage() {
                                 if (vd.today?.chastity_photo) setChastityPhotoUrl(vd.today.chastity_photo);
                                 else if (cc?.photoUrl) setChastityPhotoUrl(cc.photoUrl);
                             }
-                            // Chastity window: always use client-side timer (line 310-323), never override from server/cache
+                            // Chastity window from fresh API (same pattern as routine-status)
+                            if (vd.chastityWindow && !_cachedSession) setChastityWindow(vd.chastityWindow);
                             if (_cachedKneel) {
                                 if (_cachedKneel.todayKneeling) setKneelToday(_cachedKneel.todayKneeling);
                                 if (_cachedKneel.isLocked && _cachedKneel.minLeft > 0) setKneelCooldownUntil(Date.now() + _cachedKneel.minLeft * 60000);
@@ -421,7 +425,7 @@ export default function VaultPage() {
                                     }
                                     return fetch(`/api/vault/session?memberId=${encodeURIComponent(memberId)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`)
                                         .then(r2 => r2.json())
-                                        .then(vd2 => { if (vd2.active) setVaultData(vd2); });
+                                        .then(vd2 => { if (vd2.active) { setVaultData(vd2); if (vd2.chastityWindow) setChastityWindow(vd2.chastityWindow); } });
                                 })
                                 .catch(() => {});
 
