@@ -180,7 +180,15 @@ export default function VaultPage() {
     const [trialDone, setTrialDone] = useState(false);
     const [chastityUploading, setChastityUploading] = useState(false);
     const [chastityStatus, setChastityStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
-    const [chastityWindow, setChastityWindow] = useState<{ open: boolean; before: boolean; localHour: number; localMinute: number }>({ open: false, before: false, localHour: 0, localMinute: 0 });
+    const [chastityWindow, setChastityWindow] = useState<{ open: boolean; before: boolean; localHour: number; localMinute: number }>(() => {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const now = new Date();
+            const h = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now), 10);
+            const m = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(now), 10);
+            return { open: h >= 6 && h < 10, before: h < 6, localHour: h, localMinute: m };
+        } catch { return { open: false, before: false, localHour: 0, localMinute: 0 }; }
+    });
     const [chastityPhotoUrl, setChastityPhotoUrl] = useState<string | null>(null);
     const [spinning, setSpinning] = useState(false);
     const [wheelAngle, setWheelAngle] = useState(0);
@@ -390,8 +398,7 @@ export default function VaultPage() {
                                 if (vd.today?.chastity_photo) setChastityPhotoUrl(vd.today.chastity_photo);
                                 else if (cc?.photoUrl) setChastityPhotoUrl(cc.photoUrl);
                             }
-                            // Chastity window state (6-10 AM local time)
-                            if (vd.chastityWindow) setChastityWindow(vd.chastityWindow);
+                            // Chastity window: always use client-side timer (line 310-323), never override from server/cache
                             if (_cachedKneel) {
                                 if (_cachedKneel.todayKneeling) setKneelToday(_cachedKneel.todayKneeling);
                                 if (_cachedKneel.isLocked && _cachedKneel.minLeft > 0) setKneelCooldownUntil(Date.now() + _cachedKneel.minLeft * 60000);
