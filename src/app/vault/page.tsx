@@ -196,7 +196,7 @@ export default function VaultPage() {
     const [chastityPhotoUrl, setChastityPhotoUrl] = useState<string | null>(null);
     const [spinning, setSpinning] = useState(false);
     const [wheelAngle, setWheelAngle] = useState(0);
-    const [wheelResult, setWheelResult] = useState<typeof WHEEL[0] | null>(null);
+    const [wheelResult, setWheelResult] = useState<any>(null);
     const [wheelUsed, setWheelUsed] = useState(false);
     const [showBeg, setShowBeg] = useState(false);
     const [begText, setBegText] = useState('');
@@ -210,10 +210,19 @@ export default function VaultPage() {
     const [coinFlipping, setCoinFlipping] = useState(false);
     const [coinResult, setCoinResult] = useState<string | null>(null);
     const [cardPicking, setCardPicking] = useState(false);
-    const [cardResult, setCardResult] = useState<string | null>(null);
+    const [cardResult, setCardResult] = useState<any>(null);
     const [rouletteSpinning, setRouletteSpinning] = useState(false);
     const [rouletteResult, setRouletteResult] = useState<string | null>(null);
     const [mechDone, setMechDone] = useState(false);
+    const [wheelSpinning, setWheelSpinning] = useState(false);
+    const [truthDareChoice, setTruthDareChoice] = useState<'truth' | 'dare' | null>(null);
+    const [simonStep, setSimonStep] = useState(0);
+    const [greedCoins, setGreedCoins] = useState(0);
+    const [greedBusted, setGreedBusted] = useState(false);
+    const [greedCashedOut, setGreedCashedOut] = useState(false);
+    const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
+    const [followUpText, setFollowUpText] = useState('');
+    const [followUpUploading, setFollowUpUploading] = useState(false);
     const [taskText, setTaskText] = useState('');
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
@@ -2399,9 +2408,10 @@ export default function VaultPage() {
                                                             {/* ── GENERIC TASK SUBMISSION (all non-handled types) ── */}
                                                             {!['spin','trial','tribute','silence'].includes(o.type) && (() => {
                                                                 const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof','ambush_snap','timed_photo','multi_video','endurance'].includes(o.type);
-                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing','quiz','truth_dare'].includes(o.type);
-                                                                const isInteractive = ['dice_roll','coinflip','card_pick','russian_roulette'].includes(o.type);
-                                                                const isSelfReport = ['edge','corner_time','denial','spin_wheel','greed_game','simon_says','payment','kneel'].includes(o.type);
+                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing','quiz'].includes(o.type);
+                                                                const isInteractive = ['dice_roll','coinflip','card_pick','russian_roulette','spin_wheel','truth_dare','greed_game','simon_says'].includes(o.type);
+                                                                const isSelfReport = ['edge','corner_time','denial','kneel'].includes(o.type);
+                                                                const isPayment = o.type === 'payment';
                                                                 const alreadySubmitted = taskSubmitted[o.type];
                                                                 const existingSub = (vaultData?.submissions || []).find((s: any) => s.order_type === o.type);
                                                                 const isPending = existingSub?.status === 'pending' || alreadySubmitted || o.submitted === 'pending';
@@ -2439,9 +2449,12 @@ export default function VaultPage() {
 
                                                                 return (
                                                                     <div>
-                                                                        {/* Task description — priority: config instruction > config prompt > config question > MECH_ICON desc */}
+                                                                        {/* Task description — priority: config fields > meta desc > fallback */}
                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>
-                                                                            {o.config?.instruction || o.config?.prompt || o.config?.question || meta.desc || 'Complete this task as ordered.'}
+                                                                            {o.config?.instruction || o.config?.prompt || o.config?.question
+                                                                                || (o.type === 'coinflip' && o.config?.headsText ? `Heads: ${o.config.headsText} / Tails: ${o.config.tailsText}` : null)
+                                                                                || (o.type === 'multi_video' && o.config?.target ? `Record ${o.config.target} clips as instructed.` : null)
+                                                                                || meta.desc || 'Complete this task as ordered.'}
                                                                         </div>
                                                                         {o.config?.duration && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 12 }}>{Math.floor(o.config.duration / 60)}:{String(o.config.duration % 60).padStart(2, '0')} DURATION</div>}
 
@@ -2453,25 +2466,45 @@ export default function VaultPage() {
                                                                                 <div style={{ width: 80, height: 80, margin: '16px auto 24px', border: `2px solid ${diceResult ? 'rgba(197,160,89,0.4)' : `${R}0.2)`}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: diceResult ? 'rgba(197,160,89,0.06)' : `${R}0.04)`, animation: diceRolling ? 'vPulse 0.15s linear infinite' : 'none' }}>
                                                                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2.5rem', color: diceResult ? 'rgba(197,160,89,0.9)' : `${R}0.3)` }}>{diceResult || '?'}</span>
                                                                                 </div>
-                                                                                {diceResult && !diceRolling && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 4, marginBottom: 16 }}>YOU ROLLED: {diceResult}</div>}
+                                                                                {diceResult && !diceRolling && (() => {
+                                                                                    const outcomes = o.config?.outcomes || [];
+                                                                                    const outcomeText = outcomes[diceResult - 1]?.text || `Face ${diceResult}`;
+                                                                                    return (<>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 4, marginBottom: 8 }}>YOU ROLLED: {diceResult}</div>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{outcomeText}</div>
+                                                                                    </>);
+                                                                                })()}
                                                                                 {!diceResult || diceRolling ? (
                                                                                     <button disabled={diceRolling} onClick={() => {
                                                                                         setDiceRolling(true); setDiceResult(null);
+                                                                                        const numFaces = o.config?.outcomes?.length || 6;
                                                                                         let count = 0;
                                                                                         const iv = setInterval(() => {
-                                                                                            setDiceResult(Math.floor(Math.random() * 6) + 1);
+                                                                                            setDiceResult(Math.floor(Math.random() * numFaces) + 1);
                                                                                             count++;
                                                                                             if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); }
                                                                                         }, 100);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {diceRolling ? 'ROLLING...' : 'ROLL DICE'}
                                                                                     </button>
-                                                                                ) : mechDone && (
-                                                                                    <button onClick={() => { submitTask({ text: `Dice roll result: ${diceResult}` }); setDiceResult(null); setMechDone(false); }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        SUBMIT RESULT
+                                                                                ) : mechDone ? (() => {
+                                                                                    const outcomes = o.config?.outcomes || [];
+                                                                                    const outcome = outcomes[diceResult! - 1];
+                                                                                    const hasFollowUp = outcome?.followUpType && outcome.followUpType !== 'instant';
+                                                                                    return (
+                                                                                    <button onClick={() => {
+                                                                                        if (hasFollowUp) {
+                                                                                            setFollowUp({ orderType: o.type, source: 'Dice Roll', resultText: outcome.text, type: outcome.followUpType, prompt: outcome.followUpPrompt, instruction: outcome.followUpInstruction, duration: outcome.followUpDuration, target: outcome.followUpTarget });
+                                                                                        } else {
+                                                                                            submitTask({ text: `Dice roll: ${diceResult} — ${outcome?.text || `Face ${diceResult}`}` });
+                                                                                        }
+                                                                                        setDiceResult(null); setMechDone(false);
+                                                                                    }}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
                                                                                     </button>
-                                                                                )}
+                                                                                    );
+                                                                                })() : null}
                                                                             </div>
                                                                         )}
 
@@ -2481,7 +2514,13 @@ export default function VaultPage() {
                                                                                 <div style={{ width: 90, height: 90, margin: '16px auto 24px', borderRadius: '50%', border: `2px solid ${coinResult ? (coinResult === 'heads' ? 'rgba(197,160,89,0.5)' : 'rgba(255,80,80,0.4)') : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: coinResult === 'heads' ? 'rgba(197,160,89,0.08)' : coinResult === 'tails' ? 'rgba(255,80,80,0.06)' : `${R}0.04)`, animation: coinFlipping ? 'vPulse 0.12s linear infinite' : 'none' }}>
                                                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: coinResult ? '0.9rem' : '1.5rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.9)' : coinResult === 'tails' ? 'rgba(255,80,80,0.8)' : `${R}0.3)`, letterSpacing: 2, fontWeight: 700 }}>{coinResult ? coinResult.charAt(0).toUpperCase() + coinResult.slice(1) : '$'}</span>
                                                                                 </div>
-                                                                                {coinResult && !coinFlipping && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.8)' : 'rgba(255,80,80,0.8)', letterSpacing: 4, marginBottom: 16 }}>{coinResult.toUpperCase()}</div>}
+                                                                                {coinResult && !coinFlipping && (() => {
+                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Heads') : (o.config?.tailsText || 'Tails');
+                                                                                    return (<>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.8)' : 'rgba(255,80,80,0.8)', letterSpacing: 4, marginBottom: 8 }}>{coinResult.toUpperCase()}</div>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.7)' : 'rgba(255,80,80,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: coinResult === 'heads' ? 'rgba(197,160,89,0.06)' : 'rgba(255,80,80,0.06)', border: `1px solid ${coinResult === 'heads' ? 'rgba(197,160,89,0.15)' : 'rgba(255,80,80,0.15)'}`, borderRadius: 8 }}>{consequenceText}</div>
+                                                                                    </>);
+                                                                                })()}
                                                                                 {!coinResult || coinFlipping ? (
                                                                                     <button disabled={coinFlipping} onClick={() => {
                                                                                         setCoinFlipping(true); setCoinResult(null);
@@ -2494,27 +2533,49 @@ export default function VaultPage() {
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
                                                                                     </button>
-                                                                                ) : mechDone && (
-                                                                                    <button onClick={() => { submitTask({ text: `Coinflip result: ${coinResult}` }); setCoinResult(null); setMechDone(false); }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        SUBMIT RESULT
+                                                                                ) : mechDone ? (() => {
+                                                                                    const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Heads') : (o.config?.tailsText || 'Tails');
+                                                                                    const lower = consequenceText.toLowerCase();
+                                                                                    const inferredType = /write|essay|confession|journal|list|lines|letter|words/.test(lower) ? 'writing'
+                                                                                        : /photo|selfie|body writing|picture/.test(lower) ? 'photo'
+                                                                                        : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera/.test(lower) ? 'endurance'
+                                                                                        : 'instant';
+                                                                                    const hasFollowUp = inferredType !== 'instant';
+                                                                                    return (
+                                                                                    <button onClick={() => {
+                                                                                        if (hasFollowUp) {
+                                                                                            setFollowUp({ orderType: o.type, source: 'Coinflip', resultText: consequenceText, type: inferredType });
+                                                                                        } else {
+                                                                                            submitTask({ text: `Coinflip: ${coinResult} — ${consequenceText}` });
+                                                                                        }
+                                                                                        setCoinResult(null); setMechDone(false);
+                                                                                    }}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
                                                                                     </button>
-                                                                                )}
+                                                                                    );
+                                                                                })() : null}
                                                                             </div>
                                                                         )}
 
                                                                         {/* CARD PICK */}
-                                                                        {o.type === 'card_pick' && (
+                                                                        {o.type === 'card_pick' && (() => {
+                                                                            const configCards = o.config?.cards || [];
+                                                                            const numCards = Math.max(configCards.length, 3);
+                                                                            const displayCount = Math.min(numCards, 5);
+                                                                            return (
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 {!cardResult ? (
                                                                                     <>
-                                                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, margin: '16px 0 24px' }}>
-                                                                                            {[1,2,3].map(i => (
+                                                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, margin: '16px 0 24px', flexWrap: 'wrap' }}>
+                                                                                            {Array.from({ length: displayCount }, (_, i) => (
                                                                                                 <button key={i} disabled={cardPicking} onClick={() => {
                                                                                                     setCardPicking(true);
-                                                                                                    const cards = ['\u2660 Ace of Spades \u2014 Extra kneeling','\u2665 Queen of Hearts \u2014 Queen is pleased','\u2666 7 of Diamonds \u2014 Tribute 10 coins','\u2663 Jack of Clubs \u2014 Corner time 10 min','\u2660 3 of Spades \u2014 Cold shower 60s','\u2665 King of Hearts \u2014 +1 day locked','\u2666 10 of Diamonds \u2014 Body writing task','\u2663 5 of Clubs \u2014 50 lines punishment'];
-                                                                                                    setTimeout(() => { setCardResult(cards[Math.floor(Math.random() * cards.length)]); setCardPicking(false); setMechDone(true); }, 800);
-                                                                                                }} style={{ width: 80, height: 110, background: cardPicking ? 'rgba(197,160,89,0.1)' : `${R}0.06)`, border: `1.5px solid ${R}0.2)`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', animation: cardPicking ? 'vPulse 0.3s ease infinite' : 'none' }}>
+                                                                                                    const picked = configCards.length > 0
+                                                                                                        ? configCards[Math.floor(Math.random() * configCards.length)]
+                                                                                                        : { text: 'Unknown card' };
+                                                                                                    setTimeout(() => { setCardResult(picked); setCardPicking(false); setMechDone(true); }, 800);
+                                                                                                }} style={{ width: 70, height: 100, background: cardPicking ? 'rgba(197,160,89,0.1)' : `${R}0.06)`, border: `1.5px solid ${R}0.2)`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', animation: cardPicking ? 'vPulse 0.3s ease infinite' : 'none' }}>
                                                                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: `${R}0.25)` }}>{'\u2660'}</span>
                                                                                                 </button>
                                                                                             ))}
@@ -2524,18 +2585,29 @@ export default function VaultPage() {
                                                                                 ) : (
                                                                                     <>
                                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', lineHeight: 1.6, margin: '16px 0 20px', padding: '16px 20px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
-                                                                                            {cardResult}
+                                                                                            {cardResult?.text || cardResult}
                                                                                         </div>
-                                                                                        {mechDone && (
-                                                                                            <button onClick={() => { submitTask({ text: `Card drawn: ${cardResult}` }); setCardResult(null); setMechDone(false); }}
-                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                                SUBMIT RESULT
+                                                                                        {mechDone && (() => {
+                                                                                            const hasFollowUp = cardResult?.followUpType && cardResult.followUpType !== 'instant';
+                                                                                            return (
+                                                                                            <button onClick={() => {
+                                                                                                if (hasFollowUp) {
+                                                                                                    setFollowUp({ orderType: o.type, source: 'Card Draw', resultText: cardResult.text, type: cardResult.followUpType, prompt: cardResult.followUpPrompt, instruction: cardResult.followUpInstruction, duration: cardResult.followUpDuration, target: cardResult.followUpTarget });
+                                                                                                } else {
+                                                                                                    submitTask({ text: `Card drawn: ${cardResult?.text || cardResult}` });
+                                                                                                }
+                                                                                                setCardResult(null); setMechDone(false);
+                                                                                            }}
+                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                                {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
                                                                                             </button>
-                                                                                        )}
+                                                                                            );
+                                                                                        })()}
                                                                                     </>
                                                                                 )}
                                                                             </div>
-                                                                        )}
+                                                                            );
+                                                                        })()}
 
                                                                         {/* RUSSIAN ROULETTE */}
                                                                         {o.type === 'russian_roulette' && (
@@ -2543,11 +2615,17 @@ export default function VaultPage() {
                                                                                 <div style={{ width: 90, height: 90, margin: '16px auto 24px', borderRadius: '50%', border: `2px solid ${rouletteResult === 'bang' ? 'rgba(255,60,60,0.5)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.4)' : 'rgba(255,60,60,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: rouletteResult === 'bang' ? 'rgba(255,60,60,0.08)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.06)' : 'rgba(255,60,60,0.03)', animation: rouletteSpinning ? 'vPulse 0.1s linear infinite' : 'none' }}>
                                                                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: rouletteResult ? '0.7rem' : '1.2rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.8)' : 'rgba(255,60,60,0.4)', letterSpacing: 2 }}>{rouletteResult === 'bang' ? 'BANG' : rouletteResult === 'click' ? 'CLICK' : '\u2295'}</span>
                                                                                 </div>
-                                                                                {rouletteResult && !rouletteSpinning && (
-                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 16 }}>
-                                                                                        {rouletteResult === 'bang' ? 'PENALTY TRIGGERED' : 'YOU SURVIVED'}
-                                                                                    </div>
-                                                                                )}
+                                                                                {rouletteResult && !rouletteSpinning && (() => {
+                                                                                    const punishmentText = o.config?.punishment || 'Penalty triggered';
+                                                                                    return (<>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 8 }}>
+                                                                                            {rouletteResult === 'bang' ? 'BANG' : 'YOU SURVIVED'}
+                                                                                        </div>
+                                                                                        {rouletteResult === 'bang' && (
+                                                                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,80,80,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '12px 16px', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.15)', borderRadius: 8 }}>{punishmentText}</div>
+                                                                                        )}
+                                                                                    </>);
+                                                                                })()}
                                                                                 {!rouletteResult ? (
                                                                                     <button disabled={rouletteSpinning} onClick={() => {
                                                                                         setRouletteSpinning(true);
@@ -2559,14 +2637,176 @@ export default function VaultPage() {
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: 'rgba(255,60,60,0.8)', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {rouletteSpinning ? 'CHAMBER SPINNING...' : 'PULL TRIGGER'}
                                                                                     </button>
-                                                                                ) : mechDone && (
-                                                                                    <button onClick={() => { submitTask({ text: `Russian roulette: ${rouletteResult === 'bang' ? 'BANG \u2014 penalty' : 'CLICK \u2014 survived'}` }); setRouletteResult(null); setMechDone(false); }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        SUBMIT RESULT
-                                                                                    </button>
-                                                                                )}
+                                                                                ) : null}
+                                                                                {rouletteResult && !rouletteSpinning && mechDone && (() => {
+                                                                                    const pt = o.config?.punishment || 'Penalty triggered';
+                                                                                    const isBang = rouletteResult === 'bang';
+                                                                                    const lo = pt.toLowerCase();
+                                                                                    const inf = isBang ? (/write|essay|confession|journal|list|lines/.test(lo) ? 'writing' : /photo|selfie|body writing|picture/.test(lo) ? 'photo' : /shower|plank|hold|sit|pushup|squat|camera/.test(lo) ? 'endurance' : 'instant') : 'instant';
+                                                                                    const hasFU = isBang && inf !== 'instant';
+                                                                                    return (
+                                                                                        <button onClick={() => {
+                                                                                            if (hasFU) { setFollowUp({ orderType: o.type, source: 'Russian Roulette', resultText: pt, type: inf }); }
+                                                                                            else { submitTask({ text: `Russian roulette: ${isBang ? `BANG — ${pt}` : 'CLICK — survived'}` }); }
+                                                                                            setRouletteResult(null); setMechDone(false);
+                                                                                        }}
+                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFU ? 'rgba(255,60,60,0.5)' : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                            {hasFU ? 'ACCEPT PUNISHMENT' : 'SUBMIT RESULT'}
+                                                                                        </button>
+                                                                                    );
+                                                                                })()}
                                                                             </div>
                                                                         )}
+
+                                                                        {/* SPIN WHEEL */}
+                                                                        {o.type === 'spin_wheel' && (() => {
+                                                                            const segments = o.config?.segments || [];
+                                                                            return (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                {!wheelResult ? (
+                                                                                    <>
+                                                                                        <div style={{ width: 100, height: 100, margin: '12px auto 20px', borderRadius: '50%', border: `2px solid ${wheelSpinning ? 'rgba(197,160,89,0.5)' : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${R}0.04)`, animation: wheelSpinning ? 'vPulse 0.08s linear infinite' : 'none' }}>
+                                                                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: `${R}0.3)` }}>{'\u25CE'}</span>
+                                                                                        </div>
+                                                                                        <button disabled={wheelSpinning} onClick={() => {
+                                                                                            if (segments.length === 0) return;
+                                                                                            setWheelSpinning(true);
+                                                                                            let count = 0;
+                                                                                            const iv = setInterval(() => {
+                                                                                                setWheelResult(segments[Math.floor(Math.random() * segments.length)]);
+                                                                                                count++;
+                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setMechDone(true); }
+                                                                                            }, 100 + count * 15);
+                                                                                        }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                            {wheelSpinning ? 'SPINNING...' : 'SPIN'}
+                                                                                        </button>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 3, marginBottom: 8 }}>YOU LANDED ON</div>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', lineHeight: 1.6, margin: '0 0 16px', padding: '14px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{wheelResult.text}</div>
+                                                                                        {(() => {
+                                                                                            const hasFollowUp = wheelResult.followUpType && wheelResult.followUpType !== 'instant';
+                                                                                            return (
+                                                                                            <button onClick={() => {
+                                                                                                if (hasFollowUp) {
+                                                                                                    setFollowUp({ orderType: o.type, source: 'Spin Wheel', resultText: wheelResult.text, type: wheelResult.followUpType, prompt: wheelResult.followUpPrompt, instruction: wheelResult.followUpInstruction, duration: wheelResult.followUpDuration, target: wheelResult.followUpTarget });
+                                                                                                } else {
+                                                                                                    submitTask({ text: `Wheel result: ${wheelResult.text}` });
+                                                                                                }
+                                                                                                setWheelResult(null); setMechDone(false);
+                                                                                            }}
+                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                                {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
+                                                                                            </button>
+                                                                                            );
+                                                                                        })()}
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                            );
+                                                                        })()}
+
+                                                                        {/* TRUTH OR DARE */}
+                                                                        {o.type === 'truth_dare' && (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                {!truthDareChoice ? (
+                                                                                    <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+                                                                                        <button onClick={() => setTruthDareChoice('truth')}
+                                                                                            style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.8)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer' }}>TRUTH</button>
+                                                                                        <button onClick={() => setTruthDareChoice('dare')}
+                                                                                            style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(255,80,80,0.8)', background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>DARE</button>
+                                                                                    </div>
+                                                                                ) : (() => {
+                                                                                    const choiceText = truthDareChoice === 'truth' ? (o.config?.truthText || 'Tell the truth') : (o.config?.dareText || 'Complete the dare');
+                                                                                    const tdFollowUp = truthDareChoice === 'truth' ? (o.config?.truthFollowUp || 'writing') : (o.config?.dareFollowUp || 'endurance');
+                                                                                    return (
+                                                                                        <>
+                                                                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: truthDareChoice === 'truth' ? 'rgba(197,160,89,0.6)' : 'rgba(255,80,80,0.6)', letterSpacing: 3, marginBottom: 8 }}>{truthDareChoice.toUpperCase()}</div>
+                                                                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '14px 18px', background: truthDareChoice === 'truth' ? 'rgba(197,160,89,0.06)' : 'rgba(255,60,60,0.06)', border: `1px solid ${truthDareChoice === 'truth' ? 'rgba(197,160,89,0.15)' : 'rgba(255,60,60,0.15)'}`, borderRadius: 8 }}>{choiceText}</div>
+                                                                                            <button onClick={() => {
+                                                                                                setFollowUp({ orderType: o.type, source: `Truth or Dare (${truthDareChoice})`, resultText: choiceText, type: tdFollowUp });
+                                                                                                setTruthDareChoice(null);
+                                                                                            }}
+                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>ACCEPT FATE</button>
+                                                                                        </>
+                                                                                    );
+                                                                                })()}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* GREED GAME */}
+                                                                        {o.type === 'greed_game' && (() => {
+                                                                            const ceiling = o.config?.ceiling || 50;
+                                                                            return (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                {!greedBusted && !greedCashedOut ? (
+                                                                                    <>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2rem', color: 'rgba(197,160,89,0.9)', margin: '12px 0 8px' }}>{greedCoins}</div>
+                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2, marginBottom: 20 }}>COINS STACKED / MAX {ceiling}</div>
+                                                                                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                                                                                            <button onClick={() => {
+                                                                                                const add = Math.floor(Math.random() * 15) + 3;
+                                                                                                const bustChance = (greedCoins + add) / ceiling;
+                                                                                                if (Math.random() < bustChance * 0.6) { setGreedBusted(true); setGreedCoins(0); setMechDone(true); }
+                                                                                                else { setGreedCoins(prev => Math.min(prev + add, ceiling)); }
+                                                                                            }} style={{ padding: '16px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.8)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer' }}>PUSH</button>
+                                                                                            <button disabled={greedCoins === 0} onClick={() => { setGreedCashedOut(true); setMechDone(true); }}
+                                                                                                style={{ padding: '16px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: greedCoins > 0 ? 'rgba(80,200,120,0.8)' : 'rgba(255,255,255,0.1)', background: greedCoins > 0 ? 'rgba(80,200,120,0.04)' : 'transparent', border: `1px solid ${greedCoins > 0 ? 'rgba(80,200,120,0.2)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: greedCoins > 0 ? 'pointer' : 'default' }}>CASH OUT</button>
+                                                                                        </div>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: greedBusted ? 'rgba(255,60,60,0.9)' : 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 8 }}>{greedBusted ? 'BUSTED' : `CASHED OUT: ${greedCoins} COINS`}</div>
+                                                                                        {greedBusted && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,80,80,0.5)', marginBottom: 16 }}>Greed consumed you. You walk away with nothing.</div>}
+                                                                                        {mechDone && (
+                                                                                            <button onClick={() => { submitTask({ text: `Greed game: ${greedBusted ? 'BUSTED — 0 coins' : `Cashed out ${greedCoins} coins`}` }); setGreedCoins(0); setGreedBusted(false); setGreedCashedOut(false); setMechDone(false); }}
+                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>SUBMIT RESULT</button>
+                                                                                        )}
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                            );
+                                                                        })()}
+
+                                                                        {/* SIMON SAYS */}
+                                                                        {o.type === 'simon_says' && (() => {
+                                                                            const chain = o.config?.chainTasks || [];
+                                                                            const current = chain[simonStep];
+                                                                            const allDone = simonStep >= chain.length;
+                                                                            return (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                {!allDone && current ? (
+                                                                                    <>
+                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2, marginBottom: 8 }}>TASK {simonStep + 1} OF {chain.length}</div>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 12px', padding: '14px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{current.text}</div>
+                                                                                        {current.timeLimit && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginBottom: 16 }}>{current.timeLimit}s TIME LIMIT</div>}
+                                                                                        <button onClick={() => setSimonStep(prev => prev + 1)}
+                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>DONE — NEXT</button>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 16 }}>ALL TASKS COMPLETE</div>
+                                                                                        <button onClick={() => { submitTask({ text: `Simon Says: completed ${chain.length} tasks` }); setSimonStep(0); }}
+                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>SUBMIT RESULT</button>
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                            );
+                                                                        })()}
+
+                                                                        {/* PAYMENT / TRIBUTE */}
+                                                                        {isPayment && (() => {
+                                                                            const amount = o.config?.amount || o.target || 5;
+                                                                            return (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2rem', color: 'rgba(197,160,89,0.9)', margin: '8px 0 4px' }}>{amount}</div>
+                                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2, marginBottom: 20 }}>COINS REQUIRED</div>
+                                                                                <button onClick={() => submitTask({ text: `Tribute paid: ${amount} coins` })}
+                                                                                    style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(197,160,89,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>PAY TRIBUTE</button>
+                                                                            </div>
+                                                                            );
+                                                                        })()}
 
                                                                         {/* Text input for writing tasks */}
                                                                         {isTextTask && (
@@ -2613,7 +2853,7 @@ export default function VaultPage() {
                                                                         )}
 
                                                                         {/* Fallback for unknown types: show both text + photo */}
-                                                                        {!isPhotoTask && !isTextTask && !isSelfReport && (
+                                                                        {!isPhotoTask && !isTextTask && !isSelfReport && !isPayment && !isInteractive && (
                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                                                                 <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe your completion..."
                                                                                     style={{ width: '100%', minHeight: 80, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
@@ -2666,6 +2906,115 @@ export default function VaultPage() {
                     </div>
                 );
             })}
+
+            {/* ══════════════════════════════════════════════
+                FOLLOW-UP TASK OVERLAY (after gamble result)
+            ══════════════════════════════════════════════ */}
+            {followUp && (() => {
+                const mid = profile?.member_id || profile?.memberId || '';
+                const submitFollowUp = async (opts: { text?: string; photoUrl?: string }) => {
+                    setTaskSubmitted(p => ({ ...p, [followUp.orderType]: true }));
+                    try {
+                        const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: followUp.orderType, text: opts.text || null, photoUrl: opts.photoUrl || null }),
+                        });
+                        const result = await resp.json();
+                        if (!resp.ok) alert('Submit failed: ' + (result.error || 'unknown error'));
+                        setFollowUp(null); setFollowUpText('');
+                        if (mid) {
+                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                if (vd2.active) setVaultData(vd2);
+                            }).catch(() => {});
+                        }
+                    } catch (e: any) { alert('Submit failed: ' + e?.message); }
+                };
+                return (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(2,5,10,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 } as React.CSSProperties}>
+                        <div style={{ width: '100%', maxWidth: 400, background: '#0a0a0e', border: `1px solid ${R}0.15)`, borderRadius: 16, padding: '32px 24px', position: 'relative' }}>
+                            {/* Source label */}
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, textAlign: 'center', marginBottom: 6 }}>{followUp.source.toUpperCase()} RESULT</div>
+                            {/* What they got */}
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 3, textAlign: 'center', marginBottom: 16 }}>YOUR TASK</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, textAlign: 'center', marginBottom: 8, padding: '16px 20px', background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10 }}>{followUp.resultText}</div>
+                            {/* Follow-up instruction */}
+                            {(followUp.prompt || followUp.instruction) && (
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, textAlign: 'center', marginBottom: 16, fontStyle: 'italic' }}>{followUp.prompt || followUp.instruction}</div>
+                            )}
+                            {followUp.duration && (
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2, textAlign: 'center', marginBottom: 16 }}>{Math.floor(followUp.duration / 60)}:{String(followUp.duration % 60).padStart(2, '0')} DURATION</div>
+                            )}
+
+                            {/* WRITING follow-up */}
+                            {followUp.type === 'writing' && (
+                                <div style={{ marginTop: 16 }}>
+                                    <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Write here..."
+                                        style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.4)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)' }}>{followUpText.split(/\s+/).filter(Boolean).length} words</span>
+                                        <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!followUpText.trim()}
+                                            style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: followUpText.trim() ? '#050508' : 'rgba(255,255,255,0.1)', background: followUpText.trim() ? 'rgba(80,200,120,0.5)' : 'transparent', border: `1px solid ${followUpText.trim() ? 'rgba(80,200,120,0.3)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: followUpText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* PHOTO / VIDEO follow-up */}
+                            {(followUp.type === 'photo' || followUp.type === 'video') && (
+                                <div style={{ marginTop: 16 }}>
+                                    <label style={{ cursor: 'pointer', display: 'block' }}>
+                                        <div style={{ padding: '18px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: followUpUploading ? 'rgba(255,255,255,0.2)' : `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                                            {followUpUploading ? 'UPLOADING...' : (followUp.type === 'video' ? 'UPLOAD VIDEO PROOF' : 'UPLOAD PHOTO PROOF')}
+                                        </div>
+                                        <input type="file" accept={followUp.type === 'video' ? 'video/*' : 'image/*,video/*'} capture="environment" style={{ display: 'none' }} onChange={async (e) => {
+                                            const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                            setFollowUpUploading(true);
+                                            try {
+                                                const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                const data = await res.json();
+                                                if (data.url) await submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}`, photoUrl: data.url });
+                                            } catch {} finally { setFollowUpUploading(false); }
+                                        }} />
+                                    </label>
+                                </div>
+                            )}
+
+                            {/* ENDURANCE follow-up — confirm with optional proof */}
+                            {followUp.type === 'endurance' && (
+                                <div style={{ marginTop: 16 }}>
+                                    <label style={{ cursor: 'pointer', display: 'block', marginBottom: 12 }}>
+                                        <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '2px', color: followUpUploading ? 'rgba(255,255,255,0.2)' : `${R}0.4)`, background: `${R}0.03)`, border: `1px solid ${R}0.1)`, borderRadius: 8, textAlign: 'center' }}>
+                                            {followUpUploading ? 'UPLOADING...' : '+ ATTACH PROOF (OPTIONAL)'}
+                                        </div>
+                                        <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={async (e) => {
+                                            const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                            setFollowUpUploading(true);
+                                            try {
+                                                const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                const data = await res.json();
+                                                if (data.url) await submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — completed`, photoUrl: data.url });
+                                            } catch {} finally { setFollowUpUploading(false); }
+                                        }} />
+                                    </label>
+                                    <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — completed` })}
+                                        style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>CONFIRM DONE</button>
+                                </div>
+                            )}
+
+                            {/* INSTANT follow-up — auto-acknowledged */}
+                            {followUp.type === 'instant' && (
+                                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                                    <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}` })}
+                                        style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ══════════════════════════════════════════════
                 BEG MODAL
