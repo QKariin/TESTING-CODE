@@ -205,6 +205,15 @@ export default function VaultPage() {
     const [selectedDay, setSelectedDay] = useState<DayLog | null>(null);
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [mechOverlay, setMechOverlay] = useState<{ order: any; idx: number } | null>(null);
+    const [diceRolling, setDiceRolling] = useState(false);
+    const [diceResult, setDiceResult] = useState<number | null>(null);
+    const [coinFlipping, setCoinFlipping] = useState(false);
+    const [coinResult, setCoinResult] = useState<string | null>(null);
+    const [cardPicking, setCardPicking] = useState(false);
+    const [cardResult, setCardResult] = useState<string | null>(null);
+    const [rouletteSpinning, setRouletteSpinning] = useState(false);
+    const [rouletteResult, setRouletteResult] = useState<string | null>(null);
+    const [mechDone, setMechDone] = useState(false);
     const [taskText, setTaskText] = useState('');
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
@@ -2391,7 +2400,8 @@ export default function VaultPage() {
                                                             {!['spin','trial','tribute','silence'].includes(o.type) && (() => {
                                                                 const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof','ambush_snap','timed_photo','multi_video','endurance'].includes(o.type);
                                                                 const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing','quiz','truth_dare'].includes(o.type);
-                                                                const isSelfReport = ['edge','corner_time','denial','spin_wheel','coinflip','card_pick','dice_roll','russian_roulette','greed_game','simon_says','payment','kneel'].includes(o.type);
+                                                                const isInteractive = ['dice_roll','coinflip','card_pick','russian_roulette'].includes(o.type);
+                                                                const isSelfReport = ['edge','corner_time','denial','spin_wheel','greed_game','simon_says','payment','kneel'].includes(o.type);
                                                                 const alreadySubmitted = taskSubmitted[o.type];
                                                                 const existingSub = (vaultData?.submissions || []).find((s: any) => s.order_type === o.type);
                                                                 const isPending = existingSub?.status === 'pending' || alreadySubmitted || o.submitted === 'pending';
@@ -2434,6 +2444,129 @@ export default function VaultPage() {
                                                                             {o.config?.instruction || o.config?.prompt || o.config?.question || meta.desc || 'Complete this task as ordered.'}
                                                                         </div>
                                                                         {o.config?.duration && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 12 }}>{Math.floor(o.config.duration / 60)}:{String(o.config.duration % 60).padStart(2, '0')} DURATION</div>}
+
+                                                                        {/* ── INTERACTIVE MECHANISMS ── */}
+
+                                                                        {/* DICE ROLL */}
+                                                                        {o.type === 'dice_roll' && (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                <div style={{ width: 80, height: 80, margin: '16px auto 24px', border: `2px solid ${diceResult ? 'rgba(197,160,89,0.4)' : `${R}0.2)`}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: diceResult ? 'rgba(197,160,89,0.06)' : `${R}0.04)`, animation: diceRolling ? 'vPulse 0.15s linear infinite' : 'none' }}>
+                                                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2.5rem', color: diceResult ? 'rgba(197,160,89,0.9)' : `${R}0.3)` }}>{diceResult || '?'}</span>
+                                                                                </div>
+                                                                                {diceResult && !diceRolling && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 4, marginBottom: 16 }}>YOU ROLLED: {diceResult}</div>}
+                                                                                {!diceResult || diceRolling ? (
+                                                                                    <button disabled={diceRolling} onClick={() => {
+                                                                                        setDiceRolling(true); setDiceResult(null);
+                                                                                        let count = 0;
+                                                                                        const iv = setInterval(() => {
+                                                                                            setDiceResult(Math.floor(Math.random() * 6) + 1);
+                                                                                            count++;
+                                                                                            if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); }
+                                                                                        }, 100);
+                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                        {diceRolling ? 'ROLLING...' : 'ROLL DICE'}
+                                                                                    </button>
+                                                                                ) : mechDone && (
+                                                                                    <button onClick={() => { submitTask({ text: `Dice roll result: ${diceResult}` }); setDiceResult(null); setMechDone(false); }}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        SUBMIT RESULT
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* COINFLIP */}
+                                                                        {o.type === 'coinflip' && (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                <div style={{ width: 90, height: 90, margin: '16px auto 24px', borderRadius: '50%', border: `2px solid ${coinResult ? (coinResult === 'heads' ? 'rgba(197,160,89,0.5)' : 'rgba(255,80,80,0.4)') : `${R}0.2)`}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: coinResult === 'heads' ? 'rgba(197,160,89,0.08)' : coinResult === 'tails' ? 'rgba(255,80,80,0.06)' : `${R}0.04)`, animation: coinFlipping ? 'vPulse 0.12s linear infinite' : 'none' }}>
+                                                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: coinResult ? '0.9rem' : '1.5rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.9)' : coinResult === 'tails' ? 'rgba(255,80,80,0.8)' : `${R}0.3)`, letterSpacing: 2, fontWeight: 700 }}>{coinResult ? coinResult.charAt(0).toUpperCase() + coinResult.slice(1) : '$'}</span>
+                                                                                </div>
+                                                                                {coinResult && !coinFlipping && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: coinResult === 'heads' ? 'rgba(197,160,89,0.8)' : 'rgba(255,80,80,0.8)', letterSpacing: 4, marginBottom: 16 }}>{coinResult.toUpperCase()}</div>}
+                                                                                {!coinResult || coinFlipping ? (
+                                                                                    <button disabled={coinFlipping} onClick={() => {
+                                                                                        setCoinFlipping(true); setCoinResult(null);
+                                                                                        let count = 0;
+                                                                                        const iv = setInterval(() => {
+                                                                                            setCoinResult(Math.random() > 0.5 ? 'heads' : 'tails');
+                                                                                            count++;
+                                                                                            if (count > 12) { clearInterval(iv); setCoinFlipping(false); setMechDone(true); }
+                                                                                        }, 120);
+                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                        {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
+                                                                                    </button>
+                                                                                ) : mechDone && (
+                                                                                    <button onClick={() => { submitTask({ text: `Coinflip result: ${coinResult}` }); setCoinResult(null); setMechDone(false); }}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        SUBMIT RESULT
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* CARD PICK */}
+                                                                        {o.type === 'card_pick' && (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                {!cardResult ? (
+                                                                                    <>
+                                                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, margin: '16px 0 24px' }}>
+                                                                                            {[1,2,3].map(i => (
+                                                                                                <button key={i} disabled={cardPicking} onClick={() => {
+                                                                                                    setCardPicking(true);
+                                                                                                    const cards = ['\u2660 Ace of Spades \u2014 Extra kneeling','\u2665 Queen of Hearts \u2014 Queen is pleased','\u2666 7 of Diamonds \u2014 Tribute 10 coins','\u2663 Jack of Clubs \u2014 Corner time 10 min','\u2660 3 of Spades \u2014 Cold shower 60s','\u2665 King of Hearts \u2014 +1 day locked','\u2666 10 of Diamonds \u2014 Body writing task','\u2663 5 of Clubs \u2014 50 lines punishment'];
+                                                                                                    setTimeout(() => { setCardResult(cards[Math.floor(Math.random() * cards.length)]); setCardPicking(false); setMechDone(true); }, 800);
+                                                                                                }} style={{ width: 80, height: 110, background: cardPicking ? 'rgba(197,160,89,0.1)' : `${R}0.06)`, border: `1.5px solid ${R}0.2)`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', animation: cardPicking ? 'vPulse 0.3s ease infinite' : 'none' }}>
+                                                                                                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: `${R}0.25)` }}>{'\u2660'}</span>
+                                                                                                </button>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>CHOOSE A CARD</div>
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', lineHeight: 1.6, margin: '16px 0 20px', padding: '16px 20px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>
+                                                                                            {cardResult}
+                                                                                        </div>
+                                                                                        {mechDone && (
+                                                                                            <button onClick={() => { submitTask({ text: `Card drawn: ${cardResult}` }); setCardResult(null); setMechDone(false); }}
+                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                                SUBMIT RESULT
+                                                                                            </button>
+                                                                                        )}
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* RUSSIAN ROULETTE */}
+                                                                        {o.type === 'russian_roulette' && (
+                                                                            <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                <div style={{ width: 90, height: 90, margin: '16px auto 24px', borderRadius: '50%', border: `2px solid ${rouletteResult === 'bang' ? 'rgba(255,60,60,0.5)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.4)' : 'rgba(255,60,60,0.15)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: rouletteResult === 'bang' ? 'rgba(255,60,60,0.08)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.06)' : 'rgba(255,60,60,0.03)', animation: rouletteSpinning ? 'vPulse 0.1s linear infinite' : 'none' }}>
+                                                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: rouletteResult ? '0.7rem' : '1.2rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : rouletteResult === 'click' ? 'rgba(80,200,120,0.8)' : 'rgba(255,60,60,0.4)', letterSpacing: 2 }}>{rouletteResult === 'bang' ? 'BANG' : rouletteResult === 'click' ? 'CLICK' : '\u2295'}</span>
+                                                                                </div>
+                                                                                {rouletteResult && !rouletteSpinning && (
+                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', color: rouletteResult === 'bang' ? 'rgba(255,60,60,0.9)' : 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 16 }}>
+                                                                                        {rouletteResult === 'bang' ? 'PENALTY TRIGGERED' : 'YOU SURVIVED'}
+                                                                                    </div>
+                                                                                )}
+                                                                                {!rouletteResult ? (
+                                                                                    <button disabled={rouletteSpinning} onClick={() => {
+                                                                                        setRouletteSpinning(true);
+                                                                                        setTimeout(() => {
+                                                                                            setRouletteResult(Math.random() < 0.167 ? 'bang' : 'click');
+                                                                                            setRouletteSpinning(false);
+                                                                                            setMechDone(true);
+                                                                                        }, 1500);
+                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: 'rgba(255,60,60,0.8)', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                        {rouletteSpinning ? 'CHAMBER SPINNING...' : 'PULL TRIGGER'}
+                                                                                    </button>
+                                                                                ) : mechDone && (
+                                                                                    <button onClick={() => { submitTask({ text: `Russian roulette: ${rouletteResult === 'bang' ? 'BANG \u2014 penalty' : 'CLICK \u2014 survived'}` }); setRouletteResult(null); setMechDone(false); }}
+                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
+                                                                                        SUBMIT RESULT
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
 
                                                                         {/* Text input for writing tasks */}
                                                                         {isTextTask && (
