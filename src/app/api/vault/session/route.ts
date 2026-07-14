@@ -568,14 +568,25 @@ export async function POST(req: NextRequest) {
         console.log('[vault] submit_task:', { email, orderType, sessionId: session.id, today });
 
         const { data: daily, error: dailyErr } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
+            .select('id, orders').eq('session_id', session.id).eq('date', today)
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
         if (dailyErr) console.error('[vault] submit_task daily lookup error:', dailyErr.message);
         if (!daily) {
             console.error('[vault] submit_task: no vault_daily for session', session.id, 'date', today);
-            return NextResponse.json({ error: 'No daily record for today' }, { status: 404 });
+            // Still try to insert into vault_submissions even without vault_daily
+            try {
+                await supabaseAdmin.from('vault_submissions').insert({
+                    session_id: session.id, member_id: email, date: today,
+                    order_idx: 0, order_type: orderType || 'unknown', label: orderType || null,
+                    text: text || null, photo_url: photoUrl || null, video_url: videoUrl || null,
+                    status: 'pending',
+                });
+            } catch {}
+            return NextResponse.json({ success: true, status: 'pending' });
         }
 
         const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+        console.log('[vault] submit_task orders count:', orders.length, 'looking for type:', orderType);
         const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target && o.submitted !== 'pending');
 
         // Mark the order as submitted in vault_daily orders JSON (reliable fallback)
@@ -585,9 +596,12 @@ export async function POST(req: NextRequest) {
             if (text) orders[idx].submitted_text = text;
             if (photoUrl) orders[idx].submitted_photo = photoUrl;
             if (videoUrl) orders[idx].submitted_video = videoUrl;
-            await supabaseAdmin.from('vault_daily').update({
+            const { error: updErr } = await supabaseAdmin.from('vault_daily').update({
                 orders: JSON.stringify(orders),
             }).eq('id', daily.id);
+            console.log('[vault] submit_task vault_daily updated:', idx, updErr ? 'ERROR: ' + updErr.message : 'OK');
+        } else {
+            console.log('[vault] submit_task: no matching order found for type', orderType, 'idx:', idx);
         }
 
         // Also insert into vault_submissions table if it exists

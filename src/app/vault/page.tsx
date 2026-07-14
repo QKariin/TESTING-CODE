@@ -2400,21 +2400,26 @@ export default function VaultPage() {
                                                                 const isPending = existingSub?.status === 'pending' || alreadySubmitted || o.submitted === 'pending';
                                                                 const mid = profile?.member_id || profile?.memberId || '';
                                                                 const submitTask = async (opts: { text?: string; photoUrl?: string }) => {
+                                                                    console.log('[vault] submitTask called:', o.type, 'mid:', mid);
                                                                     setTaskSubmitted(p => ({ ...p, [o.type]: true }));
                                                                     try {
                                                                         const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                                                             body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null }),
                                                                         });
                                                                         const result = await resp.json();
-                                                                        if (!resp.ok) console.error('[vault] submit_task error:', result.error);
+                                                                        console.log('[vault] submit_task response:', resp.status, result);
+                                                                        if (!resp.ok) alert('Submit failed: ' + (result.error || 'unknown error'));
                                                                         setTaskText('');
                                                                         // Refresh vault data to get updated submissions
                                                                         if (mid) {
                                                                             fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
-                                                                                if (vd2.active) setVaultData(vd2);
+                                                                                if (vd2.active) {
+                                                                                    console.log('[vault] refreshed data, programTasks submitted states:', vd2.programTasks?.map((t: any) => `${t.type}:${t.submitted || 'none'}`));
+                                                                                    setVaultData(vd2);
+                                                                                }
                                                                             }).catch(() => {});
                                                                         }
-                                                                    } catch (e) { console.error('[vault] submit_task fetch error:', e); }
+                                                                    } catch (e: any) { console.error('[vault] submit_task fetch error:', e); alert('Submit failed: ' + e?.message); }
                                                                 };
 
                                                                 if (isPending) return (
