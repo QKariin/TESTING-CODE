@@ -224,6 +224,17 @@ export default function VaultPage() {
     const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
     const [followUpText, setFollowUpText] = useState('');
     const [followUpUploading, setFollowUpUploading] = useState(false);
+
+    // Persist gamble results to localStorage so they survive reload
+    const saveGambleResult = useCallback((data: Record<string, any>) => {
+        try {
+            const existing = JSON.parse(localStorage.getItem('vault_gamble_results') || '{}');
+            localStorage.setItem('vault_gamble_results', JSON.stringify({ ...existing, ...data }));
+        } catch {}
+    }, []);
+    const clearGambleResults = useCallback(() => {
+        try { localStorage.removeItem('vault_gamble_results'); } catch {}
+    }, []);
     const [taskText, setTaskText] = useState('');
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
@@ -300,6 +311,35 @@ export default function VaultPage() {
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
     const chatGateCooldown = chatGateCooldownUntil > Date.now();
+
+    // Restore follow-up overlay + gamble results from localStorage on mount
+    useEffect(() => {
+        try {
+            const savedFU = localStorage.getItem('vault_followup');
+            if (savedFU) { setFollowUp(JSON.parse(savedFU)); }
+            const savedGamble = localStorage.getItem('vault_gamble_results');
+            if (savedGamble) {
+                const g = JSON.parse(savedGamble);
+                if (g.wheelResult) { setWheelResult(g.wheelResult); setMechDone(true); }
+                if (g.diceResult) { setDiceResult(g.diceResult); setMechDone(true); }
+                if (g.coinResult) { setCoinResult(g.coinResult); setMechDone(true); }
+                if (g.cardResult) { setCardResult(g.cardResult); setMechDone(true); }
+                if (g.rouletteResult) { setRouletteResult(g.rouletteResult); setMechDone(true); }
+                if (g.greedBusted) { setGreedBusted(true); setMechDone(true); }
+                if (g.greedCashedOut) { setGreedCashedOut(true); setGreedCoins(g.greedCoins || 0); setMechDone(true); }
+                if (g.truthDareChoice) { setTruthDareChoice(g.truthDareChoice); }
+                if (g.simonStep) { setSimonStep(g.simonStep); }
+            }
+        } catch {}
+    }, []);
+
+    // Persist follow-up overlay to localStorage
+    useEffect(() => {
+        try {
+            if (followUp) localStorage.setItem('vault_followup', JSON.stringify(followUp));
+            else localStorage.removeItem('vault_followup');
+        } catch {}
+    }, [followUp]);
 
     // Restore cooldowns from localStorage on mount
     useEffect(() => {
@@ -2313,7 +2353,7 @@ export default function VaultPage() {
 
                                                 return (
                                                     <div
-                                                        style={{ background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 16, overflow: 'hidden', animation: 'vFadeIn 0.3s ease' }}>
+                                                        style={{ background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 16, animation: 'vFadeIn 0.3s ease' }}>
 
                                                         {/* Card header */}
                                                         <div style={{ padding: '20px 22px 16px', borderBottom: `1px solid ${R}0.08)` }}>
@@ -2483,9 +2523,10 @@ export default function VaultPage() {
                                                                                         const numFaces = diceOutcomes.length;
                                                                                         let count = 0;
                                                                                         const iv = setInterval(() => {
-                                                                                            setDiceResult(Math.floor(Math.random() * numFaces) + 1);
+                                                                                            const val = Math.floor(Math.random() * numFaces) + 1;
+                                                                                            setDiceResult(val);
                                                                                             count++;
-                                                                                            if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); }
+                                                                                            if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); saveGambleResult({ diceResult: val }); }
                                                                                         }, 100);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {diceRolling ? 'ROLLING...' : 'ROLL DICE'}
@@ -2500,7 +2541,7 @@ export default function VaultPage() {
                                                                                         } else {
                                                                                             submitTask({ text: `Dice roll: ${diceResult} — ${outcome?.text || `Face ${diceResult}`}` });
                                                                                         }
-                                                                                        setDiceResult(null); setMechDone(false);
+                                                                                        setDiceResult(null); setMechDone(false); clearGambleResults();
                                                                                     }}
                                                                                         style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
                                                                                         {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
@@ -2529,9 +2570,10 @@ export default function VaultPage() {
                                                                                         setCoinFlipping(true); setCoinResult(null);
                                                                                         let count = 0;
                                                                                         const iv = setInterval(() => {
-                                                                                            setCoinResult(Math.random() > 0.5 ? 'heads' : 'tails');
+                                                                                            const val = Math.random() > 0.5 ? 'heads' : 'tails';
+                                                                                            setCoinResult(val);
                                                                                             count++;
-                                                                                            if (count > 12) { clearInterval(iv); setCoinFlipping(false); setMechDone(true); }
+                                                                                            if (count > 12) { clearInterval(iv); setCoinFlipping(false); setMechDone(true); saveGambleResult({ coinResult: val }); }
                                                                                         }, 120);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
@@ -2539,9 +2581,9 @@ export default function VaultPage() {
                                                                                 ) : mechDone ? (() => {
                                                                                     const consequenceText = coinResult === 'heads' ? (o.config?.headsText || 'Heads') : (o.config?.tailsText || 'Tails');
                                                                                     const lower = consequenceText.toLowerCase();
-                                                                                    const inferredType = /write|essay|confession|journal|list|lines|letter|words/.test(lower) ? 'writing'
-                                                                                        : /photo|selfie|body writing|picture/.test(lower) ? 'photo'
-                                                                                        : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera/.test(lower) ? 'endurance'
+                                                                                    const inferredType = /proof|video|selfie|photo|picture|body writing/.test(lower) ? 'photo'
+                                                                                        : /write|essay|confession|journal|list|lines|letter|words|grateful/.test(lower) ? 'writing'
+                                                                                        : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera|edge|ice/.test(lower) ? 'endurance'
                                                                                         : 'instant';
                                                                                     const hasFollowUp = inferredType !== 'instant';
                                                                                     return (
@@ -2551,7 +2593,7 @@ export default function VaultPage() {
                                                                                         } else {
                                                                                             submitTask({ text: `Coinflip: ${coinResult} — ${consequenceText}` });
                                                                                         }
-                                                                                        setCoinResult(null); setMechDone(false);
+                                                                                        setCoinResult(null); setMechDone(false); clearGambleResults();
                                                                                     }}
                                                                                         style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
                                                                                         {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
@@ -2577,7 +2619,7 @@ export default function VaultPage() {
                                                                                                     const picked = configCards.length > 0
                                                                                                         ? configCards[Math.floor(Math.random() * configCards.length)]
                                                                                                         : { text: 'Unknown card' };
-                                                                                                    setTimeout(() => { setCardResult(picked); setCardPicking(false); setMechDone(true); }, 800);
+                                                                                                    setTimeout(() => { setCardResult(picked); setCardPicking(false); setMechDone(true); saveGambleResult({ cardResult: picked }); }, 800);
                                                                                                 }} style={{ width: 70, height: 100, background: cardPicking ? 'rgba(197,160,89,0.1)' : `${R}0.06)`, border: `1.5px solid ${R}0.2)`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', animation: cardPicking ? 'vPulse 0.3s ease infinite' : 'none' }}>
                                                                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: `${R}0.25)` }}>{'\u2660'}</span>
                                                                                                 </button>
@@ -2599,7 +2641,7 @@ export default function VaultPage() {
                                                                                                 } else {
                                                                                                     submitTask({ text: `Card drawn: ${cardResult?.text || cardResult}` });
                                                                                                 }
-                                                                                                setCardResult(null); setMechDone(false);
+                                                                                                setCardResult(null); setMechDone(false); clearGambleResults();
                                                                                             }}
                                                                                                 style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
                                                                                                 {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
@@ -2633,9 +2675,11 @@ export default function VaultPage() {
                                                                                     <button disabled={rouletteSpinning} onClick={() => {
                                                                                         setRouletteSpinning(true);
                                                                                         setTimeout(() => {
-                                                                                            setRouletteResult(Math.random() < 0.167 ? 'bang' : 'click');
+                                                                                            const val = Math.random() < 0.167 ? 'bang' : 'click';
+                                                                                            setRouletteResult(val);
                                                                                             setRouletteSpinning(false);
                                                                                             setMechDone(true);
+                                                                                            saveGambleResult({ rouletteResult: val });
                                                                                         }, 1500);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: 'rgba(255,60,60,0.8)', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {rouletteSpinning ? 'CHAMBER SPINNING...' : 'PULL TRIGGER'}
@@ -2645,13 +2689,13 @@ export default function VaultPage() {
                                                                                     const pt = o.config?.punishment || 'Penalty triggered';
                                                                                     const isBang = rouletteResult === 'bang';
                                                                                     const lo = pt.toLowerCase();
-                                                                                    const inf = isBang ? (/write|essay|confession|journal|list|lines/.test(lo) ? 'writing' : /photo|selfie|body writing|picture/.test(lo) ? 'photo' : /shower|plank|hold|sit|pushup|squat|camera/.test(lo) ? 'endurance' : 'instant') : 'instant';
+                                                                                    const inf = isBang ? (/proof|video|selfie|photo|picture|body writing/.test(lo) ? 'photo' : /write|essay|confession|journal|list|lines|grateful/.test(lo) ? 'writing' : /shower|plank|hold|sit|pushup|squat|camera|edge|ice/.test(lo) ? 'endurance' : 'instant') : 'instant';
                                                                                     const hasFU = isBang && inf !== 'instant';
                                                                                     return (
                                                                                         <button onClick={() => {
                                                                                             if (hasFU) { setFollowUp({ orderType: o.type, source: 'Russian Roulette', resultText: pt, type: inf }); }
                                                                                             else { submitTask({ text: `Russian roulette: ${isBang ? `BANG — ${pt}` : 'CLICK — survived'}` }); }
-                                                                                            setRouletteResult(null); setMechDone(false);
+                                                                                            setRouletteResult(null); setMechDone(false); clearGambleResults();
                                                                                         }}
                                                                                             style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFU ? 'rgba(255,60,60,0.5)' : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
                                                                                             {hasFU ? 'ACCEPT PUNISHMENT' : 'SUBMIT RESULT'}
@@ -2663,7 +2707,7 @@ export default function VaultPage() {
 
                                                                         {/* SPIN WHEEL */}
                                                                         {o.type === 'spin_wheel' && (() => {
-                                                                            const segments = o.config?.segments?.length > 0 ? o.config.segments : WHEEL.map((w: any) => ({ text: w.text, followUpType: /write|essay|confession|journal|list|lines/.test(w.text.toLowerCase()) ? 'writing' : /photo|selfie|body writing|picture/.test(w.text.toLowerCase()) ? 'photo' : /shower|plank|hold|sit|pushup|squat|exercise|ice|video|proof/.test(w.text.toLowerCase()) ? 'endurance' : 'instant' }));
+                                                                            const segments = o.config?.segments?.length > 0 ? o.config.segments : WHEEL.map((w: any) => ({ text: w.text, followUpType: /proof|video|selfie|photo|picture|body writing/.test(w.text.toLowerCase()) ? 'photo' : /write|essay|confession|journal|list|lines|grateful/.test(w.text.toLowerCase()) ? 'writing' : /shower|plank|hold|sit|pushup|squat|exercise|ice|edge|camera/.test(w.text.toLowerCase()) ? 'endurance' : 'instant' }));
                                                                             return (
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 {!wheelResult ? (
@@ -2682,7 +2726,7 @@ export default function VaultPage() {
                                                                                                 finalSeg = segments[Math.floor(Math.random() * segments.length)];
                                                                                                 setWheelPreview(finalSeg.text);
                                                                                                 count++;
-                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setWheelPreview(null); setWheelResult(finalSeg); setMechDone(true); }
+                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setWheelPreview(null); setWheelResult(finalSeg); setMechDone(true); saveGambleResult({ wheelResult: finalSeg }); }
                                                                                             }, 100);
                                                                                         }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                             {wheelSpinning ? 'SPINNING...' : 'SPIN'}
@@ -2701,7 +2745,7 @@ export default function VaultPage() {
                                                                                                 } else {
                                                                                                     submitTask({ text: `Wheel result: ${wheelResult.text}` });
                                                                                                 }
-                                                                                                setWheelResult(null); setMechDone(false);
+                                                                                                setWheelResult(null); setMechDone(false); clearGambleResults();
                                                                                             }}
                                                                                                 style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: hasFollowUp ? `${R}0.5)` : 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
                                                                                                 {hasFollowUp ? 'ACCEPT FATE' : 'SUBMIT RESULT'}
@@ -2719,9 +2763,9 @@ export default function VaultPage() {
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 {!truthDareChoice ? (
                                                                                     <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-                                                                                        <button onClick={() => setTruthDareChoice('truth')}
+                                                                                        <button onClick={() => { setTruthDareChoice('truth'); saveGambleResult({ truthDareChoice: 'truth' }); }}
                                                                                             style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.8)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer' }}>TRUTH</button>
-                                                                                        <button onClick={() => setTruthDareChoice('dare')}
+                                                                                        <button onClick={() => { setTruthDareChoice('dare'); saveGambleResult({ truthDareChoice: 'dare' }); }}
                                                                                             style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(255,80,80,0.8)', background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>DARE</button>
                                                                                     </div>
                                                                                 ) : (() => {
@@ -2733,7 +2777,7 @@ export default function VaultPage() {
                                                                                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '14px 18px', background: truthDareChoice === 'truth' ? 'rgba(197,160,89,0.06)' : 'rgba(255,60,60,0.06)', border: `1px solid ${truthDareChoice === 'truth' ? 'rgba(197,160,89,0.15)' : 'rgba(255,60,60,0.15)'}`, borderRadius: 8 }}>{choiceText}</div>
                                                                                             <button onClick={() => {
                                                                                                 setFollowUp({ orderType: o.type, source: `Truth or Dare (${truthDareChoice})`, resultText: choiceText, type: tdFollowUp });
-                                                                                                setTruthDareChoice(null);
+                                                                                                setTruthDareChoice(null); clearGambleResults();
                                                                                             }}
                                                                                                 style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>ACCEPT FATE</button>
                                                                                         </>
@@ -2755,10 +2799,10 @@ export default function VaultPage() {
                                                                                             <button onClick={() => {
                                                                                                 const add = Math.floor(Math.random() * 15) + 3;
                                                                                                 const bustChance = (greedCoins + add) / ceiling;
-                                                                                                if (Math.random() < bustChance * 0.6) { setGreedBusted(true); setGreedCoins(0); setMechDone(true); }
+                                                                                                if (Math.random() < bustChance * 0.6) { setGreedBusted(true); setGreedCoins(0); setMechDone(true); saveGambleResult({ greedBusted: true }); }
                                                                                                 else { setGreedCoins(prev => Math.min(prev + add, ceiling)); }
                                                                                             }} style={{ padding: '16px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.8)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer' }}>PUSH</button>
-                                                                                            <button disabled={greedCoins === 0} onClick={() => { setGreedCashedOut(true); setMechDone(true); }}
+                                                                                            <button disabled={greedCoins === 0} onClick={() => { setGreedCashedOut(true); setMechDone(true); saveGambleResult({ greedCashedOut: true, greedCoins }); }}
                                                                                                 style={{ padding: '16px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: greedCoins > 0 ? 'rgba(80,200,120,0.8)' : 'rgba(255,255,255,0.1)', background: greedCoins > 0 ? 'rgba(80,200,120,0.04)' : 'transparent', border: `1px solid ${greedCoins > 0 ? 'rgba(80,200,120,0.2)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: greedCoins > 0 ? 'pointer' : 'default' }}>CASH OUT</button>
                                                                                         </div>
                                                                                     </>
@@ -2767,7 +2811,7 @@ export default function VaultPage() {
                                                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: greedBusted ? 'rgba(255,60,60,0.9)' : 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 8 }}>{greedBusted ? 'BUSTED' : `CASHED OUT: ${greedCoins} COINS`}</div>
                                                                                         {greedBusted && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,80,80,0.5)', marginBottom: 16 }}>Greed consumed you. You walk away with nothing.</div>}
                                                                                         {mechDone && (
-                                                                                            <button onClick={() => { submitTask({ text: `Greed game: ${greedBusted ? 'BUSTED — 0 coins' : `Cashed out ${greedCoins} coins`}` }); setGreedCoins(0); setGreedBusted(false); setGreedCashedOut(false); setMechDone(false); }}
+                                                                                            <button onClick={() => { submitTask({ text: `Greed game: ${greedBusted ? 'BUSTED — 0 coins' : `Cashed out ${greedCoins} coins`}` }); setGreedCoins(0); setGreedBusted(false); setGreedCashedOut(false); setMechDone(false); clearGambleResults(); }}
                                                                                                 style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>SUBMIT RESULT</button>
                                                                                         )}
                                                                                     </>
@@ -2794,7 +2838,7 @@ export default function VaultPage() {
                                                                                 ) : (
                                                                                     <>
                                                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(80,200,120,0.8)', letterSpacing: 4, marginBottom: 16 }}>ALL TASKS COMPLETE</div>
-                                                                                        <button onClick={() => { submitTask({ text: `Simon Says: completed ${chain.length} tasks` }); setSimonStep(0); }}
+                                                                                        <button onClick={() => { submitTask({ text: `Simon Says: completed ${chain.length} tasks` }); setSimonStep(0); clearGambleResults(); }}
                                                                                             style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: 'rgba(80,200,120,0.5)', border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>SUBMIT RESULT</button>
                                                                                     </>
                                                                                 )}
@@ -2927,7 +2971,7 @@ export default function VaultPage() {
                         });
                         const result = await resp.json();
                         if (!resp.ok) alert('Submit failed: ' + (result.error || 'unknown error'));
-                        setFollowUp(null); setFollowUpText('');
+                        setFollowUp(null); setFollowUpText(''); clearGambleResults();
                         if (mid) {
                             fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
                                 if (vd2.active) setVaultData(vd2);
@@ -2993,12 +3037,14 @@ export default function VaultPage() {
                                 </div>
                             )}
 
-                            {/* ENDURANCE follow-up — confirm with optional proof */}
+                            {/* ENDURANCE follow-up — requires written report of completion */}
                             {followUp.type === 'endurance' && (
                                 <div style={{ width: '100%', maxWidth: 340 }}>
+                                    <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Describe how you completed this task..."
+                                        style={{ width: '100%', minHeight: 100, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none', marginBottom: 12 }} />
                                     <label style={{ cursor: 'pointer', display: 'block', marginBottom: 12 }}>
                                         <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : `${R}0.3)`, background: `${R}0.02)`, border: `1px solid ${R}0.08)`, borderRadius: 8, textAlign: 'center' }}>
-                                            {followUpUploading ? 'UPLOADING...' : '+ ATTACH PROOF (OPTIONAL)'}
+                                            {followUpUploading ? 'UPLOADING...' : '+ ATTACH PROOF'}
                                         </div>
                                         <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={async (e) => {
                                             const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
@@ -3008,12 +3054,12 @@ export default function VaultPage() {
                                                 const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
                                                 const res = await fetch('/api/upload', { method: 'POST', body: fd });
                                                 const data = await res.json();
-                                                if (data.url) await submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — completed`, photoUrl: data.url });
+                                                if (data.url) await submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText || 'completed'}`, photoUrl: data.url });
                                             } catch {} finally { setFollowUpUploading(false); }
                                         }} />
                                     </label>
-                                    <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — completed` })}
-                                        style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>CONFIRM DONE</button>
+                                    <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!followUpText.trim()}
+                                        style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: followUpText.trim() ? '#050508' : 'rgba(255,255,255,0.08)', background: followUpText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${followUpText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: followUpText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
                                 </div>
                             )}
 
