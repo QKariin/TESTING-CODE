@@ -2537,7 +2537,7 @@ export default function VaultPage() {
                                                                                     return (
                                                                                     <button onClick={() => {
                                                                                         if (hasFollowUp) {
-                                                                                            setFollowUp({ orderType: o.type, source: 'Dice Roll', resultText: outcome.text, type: outcome.followUpType, prompt: outcome.followUpPrompt, instruction: outcome.followUpInstruction, duration: outcome.followUpDuration, target: outcome.followUpTarget });
+                                                                                            setFollowUp({ orderType: o.type, source: `Dice Roll — ${diceResult}`, resultText: outcome.text, type: outcome.followUpType, prompt: outcome.followUpPrompt, instruction: outcome.followUpInstruction, duration: outcome.followUpDuration, target: outcome.followUpTarget });
                                                                                         } else {
                                                                                             submitTask({ text: `Dice roll: ${diceResult} — ${outcome?.text || `Face ${diceResult}`}` });
                                                                                         }
@@ -2589,7 +2589,7 @@ export default function VaultPage() {
                                                                                     return (
                                                                                     <button onClick={() => {
                                                                                         if (hasFollowUp) {
-                                                                                            setFollowUp({ orderType: o.type, source: 'Coinflip', resultText: consequenceText, type: inferredType });
+                                                                                            setFollowUp({ orderType: o.type, source: `Coinflip — ${coinResult!.toUpperCase()}`, resultText: consequenceText, type: inferredType });
                                                                                         } else {
                                                                                             submitTask({ text: `Coinflip: ${coinResult} — ${consequenceText}` });
                                                                                         }
@@ -2693,7 +2693,7 @@ export default function VaultPage() {
                                                                                     const hasFU = isBang && inf !== 'instant';
                                                                                     return (
                                                                                         <button onClick={() => {
-                                                                                            if (hasFU) { setFollowUp({ orderType: o.type, source: 'Russian Roulette', resultText: pt, type: inf }); }
+                                                                                            if (hasFU) { setFollowUp({ orderType: o.type, source: 'Russian Roulette — BANG', resultText: pt, type: inf }); }
                                                                                             else { submitTask({ text: `Russian roulette: ${isBang ? `BANG — ${pt}` : 'CLICK — survived'}` }); }
                                                                                             setRouletteResult(null); setMechDone(false); clearGambleResults();
                                                                                         }}
