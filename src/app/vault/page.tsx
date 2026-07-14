@@ -2462,13 +2462,15 @@ export default function VaultPage() {
                                                                         {/* ── INTERACTIVE MECHANISMS ── */}
 
                                                                         {/* DICE ROLL */}
-                                                                        {o.type === 'dice_roll' && (
+                                                                        {o.type === 'dice_roll' && (() => {
+                                                                            const diceOutcomes = o.config?.outcomes?.length > 0 ? o.config.outcomes : [{ text: 'Edge once — no release', followUpType: 'endurance' }, { text: 'Write 100 lines of devotion', followUpType: 'writing' }, { text: 'Hold a plank for 60 seconds — proof', followUpType: 'photo' }, { text: '30 squats — video proof', followUpType: 'endurance' }, { text: 'Cold water on your face — selfie', followUpType: 'photo' }, { text: 'Lucky. Nothing happens.', followUpType: 'instant' }];
+                                                                            return (
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 <div style={{ width: 80, height: 80, margin: '16px auto 24px', border: `2px solid ${diceResult ? 'rgba(197,160,89,0.4)' : `${R}0.2)`}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: diceResult ? 'rgba(197,160,89,0.06)' : `${R}0.04)`, animation: diceRolling ? 'vPulse 0.15s linear infinite' : 'none' }}>
                                                                                     <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2.5rem', color: diceResult ? 'rgba(197,160,89,0.9)' : `${R}0.3)` }}>{diceResult || '?'}</span>
                                                                                 </div>
                                                                                 {diceResult && !diceRolling && (() => {
-                                                                                    const outcomes = o.config?.outcomes || [];
+                                                                                    const outcomes = diceOutcomes;
                                                                                     const outcomeText = outcomes[diceResult - 1]?.text || `Face ${diceResult}`;
                                                                                     return (<>
                                                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', letterSpacing: 4, marginBottom: 8 }}>YOU ROLLED: {diceResult}</div>
@@ -2478,7 +2480,7 @@ export default function VaultPage() {
                                                                                 {!diceResult || diceRolling ? (
                                                                                     <button disabled={diceRolling} onClick={() => {
                                                                                         setDiceRolling(true); setDiceResult(null);
-                                                                                        const numFaces = o.config?.outcomes?.length || 6;
+                                                                                        const numFaces = diceOutcomes.length;
                                                                                         let count = 0;
                                                                                         const iv = setInterval(() => {
                                                                                             setDiceResult(Math.floor(Math.random() * numFaces) + 1);
@@ -2489,8 +2491,7 @@ export default function VaultPage() {
                                                                                         {diceRolling ? 'ROLLING...' : 'ROLL DICE'}
                                                                                     </button>
                                                                                 ) : mechDone ? (() => {
-                                                                                    const outcomes = o.config?.outcomes || [];
-                                                                                    const outcome = outcomes[diceResult! - 1];
+                                                                                    const outcome = diceOutcomes[diceResult! - 1];
                                                                                     const hasFollowUp = outcome?.followUpType && outcome.followUpType !== 'instant';
                                                                                     return (
                                                                                     <button onClick={() => {
@@ -2507,7 +2508,8 @@ export default function VaultPage() {
                                                                                     );
                                                                                 })() : null}
                                                                             </div>
-                                                                        )}
+                                                                            );
+                                                                        })()}
 
                                                                         {/* COINFLIP */}
                                                                         {o.type === 'coinflip' && (
@@ -2561,7 +2563,7 @@ export default function VaultPage() {
 
                                                                         {/* CARD PICK */}
                                                                         {o.type === 'card_pick' && (() => {
-                                                                            const configCards = o.config?.cards || [];
+                                                                            const configCards = o.config?.cards?.length > 0 ? o.config.cards : [{ text: 'Edge 3 times without release', followUpType: 'endurance' }, { text: 'Write a confession — 200 words', followUpType: 'writing' }, { text: 'Cold shower — 60 seconds proof', followUpType: 'photo' }, { text: '50 pushups — video proof', followUpType: 'endurance' }, { text: 'You got lucky. Nothing happens.', followUpType: 'instant' }];
                                                                             const numCards = Math.max(configCards.length, 3);
                                                                             const displayCount = Math.min(numCards, 5);
                                                                             return (
@@ -2661,7 +2663,7 @@ export default function VaultPage() {
 
                                                                         {/* SPIN WHEEL */}
                                                                         {o.type === 'spin_wheel' && (() => {
-                                                                            const segments = o.config?.segments || [];
+                                                                            const segments = o.config?.segments?.length > 0 ? o.config.segments : WHEEL.map((w: any) => ({ text: w.text, followUpType: /write|essay|confession|journal|list|lines/.test(w.text.toLowerCase()) ? 'writing' : /photo|selfie|body writing|picture/.test(w.text.toLowerCase()) ? 'photo' : /shower|plank|hold|sit|pushup|squat|exercise|ice|video|proof/.test(w.text.toLowerCase()) ? 'endurance' : 'instant' }));
                                                                             return (
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 {!wheelResult ? (
@@ -2776,7 +2778,7 @@ export default function VaultPage() {
 
                                                                         {/* SIMON SAYS */}
                                                                         {o.type === 'simon_says' && (() => {
-                                                                            const chain = o.config?.chainTasks || [];
+                                                                            const chain = o.config?.chainTasks?.length > 0 ? o.config.chainTasks : [{ text: 'Stand at attention for 30 seconds', timeLimit: 30 }, { text: 'Drop and give 10 pushups', timeLimit: 60 }, { text: 'Write "I obey" 10 times', timeLimit: 120 }];
                                                                             const current = chain[simonStep];
                                                                             const allDone = simonStep >= chain.length;
                                                                             return (
@@ -2936,6 +2938,8 @@ export default function VaultPage() {
                 return (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#050508', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
                         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
+                        {/* Back button */}
+                        <button onClick={() => { setFollowUp(null); setFollowUpText(''); }} style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 2, padding: '8px 12px' }}>BACK</button>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px 100px', position: 'relative', zIndex: 1 }}>
                             {/* Source label */}
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, textAlign: 'center', marginBottom: 20 }}>{followUp.source.toUpperCase()}</div>
