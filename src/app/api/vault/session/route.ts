@@ -175,6 +175,44 @@ export async function GET(req: NextRequest) {
     const { data: allSubmissions } = await supabaseAdmin.from('vault_submissions')
         .select('*').eq('session_id', session.id).order('submitted_at', { ascending: true });
 
+    // Read program directly (same source as dashboard's /api/vault/program)
+    let programTasks: any[] | null = null;
+    try {
+        const startDateP = new Date(session.started_at);
+        const dayNum = Math.floor((Date.now() - startDateP.getTime()) / 86400000) + 1;
+        const { data: progRow } = await supabaseAdmin
+            .from('vault_member_program')
+            .select('program')
+            .eq('session_id', session.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (progRow?.program) {
+            const prog = typeof progRow.program === 'string' ? JSON.parse(progRow.program) : progRow.program;
+            const dayData = prog[String(dayNum)];
+            if (dayData && Array.isArray(dayData) && dayData.length > 0) {
+                programTasks = dayData.map((t: any) => ({
+                    type: t.type,
+                    target: t.target || 1,
+                    done: 0,
+                    ...(t.label ? { label: t.label } : {}),
+                    ...(t.config ? { config: t.config } : {}),
+                }));
+            }
+        }
+    } catch (e: any) { console.error('[vault] program read error:', e?.message); }
+
+    // Merge program tasks with vault_daily done counts
+    if (programTasks && todayRecord) {
+        const currentOrders: any[] = todayRecord.orders
+            ? (typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : todayRecord.orders)
+            : [];
+        programTasks = programTasks.map((pt: any) => {
+            const existing = currentOrders.find((co: any) => co.type === pt.type);
+            return existing ? { ...pt, done: existing.done } : pt;
+        });
+    }
+
     return NextResponse.json({
         active: true,
         session,
@@ -193,6 +231,7 @@ export async function GET(req: NextRequest) {
         chastityLog: allChastityChecks || [],
         submissions: todaySubmissions || [],
         allSubmissions: allSubmissions || [],
+        programTasks,
     });
 }
 

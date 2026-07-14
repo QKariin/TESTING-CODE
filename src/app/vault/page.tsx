@@ -252,8 +252,12 @@ export default function VaultPage() {
     const lockDays = vaultData?.session?.lock_days ?? 0;
     const dailyRecords = vaultData?.dailyRecords || [];
     const adjustments = vaultData?.adjustments || [];
+    // Use programTasks (direct from vault_member_program) as source of truth, fallback to vault_daily orders
+    const programTasks = vaultData?.programTasks;
     const rawOrders = vaultData?.today?.orders;
-    const todayOrdersBase = rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
+    const todayOrdersBase = programTasks && programTasks.length > 0
+        ? programTasks
+        : rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
     // Sync kneel order with kneelToday, and chastity with chastityStatus
     const todayOrders = todayOrdersBase.map((o: any) => {
         if (o.type === 'kneel') return { ...o, done: kneelToday };
