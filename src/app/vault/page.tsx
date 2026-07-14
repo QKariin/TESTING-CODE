@@ -2197,9 +2197,13 @@ export default function VaultPage() {
                             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 100px', display: 'flex', flexDirection: 'column' }}>
                                 {(() => {
                                     const tasks = todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel');
+                                    const subs = vaultData?.submissions || [];
+                                    const isPending = (o: any) => taskSubmitted[o.type] || subs.some((s: any) => s.order_type === o.type && s.status === 'pending');
                                     const doneCount = tasks.filter((o: any) => o.done >= o.target).length;
-                                    const allDone = doneCount >= tasks.length;
-                                    const currentTask = tasks.find((o: any) => o.done < o.target);
+                                    const pendingCount = tasks.filter((o: any) => o.done < o.target && isPending(o)).length;
+                                    const allDone = (doneCount + pendingCount) >= tasks.length;
+                                    // Skip done AND pending tasks — show the next actionable one
+                                    const currentTask = tasks.find((o: any) => o.done < o.target && !isPending(o));
 
                                     return (
                                         <>
@@ -2207,10 +2211,10 @@ export default function VaultPage() {
                                             <div style={{ textAlign: 'center', marginBottom: 28 }}>
                                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '4px', marginBottom: 6 }}>DAY {daysIn + 1}</div>
                                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.65)', letterSpacing: '2px' }}>
-                                                    {allDone ? 'ALL ORDERS COMPLETE' : `${tasks.length} TASKS TODAY`}
+                                                    {allDone && pendingCount === 0 ? 'ALL ORDERS COMPLETE' : allDone ? 'AWAITING REVIEW' : `${tasks.length} TASKS TODAY`}
                                                 </div>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: allDone ? 'rgba(80,200,120,0.7)' : `${R}0.5)`, letterSpacing: '3px', marginTop: 4 }}>
-                                                    {doneCount} / {tasks.length} DONE
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.7)' : allDone ? 'rgba(197,160,89,0.6)' : `${R}0.5)`, letterSpacing: '3px', marginTop: 4 }}>
+                                                    {doneCount} / {tasks.length} DONE{pendingCount > 0 ? ` · ${pendingCount} PENDING` : ''}
                                                 </div>
                                             </div>
 
@@ -2218,36 +2222,47 @@ export default function VaultPage() {
                                             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 32, flexWrap: 'wrap' }}>
                                                 {tasks.map((o: any, i: number) => {
                                                     const isDone = o.done >= o.target;
+                                                    const pending = !isDone && isPending(o);
                                                     const isCurrent = o === currentTask;
                                                     const meta = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
                                                     return (
                                                         <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                                                             <div style={{
                                                                 width: 36, height: 36, borderRadius: '50%',
-                                                                border: `2px solid ${isDone ? 'rgba(80,200,120,0.5)' : isCurrent ? `${R}0.5)` : 'rgba(255,255,255,0.08)'}`,
-                                                                background: isDone ? 'rgba(80,200,120,0.08)' : isCurrent ? `${R}0.06)` : 'transparent',
+                                                                border: `2px solid ${isDone ? 'rgba(80,200,120,0.5)' : pending ? 'rgba(197,160,89,0.5)' : isCurrent ? `${R}0.5)` : 'rgba(255,255,255,0.08)'}`,
+                                                                background: isDone ? 'rgba(80,200,120,0.08)' : pending ? 'rgba(197,160,89,0.06)' : isCurrent ? `${R}0.06)` : 'transparent',
                                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                 transition: 'all 0.3s',
-                                                                boxShadow: isCurrent ? `0 0 12px ${R}0.15)` : 'none',
+                                                                boxShadow: isCurrent ? `0 0 12px ${R}0.15)` : pending ? '0 0 10px rgba(197,160,89,0.1)' : 'none',
+                                                                animation: pending ? 'vPulse 2s ease infinite' : 'none',
                                                             }}>
                                                                 {isDone ? (
                                                                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(80,200,120,0.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                                                ) : pending ? (
+                                                                    <span style={{ fontSize: '0.65rem', color: 'rgba(197,160,89,0.7)' }}>⏳</span>
                                                                 ) : (
                                                                     <span style={{ fontSize: '0.8rem', opacity: isCurrent ? 0.7 : 0.2 }}>{meta.icon}</span>
                                                                 )}
                                                             </div>
-                                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: isDone ? 'rgba(80,200,120,0.5)' : isCurrent ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', letterSpacing: '1px', maxWidth: 50, textAlign: 'center', lineHeight: 1.2 }}>{meta.label}</span>
+                                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: isDone ? 'rgba(80,200,120,0.5)' : pending ? 'rgba(197,160,89,0.5)' : isCurrent ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', letterSpacing: '1px', maxWidth: 50, textAlign: 'center', lineHeight: 1.2 }}>{pending ? 'Pending' : meta.label}</span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
 
-                                            {/* ── All complete celebration ── */}
-                                            {allDone && (
+                                            {/* ── All complete / all pending celebration ── */}
+                                            {allDone && pendingCount === 0 && (
                                                 <div style={{ textAlign: 'center', padding: '40px 0', animation: 'vFadeIn 0.5s ease' }}>
                                                     <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 16 }}><path d="M20 6L9 17l-5-5" /></svg>
                                                     <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(80,200,120,0.6)', letterSpacing: '3px', marginBottom: 8 }}>PERFECT</div>
                                                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>ALL ORDERS FULFILLED</div>
+                                                </div>
+                                            )}
+                                            {allDone && pendingCount > 0 && !currentTask && (
+                                                <div style={{ textAlign: 'center', padding: '40px 0', animation: 'vFadeIn 0.5s ease' }}>
+                                                    <div style={{ fontSize: '2.5rem', marginBottom: 16, animation: 'vPulse 2s ease infinite' }}>⏳</div>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 8 }}>ALL SUBMITTED</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{pendingCount} TASK{pendingCount > 1 ? 'S' : ''} AWAITING QUEEN&apos;S REVIEW</div>
                                                 </div>
                                             )}
 
