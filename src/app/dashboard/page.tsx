@@ -2447,8 +2447,71 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                {/* ── PENDING REVIEW (always visible) ── */}
-                                <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
+                                {/* ── PENDING REVIEW — vault submissions when locked, regular queue otherwise ── */}
+                                {vaultRequest?.status === 'active' && vaultSession ? (() => {
+                                    const subs: any[] = vaultSession?.submissions || [];
+                                    const pending = subs.filter((s: any) => s.status === 'pending');
+                                    if (pending.length === 0) return <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>;
+                                    return (
+                                        <div className="dp-section" style={{ margin: '0 0 12px' }}>
+                                            <div className="dp-divider-label" style={{ marginBottom: 16 }}>
+                                                <span className="dp-divider-text" style={{ fontFamily: "'Cinzel',serif" }}>PENDING REVIEW</span>
+                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', fontWeight: 700, letterSpacing: 2 }}>{pending.length}</span>
+                                            </div>
+                                            {pending.map((sub: any) => (
+                                                <div key={sub.id} style={{ marginBottom: 10, padding: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                                        <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>{sub.label || sub.order_type}</span>
+                                                        <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1 }}>
+                                                            {sub.submitted_at ? new Date(sub.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                        </span>
+                                                    </div>
+                                                    {sub.photo_url && (
+                                                        <a href={sub.photo_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.15)', marginBottom: 8 }}>
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img src={sub.photo_url} alt="Submission" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                        </a>
+                                                    )}
+                                                    {sub.video_url && (
+                                                        <video src={sub.video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />
+                                                    )}
+                                                    {sub.text && (
+                                                        <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>
+                                                            {sub.text}
+                                                        </div>
+                                                    )}
+                                                    <textarea id={`pendingSubComment-${sub.id}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginBottom: 6 }} />
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        <button disabled={vaultLoading} onClick={async () => {
+                                                            setVaultLoading(true);
+                                                            const cEl = document.getElementById(`pendingSubComment-${sub.id}`) as HTMLTextAreaElement;
+                                                            const comment = cEl?.value?.trim() || '';
+                                                            try {
+                                                                await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
+                                                                const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                const d = await r.json();
+                                                                if (d.active) setVaultSession(d);
+                                                            } catch (_) {} finally { setVaultLoading(false); }
+                                                        }} style={{ flex: 1, padding: '8px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.42rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
+                                                        <button disabled={vaultLoading} onClick={async () => {
+                                                            setVaultLoading(true);
+                                                            const cEl = document.getElementById(`pendingSubComment-${sub.id}`) as HTMLTextAreaElement;
+                                                            const comment = cEl?.value?.trim() || '';
+                                                            try {
+                                                                await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
+                                                                const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                const d = await r.json();
+                                                                if (d.active) setVaultSession(d);
+                                                            } catch (_) {} finally { setVaultLoading(false); }
+                                                        }} style={{ padding: '8px 14px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })() : (
+                                    <div id="userQueueSec" className="dp-section" style={{ display: 'none' }}></div>
+                                )}
 
                                 {/* kneeling is in the header now */}
                                 <div id="admin_KneelSection" style={{ display: 'none' }}></div>
