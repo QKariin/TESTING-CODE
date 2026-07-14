@@ -2190,81 +2190,6 @@ export default function DashboardPage() {
                                             )}
                                         </div>
 
-                                        {/* ── PENDING TASK SUBMISSIONS (from vault_submissions table) ── */}
-                                        {(() => {
-                                            const subs: any[] = vs?.submissions || [];
-                                            const pending = subs.filter((s: any) => s.status === 'pending');
-                                            const reviewed = subs.filter((s: any) => s.status !== 'pending');
-                                            if (subs.length === 0) return null;
-                                            return (
-                                                <div style={{ margin: '0 4px 12px' }}>
-                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: pending.length > 0 ? 'rgba(197,160,89,0.8)' : 'rgba(100,180,100,0.6)', letterSpacing: 3, marginBottom: 8 }}>
-                                                        TASK SUBMISSIONS {pending.length > 0 && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.9)', background: 'rgba(197,160,89,0.12)', padding: '2px 8px', borderRadius: 4, marginLeft: 6 }}>{pending.length} PENDING</span>}
-                                                    </div>
-                                                    {pending.map((sub: any, si: number) => (
-                                                            <div key={sub.id} style={{ marginBottom: 10, padding: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>{sub.label || sub.order_type}</span>
-                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1 }}>
-                                                                        {sub.submitted_at ? new Date(sub.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                                                                    </span>
-                                                                </div>
-                                                                {sub.photo_url && (
-                                                                    <a href={sub.photo_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.15)', marginBottom: 8 }}>
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img src={sub.photo_url} alt="Submission" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
-                                                                    </a>
-                                                                )}
-                                                                {sub.video_url && (
-                                                                    <video src={sub.video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />
-                                                                )}
-                                                                {sub.text && (
-                                                                    <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>
-                                                                        {sub.text}
-                                                                    </div>
-                                                                )}
-                                                                <textarea id={`subComment-${sub.id}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginBottom: 6 }} />
-                                                                <div style={{ display: 'flex', gap: 8 }}>
-                                                                    <button disabled={vaultLoading} onClick={async () => {
-                                                                        setVaultLoading(true);
-                                                                        const cEl = document.getElementById(`subComment-${sub.id}`) as HTMLTextAreaElement;
-                                                                        const comment = cEl?.value?.trim() || '';
-                                                                        try {
-                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
-                                                                            const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
-                                                                            const d = await r.json();
-                                                                            if (d.active) setVaultSession(d);
-                                                                        } catch (_) {} finally { setVaultLoading(false); }
-                                                                    }} style={{ flex: 1, padding: '8px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.42rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
-                                                                    <button disabled={vaultLoading} onClick={async () => {
-                                                                        setVaultLoading(true);
-                                                                        const cEl = document.getElementById(`subComment-${sub.id}`) as HTMLTextAreaElement;
-                                                                        const comment = cEl?.value?.trim() || '';
-                                                                        try {
-                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
-                                                                            const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
-                                                                            const d = await r.json();
-                                                                            if (d.active) setVaultSession(d);
-                                                                        } catch (_) {} finally { setVaultLoading(false); }
-                                                                    }} style={{ padding: '8px 14px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
-                                                                </div>
-                                                            </div>
-                                                    ))}
-                                                    {reviewed.length > 0 && (
-                                                        <div style={{ marginTop: 6 }}>
-                                                            {reviewed.slice(-5).map((sub: any) => (
-                                                                <div key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 3, background: sub.status === 'approved' ? 'rgba(80,200,80,0.03)' : 'rgba(255,60,60,0.03)', border: `1px solid ${sub.status === 'approved' ? 'rgba(80,200,80,0.1)' : 'rgba(255,60,60,0.1)'}`, borderRadius: 6 }}>
-                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.35rem', color: sub.status === 'approved' ? 'rgba(80,200,80,0.6)' : 'rgba(255,60,60,0.5)', letterSpacing: 1, width: 55 }}>{sub.status === 'approved' ? '✓ OK' : '✕ REJ'}</span>
-                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{sub.label || sub.order_type}</span>
-                                                                    {sub.queen_comment && <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', fontStyle: 'italic' }}>&ldquo;{sub.queen_comment}&rdquo;</span>}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })()}
-
                                         {/* ── SEAL BADGE ── */}
                                         {sealEarned && (
                                             <div style={{ textAlign: 'center', margin: '0 4px 12px', padding: '10px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
@@ -2306,57 +2231,6 @@ export default function DashboardPage() {
                                             </div>
                                         )}
 
-                                        {/* ── CHASTITY CHECK LOG (from vault_check_log table) ── */}
-                                        {(() => {
-                                            const log: any[] = vs?.chastityLog || [];
-                                            if (log.length === 0) return null;
-                                            return (
-                                                <div style={{ margin: '0 4px 12px' }}>
-                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>CHASTITY LOG ({log.length})</div>
-                                                    <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                        {log.slice().reverse().map((chk: any) => (
-                                                            <div key={chk.id} style={{ padding: '10px 12px', background: chk.status === 'approved' ? 'rgba(80,200,80,0.04)' : chk.status === 'pending' ? 'rgba(197,160,89,0.04)' : chk.status === 'rejected' ? 'rgba(255,60,60,0.04)' : 'rgba(139,0,0,0.04)', border: `1px solid ${chk.status === 'approved' ? 'rgba(80,200,80,0.15)' : chk.status === 'pending' ? 'rgba(197,160,89,0.2)' : chk.status === 'rejected' ? 'rgba(255,60,60,0.15)' : 'rgba(139,0,0,0.1)'}`, borderRadius: 8 }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: chk.proof_url ? 8 : 0 }}>
-                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)' }}>{chk.date}</span>
-                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.38rem', letterSpacing: 2, color: chk.status === 'approved' ? 'rgba(80,200,80,0.8)' : chk.status === 'pending' ? 'rgba(197,160,89,0.8)' : 'rgba(255,60,60,0.7)' }}>
-                                                                        {chk.status === 'approved' ? '✓ APPROVED' : chk.status === 'pending' ? '⏳ PENDING' : '✕ REJECTED'}
-                                                                    </span>
-                                                                </div>
-                                                                {chk.proof_url && (
-                                                                    <a href={chk.proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.1)', marginBottom: chk.status === 'pending' ? 8 : 0 }}>
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img src={chk.proof_url} alt="Chastity check" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
-                                                                    </a>
-                                                                )}
-                                                                {chk.status === 'pending' && (
-                                                                    <div style={{ display: 'flex', gap: 8 }}>
-                                                                        <button disabled={vaultLoading} onClick={async () => {
-                                                                            setVaultLoading(true);
-                                                                            try {
-                                                                                await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_chastity', memberId: currId, date: chk.date }) });
-                                                                                const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
-                                                                                const d = await r.json();
-                                                                                if (d.active) setVaultSession(d);
-                                                                            } catch (_) {} finally { setVaultLoading(false); }
-                                                                        }} style={{ flex: 1, padding: '7px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.42rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
-                                                                        <button disabled={vaultLoading} onClick={async () => {
-                                                                            setVaultLoading(true);
-                                                                            try {
-                                                                                await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_chastity', memberId: currId, date: chk.date, reason: 'Rejected' }) });
-                                                                                const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
-                                                                                const d = await r.json();
-                                                                                if (d.active) setVaultSession(d);
-                                                                            } catch (_) {} finally { setVaultLoading(false); }
-                                                                        }} style={{ padding: '7px 12px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
-                                                                    </div>
-                                                                )}
-                                                                {chk.queen_comment && <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', fontStyle: 'italic', marginTop: 4 }}>&ldquo;{chk.queen_comment}&rdquo;</div>}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
 
                                         {/* ── ALL TASK SUBMISSIONS LOG ── */}
                                         {(() => {
