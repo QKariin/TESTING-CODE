@@ -121,6 +121,59 @@ export async function GET(req: Request) {
         checkAndPromote(ur.member_id).catch(() => {});
     }
 
-    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines`);
-    return NextResponse.json({ success: true, approved: stale.length });
+    // ── AUTO-APPROVE VAULT CHASTITY CHECKS (from Taskdom_History) ──
+    let chastityApproved = 0;
+    try {
+        const { data: taskRows } = await supabaseAdmin.from('tasks').select('member_id, "Taskdom_History"');
+        for (const row of (taskRows || [])) {
+            let history: any[] = [];
+            try { history = typeof row.Taskdom_History === 'string' ? JSON.parse(row.Taskdom_History || '[]') : (row.Taskdom_History || []); } catch { continue; }
+            let changed = false;
+            for (const entry of history) {
+                if (entry.status === 'pending' && entry.text === 'Chastity Check' && entry.timestamp) {
+                    const age = Date.now() - new Date(entry.timestamp).getTime();
+                    if (age > 2 * 60 * 60 * 1000) {
+                        entry.status = 'approve';
+                        entry.completed = true;
+                        entry.reviewed_at = now;
+                        changed = true;
+                        chastityApproved++;
+
+                        // Also mark vault_daily order as done
+                        try {
+                            const email = row.member_id.toLowerCase();
+                            const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                                .select('id').eq('member_id', email).eq('status', 'active').limit(1).maybeSingle();
+                            if (sess) {
+                                const today = new Date().toISOString().split('T')[0];
+                                const { data: daily } = await supabaseAdmin.from('vault_daily')
+                                    .select('id, orders, orders_completed, orders_total')
+                                    .eq('session_id', sess.id).eq('date', today).maybeSingle();
+                                if (daily) {
+                                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                                    for (const o of orders) {
+                                        if (o.type === 'chastity_check') { o.done = o.target; o.status = 'approved'; break; }
+                                    }
+                                    const completed = orders.filter((o: any) => o.done >= o.target).length;
+                                    await supabaseAdmin.from('vault_daily').update({
+                                        orders: JSON.stringify(orders),
+                                        orders_completed: completed,
+                                        perfect: completed >= orders.length,
+                                    }).eq('id', daily.id);
+                                }
+                            }
+                        } catch (_) {}
+                    }
+                }
+            }
+            if (changed) {
+                await supabaseAdmin.from('tasks').update({ 'Taskdom_History': JSON.stringify(history) }).eq('member_id', row.member_id);
+            }
+        }
+    } catch (err: any) {
+        console.error('[cron/auto-approve] chastity error:', err.message);
+    }
+
+    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines, ${chastityApproved} chastity checks`);
+    return NextResponse.json({ success: true, approved: stale.length, chastityApproved });
 }

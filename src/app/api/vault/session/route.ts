@@ -127,6 +127,29 @@ export async function GET(req: NextRequest) {
         chastityWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
     } catch (_) {}
 
+    // Read chastity check status from Taskdom_History (same storage as daily routine tasks)
+    let chastityTaskStatus: string | null = null;
+    let chastityTaskPhoto: string | null = null;
+    try {
+        const { data: taskRow } = await supabaseAdmin.from('tasks').select('"Taskdom_History"').ilike('member_id', email).maybeSingle();
+        if (taskRow?.Taskdom_History) {
+            const hist: any[] = typeof taskRow.Taskdom_History === 'string' ? JSON.parse(taskRow.Taskdom_History) : taskRow.Taskdom_History;
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+            // Find most recent chastity check for today
+            for (let i = hist.length - 1; i >= 0; i--) {
+                const e = hist[i];
+                if (e.text === 'Chastity Check') {
+                    const eDate = e.timestamp ? new Date(e.timestamp).toLocaleDateString('en-CA', { timeZone: tz }) : null;
+                    if (eDate === todayStr) {
+                        chastityTaskStatus = e.status === 'approve' ? 'approved' : e.status;
+                        chastityTaskPhoto = e.proofUrl || null;
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (_) {}
+
     return NextResponse.json({
         active: true,
         session,
@@ -141,6 +164,8 @@ export async function GET(req: NextRequest) {
         begs: begs || [],
         totalPenaltyHours,
         chastityWindow,
+        chastityTaskStatus,
+        chastityTaskPhoto,
     });
 }
 
@@ -344,30 +369,34 @@ export async function POST(req: NextRequest) {
                 10
             );
 
-            try {
-                const { data: daily } = await supabaseAdmin.from('vault_daily')
-                    .select('id, orders, chastity_photo').eq('session_id', session.id).eq('date', today).maybeSingle();
-                if (daily) {
-                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-                    const cc = orders.find((o: any) => o.type === 'chastity_check');
-                    // Block duplicate: if already pending or approved, reject
-                    if (cc && (cc.status === 'pending' || cc.status === 'approved')) {
-                        return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: cc.status }, { status: 400 });
-                    }
-                    // Enforce 6-10 AM window — but allow resubmit anytime if Queen rejected
-                    const isRejectedRetry = cc?.status === 'rejected';
-                    if (!isRejectedRetry && (localHour < 6 || localHour >= 10)) {
-                        return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
-                    }
-                    for (const o of orders) {
-                        if (o.type === 'chastity_check') { o.status = 'pending'; o.photoUrl = photoUrl; break; }
-                    }
-                    await supabaseAdmin.from('vault_daily').update({
-                        chastity_photo: photoUrl,
-                        orders: JSON.stringify(orders),
-                    }).eq('id', daily.id);
-                }
-            } catch (_) {}
+            const { data: daily } = await supabaseAdmin.from('vault_daily')
+                .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
+            if (!daily) return NextResponse.json({ error: 'No daily record for today' }, { status: 404 });
+
+            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+            const cc = orders.find((o: any) => o.type === 'chastity_check');
+            // Block duplicate: if already pending or approved, reject
+            if (cc && (cc.status === 'pending' || cc.status === 'approved')) {
+                return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: cc.status }, { status: 400 });
+            }
+            // Enforce 6-10 AM window — but allow resubmit anytime if Queen rejected
+            const isRejectedRetry = cc?.status === 'rejected';
+            if (!isRejectedRetry && (localHour < 6 || localHour >= 10)) {
+                return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
+            }
+            for (const o of orders) {
+                if (o.type === 'chastity_check') { o.status = 'pending'; o.photoUrl = photoUrl; o.submittedAt = new Date().toISOString(); break; }
+            }
+            // Save orders JSON first (this column always exists)
+            const { error: ordErr } = await supabaseAdmin.from('vault_daily').update({
+                orders: JSON.stringify(orders),
+            }).eq('id', daily.id);
+            if (ordErr) {
+                console.error('[vault] Failed to save chastity orders:', ordErr);
+                return NextResponse.json({ error: 'Failed to save submission' }, { status: 500 });
+            }
+            // Try saving to chastity_photo column too (may not exist in all DBs)
+            try { await supabaseAdmin.from('vault_daily').update({ chastity_photo: photoUrl }).eq('id', daily.id); } catch (_) {}
 
             // Send push notification to Queen
             try {
@@ -451,9 +480,9 @@ export async function POST(req: NextRequest) {
             if (o.type === 'chastity_check') { o.done = 0; o.status = 'rejected'; o.rejectReason = reason || ''; delete o.photoUrl; break; }
         }
         await supabaseAdmin.from('vault_daily').update({
-            chastity_photo: null,
             orders: JSON.stringify(orders),
         }).eq('id', daily.id);
+        try { await supabaseAdmin.from('vault_daily').update({ chastity_photo: null }).eq('id', daily.id); } catch (_) {}
 
         return NextResponse.json({ success: true, rejected: true });
     }
