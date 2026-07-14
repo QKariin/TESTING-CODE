@@ -195,6 +195,9 @@ export default function VaultPage() {
     const [selectedDay, setSelectedDay] = useState<DayLog | null>(null);
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [mechOverlay, setMechOverlay] = useState<{ order: any; idx: number } | null>(null);
+    const [taskText, setTaskText] = useState('');
+    const [taskUploading, setTaskUploading] = useState(false);
+    const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
     const [attnHolding, setAttnHolding] = useState(false);
     const [attnFill, setAttnFill] = useState(0);
     const [attnResult, setAttnResult] = useState<typeof ATTENTION_TASKS[0] | null>(null);
@@ -2362,6 +2365,127 @@ export default function VaultPage() {
                                                                     </div>
                                                                 </div>
                                                             )}
+
+                                                            {/* ── GENERIC TASK SUBMISSION (all non-handled types) ── */}
+                                                            {!isMech && !['spin','trial','tribute','silence'].includes(o.type) && (() => {
+                                                                const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof'].includes(o.type);
+                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing'].includes(o.type);
+                                                                const isSelfReport = ['edge','corner_time','denial'].includes(o.type);
+                                                                const alreadySubmitted = taskSubmitted[o.type];
+                                                                const existingSub = (vaultData?.submissions || []).find((s: any) => s.order_type === o.type);
+                                                                const isPending = existingSub?.status === 'pending' || alreadySubmitted;
+                                                                const mid = profile?.member_id || profile?.memberId || '';
+                                                                const oIdx = tasks.indexOf(o);
+
+                                                                const submitTask = async (opts: { text?: string; photoUrl?: string }) => {
+                                                                    setTaskSubmitted(p => ({ ...p, [o.type]: true }));
+                                                                    try {
+                                                                        await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderIdx: oIdx, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null }),
+                                                                        });
+                                                                        setTaskText('');
+                                                                    } catch {}
+                                                                };
+
+                                                                if (isPending) return (
+                                                                    <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', animation: 'vPulse 2s ease infinite' }}>
+                                                                            ⏳ AWAITING REVIEW
+                                                                        </div>
+                                                                    </div>
+                                                                );
+
+                                                                return (
+                                                                    <div>
+                                                                        {/* Task description / instruction */}
+                                                                        {o.config?.instruction && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config.instruction}</div>}
+
+                                                                        {/* Specific prompts per type */}
+                                                                        {o.type === 'cold_shower' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Take a cold shower for {o.target} seconds. Film or photograph yourself as proof.</div>}
+                                                                        {o.type === 'body_writing' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Write the required word on your body. Take a clear photo.</div>}
+                                                                        {o.type === 'exercise' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Complete {o.target} reps. Video or photo proof required.</div>}
+                                                                        {o.type === 'journal' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config?.prompt || 'Write your journal entry.'}</div>}
+                                                                        {o.type === 'confession' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Confess. Be honest. Queen sees everything.</div>}
+                                                                        {o.type === 'worship' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Write a worship message to Queen Karin.</div>}
+                                                                        {o.type === 'gratitude' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>List {o.target} things you are grateful for.</div>}
+                                                                        {o.type === 'essay' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>{o.config?.prompt || 'Write your essay.'}</div>}
+                                                                        {o.type === 'lines' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Write the assigned line {o.target} times. Screenshot your work.</div>}
+                                                                        {o.type === 'edge' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Edge {o.target} time{o.target > 1 ? 's' : ''}. Do not release. Report when done.</div>}
+                                                                        {o.type === 'corner_time' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Stand in the corner for {o.target} minutes. No phone. No distractions.</div>}
+                                                                        {o.type === 'denial' && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>Full denial. No touching for 24 hours. Report compliance.</div>}
+
+                                                                        {/* Text input for writing tasks */}
+                                                                        {isTextTask && (
+                                                                            <>
+                                                                                <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Write here..."
+                                                                                    style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                                                                                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>{taskText.split(/\s+/).filter(Boolean).length} words</span>
+                                                                                    <button onClick={() => submitTask({ text: taskText })} disabled={!taskText.trim()}
+                                                                                        style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#050508' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${taskText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                                                                                </div>
+                                                                            </>
+                                                                        )}
+
+                                                                        {/* Photo upload for proof tasks */}
+                                                                        {isPhotoTask && (
+                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                                                                <label style={{ cursor: 'pointer' }}>
+                                                                                    <div style={{ padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskUploading ? 'rgba(255,255,255,0.2)' : `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                                                                                        {taskUploading ? 'UPLOADING...' : 'UPLOAD PROOF'}
+                                                                                    </div>
+                                                                                    <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={async (e) => {
+                                                                                        const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                                                                        setTaskUploading(true);
+                                                                                        try {
+                                                                                            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                                                            const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                                                            const data = await res.json();
+                                                                                            if (data.url) await submitTask({ photoUrl: data.url });
+                                                                                        } catch {} finally { setTaskUploading(false); }
+                                                                                    }} />
+                                                                                </label>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Self-report button */}
+                                                                        {isSelfReport && (
+                                                                            <button onClick={() => submitTask({ text: `${o.type} completed` })}
+                                                                                style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 8, cursor: 'pointer', textAlign: 'center' }}>
+                                                                                MARK COMPLETE
+                                                                            </button>
+                                                                        )}
+
+                                                                        {/* Fallback for unknown types: show both text + photo */}
+                                                                        {!isPhotoTask && !isTextTask && !isSelfReport && (
+                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                                                                <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe your completion..."
+                                                                                    style={{ width: '100%', minHeight: 80, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
+                                                                                <label style={{ cursor: 'pointer' }}>
+                                                                                    <div style={{ padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '2px', color: `${R}0.4)`, background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 8, textAlign: 'center' }}>
+                                                                                        + ATTACH PHOTO
+                                                                                    </div>
+                                                                                    <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={async (e) => {
+                                                                                        const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                                                                        setTaskUploading(true);
+                                                                                        try {
+                                                                                            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                                                                            const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                                                            const data = await res.json();
+                                                                                            if (data.url) await submitTask({ text: taskText || undefined, photoUrl: data.url });
+                                                                                        } catch {} finally { setTaskUploading(false); }
+                                                                                    }} />
+                                                                                </label>
+                                                                                <button onClick={() => submitTask({ text: taskText })} disabled={!taskText.trim()}
+                                                                                    style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#050508' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${taskText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 );
