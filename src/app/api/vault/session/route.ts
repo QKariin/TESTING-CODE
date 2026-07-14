@@ -618,6 +618,10 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Broadcast to member so their vault page updates instantly
+        _notifyMember(email, 'task_reviewed', { status: 'approved', submissionId });
+        _pushToMember(email, 'Task Approved', 'Your task submission has been approved by Queen.');
+
         return NextResponse.json({ success: true, approved: true });
     }
 
@@ -650,6 +654,10 @@ export async function POST(req: NextRequest) {
                 orders: JSON.stringify(orders),
             }).eq('id', daily.id);
         }
+
+        // Broadcast to member
+        _notifyMember(email, 'task_reviewed', { status: 'rejected', submissionId });
+        _pushToMember(email, 'Task Rejected', comment || 'Your task submission was rejected. Resubmit.');
 
         return NextResponse.json({ success: true, rejected: true });
     }

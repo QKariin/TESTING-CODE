@@ -486,6 +486,15 @@ export default function VaultPage() {
                                             }).catch(() => {});
                                         }
                                     })
+                                    .on('broadcast', { event: 'task_reviewed' }, (msg: any) => {
+                                        // Refresh full vault data so submission statuses update
+                                        const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
+                                        if (mid) {
+                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                                if (vd2.active) setVaultData(vd2);
+                                            }).catch(() => {});
+                                        }
+                                    })
                                     .subscribe();
                                 (window as any)._vaultDailySub = notifySub;
                             }

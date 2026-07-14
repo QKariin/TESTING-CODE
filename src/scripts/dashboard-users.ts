@@ -564,6 +564,12 @@ async function updateReviewQueue(u: any) {
     const qSec = document.getElementById('userQueueSec');
     if (!qSec) return;
 
+    // Hide regular review queue for vault-locked members — vault has its own submissions panel
+    if ((window as any)._isVaultActive) {
+        qSec.style.display = 'none';
+        return;
+    }
+
     if (u.reviewQueue && u.reviewQueue.length > 0) {
         // Skip re-render if queue hasn't changed
         const queueJson = JSON.stringify(u.reviewQueue);

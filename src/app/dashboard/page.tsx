@@ -915,6 +915,7 @@ export default function DashboardPage() {
         (window as any)._setQueenOnlyChat = setQueenOnlyChat;
         (window as any)._setVaultRequest = (req: any) => {
             setVaultRequest(req);
+            (window as any)._isVaultActive = req?.status === 'active';
             // Auto-fetch full vault session data when user has active lock
             if (req?.status === 'active') {
                 const id = (window as any).currId;
