@@ -427,13 +427,17 @@ export default function VaultPage() {
                                                 setVaultData(vd2);
                                                 if (vd2.chastityWindow) setChastityWindow(vd2.chastityWindow);
                                                 // Re-read chastity status from fresh data
-                                                const freshOrd = vd2.today?.orders ? (typeof vd2.today.orders === 'string' ? JSON.parse(vd2.today.orders) : vd2.today.orders) : [];
-                                                const fcc = freshOrd.find((o: any) => o.type === 'chastity_check');
                                                 const chk2 = vd2.chastityCheck;
                                                 if (chk2?.status === 'approved') setChastityStatus('approved');
                                                 else if (chk2?.status === 'pending') setChastityStatus('pending');
                                                 else if (chk2?.status === 'rejected') setChastityStatus('rejected');
-                                                else setChastityStatus('none');
+                                                else {
+                                                    // Fallback: check orders JSON for legacy approved chastity
+                                                    const freshOrd = vd2.today?.orders ? (typeof vd2.today.orders === 'string' ? JSON.parse(vd2.today.orders) : vd2.today.orders) : [];
+                                                    const fcc = freshOrd.find((o: any) => o.type === 'chastity_check');
+                                                    if (fcc && fcc.done >= fcc.target) setChastityStatus('approved');
+                                                    else setChastityStatus('none');
+                                                }
                                                 if (chk2?.proof_url) setChastityPhotoUrl(chk2.proof_url);
                                             }
                                         });

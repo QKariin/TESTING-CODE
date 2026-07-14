@@ -92,21 +92,23 @@ export async function GET(req: NextRequest) {
         const daysIn3 = Math.floor((Date.now() - startDate3.getTime()) / 86400000) + 1;
         const programOrders = await _getOrdersForDay(session.id, daysIn3);
 
-        // Compare task types from program vs current orders
-        const programTypes = programOrders.map((o: any) => o.type).sort().join(',');
-        const currentTypes = currentOrders.map((o: any) => o.type).sort().join(',');
+        // Compare types + targets + labels to catch any program edits
+        const programSig = programOrders.map((o: any) => `${o.type}:${o.target}:${o.label || ''}`).sort().join('|');
+        const currentSig = currentOrders.map((o: any) => `${o.type}:${o.target}:${o.label || ''}`).sort().join('|');
 
-        if (programTypes !== currentTypes) {
+        if (programSig !== currentSig) {
             // Merge: keep done counts for tasks that still exist, add new ones, remove old ones
             const merged = programOrders.map((po: any) => {
                 const existing = currentOrders.find((co: any) => co.type === po.type);
                 return existing ? { ...po, done: existing.done } : po;
             });
+            const completed = merged.filter((o: any) => o.done >= o.target).length;
             await supabaseAdmin.from('vault_daily').update({
                 orders: JSON.stringify(merged),
                 orders_total: merged.length,
+                orders_completed: completed,
             }).eq('id', todayRecord.id);
-            todayRecord = { ...todayRecord, orders: JSON.stringify(merged), orders_total: merged.length };
+            todayRecord = { ...todayRecord, orders: JSON.stringify(merged), orders_total: merged.length, orders_completed: completed };
         }
     }
 
@@ -732,14 +734,17 @@ export async function POST(req: NextRequest) {
 // Read orders from member's custom program; auto-generate program if missing
 async function _getOrdersForDay(sessionId: string, dayNumber: number) {
     try {
-        let { data: prog } = await supabaseAdmin
+        let { data: prog, error: progErr } = await supabaseAdmin
             .from('vault_member_program')
             .select('program')
             .eq('session_id', sessionId)
             .maybeSingle();
 
+        if (progErr) console.error('[vault] _getOrdersForDay query error:', progErr.message);
+
         // Auto-generate program for sessions that don't have one yet
         if (!prog) {
+            console.log(`[vault] No program for session ${sessionId}, auto-generating...`);
             const { data: sess } = await supabaseAdmin
                 .from('vault_sessions')
                 .select('member_id')
@@ -747,11 +752,13 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
                 .single();
             if (sess) {
                 const program = await _generateFullProgram();
-                await supabaseAdmin.from('vault_member_program').insert({
+                const { error: insertErr } = await supabaseAdmin.from('vault_member_program').insert({
                     session_id: sessionId,
                     member_id: sess.member_id,
                     program: JSON.stringify(program),
                 });
+                if (insertErr) console.error('[vault] Failed to insert auto-generated program:', insertErr.message);
+                else console.log(`[vault] Auto-generated program for session ${sessionId}`);
                 prog = { program: JSON.stringify(program) };
             }
         }
@@ -767,8 +774,11 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
                     return order;
                 });
             }
+            console.warn(`[vault] Program found but day ${dayNumber} has no tasks, falling back to defaults`);
         }
-    } catch { }
+    } catch (err: any) {
+        console.error('[vault] _getOrdersForDay error:', err?.message || err);
+    }
     // Final fallback
     return _generateDailyOrders(dayNumber);
 }

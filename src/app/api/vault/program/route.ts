@@ -214,9 +214,21 @@ export async function POST(req: NextRequest) {
             .eq('session_id', session.id)
             .maybeSingle();
 
-        if (!prog) return NextResponse.json({ error: 'No program found. Generate first.' }, { status: 400 });
-
-        const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
+        let program: Record<string, any>;
+        if (!prog) {
+            // Auto-create program if it doesn't exist (session created before table existed)
+            program = {};
+            for (let d = 1; d <= 30; d++) program[String(d)] = _defaultDayTasks(d);
+            const { data: created } = await supabaseAdmin.from('vault_member_program').insert({
+                session_id: session.id,
+                member_id: email,
+                program: JSON.stringify(program),
+            }).select('id').single();
+            if (!created) return NextResponse.json({ error: 'Failed to create program' }, { status: 500 });
+            prog = { id: created.id, program };
+        } else {
+            program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
+        }
         program[String(dayNumber)] = tasks;
 
         await supabaseAdmin.from('vault_member_program').update({
