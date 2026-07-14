@@ -632,7 +632,7 @@ export async function POST(req: NextRequest) {
             .maybeSingle();
 
         if (!existing) {
-            // Check if yesterday's chastity check was approved — if not, end the program
+            // Check if yesterday's chastity check was done — if not, end the program
             // Skip day 1 (video submission day) — chastity check starts from day 2
             if (daysIn > 2) {
                 const { data: yesterday } = await supabaseAdmin
@@ -644,11 +644,13 @@ export async function POST(req: NextRequest) {
                 if (yesterday) {
                     const yOrders: any[] = typeof yesterday.orders === 'string' ? JSON.parse(yesterday.orders) : (yesterday.orders || []);
                     const yChastity = yOrders.find((o: any) => o.type === 'chastity_check');
-                    if (yChastity && yChastity.status !== 'approved' && !(yChastity.done >= yChastity.target)) {
-                        // Chastity check not approved — end the session
+                    // Only terminate if chastity was never submitted at all (done=0 AND no pending/approved status)
+                    // If status is 'pending', Queen hasn't reviewed yet — don't terminate
+                    if (yChastity && !(yChastity.done >= yChastity.target) && yChastity.status !== 'pending' && yChastity.status !== 'approved') {
+                        // Chastity check not submitted — end the session
                         await supabaseAdmin.from('vault_sessions').update({
                             status: 'completed',
-                            release_reason: 'Chastity check not submitted or approved. Program terminated.',
+                            release_reason: 'Chastity check not submitted. Program terminated.',
                         }).eq('id', session.id);
                         return NextResponse.json({ success: false, ended: true, reason: 'chastity_failed' });
                     }
@@ -722,7 +724,12 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
             const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
             const dayTasks = program[String(dayNumber)];
             if (dayTasks && Array.isArray(dayTasks) && dayTasks.length > 0) {
-                return dayTasks.map((t: any) => ({ type: t.type, target: t.target || 1, done: 0 }));
+                return dayTasks.map((t: any) => {
+                    const order: any = { type: t.type, target: t.target || 1, done: 0 };
+                    if (t.label) order.label = t.label;
+                    if (t.config) order.config = t.config;
+                    return order;
+                });
             }
         }
     } catch { }
