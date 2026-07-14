@@ -2207,7 +2207,7 @@ export default function VaultPage() {
                                 {(() => {
                                     const tasks = todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel');
                                     const subs = vaultData?.submissions || [];
-                                    const isPending = (o: any) => taskSubmitted[o.type] || subs.some((s: any) => s.order_type === o.type && s.status === 'pending');
+                                    const isPending = (o: any) => taskSubmitted[o.type] || o.submitted === 'pending' || subs.some((s: any) => s.order_type === o.type && s.status === 'pending');
                                     const doneCount = tasks.filter((o: any) => o.done >= o.target).length;
                                     const pendingCount = tasks.filter((o: any) => o.done < o.target && isPending(o)).length;
                                     const allDone = (doneCount + pendingCount) >= tasks.length;
@@ -2397,18 +2397,24 @@ export default function VaultPage() {
                                                                 const isSelfReport = ['edge','corner_time','denial'].includes(o.type);
                                                                 const alreadySubmitted = taskSubmitted[o.type];
                                                                 const existingSub = (vaultData?.submissions || []).find((s: any) => s.order_type === o.type);
-                                                                const isPending = existingSub?.status === 'pending' || alreadySubmitted;
+                                                                const isPending = existingSub?.status === 'pending' || alreadySubmitted || o.submitted === 'pending';
                                                                 const mid = profile?.member_id || profile?.memberId || '';
-                                                                const oIdx = tasks.indexOf(o);
-
                                                                 const submitTask = async (opts: { text?: string; photoUrl?: string }) => {
                                                                     setTaskSubmitted(p => ({ ...p, [o.type]: true }));
                                                                     try {
-                                                                        await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                                                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderIdx: oIdx, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null }),
+                                                                        const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null }),
                                                                         });
+                                                                        const result = await resp.json();
+                                                                        if (!resp.ok) console.error('[vault] submit_task error:', result.error);
                                                                         setTaskText('');
-                                                                    } catch {}
+                                                                        // Refresh vault data to get updated submissions
+                                                                        if (mid) {
+                                                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                                                                if (vd2.active) setVaultData(vd2);
+                                                                            }).catch(() => {});
+                                                                        }
+                                                                    } catch (e) { console.error('[vault] submit_task fetch error:', e); }
                                                                 };
 
                                                                 if (isPending) return (

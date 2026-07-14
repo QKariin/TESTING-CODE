@@ -168,12 +168,22 @@ export async function GET(req: NextRequest) {
         .select('*').eq('session_id', session.id).eq('type', 'chastity_check').order('date', { ascending: true });
 
     // Read today's task submissions from vault_submissions table
-    const { data: todaySubmissions } = await supabaseAdmin.from('vault_submissions')
-        .select('*').eq('session_id', session.id).eq('date', today).order('submitted_at', { ascending: true });
+    let todaySubmissions: any[] = [];
+    let allSubmissions: any[] = [];
+    try {
+        const { data: ts, error: tsErr } = await supabaseAdmin.from('vault_submissions')
+            .select('*').eq('session_id', session.id).eq('date', today).order('submitted_at', { ascending: true });
+        if (tsErr) console.error('[vault] submissions read error:', tsErr.message);
+        else todaySubmissions = ts || [];
 
-    // Read ALL task submissions for this session (for dashboard history)
-    const { data: allSubmissions } = await supabaseAdmin.from('vault_submissions')
-        .select('*').eq('session_id', session.id).order('submitted_at', { ascending: true });
+        // Read ALL task submissions for this session (for dashboard history)
+        const { data: as2, error: asErr } = await supabaseAdmin.from('vault_submissions')
+            .select('*').eq('session_id', session.id).order('submitted_at', { ascending: true });
+        if (asErr) console.error('[vault] all submissions read error:', asErr.message);
+        else allSubmissions = as2 || [];
+    } catch (e: any) {
+        console.error('[vault] submissions table error:', e?.message);
+    }
 
     // Read program directly (same source as dashboard's /api/vault/program)
     let programTasks: any[] | null = null;
@@ -209,7 +219,15 @@ export async function GET(req: NextRequest) {
             : [];
         programTasks = programTasks.map((pt: any) => {
             const existing = currentOrders.find((co: any) => co.type === pt.type);
-            return existing ? { ...pt, done: existing.done } : pt;
+            if (!existing) return pt;
+            return {
+                ...pt,
+                done: existing.done,
+                ...(existing.submitted ? { submitted: existing.submitted } : {}),
+                ...(existing.submitted_at ? { submitted_at: existing.submitted_at } : {}),
+                ...(existing.submitted_text ? { submitted_text: existing.submitted_text } : {}),
+                ...(existing.submitted_photo ? { submitted_photo: existing.submitted_photo } : {}),
+            };
         });
     }
 
@@ -544,29 +562,52 @@ export async function POST(req: NextRequest) {
 
     // ── SUBMIT TASK — member submits proof/text for Queen's review ──
     if (action === 'submit_task') {
-        const { orderIdx, orderType, text, photoUrl, videoUrl } = body;
+        const { orderType, text, photoUrl, videoUrl } = body;
         const today = new Date().toISOString().split('T')[0];
 
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        console.log('[vault] submit_task:', { email, orderType, sessionId: session.id, today });
+
+        const { data: daily, error: dailyErr } = await supabaseAdmin.from('vault_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
-        if (!daily) return NextResponse.json({ error: 'No daily record' }, { status: 404 });
+        if (dailyErr) console.error('[vault] submit_task daily lookup error:', dailyErr.message);
+        if (!daily) {
+            console.error('[vault] submit_task: no vault_daily for session', session.id, 'date', today);
+            return NextResponse.json({ error: 'No daily record for today' }, { status: 404 });
+        }
 
         const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-        const idx = orderIdx != null ? orderIdx : orders.findIndex((o: any) => o.type === orderType && o.done < o.target);
+        const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target && o.submitted !== 'pending');
 
-        // Insert into vault_submissions table (proper DB, not JSON)
-        await supabaseAdmin.from('vault_submissions').insert({
-            session_id: session.id,
-            member_id: email,
-            date: today,
-            order_idx: idx >= 0 ? idx : 0,
-            order_type: orderType || orders[idx]?.type || 'unknown',
-            label: orders[idx]?.label || orderType || null,
-            text: text || null,
-            photo_url: photoUrl || null,
-            video_url: videoUrl || null,
-            status: 'pending',
-        });
+        // Mark the order as submitted in vault_daily orders JSON (reliable fallback)
+        if (idx >= 0 && idx < orders.length) {
+            orders[idx].submitted = 'pending';
+            orders[idx].submitted_at = new Date().toISOString();
+            if (text) orders[idx].submitted_text = text;
+            if (photoUrl) orders[idx].submitted_photo = photoUrl;
+            if (videoUrl) orders[idx].submitted_video = videoUrl;
+            await supabaseAdmin.from('vault_daily').update({
+                orders: JSON.stringify(orders),
+            }).eq('id', daily.id);
+        }
+
+        // Also insert into vault_submissions table if it exists
+        try {
+            const { error: subErr } = await supabaseAdmin.from('vault_submissions').insert({
+                session_id: session.id,
+                member_id: email,
+                date: today,
+                order_idx: idx >= 0 ? idx : 0,
+                order_type: orderType || orders[idx]?.type || 'unknown',
+                label: orders[idx]?.label || orderType || null,
+                text: text || null,
+                photo_url: photoUrl || null,
+                video_url: videoUrl || null,
+                status: 'pending',
+            });
+            if (subErr) console.error('[vault] submit_task vault_submissions insert error:', subErr.message);
+        } catch (e: any) {
+            console.error('[vault] vault_submissions table missing:', e?.message);
+        }
 
         return NextResponse.json({ success: true, status: 'pending' });
     }
