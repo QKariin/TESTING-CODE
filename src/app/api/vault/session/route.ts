@@ -747,6 +747,8 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
             .from('vault_member_program')
             .select('program')
             .eq('session_id', sessionId)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
         if (progErr) console.error('[vault] _getOrdersForDay query error:', progErr.message);

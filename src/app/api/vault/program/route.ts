@@ -99,6 +99,8 @@ export async function GET(req: NextRequest) {
         .from('vault_member_program')
         .select('*')
         .eq('session_id', session.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
     return NextResponse.json({ program: prog });
@@ -174,6 +176,8 @@ export async function POST(req: NextRequest) {
             .from('vault_member_program')
             .select('id')
             .eq('session_id', session.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
         if (existing) {
@@ -212,6 +216,8 @@ export async function POST(req: NextRequest) {
             .from('vault_member_program')
             .select('*')
             .eq('session_id', session.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
         let program: Record<string, any>;
