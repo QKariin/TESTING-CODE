@@ -145,7 +145,7 @@ export async function GET(req: Request) {
                 if (daily) {
                     const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
                     for (const o of orders) {
-                        if (o.type === 'chastity_check') { o.done = o.target; o.status = 'approved'; break; }
+                        if (o.type === 'chastity_check') { o.done = o.target; break; }
                     }
                     const completed = orders.filter((o: any) => o.done >= o.target).length;
                     const perfect = completed >= orders.length;
@@ -173,6 +173,57 @@ export async function GET(req: Request) {
         console.error('[cron/auto-approve] chastity error:', err.message);
     }
 
-    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines, ${chastityApproved} chastity checks`);
-    return NextResponse.json({ success: true, approved: stale.length, chastityApproved });
+    // ── AUTO-APPROVE VAULT TASK SUBMISSIONS (from vault_submissions table) ──
+    let tasksApproved = 0;
+    try {
+        const { data: pendingSubs } = await supabaseAdmin
+            .from('vault_submissions')
+            .select('*')
+            .eq('status', 'pending')
+            .lt('submitted_at', twoHoursAgo);
+
+        for (const sub of (pendingSubs || [])) {
+            await supabaseAdmin.from('vault_submissions').update({
+                status: 'approved',
+                reviewed_at: now,
+            }).eq('id', sub.id);
+
+            // Update order done count in vault_daily
+            try {
+                const { data: daily } = await supabaseAdmin.from('vault_daily')
+                    .select('id, orders, orders_completed, orders_total')
+                    .eq('session_id', sub.session_id).eq('date', sub.date).maybeSingle();
+                if (daily) {
+                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    if (sub.order_idx != null && orders[sub.order_idx]) {
+                        orders[sub.order_idx].done = orders[sub.order_idx].target;
+                    }
+                    const completed = orders.filter((o: any) => o.done >= o.target).length;
+                    const perfect = completed >= orders.length;
+                    await supabaseAdmin.from('vault_daily').update({
+                        orders: JSON.stringify(orders), orders_completed: completed, perfect,
+                    }).eq('id', daily.id);
+
+                    if (perfect) {
+                        const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                            .select('current_streak, best_streak, total_perfect_days').eq('id', sub.session_id).single();
+                        if (sess) {
+                            const ns = (sess.current_streak || 0) + 1;
+                            await supabaseAdmin.from('vault_sessions').update({
+                                current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
+                                total_perfect_days: (sess.total_perfect_days || 0) + 1,
+                            }).eq('id', sub.session_id);
+                        }
+                    }
+                }
+            } catch (_) {}
+
+            tasksApproved++;
+        }
+    } catch (err: any) {
+        console.error('[cron/auto-approve] vault tasks error:', err.message);
+    }
+
+    console.log(`[cron/auto-approve] Auto-approved ${stale.length} routines, ${chastityApproved} chastity checks, ${tasksApproved} vault tasks`);
+    return NextResponse.json({ success: true, approved: stale.length, chastityApproved, tasksApproved });
 }

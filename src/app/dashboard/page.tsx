@@ -2075,14 +2075,17 @@ export default function DashboardPage() {
                                     const streak = s?.current_streak || 0;
                                     const bestStreak = s?.best_streak || 0;
                                     const perfectDays = s?.total_perfect_days || 0;
+                                    const failedDays = s?.total_failed_days || 0;
+                                    const sealEarned = s?.seal_earned || null;
                                     const todayOrders: any[] = vs?.today?.orders ? (typeof vs.today.orders === 'string' ? JSON.parse(vs.today.orders) : vs.today.orders) : [];
                                     const todayPerfect = vs?.today?.perfect || false;
                                     const dailyRecords: any[] = vs?.dailyRecords || [];
                                     const begs: any[] = vs?.begs || [];
                                     const orderLabels: Record<string, string> = { kneel: 'KNEEL', chastity_check: 'CHASTITY CHECK', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
-                                    const todayChastityPhoto = vs?.today?.chastity_photo || null;
-                                    const chastityOrder = todayOrders.find((o: any) => o.type === 'chastity_check');
-                                    const chastityStatus = chastityOrder?.status || (chastityOrder?.done >= chastityOrder?.target ? 'approved' : todayChastityPhoto ? 'pending' : 'none');
+                                    // Chastity check data from vault_check_log (proper table, not orders JSON)
+                                    const chastityCheckRow = vs?.chastityCheck || null;
+                                    const todayChastityPhoto = chastityCheckRow?.proof_url || null;
+                                    const chastityStatus = chastityCheckRow?.status || 'none';
                                     const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                                     return (
@@ -2186,10 +2189,9 @@ export default function DashboardPage() {
                                             )}
                                         </div>
 
-                                        {/* ── PENDING TASK SUBMISSIONS ── */}
+                                        {/* ── PENDING TASK SUBMISSIONS (from vault_submissions table) ── */}
                                         {(() => {
-                                            let subs: any[] = [];
-                                            try { subs = typeof vs?.today?.submissions === 'string' ? JSON.parse(vs.today.submissions) : (vs?.today?.submissions || []); } catch { subs = []; }
+                                            const subs: any[] = vs?.submissions || [];
                                             const pending = subs.filter((s: any) => s.status === 'pending');
                                             const reviewed = subs.filter((s: any) => s.status !== 'pending');
                                             if (subs.length === 0) return null;
@@ -2198,42 +2200,36 @@ export default function DashboardPage() {
                                                     <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: pending.length > 0 ? 'rgba(197,160,89,0.8)' : 'rgba(100,180,100,0.6)', letterSpacing: 3, marginBottom: 8 }}>
                                                         TASK SUBMISSIONS {pending.length > 0 && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.9)', background: 'rgba(197,160,89,0.12)', padding: '2px 8px', borderRadius: 4, marginLeft: 6 }}>{pending.length} PENDING</span>}
                                                     </div>
-                                                    {pending.map((sub: any, si: number) => {
-                                                        const realIdx = subs.indexOf(sub);
-                                                        return (
-                                                            <div key={`p-${si}`} style={{ marginBottom: 10, padding: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
+                                                    {pending.map((sub: any, si: number) => (
+                                                            <div key={sub.id} style={{ marginBottom: 10, padding: 12, background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>{sub.label || sub.orderType}</span>
+                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>{sub.label || sub.order_type}</span>
                                                                     <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 1 }}>
-                                                                        {sub.submittedAt ? new Date(sub.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                                        {sub.submitted_at ? new Date(sub.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                                                     </span>
                                                                 </div>
-                                                                {/* Photo */}
-                                                                {sub.photoUrl && (
-                                                                    <a href={sub.photoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.15)', marginBottom: 8 }}>
+                                                                {sub.photo_url && (
+                                                                    <a href={sub.photo_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.15)', marginBottom: 8 }}>
                                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img src={sub.photoUrl} alt="Submission" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                                        <img src={sub.photo_url} alt="Submission" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
                                                                     </a>
                                                                 )}
-                                                                {/* Video */}
-                                                                {sub.videoUrl && (
-                                                                    <video src={sub.videoUrl} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />
+                                                                {sub.video_url && (
+                                                                    <video src={sub.video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />
                                                                 )}
-                                                                {/* Text */}
                                                                 {sub.text && (
                                                                     <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>
                                                                         {sub.text}
                                                                     </div>
                                                                 )}
-                                                                {/* Comment + Approve / Reject */}
-                                                                <textarea id={`subComment-${realIdx}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginBottom: 6 }} />
+                                                                <textarea id={`subComment-${sub.id}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginBottom: 6 }} />
                                                                 <div style={{ display: 'flex', gap: 8 }}>
                                                                     <button disabled={vaultLoading} onClick={async () => {
                                                                         setVaultLoading(true);
-                                                                        const cEl = document.getElementById(`subComment-${realIdx}`) as HTMLTextAreaElement;
+                                                                        const cEl = document.getElementById(`subComment-${sub.id}`) as HTMLTextAreaElement;
                                                                         const comment = cEl?.value?.trim() || '';
                                                                         try {
-                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_task', memberId: currId, submissionIdx: realIdx, comment }) });
+                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
                                                                             const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
                                                                             const d = await r.json();
                                                                             if (d.active) setVaultSession(d);
@@ -2241,10 +2237,10 @@ export default function DashboardPage() {
                                                                     }} style={{ flex: 1, padding: '8px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.42rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
                                                                     <button disabled={vaultLoading} onClick={async () => {
                                                                         setVaultLoading(true);
-                                                                        const cEl = document.getElementById(`subComment-${realIdx}`) as HTMLTextAreaElement;
+                                                                        const cEl = document.getElementById(`subComment-${sub.id}`) as HTMLTextAreaElement;
                                                                         const comment = cEl?.value?.trim() || '';
                                                                         try {
-                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_task', memberId: currId, submissionIdx: realIdx, comment }) });
+                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
                                                                             const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
                                                                             const d = await r.json();
                                                                             if (d.active) setVaultSession(d);
@@ -2252,16 +2248,14 @@ export default function DashboardPage() {
                                                                     }} style={{ padding: '8px 14px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
                                                                 </div>
                                                             </div>
-                                                        );
-                                                    })}
-                                                    {/* Reviewed submissions — collapsed */}
+                                                    ))}
                                                     {reviewed.length > 0 && (
                                                         <div style={{ marginTop: 6 }}>
-                                                            {reviewed.slice(-5).map((sub: any, si: number) => (
-                                                                <div key={`r-${si}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 3, background: sub.status === 'approved' ? 'rgba(80,200,80,0.03)' : 'rgba(255,60,60,0.03)', border: `1px solid ${sub.status === 'approved' ? 'rgba(80,200,80,0.1)' : 'rgba(255,60,60,0.1)'}`, borderRadius: 6 }}>
+                                                            {reviewed.slice(-5).map((sub: any) => (
+                                                                <div key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 3, background: sub.status === 'approved' ? 'rgba(80,200,80,0.03)' : 'rgba(255,60,60,0.03)', border: `1px solid ${sub.status === 'approved' ? 'rgba(80,200,80,0.1)' : 'rgba(255,60,60,0.1)'}`, borderRadius: 6 }}>
                                                                     <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.35rem', color: sub.status === 'approved' ? 'rgba(80,200,80,0.6)' : 'rgba(255,60,60,0.5)', letterSpacing: 1, width: 55 }}>{sub.status === 'approved' ? '✓ OK' : '✕ REJ'}</span>
-                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{sub.label || sub.orderType}</span>
-                                                                    {sub.queenComment && <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', fontStyle: 'italic' }}>&ldquo;{sub.queenComment}&rdquo;</span>}
+                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{sub.label || sub.order_type}</span>
+                                                                    {sub.queen_comment && <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.5)', fontStyle: 'italic' }}>&ldquo;{sub.queen_comment}&rdquo;</span>}
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -2270,12 +2264,24 @@ export default function DashboardPage() {
                                             );
                                         })()}
 
+                                        {/* ── SEAL BADGE ── */}
+                                        {sealEarned && (
+                                            <div style={{ textAlign: 'center', margin: '0 4px 12px', padding: '10px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8 }}>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.6rem', letterSpacing: 3, color: sealEarned === 'diamond' ? 'rgba(185,242,255,0.9)' : sealEarned === 'gold' ? 'rgba(197,160,89,0.9)' : sealEarned === 'silver' ? 'rgba(192,192,192,0.9)' : 'rgba(205,127,50,0.9)' }}>
+                                                    {sealEarned === 'diamond' ? '◆' : sealEarned === 'gold' ? '★' : sealEarned === 'silver' ? '☆' : '●'} {sealEarned.toUpperCase()} SEAL
+                                                </span>
+                                            </div>
+                                        )}
+
                                         {/* ── STATS GRID ── */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, margin: '0 4px 12px' }}>
                                             {[
                                                 { label: 'STREAK', value: streak, color: streak > 0 ? 'rgba(80,200,80,0.7)' : 'rgba(255,255,255,0.4)' },
                                                 { label: 'BEST', value: bestStreak, color: 'rgba(197,160,89,0.7)' },
-                                                { label: 'PERFECT', value: perfectDays, color: 'rgba(255,255,255,0.5)' },
+                                                { label: 'PERFECT', value: perfectDays, color: 'rgba(80,200,80,0.5)' },
+                                                { label: 'FAILED', value: failedDays, color: failedDays > 0 ? 'rgba(255,60,60,0.7)' : 'rgba(255,255,255,0.25)' },
+                                                { label: 'DAY', value: `${daysIn + 1}/${lockDays}`, color: 'rgba(255,255,255,0.5)' },
+                                                { label: 'PENALTY', value: penaltyHrs > 0 ? `+${penaltyHrs}h` : '0', color: penaltyHrs > 0 ? 'rgba(255,60,60,0.6)' : 'rgba(255,255,255,0.25)' },
                                             ].map((st, i) => (
                                                 <div key={i} style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(139,0,0,0.03)', border: '1px solid rgba(139,0,0,0.08)', borderRadius: 6 }}>
                                                     <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1rem', fontWeight: 700, color: st.color }}>{st.value}</div>
@@ -2284,12 +2290,6 @@ export default function DashboardPage() {
                                             ))}
                                         </div>
 
-                                        {/* ── PENALTY ── */}
-                                        {penaltyHrs > 0 && (
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, margin: '0 4px 12px', padding: '8px', background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.12)', borderRadius: 6 }}>
-                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: 'rgba(255,60,60,0.6)', letterSpacing: 2 }}>+{penaltyHrs}h PENALTY</span>
-                                            </div>
-                                        )}
 
                                         {/* ── DAILY HISTORY (last 7) ── */}
                                         {dailyRecords.length > 0 && (
@@ -2304,6 +2304,83 @@ export default function DashboardPage() {
                                                 </div>
                                             </div>
                                         )}
+
+                                        {/* ── CHASTITY CHECK LOG (from vault_check_log table) ── */}
+                                        {(() => {
+                                            const log: any[] = vs?.chastityLog || [];
+                                            if (log.length === 0) return null;
+                                            return (
+                                                <div style={{ margin: '0 4px 12px' }}>
+                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>CHASTITY LOG ({log.length})</div>
+                                                    <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                        {log.slice().reverse().map((chk: any) => (
+                                                            <div key={chk.id} style={{ padding: '10px 12px', background: chk.status === 'approved' ? 'rgba(80,200,80,0.04)' : chk.status === 'pending' ? 'rgba(197,160,89,0.04)' : chk.status === 'rejected' ? 'rgba(255,60,60,0.04)' : 'rgba(139,0,0,0.04)', border: `1px solid ${chk.status === 'approved' ? 'rgba(80,200,80,0.15)' : chk.status === 'pending' ? 'rgba(197,160,89,0.2)' : chk.status === 'rejected' ? 'rgba(255,60,60,0.15)' : 'rgba(139,0,0,0.1)'}`, borderRadius: 8 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: chk.proof_url ? 8 : 0 }}>
+                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.4)' }}>{chk.date}</span>
+                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.38rem', letterSpacing: 2, color: chk.status === 'approved' ? 'rgba(80,200,80,0.8)' : chk.status === 'pending' ? 'rgba(197,160,89,0.8)' : 'rgba(255,60,60,0.7)' }}>
+                                                                        {chk.status === 'approved' ? '✓ APPROVED' : chk.status === 'pending' ? '⏳ PENDING' : '✕ REJECTED'}
+                                                                    </span>
+                                                                </div>
+                                                                {chk.proof_url && (
+                                                                    <a href={chk.proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.1)', marginBottom: chk.status === 'pending' ? 8 : 0 }}>
+                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                        <img src={chk.proof_url} alt="Chastity check" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
+                                                                    </a>
+                                                                )}
+                                                                {chk.status === 'pending' && (
+                                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                                        <button disabled={vaultLoading} onClick={async () => {
+                                                                            setVaultLoading(true);
+                                                                            try {
+                                                                                await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_chastity', memberId: currId, date: chk.date }) });
+                                                                                const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                                const d = await r.json();
+                                                                                if (d.active) setVaultSession(d);
+                                                                            } catch (_) {} finally { setVaultLoading(false); }
+                                                                        }} style={{ flex: 1, padding: '7px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.42rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
+                                                                        <button disabled={vaultLoading} onClick={async () => {
+                                                                            setVaultLoading(true);
+                                                                            try {
+                                                                                await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_chastity', memberId: currId, date: chk.date, reason: 'Rejected' }) });
+                                                                                const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                                const d = await r.json();
+                                                                                if (d.active) setVaultSession(d);
+                                                                            } catch (_) {} finally { setVaultLoading(false); }
+                                                                        }} style={{ padding: '7px 12px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.4rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
+                                                                    </div>
+                                                                )}
+                                                                {chk.queen_comment && <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', fontStyle: 'italic', marginTop: 4 }}>&ldquo;{chk.queen_comment}&rdquo;</div>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* ── ALL TASK SUBMISSIONS LOG ── */}
+                                        {(() => {
+                                            const all: any[] = vs?.allSubmissions || [];
+                                            if (all.length === 0) return null;
+                                            const pendingAll = all.filter((s: any) => s.status === 'pending');
+                                            return (
+                                                <div style={{ margin: '0 4px 12px' }}>
+                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>
+                                                        SUBMISSION LOG ({all.length}) {pendingAll.length > 0 && <span style={{ color: 'rgba(197,160,89,0.8)' }}>— {pendingAll.length} PENDING</span>}
+                                                    </div>
+                                                    <div style={{ maxHeight: 250, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                        {all.slice().reverse().slice(0, 20).map((sub: any) => (
+                                                            <div key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: sub.status === 'approved' ? 'rgba(80,200,80,0.03)' : sub.status === 'pending' ? 'rgba(197,160,89,0.04)' : 'rgba(255,60,60,0.03)', border: `1px solid ${sub.status === 'approved' ? 'rgba(80,200,80,0.1)' : sub.status === 'pending' ? 'rgba(197,160,89,0.15)' : 'rgba(255,60,60,0.1)'}`, borderRadius: 6 }}>
+                                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.33rem', color: sub.status === 'approved' ? 'rgba(80,200,80,0.6)' : sub.status === 'pending' ? 'rgba(197,160,89,0.7)' : 'rgba(255,60,60,0.5)', letterSpacing: 1, width: 50 }}>{sub.status === 'approved' ? '✓ OK' : sub.status === 'pending' ? '⏳' : '✕ REJ'}</span>
+                                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.3)', width: 55 }}>{sub.date}</span>
+                                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{sub.label || sub.order_type}</span>
+                                                                {sub.photo_url && <span style={{ fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)' }}>📷</span>}
+                                                                {sub.queen_comment && <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.4)', fontStyle: 'italic', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>&ldquo;{sub.queen_comment}&rdquo;</span>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* ── BEGS ── */}
                                         {begs.length > 0 && (

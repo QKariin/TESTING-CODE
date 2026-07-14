@@ -2690,10 +2690,11 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                                             <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
                                         </div>
                                     ))}
-                                    {vaultSession.today.chastity_photo && (
-                                        <a href={vaultSession.today.chastity_photo} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 8, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.2)' }}>
+                                    {/* Chastity check from vault_check_log table */}
+                                    {vaultSession.chastityCheck?.proof_url && (
+                                        <a href={vaultSession.chastityCheck.proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 8, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.2)' }}>
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={vaultSession.today.chastity_photo} alt="Chastity check" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
+                                            <img src={vaultSession.chastityCheck.proof_url} alt="Chastity check" style={{ width: '100%', maxHeight: 160, objectFit: 'cover', display: 'block' }} />
                                         </a>
                                     )}
                                 </div>

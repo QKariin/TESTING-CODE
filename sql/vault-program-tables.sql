@@ -48,6 +48,31 @@ CREATE INDEX IF NOT EXISTS idx_vault_check_log_session ON vault_check_log(sessio
 CREATE INDEX IF NOT EXISTS idx_vault_check_log_status ON vault_check_log(status);
 CREATE INDEX IF NOT EXISTS idx_vault_check_log_member ON vault_check_log(member_id, date);
 
+-- 5. Vault submissions — proper table for all task submissions (not chastity, that's vault_check_log)
+-- One row per submission. Member can resubmit after rejection.
+CREATE TABLE IF NOT EXISTS vault_submissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES vault_sessions(id) ON DELETE CASCADE,
+    member_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    order_idx INTEGER NOT NULL,
+    order_type TEXT NOT NULL,
+    label TEXT,
+    text TEXT,
+    photo_url TEXT,
+    video_url TEXT,
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'rejected')),
+    reviewed_at TIMESTAMPTZ,
+    queen_comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_vault_submissions_session_date ON vault_submissions(session_id, date);
+CREATE INDEX IF NOT EXISTS idx_vault_submissions_status ON vault_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_vault_submissions_member ON vault_submissions(member_id, date);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_vault_member_program_session ON vault_member_program(session_id);
 CREATE INDEX IF NOT EXISTS idx_vault_member_program_member ON vault_member_program(member_id);

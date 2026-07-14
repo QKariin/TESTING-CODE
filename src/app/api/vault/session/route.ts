@@ -131,6 +131,18 @@ export async function GET(req: NextRequest) {
     const { data: chastityCheck } = await supabaseAdmin.from('vault_check_log')
         .select('*').eq('session_id', session.id).eq('date', today).eq('type', 'chastity_check').maybeSingle();
 
+    // Read ALL chastity check logs for this session (for dashboard history)
+    const { data: allChastityChecks } = await supabaseAdmin.from('vault_check_log')
+        .select('*').eq('session_id', session.id).eq('type', 'chastity_check').order('date', { ascending: true });
+
+    // Read today's task submissions from vault_submissions table
+    const { data: todaySubmissions } = await supabaseAdmin.from('vault_submissions')
+        .select('*').eq('session_id', session.id).eq('date', today).order('submitted_at', { ascending: true });
+
+    // Read ALL task submissions for this session (for dashboard history)
+    const { data: allSubmissions } = await supabaseAdmin.from('vault_submissions')
+        .select('*').eq('session_id', session.id).order('submitted_at', { ascending: true });
+
     return NextResponse.json({
         active: true,
         session,
@@ -146,6 +158,9 @@ export async function GET(req: NextRequest) {
         totalPenaltyHours,
         chastityWindow,
         chastityCheck: chastityCheck || null,
+        chastityLog: allChastityChecks || [],
+        submissions: todaySubmissions || [],
+        allSubmissions: allSubmissions || [],
     });
 }
 
@@ -384,18 +399,7 @@ export async function POST(req: NextRequest) {
                 });
             }
 
-            // Also mark vault_daily order as pending (for task list display)
-            try {
-                const { data: daily } = await supabaseAdmin.from('vault_daily')
-                    .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
-                if (daily) {
-                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-                    for (const o of orders) {
-                        if (o.type === 'chastity_check') { o.status = 'pending'; break; }
-                    }
-                    await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
-                }
-            } catch (_) {}
+            // No need to touch vault_daily orders — chastity status lives in vault_check_log
 
             // Push notification to Queen
             try {
@@ -465,91 +469,77 @@ export async function POST(req: NextRequest) {
 
     // ── SUBMIT TASK — member submits proof/text for Queen's review ──
     if (action === 'submit_task') {
-        const { orderIdx, orderType, text, photoUrl, videoUrl, submittedAt } = body;
+        const { orderIdx, orderType, text, photoUrl, videoUrl } = body;
         const today = new Date().toISOString().split('T')[0];
 
         const { data: daily } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders, submissions').eq('session_id', session.id).eq('date', today).maybeSingle();
+            .select('id, orders').eq('session_id', session.id).eq('date', today).maybeSingle();
         if (!daily) return NextResponse.json({ error: 'No daily record' }, { status: 404 });
 
         const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-        // Mark the order as pending
-        const idx = orderIdx != null ? orderIdx : orders.findIndex((o: any) => o.type === orderType && o.status !== 'pending' && o.status !== 'approved' && o.done < o.target);
-        if (idx >= 0 && idx < orders.length) {
-            orders[idx].status = 'pending';
-            if (photoUrl) orders[idx].photoUrl = photoUrl;
-            if (videoUrl) orders[idx].videoUrl = videoUrl;
-            if (text) orders[idx].submittedText = text;
-        }
+        const idx = orderIdx != null ? orderIdx : orders.findIndex((o: any) => o.type === orderType && o.done < o.target);
 
-        // Append to submissions array (stored in vault_daily row)
-        let subs: any[] = [];
-        try { subs = typeof daily.submissions === 'string' ? JSON.parse(daily.submissions) : (daily.submissions || []); } catch { subs = []; }
-        subs.push({
-            orderIdx: idx,
-            orderType: orderType || orders[idx]?.type,
-            label: orders[idx]?.label || orderType,
+        // Insert into vault_submissions table (proper DB, not JSON)
+        await supabaseAdmin.from('vault_submissions').insert({
+            session_id: session.id,
+            member_id: email,
+            date: today,
+            order_idx: idx >= 0 ? idx : 0,
+            order_type: orderType || orders[idx]?.type || 'unknown',
+            label: orders[idx]?.label || orderType || null,
             text: text || null,
-            photoUrl: photoUrl || null,
-            videoUrl: videoUrl || null,
-            submittedAt: submittedAt || new Date().toISOString(),
+            photo_url: photoUrl || null,
+            video_url: videoUrl || null,
             status: 'pending',
-            queenComment: null,
         });
-
-        await supabaseAdmin.from('vault_daily').update({
-            orders: JSON.stringify(orders),
-            submissions: JSON.stringify(subs),
-        }).eq('id', daily.id);
 
         return NextResponse.json({ success: true, status: 'pending' });
     }
 
     // ── APPROVE TASK — Queen approves a task submission ──
     if (action === 'approve_task') {
-        const { date: targetDate, submissionIdx, comment } = body;
+        const { date: targetDate, submissionId, comment } = body;
         const date = targetDate || new Date().toISOString().split('T')[0];
 
+        // Update the submission row in vault_submissions
+        await supabaseAdmin.from('vault_submissions').update({
+            status: 'approved',
+            reviewed_at: new Date().toISOString(),
+            queen_comment: comment || null,
+        }).eq('id', submissionId);
+
+        // Get the submission to find order_idx
+        const { data: sub } = await supabaseAdmin.from('vault_submissions')
+            .select('order_idx').eq('id', submissionId).single();
+
+        // Update order done count in vault_daily
         const { data: daily } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders, orders_completed, orders_total, submissions').eq('session_id', session.id).eq('date', date).maybeSingle();
-        if (!daily) return NextResponse.json({ error: 'No daily record' }, { status: 404 });
-
-        let subs: any[] = [];
-        try { subs = typeof daily.submissions === 'string' ? JSON.parse(daily.submissions) : (daily.submissions || []); } catch { subs = []; }
-        const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-
-        if (submissionIdx != null && subs[submissionIdx]) {
-            subs[submissionIdx].status = 'approved';
-            if (comment) subs[submissionIdx].queenComment = comment;
-            // Mark the corresponding order as done
-            const oIdx = subs[submissionIdx].orderIdx;
+            .select('id, orders, orders_completed, orders_total').eq('session_id', session.id).eq('date', date).maybeSingle();
+        if (daily) {
+            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+            const oIdx = sub?.order_idx;
             if (oIdx != null && orders[oIdx]) {
                 orders[oIdx].done = orders[oIdx].target;
-                orders[oIdx].status = 'approved';
-                if (comment) orders[oIdx].queenComment = comment;
             }
-        }
+            const completed = orders.filter((o: any) => o.done >= o.target).length;
+            const perfect = completed >= orders.length;
 
-        const completed = orders.filter((o: any) => o.done >= o.target).length;
-        const perfect = completed >= orders.length;
+            await supabaseAdmin.from('vault_daily').update({
+                orders: JSON.stringify(orders),
+                orders_completed: completed,
+                perfect,
+            }).eq('id', daily.id);
 
-        await supabaseAdmin.from('vault_daily').update({
-            orders: JSON.stringify(orders),
-            submissions: JSON.stringify(subs),
-            orders_completed: completed,
-            perfect,
-        }).eq('id', daily.id);
-
-        // Update streak if perfect
-        if (perfect) {
-            const { data: sess } = await supabaseAdmin.from('vault_sessions')
-                .select('current_streak, best_streak, total_perfect_days').eq('id', session.id).single();
-            if (sess) {
-                const ns = (sess.current_streak || 0) + 1;
-                await supabaseAdmin.from('vault_sessions').update({
-                    current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
-                    total_perfect_days: (sess.total_perfect_days || 0) + 1,
-                }).eq('id', session.id);
+            if (perfect) {
+                const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                    .select('current_streak, best_streak, total_perfect_days').eq('id', session.id).single();
+                if (sess) {
+                    const ns = (sess.current_streak || 0) + 1;
+                    await supabaseAdmin.from('vault_sessions').update({
+                        current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
+                        total_perfect_days: (sess.total_perfect_days || 0) + 1,
+                    }).eq('id', session.id);
+                }
             }
         }
 
@@ -558,35 +548,33 @@ export async function POST(req: NextRequest) {
 
     // ── REJECT TASK — Queen rejects a task submission ──
     if (action === 'reject_task') {
-        const { date: targetDate, submissionIdx, comment } = body;
+        const { date: targetDate, submissionId, comment } = body;
         const date = targetDate || new Date().toISOString().split('T')[0];
 
+        // Update the submission row
+        await supabaseAdmin.from('vault_submissions').update({
+            status: 'rejected',
+            reviewed_at: new Date().toISOString(),
+            queen_comment: comment || null,
+        }).eq('id', submissionId);
+
+        // Get the submission to find order_idx
+        const { data: sub } = await supabaseAdmin.from('vault_submissions')
+            .select('order_idx').eq('id', submissionId).single();
+
+        // Reset order done count
         const { data: daily } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders, submissions').eq('session_id', session.id).eq('date', date).maybeSingle();
-        if (!daily) return NextResponse.json({ error: 'No daily record' }, { status: 404 });
-
-        let subs: any[] = [];
-        try { subs = typeof daily.submissions === 'string' ? JSON.parse(daily.submissions) : (daily.submissions || []); } catch { subs = []; }
-        const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-
-        if (submissionIdx != null && subs[submissionIdx]) {
-            subs[submissionIdx].status = 'rejected';
-            if (comment) subs[submissionIdx].queenComment = comment;
-            const oIdx = subs[submissionIdx].orderIdx;
+            .select('id, orders').eq('session_id', session.id).eq('date', date).maybeSingle();
+        if (daily) {
+            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+            const oIdx = sub?.order_idx;
             if (oIdx != null && orders[oIdx]) {
                 orders[oIdx].done = 0;
-                orders[oIdx].status = 'rejected';
-                if (comment) orders[oIdx].queenComment = comment;
-                delete orders[oIdx].photoUrl;
-                delete orders[oIdx].videoUrl;
-                delete orders[oIdx].submittedText;
             }
+            await supabaseAdmin.from('vault_daily').update({
+                orders: JSON.stringify(orders),
+            }).eq('id', daily.id);
         }
-
-        await supabaseAdmin.from('vault_daily').update({
-            orders: JSON.stringify(orders),
-            submissions: JSON.stringify(subs),
-        }).eq('id', daily.id);
 
         return NextResponse.json({ success: true, rejected: true });
     }
@@ -916,7 +904,6 @@ async function _syncChastityOrder(sessionId: string, date: string, status: 'appr
         const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
         for (const o of orders) {
             if (o.type === 'chastity_check') {
-                o.status = status;
                 o.done = status === 'approved' ? o.target : 0;
                 break;
             }
