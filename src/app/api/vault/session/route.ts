@@ -127,29 +127,6 @@ export async function GET(req: NextRequest) {
         chastityWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
     } catch (_) {}
 
-    // Read chastity check status from Taskdom_History (same storage as daily routine tasks)
-    let chastityTaskStatus: string | null = null;
-    let chastityTaskPhoto: string | null = null;
-    try {
-        const { data: taskRow } = await supabaseAdmin.from('tasks').select('"Taskdom_History"').ilike('member_id', email).maybeSingle();
-        if (taskRow?.Taskdom_History) {
-            const hist: any[] = typeof taskRow.Taskdom_History === 'string' ? JSON.parse(taskRow.Taskdom_History) : taskRow.Taskdom_History;
-            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
-            // Find most recent chastity check for today
-            for (let i = hist.length - 1; i >= 0; i--) {
-                const e = hist[i];
-                if (e.text === 'Chastity Check') {
-                    const eDate = e.timestamp ? new Date(e.timestamp).toLocaleDateString('en-CA', { timeZone: tz }) : null;
-                    if (eDate === todayStr) {
-                        chastityTaskStatus = e.status === 'approve' ? 'approved' : e.status;
-                        chastityTaskPhoto = e.proofUrl || null;
-                        break;
-                    }
-                }
-            }
-        }
-    } catch (_) {}
-
     return NextResponse.json({
         active: true,
         session,
@@ -164,8 +141,6 @@ export async function GET(req: NextRequest) {
         begs: begs || [],
         totalPenaltyHours,
         chastityWindow,
-        chastityTaskStatus,
-        chastityTaskPhoto,
     });
 }
 

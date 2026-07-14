@@ -390,14 +390,11 @@ export default function VaultPage() {
                             {
                                 const todayOrd = vd.today?.orders ? (typeof vd.today.orders === 'string' ? JSON.parse(vd.today.orders) : vd.today.orders) : [];
                                 const cc = todayOrd.find((o: any) => o.type === 'chastity_check');
-                                // Read chastity status from Taskdom_History (same as daily routine)
-                                const cts = vd.chastityTaskStatus;
-                                if (cts === 'approved' || (cc && cc.done >= cc.target)) setChastityStatus('approved');
-                                else if (cts === 'pending' || cc?.status === 'pending') setChastityStatus('pending');
-                                else if (cts === 'rejected' || cc?.status === 'rejected') setChastityStatus('rejected');
+                                if (cc?.status === 'approved' || (cc && cc.done >= cc.target)) setChastityStatus('approved');
+                                else if (cc?.status === 'pending') setChastityStatus('pending');
+                                else if (cc?.status === 'rejected') setChastityStatus('rejected');
                                 else setChastityStatus('none');
-                                if (vd.chastityTaskPhoto) setChastityPhotoUrl(vd.chastityTaskPhoto);
-                                else if (cc?.photoUrl) setChastityPhotoUrl(cc.photoUrl);
+                                if (cc?.photoUrl) setChastityPhotoUrl(cc.photoUrl);
                             }
                             // Chastity window from fresh API (same pattern as routine-status)
                             if (vd.chastityWindow && !_cachedSession) setChastityWindow(vd.chastityWindow);
@@ -430,13 +427,11 @@ export default function VaultPage() {
                                                 // Re-read chastity status from fresh data
                                                 const freshOrd = vd2.today?.orders ? (typeof vd2.today.orders === 'string' ? JSON.parse(vd2.today.orders) : vd2.today.orders) : [];
                                                 const fcc = freshOrd.find((o: any) => o.type === 'chastity_check');
-                                                const cts2 = vd2.chastityTaskStatus;
-                                                if (cts2 === 'approved' || (fcc && fcc.done >= fcc.target)) setChastityStatus('approved');
-                                                else if (cts2 === 'pending' || fcc?.status === 'pending') setChastityStatus('pending');
-                                                else if (cts2 === 'rejected' || fcc?.status === 'rejected') setChastityStatus('rejected');
+                                                if (fcc?.status === 'approved' || (fcc && fcc.done >= fcc.target)) setChastityStatus('approved');
+                                                else if (fcc?.status === 'pending') setChastityStatus('pending');
+                                                else if (fcc?.status === 'rejected') setChastityStatus('rejected');
                                                 else setChastityStatus('none');
-                                                if (vd2.chastityTaskPhoto) setChastityPhotoUrl(vd2.chastityTaskPhoto);
-                                                else if (fcc?.photoUrl) setChastityPhotoUrl(fcc.photoUrl);
+                                                if (fcc?.photoUrl) setChastityPhotoUrl(fcc.photoUrl);
                                             }
                                         });
                                 })
@@ -1198,30 +1193,19 @@ export default function VaultPage() {
                                                 const data = await res.json();
                                                 if (data.url && vaultData?.session?.id) {
                                                     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                                                    const pid = profile?.memberId || profile?.id || mid;
-                                                    // Submit via same route as daily routine (profile-action SUBMIT_TASK)
-                                                    const submitRes = await fetch('/api/profile-action', {
+                                                    // Submit to vault_daily via complete_order (stores in orders JSON + submissions)
+                                                    const submitRes = await fetch('/api/vault/session', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            type: 'SUBMIT_TASK',
-                                                            memberId: pid,
-                                                            payload: { proofUrl: data.url, proofType: 'image', taskText: 'Chastity Check', isRoutine: false, tz },
-                                                        }),
+                                                        body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url, tz }),
                                                     });
                                                     if (submitRes.ok) {
-                                                        // Also mark vault_daily order as pending
-                                                        fetch('/api/vault/session', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url, tz }),
-                                                        }).catch(() => {});
                                                         setChastityStatus('pending');
                                                         setChastityPhotoUrl(data.url);
                                                         vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
                                                     } else {
                                                         const err = await submitRes.json().catch(() => ({}));
-                                                        if (err.error?.includes('window')) setChastityWindow(w => ({ ...w, open: false, before: false }));
+                                                        if (err.windowClosed) setChastityWindow(w => ({ ...w, open: false, before: false }));
                                                     }
                                                 }
                                             } catch {} finally {
