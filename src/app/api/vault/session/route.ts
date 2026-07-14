@@ -19,20 +19,20 @@ export async function GET(req: NextRequest) {
 
     // Resolve UUID → email if needed (vault_sessions stores email as member_id)
     let email = memberId.toLowerCase();
+    let savedTz = '';
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
     if (isUuid) {
         const { data: prof } = await supabaseAdmin.from('profiles').select('member_id, timezone').eq('ID', email).maybeSingle();
         if (prof?.member_id) email = prof.member_id.toLowerCase();
-        if (!tz && prof?.timezone) tz = prof.timezone;
+        if (prof?.timezone) savedTz = prof.timezone;
+    } else {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('timezone').ilike('member_id', email).maybeSingle();
+        if (prof?.timezone) savedTz = prof.timezone;
     }
-    // Read saved timezone from profile if not passed (same pattern as routine-status)
-    if (!tz) {
-        const { data: tzProf } = await supabaseAdmin.from('profiles').select('timezone').ilike('member_id', email).maybeSingle();
-        if (tzProf?.timezone) tz = tzProf.timezone;
-    }
-    if (!tz) tz = 'UTC';
-    // Save timezone to profile (fire & forget) — same as routine-status
-    if (tz !== 'UTC') {
+    // Use client tz if provided, fall back to saved profile timezone (same as routine-status)
+    if (!tz) tz = savedTz || 'UTC';
+    // Save timezone only when client sends a new one that differs from saved
+    if (tz !== 'UTC' && tz !== savedTz) {
         supabaseAdmin.from('profiles').update({ timezone: tz }).ilike('member_id', email).then(() => {}).catch(() => {});
     }
 
