@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
 import { DbService } from '@/lib/supabase-service';
+import { generateDefaultProgram } from '@/lib/vault-program-defaults';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,19 +35,22 @@ export async function POST(req: Request) {
                 status: 'awaiting_video',
             }).eq('id', sessionId);
 
-            // Generate program from template immediately so it's ready when keyholder views member
+            // ALWAYS generate FRESH program from latest template — delete any old one first
             try {
-                const { data: existing } = await supabaseAdmin
-                    .from('vault_member_program').select('id').eq('session_id', sessionId).maybeSingle();
-                if (!existing) {
-                    const program = await _generateProgram();
-                    await supabaseAdmin.from('vault_member_program').insert({
-                        session_id: sessionId,
-                        member_id: memberId,
-                        program: JSON.stringify(program),
-                    });
-                }
-            } catch (_) {}
+                await supabaseAdmin
+                    .from('vault_member_program')
+                    .delete()
+                    .eq('session_id', sessionId);
+                const program = await _generateProgram();
+                console.log(`[vault manage] Generated fresh program from template for ${memberId}, day 1:`, JSON.stringify(program['1']));
+                await supabaseAdmin.from('vault_member_program').insert({
+                    session_id: sessionId,
+                    member_id: memberId,
+                    program: JSON.stringify(program),
+                });
+            } catch (e: any) {
+                console.error('[vault manage] Program generation failed:', e?.message);
+            }
 
             // Update profile — set vault_request to awaiting_video (no active_overlay yet)
             const { data: profile } = await supabaseAdmin
@@ -211,23 +215,20 @@ export async function POST(req: Request) {
 async function _generateProgram(): Promise<Record<string, any[]>> {
     const program: Record<string, any[]> = {};
     try {
-        const { data: template } = await supabaseAdmin
+        const { data: template, error: tplErr } = await supabaseAdmin
             .from('vault_program_template').select('*').order('day_number');
+        if (tplErr) console.error('[vault manage] Template read error:', tplErr.message);
         if (template && template.length > 0) {
             for (const row of template) {
                 program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
             }
             return program;
         }
-    } catch {}
-    // Fallback defaults
-    for (let d = 1; d <= 30; d++) {
-        program[String(d)] = [
-            { type: 'kneel', target: Math.min(4 + Math.floor(d / 3) * 2, 20), label: 'Kneel' },
-            { type: 'chastity_check', target: 1, label: 'Chastity check' },
-        ];
+    } catch (e: any) {
+        console.error('[vault manage] Template read failed:', e?.message);
     }
-    return program;
+    // Fallback: use shared defaults (same as dashboard)
+    return generateDefaultProgram();
 }
 
 async function _pushToUser(memberId: string, message: string) {

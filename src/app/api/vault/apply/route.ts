@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { DbService } from '@/lib/supabase-service';
 import { discordVaultLock } from '@/lib/discord';
+import { generateDefaultProgram } from '@/lib/vault-program-defaults';
 
 // Fresh admin client — NOT the shared singleton
 function getAdmin() {
@@ -106,8 +107,8 @@ export async function POST(req: Request) {
 
             if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-            // Auto-generate program from template
-            try { await _generateMemberProgram(session.id, memberId); } catch (_) {}
+            // Clone template into member's program IMMEDIATELY at payment
+            try { await _generateMemberProgram(session.id, memberId); } catch (e: any) { console.error('[vault apply] Program generation failed:', e?.message); }
 
             // Clear the chastity purchase marker
             delete params.chastity_tier;
@@ -269,23 +270,25 @@ export async function GET(req: Request) {
 
 async function _generateMemberProgram(sessionId: string, memberId: string) {
     const admin = getAdmin();
+    // Delete any old programs for this member (fresh template copy every time)
+    await admin.from('vault_member_program').delete().eq('member_id', memberId);
     const program: Record<string, any[]> = {};
     try {
-        const { data: template } = await admin
+        const { data: template, error: tplErr } = await admin
             .from('vault_program_template').select('*').order('day_number');
+        if (tplErr) console.error('[vault apply] Template read error:', tplErr.message);
         if (template && template.length > 0) {
+            console.log(`[vault apply] Copying ${template.length} template days for ${memberId}`);
             for (const row of template) {
                 program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
             }
         }
-    } catch {}
+    } catch (e: any) {
+        console.error('[vault apply] Template read failed:', e?.message);
+    }
     if (Object.keys(program).length === 0) {
-        for (let d = 1; d <= 30; d++) {
-            program[String(d)] = [
-                { type: 'kneel', target: Math.min(4 + Math.floor(d / 3) * 2, 20), label: 'Kneel' },
-                { type: 'chastity_check', target: 1, label: 'Chastity check' },
-            ];
-        }
+        // Fallback: use shared defaults (same as dashboard)
+        Object.assign(program, generateDefaultProgram());
     }
     await admin.from('vault_member_program').insert({
         session_id: sessionId,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO, isOwnerOrCEO } from '@/lib/api-auth';
+import { defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-defaults';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,19 @@ export async function GET(req: NextRequest) {
         .maybeSingle();
 
     if (!session) {
-        return NextResponse.json({ active: false });
+        // Check if there's a recently released/ended session (for polling detection)
+        const { data: releasedSession } = await supabaseAdmin
+            .from('vault_sessions')
+            .select('id, status, release_reason')
+            .eq('member_id', email)
+            .in('status', ['released_early', 'completed', 'denied', 'ended'])
+            .order('started_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        return NextResponse.json({
+            active: false,
+            ...(releasedSession ? { session: releasedSession } : {}),
+        });
     }
 
     // 2. Get all daily records for this session
@@ -192,13 +205,40 @@ export async function GET(req: NextRequest) {
         const dayNum = Math.floor((Date.now() - startDateP.getTime()) / 86400000) + 1;
         const { data: progRow } = await supabaseAdmin
             .from('vault_member_program')
-            .select('program')
+            .select('id, program')
             .eq('session_id', session.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
+
+        let prog: Record<string, any[]> | null = null;
         if (progRow?.program) {
-            const prog = typeof progRow.program === 'string' ? JSON.parse(progRow.program) : progRow.program;
+            prog = typeof progRow.program === 'string' ? JSON.parse(progRow.program) : progRow.program;
+        }
+
+        // Auto-regenerate if program is missing or uses stale/old task types (no config on any day-1 task)
+        const day1 = prog?.['1'];
+        const isStale = !prog || !day1 || day1.length === 0 || !day1.some((t: any) => t.config);
+        if (isStale) {
+            console.log(`[vault] Program stale or missing for session ${session.id}, regenerating from template...`);
+            const freshProgram = await _generateFullProgram();
+            // Update DB
+            if (progRow?.id) {
+                await supabaseAdmin.from('vault_member_program').update({
+                    program: JSON.stringify(freshProgram),
+                }).eq('id', progRow.id);
+            } else {
+                await supabaseAdmin.from('vault_member_program').insert({
+                    session_id: session.id,
+                    member_id: email,
+                    program: JSON.stringify(freshProgram),
+                });
+            }
+            prog = freshProgram;
+            console.log(`[vault] Regenerated program, day ${dayNum} tasks:`, JSON.stringify(prog[String(dayNum)]?.map((t: any) => t.type)));
+        }
+
+        if (prog) {
             const dayData = prog[String(dayNum)];
             if (dayData && Array.isArray(dayData) && dayData.length > 0) {
                 programTasks = dayData.map((t: any) => ({
@@ -288,11 +328,23 @@ export async function POST(req: NextRequest) {
         }
 
         // Deactivate any previous active sessions for this member
-        await supabaseAdmin
+        const { data: oldSessions } = await supabaseAdmin
             .from('vault_sessions')
-            .update({ status: 'ended' })
+            .select('id')
             .eq('member_id', email)
             .in('status', ['active', 'awaiting_video']);
+        if (oldSessions && oldSessions.length > 0) {
+            const oldIds = oldSessions.map((s: any) => s.id);
+            await supabaseAdmin
+                .from('vault_sessions')
+                .update({ status: 'ended' })
+                .in('id', oldIds);
+            // Delete old programs — fresh template copy every time
+            await supabaseAdmin
+                .from('vault_member_program')
+                .delete()
+                .in('session_id', oldIds);
+        }
 
         const expiresAt = new Date(Date.now() + lockDays * 86400000).toISOString();
 
@@ -309,17 +361,24 @@ export async function POST(req: NextRequest) {
 
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-        // Auto-generate 30-day program from template (or defaults)
+        // ALWAYS copy the LATEST master template — fresh program every join
         const program = await _generateFullProgram();
-        await supabaseAdmin.from('vault_member_program').insert({
+        console.log(`[vault] Generated program for ${email}, day 1 tasks:`, JSON.stringify(program['1']));
+        const { error: progErr } = await supabaseAdmin.from('vault_member_program').insert({
             session_id: session.id,
             member_id: email,
             program: JSON.stringify(program),
         });
+        if (progErr) console.error('[vault] Failed to insert program:', progErr.message);
 
-        // Create day 1 orders from the generated program
+        // Create day 1 orders from the generated program (include label + config)
         const day1Tasks = program['1'] || [];
-        const orders = day1Tasks.map((t: any) => ({ type: t.type, target: t.target || 1, done: 0 }));
+        const orders = day1Tasks.map((t: any) => {
+            const order: any = { type: t.type, target: t.target || 1, done: 0 };
+            if (t.label) order.label = t.label;
+            if (t.config) order.config = t.config;
+            return order;
+        });
         await supabaseAdmin.from('vault_daily').insert({
             session_id: session.id,
             member_id: email,
@@ -904,102 +963,40 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
 }
 
 function _generateDailyOrders(dayNumber: number) {
-    const orders: { type: string; target: number; done: number }[] = [
-        { type: 'kneel', target: 8, done: 0 },
-        { type: 'chastity_check', target: 1, done: 0 },
-        { type: 'trial', target: 1, done: 0 },
-    ];
-
-    // Add spin on odd days
-    if (dayNumber % 2 === 1) {
-        orders.push({ type: 'spin', target: 1, done: 0 });
-    }
-
-    // Add tribute on even days or every 3rd day
-    if (dayNumber % 2 === 0 || dayNumber % 3 === 0) {
-        orders.push({ type: 'tribute', target: 5, done: 0 });
-    }
-
-    return orders;
+    // Use the shared defaults (same as dashboard template)
+    const tasks = defaultDayTasks(dayNumber);
+    return tasks.map((t: any) => {
+        const order: any = { type: t.type, target: t.target || 1, done: 0 };
+        if (t.label) order.label = t.label;
+        if (t.config) order.config = t.config;
+        return order;
+    });
 }
 
 // Generate a full 30-day program from template or defaults
 async function _generateFullProgram(): Promise<Record<string, any[]>> {
     const program: Record<string, any[]> = {};
-    // Try to read from vault_program_template first
+    // ALWAYS read LATEST from vault_program_template
     try {
-        const { data: template } = await supabaseAdmin
+        const { data: template, error: tplErr } = await supabaseAdmin
             .from('vault_program_template')
             .select('*')
             .order('day_number');
+        if (tplErr) console.error('[vault] Template read error:', tplErr.message);
         if (template && template.length > 0) {
+            console.log(`[vault] Found ${template.length} template rows, copying to member program`);
             for (const row of template) {
                 const tasks = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
                 program[String(row.day_number)] = tasks;
             }
             return program;
         }
-    } catch { }
-    // Fallback: generate from hardcoded defaults
-    for (let d = 1; d <= 30; d++) {
-        program[String(d)] = _defaultDayTasks(d);
+        console.log('[vault] No template found, using hardcoded defaults');
+    } catch (e: any) {
+        console.error('[vault] _generateFullProgram error:', e?.message);
     }
-    return program;
-}
-
-function _kneelTarget(day: number): number {
-    if (day <= 3) return 4;
-    if (day <= 6) return 6;
-    if (day <= 11) return 8;
-    if (day <= 14) return 10;
-    if (day <= 19) return 12;
-    if (day <= 24) return 14;
-    if (day <= 27) return 16;
-    if (day <= 29) return 18;
-    return 20;
-}
-
-function _defaultDayTasks(dayNumber: number) {
-    const tasks: { type: string; target: number; label: string }[] = [
-        { type: 'kneel', target: _kneelTarget(dayNumber), label: `Kneel ${_kneelTarget(dayNumber)} times` },
-        { type: 'chastity_check', target: 1, label: 'Chastity check photo' },
-    ];
-    if (dayNumber <= 7) {
-        if (dayNumber === 1) tasks.push({ type: 'journal', target: 1, label: 'Journal: "Why I submitted"' });
-        if (dayNumber === 2) tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' });
-        if (dayNumber === 3) tasks.push({ type: 'lines', target: 30, label: 'Write lines x30' });
-        if (dayNumber === 4) tasks.push({ type: 'tribute', target: 3, label: 'Tribute 3 coins' });
-        if (dayNumber === 5) tasks.push({ type: 'worship', target: 1, label: 'Worship message' });
-        if (dayNumber === 6) tasks.push({ type: 'card', target: 1, label: 'Draw a task card' });
-        if (dayNumber === 7) { tasks.push({ type: 'cold_shower', target: 60, label: 'Cold shower 60s' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); }
-    } else if (dayNumber <= 14) {
-        if (dayNumber === 8) { tasks.push({ type: 'edge', target: 3, label: 'Edge 3 times' }); tasks.push({ type: 'journal', target: 1, label: 'Journal entry' }); }
-        if (dayNumber === 9) { tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); tasks.push({ type: 'tribute', target: 5, label: 'Tribute 5 coins' }); }
-        if (dayNumber === 10) { tasks.push({ type: 'lines', target: 50, label: 'Write lines x50' }); tasks.push({ type: 'corner_time', target: 10, label: 'Corner time 10min' }); }
-        if (dayNumber === 11) tasks.push({ type: 'body_writing', target: 1, label: 'Body writing photo: OWNED' });
-        if (dayNumber === 12) { tasks.push({ type: 'card', target: 1, label: 'Draw a task card' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); }
-        if (dayNumber === 13) { tasks.push({ type: 'edge', target: 5, label: 'Edge 5 times' }); tasks.push({ type: 'gratitude', target: 5, label: 'Gratitude list (5 things)' }); }
-        if (dayNumber === 14) { tasks.push({ type: 'tribute', target: 10, label: 'Tribute 10 coins' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); }
-    } else if (dayNumber <= 21) {
-        if (dayNumber === 15) { tasks.push({ type: 'exercise', target: 50, label: 'Exercise: 50 pushups' }); tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); }
-        if (dayNumber === 16) { tasks.push({ type: 'edge', target: 5, label: 'Edge 5 times' }); tasks.push({ type: 'lines', target: 75, label: 'Write lines x75' }); }
-        if (dayNumber === 17) { tasks.push({ type: 'quiz', target: 1, label: "Quiz: Queen's rules" }); tasks.push({ type: 'journal', target: 1, label: 'Journal entry' }); }
-        if (dayNumber === 18) { tasks.push({ type: 'tribute', target: 10, label: 'Tribute 10 coins' }); tasks.push({ type: 'corner_time', target: 15, label: 'Corner time 15min' }); }
-        if (dayNumber === 19) { tasks.push({ type: 'body_writing', target: 1, label: 'Body writing photo' }); tasks.push({ type: 'card', target: 1, label: 'Draw a task card' }); }
-        if (dayNumber === 20) { tasks.push({ type: 'cold_shower', target: 90, label: 'Cold shower 90s' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); tasks.push({ type: 'edge', target: 5, label: 'Edge 5x' }); }
-        if (dayNumber === 21) { tasks.push({ type: 'denial', target: 1, label: 'Denial day (no touching 24h)' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); }
-    } else {
-        if (dayNumber === 22) { tasks.push({ type: 'tribute', target: 15, label: 'Tribute 15 coins' }); tasks.push({ type: 'gratitude', target: 10, label: 'Gratitude list (10 things)' }); }
-        if (dayNumber === 23) { tasks.push({ type: 'edge', target: 7, label: 'Edge 7 times' }); tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); tasks.push({ type: 'lines', target: 100, label: 'Write lines x100' }); }
-        if (dayNumber === 24) { tasks.push({ type: 'exercise', target: 75, label: 'Exercise: 75 pushups' }); tasks.push({ type: 'body_writing', target: 1, label: 'Body writing' }); tasks.push({ type: 'journal', target: 1, label: 'Journal entry' }); }
-        if (dayNumber === 25) { tasks.push({ type: 'card', target: 1, label: 'Draw a task card' }); tasks.push({ type: 'corner_time', target: 20, label: 'Corner time 20min' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); }
-        if (dayNumber === 26) { tasks.push({ type: 'cold_shower', target: 120, label: 'Cold shower 120s' }); tasks.push({ type: 'edge', target: 7, label: 'Edge 7x' }); tasks.push({ type: 'tribute', target: 10, label: 'Tribute 10 coins' }); }
-        if (dayNumber === 27) { tasks.push({ type: 'denial', target: 1, label: 'Denial day' }); tasks.push({ type: 'essay', target: 1, label: 'Essay: "What I\'ve learned"' }); }
-        if (dayNumber === 28) { tasks.push({ type: 'quiz', target: 1, label: 'Quiz' }); tasks.push({ type: 'confession', target: 1, label: 'Confession' }); tasks.push({ type: 'spin', target: 1, label: 'Spin the wheel' }); tasks.push({ type: 'lines', target: 100, label: 'Lines x100' }); }
-        if (dayNumber === 29) { tasks.push({ type: 'edge', target: 10, label: 'Edge 10 times' }); tasks.push({ type: 'tribute', target: 20, label: 'Tribute 20 coins' }); tasks.push({ type: 'exercise', target: 100, label: 'Exercise: 100 pushups' }); }
-        if (dayNumber === 30) { tasks.push({ type: 'journal', target: 1, label: 'Final devotion journal' }); tasks.push({ type: 'worship', target: 1, label: 'Worship message' }); tasks.push({ type: 'gratitude', target: 10, label: 'Gratitude (10 things)' }); tasks.push({ type: 'body_writing', target: 1, label: 'Body writing' }); tasks.push({ type: 'tribute', target: 25, label: 'Tribute 25 coins' }); }
-    }
-    return tasks;
+    // Fallback: use shared defaults (same as dashboard)
+    return generateDefaultProgram();
 }
 
 async function _updateOrderDone(sessionId: string, date: string, orderType: string, amount?: number) {

@@ -539,6 +539,26 @@ export default function VaultPage() {
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
 
+                            // Polling fallback: check session status every 10s (in case Realtime doesn't fire due to RLS)
+                            const sessionId = vd.session.id;
+                            const releasePoller = setInterval(async () => {
+                                try {
+                                    const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
+                                    if (!mid) return;
+                                    const res = await fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`);
+                                    const data = await res.json();
+                                    if (!data.active && data.session?.status) {
+                                        const st = data.session.status;
+                                        if (st === 'released_early' || st === 'completed' || st === 'denied' || st === 'ended') {
+                                            clearInterval(releasePoller);
+                                            try { localStorage.removeItem('vault_cooldowns'); } catch {}
+                                            setReleaseOverlay({ reason: data.session.release_reason || '' });
+                                        }
+                                    }
+                                } catch {}
+                            }, 10000);
+                            (window as any)._vaultReleasePoller = releasePoller;
+
                             // Realtime: listen for Queen's review actions (broadcast from API)
                             if (_cachedProfile?.ID) {
                                 const notifySub = supabase
