@@ -291,6 +291,7 @@ input[type=number]{-moz-appearance:textfield}
 @keyframes kSlide{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .kfade{animation:kFade .35s ease forwards}
 .kslide{animation:kSlide .3s ease forwards}
+.kdc:hover .kdc-icon{filter:drop-shadow(0 0 6px currentColor)}
 `;
 
 /* ═══════════════ MAIN ═══════════════ */
@@ -348,11 +349,14 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const sel = getSel();
 
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', fontFamily: F }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', fontFamily: F, position: 'relative' }}>
+            {/* Full background image */}
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-desktop.png')", backgroundSize: 'cover', backgroundPosition: 'center 15%', opacity: 0.08, pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(139,0,0,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgba(197,160,89,0.04) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 0 }} />
             <style>{CSS}</style>
 
             {/* HEADER */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 28px', borderBottom: `1px solid rgba(197,160,89,.18)`, gap: 16, flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '14px 28px', borderBottom: `1px solid rgba(197,160,89,.18)`, gap: 16, flexShrink: 0, position: 'relative', zIndex: 1, background: 'rgba(10,10,16,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
                 <button onClick={onClose} style={{ background: 'none', border: 'none', color: GOLD, fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{'\u2190'}</button>
                 <h1 style={{ fontFamily: FC, fontSize: '.8rem', color: GOLD, letterSpacing: 8, margin: 0, flex: 1, textTransform: 'uppercase' }}>Keyholder Program</h1>
                 <div style={{ display: 'flex', gap: 0, background: 'rgba(197,160,89,.08)', borderRadius: 6, border: `1px solid rgba(197,160,89,.2)` }}>
@@ -369,7 +373,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
 
             {/* LOCKED MEMBERS STRIP */}
             {lockedMembers.length > 0 && (
-                <div style={{ display: 'flex', gap: 16, padding: '16px 28px', overflowX: 'auto', borderBottom: `1px solid rgba(197,160,89,.18)`, flexShrink: 0 }} className="kscr">
+                <div style={{ display: 'flex', gap: 16, padding: '16px 28px', overflowX: 'auto', borderBottom: `1px solid rgba(197,160,89,.18)`, flexShrink: 0, position: 'relative', zIndex: 1, background: 'rgba(10,10,16,0.6)' }} className="kscr">
                     {lockedMembers.map((m: any) => (
                         <div key={m.memberId} className="kmc"
                             onClick={() => { setMemberEmail(m.memberId); setView('member'); setTimeout(()=>loadMemberProgram(m.memberId),80); }}
@@ -409,7 +413,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
             )}
 
             {/* MAIN */}
-            <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', position: 'relative', zIndex: 1 }}>
                 {view==='program' && <ProgramView days={templateDays} sel={selectedDay} setSel={setSelectedDay} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveTemplate={saveTemplate} saving={saving} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
                 {view==='config' && <ConfigView configData={configData} setConfigData={setConfigData} configSection={configSection} setConfigSection={setConfigSection} onSave={saveConfig} saving={saving} />}
                 {view==='member' && <MemberView email={memberEmail} setEmail={setMemberEmail} program={memberProgram} sel={memberSelectedDay} setSel={setMemberSelectedDay} info={memberInfo} locked={lockedMembers} onLoad={loadMemberProgram} onGenerate={generateMemberProgram} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveMemberDay={saveMemberDay} saving={saving} loading={loading} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
@@ -422,7 +426,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
 function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveTask, saveTemplate, saving, dragIdx, setDragIdx, configData, setView, setConfigSection }: any) {
     return (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-            <div style={{ width: sel ? '32%' : '100%', transition: 'width .4s ease', overflowY: 'auto', padding: '20px 28px' }} className="kscr">
+            <div style={{ width: sel ? '32%' : '100%', transition: 'width .4s ease', overflowY: 'auto', padding: '20px 28px', background: 'rgba(10,10,16,0.5)' }} className="kscr">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <div>
                         <div style={{ fontFamily: FC, fontSize: '.55rem', color: 'rgba(255,255,255,.6)', letterSpacing: 5 }}>MASTER TEMPLATE</div>
@@ -483,9 +487,10 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
     const [addConfig, setAddConfig] = useState<any>({});
 
     return (
-        <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', position: 'relative' }}>
+        <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: 'rgba(10,10,16,0.92)', overflow: 'hidden', position: 'relative' }}>
             {/* Background image */}
-            <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', opacity: 0.06, filter: 'saturate(0.2)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-mobile.jpg')", backgroundSize: 'cover', backgroundPosition: 'center 20%', opacity: 0.1, filter: 'saturate(0.3)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,16,0.7) 0%, rgba(10,10,16,0.3) 40%, rgba(10,10,16,0.8) 100%)', pointerEvents: 'none', zIndex: 0 }} />
             {/* Header */}
             <div style={{ padding: '24px 36px 20px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'flex-end', gap: 16, position: 'relative', zIndex: 1 }}>
                 <div style={{ flex: 1 }}>
@@ -1165,8 +1170,8 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                 </div>
             ) : (
                 <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-                    <div style={{ width: sel?'32%':'100%', transition: 'width .4s ease', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <div style={{ padding: '14px 24px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                    <div style={{ width: sel?'32%':'100%', transition: 'width .4s ease', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'rgba(10,10,16,0.5)' }}>
+                        <div style={{ padding: '14px 24px', borderBottom: `1px solid rgba(197,160,89,.18)`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, background: 'rgba(10,10,16,0.6)' }}>
                             <button onClick={() => { setEmail(''); setSel(null); }} style={{ background: 'none', border: 'none', color: TEXT_DIM, cursor: 'pointer', fontSize: '1rem' }}>{'\u2190'}</button>
                             {info?.avatar && <img src={info.avatar} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', border: `1px solid rgba(197,160,89,.2)` }} />}
                             <div style={{ flex: 1 }}>
