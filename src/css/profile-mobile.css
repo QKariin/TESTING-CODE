@@ -970,8 +970,8 @@
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 9999999;
-        height: calc(60px + env(safe-area-inset-bottom));
+        z-index: 2147483647;
+        height: calc(68px + env(safe-area-inset-bottom));
         padding-bottom: env(safe-area-inset-bottom);
         background: linear-gradient(135deg, #ff00ed, #000aff);
         backdrop-filter: blur(20px);
@@ -1055,18 +1055,20 @@
         cursor: pointer;
         padding: 0;
         position: relative;
-        margin-top: -30px;
-        transform: translateY(14px);
+        height: 0;
+        overflow: visible;
+        transform: translateY(28px);
+        z-index: 10;
     }
 
     .mob-nav-queen-ring {
-        width: 75px;
-        height: 75px;
+        width: 130px;
+        height: 130px;
         border-radius: 50%;
-        border: none;
+        border: 2px solid rgba(197, 160, 89, 0.15);
         box-shadow: none;
         overflow: hidden;
-        background: #000;
+        background: #050508;
         transition: box-shadow 0.2s;
         flex-shrink: 0;
     }
@@ -1152,6 +1154,13 @@
         object-fit: cover;
         display: block;
         border-radius: 50%;
+    }
+
+    /* ── KEYHOLDER CARD STACK ── */
+    .kh-card:hover {
+        transform: translateX(calc(var(--off, 0) * 75px)) rotate(0deg) translateY(-18px) scale(1.05) !important;
+        box-shadow: 0 12px 40px rgba(139,0,0,0.12), 0 0 0 1px rgba(139,0,0,0.35) !important;
+        z-index: 50 !important;
     }
 
     /* ── ALTAR BOTTOM DRAWER ── */

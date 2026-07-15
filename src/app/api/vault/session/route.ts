@@ -290,6 +290,7 @@ export async function GET(req: NextRequest) {
         submissions: todaySubmissions || [],
         allSubmissions: allSubmissions || [],
         programTasks,
+        chatCooldownUntil: todayRecord?.chat_cooldown_until || null,
     });
 }
 
@@ -828,6 +829,54 @@ export async function POST(req: NextRequest) {
 
         const rewardUntil = Date.now() + 60 * 60 * 1000;
         return NextResponse.json({ success: true, rewardUntil });
+    }
+
+    // ── SET CHAT COOLDOWN (coin flip tails) ──
+    if (action === 'set_chat_cooldown') {
+        const { until } = body; // ISO string or timestamp
+        const today = new Date().toISOString().split('T')[0];
+        const { data: todayRecord } = await supabaseAdmin
+            .from('vault_daily')
+            .select('id')
+            .eq('session_id', session.id)
+            .eq('date', today)
+            .maybeSingle();
+        if (todayRecord) {
+            await supabaseAdmin.from('vault_daily').update({
+                chat_cooldown_until: typeof until === 'number' ? new Date(until).toISOString() : until,
+            }).eq('id', todayRecord.id);
+        }
+        return NextResponse.json({ success: true });
+    }
+
+    // ── SKIP ORDER ──
+    if (action === 'skip_order') {
+        const { orderType, cost, useSkipPass } = body;
+        // Look up profile
+        const isUuid2 = /^[0-9a-f]{8}-/i.test(email);
+        const { data: prof } = isUuid2
+            ? await supabaseAdmin.from('profiles').select('ID, wallet, skippass').eq('ID', email).maybeSingle()
+            : await supabaseAdmin.from('profiles').select('ID, wallet, skippass').ilike('member_id', email).maybeSingle();
+        if (!prof) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+
+        if (useSkipPass) {
+            if ((prof.skippass || 0) <= 0) return NextResponse.json({ error: 'No skip passes' }, { status: 400 });
+            await supabaseAdmin.from('profiles').update({ skippass: (prof.skippass || 0) - 1 }).eq('ID', prof.ID);
+        } else {
+            if ((prof.wallet || 0) < (cost || 300)) return NextResponse.json({ error: 'Not enough coins' }, { status: 400 });
+            await supabaseAdmin.from('profiles').update({ wallet: (prof.wallet || 0) - (cost || 300) }).eq('ID', prof.ID);
+        }
+
+        // Record submission as skipped
+        await supabaseAdmin.from('vault_submissions').insert({
+            session_id: session.id,
+            member_id: email,
+            order_type: orderType || 'unknown',
+            text: useSkipPass ? 'SKIP_PASS' : 'SKIPPED — 300 coins',
+            status: useSkipPass ? 'skip_pass' : 'skipped',
+        });
+
+        return NextResponse.json({ success: true });
     }
 
     // ── RECORD TRIBUTE ──

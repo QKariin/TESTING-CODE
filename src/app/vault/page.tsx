@@ -224,6 +224,8 @@ export default function VaultPage() {
     const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
     const [followUpText, setFollowUpText] = useState('');
     const [followUpUploading, setFollowUpUploading] = useState(false);
+    const [pendingFollowUp, setPendingFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
+    const [followUpSkipping, setFollowUpSkipping] = useState(false);
 
     // Persist gamble results to server + localStorage so they survive reload
     const saveGambleResult = useCallback((data: Record<string, any>, orderType?: string) => {
@@ -244,6 +246,20 @@ export default function VaultPage() {
     const clearGambleResults = useCallback(() => {
         try { localStorage.removeItem('vault_gamble_results'); } catch {}
     }, []);
+    // Auto-transition from mechanic result to follow-up overlay
+    useEffect(() => {
+        if (!pendingFollowUp) return;
+        const t = setTimeout(() => {
+            setFollowUp(pendingFollowUp);
+            setPendingFollowUp(null);
+            setMechDone(false);
+            setDiceResult(null); setCoinResult(null); setCardResult(null);
+            setRouletteResult(null); setWheelResult(null); setTruthDareChoice(null);
+            clearGambleResults();
+        }, 2500);
+        return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingFollowUp]);
     const [taskText, setTaskText] = useState('');
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
@@ -439,8 +455,9 @@ export default function VaultPage() {
 
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
-            if (!user) { window.location.href = '/login'; return; }
-            const userEmail = user.email || user.id;
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (!user && !isLocal) { window.location.href = '/login'; return; }
+            const userEmail = user?.email || user?.id || (isLocal ? 'prespamemai@gmail.com' : '');
 
         const profileReady = _cachedProfile
             ? Promise.resolve(_cachedProfile)
@@ -450,9 +467,9 @@ export default function VaultPage() {
             .then(async (rawData: any) => {
                 const data = _cachedProfile ? rawData : {
                     ...(rawData && !rawData.error ? rawData : {}),
-                    member_id: rawData?.member_id || user.email,
-                    memberId: user.id,
-                    email: user.email,
+                    member_id: rawData?.member_id || user?.email,
+                    memberId: user?.id,
+                    email: user?.email,
                 };
                 console.log('[VAULT] Loaded profile:', data);
                 // Cache name + avatar for loading screen
@@ -482,6 +499,11 @@ export default function VaultPage() {
                         if (vd.active) {
                             setVaultData(vd);
                             setPenaltyHours(vd.totalPenaltyHours || 0);
+                            // Restore chat cooldown from DB
+                            if (vd.chatCooldownUntil) {
+                                const cdUntil = new Date(vd.chatCooldownUntil).getTime();
+                                if (cdUntil > Date.now()) setChatGateCooldownUntil(cdUntil);
+                            }
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
                             if (todayTrial && (todayTrial.status === 'submitted' || todayTrial.status === 'approved')) setTrialDone(true);
@@ -633,7 +655,7 @@ export default function VaultPage() {
                     });
             })
             .catch(() => { setLoading(false); });
-        }).catch(() => { window.location.href = '/login'; });
+        }).catch(() => { if (!(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) window.location.href = '/login'; });
         import('@/scripts/tribute-game').then(({ bindTributeGame }) => {
             bindTributeGame();
         });
@@ -1059,9 +1081,11 @@ export default function VaultPage() {
     return (
         <div style={{ background: '#080810', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
 
-            {/* BG — layered red glow */}
-            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(139,0,0,0.12) 0%, rgba(60,0,0,0.06) 40%, transparent 70%)' }} />
-            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 100%, rgba(139,0,0,0.06) 0%, transparent 50%)' }} />
+            {/* BG — queen photo + layered red glow */}
+            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, background: "url('/queen-bg-mobile.jpg') center 20%/cover no-repeat", opacity: 0.5, filter: 'saturate(0.4)' }} />
+            </div>
+            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'linear-gradient(180deg, rgba(8,8,16,0.1) 0%, rgba(8,8,16,0.55) 60%, rgba(8,8,16,0.85) 100%)' }} />
 
             {/* ══════════════════════════════════════════════
                 VAULT TAB — main scroll
@@ -1104,7 +1128,7 @@ export default function VaultPage() {
                     {/* Concentric rings — outermost */}
                     <div style={{
                         position: 'relative', zIndex: 1,
-                        width: 340, height: 340, borderRadius: '50%',
+                        width: 380, height: 380, borderRadius: '50%',
                         border: `1px solid ${borderColor}15`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'border-color 0.6s ease',
@@ -1112,7 +1136,7 @@ export default function VaultPage() {
                     {/* Middle ring */}
                     <div style={{
                         position: 'relative',
-                        width: 320, height: 320, borderRadius: '50%',
+                        width: 360, height: 360, borderRadius: '50%',
                         border: `1px solid ${borderColor}30`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'border-color 0.6s ease',
@@ -1120,7 +1144,7 @@ export default function VaultPage() {
                     {/* Main circle */}
                     <div style={{
                         position: 'relative', zIndex: 2,
-                        width: 300, height: 300, borderRadius: '50%',
+                        width: 340, height: 340, borderRadius: '50%',
                         border: `2px solid ${borderColor}`,
                         boxShadow: glowColor,
                         background: 'rgba(10,5,8,0.7)',
@@ -1394,43 +1418,56 @@ export default function VaultPage() {
                     );
                 })()}
 
-                {/* ── RELEASE COUNTDOWN — under merit/coins ── */}
-                <div style={{ width: '100%', padding: '8px 20px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: `${R}0.7)`, letterSpacing: '5px', marginBottom: 14 }}>RELEASE IN</div>
-                    {penaltyHours > 0 && (
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '2px', marginBottom: 10 }}>
-                            +{penaltyHours}h ADDED
-                        </div>
-                    )}
-                    <div className="card-timer-row" style={{ gap: 12 }}>
-                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
-                            {String(remaining.d).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>DAYS</div>
-                        </div>
-                        <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
-                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
-                            {String(remaining.h).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>HRS</div>
-                        </div>
-                        <div className="t-sep" style={{ color: `${R}0.6)` }}>:</div>
-                        <div className="card-t-box" style={{ background: `${R}0.1)`, border: `1px solid ${R}0.25)`, color: '#c03030', textShadow: '0 0 14px rgba(180,30,30,0.4)', width: 80 }}>
-                            {String(remaining.m).padStart(2, '0')}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 2 }}>MIN</div>
+                {/* ── RELEASE COUNTDOWN — full-width hero panel ── */}
+                <div style={{
+                    width: '100%', padding: '0 16px', marginBottom: 8,
+                }}>
+                    <div style={{
+                        width: '100%', borderRadius: 16, padding: '28px 20px 24px',
+                        background: 'rgba(139,0,0,0.04)',
+                        border: `1px solid ${R}0.12)`,
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    }}>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '6px', marginBottom: 4 }}>RELEASE IN</div>
+                        {penaltyHours > 0 && (
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,40,40,0.5)', letterSpacing: '2px', marginBottom: 8 }}>
+                                +{penaltyHours}h ADDED
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', width: '100%', gap: 8, marginTop: 8 }}>
+                            <div style={{
+                                flex: 1, borderRadius: 12, padding: '18px 0',
+                                background: 'rgba(0,0,0,0.4)', border: `1px solid ${R}0.15)`,
+                                textAlign: 'center',
+                            }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2rem', color: '#fff', fontWeight: 800, lineHeight: 1, textShadow: '0 0 20px rgba(139,0,0,0.3)' }}>
+                                    {String(remaining.d).padStart(2, '0')}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', marginTop: 6 }}>DAYS</div>
+                            </div>
+                            <div style={{
+                                flex: 1, borderRadius: 12, padding: '18px 0',
+                                background: 'rgba(0,0,0,0.4)', border: `1px solid ${R}0.15)`,
+                                textAlign: 'center',
+                            }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2rem', color: '#fff', fontWeight: 800, lineHeight: 1, textShadow: '0 0 20px rgba(139,0,0,0.3)' }}>
+                                    {String(remaining.h).padStart(2, '0')}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', marginTop: 6 }}>HRS</div>
+                            </div>
+                            <div style={{
+                                flex: 1, borderRadius: 12, padding: '18px 0',
+                                background: 'rgba(0,0,0,0.4)', border: `1px solid ${R}0.15)`,
+                                textAlign: 'center',
+                            }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2rem', color: '#fff', fontWeight: 800, lineHeight: 1, textShadow: '0 0 20px rgba(139,0,0,0.3)' }}>
+                                    {String(remaining.m).padStart(2, '0')}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', marginTop: 6 }}>MIN</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                {/* Kneel progress dots — under release */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '0 0 24px' }}>
-                    {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 8 }).map((_, i) => (
-                        <div key={i} style={{
-                            width: 10, height: 10, borderRadius: '50%',
-                            background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
-                            border: `1px solid ${i < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`,
-                            boxShadow: i < kneelToday ? '0 0 6px rgba(184,32,32,0.3)' : 'none',
-                            transition: 'all 0.3s ease',
-                        }} />
-                    ))}
                 </div>
 
                 {/* ── KNEEL BAR ── */}
@@ -1489,24 +1526,17 @@ export default function VaultPage() {
                     </div>
                 </div>
 
-                {/* ── TRIBUTE BUTTON — opens real tribute overlay ── */}
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '12px 20px 32px' }}>
-                    <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
-                        width: 240, height: 48,
-                        background: `${R}0.08)`,
-                        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                        border: `1px solid ${R}0.35)`, borderRadius: 12,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                    }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="8" width="18" height="12" rx="1"></rect>
-                            <path d="M12 8v12"></path>
-                            <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
-                        </svg>
-                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#8b0000', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
-                    </button>
+                {/* Kneel progress dots — under kneel button */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '6px 0 0' }}>
+                    {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 8 }).map((_, i) => (
+                        <div key={i} style={{
+                            width: 10, height: 10, borderRadius: '50%',
+                            background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
+                            border: `1px solid ${i < kneelToday ? 'rgba(184,32,32,0.7)' : 'rgba(255,255,255,0.15)'}`,
+                            boxShadow: i < kneelToday ? '0 0 6px rgba(184,32,32,0.3)' : 'none',
+                            transition: 'all 0.3s ease',
+                        }} />
+                    ))}
                 </div>
 
                 {/* ── SHAME OVERLAY — shown when cancelling ── */}
@@ -1539,17 +1569,22 @@ export default function VaultPage() {
 
 
                 {/* ── TODAY'S ORDERS ── */}
-                <div style={{ width: '100%', padding: '0 20px 36px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: `${R}0.75)`, letterSpacing: '4px', fontWeight: 600 }}>TODAY&apos;S ORDERS</div>
-                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
-                    </div>
-                    {attnSkippedToday && (
-                        <div style={{ textAlign: 'center', padding: '10px 0 14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '3px' }}>
-                            &#10005; PERFECTION BROKEN — ORDER SKIPPED
+                <div style={{ width: '100%', padding: '0 16px 36px', marginTop: 20 }}>
+                    <div style={{
+                        width: '100%', borderRadius: 16, padding: '24px 20px 16px',
+                        background: 'rgba(139,0,0,0.04)',
+                        border: `1px solid ${R}0.12)`,
+                        backdropFilter: 'blur(12px)',
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '4px', fontWeight: 600 }}>TODAY&apos;S ORDERS</div>
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
                         </div>
-                    )}
-                    <div style={{ background: `${R}0.08)`, border: `1px solid ${R}0.22)`, borderRadius: 14, padding: '8px 0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                        {attnSkippedToday && (
+                            <div style={{ textAlign: 'center', padding: '10px 0 14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '3px' }}>
+                                &#10005; PERFECTION BROKEN — ORDER SKIPPED
+                            </div>
+                        )}
                         {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length === 0 && (
                             <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>
                                 {vaultData?.today ? 'NO ADDITIONAL TASKS' : 'LOADING...'}
@@ -1557,28 +1592,38 @@ export default function VaultPage() {
                         )}
                         {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').map((o: any, i: number, arr: any[]) => {
                             const completed = o.done >= o.target;
+                            const subs = vaultData?.submissions || [];
+                            const pending = !completed && (taskSubmitted[o.type] || o.submitted === 'pending' || subs.some((s: any) => s.order_type === o.type && s.status === 'pending'));
                             return (
                                 <div key={i} style={{
-                                    display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px',
-                                    borderBottom: i < arr.length - 1 ? `1px solid ${R}0.12)` : 'none',
+                                    display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0',
+                                    borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                                 }}>
                                     <div style={{
                                         width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                                        border: `2px solid ${completed ? 'rgba(80,200,120,0.6)' : `${R}0.35)`}`,
-                                        background: completed ? 'rgba(80,200,120,0.1)' : `${R}0.04)`,
+                                        border: `2px solid ${completed ? 'rgba(80,200,120,0.6)' : pending ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                                        background: completed ? 'rgba(80,200,120,0.1)' : pending ? 'rgba(197,160,89,0.08)' : 'transparent',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
-                                        {completed && <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                                        {completed ? (
+                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                        ) : pending ? (
+                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(197,160,89,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+                                            </svg>
+                                        ) : null}
                                     </div>
                                     <span style={{
-                                        flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.95rem',
-                                        color: completed ? 'rgba(80,200,120,0.55)' : 'rgba(255,255,255,0.7)',
+                                        flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.9rem',
+                                        color: completed ? 'rgba(80,200,120,0.55)' : pending ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.55)',
                                         textDecoration: completed ? 'line-through' : 'none',
                                         letterSpacing: '0.5px',
-                                    }}>{o.label || (o.type === 'kneel' ? `Kneel ${o.target} times` : o.type === 'chastity_check' ? 'Chastity check photo' : o.type === 'spin' ? 'Spin the wheel' : o.type === 'trial' ? 'Complete daily trial' : o.type === 'tribute' ? `Tribute ${o.target} coins` : o.type)}</span>
-                                    {!completed && o.done > 0 && (
-                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: `${R}0.7)` }}>{o.done}/{o.target}</span>
-                                    )}
+                                    }}>{o.label || (({ kneel: `Kneel ${o.target} times`, chastity_check: 'Chastity Check', spin: 'Spin the Wheel', spin_wheel: 'Spin the Wheel', trial: 'Daily Trial', tribute: `Tribute ${o.target} Coins`, coinflip: 'Coin Flip', card_pick: 'Card Draw', dice_roll: 'Dice Roll', russian_roulette: 'Russian Roulette', truth_dare: 'Truth or Dare', greed_game: 'Greed Game' } as Record<string, string>)[o.type] || o.type.replace(/_/g, ' '))}</span>
+                                    {pending ? (
+                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.6rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>PENDING</span>
+                                    ) : !completed && o.done > 0 ? (
+                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)' }}>{o.done}/{o.target}</span>
+                                    ) : null}
                                 </div>
                             );
                         })}
@@ -1637,12 +1682,58 @@ export default function VaultPage() {
                     )}
                 </div>
 
-                {/* ── LOCK STATS ROW (days / denied / streak / trials) ── */}
+                {/* ── TRIBUTE BUTTON — under today's orders ── */}
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '0 20px 32px' }}>
+                    <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
+                        width: 240, height: 48,
+                        background: `${R}0.08)`,
+                        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                        border: `1px solid ${R}0.35)`, borderRadius: 12,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                    }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="8" width="18" height="12" rx="1"></rect>
+                            <path d="M12 8v12"></path>
+                            <path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8"></path>
+                        </svg>
+                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: '#8b0000', letterSpacing: 3, fontWeight: 700 }}>TRIBUTE</span>
+                    </button>
+                </div>
+
+                {/* Standalone tribute overlay shell — populated by tribute-game.ts */}
+                <div id="mobTributeStandalone" onClick={(e) => { if (e.target === e.currentTarget) (window as any).closeStandaloneTribute?.(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 2147483640, display: 'none', flexDirection: 'column' } as React.CSSProperties}>
+                    <div id="mobTributeContent" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '20px', paddingTop: 'calc(env(safe-area-inset-top) + 20px)', boxSizing: 'border-box' }}></div>
+                </div>
+
+
+                {/* ── BEG BUTTON ── */}
+                <div style={{ textAlign: 'center', padding: '20px 0 40px' }}>
+                    <button onClick={() => setShowBeg(true)} style={{ padding: '16px 48px', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', letterSpacing: '3px', color: `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer' }}>
+                        BEG FOR RELEASE
+                    </button>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? 0} TIMES</div>
+                </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════
+                RECORD TAB — stats, calendar, pressure
+            ══════════════════════════════════════════════ */}
+            <div style={{ display: tab === 'queen' ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', inset: 0, zIndex: 40, background: '#050508' }}>
+                {/* Header */}
+                <div style={{ padding: '16px 20px', borderBottom: `1px solid ${R}0.1)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>RECORD</span>
+                    <button onClick={() => setTab('vault')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: '1.2rem', cursor: 'pointer' }}>&#10005;</button>
+                </div>
+
+                {/* Scrollable content */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 100 }}>
+
+                {/* ── LOCK STATS ROW ── */}
                 <div style={{
                     width: '100%', display: 'flex', justifyContent: 'space-around',
-                    padding: '24px 20px',
-                    borderTop: '1px solid rgba(160,20,20,0.2)',
-                    marginTop: 12,
+                    padding: '32px 20px 24px',
                 }}>
                     {[
                         { v: daysIn, l: 'DAYS LOCKED' },
@@ -1664,37 +1755,43 @@ export default function VaultPage() {
                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}> {elapsed.d === 1 ? 'DAY' : 'DAYS'} AGO</span>
                 </div>
 
-                {/* ── OBEDIENCE CALENDAR ── */}
-                <div style={{ width: '100%', padding: '0 16px 28px' }}>
-                    <button onClick={() => setCalendarOpen(!calendarOpen)} style={{
-                        width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '14px 18px', background: `${R}0.07)`, border: `1px solid ${R}0.22)`, borderRadius: 12,
-                        cursor: 'pointer', outline: 'none',
-                    }}>
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.7)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)' }}>
-                                {(dailyRecords.filter((d: any) => d.perfect).length)}/{daysIn} PERFECT
-                            </span>
-                            <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.85rem', transform: calendarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>&#9662;</span>
-                        </div>
-                    </button>
+                {/* ── PRESSURE ── */}
+                <div style={{ width: '100%', padding: '0 24px 32px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '3px' }}>PRESSURE</span>
+                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', color: pressurePct > 80 ? `${R}0.8)` : pressurePct > 50 ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.5)' }}>{pressurePct}%</span>
+                    </div>
+                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{
+                            height: '100%', width: `${pressurePct}%`, borderRadius: 3, transition: 'width 1s ease',
+                            background: pressurePct > 80 ? `linear-gradient(90deg, ${R}0.5), ${R}0.8))` : pressurePct > 50 ? 'linear-gradient(90deg, rgba(197,160,89,0.3), rgba(197,160,89,0.6))' : 'linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.25))',
+                        }} />
+                    </div>
+                    {pressurePct > 85 && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: `${R}0.6)`, textAlign: 'center', marginTop: 10, letterSpacing: '1px' }}>You&apos;re breaking. Beg for mercy?</div>}
+                </div>
 
-                    {calendarOpen && (() => {
+                {/* ── OBEDIENCE CALENDAR — always open ── */}
+                <div style={{ width: '100%', padding: '0 16px 28px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px', marginBottom: 12 }}>
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.7)`, letterSpacing: '3px' }}>OBEDIENCE CALENDAR</span>
+                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)' }}>
+                            {(dailyRecords.filter((d: any) => d.perfect).length)}/{daysIn} PERFECT
+                        </span>
+                    </div>
+
+                    {(() => {
                         const lockStart = new Date(vaultData?.session?.started_at || new Date().toISOString());
-                        const startDay = (lockStart.getUTCDay() + 6) % 7; // 0=Mon
+                        const startDay = (lockStart.getUTCDay() + 6) % 7;
                         const totalCells = startDay + lockDays;
                         const rows = Math.ceil(totalCells / 7);
 
                         return (
-                            <div style={{ marginTop: 10, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 12, padding: '16px 12px 12px', animation: 'vFadeIn 0.3s ease' }}>
-                                {/* Weekday headers */}
+                            <div style={{ background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 12, padding: '16px 12px 12px' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, marginBottom: 8 }}>
                                     {WEEKDAYS.map(d => (
                                         <div key={d} style={{ textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px' }}>{d}</div>
                                     ))}
                                 </div>
-                                {/* Calendar grid */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
                                     {Array.from({ length: rows * 7 }).map((_, cellIdx) => {
                                         const dayIdx = cellIdx - startDay;
@@ -1715,54 +1812,26 @@ export default function VaultPage() {
                                                     aspectRatio: '1', borderRadius: 4, display: 'flex', flexDirection: 'column',
                                                     alignItems: 'center', justifyContent: 'center', gap: 1,
                                                     cursor: clickable ? 'pointer' : 'default',
-                                                    background: isToday
-                                                        ? 'rgba(197,160,89,0.08)'
-                                                        : obedient === true
-                                                            ? `${R}0.06)`
-                                                            : obedient === false
-                                                                ? 'rgba(255,40,40,0.04)'
-                                                                : 'rgba(255,255,255,0.01)',
-                                                    border: `1px solid ${
-                                                        isToday
-                                                            ? 'rgba(197,160,89,0.25)'
-                                                            : obedient === true
-                                                                ? `${R}0.15)`
-                                                                : obedient === false
-                                                                    ? 'rgba(255,40,40,0.12)'
-                                                                    : 'rgba(255,255,255,0.03)'
-                                                    }`,
+                                                    background: isToday ? 'rgba(197,160,89,0.08)' : obedient === true ? `${R}0.06)` : obedient === false ? 'rgba(255,40,40,0.04)' : 'rgba(255,255,255,0.01)',
+                                                    border: `1px solid ${isToday ? 'rgba(197,160,89,0.25)' : obedient === true ? `${R}0.15)` : obedient === false ? 'rgba(255,40,40,0.12)' : 'rgba(255,255,255,0.03)'}`,
                                                     transition: 'all 0.2s ease',
                                                     animation: isToday ? 'vPulse 2s ease-in-out infinite' : 'none',
                                                     position: 'relative',
                                                 }}>
                                                 <span style={{
                                                     fontFamily: 'Orbitron, monospace', fontSize: '0.8rem',
-                                                    color: isToday
-                                                        ? 'rgba(197,160,89,0.8)'
-                                                        : obedient === true
-                                                            ? `${R}0.65)`
-                                                            : obedient === false
-                                                                ? 'rgba(255,40,40,0.5)'
-                                                                : 'rgba(255,255,255,0.12)',
+                                                    color: isToday ? 'rgba(197,160,89,0.8)' : obedient === true ? `${R}0.65)` : obedient === false ? 'rgba(255,40,40,0.5)' : 'rgba(255,255,255,0.12)',
                                                 }}>{cellDate.getUTCDate()}</span>
                                                 {isPast && (
-                                                    <div style={{
-                                                        width: 5, height: 5, borderRadius: '50%',
-                                                        background: obedient ? '#a01010' : 'rgba(255,40,40,0.4)',
-                                                    }} />
+                                                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: obedient ? '#a01010' : 'rgba(255,40,40,0.4)' }} />
                                                 )}
-                                                {/* Seal badge on milestone days */}
                                                 {dayLog?.seal && (
-                                                    <div style={{
-                                                        position: 'absolute', top: 1, right: 1, width: 6, height: 6, borderRadius: '50%',
-                                                        background: dayLog.seal === 'bronze' ? '#cd7f32' : dayLog.seal === 'silver' ? '#c0c0c0' : dayLog.seal === 'gold' ? '#c5a059' : '#b9f2ff',
-                                                    }} />
+                                                    <div style={{ position: 'absolute', top: 1, right: 1, width: 6, height: 6, borderRadius: '50%', background: dayLog.seal === 'bronze' ? '#cd7f32' : dayLog.seal === 'silver' ? '#c0c0c0' : dayLog.seal === 'gold' ? '#c5a059' : '#b9f2ff' }} />
                                                 )}
                                             </div>
                                         );
                                     })}
                                 </div>
-                                {/* Legend */}
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(139,0,0,0.1)' }}>
                                     {[
                                         { color: '#a01010', label: 'PERFECT' },
@@ -1780,83 +1849,34 @@ export default function VaultPage() {
                     })()}
                 </div>
 
-                {/* Standalone tribute overlay shell — populated by tribute-game.ts */}
-                <div id="mobTributeStandalone" onClick={(e) => { if (e.target === e.currentTarget) (window as any).closeStandaloneTribute?.(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', zIndex: 2147483640, display: 'none', flexDirection: 'column' } as React.CSSProperties}>
-                    <div id="mobTributeContent" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '20px', paddingTop: 'calc(env(safe-area-inset-top) + 20px)', boxSizing: 'border-box' }}></div>
-                </div>
-
-                {/* ── PRESSURE ── */}
-                <div style={{ width: '100%', padding: '0 24px 32px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '3px' }}>PRESSURE</span>
-                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.9rem', color: pressurePct > 80 ? `${R}0.8)` : pressurePct > 50 ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.5)' }}>{pressurePct}%</span>
-                    </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{
-                            height: '100%', width: `${pressurePct}%`, borderRadius: 3, transition: 'width 1s ease',
-                            background: pressurePct > 80 ? `linear-gradient(90deg, ${R}0.5), ${R}0.8))` : pressurePct > 50 ? 'linear-gradient(90deg, rgba(197,160,89,0.3), rgba(197,160,89,0.6))' : 'linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.25))',
-                        }} />
-                    </div>
-                    {pressurePct > 85 && <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: `${R}0.6)`, textAlign: 'center', marginTop: 10, letterSpacing: '1px' }}>You&apos;re breaking. Beg for mercy?</div>}
-                </div>
-
-                {/* ── MILESTONES ── */}
+                {/* ── SEAL MILESTONES ── */}
                 <div style={{ width: '100%', padding: '0 20px 36px' }}>
                     <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '4px', textAlign: 'center', marginBottom: 16 }}>SEAL MILESTONES</div>
                     <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                         {SEALS.map(m => {
                             const done = daysIn >= m.days;
                             const cur = !done && daysIn < m.days;
-                            const prog = cur ? Math.min(100, (daysIn / m.days) * 100) : 0;
                             return (
-                                <div key={m.key} style={{ textAlign: 'center', opacity: done ? 1 : 0.3 }}>
-                                    <div style={{ width: 42, height: 42, borderRadius: '50%', margin: '0 auto 6px', border: `1.5px solid ${done ? m.color : 'rgba(255,255,255,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: done ? `radial-gradient(circle, ${m.color}11 0%, transparent 70%)` : 'none' }}>
-                                        {done
-                                            ? <svg viewBox="0 0 24 24" width="16" height="16" fill={m.color}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                                            : <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-                                        }
-                                        {cur && <svg viewBox="0 0 46 46" style={{ position: 'absolute', inset: -2, transform: 'rotate(-90deg)' }}><circle cx="23" cy="23" r="21" fill="none" stroke="rgba(197,160,89,0.1)" strokeWidth="1.5" /><circle cx="23" cy="23" r="21" fill="none" stroke="rgba(197,160,89,0.35)" strokeWidth="1.5" strokeDasharray={`${prog * 1.319} ${131.9 - prog * 1.319}`} /></svg>}
+                                <div key={m.label} style={{ textAlign: 'center', opacity: done ? 1 : 0.35 }}>
+                                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: done ? m.color : 'rgba(255,255,255,0.06)', border: `1px solid ${done ? m.color : 'rgba(255,255,255,0.1)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px', boxShadow: done ? `0 0 12px ${m.color}40` : 'none' }}>
+                                        {done && <span style={{ fontSize: '0.85rem' }}>&#10003;</span>}
                                     </div>
-                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: done ? m.color : 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>{m.label}</div>
-                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{m.days}d</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: done ? m.color : 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>{m.label}</div>
+                                    <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>{m.days}d</div>
                                 </div>
                             );
                         })}
                     </div>
                 </div>
-
-                {/* ── LEADERBOARD ── */}
-                <div style={{ width: '100%', padding: '0 20px 36px' }}>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>LEADERBOARD OF SUFFERING</div>
-                    {[
-                        { r: 1, n: 'Subject #12', d: 93, s: 5 },
-                        { r: 2, n: 'Subject #47', d: 47, s: 3, you: true },
-                        { r: 3, n: 'Subject #31', d: 34, s: 2 },
-                        { r: 4, n: 'Subject #08', d: 21, s: 1 },
-                    ].map(e => (
-                        <div key={e.r} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', background: e.you ? `${R}0.03)` : 'transparent', borderLeft: e.you ? `2px solid ${R}0.25)` : '2px solid transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: e.r === 1 ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.2)', minWidth: 20 }}>{String(e.r).padStart(2, '0')}</span>
-                            <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: e.you ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>{e.n}</span>
-                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px' }}>{e.d}d &middot; {e.s}x</span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* ── BEG BUTTON ── */}
-                <div style={{ textAlign: 'center', padding: '20px 0 40px' }}>
-                    <button onClick={() => setShowBeg(true)} style={{ padding: '16px 48px', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', letterSpacing: '3px', color: `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer' }}>
-                        BEG FOR RELEASE
-                    </button>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '2px', marginTop: 8 }}>DENIED {vaultData?.begs?.filter((b: any) => b.status === 'denied').length ?? 0} TIMES</div>
-                </div>
+                </div>{/* end scrollable content */}
             </div>
 
             {/* ══════════════════════════════════════════════
-                OVERLAY TABS (chat, queen, global, challenge)
+                OVERLAY TABS (chat, global, challenge)
             ══════════════════════════════════════════════ */}
-            {['chat', 'queen', 'global', 'challenge'].map(t => {
+            {['chat', 'global', 'challenge'].map(t => {
                 const isLocked = (t === 'chat' && !chatOk) || (t === 'global' && !globalOk);
-                const title = t === 'chat' ? 'QUEEN KARIN' : t === 'queen' ? "QUEEN'S WALL" : t === 'global' ? 'SUBS UNION' : 'WORK';
+                const title = t === 'chat' ? 'QUEEN KARIN' : t === 'global' ? 'SUBS UNION' : 'WORK';
                 const lockMsg = t === 'chat' ? 'COMPLETE YOUR DAILY TRIAL' : 'KNEEL 5 TIMES TODAY';
                 return (
                     <div key={t} style={{ display: tab === t ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', inset: 0, zIndex: 40, background: '#050508' }}>
@@ -1880,386 +1900,121 @@ export default function VaultPage() {
                             <button onClick={() => setTab('vault')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', fontSize: '1.2rem', cursor: 'pointer' }}>&#10005;</button>
                         </div>
 
-                        {/* Content or lock */}
+                        {/* Content or lock — coin flip gate */}
                         {isLocked && t === 'chat' ? (
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '0 24px' }}>
-                                {!chatGateTask ? (
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, padding: '0 24px' }}>
+                                {chatGateCooldown ? (
                                     <>
-                                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke={`${R}0.3)`} strokeWidth="1.5">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5">
+                                            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                                         </svg>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.7 }}>
-                                            Prove your devotion before<br />speaking to Queen Karin
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 1.7 }}>
+                                            Queen denied your audience
                                         </div>
-
-                                        {/* Attention bar for chat gate */}
-                                        <div style={{ width: '100%', maxWidth: 300, position: 'relative', marginTop: 8 }}>
-                                            <div
-                                                onPointerDown={chatGateDown}
-                                                onPointerUp={chatGateUp}
-                                                onPointerLeave={chatGateUp}
-                                                onPointerCancel={chatGateUp}
-                                                onContextMenu={(e) => e.preventDefault()}
-                                                style={{
-                                                    position: 'relative', width: '100%', height: 48, borderRadius: 24,
-                                                    background: `${R}0.06)`, border: `1.5px solid ${R}${chatGateHolding ? '0.4' : '0.15'})`,
-                                                    overflow: 'hidden', cursor: 'pointer',
-                                                    boxShadow: chatGateHolding ? `0 0 20px ${R}0.2)` : 'none',
-                                                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                                                    WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
-                                                } as React.CSSProperties}
-                                            >
-                                                <div style={{
-                                                    position: 'absolute', left: 0, top: 0, bottom: 0,
-                                                    width: `${chatGateFill}%`,
-                                                    background: `linear-gradient(90deg, ${R}0.15), ${R}0.35))`,
-                                                    borderRadius: 24, transition: chatGateHolding ? 'none' : 'width 0.2s',
-                                                }} />
-                                                <div style={{
-                                                    position: 'relative', zIndex: 1, width: '100%', height: '100%',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                                                }}>
-                                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke={`${R}0.5)`} strokeWidth="1.5">
-                                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                                                    </svg>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '4px', color: `${R}0.55)` }}>
-                                                        {chatGateCooldown ? (() => {
-                                                            const left = Math.max(0, Math.ceil((chatGateCooldownUntil - Date.now()) / 1000));
-                                                            if (left < 60) return `${left}s`;
-                                                            const h = Math.floor(left / 3600); const m = Math.floor((left % 3600) / 60);
-                                                            return h > 0 ? `${h}h ${m}m` : `${m}m`;
-                                                        })() : chatGateHolding ? 'HOLD...' : 'ATTENTION'}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.4rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '3px' }}>
+                                            {(() => {
+                                                const left = Math.max(0, Math.ceil((chatGateCooldownUntil - Date.now()) / 1000));
+                                                const h = Math.floor(left / 3600); const m = Math.floor((left % 3600) / 60); const s = left % 60;
+                                                return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+                                            })()}
                                         </div>
-
-                                        {/* Skip cooldown — costs 5h lock time per hour remaining */}
-                                        {chatGateCooldown && (() => {
-                                            const hoursLeft = Math.ceil((chatGateCooldownUntil - Date.now()) / 3600000);
-                                            const cost = hoursLeft * 5;
-                                            return (
-                                                <button onClick={() => {
-                                                    setPenaltyHours((prev: number) => prev + cost);
-                                                    setAttnCooldownUntil(0);
-                                                    setChatGateCooldownUntil(0);
-                                                    setAttnSkippedToday(false);
-                                                    vladReact(`Member just PAID ${cost} HOURS of extra lock time to skip their cooldown so they can talk to Queen. Desperate. Roast them.`);
-                                                    // Persist adjustment to DB
-                                                    if (vaultData?.session?.id) {
-                                                        fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'adjust', memberId: profile?.member_id || profile?.memberId || '', hours: cost, reason: `Skipped chat gate cooldown (${hoursLeft}h × 5)` }) }).catch(() => {});
-                                                    }
-                                                }} style={{
-                                                    marginTop: 12, background: 'none', border: `1px solid ${R}0.12)`,
-                                                    borderRadius: 16, padding: '8px 20px', cursor: 'pointer',
-                                                    display: 'flex', alignItems: 'center', gap: 8,
-                                                    WebkitTapHighlightColor: 'transparent',
-                                                }}>
-                                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke={`${R}0.3)`} strokeWidth="1.5">
-                                                        <circle cx="12" cy="12" r="10" />
-                                                        <polyline points="12 6 12 12 16 14" />
-                                                    </svg>
-                                                    <span style={{
-                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem',
-                                                        color: `${R}0.55)`, letterSpacing: '2px',
-                                                    }}>
-                                                        SKIP COOLDOWN (+{cost}h lock time)
-                                                    </span>
-                                                </button>
-                                            );
-                                        })()}
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px' }}>UNTIL NEXT ATTEMPT</div>
+                                    </>
+                                ) : chatGateFlipState === 'flipping' ? (
+                                    <>
+                                        <div style={{
+                                            width: 120, height: 120, borderRadius: '50%',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            border: '1px solid rgba(255,255,255,0.12)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            animation: 'vCoinFlip 0.15s linear infinite',
+                                        }}>
+                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2.2rem', fontWeight: 700, color: 'rgba(255,255,255,0.25)' }}>?</span>
+                                        </div>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', marginTop: 8 }}>FLIPPING...</div>
+                                    </>
+                                ) : chatGateFlipState === 'heads' ? (
+                                    <>
+                                        <div style={{
+                                            width: 120, height: 120, borderRadius: '50%',
+                                            background: 'rgba(255,255,255,0.04)',
+                                            border: '1px solid rgba(255,255,255,0.15)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            animation: 'vFadeIn 0.4s ease',
+                                        }}>
+                                            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                        </div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '3px', marginTop: 4 }}>GRANTED</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px' }}>ENTERING CHAT — 15 MINUTES</div>
+                                    </>
+                                ) : chatGateFlipState === 'tails' ? (
+                                    <>
+                                        <div style={{
+                                            width: 120, height: 120, borderRadius: '50%',
+                                            background: 'rgba(255,255,255,0.02)',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            animation: 'vFadeIn 0.4s ease',
+                                        }}>
+                                            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                            </svg>
+                                        </div>
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '3px', marginTop: 4 }}>DENIED</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>8 HOUR COOLDOWN</div>
                                     </>
                                 ) : (
-                                    <div style={{ width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, animation: 'vFadeIn 0.4s ease' }}>
-                                        {/* Task icon */}
+                                    <>
                                         <div style={{
-                                            width: 50, height: 50, borderRadius: '50%',
-                                            background: `${R}0.06)`, border: `1px solid ${R}0.2)`,
+                                            width: 120, height: 120, borderRadius: '50%',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         }}>
-                                            <span style={{ fontSize: '1.1rem', color: `${R}0.5)` }} dangerouslySetInnerHTML={{ __html: chatGateTask.icon }} />
+                                            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '2.2rem', fontWeight: 700, color: 'rgba(255,255,255,0.2)' }}>?</span>
                                         </div>
 
-                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: `${R}0.7)`, letterSpacing: '3px' }}>TO ENTER CHAT</div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: '#8b0000', letterSpacing: '2px', textShadow: `0 0 16px ${R}0.3)`, textAlign: 'center' }}>
-                                            {chatGateTask.label}
-                                        </div>
-                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.7 }}>
-                                            {chatGateTask.desc}
+                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', letterSpacing: '1px', marginTop: 4 }}>
+                                            Flip to request an audience
                                         </div>
 
-                                        {/* Action — SPIN */}
-                                        {chatGateTask.type === 'spin' && (
-                                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                                                {/* Mini wheel */}
-                                                <div style={{ position: 'relative', width: 140, height: 140 }}>
-                                                    <div style={{ position: 'absolute', top: -5, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: `9px solid ${R}0.6)` }} />
-                                                    <div style={{ width: 140, height: 140, borderRadius: '50%', border: `1px solid ${R}0.15)`, transform: `rotate(${chatGateSpinAngle}deg)`, transition: chatGateSpinning ? 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
-                                                        {WHEEL.map((_, i) => { const seg = 360 / WHEEL.length; return <div key={i} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${i * seg - 90}deg) skewY(-${90 - seg}deg)`, background: i % 2 === 0 ? `${R}0.06)` : 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
-                                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 28, height: 28, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.15)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                                                            <span style={{ fontSize: '0.7rem', color: `${R}0.65)` }}>&#9819;</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {chatGateSpinResult ? (
-                                                    <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: `${R}0.6)`, lineHeight: 1.5, marginBottom: 6 }}>{chatGateSpinResult.text}</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 12 }}>{chatGateSpinResult.type}</div>
-                                                        <button onClick={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: chatGateSpinResult?.text }); setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }} style={{
-                                                            width: '100%', padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
-                                                            color: 'rgba(80,200,120,0.5)', background: 'rgba(80,200,120,0.04)', border: '1px solid rgba(80,200,120,0.15)', borderRadius: 10, cursor: 'pointer',
-                                                        }}>ENTER CHAT</button>
-                                                    </div>
-                                                ) : (
-                                                    <button disabled={chatGateSpinning} onClick={() => {
-                                                        setChatGateSpinning(true);
-                                                        const idx = Math.floor(Math.random() * WHEEL.length);
-                                                        const seg = 360 / WHEEL.length;
-                                                        setChatGateSpinAngle(prev => prev + 360 * 4 + (360 - idx * seg - seg / 2));
-                                                        setTimeout(() => { setChatGateSpinResult(WHEEL[idx]); setChatGateSpinning(false); }, 3000);
-                                                    }} style={{
-                                                        padding: '10px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
-                                                        color: chatGateSpinning ? 'rgba(255,255,255,0.08)' : `${R}0.5)`, background: 'transparent',
-                                                        border: `1px solid ${chatGateSpinning ? 'rgba(255,255,255,0.04)' : `${R}0.12)`}`, borderRadius: 8, cursor: chatGateSpinning ? 'default' : 'pointer',
-                                                    }}>{chatGateSpinning ? 'SPINNING...' : 'SPIN'}</button>
-                                                )}
+                                        <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 280, marginTop: 4 }}>
+                                            <div style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginBottom: 4 }}>HEADS</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px' }}>15 MIN CHAT</div>
                                             </div>
-                                        )}
-
-                                        {/* Action — TRIBUTE: pick duration */}
-                                        {chatGateTask.type === 'tribute' && (
-                                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    <svg width="14" height="14" viewBox="0 0 512 512" fill={`${R}0.4)`}><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80z" /></svg>
-                                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>{profile?.wallet ?? 0}</span>
-                                                </div>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-                                                    {[
-                                                        { coins: 100, mins: 5, label: '5 MIN' },
-                                                        { coins: 500, mins: 15, label: '15 MIN' },
-                                                        { coins: 1000, mins: 60, label: '1 HOUR' },
-                                                    ].map(opt => (
-                                                        <button key={opt.coins} onClick={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: `${opt.label} for ${opt.coins} coins` }); vladReact(`Member just paid ${opt.coins} coins for ${opt.label} of chat time with Queen. They're desperate to talk to her.`); setChatExpiresAt(Date.now() + opt.mins * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }} style={{
-                                                            width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                            fontFamily: 'Orbitron, sans-serif', background: `${R}0.04)`, border: `1px solid ${R}0.15)`,
-                                                            borderRadius: 10, cursor: 'pointer',
-                                                        }}>
-                                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: `${R}0.6)`, letterSpacing: 2 }}>{opt.label}</span>
-                                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>{opt.coins} COINS</span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>BUY TIME WITH QUEEN</div>
+                                            <div style={{ flex: 1, padding: '12px 0', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginBottom: 4 }}>TAILS</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px' }}>8 HOUR WAIT</div>
                                             </div>
-                                        )}
+                                        </div>
 
-                                        {/* Action — PROOF */}
-                                        {chatGateTask.type === 'proof' && (
-                                            !chatGateProofUploaded ? (
-                                                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                                                    <div style={{ textAlign: 'center', marginBottom: 4 }}>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 3 }}>WRITE THIS NUMBER ON YOUR PROOF</div>
-                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', color: `${R}0.7)`, fontWeight: 700, letterSpacing: 6, textShadow: `0 0 20px ${R}0.3)` }}>#{daysIn + 1}</div>
-                                                    </div>
-                                                    <label style={{
-                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
-                                                        color: `${R}0.6)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer',
-                                                        textAlign: 'center', display: 'block',
-                                                    }}>
-                                                        UPLOAD PROOF
-                                                        <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: 'Proof uploaded' }); setChatGateProofUploaded(true); vladReact('Member uploaded proof to earn chat access. They want to talk to Queen badly.'); setTimeout(() => { setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }, 1200); }} />
-                                                    </label>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>PHOTO OR VIDEO</div>
-                                                </div>
-                                            ) : (
-                                                <div style={{ textAlign: 'center', animation: 'vFadeIn 0.3s ease' }}>
-                                                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 6 }}>PROOF SUBMITTED — ENTERING CHAT...</div>
-                                                </div>
-                                            )
-                                        )}
-
-                                        {/* Action — COIN FLIP */}
-                                        {chatGateTask.type === 'coinflip' && (
-                                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-                                                {/* Coin */}
-                                                <div style={{
-                                                    width: 80, height: 80, borderRadius: '50%',
-                                                    background: chatGateFlipState === 'heads'
-                                                        ? 'linear-gradient(135deg, rgba(80,200,120,0.15), rgba(80,200,120,0.05))'
-                                                        : chatGateFlipState === 'tails'
-                                                            ? `linear-gradient(135deg, ${R}0.15), ${R}0.05))`
-                                                            : `linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.04))`,
-                                                    border: `2px solid ${
-                                                        chatGateFlipState === 'heads' ? 'rgba(80,200,120,0.3)'
-                                                        : chatGateFlipState === 'tails' ? `${R}0.3)`
-                                                        : 'rgba(197,160,89,0.2)'
-                                                    }`,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    animation: chatGateFlipState === 'flipping' ? 'vCoinFlip 0.15s linear infinite' : 'none',
-                                                    transition: 'all 0.3s ease',
-                                                }}>
-                                                    <span style={{
-                                                        fontFamily: 'Cinzel, serif', fontSize: '1.4rem', fontWeight: 700,
-                                                        color: chatGateFlipState === 'heads' ? 'rgba(80,200,120,0.6)'
-                                                            : chatGateFlipState === 'tails' ? `${R}0.6)`
-                                                            : 'rgba(197,160,89,0.4)',
-                                                    }}>
-                                                        {chatGateFlipState === 'heads' ? 'H' : chatGateFlipState === 'tails' ? 'T' : '?'}
-                                                    </span>
-                                                </div>
-
-                                                {chatGateFlipState === 'idle' && (
-                                                    <button onClick={() => {
-                                                        setChatGateFlipState('flipping');
-                                                        const isHeads = Math.random() < 0.5;
-                                                        setTimeout(() => {
-                                                            setChatGateFlipState(isHeads ? 'heads' : 'tails');
-                                                            if (isHeads) {
-                                                                if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: 'Heads — entered chat' });
-                                                                setTimeout(() => { setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }, 1500);
-                                                            } else {
-                                                                if (chatGateTask) sendAttentionCard(chatGateTask, { completed: false, result: 'Tails — locked out 5 min' });
-                                                                const lockUntil = Date.now() + 5 * 60 * 1000;
-                                                                setChatGateFlipLocked(lockUntil);
-                                                            }
-                                                        }, 1500);
-                                                    }} style={{
-                                                        padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '3px',
-                                                        color: 'rgba(197,160,89,0.5)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, cursor: 'pointer',
-                                                    }}>FLIP</button>
-                                                )}
-
-                                                {chatGateFlipState === 'flipping' && (
-                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '3px' }}>FLIPPING...</div>
-                                                )}
-
-                                                {chatGateFlipState === 'heads' && (
-                                                    <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.5)', letterSpacing: '2px' }}>HEADS</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.3)', letterSpacing: '2px', marginTop: 4 }}>LUCKY — ENTERING CHAT...</div>
-                                                    </div>
-                                                )}
-
-                                                {chatGateFlipState === 'tails' && (
-                                                    <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: `${R}0.6)`, letterSpacing: '2px' }}>TAILS</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.6)`, letterSpacing: '2px', marginTop: 4 }}>DENIED — LOCKED OUT 5 MINUTES</div>
-                                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.7rem', color: `${R}0.65)`, marginTop: 12 }}>
-                                                            {Math.max(0, Math.ceil((chatGateFlipLocked - Date.now()) / 60000))}m
-                                                        </div>
-                                                        <button onClick={() => { setChatGateFlipState('idle'); setChatGateTask(null); setTab('vault'); }} style={{
-                                                            marginTop: 14, padding: '8px 20px', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', letterSpacing: '2px',
-                                                            color: 'rgba(255,255,255,0.4)', background: 'transparent', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 6, cursor: 'pointer',
-                                                        }}>RETURN TO VAULT</button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Action — PATIENCE TEST */}
-                                        {chatGateTask.type === 'patience' && (
-                                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-                                                {chatGateWaitTotal === 0 ? (
-                                                    <button onClick={() => {
-                                                        const secs = 30 + Math.floor(Math.random() * 61); // 30-90s
-                                                        setChatGateWaitTotal(secs);
-                                                        setChatGateWaitLeft(secs);
-                                                        const iv = setInterval(() => {
-                                                            setChatGateWaitLeft(prev => {
-                                                                if (prev <= 1) {
-                                                                    clearInterval(iv);
-                                                                    if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: `Waited ${secs}s` });
-                                                                    vladReact(`Member just sat and waited ${secs} seconds in silence to earn chat access. Patience test passed.`);
-                                                                    setTimeout(() => { setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }, 500);
-                                                                    return 0;
-                                                                }
-                                                                return prev - 1;
-                                                            });
-                                                        }, 1000);
-                                                    }} style={{
-                                                        padding: '12px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '3px',
-                                                        color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.15)`, borderRadius: 10, cursor: 'pointer',
-                                                    }}>BEGIN WAIT</button>
-                                                ) : chatGateWaitLeft > 0 ? (
-                                                    <>
-                                                        {/* Circular progress */}
-                                                        <div style={{ position: 'relative', width: 120, height: 120 }}>
-                                                            <svg viewBox="0 0 120 120" width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
-                                                                <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
-                                                                <circle cx="60" cy="60" r="54" fill="none" stroke="#8b0000" strokeWidth="3"
-                                                                    strokeDasharray={`${((chatGateWaitTotal - chatGateWaitLeft) / chatGateWaitTotal) * 339.3} 339.3`}
-                                                                    strokeLinecap="round"
-                                                                    style={{ transition: 'stroke-dasharray 1s linear' }}
-                                                                />
-                                                            </svg>
-                                                            <div style={{
-                                                                position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-                                                                alignItems: 'center', justifyContent: 'center',
-                                                            }}>
-                                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '1.6rem', color: `${R}0.5)` }}>
-                                                                    {chatGateWaitLeft}
-                                                                </div>
-                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>SECONDS</div>
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.7 }}>
-                                                            Patience is obedience.<br />Do not leave.
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <div style={{ textAlign: 'center', animation: 'vFadeIn 0.4s ease' }}>
-                                                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(80,200,120,0.4)', letterSpacing: '2px', marginTop: 8 }}>PATIENCE PROVEN</div>
-                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.2)', letterSpacing: '2px', marginTop: 4 }}>ENTERING CHAT...</div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Action — CONFESS */}
-                                        {chatGateTask.type === 'confess' && (
-                                            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                                                <textarea
-                                                    value={chatGateConfessText}
-                                                    onChange={e => setChatGateConfessText(e.target.value)}
-                                                    placeholder="Confess..."
-                                                    style={{
-                                                        width: '100%', minHeight: 90, background: `${R}0.02)`, border: `1px solid ${R}0.1)`,
-                                                        borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.4)',
-                                                        fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.75rem', lineHeight: 1.6,
-                                                        resize: 'vertical', outline: 'none',
-                                                    }}
-                                                />
-                                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{
-                                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem',
-                                                        color: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? 'rgba(80,200,120,0.3)' : 'rgba(255,255,255,0.08)',
-                                                        letterSpacing: '1px',
-                                                    }}>
-                                                        {chatGateConfessText.split(/\s+/).filter(Boolean).length} / 20 WORDS
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    disabled={chatGateConfessText.split(/\s+/).filter(Boolean).length < 20}
-                                                    onClick={() => { if (chatGateTask) sendAttentionCard(chatGateTask, { completed: true, result: chatGateConfessText.slice(0, 100) }); vladReact(`Member just confessed to enter chat. They wrote: "${chatGateConfessText.slice(0, 80)}..." React to their confession.`); setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateTask(null); setChatGateDone(true); }}
-                                                    style={{
-                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
-                                                        color: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? `${R}0.6)` : 'rgba(255,255,255,0.06)',
-                                                        background: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? `${R}0.04)` : 'transparent',
-                                                        border: `1px solid ${chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? `${R}0.15)` : 'rgba(255,255,255,0.03)'}`,
-                                                        borderRadius: 10, cursor: chatGateConfessText.split(/\s+/).filter(Boolean).length >= 20 ? 'pointer' : 'default',
-                                                    }}>CONFESS &amp; ENTER</button>
-                                            </div>
-                                        )}
-
-                                        {/* CANCEL — always visible on every chat gate task */}
-                                        <button onClick={cancelChatGate} style={{
-                                            marginTop: 12, padding: '10px 24px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
-                                            color: 'rgba(255,255,255,0.4)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, cursor: 'pointer',
-                                        }}>CANCEL</button>
-                                    </div>
+                                        <button onClick={() => {
+                                            setChatGateFlipState('flipping');
+                                            const isHeads = Math.random() < 0.5;
+                                            setTimeout(() => {
+                                                setChatGateFlipState(isHeads ? 'heads' : 'tails');
+                                                if (isHeads) {
+                                                    vladReact('Member flipped HEADS! They get 15 minutes of chat with Queen. Lucky bastard.');
+                                                    setTimeout(() => { setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateDone(true); setChatGateFlipState('idle'); }, 2000);
+                                                } else {
+                                                    vladReact('Member flipped TAILS. Denied. 8 hour cooldown. Better luck next time.');
+                                                    setTimeout(() => {
+                                                        const cooldownUntil = Date.now() + 8 * 3600 * 1000;
+                                                        setChatGateCooldownUntil(cooldownUntil);
+                                                        setChatGateFlipState('idle');
+                                                        // Persist to DB
+                                                        const mid = profile?.member_id || profile?.memberId || '';
+                                                        if (mid) fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_cooldown', memberId: mid, until: cooldownUntil }) }).catch(() => {});
+                                                    }, 2500);
+                                                }
+                                            }, 1500);
+                                        }} style={{
+                                            padding: '14px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '4px',
+                                            color: 'rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, cursor: 'pointer',
+                                            marginTop: 4, animation: 'vShake 2.5s ease-in-out infinite',
+                                        }}>FLIP</button>
+                                    </>
                                 )}
                             </div>
                         ) : isLocked ? (
@@ -2570,24 +2325,14 @@ export default function VaultPage() {
                                                                                             const val = Math.floor(Math.random() * numFaces) + 1;
                                                                                             setDiceResult(val);
                                                                                             count++;
-                                                                                            if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); saveGambleResult({ diceResult: val }, 'dice_roll'); }
+                                                                                            if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); saveGambleResult({ diceResult: val }, 'dice_roll'); const oc = diceOutcomes[val - 1]; const ft = oc?.followUpType || 'writing'; setPendingFollowUp({ orderType: o.type, source: `Dice Roll — ${val}`, resultText: oc?.text || `Face ${val}`, type: ft, prompt: oc?.followUpPrompt, instruction: oc?.followUpInstruction, duration: oc?.followUpDuration, target: oc?.followUpTarget }); }
                                                                                         }, 100);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {diceRolling ? 'ROLLING...' : 'ROLL DICE'}
                                                                                     </button>
-                                                                                ) : mechDone ? (() => {
-                                                                                    const outcome = diceOutcomes[diceResult! - 1];
-                                                                                    const fuType = outcome?.followUpType || 'writing';
-                                                                                    return (
-                                                                                    <button onClick={() => {
-                                                                                        setFollowUp({ orderType: o.type, source: `Dice Roll — ${diceResult}`, resultText: outcome?.text || `Face ${diceResult}`, type: fuType, prompt: outcome?.followUpPrompt, instruction: outcome?.followUpInstruction, duration: outcome?.followUpDuration, target: outcome?.followUpTarget });
-                                                                                        setDiceResult(null); setMechDone(false); clearGambleResults();
-                                                                                    }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        ACCEPT FATE
-                                                                                    </button>
-                                                                                    );
-                                                                                })() : null}
+                                                                                ) : mechDone ? (
+                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', animation: 'vPulse 1s ease infinite', marginTop: 8 }}>YOUR FATE IS SEALED</div>
+                                                                                ) : null}
                                                                             </div>
                                                                             );
                                                                         })()}
@@ -2620,19 +2365,13 @@ export default function VaultPage() {
                                                                                             const val = Math.random() > 0.5 ? 'heads' : 'tails';
                                                                                             setCoinResult(val);
                                                                                             count++;
-                                                                                            if (count > 12) { clearInterval(iv); setCoinFlipping(false); setMechDone(true); saveGambleResult({ coinResult: val }, 'coinflip'); }
+                                                                                            if (count > 12) { clearInterval(iv); setCoinFlipping(false); setMechDone(true); saveGambleResult({ coinResult: val }, 'coinflip'); const tt = val === 'heads' ? headsTask : tailsTask; const lo2 = tt.toLowerCase(); const it = /proof|video|selfie|photo|picture|body writing/.test(lo2) ? 'photo' : /write|essay|confession|journal|list|lines|letter|words|grateful/.test(lo2) ? 'writing' : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera|edge|ice/.test(lo2) ? 'endurance' : 'writing'; setPendingFollowUp({ orderType: o.type, source: `Coinflip — ${val.toUpperCase()}`, resultText: tt, type: it }); }
                                                                                         }, 120);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
                                                                                     </button>
                                                                                 ) : mechDone ? (
-                                                                                    <button onClick={() => {
-                                                                                        setFollowUp({ orderType: o.type, source: `Coinflip — ${coinResult!.toUpperCase()}`, resultText: taskText, type: inferredType });
-                                                                                        setCoinResult(null); setMechDone(false); clearGambleResults();
-                                                                                    }}
-                                                                                        style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                        ACCEPT FATE
-                                                                                    </button>
+                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', animation: 'vPulse 1s ease infinite', marginTop: 8 }}>YOUR FATE IS SEALED</div>
                                                                                 ) : null}
                                                                             </div>
                                                                             );
@@ -2654,7 +2393,7 @@ export default function VaultPage() {
                                                                                                     const picked = configCards.length > 0
                                                                                                         ? configCards[Math.floor(Math.random() * configCards.length)]
                                                                                                         : { text: 'Unknown card' };
-                                                                                                    setTimeout(() => { setCardResult(picked); setCardPicking(false); setMechDone(true); saveGambleResult({ cardResult: picked }, 'card_pick'); }, 800);
+                                                                                                    setTimeout(() => { setCardResult(picked); setCardPicking(false); setMechDone(true); saveGambleResult({ cardResult: picked }, 'card_pick'); const cft = picked?.followUpType || 'writing'; setPendingFollowUp({ orderType: o.type, source: 'Card Draw', resultText: picked?.text || picked, type: cft === 'instant' ? 'writing' : cft, prompt: picked?.followUpPrompt, instruction: picked?.followUpInstruction, duration: picked?.followUpDuration, target: picked?.followUpTarget }); }, 800);
                                                                                                 }} style={{ width: 70, height: 100, background: cardPicking ? 'rgba(197,160,89,0.1)' : `${R}0.06)`, border: `1.5px solid ${R}0.2)`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', animation: cardPicking ? 'vPulse 0.3s ease infinite' : 'none' }}>
                                                                                                     <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1.8rem', color: `${R}0.25)` }}>{'\u2660'}</span>
                                                                                                 </button>
@@ -2668,14 +2407,7 @@ export default function VaultPage() {
                                                                                             {cardResult?.text || cardResult}
                                                                                         </div>
                                                                                         {mechDone && (
-                                                                                            <button onClick={() => {
-                                                                                                const fuType = cardResult?.followUpType || 'writing';
-                                                                                                setFollowUp({ orderType: o.type, source: 'Card Draw', resultText: cardResult?.text || cardResult, type: fuType === 'instant' ? 'writing' : fuType, prompt: cardResult?.followUpPrompt, instruction: cardResult?.followUpInstruction, duration: cardResult?.followUpDuration, target: cardResult?.followUpTarget });
-                                                                                                setCardResult(null); setMechDone(false); clearGambleResults();
-                                                                                            }}
-                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                                ACCEPT FATE
-                                                                                            </button>
+                                                                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', animation: 'vPulse 1s ease infinite', marginTop: 8, textAlign: 'center' }}>YOUR FATE IS SEALED</div>
                                                                                         )}
                                                                                     </>
                                                                                 )}
@@ -2706,26 +2438,16 @@ export default function VaultPage() {
                                                                                             setRouletteSpinning(false);
                                                                                             setMechDone(true);
                                                                                             saveGambleResult({ rouletteResult: val }, 'russian_roulette');
+                                                                                            const rpt = o.config?.punishment || 'Write 100 lines: "I pulled the trigger and paid the price"'; const rBang = val === 'bang'; const rlo = rpt.toLowerCase(); const rinf = rBang ? (/proof|video|selfie|photo|picture|body writing/.test(rlo) ? 'photo' : /write|essay|confession|journal|list|lines|grateful/.test(rlo) ? 'writing' : /shower|plank|hold|sit|pushup|squat|camera|edge|ice/.test(rlo) ? 'endurance' : 'writing') : 'writing';
+                                                                                            setPendingFollowUp({ orderType: o.type, source: `Russian Roulette — ${rBang ? 'BANG' : 'SURVIVED'}`, resultText: rBang ? rpt : 'You survived. Describe the fear you felt.', type: rinf });
                                                                                         }, 1500);
                                                                                     }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: 'rgba(255,60,60,0.8)', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {rouletteSpinning ? 'CHAMBER SPINNING...' : 'PULL TRIGGER'}
                                                                                     </button>
                                                                                 ) : null}
-                                                                                {rouletteResult && !rouletteSpinning && mechDone && (() => {
-                                                                                    const pt = o.config?.punishment || 'Write 100 lines: "I pulled the trigger and paid the price"';
-                                                                                    const isBang = rouletteResult === 'bang';
-                                                                                    const lo = pt.toLowerCase();
-                                                                                    const inf = isBang ? (/proof|video|selfie|photo|picture|body writing/.test(lo) ? 'photo' : /write|essay|confession|journal|list|lines|grateful/.test(lo) ? 'writing' : /shower|plank|hold|sit|pushup|squat|camera|edge|ice/.test(lo) ? 'endurance' : 'writing') : 'writing';
-                                                                                    return (
-                                                                                        <button onClick={() => {
-                                                                                            setFollowUp({ orderType: o.type, source: `Russian Roulette — ${isBang ? 'BANG' : 'SURVIVED'}`, resultText: isBang ? pt : 'You survived. Describe the fear you felt.', type: inf });
-                                                                                            setRouletteResult(null); setMechDone(false); clearGambleResults();
-                                                                                        }}
-                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: isBang ? 'rgba(255,60,60,0.5)' : `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                            {isBang ? 'ACCEPT PUNISHMENT' : 'ACCEPT FATE'}
-                                                                                        </button>
-                                                                                    );
-                                                                                })()}
+                                                                                {rouletteResult && !rouletteSpinning && mechDone && (
+                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', animation: 'vPulse 1s ease infinite', marginTop: 8, textAlign: 'center' }}>YOUR FATE IS SEALED</div>
+                                                                                )}
                                                                             </div>
                                                                         )}
 
@@ -2750,7 +2472,7 @@ export default function VaultPage() {
                                                                                                 finalSeg = segments[Math.floor(Math.random() * segments.length)];
                                                                                                 setWheelPreview(finalSeg.text);
                                                                                                 count++;
-                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setWheelPreview(null); setWheelResult(finalSeg); setMechDone(true); saveGambleResult({ wheelResult: finalSeg }, 'spin_wheel'); }
+                                                                                                if (count > 20) { clearInterval(iv); setWheelSpinning(false); setWheelPreview(null); setWheelResult(finalSeg); setMechDone(true); saveGambleResult({ wheelResult: finalSeg }, 'spin_wheel'); const wft = finalSeg.followUpType || 'writing'; setPendingFollowUp({ orderType: o.type, source: 'Spin Wheel', resultText: finalSeg.text, type: wft === 'instant' ? 'writing' : wft, prompt: finalSeg.followUpPrompt, instruction: finalSeg.followUpInstruction, duration: finalSeg.followUpDuration, target: finalSeg.followUpTarget }); }
                                                                                             }, 100);
                                                                                         }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                             {wheelSpinning ? 'SPINNING...' : 'SPIN'}
@@ -2760,14 +2482,7 @@ export default function VaultPage() {
                                                                                     <>
                                                                                         <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.6)', letterSpacing: 3, marginBottom: 8 }}>YOU LANDED ON</div>
                                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.8)', lineHeight: 1.6, margin: '0 0 16px', padding: '14px 18px', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8 }}>{wheelResult.text}</div>
-                                                                                        <button onClick={() => {
-                                                                                            const fuType = wheelResult.followUpType || 'writing';
-                                                                                            setFollowUp({ orderType: o.type, source: 'Spin Wheel', resultText: wheelResult.text, type: fuType === 'instant' ? 'writing' : fuType, prompt: wheelResult.followUpPrompt, instruction: wheelResult.followUpInstruction, duration: wheelResult.followUpDuration, target: wheelResult.followUpTarget });
-                                                                                            setWheelResult(null); setMechDone(false); clearGambleResults();
-                                                                                        }}
-                                                                                            style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>
-                                                                                            ACCEPT FATE
-                                                                                        </button>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', animation: 'vPulse 1s ease infinite', marginTop: 8, textAlign: 'center' }}>YOUR FATE IS SEALED</div>
                                                                                     </>
                                                                                 )}
                                                                             </div>
@@ -2779,9 +2494,9 @@ export default function VaultPage() {
                                                                             <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                                                                 {!truthDareChoice ? (
                                                                                     <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-                                                                                        <button onClick={() => { setTruthDareChoice('truth'); saveGambleResult({ truthDareChoice: 'truth' }, 'truth_dare'); }}
+                                                                                        <button onClick={() => { setTruthDareChoice('truth'); saveGambleResult({ truthDareChoice: 'truth' }, 'truth_dare'); const tText = o.config?.truthText || 'Confess your deepest weakness to Queen Karin — at least 150 words'; const tFu = o.config?.truthFollowUp || 'writing'; setPendingFollowUp({ orderType: o.type, source: 'Truth or Dare (truth)', resultText: tText, type: tFu }); }}
                                                                                             style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.8)', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer' }}>TRUTH</button>
-                                                                                        <button onClick={() => { setTruthDareChoice('dare'); saveGambleResult({ truthDareChoice: 'dare' }, 'truth_dare'); }}
+                                                                                        <button onClick={() => { setTruthDareChoice('dare'); saveGambleResult({ truthDareChoice: 'dare' }, 'truth_dare'); const dText = o.config?.dareText || 'Take a cold shower for 60 seconds — upload photo proof'; const dFu = o.config?.dareFollowUp || 'endurance'; setPendingFollowUp({ orderType: o.type, source: 'Truth or Dare (dare)', resultText: dText, type: dFu }); }}
                                                                                             style={{ flex: 1, maxWidth: 160, padding: '20px 16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '3px', color: 'rgba(255,80,80,0.8)', background: 'rgba(255,60,60,0.04)', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 8, cursor: 'pointer' }}>DARE</button>
                                                                                     </div>
                                                                                 ) : (() => {
@@ -2791,11 +2506,7 @@ export default function VaultPage() {
                                                                                         <>
                                                                                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: truthDareChoice === 'truth' ? 'rgba(197,160,89,0.6)' : 'rgba(255,80,80,0.6)', letterSpacing: 3, marginBottom: 8 }}>{truthDareChoice.toUpperCase()}</div>
                                                                                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 16px', padding: '14px 18px', background: truthDareChoice === 'truth' ? 'rgba(197,160,89,0.06)' : 'rgba(255,60,60,0.06)', border: `1px solid ${truthDareChoice === 'truth' ? 'rgba(197,160,89,0.15)' : 'rgba(255,60,60,0.15)'}`, borderRadius: 8 }}>{choiceText}</div>
-                                                                                            <button onClick={() => {
-                                                                                                setFollowUp({ orderType: o.type, source: `Truth or Dare (${truthDareChoice})`, resultText: choiceText, type: tdFollowUp });
-                                                                                                setTruthDareChoice(null); clearGambleResults();
-                                                                                            }}
-                                                                                                style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer', animation: 'vFadeIn 0.3s ease' }}>ACCEPT FATE</button>
+                                                                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '4px', animation: 'vPulse 1s ease infinite', marginTop: 8, textAlign: 'center' }}>YOUR FATE IS SEALED</div>
                                                                                         </>
                                                                                     );
                                                                                 })()}
@@ -2956,8 +2667,21 @@ export default function VaultPage() {
                                 })()}
                             </div>
                         ) : (
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{title} PREVIEW</div>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 100px' }}>
+                                {/* ── LEADERBOARD OF SUFFERING ── */}
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: `${R}0.6)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 14 }}>LEADERBOARD OF SUFFERING</div>
+                                {[
+                                    { r: 1, n: 'Subject #12', d: 93, s: 5 },
+                                    { r: 2, n: 'Subject #47', d: 47, s: 3, you: true },
+                                    { r: 3, n: 'Subject #31', d: 34, s: 2 },
+                                    { r: 4, n: 'Subject #08', d: 21, s: 1 },
+                                ].map(e => (
+                                    <div key={e.r} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', background: e.you ? `${R}0.03)` : 'transparent', borderLeft: e.you ? `2px solid ${R}0.25)` : '2px solid transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: e.r === 1 ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.2)', minWidth: 20 }}>{String(e.r).padStart(2, '0')}</span>
+                                        <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: e.you ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>{e.n}</span>
+                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px' }}>{e.d}d &middot; {e.s}x</span>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
@@ -2996,45 +2720,51 @@ export default function VaultPage() {
                     } catch (e: any) { alert('Submit failed: ' + e?.message); }
                 };
                 return (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#050508', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
-                        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
-                        {/* Back button */}
-                        <button onClick={() => { setFollowUp(null); setFollowUpText(''); }} style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 2, padding: '8px 12px' }}>BACK</button>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px 100px', position: 'relative', zIndex: 1 }}>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#050508', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
+                        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
+                        {/* Skip button */}
+                        <button onClick={() => setFollowUpSkipping(!followUpSkipping)} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 2, padding: '8px 12px' }}>{followUpSkipping ? 'BACK' : 'SKIP'}</button>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '70px 20px 24px', position: 'relative', zIndex: 5 }}>
                             {/* Source label */}
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, textAlign: 'center', marginBottom: 20 }}>{followUp.source.toUpperCase()}</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, textAlign: 'center', marginBottom: 40 }}>{followUp.source.toUpperCase()}</div>
                             {/* Thin gold line */}
-                            <div style={{ width: 40, height: 1, background: `${R}0.2)`, marginBottom: 24 }} />
+                            <div style={{ width: 40, height: 1, background: `${R}0.2)`, marginBottom: 50 }} />
                             {/* What they got */}
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.8, textAlign: 'center', marginBottom: 12, maxWidth: 320 }}>{followUp.resultText}</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.7, textAlign: 'center', marginBottom: 40 }}>{followUp.resultText}</div>
                             {/* Follow-up instruction */}
                             {(followUp.prompt || followUp.instruction) && (
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, textAlign: 'center', marginBottom: 20, maxWidth: 300, fontStyle: 'italic' }}>{followUp.prompt || followUp.instruction}</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, textAlign: 'center', marginBottom: 40, fontStyle: 'italic' }}>{followUp.prompt || followUp.instruction}</div>
                             )}
                             {followUp.duration && (
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, textAlign: 'center', marginBottom: 24 }}>{Math.floor(followUp.duration / 60)}:{String(followUp.duration % 60).padStart(2, '0')} DURATION</div>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, textAlign: 'center', marginBottom: 40 }}>{Math.floor(followUp.duration / 60)}:{String(followUp.duration % 60).padStart(2, '0')} DURATION</div>
                             )}
                             {/* Another thin line */}
-                            <div style={{ width: 60, height: 1, background: `${R}0.1)`, marginBottom: 28 }} />
+                            <div style={{ width: 60, height: 1, background: `${R}0.1)`, marginBottom: 80 }} />
 
                             {/* WRITING follow-up */}
-                            {followUp.type === 'writing' && (
-                                <div style={{ width: '100%', maxWidth: 340 }}>
-                                    <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Write here..."
-                                        style={{ width: '100%', minHeight: 140, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)' }}>{followUpText.split(/\s+/).filter(Boolean).length} words</span>
-                                        <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!followUpText.trim()}
-                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: followUpText.trim() ? '#050508' : 'rgba(255,255,255,0.08)', background: followUpText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${followUpText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: followUpText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                            {followUp.type === 'writing' && (() => {
+                                const wc = followUpText.split(/\s+/).filter(Boolean).length;
+                                const parsedWords = followUp.resultText?.match(/(\d+)[- ]?word/i);
+                                const minW = followUp.target || (parsedWords ? parseInt(parsedWords[1]) : 20);
+                                const ok = wc >= minW;
+                                return (
+                                <div style={{ width: '100%' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: ok ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{wc} / {minW} words</span>
+                                        <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!ok}
+                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: ok ? '#050508' : 'rgba(255,255,255,0.08)', background: ok ? `${R}0.5)` : 'transparent', border: `1px solid ${ok ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: ok ? 'pointer' : 'default' }}>SUBMIT</button>
                                     </div>
+                                    <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Write here..."
+                                        style={{ width: '100%', minHeight: '35vh', background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
                                 </div>
-                            )}
+                                );
+                            })()}
 
                             {/* PHOTO / VIDEO follow-up */}
                             {(followUp.type === 'photo' || followUp.type === 'video') && (
-                                <div style={{ width: '100%', maxWidth: 340 }}>
+                                <div style={{ width: '75%', margin: '0 auto' }}>
                                     <label style={{ cursor: 'pointer', display: 'block' }}>
-                                        <div style={{ padding: '20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : `${R}0.5)`, background: `${R}0.03)`, border: `1px solid ${R}0.12)`, borderRadius: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                        <div style={{ padding: '18px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '3px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : '#c5a059', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid #c5a059', borderRadius: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 0 15px rgba(197,160,89,0.2)' }}>
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                                             {followUpUploading ? 'UPLOADING...' : (followUp.type === 'video' ? 'UPLOAD VIDEO' : 'UPLOAD PHOTO')}
                                         </div>
@@ -3054,12 +2784,22 @@ export default function VaultPage() {
                             )}
 
                             {/* ENDURANCE follow-up — requires written report of completion */}
-                            {followUp.type === 'endurance' && (
-                                <div style={{ width: '100%', maxWidth: 340 }}>
+                            {followUp.type === 'endurance' && (() => {
+                                const wc = followUpText.split(/\s+/).filter(Boolean).length;
+                                const parsedWords = followUp.resultText?.match(/(\d+)[- ]?word/i);
+                                const minW = followUp.target || (parsedWords ? parseInt(parsedWords[1]) : 15);
+                                const ok = wc >= minW;
+                                return (
+                                <div style={{ width: '100%' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: ok ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{wc} / {minW} words</span>
+                                        <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!ok}
+                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: ok ? '#050508' : 'rgba(255,255,255,0.08)', background: ok ? `${R}0.5)` : 'transparent', border: `1px solid ${ok ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: ok ? 'pointer' : 'default' }}>SUBMIT</button>
+                                    </div>
                                     <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Describe how you completed this task..."
-                                        style={{ width: '100%', minHeight: 100, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none', marginBottom: 12 }} />
-                                    <label style={{ cursor: 'pointer', display: 'block', marginBottom: 12 }}>
-                                        <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '2px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : `${R}0.3)`, background: `${R}0.02)`, border: `1px solid ${R}0.08)`, borderRadius: 8, textAlign: 'center' }}>
+                                        style={{ width: '100%', minHeight: 220, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+                                    <label style={{ cursor: 'pointer', display: 'block' }}>
+                                        <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '2px', color: followUpUploading ? 'rgba(255,255,255,0.15)' : '#c5a059', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid #c5a059', borderRadius: 10, textAlign: 'center', boxShadow: '0 0 15px rgba(197,160,89,0.2)' }}>
                                             {followUpUploading ? 'UPLOADING...' : '+ ATTACH PROOF'}
                                         </div>
                                         <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={async (e) => {
@@ -3074,15 +2814,68 @@ export default function VaultPage() {
                                             } catch {} finally { setFollowUpUploading(false); }
                                         }} />
                                     </label>
-                                    <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!followUpText.trim()}
-                                        style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: followUpText.trim() ? '#050508' : 'rgba(255,255,255,0.08)', background: followUpText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${followUpText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: followUpText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
                                 </div>
-                            )}
+                                );
+                            })()}
 
                             {/* INSTANT follow-up — auto-acknowledged */}
                             {followUp.type === 'instant' && (
                                 <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}` })}
                                     style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
+                            )}
+
+                            {/* SKIP OPTIONS OVERLAY */}
+                            {followUpSkipping && (
+                                <div style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(5,5,8,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 30, gap: 24, animation: 'vFadeIn 0.3s ease' }}>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, textAlign: 'center', lineHeight: 1.7 }}>Skip this task?</div>
+                                    <div style={{ width: 40, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+                                    {/* Pay 300 coins */}
+                                    <button onClick={async () => {
+                                        const coins = profile?.wallet ?? 0;
+                                        if (coins < 300) { alert('Not enough coins. 300 required.'); return; }
+                                        try {
+                                            const res = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'skip_order', memberId: mid, orderType: followUp.orderType, cost: 300 }) });
+                                            const data = await res.json();
+                                            if (data.success) {
+                                                setProfile((p: any) => ({ ...p, wallet: (p?.wallet || 0) - 300 }));
+                                                setFollowUp(null); setFollowUpText(''); setFollowUpSkipping(false);
+                                                if (mid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }); }
+                                            }
+                                        } catch {}
+                                    }} style={{
+                                        width: '100%', maxWidth: 300, padding: '18px 20px', borderRadius: 12,
+                                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                                        cursor: 'pointer', textAlign: 'center',
+                                    }}>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 3, marginBottom: 6 }}>PAY 300 COINS</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,60,60,0.4)', letterSpacing: 1 }}>BREAKS OBEDIENCE STREAK</div>
+                                    </button>
+
+                                    {/* Use skip pass */}
+                                    <button disabled={!(profile?.skippass > 0)} onClick={async () => {
+                                        try {
+                                            const res = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'skip_order', memberId: mid, orderType: followUp.orderType, useSkipPass: true }) });
+                                            const data = await res.json();
+                                            if (data.success) {
+                                                setProfile((p: any) => ({ ...p, skippass: Math.max(0, (p?.skippass || 0) - 1) }));
+                                                setFollowUp(null); setFollowUpText(''); setFollowUpSkipping(false);
+                                                if (mid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }); }
+                                            }
+                                        } catch {}
+                                    }} style={{
+                                        width: '100%', maxWidth: 300, padding: '18px 20px', borderRadius: 12,
+                                        background: (profile?.skippass > 0) ? 'rgba(197,160,89,0.04)' : 'transparent',
+                                        border: `1px solid ${(profile?.skippass > 0) ? 'rgba(197,160,89,0.2)' : 'rgba(255,255,255,0.04)'}`,
+                                        cursor: (profile?.skippass > 0) ? 'pointer' : 'default', textAlign: 'center',
+                                        opacity: (profile?.skippass > 0) ? 1 : 0.3,
+                                    }}>
+                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: (profile?.skippass > 0) ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.15)', letterSpacing: 3, marginBottom: 6 }}>USE SKIP PASS</div>
+                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 1 }}>{profile?.skippass || 0} AVAILABLE</div>
+                                    </button>
+
+                                    <button onClick={() => setFollowUpSkipping(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 2, padding: '12px', marginTop: 8 }}>CANCEL</button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -3239,25 +3032,27 @@ export default function VaultPage() {
                 BOTTOM NAV — 5 tabs matching /profile
             ══════════════════════════════════════════════ */}
             <nav style={{
-                position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-                width: '100%', maxWidth: 480,
+                position: 'fixed', bottom: 0, left: 0, right: 0,
+                width: '100%',
                 background: 'rgba(5,5,8,0.95)', backdropFilter: 'blur(20px)',
                 borderTop: `1px solid ${R}0.12)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-                padding: '10px 0 env(safe-area-inset-bottom, 10px)',
+                height: 'calc(68px + env(safe-area-inset-bottom, 0px))',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 zIndex: 60,
             }}>
                 <NavBtn active={tab === 'vault'} icon="&#9670;" label="VAULT" onClick={() => setTab('vault')} />
                 <NavBtn active={tab === 'challenge'} label="WORK" onClick={() => setTab('challenge')}
-                    icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>} />
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>} />
 
                 {/* Center Queen button */}
-                <button onClick={() => setTab('chat')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative' }}>
+                <button onClick={() => setTab('chat')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(-8px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
                     <div style={{
-                        width: 50, height: 50, borderRadius: '50%',
-                        border: `1.5px solid ${tab === 'chat' ? `${R}0.5)` : `${R}0.15)`}`,
+                        width: 130, height: 130, borderRadius: '50%',
+                        border: `2px solid ${tab === 'chat' ? `${R}0.5)` : `${R}0.15)`}`,
                         overflow: 'hidden',
                         boxShadow: tab === 'chat' ? `0 0 16px ${R}0.15)` : 'none',
+                        flexShrink: 0,
                     }}>
                         <img src="/queen-nav.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Q" />
                     </div>
@@ -3268,31 +3063,33 @@ export default function VaultPage() {
                     )}
                 </button>
 
-                <NavBtn active={tab === 'queen'} icon="&#9819;" label="QUEEN" onClick={() => setTab('queen')} />
+                <NavBtn active={tab === 'queen'} icon="&#9819;" label="RECORD" onClick={() => setTab('queen')} />
                 <NavBtn active={tab === 'global'} icon="&#9678;" label="UNION" onClick={() => setTab('global')} locked={!globalOk} />
             </nav>
 
             {/* ── FLOATING VLAD AVATAR + SPEECH BUBBLE ── */}
             {!vladOpen && (
-                <div style={{ position: 'fixed', bottom: 76, right: 12, zIndex: 150, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                <div style={{ position: 'fixed', bottom: 90, right: 12, zIndex: 150, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
                     {/* Speech bubble — pops up when Vlad has something to say */}
                     {vladBubble && (
                         <div onClick={() => { setVladOpen(true); setVladPulse(false); setVladBubble(''); }} style={{
-                            maxWidth: 240, padding: '10px 14px',
-                            background: 'rgba(10,6,14,0.95)', border: '1px solid rgba(255,0,237,0.2)',
-                            borderRadius: '14px 14px 4px 14px',
-                            boxShadow: '0 8px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255,0,237,0.06)',
-                            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.72rem',
-                            color: 'rgba(255,0,237,0.6)', lineHeight: 1.6, cursor: 'pointer',
-                            animation: 'vFadeIn 0.3s ease',
+                            maxWidth: 250, padding: '12px 16px',
+                            background: 'rgba(8,4,12,0.97)', border: '1px solid rgba(197,160,89,0.12)',
+                            borderRadius: '16px 16px 4px 16px',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(139,0,0,0.06), inset 0 1px 0 rgba(197,160,89,0.05)',
+                            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.73rem',
+                            color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, cursor: 'pointer',
+                            animation: 'vFadeIn 0.3s ease', letterSpacing: '0.3px',
                         }}>{vladBubble.length > 120 ? vladBubble.slice(0, 120) + '...' : vladBubble}</div>
                     )}
                     {/* Avatar button */}
                     <button onClick={() => { setVladOpen(true); setVladPulse(false); setVladBubble(''); if (vladMsgs.length === 0) vladReact('Member just opened the vault page. Greet them — you can see they\'re locked up. Be sarcastic but welcoming.'); }} style={{
-                        width: 50, height: 50, borderRadius: '50%', padding: 0,
-                        border: vladPulse ? '2px solid rgba(255,0,237,0.5)' : '1.5px solid rgba(255,0,237,0.25)',
+                        width: 80, height: 80, borderRadius: '50%', padding: 0,
+                        border: vladPulse ? '2.5px solid rgba(139,0,0,0.7)' : '2px solid rgba(139,0,0,0.45)',
                         cursor: 'pointer', overflow: 'hidden', flexShrink: 0,
-                        boxShadow: vladPulse ? '0 0 18px rgba(255,0,237,0.25)' : '0 4px 20px rgba(0,0,0,0.5)',
+                        boxShadow: vladPulse
+                            ? '0 0 24px rgba(197,160,89,0.35), 0 0 8px rgba(139,0,0,0.4), 0 4px 20px rgba(0,0,0,0.6)'
+                            : '0 0 15px rgba(197,160,89,0.15), 0 4px 24px rgba(0,0,0,0.6)',
                         animation: vladPulse ? 'vladPulse 1.5s ease infinite' : 'none',
                         background: 'none',
                     }}>
@@ -3305,37 +3102,39 @@ export default function VaultPage() {
             {/* ── VLAD CHAT PANEL — full-screen overlay ── */}
             {vladOpen && (
                 <div onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} style={{
-                    position: 'fixed', inset: 0, zIndex: 160,
-                    background: 'linear-gradient(170deg, #08040e 0%, #0c0614 40%, #0a0510 100%)',
+                    position: 'fixed', top: 0, left: 0, right: 0,
+                    bottom: 'calc(68px + env(safe-area-inset-bottom, 0px))',
+                    zIndex: 55,
+                    background: 'linear-gradient(170deg, #06050a 0%, #0a0810 40%, #080712 100%)',
                     display: 'flex', flexDirection: 'column',
                     animation: 'vFadeIn 0.2s ease', overflow: 'hidden',
                 }}>
                     {/* BG glow */}
-                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 20%, rgba(255,0,237,0.04) 0%, transparent 60%)' }} />
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 15%, rgba(139,0,0,0.04) 0%, transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(197,160,89,0.02) 0%, transparent 50%)' }} />
 
                     {/* Header */}
                     <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         padding: '16px 20px', paddingTop: 'calc(env(safe-area-inset-top, 16px) + 10px)',
-                        borderBottom: '1px solid rgba(255,0,237,0.1)',
-                        background: 'rgba(255,0,237,0.02)',
+                        borderBottom: '1px solid rgba(197,160,89,0.08)',
+                        background: 'rgba(139,0,0,0.02)',
                         position: 'relative', zIndex: 1,
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                            <div style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,0,237,0.35)', flexShrink: 0, boxShadow: '0 0 20px rgba(255,0,237,0.15)' }}>
+                            <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(139,0,0,0.5)', flexShrink: 0, boxShadow: '0 0 18px rgba(197,160,89,0.15), 0 0 6px rgba(139,0,0,0.2)' }}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/vlad-avatar.png" alt="Vlad" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                             </div>
                             <div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,0,237,0.7)', letterSpacing: '4px' }}>VLAD</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>YOUR GUARDIAN DEMON</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.65)', letterSpacing: '5px' }}>VLAD</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px' }}>GUARDIAN DEMON</div>
                             </div>
                         </div>
                         <button onClick={() => setVladOpen(false)} style={{
-                            background: 'rgba(255,0,237,0.04)', border: '1px solid rgba(255,0,237,0.12)',
+                            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
                             borderRadius: 10, cursor: 'pointer', width: 36, height: 36,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: 'rgba(255,0,237,0.4)', fontSize: '1.2rem', lineHeight: 1,
+                            color: 'rgba(255,255,255,0.3)', fontSize: '1.2rem', lineHeight: 1,
                         }}>&times;</button>
                     </div>
 
@@ -3348,7 +3147,7 @@ export default function VaultPage() {
                                 alignItems: 'flex-end',
                             }}>
                                 {m.role === 'vlad' && (
-                                    <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.25)', flexShrink: 0 }}>
+                                    <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '1.5px solid rgba(139,0,0,0.35)', flexShrink: 0, boxShadow: '0 0 8px rgba(197,160,89,0.08)' }}>
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src="/vlad-avatar.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                                     </div>
@@ -3357,23 +3156,23 @@ export default function VaultPage() {
                                     maxWidth: '80%', padding: '12px 16px',
                                     borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                                     background: m.role === 'user'
-                                        ? 'rgba(139,0,0,0.08)'
-                                        : 'rgba(255,0,237,0.05)',
-                                    border: `1px solid ${m.role === 'user' ? 'rgba(139,0,0,0.15)' : 'rgba(255,0,237,0.12)'}`,
-                                    fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem',
-                                    color: m.role === 'user' ? 'rgba(255,255,255,0.5)' : 'rgba(255,0,237,0.6)',
-                                    lineHeight: 1.65,
+                                        ? 'rgba(255,255,255,0.03)'
+                                        : 'rgba(139,0,0,0.04)',
+                                    border: `1px solid ${m.role === 'user' ? 'rgba(255,255,255,0.07)' : 'rgba(197,160,89,0.08)'}`,
+                                    fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.88rem',
+                                    color: m.role === 'user' ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.55)',
+                                    lineHeight: 1.7, letterSpacing: '0.2px',
                                 }}>{m.text}</div>
                             </div>
                         ))}
                         {vladSending && (
                             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                                <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,0,237,0.25)', flexShrink: 0 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '1.5px solid rgba(139,0,0,0.35)', flexShrink: 0, boxShadow: '0 0 8px rgba(197,160,89,0.08)' }}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src="/vlad-avatar.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
                                 </div>
-                                <div style={{ padding: '12px 16px', borderRadius: '16px 16px 16px 4px', background: 'rgba(255,0,237,0.05)', border: '1px solid rgba(255,0,237,0.12)' }}>
-                                    <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', color: 'rgba(255,0,237,0.3)', animation: 'vPulse 1s ease infinite' }}>typing...</span>
+                                <div style={{ padding: '12px 16px', borderRadius: '16px 16px 16px 4px', background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(197,160,89,0.08)' }}>
+                                    <span style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.2)', animation: 'vPulse 1s ease infinite' }}>typing...</span>
                                 </div>
                             </div>
                         )}
@@ -3381,10 +3180,9 @@ export default function VaultPage() {
 
                     {/* Input — fontSize 16px to prevent iOS zoom */}
                     <div style={{
-                        display: 'flex', gap: 10, padding: '12px 16px',
-                        paddingBottom: 'calc(env(safe-area-inset-bottom, 12px) + 8px)',
-                        borderTop: '1px solid rgba(255,0,237,0.1)',
-                        background: 'rgba(255,0,237,0.02)',
+                        display: 'flex', gap: 10, padding: '12px 16px 14px',
+                        borderTop: '1px solid rgba(197,160,89,0.06)',
+                        background: 'rgba(0,0,0,0.2)',
                         position: 'relative', zIndex: 1,
                     }}>
                         <input
@@ -3393,7 +3191,7 @@ export default function VaultPage() {
                             onKeyDown={e => { if (e.key === 'Enter' && vladInput.trim()) { sendVladMsg(vladInput.trim()); setVladInput(''); } }}
                             placeholder="Talk to Vlad..."
                             style={{
-                                flex: 1, background: 'rgba(255,0,237,0.03)', border: '1px solid rgba(255,0,237,0.12)',
+                                flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
                                 borderRadius: 14, padding: '12px 16px', color: 'rgba(255,255,255,0.5)',
                                 fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px',
                                 outline: 'none',
@@ -3403,10 +3201,10 @@ export default function VaultPage() {
                             disabled={vladSending || !vladInput.trim()}
                             onClick={() => { if (vladInput.trim()) { sendVladMsg(vladInput.trim()); setVladInput(''); } }}
                             style={{
-                                padding: '10px 18px', background: 'rgba(255,0,237,0.08)',
-                                border: '1px solid rgba(255,0,237,0.18)', borderRadius: 14,
+                                padding: '10px 18px', background: 'rgba(139,0,0,0.08)',
+                                border: '1px solid rgba(197,160,89,0.12)', borderRadius: 14,
                                 fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '2px',
-                                color: vladSending ? 'rgba(255,0,237,0.12)' : 'rgba(255,0,237,0.55)',
+                                color: vladSending ? 'rgba(255,255,255,0.1)' : 'rgba(197,160,89,0.5)',
                                 cursor: vladSending ? 'default' : 'pointer',
                             }}>SEND</button>
                     </div>
@@ -3417,12 +3215,14 @@ export default function VaultPage() {
                 @keyframes vFadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
                 @keyframes vPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
                 @keyframes vCoinFlip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.05); } 100% { transform: scaleX(1); } }
+                @keyframes vShake { 0%, 100% { transform: translateX(0) rotate(0deg); } 15% { transform: translateX(-2px) rotate(-1deg); } 30% { transform: translateX(2px) rotate(1deg); } 45% { transform: translateX(-1px) rotate(-0.5deg); } 60% { transform: translateX(1px) rotate(0.5deg); } 75% { transform: translateX(0); } }
                 @keyframes vSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                @keyframes vladPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(160,100,255,0.4); } 50% { box-shadow: 0 0 14px 4px rgba(160,100,255,0.25); } }
+                @keyframes vladPulse { 0%, 100% { box-shadow: 0 0 12px rgba(197,160,89,0.15), 0 0 4px rgba(139,0,0,0.3); } 50% { box-shadow: 0 0 28px rgba(197,160,89,0.35), 0 0 10px rgba(139,0,0,0.45); } }
                 * { box-sizing: border-box; }
                 ::-webkit-scrollbar { display: none; }
                 * { -ms-overflow-style: none; scrollbar-width: none; }
                 textarea:focus, input:focus { border-color: rgba(139,0,0,0.25) !important; }
+                body { background-image: none !important; background-color: #080810 !important; }
 
                 /* Vault timer boxes: red override */
                 .card-t-box {
@@ -3437,9 +3237,9 @@ export default function VaultPage() {
 function NavBtn({ active, icon, label, onClick, locked }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void; locked?: boolean }) {
     const color = active ? `rgba(139,0,0,0.7)` : 'rgba(255,255,255,0.2)';
     return (
-        <button onClick={onClick} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', padding: '4px 12px', position: 'relative' }}>
-            <span style={{ fontSize: typeof icon === 'string' ? '1.1rem' : undefined, color, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.2rem' }}>{icon}</span>
-            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color, letterSpacing: '1px' }}>{label}</span>
+        <button onClick={onClick} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '8px 0', position: 'relative', flex: 1 }}>
+            <span style={{ fontSize: typeof icon === 'string' ? '1.6rem' : undefined, color, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.6rem' }}>{icon}</span>
+            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color, letterSpacing: '2px' }}>{label}</span>
             {locked && (
                 <div style={{ position: 'absolute', top: -2, right: 2, width: 12, height: 12, borderRadius: '50%', background: '#050508', border: '1px solid rgba(139,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg viewBox="0 0 24 24" width="7" height="7" fill="rgba(139,0,0,0.4)"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>

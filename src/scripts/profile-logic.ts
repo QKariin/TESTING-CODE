@@ -5457,9 +5457,11 @@ if (typeof window !== 'undefined') {
 // ─── VAULT LOCK REQUEST ────────────────────────────────────────────────────────
 
 const LOCK_TIERS = [
-    { key: '7',  days: 7,  coins: 5500,  eur: 55,  label: '7 DAYS' },
-    { key: '30', days: 30, coins: 15000, eur: 150, label: '30 DAYS' },
-    { key: '90', days: 90, coins: 30000, eur: 300, label: '90 DAYS' },
+    { key: '7',   days: 7,   coins: 5500,  eur: 55,   label: '7 DAYS' },
+    { key: '14',  days: 14,  coins: 10000, eur: 100,  label: '14 DAYS' },
+    { key: '30',  days: 30,  coins: 15000, eur: 150,  label: '1 MONTH' },
+    { key: '90',  days: 90,  coins: 30000, eur: 300,  label: '90 DAYS' },
+    { key: '365', days: 365, coins: 66600, eur: 666,  label: '365 DAYS' },
 ];
 
 export async function openVaultLockRequest() {
@@ -5528,13 +5530,13 @@ export async function openVaultLockRequest() {
             <div style="width:100%;height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
 
             <div style="display:flex;flex-direction:column;gap:10px;">
-                <button id="_vaultLockNow" style="width:100%;padding:18px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:0.9rem;letter-spacing:3px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
-                <button id="_vaultWaitQueen" style="width:100%;padding:16px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-family:Cinzel,serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
+                <button id="_vaultLockNow" style="width:100%;padding:22px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:1rem;letter-spacing:3px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
+                <button id="_vaultWaitQueen" style="width:100%;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
             </div>
 
             <div id="_vaultDatePicker" style="display:none;margin-top:18px;">
                 <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.4);margin-bottom:10px;letter-spacing:1px;">When should your sentence begin?</div>
-                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.6);font-family:Orbitron,sans-serif;font-size:0.85rem;outline:none;box-sizing:border-box;text-align:center;" />
+                <input id="_vaultDateInput" type="datetime-local" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.6);font-family:Cinzel,serif;font-size:0.9rem;outline:none;box-sizing:border-box;text-align:center;letter-spacing:1px;" />
                 <button id="_vaultSubmitDate" style="width:100%;margin-top:12px;padding:16px;border-radius:10px;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.22);color:rgba(200,50,50,0.8);font-family:Cinzel,serif;font-size:0.85rem;letter-spacing:3px;cursor:pointer;font-weight:600;">SUBMIT REQUEST</button>
             </div>
 

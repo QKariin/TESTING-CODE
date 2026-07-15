@@ -350,9 +350,12 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: BG, overflow: 'hidden', fontFamily: F, position: 'relative' }}>
-            {/* Full background image */}
-            <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/queen-bg-desktop.png')", backgroundSize: 'cover', backgroundPosition: 'center 15%', opacity: 0.08, pointerEvents: 'none', zIndex: 0 }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(139,0,0,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 100%, rgba(197,160,89,0.04) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 0 }} />
+            {/* Full background image — same as /keyholder page */}
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, background: "url('/queen-bg-mobile.jpg') center 20%/cover no-repeat", opacity: 0.3, filter: 'saturate(0.3)' }} />
+            </div>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,16,0.5) 0%, rgba(10,10,16,0.85) 50%, rgba(10,10,16,0.95) 100%)', pointerEvents: 'none', zIndex: 0 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(139,0,0,0.1) 0%, transparent 60%)', pointerEvents: 'none', zIndex: 0 }} />
             <style>{CSS}</style>
 
             {/* HEADER */}
