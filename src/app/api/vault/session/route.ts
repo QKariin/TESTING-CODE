@@ -692,6 +692,27 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, status: 'pending' });
     }
 
+    // ── SAVE GAMBLE RESULT — persist gamble outcome so it survives page reload ──
+    if (action === 'save_gamble') {
+        const { orderType, gambleResult } = body;
+        if (!orderType || gambleResult === undefined) return NextResponse.json({ error: 'Missing orderType or gambleResult' }, { status: 400 });
+
+        const today = new Date().toISOString().split('T')[0];
+        const { data: daily } = await supabaseAdmin.from('vault_daily')
+            .select('id, orders').eq('session_id', session.id).eq('date', today)
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+        if (!daily) return NextResponse.json({ success: true }); // no daily record yet, ignore
+
+        const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+        const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target);
+        if (idx >= 0) {
+            orders[idx].gambleResult = gambleResult;
+            await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+        }
+        return NextResponse.json({ success: true });
+    }
+
     // ── APPROVE TASK — Queen approves a task submission ──
     if (action === 'approve_task') {
         const { date: targetDate, submissionId, comment } = body;
