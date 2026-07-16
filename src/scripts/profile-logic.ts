@@ -5907,7 +5907,7 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                 {
                     num: 3, icon: `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
                     title: 'DAILY CHASTITY CHECK',
-                    body: 'Every morning between 6:00 and 10:00 AM in your local timezone, you must submit a photo proving you are still locked.\n\nThis is non-negotiable. Missing a check may result in penalties or termination of your program.\n\nYou will receive a notification when the window opens.',
+                    body: 'Every morning between 6:00 and 10:00 AM in your local timezone, you must submit a photo proving you are still locked.\n\nThis is non-negotiable. Missing a check means immediate termination of your program. No warnings, no second chances.\n\nYou will receive a notification when the window opens.',
                 },
                 {
                     num: 4, icon: `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(139,0,0,0.6)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
