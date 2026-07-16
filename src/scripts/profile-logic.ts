@@ -5754,7 +5754,201 @@ export function _updateVaultLockButton(data: { active: boolean; status?: string;
     if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = '0.6'; mobBtn.disabled = true; mobBtn.onclick = null; }
 }
 
+const VAULT_ONBOARD_KINKS = ["JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", "Protocol", "Obedience", "Psychological domination"];
+const VAULT_ONBOARD_LIMITS = ["Face showing", "Public exposure", "Financial ruin", "Permanent marks", "Family involvement", "Employer contact", "Blood play", "Scat", "Extreme pain", "Breath play", "Real blackmail", "Non-consensual sharing", "Sleep deprivation", "Drug use", "Self-harm"];
+
+function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
+    document.getElementById('_vaultVideoOverlay')?.remove();
+
+    const state = getState();
+    const raw = state.raw || state;
+    const existingKinks = (raw.kinks || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+    const existingLimits = (raw.limits || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+    const selectedKinks = new Set<string>(existingKinks);
+    const selectedLimits = new Set<string>(existingLimits);
+
+    const ov = document.createElement('div');
+    ov.id = '_vaultVideoOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;background:#080507;animation:_vFadeIn 0.3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+
+    let step = 1;
+
+    function renderStep() {
+        if (step === 1) {
+            // STEP 1: KINKS
+            ov.innerHTML = `
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 1 OF 3</div>
+                    <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:6px;">YOUR KINKS</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:32px;line-height:1.6;">Select what excites you. This helps Queen Karin<br>build a program tailored to your desires.</div>
+                    <div style="width:40px;height:1px;background:rgba(197,160,89,0.2);margin:0 auto 28px;"></div>
+                    <div id="_obChips" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:40px;"></div>
+                    <div style="text-align:center;">
+                        <div id="_obMinMsg" style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.15);letter-spacing:2px;margin-bottom:16px;">SELECT AT LEAST 3</div>
+                        <button id="_obNext" disabled style="padding:16px 48px;font-family:Orbitron,sans-serif;font-size:0.8rem;letter-spacing:4px;color:rgba(255,255,255,0.1);background:transparent;border:1px solid rgba(255,255,255,0.04);border-radius:10px;cursor:default;">NEXT</button>
+                    </div>
+                </div>
+            `;
+            const chipWrap = ov.querySelector('#_obChips')!;
+            const nextBtn = ov.querySelector('#_obNext') as HTMLButtonElement;
+            const minMsg = ov.querySelector('#_obMinMsg') as HTMLElement;
+
+            VAULT_ONBOARD_KINKS.forEach(k => {
+                const chip = document.createElement('button');
+                chip.textContent = k;
+                const sel = selectedKinks.has(k);
+                chip.style.cssText = `padding:8px 16px;border-radius:20px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid ${sel ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'};color:${sel ? '#c5a059' : 'rgba(255,255,255,0.35)'};background:${sel ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.02)'};`;
+                chip.addEventListener('click', () => {
+                    if (selectedKinks.has(k)) { selectedKinks.delete(k); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
+                    else { selectedKinks.add(k); chip.style.borderColor = 'rgba(197,160,89,0.5)'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.08)'; }
+                    const ok = selectedKinks.size >= 3;
+                    nextBtn.disabled = !ok;
+                    nextBtn.style.color = ok ? '#c5a059' : 'rgba(255,255,255,0.1)';
+                    nextBtn.style.borderColor = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.04)';
+                    nextBtn.style.background = ok ? 'rgba(197,160,89,0.06)' : 'transparent';
+                    nextBtn.style.cursor = ok ? 'pointer' : 'default';
+                    minMsg.textContent = ok ? `${selectedKinks.size} SELECTED` : 'SELECT AT LEAST 3';
+                    minMsg.style.color = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.15)';
+                });
+                chipWrap.appendChild(chip);
+            });
+            // Init button state
+            if (selectedKinks.size >= 3) {
+                nextBtn.disabled = false;
+                nextBtn.style.color = '#c5a059'; nextBtn.style.borderColor = 'rgba(197,160,89,0.4)'; nextBtn.style.background = 'rgba(197,160,89,0.06)'; nextBtn.style.cursor = 'pointer';
+                minMsg.textContent = `${selectedKinks.size} SELECTED`; minMsg.style.color = 'rgba(197,160,89,0.4)';
+            }
+            nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) { step = 2; renderStep(); } });
+
+        } else if (step === 2) {
+            // STEP 2: LIMITS
+            ov.innerHTML = `
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 2 OF 3</div>
+                    <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:6px;">YOUR LIMITS</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:32px;line-height:1.6;">Select your hard limits. These will never<br>appear in your program. Your safety matters.</div>
+                    <div style="width:40px;height:1px;background:rgba(139,0,0,0.3);margin:0 auto 28px;"></div>
+                    <div id="_obChips2" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:40px;"></div>
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="_obBack2" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
+                        <button id="_obNext2" style="padding:14px 48px;font-family:Orbitron,sans-serif;font-size:0.8rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;">NEXT</button>
+                    </div>
+                </div>
+            `;
+            const chipWrap = ov.querySelector('#_obChips2')!;
+            VAULT_ONBOARD_LIMITS.forEach(k => {
+                const chip = document.createElement('button');
+                chip.textContent = k;
+                const sel = selectedLimits.has(k);
+                chip.style.cssText = `padding:8px 16px;border-radius:20px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid ${sel ? 'rgba(139,0,0,0.5)' : 'rgba(255,255,255,0.08)'};color:${sel ? 'rgba(200,60,60,0.8)' : 'rgba(255,255,255,0.35)'};background:${sel ? 'rgba(139,0,0,0.08)' : 'rgba(255,255,255,0.02)'};`;
+                chip.addEventListener('click', () => {
+                    if (selectedLimits.has(k)) { selectedLimits.delete(k); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
+                    else { selectedLimits.add(k); chip.style.borderColor = 'rgba(139,0,0,0.5)'; chip.style.color = 'rgba(200,60,60,0.8)'; chip.style.background = 'rgba(139,0,0,0.08)'; }
+                });
+                chipWrap.appendChild(chip);
+            });
+            ov.querySelector('#_obBack2')!.addEventListener('click', () => { step = 1; renderStep(); });
+            ov.querySelector('#_obNext2')!.addEventListener('click', () => { step = 3; renderStep(); });
+
+        } else if (step === 3) {
+            // STEP 3: HOW IT WORKS
+            ov.innerHTML = `
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 3 OF 3</div>
+                    <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:28px;">HOW IT WORKS</div>
+                    <div style="width:40px;height:1px;background:rgba(139,0,0,0.2);margin:0 auto 32px;"></div>
+
+                    <div style="display:flex;flex-direction:column;gap:24px;margin-bottom:40px;">
+                        <div style="display:flex;gap:16px;align-items:flex-start;">
+                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(197,160,89,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">DAILY CHASTITY CHECK</div>
+                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">Every morning between 6:00 - 10:00 AM you must submit a photo proving you are still locked. Missing a check terminates your program.</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:16px;align-items:flex-start;">
+                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(139,0,0,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(139,0,0,0.5)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">DAILY ORDERS</div>
+                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">Each day you receive tasks from Queen Karin. Writing assignments, photo proofs, challenges. Complete all to maintain your obedience streak.</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:16px;align-items:flex-start;">
+                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(139,0,0,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(139,0,0,0.5)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">CONSEQUENCES</div>
+                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">Skipping orders costs coins and breaks your streak. Disobedience may result in penalty days added to your sentence. Perfect obedience earns rewards.</div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:16px;align-items:flex-start;">
+                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(197,160,89,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </div>
+                            <div>
+                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">NO EARLY RELEASE</div>
+                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">You may beg Queen Karin for release, but she decides. Your ${data.lockDays} day sentence is final unless she grants mercy.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;justify-content:center;">
+                        <button id="_obBack3" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
+                        <button id="_obAccept" style="padding:16px 36px;font-family:Orbitron,sans-serif;font-size:0.8rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;">I UNDERSTAND</button>
+                    </div>
+                </div>
+            `;
+            ov.querySelector('#_obBack3')!.addEventListener('click', () => { step = 2; renderStep(); });
+            ov.querySelector('#_obAccept')!.addEventListener('click', async () => {
+                const acceptBtn = ov.querySelector('#_obAccept') as HTMLButtonElement;
+                acceptBtn.disabled = true; acceptBtn.textContent = 'SAVING...'; acceptBtn.style.color = 'rgba(197,160,89,0.3)';
+
+                const email = state.email || state.memberId || '';
+                try {
+                    // Save kinks
+                    const kinksStr = Array.from(selectedKinks).join(', ');
+                    await fetch('/api/profile-update', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberEmail: email, field: 'kinks', value: kinksStr, cost: 0 }) });
+                    // Save limits
+                    const limitsStr = Array.from(selectedLimits).join(', ');
+                    await fetch('/api/profile-update', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberEmail: email, field: 'limits', value: limitsStr, cost: 0 }) });
+                } catch {}
+
+                // Proceed to video upload
+                ov.remove();
+                _showVideoProofUploadDirect(data);
+            });
+        }
+        ov.scrollTop = 0;
+    }
+
+    renderStep();
+    document.body.appendChild(ov);
+}
+
 function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
+    // Check if kinks/limits already set — if not, show onboarding first
+    const state = getState();
+    const raw = state.raw || state;
+    const hasKinks = (raw.kinks || '').split(',').filter((s: string) => s.trim()).length >= 3;
+    const hasLimits = (raw.limits || '').split(',').filter((s: string) => s.trim()).length >= 1;
+    if (!hasKinks || !hasLimits) {
+        _showVaultOnboarding(data);
+        return;
+    }
+    _showVideoProofUploadDirect(data);
+}
+
+function _showVideoProofUploadDirect(data: { sessionId: string; lockDays: number }) {
     const existing = document.getElementById('_vaultVideoOverlay');
     if (existing) existing.remove();
 
@@ -5860,7 +6054,7 @@ function _showVaultThumbPicker(ov: HTMLElement, file: File, data: { sessionId: s
     // Re-record
     backBtn.addEventListener('click', () => {
         URL.revokeObjectURL(videoUrl);
-        _showVideoProofUpload(data);
+        _showVideoProofUploadDirect(data);
     });
 
     // Submit — grab thumbnail frame, upload both
