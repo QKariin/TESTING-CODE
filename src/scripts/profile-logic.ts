@@ -5489,8 +5489,8 @@ export async function openVaultLockRequest() {
         style.id = '_vaultLockStyles';
         style.textContent = `
             @keyframes _vFadeIn{from{opacity:0}to{opacity:1}}
-            #_vaultLockOverlay{scrollbar-width:none;-ms-overflow-style:none;}
-            #_vaultLockOverlay::-webkit-scrollbar{display:none;}
+            #_vaultLockOverlay,#_vaultVideoOverlay{scrollbar-width:none;-ms-overflow-style:none;}
+            #_vaultLockOverlay::-webkit-scrollbar,#_vaultVideoOverlay::-webkit-scrollbar{display:none;}
             #_vaultDateInput::-webkit-calendar-picker-indicator{filter:invert(0.25) sepia(1) hue-rotate(-30deg);cursor:pointer;}
         `;
         document.head.appendChild(style);
@@ -5756,46 +5756,46 @@ export function _updateVaultLockButton(data: { active: boolean; status?: string;
     if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = '0.6'; mobBtn.disabled = true; mobBtn.onclick = null; }
 }
 
-const VAULT_ONBOARD_KINKS: { name: string; desc: string }[] = [
-    { name: "Foot fetish", desc: "Worship, massaging, or being controlled through feet" },
-    { name: "JOI", desc: "Being told exactly how to touch yourself" },
-    { name: "Humiliation", desc: "Being verbally degraded, embarrassed, or put in your place" },
-    { name: "SPH", desc: "Small penis humiliation, size-based degradation" },
-    { name: "Findom", desc: "Financial domination, giving money as a form of submission" },
-    { name: "D/s", desc: "Dominant/submissive power dynamic and structure" },
-    { name: "Control", desc: "Having decisions made for you: what to wear, eat, do" },
-    { name: "Ownership", desc: "Being treated as property, collared, branded, possessed" },
-    { name: "Chastity", desc: "Denial and lock-up, no release without permission" },
-    { name: "CEI", desc: "Cum eating instruction, forced or guided consumption" },
-    { name: "Blackmail play", desc: "Fantasy scenarios involving leverage and coercion" },
-    { name: "Objectification", desc: "Being treated as a thing: furniture, toy, decoration" },
-    { name: "Degradation", desc: "Being made to feel worthless, dirty, or beneath someone" },
-    { name: "Task submission", desc: "Completing assigned tasks and proving obedience" },
-    { name: "CBT", desc: "Cock and ball torture, pain-based genital control" },
-    { name: "Training", desc: "Structured programs to shape behavior and obedience" },
-    { name: "Power exchange", desc: "Giving up control and authority to a dominant" },
-    { name: "Verbal domination", desc: "Being commanded, scolded, or controlled through words" },
-    { name: "Protocol", desc: "Strict rules: how to address, behave, respond" },
-    { name: "Obedience", desc: "Following orders without question or hesitation" },
-    { name: "Psychological domination", desc: "Mind games, manipulation, mental control" },
-];
-const VAULT_ONBOARD_LIMITS: { name: string; desc: string }[] = [
-    { name: "Face showing", desc: "No photos or videos showing your face" },
-    { name: "Public exposure", desc: "Nothing done in public or shared publicly" },
-    { name: "Financial ruin", desc: "No demands that would cause real financial harm" },
-    { name: "Permanent marks", desc: "No tattoos, brands, or permanent body modifications" },
-    { name: "Family involvement", desc: "No contact with or mention of family members" },
-    { name: "Employer contact", desc: "No interaction with your workplace or colleagues" },
-    { name: "Blood play", desc: "Nothing involving cutting or blood" },
-    { name: "Scat", desc: "No feces-related activities" },
-    { name: "Extreme pain", desc: "No severe physical pain beyond light discomfort" },
-    { name: "Breath play", desc: "No choking, suffocation, or breath restriction" },
-    { name: "Real blackmail", desc: "No actual threats or real-world leverage" },
-    { name: "Non-consensual sharing", desc: "No sharing content without explicit permission" },
-    { name: "Sleep deprivation", desc: "No tasks that interfere with normal sleep" },
-    { name: "Drug use", desc: "No forced substance use of any kind" },
-    { name: "Self-harm", desc: "Nothing that causes real physical injury" },
-];
+const VAULT_ONBOARD_KINK_DESCS: Record<string, string> = {
+    "Foot fetish": "Worship, massaging, or being controlled through feet",
+    "JOI": "Being told exactly how to touch yourself",
+    "Humiliation": "Being verbally degraded, embarrassed, or put in your place",
+    "SPH": "Small penis humiliation, size-based degradation",
+    "Findom": "Financial domination, giving money as a form of submission",
+    "D/s": "Dominant/submissive power dynamic and structure",
+    "Control": "Having decisions made for you: what to wear, eat, do",
+    "Ownership": "Being treated as property, collared, branded, possessed",
+    "Chastity": "Denial and lock-up, no release without permission",
+    "CEI": "Cum eating instruction, forced or guided consumption",
+    "Blackmail play": "Fantasy scenarios involving leverage and coercion",
+    "Objectification": "Being treated as a thing: furniture, toy, decoration",
+    "Degradation": "Being made to feel worthless, dirty, or beneath someone",
+    "Task submission": "Completing assigned tasks and proving obedience",
+    "CBT": "Cock and ball torture, pain-based genital control",
+    "Training": "Structured programs to shape behavior and obedience",
+    "Power exchange": "Giving up control and authority to a dominant",
+    "Verbal domination": "Being commanded, scolded, or controlled through words",
+    "Protocol": "Strict rules: how to address, behave, respond",
+    "Obedience": "Following orders without question or hesitation",
+    "Psychological domination": "Mind games, manipulation, mental control",
+};
+const VAULT_ONBOARD_LIMIT_DESCS: Record<string, string> = {
+    "Face showing": "No photos or videos showing your face",
+    "Public exposure": "Nothing done in public or shared publicly",
+    "Financial ruin": "No demands that would cause real financial harm",
+    "Permanent marks": "No tattoos, brands, or permanent body modifications",
+    "Family involvement": "No contact with or mention of family members",
+    "Employer contact": "No interaction with your workplace or colleagues",
+    "Blood play": "Nothing involving cutting or blood",
+    "Scat": "No feces-related activities",
+    "Extreme pain": "No severe physical pain beyond light discomfort",
+    "Breath play": "No choking, suffocation, or breath restriction",
+    "Real blackmail": "No actual threats or real-world leverage",
+    "Non-consensual sharing": "No sharing content without explicit permission",
+    "Sleep deprivation": "No tasks that interfere with normal sleep",
+    "Drug use": "No forced substance use of any kind",
+    "Self-harm": "Nothing that causes real physical injury",
+};
 
 function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
     document.getElementById('_vaultVideoOverlay')?.remove();
@@ -5818,7 +5818,7 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
             // STEP 1: KINKS
             ov.innerHTML = `
                 <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 1 OF 3</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 1 OF 8</div>
                     <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:6px;">YOUR KINKS</div>
                     <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:32px;line-height:1.6;">Select what excites you. This helps Queen Karin<br>build a program tailored to your desires.</div>
                     <div style="width:40px;height:1px;background:rgba(197,160,89,0.2);margin:0 auto 28px;"></div>
@@ -5848,15 +5848,16 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                 minMsg.style.color = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.15)';
             }
 
-            VAULT_ONBOARD_KINKS.forEach(item => {
+            CHIP_LIST.forEach(kinkName => {
                 const chip = document.createElement('button');
-                chip.textContent = item.name;
-                const sel = selectedKinks.has(item.name);
+                chip.textContent = kinkName;
+                const sel = selectedKinks.has(kinkName);
                 chip.style.cssText = `padding:8px 16px;border-radius:20px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid ${sel ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'};color:${sel ? '#c5a059' : 'rgba(255,255,255,0.35)'};background:${sel ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.02)'};`;
                 chip.addEventListener('click', () => {
-                    if (selectedKinks.has(item.name)) { selectedKinks.delete(item.name); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
-                    else { selectedKinks.add(item.name); chip.style.borderColor = 'rgba(197,160,89,0.5)'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.08)'; }
-                    descEl.innerHTML = `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:${selectedKinks.has(item.name) ? '#c5a059' : 'rgba(255,255,255,0.45)'};letter-spacing:2px;margin-bottom:4px;">${item.name.toUpperCase()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">${item.desc}</div>`;
+                    if (selectedKinks.has(kinkName)) { selectedKinks.delete(kinkName); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
+                    else { selectedKinks.add(kinkName); chip.style.borderColor = 'rgba(197,160,89,0.5)'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.08)'; }
+                    const desc = VAULT_ONBOARD_KINK_DESCS[kinkName] || '';
+                    descEl.innerHTML = `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:${selectedKinks.has(kinkName) ? '#c5a059' : 'rgba(255,255,255,0.45)'};letter-spacing:2px;margin-bottom:4px;">${kinkName.toUpperCase()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">${desc}</div>`;
                     updateKinkBtn();
                 });
                 chipWrap.appendChild(chip);
@@ -5868,7 +5869,7 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
             // STEP 2: LIMITS
             ov.innerHTML = `
                 <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 2 OF 3</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 2 OF 8</div>
                     <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:6px;">YOUR LIMITS</div>
                     <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:32px;line-height:1.6;">Select your hard limits. These will never<br>appear in your program. Your safety matters.</div>
                     <div style="width:40px;height:1px;background:rgba(139,0,0,0.3);margin:0 auto 28px;"></div>
@@ -5884,83 +5885,197 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
             `;
             const chipWrap = ov.querySelector('#_obChips2')!;
             const descEl2 = ov.querySelector('#_obDesc2') as HTMLElement;
-            VAULT_ONBOARD_LIMITS.forEach(item => {
+            Object.keys(VAULT_ONBOARD_LIMIT_DESCS).forEach(limitName => {
                 const chip = document.createElement('button');
-                chip.textContent = item.name;
-                const sel = selectedLimits.has(item.name);
+                chip.textContent = limitName;
+                const sel = selectedLimits.has(limitName);
                 chip.style.cssText = `padding:8px 16px;border-radius:20px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid ${sel ? 'rgba(139,0,0,0.5)' : 'rgba(255,255,255,0.08)'};color:${sel ? 'rgba(200,60,60,0.8)' : 'rgba(255,255,255,0.35)'};background:${sel ? 'rgba(139,0,0,0.08)' : 'rgba(255,255,255,0.02)'};`;
                 chip.addEventListener('click', () => {
-                    if (selectedLimits.has(item.name)) { selectedLimits.delete(item.name); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
-                    else { selectedLimits.add(item.name); chip.style.borderColor = 'rgba(139,0,0,0.5)'; chip.style.color = 'rgba(200,60,60,0.8)'; chip.style.background = 'rgba(139,0,0,0.08)'; }
-                    descEl2.innerHTML = `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:${selectedLimits.has(item.name) ? 'rgba(200,60,60,0.8)' : 'rgba(255,255,255,0.45)'};letter-spacing:2px;margin-bottom:4px;">${item.name.toUpperCase()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">${item.desc}</div>`;
+                    if (selectedLimits.has(limitName)) { selectedLimits.delete(limitName); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
+                    else { selectedLimits.add(limitName); chip.style.borderColor = 'rgba(139,0,0,0.5)'; chip.style.color = 'rgba(200,60,60,0.8)'; chip.style.background = 'rgba(139,0,0,0.08)'; }
+                    const desc = VAULT_ONBOARD_LIMIT_DESCS[limitName] || '';
+                    descEl2.innerHTML = `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:${selectedLimits.has(limitName) ? 'rgba(200,60,60,0.8)' : 'rgba(255,255,255,0.45)'};letter-spacing:2px;margin-bottom:4px;">${limitName.toUpperCase()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">${desc}</div>`;
                 });
                 chipWrap.appendChild(chip);
             });
             ov.querySelector('#_obBack2')!.addEventListener('click', () => { step = 1; renderStep(); });
             ov.querySelector('#_obNext2')!.addEventListener('click', () => { step = 3; renderStep(); });
 
-        } else if (step === 3) {
-            // STEP 3: HOW IT WORKS
+        } else if (step >= 3 && step <= 6) {
+            // STEPS 3-6: Individual HOW IT WORKS screens
+            const rules = [
+                {
+                    num: 3, icon: `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+                    title: 'DAILY CHASTITY CHECK',
+                    body: 'Every morning between 6:00 and 10:00 AM in your local timezone, you must submit a photo proving you are still locked.\n\nThis is non-negotiable. Missing a check may result in penalties or termination of your program.\n\nYou will receive a notification when the window opens.',
+                },
+                {
+                    num: 4, icon: `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(139,0,0,0.6)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+                    title: 'DAILY ORDERS',
+                    body: 'Each day you will receive tasks personally designed by Queen Karin. Writing assignments, photo proofs, challenges.\n\nThis is not a generated program. Every task is created by Queen Karin based on your kinks, your limits, and what she learns about you over time.\n\nComplete all tasks to maintain your obedience streak.',
+                },
+                {
+                    num: 5, icon: `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(139,0,0,0.6)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+                    title: 'CONSEQUENCES',
+                    body: 'Skipping orders costs coins and breaks your streak. Disobedience may result in penalty days added to your sentence.\n\nPerfect obedience is rewarded. Queen Karin notices everything.\n\nYour behavior shapes how she treats you.',
+                },
+                {
+                    num: 6, icon: `<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+                    title: 'NO EARLY RELEASE',
+                    body: `Once locked, you serve your full ${data.lockDays} day sentence. There is no undo, no refund, no escape.\n\nYou may beg Queen Karin for mercy, but she decides. Early release is earned through perfect obedience, never demanded.\n\nBy continuing, you accept these terms.`,
+                },
+            ];
+            const rule = rules[step - 3];
+            const stepLabel = `${step} OF 8`;
             ov.innerHTML = `
-                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:6px;">STEP 3 OF 3</div>
-                    <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:28px;">HOW IT WORKS</div>
-                    <div style="width:40px;height:1px;background:rgba(139,0,0,0.2);margin:0 auto 32px;"></div>
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;display:flex;flex-direction:column;align-items:center;min-height:100vh;box-sizing:border-box;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:32px;">STEP ${stepLabel}</div>
 
-                    <div style="display:flex;flex-direction:column;gap:24px;margin-bottom:40px;">
-                        <div style="display:flex;gap:16px;align-items:flex-start;">
-                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(197,160,89,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            </div>
-                            <div>
-                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">DAILY CHASTITY CHECK</div>
-                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">Every morning between 6:00 - 10:00 AM you must submit a photo proving you are still locked. Missing a check terminates your program.</div>
-                            </div>
-                        </div>
-
-                        <div style="display:flex;gap:16px;align-items:flex-start;">
-                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(139,0,0,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(139,0,0,0.5)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            </div>
-                            <div>
-                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">DAILY ORDERS</div>
-                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">Each day you receive tasks from Queen Karin. Writing assignments, photo proofs, challenges. Complete all to maintain your obedience streak.</div>
-                            </div>
-                        </div>
-
-                        <div style="display:flex;gap:16px;align-items:flex-start;">
-                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(139,0,0,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(139,0,0,0.5)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            </div>
-                            <div>
-                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">CONSEQUENCES</div>
-                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">Skipping orders costs coins and breaks your streak. Disobedience may result in penalty days added to your sentence. Perfect obedience earns rewards.</div>
-                            </div>
-                        </div>
-
-                        <div style="display:flex;gap:16px;align-items:flex-start;">
-                            <div style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(197,160,89,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                            </div>
-                            <div>
-                                <div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:4px;">NO EARLY RELEASE</div>
-                                <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);line-height:1.6;">You may beg Queen Karin for release, but she decides. Your ${data.lockDays} day sentence is final unless she grants mercy.</div>
-                            </div>
-                        </div>
+                    <div style="width:70px;height:70px;border-radius:50%;border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:28px;">
+                        ${rule.icon}
                     </div>
 
-                    <div style="display:flex;gap:12px;justify-content:center;">
-                        <button id="_obBack3" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
-                        <button id="_obAccept" style="padding:16px 36px;font-family:Orbitron,sans-serif;font-size:0.8rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;">I UNDERSTAND</button>
+                    <div style="font-family:Cinzel,serif;font-size:1.3rem;color:rgba(255,255,255,0.75);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:8px;">${rule.title}</div>
+                    <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:0 auto 28px;"></div>
+
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.4);line-height:1.8;text-align:center;max-width:340px;margin-bottom:auto;white-space:pre-line;">${rule.body}</div>
+
+                    <div style="display:flex;gap:12px;justify-content:center;margin-top:40px;width:100%;">
+                        <button id="_obRuleBack" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
+                        <button id="_obRuleNext" style="padding:16px 36px;font-family:Orbitron,sans-serif;font-size:0.75rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;">I UNDERSTAND</button>
                     </div>
                 </div>
             `;
-            ov.querySelector('#_obBack3')!.addEventListener('click', () => { step = 2; renderStep(); });
+            ov.querySelector('#_obRuleBack')!.addEventListener('click', () => { step = step - 1; renderStep(); });
+            ov.querySelector('#_obRuleNext')!.addEventListener('click', () => { step = step + 1; renderStep(); });
+
+        } else if (step === 7) {
+            // STEP 7: INSTALL THE APP
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const hasPrompt = !!(window as any)._deferredInstallPrompt;
+
+            ov.innerHTML = `
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;display:flex;flex-direction:column;align-items:center;min-height:100vh;box-sizing:border-box;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:32px;">STEP 7 OF 8</div>
+
+                    <div style="width:70px;height:70px;border-radius:50%;border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:28px;">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+
+                    <div style="font-family:Cinzel,serif;font-size:1.3rem;color:rgba(255,255,255,0.75);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:8px;">INSTALL THE APP</div>
+                    <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:0 auto 28px;"></div>
+
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.4);line-height:1.8;text-align:center;max-width:340px;margin-bottom:28px;">For the best experience, install this as an app on your home screen. It takes 2 seconds.</div>
+
+                    <div style="display:flex;flex-direction:column;gap:18px;width:100%;max-width:320px;margin-bottom:24px;">
+                        <div style="display:flex;gap:14px;align-items:flex-start;">
+                            <div style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            </div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);line-height:1.6;">Receive notifications for daily checks, orders, and messages from Queen Karin</div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start;">
+                            <div style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                            </div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);line-height:1.6;">Full screen experience with no browser bars or distractions</div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start;">
+                            <div style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            </div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);line-height:1.6;">Instant access from your home screen, loads faster than the browser</div>
+                        </div>
+                    </div>
+
+                    <div style="width:100%;max-width:320px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.1);border-radius:10px;padding:16px 18px;margin-bottom:auto;">
+                        <div style="font-family:Cinzel,serif;font-size:0.7rem;color:rgba(197,160,89,0.5);letter-spacing:3px;margin-bottom:8px;">YOUR PRIVACY</div>
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.82rem;color:rgba(255,255,255,0.3);line-height:1.7;">This is not a traditional app. Nothing is downloaded from an app store. It is a shortcut to this website saved on your home screen. It does not access your contacts, photos, location, or any personal data. It has no more permissions than your browser. You can remove it at any time like any other app.</div>
+                    </div>
+
+                    ${isStandalone ? `
+                        <div style="margin-top:28px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(197,160,89,0.6);letter-spacing:2px;">ALREADY INSTALLED</div>
+                        </div>
+                    ` : `
+                        <button id="_obInstallBtn" style="margin-top:28px;margin-bottom:12px;padding:16px 48px;font-family:Orbitron,sans-serif;font-size:0.75rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;transition:all 0.2s;">${hasPrompt ? 'INSTALL NOW' : (isIOS ? 'HOW TO INSTALL' : 'INSTALL NOW')}</button>
+                    `}
+
+                    <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;width:100%;">
+                        <button id="_obInstBack" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
+                        <button id="_obInstNext" style="padding:16px 36px;font-family:Orbitron,sans-serif;font-size:0.75rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;">${isStandalone ? 'CONTINUE' : 'SKIP FOR NOW'}</button>
+                    </div>
+                </div>
+            `;
+
+            const installBtn = ov.querySelector('#_obInstallBtn') as HTMLButtonElement | null;
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    const prompt = (window as any)._deferredInstallPrompt;
+                    if (prompt) {
+                        prompt.prompt();
+                        const result = await prompt.userChoice;
+                        if (result.outcome === 'accepted') {
+                            installBtn.textContent = 'INSTALLED';
+                            installBtn.style.borderColor = 'rgba(197,160,89,0.6)';
+                            installBtn.disabled = true;
+                            const nextBtn = ov.querySelector('#_obInstNext') as HTMLButtonElement;
+                            if (nextBtn) nextBtn.textContent = 'CONTINUE';
+                            // Claim reward silently
+                            const email = state.email || state.memberId || '';
+                            fetch('/api/claim-reward', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ memberId: email, choice: 'coins', source: 'install' }) }).catch(() => {});
+                        }
+                        (window as any)._deferredInstallPrompt = null;
+                    } else {
+                        const iosMsg = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                        if (iosMsg) {
+                            installBtn.innerHTML = `<span style="font-size:0.65rem;letter-spacing:2px;line-height:1.6;">Tap <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#c5a059" stroke-width="2" style="vertical-align:middle;margin:0 2px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Share, then "Add to Home Screen"</span>`;
+                            installBtn.style.padding = '14px 20px';
+                        } else {
+                            installBtn.innerHTML = `<span style="font-size:0.65rem;letter-spacing:2px;line-height:1.6;">Open browser menu, tap "Install App"</span>`;
+                            installBtn.style.padding = '14px 20px';
+                        }
+                    }
+                });
+            }
+
+            ov.querySelector('#_obInstBack')!.addEventListener('click', () => { step = 6; renderStep(); });
+            ov.querySelector('#_obInstNext')!.addEventListener('click', () => { step = 8; renderStep(); });
+
+        } else if (step === 8) {
+            // STEP 8: ABOUT YOU — tell Queen Karin about yourself
+            ov.innerHTML = `
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;display:flex;flex-direction:column;align-items:center;min-height:100vh;box-sizing:border-box;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);letter-spacing:4px;text-align:center;margin-bottom:32px;">STEP 8 OF 8</div>
+
+                    <div style="width:70px;height:70px;border-radius:50%;border:1px solid rgba(197,160,89,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:28px;">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+
+                    <div style="font-family:Cinzel,serif;font-size:1.3rem;color:rgba(255,255,255,0.75);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:8px;">ABOUT YOU</div>
+                    <div style="width:40px;height:1px;background:rgba(197,160,89,0.15);margin:0 auto 24px;"></div>
+
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.4);line-height:1.8;text-align:center;max-width:340px;margin-bottom:28px;">Tell Queen Karin anything you think she should know about you. Your experience, your mindset, what you are looking for. This will be sent directly to her.</div>
+
+                    <textarea id="_obAboutYou" placeholder="Write here..." style="width:100%;min-height:150px;max-height:250px;background:rgba(255,255,255,0.03);border:1px solid rgba(197,160,89,0.15);color:rgba(255,255,255,0.7);padding:16px;border-radius:10px;font-family:Rajdhani,sans-serif;font-size:16px;resize:vertical;line-height:1.7;letter-spacing:0.5px;box-sizing:border-box;"></textarea>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.15);letter-spacing:1px;margin-top:8px;margin-bottom:auto;">OPTIONAL BUT RECOMMENDED</div>
+
+                    <div style="display:flex;gap:12px;justify-content:center;margin-top:40px;width:100%;">
+                        <button id="_obAboutBack" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
+                        <button id="_obAccept" style="padding:16px 36px;font-family:Orbitron,sans-serif;font-size:0.75rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.4);border-radius:10px;cursor:pointer;">CONTINUE</button>
+                    </div>
+                </div>
+            `;
+            ov.querySelector('#_obAboutBack')!.addEventListener('click', () => { step = 7; renderStep(); });
             ov.querySelector('#_obAccept')!.addEventListener('click', async () => {
                 const acceptBtn = ov.querySelector('#_obAccept') as HTMLButtonElement;
                 acceptBtn.disabled = true; acceptBtn.textContent = 'SAVING...'; acceptBtn.style.color = 'rgba(197,160,89,0.3)';
 
                 const email = state.email || state.memberId || '';
+                const aboutText = ((ov.querySelector('#_obAboutYou') as HTMLTextAreaElement)?.value || '').trim();
                 try {
                     // Save kinks
                     const kinksStr = Array.from(selectedKinks).join(', ');
@@ -5970,6 +6085,11 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                     const limitsStr = Array.from(selectedLimits).join(', ');
                     await fetch('/api/profile-update', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ memberEmail: email, field: 'limits', value: limitsStr, cost: 0 }) });
+                    // Send "about me" as chat message if provided
+                    if (aboutText) {
+                        await fetch('/api/chat/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ memberId: email, content: aboutText, type: 'text' }) });
+                    }
                 } catch {}
 
                 // Proceed to video upload
@@ -8814,7 +8934,7 @@ async function _handlePhotoFile(input: HTMLInputElement) {
     }
 }
 
-const CHIP_LIST = ["JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", "Protocol", "Obedience", "Psychological domination"];
+const CHIP_LIST = ["Foot fetish", "JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", "Protocol", "Obedience", "Psychological domination"];
 const ROUTINE_OPTIONS = ["Morning Kneel", "Chastity Check", "Cleanliness Check", "Custom Order"];
 
 export function openTextFieldModal(fieldId: string, label: string, existingValue: string = '') {
