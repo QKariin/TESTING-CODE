@@ -394,8 +394,8 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                             <div style={{ position: 'relative', zIndex: 1, padding: '14px 18px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div style={{ fontFamily: FC, fontSize: '.7rem', color: 'rgba(255,255,255,.95)', letterSpacing: 3 }}>{m.name}</div>
-                                    <div style={{ fontFamily: F, fontSize: '.55rem', color: GOLD, fontWeight: 700, letterSpacing: 2, background: 'rgba(0,0,0,.5)', padding: '3px 10px', borderRadius: 4, border: `1px solid rgba(197,160,89,.25)` }}>
-                                        DAY {m.daysIn}
+                                    <div style={{ fontFamily: F, fontSize: '.55rem', color: m.status === 'awaiting_video' ? 'rgba(255,165,0,.8)' : GOLD, fontWeight: 700, letterSpacing: 2, background: 'rgba(0,0,0,.5)', padding: '3px 10px', borderRadius: 4, border: `1px solid ${m.status === 'awaiting_video' ? 'rgba(255,165,0,.25)' : 'rgba(197,160,89,.25)'}` }}>
+                                        {m.status === 'awaiting_video' ? 'AWAITING VIDEO' : `DAY ${m.daysIn}`}
                                     </div>
                                 </div>
                                 <div>

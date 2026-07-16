@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         const results = [];
 
         for (const s of sessions) {
-            const daysIn = Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) + 1;
+            const daysIn = s.status === 'active' ? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) + 1 : 0;
             // Get today's daily record
             const { data: todayRec } = await supabaseAdmin
                 .from('vault_daily')
@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
                 avatar: prof?.profile_picture_url || prof?.avatar_url || null,
                 daysIn,
                 lockDays: s.lock_days,
+                status: s.status,
                 streak: s.current_streak || 0,
                 todayTotal: orders.length,
                 todayDone: completed,
