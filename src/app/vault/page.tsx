@@ -1165,15 +1165,15 @@ export default function VaultPage() {
                                 <video src={bgUrl} muted playsInline autoPlay loop style={{
                                     position: 'absolute', inset: 0, width: '100%', height: '100%',
                                     objectFit: 'cover', borderRadius: '50%',
-                                    opacity: 0.18, filter: 'blur(1px)',
+                                    opacity: 0.45, filter: 'blur(0.5px)',
                                 }} />
                             ) : (
                                 <div style={{
                                     position: 'absolute', inset: 0, borderRadius: '50%',
                                     backgroundImage: `url(${bgUrl})`,
                                     backgroundSize: 'cover', backgroundPosition: 'center',
-                                    opacity: chastityStatus === 'approved' ? 0.2 : 0.18,
-                                    filter: 'blur(1px)',
+                                    opacity: chastityStatus === 'approved' ? 0.5 : 0.45,
+                                    filter: 'blur(0.5px)',
                                     transition: 'opacity 0.6s ease',
                                 }} />
                             );
@@ -3041,14 +3041,14 @@ export default function VaultPage() {
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 zIndex: 60,
             }}>
-                <NavBtn active={tab === 'vault'} icon="&#9670;" label="VAULT" onClick={() => setTab('vault')} />
-                <NavBtn active={tab === 'challenge'} label="WORK" onClick={() => setTab('challenge')}
+                <NavBtn active={tab === 'vault'} icon="&#9670;" label="VAULT" onClick={() => { setVladOpen(false); setTab('vault'); }} />
+                <NavBtn active={tab === 'challenge'} label="WORK" onClick={() => { setVladOpen(false); setTab('challenge'); }}
                     icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>} />
 
                 {/* Center Queen button */}
-                <button onClick={() => setTab('chat')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(-8px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
+                <button onClick={() => { setVladOpen(false); setTab('chat'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(6px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
                     <div style={{
-                        width: 130, height: 130, borderRadius: '50%',
+                        width: 112, height: 112, borderRadius: '50%',
                         border: `2px solid ${tab === 'chat' ? `${R}0.5)` : `${R}0.15)`}`,
                         overflow: 'hidden',
                         boxShadow: tab === 'chat' ? `0 0 16px ${R}0.15)` : 'none',
@@ -3063,8 +3063,8 @@ export default function VaultPage() {
                     )}
                 </button>
 
-                <NavBtn active={tab === 'queen'} icon="&#9819;" label="RECORD" onClick={() => setTab('queen')} />
-                <NavBtn active={tab === 'global'} icon="&#9678;" label="UNION" onClick={() => setTab('global')} locked={!globalOk} />
+                <NavBtn active={tab === 'queen'} icon="&#9819;" label="RECORD" onClick={() => { setVladOpen(false); setTab('queen'); }} />
+                <NavBtn active={tab === 'global'} icon="&#9678;" label="UNION" onClick={() => { setVladOpen(false); setTab('global'); }} locked={!globalOk} />
             </nav>
 
             {/* ── FLOATING VLAD AVATAR + SPEECH BUBBLE ── */}
