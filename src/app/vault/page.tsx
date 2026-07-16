@@ -602,35 +602,7 @@ export default function VaultPage() {
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
 
-                            // Realtime: listen for keyholder chat grant (chat_cooldown_until changes on vault_daily)
-                            if (vd.today?.id) {
-                                const chatGrantSub = supabase
-                                    .channel('vault_chat_grant')
-                                    .on('postgres_changes', {
-                                        event: 'UPDATE',
-                                        schema: 'public',
-                                        table: 'vault_daily',
-                                        filter: `id=eq.${vd.today.id}`,
-                                    }, (payload: any) => {
-                                        const row = payload.new;
-                                        if (row.chat_cooldown_until) {
-                                            const cdUntil = new Date(row.chat_cooldown_until).getTime();
-                                            if (cdUntil > Date.now()) {
-                                                const minutesLeft = (cdUntil - Date.now()) / 60000;
-                                                if (minutesLeft <= 30) {
-                                                    setChatExpiresAt(cdUntil);
-                                                    setChatGateDone(true);
-                                                    setChatGateCooldownUntil(0);
-                                                    setTab('chat');
-                                                }
-                                            }
-                                        }
-                                    })
-                                    .subscribe();
-                                (window as any)._vaultChatGrantSub = chatGrantSub;
-                            }
-
-                            // Polling fallback: check session status every 10s (in case Realtime doesn't fire due to RLS)
+                            // Polling fallback: check session status + chat grants every 10s
                             const sessionId = vd.session.id;
                             const releasePoller = setInterval(async () => {
                                 try {
@@ -644,6 +616,19 @@ export default function VaultPage() {
                                             clearInterval(releasePoller);
                                             try { localStorage.removeItem('vault_cooldowns'); } catch {}
                                             setReleaseOverlay({ reason: data.session.release_reason || '' });
+                                        }
+                                    }
+                                    // Check for keyholder chat grant
+                                    if (data.chatCooldownUntil) {
+                                        const cdUntil = new Date(data.chatCooldownUntil).getTime();
+                                        if (cdUntil > Date.now()) {
+                                            const minutesLeft = (cdUntil - Date.now()) / 60000;
+                                            if (minutesLeft <= 30) {
+                                                setChatExpiresAt(cdUntil);
+                                                setChatGateDone(true);
+                                                setChatGateCooldownUntil(0);
+                                                setTab('chat');
+                                            }
                                         }
                                     }
                                 } catch {}
@@ -2037,7 +2022,13 @@ export default function VaultPage() {
                                                 setChatGateFlipState(isHeads ? 'heads' : 'tails');
                                                 if (isHeads) {
                                                     vladReact('Member flipped HEADS! They get 15 minutes of chat with Queen. Lucky bastard.');
-                                                    setTimeout(() => { setChatExpiresAt(Date.now() + 15 * 60 * 1000); setChatGateDone(true); setChatGateFlipState('idle'); }, 2000);
+                                                    setTimeout(() => {
+                                                        const grantUntil = Date.now() + 15 * 60 * 1000;
+                                                        setChatExpiresAt(grantUntil); setChatGateDone(true); setChatGateFlipState('idle');
+                                                        // Persist grant to DB
+                                                        const mid = profile?.member_id || profile?.memberId || '';
+                                                        if (mid) fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_cooldown', memberId: mid, until: grantUntil }) }).catch(() => {});
+                                                    }, 2000);
                                                 } else {
                                                     vladReact('Member flipped TAILS. Denied. 8 hour cooldown. Better luck next time.');
                                                     setTimeout(() => {
