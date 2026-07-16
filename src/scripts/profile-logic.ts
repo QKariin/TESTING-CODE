@@ -5936,16 +5936,7 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
 }
 
 function _showVideoProofUpload(data: { sessionId: string; lockDays: number }) {
-    // Check if kinks/limits already set — if not, show onboarding first
-    const state = getState();
-    const raw = state.raw || state;
-    const hasKinks = (raw.kinks || '').split(',').filter((s: string) => s.trim()).length >= 3;
-    const hasLimits = (raw.limits || '').split(',').filter((s: string) => s.trim()).length >= 1;
-    if (!hasKinks || !hasLimits) {
-        _showVaultOnboarding(data);
-        return;
-    }
-    _showVideoProofUploadDirect(data);
+    _showVaultOnboarding(data);
 }
 
 function _showVideoProofUploadDirect(data: { sessionId: string; lockDays: number }) {
