@@ -2089,13 +2089,13 @@ export default function VaultPage() {
 
                                     return (
                                         <>
-                                            {/* ── Header: task count ── */}
+                                            {/* ── Header: day + task count ── */}
                                             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '4px', marginBottom: 6 }}>DAY {daysIn + 1}</div>
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.65)', letterSpacing: '2px' }}>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '6px', fontWeight: 700 }}>DAY {daysIn + 1}</div>
+                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '4px', marginTop: 6 }}>
                                                     {allDone && pendingCount === 0 ? 'ALL ORDERS COMPLETE' : allDone ? 'AWAITING REVIEW' : `${tasks.length} TASKS TODAY`}
                                                 </div>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.7)' : allDone ? 'rgba(197,160,89,0.6)' : `${R}0.5)`, letterSpacing: '3px', marginTop: 4 }}>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.8)' : allDone ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.5)', letterSpacing: '3px', marginTop: 8 }}>
                                                     {doneCount} / {tasks.length} DONE{pendingCount > 0 ? ` · ${pendingCount} PENDING` : ''}
                                                 </div>
                                             </div>
@@ -2134,17 +2134,33 @@ export default function VaultPage() {
 
                                             {/* ── All complete / all pending celebration ── */}
                                             {allDone && pendingCount === 0 && (
-                                                <div style={{ textAlign: 'center', padding: '40px 0', animation: 'vFadeIn 0.5s ease' }}>
-                                                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 16 }}><path d="M20 6L9 17l-5-5" /></svg>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(80,200,120,0.6)', letterSpacing: '3px', marginBottom: 8 }}>PERFECT</div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>ALL ORDERS FULFILLED</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', animation: 'vFadeIn 0.6s ease', flex: 1 }}>
+                                                    <div style={{
+                                                        width: 90, height: 90, borderRadius: '50%',
+                                                        border: '2px solid rgba(80,200,120,0.3)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        boxShadow: '0 0 40px rgba(80,200,120,0.1), inset 0 0 20px rgba(80,200,120,0.05)',
+                                                        marginBottom: 28,
+                                                    }}>
+                                                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.5rem', color: 'rgba(80,200,120,0.7)', letterSpacing: '6px', marginBottom: 10, fontWeight: 700 }}>PERFECT</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px' }}>ALL ORDERS FULFILLED</div>
                                                 </div>
                                             )}
                                             {allDone && pendingCount > 0 && !currentTask && (
-                                                <div style={{ textAlign: 'center', padding: '40px 0', animation: 'vFadeIn 0.5s ease' }}>
-                                                    <div style={{ fontSize: '2.5rem', marginBottom: 16, animation: 'vPulse 2s ease infinite' }}>⏳</div>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 8 }}>ALL SUBMITTED</div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>{pendingCount} TASK{pendingCount > 1 ? 'S' : ''} AWAITING QUEEN&apos;S REVIEW</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', animation: 'vFadeIn 0.6s ease', flex: 1 }}>
+                                                    <div style={{
+                                                        width: 90, height: 90, borderRadius: '50%',
+                                                        border: '2px solid rgba(197,160,89,0.25)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        boxShadow: '0 0 40px rgba(197,160,89,0.08), inset 0 0 20px rgba(197,160,89,0.04)',
+                                                        marginBottom: 28,
+                                                    }}>
+                                                        <span style={{ fontSize: '2rem', animation: 'vPulse 2s ease infinite' }}>&#9203;</span>
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.5rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '6px', marginBottom: 10, fontWeight: 700 }}>SUBMITTED</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px' }}>{pendingCount} TASK{pendingCount > 1 ? 'S' : ''} AWAITING REVIEW</div>
                                                 </div>
                                             )}
 
@@ -2211,7 +2227,7 @@ export default function VaultPage() {
                                                                     {trialOpen && !trialDone && (
                                                                         <>
                                                                             <textarea value={trialText} onChange={e => setTrialText(e.target.value)} placeholder="Write here..."
-                                                                                style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                                                                style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
                                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                                                                                 <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>{trialText.split(/\s+/).filter(Boolean).length} / 200</span>
                                                                                 <button onClick={() => {
@@ -2590,7 +2606,7 @@ export default function VaultPage() {
                                                                         {isTextTask && (
                                                                             <>
                                                                                 <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Write here..."
-                                                                                    style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                                                                    style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
                                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                                                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>{taskText.split(/\s+/).filter(Boolean).length} words</span>
                                                                                     <button onClick={() => submitTask({ text: taskText })} disabled={!taskText.trim()}
@@ -2634,7 +2650,7 @@ export default function VaultPage() {
                                                                         {!isPhotoTask && !isTextTask && !isSelfReport && !isPayment && !isInteractive && (
                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                                                                 <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe your completion..."
-                                                                                    style={{ width: '100%', minHeight: 80, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
+                                                                                    style={{ width: '100%', minHeight: 80, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
                                                                                 <label style={{ cursor: 'pointer' }}>
                                                                                     <div style={{ padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '2px', color: `${R}0.4)`, background: `${R}0.03)`, border: `1px solid ${R}0.08)`, borderRadius: 8, textAlign: 'center' }}>
                                                                                         + ATTACH PHOTO
@@ -2892,7 +2908,7 @@ export default function VaultPage() {
                             <>
                                 <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: `${R}0.7)`, letterSpacing: '4px', textAlign: 'center', marginBottom: 6 }}>BEG FOR RELEASE</div>
                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 20, lineHeight: 1.6 }}>Choose your words carefully.<br />Queen Karin will decide your fate.</div>
-                                <textarea value={begText} onChange={e => setBegText(e.target.value)} placeholder="Please, Queen Karin..." style={{ width: '100%', minHeight: 110, background: `${R}0.02)`, border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
+                                <textarea value={begText} onChange={e => setBegText(e.target.value)} placeholder="Please, Queen Karin..." style={{ width: '100%', minHeight: 110, background: `${R}0.02)`, border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
                                 <button onClick={() => {
                                     setBegSent(true);
                                     // Record beg in DB
