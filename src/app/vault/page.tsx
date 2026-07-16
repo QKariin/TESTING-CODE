@@ -3108,15 +3108,16 @@ export default function VaultPage() {
             {/* ══════════════════════════════════════════════
                 BOTTOM NAV — 5 tabs matching /profile
             ══════════════════════════════════════════════ */}
-            <nav style={{
+            <nav className="mob-bottom-nav" style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
-                width: '100%',
-                background: 'rgba(5,5,8,0.95)', backdropFilter: 'blur(20px)',
-                borderTop: `1px solid ${R}0.12)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+                zIndex: 2147483647,
                 height: 'calc(68px + env(safe-area-inset-bottom, 0px))',
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                zIndex: 60,
+                display: 'flex', alignItems: 'stretch', justifyContent: 'space-around',
+                background: 'rgba(5,5,8,0.97)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderTop: `1px solid ${R}0.12)`,
             }}>
                 <NavBtn active={tab === 'vault'} icon="&#9670;" label="VAULT" onClick={() => { setVladOpen(false); setTab('vault'); }} />
                 <NavBtn active={tab === 'challenge'} label="WORK" onClick={() => { setVladOpen(false); setTab('challenge'); }}
