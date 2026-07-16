@@ -602,7 +602,9 @@ export default function VaultPage() {
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
 
-                            // Polling fallback: check session status + chat grants every 10s
+                            // Polling fallback: check session status, chat grants, and order updates every 10s
+                            let _lastOrdersCompleted = vd.today?.orders_completed ?? -1;
+                            let _lastPerfect = vd.today?.perfect ?? false;
                             const sessionId = vd.session.id;
                             const releasePoller = setInterval(async () => {
                                 try {
@@ -629,6 +631,16 @@ export default function VaultPage() {
                                                 setChatGateCooldownUntil(0);
                                                 setTab('chat');
                                             }
+                                        }
+                                    }
+                                    // Refresh vault data when order completion changes (task approvals)
+                                    if (data.active) {
+                                        const newCompleted = data.today?.orders_completed ?? -1;
+                                        const newPerfect = data.today?.perfect ?? false;
+                                        if (newCompleted !== _lastOrdersCompleted || newPerfect !== _lastPerfect) {
+                                            _lastOrdersCompleted = newCompleted;
+                                            _lastPerfect = newPerfect;
+                                            setVaultData(data);
                                         }
                                     }
                                 } catch {}
@@ -1593,6 +1605,23 @@ export default function VaultPage() {
                     </div>
                 )}
 
+
+                {/* ── PERFECT OBEDIENCE BANNER ── */}
+                {todayPerfect && (
+                    <div style={{ width: '100%', padding: '0 16px', marginTop: 20, animation: 'vFadeIn 0.6s ease' }}>
+                        <div style={{
+                            width: '100%', borderRadius: 16, padding: '28px 20px',
+                            background: 'linear-gradient(135deg, rgba(80,200,120,0.06), rgba(80,200,120,0.02))',
+                            border: '1px solid rgba(80,200,120,0.2)',
+                            textAlign: 'center',
+                            boxShadow: '0 0 40px rgba(80,200,120,0.05)',
+                        }}>
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}><path d="M20 6L9 17l-5-5" /></svg>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(80,200,120,0.7)', letterSpacing: '5px', fontWeight: 700 }}>PERFECT OBEDIENCE</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginTop: 6 }}>ALL ORDERS FULFILLED</div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── TODAY'S ORDERS ── */}
                 <div style={{ width: '100%', padding: '0 16px 36px', marginTop: 20 }}>

@@ -765,6 +765,8 @@ export async function POST(req: NextRequest) {
             const oIdx = sub?.order_idx;
             if (oIdx != null && orders[oIdx]) {
                 orders[oIdx].done = orders[oIdx].target;
+                delete orders[oIdx].submitted;
+                delete orders[oIdx].submitted_at;
             }
             const completed = orders.filter((o: any) => o.done >= o.target).length;
             const perfect = completed >= orders.length;
