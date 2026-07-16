@@ -432,7 +432,7 @@ export async function POST(req: NextRequest) {
         .from('vault_sessions')
         .select('*')
         .eq('member_id', email)
-        .eq('status', 'active')
+        .in('status', ['active', 'awaiting_video'])
         .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -858,16 +858,28 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, rewardUntil });
     }
 
-    // ── SET CHAT COOLDOWN (coin flip tails) ──
+    // ── SET CHAT COOLDOWN (coin flip tails OR keyholder grant) ──
     if (action === 'set_chat_cooldown') {
         const { until } = body; // ISO string or timestamp
         const today = tzToday(tz);
-        const { data: todayRecord } = await supabaseAdmin
+        let { data: todayRecord } = await supabaseAdmin
             .from('vault_daily')
             .select('id')
             .eq('session_id', session.id)
             .eq('date', today)
             .maybeSingle();
+        if (!todayRecord) {
+            // Auto-create today's daily record if missing (e.g. awaiting_video members)
+            const { data: created } = await supabaseAdmin.from('vault_daily').insert({
+                session_id: session.id,
+                member_id: email,
+                day_number: 0,
+                date: today,
+                orders: '[]',
+                orders_total: 0,
+            }).select('id').single();
+            todayRecord = created;
+        }
         if (todayRecord) {
             await supabaseAdmin.from('vault_daily').update({
                 chat_cooldown_until: typeof until === 'number' ? new Date(until).toISOString() : until,

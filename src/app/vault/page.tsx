@@ -499,10 +499,20 @@ export default function VaultPage() {
                         if (vd.active) {
                             setVaultData(vd);
                             setPenaltyHours(vd.totalPenaltyHours || 0);
-                            // Restore chat cooldown from DB
+                            // Restore chat cooldown/grant from DB
                             if (vd.chatCooldownUntil) {
                                 const cdUntil = new Date(vd.chatCooldownUntil).getTime();
-                                if (cdUntil > Date.now()) setChatGateCooldownUntil(cdUntil);
+                                if (cdUntil > Date.now()) {
+                                    const minutesLeft = (cdUntil - Date.now()) / 60000;
+                                    if (minutesLeft <= 30) {
+                                        // Short duration = keyholder granted chat access
+                                        setChatExpiresAt(cdUntil);
+                                        setChatGateDone(true);
+                                    } else {
+                                        // Long duration = deny cooldown (8h from coin flip)
+                                        setChatGateCooldownUntil(cdUntil);
+                                    }
+                                }
                             }
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
