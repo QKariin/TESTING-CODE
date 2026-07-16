@@ -150,7 +150,14 @@ export async function GET(req: NextRequest) {
         prog = newProg;
     }
 
-    return NextResponse.json({ program: prog });
+    // Fetch profile kinks/limits for the member
+    const { data: memberProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('kinks, limits')
+        .ilike('member_id', email)
+        .maybeSingle();
+
+    return NextResponse.json({ program: prog, profile: { kinks: memberProfile?.kinks || '', limits: memberProfile?.limits || '' } });
 }
 
 // POST /api/vault/program
