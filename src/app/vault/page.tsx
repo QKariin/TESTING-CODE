@@ -538,7 +538,7 @@ export default function VaultPage() {
                                         if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
                                     }).catch(() => {});
                             }
-                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId }) })
+                            fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) })
                                 .then(r => r.json())
                                 .then(ensureRes => {
                                     if (ensureRes.ended) {
@@ -2282,7 +2282,7 @@ export default function VaultPage() {
                                                                     setTaskSubmitted(p => ({ ...p, [o.type]: true }));
                                                                     try {
                                                                         const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                                                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null }),
+                                                                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
                                                                         });
                                                                         const result = await resp.json();
                                                                         console.log('[vault] submit_task response:', resp.status, result);
@@ -2723,7 +2723,7 @@ export default function VaultPage() {
                     setTaskSubmitted(p => ({ ...p, [followUp.orderType]: true }));
                     try {
                         const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: followUp.orderType, text: opts.text || null, photoUrl: opts.photoUrl || null }),
+                            body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: followUp.orderType, text: opts.text || null, photoUrl: opts.photoUrl || null, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
                         });
                         const result = await resp.json();
                         if (!resp.ok) alert('Submit failed: ' + (result.error || 'unknown error'));

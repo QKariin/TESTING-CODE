@@ -5,6 +5,31 @@ import { defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-def
 
 export const dynamic = 'force-dynamic';
 
+/** Get today's date string and daysIn using the member's timezone */
+function tzToday(tz: string): string {
+    try {
+        return new Date().toLocaleDateString('en-CA', { timeZone: tz }); // 'en-CA' → YYYY-MM-DD
+    } catch { return new Date().toISOString().split('T')[0]; }
+}
+function tzDaysIn(startedAt: string, tz: string): number {
+    try {
+        const todayStr = tzToday(tz);
+        const startStr = new Date(startedAt).toLocaleDateString('en-CA', { timeZone: tz });
+        const todayMs = new Date(todayStr + 'T00:00:00Z').getTime();
+        const startMs = new Date(startStr + 'T00:00:00Z').getTime();
+        return Math.floor((todayMs - startMs) / 86400000);
+    } catch { return Math.floor((Date.now() - new Date(startedAt).getTime()) / 86400000); }
+}
+function tzYesterday(tz: string): string {
+    try {
+        const d = new Date();
+        d.setTime(d.getTime() - 86400000);
+        return d.toLocaleDateString('en-CA', { timeZone: tz });
+    } catch {
+        return new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    }
+}
+
 // GET /api/vault/session?memberId=xxx
 // Returns full vault state: active session, today's orders, daily history, adjustments, spins, trials
 export async function GET(req: NextRequest) {
@@ -71,12 +96,11 @@ export async function GET(req: NextRequest) {
         .order('day_number', { ascending: true });
 
     // 3. Get today's record — auto-create if missing
-    const today = new Date().toISOString().split('T')[0];
+    const today = tzToday(tz);
     let todayRecord = (dailyRecords || []).find((d: any) => d.date === today);
 
     if (!todayRecord && session) {
-        const startDate2 = new Date(session.started_at);
-        const daysIn2 = Math.floor((Date.now() - startDate2.getTime()) / 86400000) + 1;
+        const daysIn2 = tzDaysIn(session.started_at, tz) + 1;
         const orders = await _getOrdersForDay(session.id, daysIn2);
         const { data: inserted, error: insertErr } = await supabaseAdmin.from('vault_daily').insert({
             session_id: session.id,
@@ -101,8 +125,7 @@ export async function GET(req: NextRequest) {
     // Sync today's orders with the current program (handles program edits after daily row was created)
     if (todayRecord && session) {
         const currentOrders: any[] = typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : (todayRecord.orders || []);
-        const startDate3 = new Date(session.started_at);
-        const daysIn3 = Math.floor((Date.now() - startDate3.getTime()) / 86400000) + 1;
+        const daysIn3 = tzDaysIn(session.started_at, tz) + 1;
         const programOrders = await _getOrdersForDay(session.id, daysIn3);
 
         // Compare types + targets + labels to catch any program edits
@@ -156,10 +179,8 @@ export async function GET(req: NextRequest) {
     // 8. Today's spin check
     const todaySpin = (spins || []).find((s: any) => s.date === today);
 
-    // 9. Calculate days in
-    const startDate = new Date(session.started_at);
-    const now = new Date();
-    const daysIn = Math.floor((now.getTime() - startDate.getTime()) / 86400000);
+    // 9. Calculate days in (timezone-aware)
+    const daysIn = tzDaysIn(session.started_at, tz);
 
     // 10. Calculate total penalty hours
     const totalPenaltyHours = (adjustments || []).reduce((sum: number, a: any) => sum + a.hours, 0);
@@ -312,11 +333,17 @@ export async function POST(req: NextRequest) {
 
     // Resolve UUID → email if needed (vault_sessions stores email as member_id)
     let email = memberId.toLowerCase();
+    let tz = body.tz || '';
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
     if (isUuid) {
-        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', email).maybeSingle();
+        const { data: prof } = await supabaseAdmin.from('profiles').select('member_id, timezone').eq('ID', email).maybeSingle();
         if (prof?.member_id) email = prof.member_id.toLowerCase();
+        if (!tz && prof?.timezone) tz = prof.timezone;
+    } else if (!tz) {
+        const { data: prof } = await supabaseAdmin.from('profiles').select('timezone').ilike('member_id', email).maybeSingle();
+        if (prof?.timezone) tz = prof.timezone;
     }
+    if (!tz) tz = 'UTC';
 
     // ── CREATE SESSION ──
     if (action === 'create') {
@@ -384,7 +411,7 @@ export async function POST(req: NextRequest) {
             session_id: session.id,
             member_id: email,
             day_number: 1,
-            date: new Date().toISOString().split('T')[0],
+            date: tzToday(tz),
             orders: JSON.stringify(orders),
             orders_total: orders.length,
         });
@@ -443,7 +470,7 @@ export async function POST(req: NextRequest) {
     // ── RECORD SPIN ──
     if (action === 'spin') {
         const { resultText, resultType } = body;
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
 
         const { error } = await supabaseAdmin.from('vault_spins').insert({
             session_id: session.id,
@@ -467,8 +494,8 @@ export async function POST(req: NextRequest) {
     // ── SUBMIT TRIAL ──
     if (action === 'trial') {
         const { prompt, response, proofUrl } = body;
-        const today = new Date().toISOString().split('T')[0];
-        const daysIn = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 86400000) + 1;
+        const today = tzToday(tz);
+        const daysIn = tzDaysIn(session.started_at, tz) + 1;
 
         const { error } = await supabaseAdmin.from('vault_trials').insert({
             session_id: session.id,
@@ -510,7 +537,7 @@ export async function POST(req: NextRequest) {
     // ── COMPLETE ORDER ──
     if (action === 'complete_order') {
         const { orderType, amount, photoUrl } = body;
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
 
         // Chastity check: enforce 6-10 AM window, save photo, DON'T mark as done — needs Queen's approval
         if (orderType === 'chastity_check' && photoUrl) {
@@ -590,7 +617,7 @@ export async function POST(req: NextRequest) {
     // ── APPROVE CHASTITY CHECK ──
     if (action === 'approve_chastity') {
         const { date: targetDate, comment } = body;
-        const date = targetDate || new Date().toISOString().split('T')[0];
+        const date = targetDate || tzToday(tz);
 
         await supabaseAdmin.from('vault_check_log').update({
             status: 'approved',
@@ -611,7 +638,7 @@ export async function POST(req: NextRequest) {
     // ── REJECT CHASTITY CHECK ──
     if (action === 'reject_chastity') {
         const { date: targetDate, reason } = body;
-        const date = targetDate || new Date().toISOString().split('T')[0];
+        const date = targetDate || tzToday(tz);
 
         await supabaseAdmin.from('vault_check_log').update({
             status: 'rejected',
@@ -630,7 +657,7 @@ export async function POST(req: NextRequest) {
     // ── SUBMIT TASK — member submits proof/text for Queen's review ──
     if (action === 'submit_task') {
         const { orderType, text, photoUrl, videoUrl } = body;
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
 
         console.log('[vault] submit_task:', { email, orderType, sessionId: session.id, today });
 
@@ -698,7 +725,7 @@ export async function POST(req: NextRequest) {
         const { orderType, gambleResult } = body;
         if (!orderType || gambleResult === undefined) return NextResponse.json({ error: 'Missing orderType or gambleResult' }, { status: 400 });
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
         const { data: daily } = await supabaseAdmin.from('vault_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', today)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
@@ -717,7 +744,7 @@ export async function POST(req: NextRequest) {
     // ── APPROVE TASK — Queen approves a task submission ──
     if (action === 'approve_task') {
         const { date: targetDate, submissionId, comment } = body;
-        const date = targetDate || new Date().toISOString().split('T')[0];
+        const date = targetDate || tzToday(tz);
 
         // Update the submission row in vault_submissions
         await supabaseAdmin.from('vault_submissions').update({
@@ -771,7 +798,7 @@ export async function POST(req: NextRequest) {
     // ── REJECT TASK — Queen rejects a task submission ──
     if (action === 'reject_task') {
         const { date: targetDate, submissionId, comment } = body;
-        const date = targetDate || new Date().toISOString().split('T')[0];
+        const date = targetDate || tzToday(tz);
 
         // Update the submission row
         await supabaseAdmin.from('vault_submissions').update({
@@ -807,7 +834,7 @@ export async function POST(req: NextRequest) {
 
     // ── CLAIM FREEDOM REWARD ──
     if (action === 'claim_reward') {
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
 
         // Check today is perfect
         const { data: todayRecord } = await supabaseAdmin
@@ -834,7 +861,7 @@ export async function POST(req: NextRequest) {
     // ── SET CHAT COOLDOWN (coin flip tails) ──
     if (action === 'set_chat_cooldown') {
         const { until } = body; // ISO string or timestamp
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
         const { data: todayRecord } = await supabaseAdmin
             .from('vault_daily')
             .select('id')
@@ -891,7 +918,7 @@ export async function POST(req: NextRequest) {
         });
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = tzToday(tz);
         await _updateOrderDone(session.id, today, 'tribute', amount);
 
         return NextResponse.json({ success: true });
@@ -899,8 +926,8 @@ export async function POST(req: NextRequest) {
 
     // ── ENSURE TODAY ── create today's daily record if missing, or reset if pre-seeded
     if (action === 'ensure_today') {
-        const today = new Date().toISOString().split('T')[0];
-        const daysIn = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 86400000) + 1;
+        const today = tzToday(tz);
+        const daysIn = tzDaysIn(session.started_at, tz) + 1;
 
         const { data: existing } = await supabaseAdmin
             .from('vault_daily')
@@ -913,7 +940,7 @@ export async function POST(req: NextRequest) {
             // Check if yesterday's chastity check was submitted
             // Skip day 1-2 (video submission day) — chastity check starts from day 3
             if (daysIn > 2) {
-                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const yesterday = tzYesterday(tz);
 
                 // Check vault_check_log first (proper table)
                 let chastitySubmitted = false;
