@@ -916,8 +916,9 @@ export default function VaultPage() {
                                 body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'kneel', amount: 1 }),
                             }).catch(() => {});
                         }
-                        const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 8;
-                        vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${data.todayKneeling >= kTarget ? 'They hit the daily target!' : `${kTarget - data.todayKneeling} more to go.`}`);
+                        const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 4;
+                        const remaining = Math.max(0, kTarget - data.todayKneeling);
+                        vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${remaining <= 0 ? 'They hit the daily target!' : `${remaining} more to go.`}`);
                     } else if (data.error === 'COOLDOWN') {
                         setKneelCooldownUntil(Date.now() + data.minLeft * 60000);
                     }
@@ -1528,7 +1529,7 @@ export default function VaultPage() {
 
                 {/* Kneel progress dots — under kneel button */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '6px 0 0' }}>
-                    {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 8 }).map((_, i) => (
+                    {Array.from({ length: todayOrders.find((o: any) => o.type === 'kneel')?.target || 4 }).map((_, i) => (
                         <div key={i} style={{
                             width: 10, height: 10, borderRadius: '50%',
                             background: i < kneelToday ? '#b82020' : 'rgba(255,255,255,0.08)',
