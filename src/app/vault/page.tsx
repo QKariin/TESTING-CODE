@@ -508,6 +508,8 @@ export default function VaultPage() {
                                         // Short duration = keyholder granted chat access
                                         setChatExpiresAt(cdUntil);
                                         setChatGateDone(true);
+                                        setChatGateCooldownUntil(0); // clear any deny
+                                        setTab('chat'); // auto-open chat
                                     } else {
                                         // Long duration = deny cooldown (8h from coin flip)
                                         setChatGateCooldownUntil(cdUntil);
@@ -599,6 +601,34 @@ export default function VaultPage() {
                                 })
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
+
+                            // Realtime: listen for keyholder chat grant (chat_cooldown_until changes on vault_daily)
+                            if (vd.today?.id) {
+                                const chatGrantSub = supabase
+                                    .channel('vault_chat_grant')
+                                    .on('postgres_changes', {
+                                        event: 'UPDATE',
+                                        schema: 'public',
+                                        table: 'vault_daily',
+                                        filter: `id=eq.${vd.today.id}`,
+                                    }, (payload: any) => {
+                                        const row = payload.new;
+                                        if (row.chat_cooldown_until) {
+                                            const cdUntil = new Date(row.chat_cooldown_until).getTime();
+                                            if (cdUntil > Date.now()) {
+                                                const minutesLeft = (cdUntil - Date.now()) / 60000;
+                                                if (minutesLeft <= 30) {
+                                                    setChatExpiresAt(cdUntil);
+                                                    setChatGateDone(true);
+                                                    setChatGateCooldownUntil(0);
+                                                    setTab('chat');
+                                                }
+                                            }
+                                        }
+                                    })
+                                    .subscribe();
+                                (window as any)._vaultChatGrantSub = chatGrantSub;
+                            }
 
                             // Polling fallback: check session status every 10s (in case Realtime doesn't fire due to RLS)
                             const sessionId = vd.session.id;
