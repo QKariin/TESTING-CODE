@@ -3529,7 +3529,9 @@ export async function initChatSystem() {
                 const vr = fresh.parameters?.vault_request;
                 if (vr && vr.status === 'awaiting_video' && vr.sessionId) {
                     _updateVaultLockButton({ active: true, status: 'awaiting_video', sessionId: vr.sessionId, lockDays: vr.lockDays } as any);
-                    _showVideoProofUpload({ sessionId: vr.sessionId, lockDays: vr.lockDays });
+                    if (!document.getElementById('_vaultVideoOverlay')) {
+                        _showVideoProofUpload({ sessionId: vr.sessionId, lockDays: vr.lockDays });
+                    }
                 }
                 // Vault: active — redirect to vault (but not if proof upload is in progress — it handles its own redirect)
                 else if (fresh.parameters?.active_overlay === 'vault') {
@@ -5754,8 +5756,46 @@ export function _updateVaultLockButton(data: { active: boolean; status?: string;
     if (mobBtn) { mobBtn.textContent = label; mobBtn.style.borderColor = 'rgba(139,0,0,0.25)'; mobBtn.style.color = color; mobBtn.style.opacity = '0.6'; mobBtn.disabled = true; mobBtn.onclick = null; }
 }
 
-const VAULT_ONBOARD_KINKS = ["JOI", "Humiliation", "SPH", "Findom", "D/s", "Control", "Ownership", "Chastity", "CEI", "Blackmail play", "Objectification", "Degradation", "Task submission", "CBT", "Training", "Power exchange", "Verbal domination", "Protocol", "Obedience", "Psychological domination"];
-const VAULT_ONBOARD_LIMITS = ["Face showing", "Public exposure", "Financial ruin", "Permanent marks", "Family involvement", "Employer contact", "Blood play", "Scat", "Extreme pain", "Breath play", "Real blackmail", "Non-consensual sharing", "Sleep deprivation", "Drug use", "Self-harm"];
+const VAULT_ONBOARD_KINKS: { name: string; desc: string }[] = [
+    { name: "Foot fetish", desc: "Worship, massaging, or being controlled through feet" },
+    { name: "JOI", desc: "Being told exactly how to touch yourself" },
+    { name: "Humiliation", desc: "Being verbally degraded, embarrassed, or put in your place" },
+    { name: "SPH", desc: "Small penis humiliation, size-based degradation" },
+    { name: "Findom", desc: "Financial domination, giving money as a form of submission" },
+    { name: "D/s", desc: "Dominant/submissive power dynamic and structure" },
+    { name: "Control", desc: "Having decisions made for you: what to wear, eat, do" },
+    { name: "Ownership", desc: "Being treated as property, collared, branded, possessed" },
+    { name: "Chastity", desc: "Denial and lock-up, no release without permission" },
+    { name: "CEI", desc: "Cum eating instruction, forced or guided consumption" },
+    { name: "Blackmail play", desc: "Fantasy scenarios involving leverage and coercion" },
+    { name: "Objectification", desc: "Being treated as a thing: furniture, toy, decoration" },
+    { name: "Degradation", desc: "Being made to feel worthless, dirty, or beneath someone" },
+    { name: "Task submission", desc: "Completing assigned tasks and proving obedience" },
+    { name: "CBT", desc: "Cock and ball torture, pain-based genital control" },
+    { name: "Training", desc: "Structured programs to shape behavior and obedience" },
+    { name: "Power exchange", desc: "Giving up control and authority to a dominant" },
+    { name: "Verbal domination", desc: "Being commanded, scolded, or controlled through words" },
+    { name: "Protocol", desc: "Strict rules: how to address, behave, respond" },
+    { name: "Obedience", desc: "Following orders without question or hesitation" },
+    { name: "Psychological domination", desc: "Mind games, manipulation, mental control" },
+];
+const VAULT_ONBOARD_LIMITS: { name: string; desc: string }[] = [
+    { name: "Face showing", desc: "No photos or videos showing your face" },
+    { name: "Public exposure", desc: "Nothing done in public or shared publicly" },
+    { name: "Financial ruin", desc: "No demands that would cause real financial harm" },
+    { name: "Permanent marks", desc: "No tattoos, brands, or permanent body modifications" },
+    { name: "Family involvement", desc: "No contact with or mention of family members" },
+    { name: "Employer contact", desc: "No interaction with your workplace or colleagues" },
+    { name: "Blood play", desc: "Nothing involving cutting or blood" },
+    { name: "Scat", desc: "No feces-related activities" },
+    { name: "Extreme pain", desc: "No severe physical pain beyond light discomfort" },
+    { name: "Breath play", desc: "No choking, suffocation, or breath restriction" },
+    { name: "Real blackmail", desc: "No actual threats or real-world leverage" },
+    { name: "Non-consensual sharing", desc: "No sharing content without explicit permission" },
+    { name: "Sleep deprivation", desc: "No tasks that interfere with normal sleep" },
+    { name: "Drug use", desc: "No forced substance use of any kind" },
+    { name: "Self-harm", desc: "Nothing that causes real physical injury" },
+];
 
 function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
     document.getElementById('_vaultVideoOverlay')?.remove();
@@ -5782,6 +5822,9 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                     <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:6px;">YOUR KINKS</div>
                     <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:32px;line-height:1.6;">Select what excites you. This helps Queen Karin<br>build a program tailored to your desires.</div>
                     <div style="width:40px;height:1px;background:rgba(197,160,89,0.2);margin:0 auto 28px;"></div>
+                    <div id="_obDesc" style="min-height:44px;text-align:center;margin-bottom:20px;transition:opacity 0.2s;">
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.2);letter-spacing:1px;line-height:1.5;">Tap a kink to see what it means</div>
+                    </div>
                     <div id="_obChips" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:40px;"></div>
                     <div style="text-align:center;">
                         <div id="_obMinMsg" style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.15);letter-spacing:2px;margin-bottom:16px;">SELECT AT LEAST 3</div>
@@ -5792,32 +5835,33 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
             const chipWrap = ov.querySelector('#_obChips')!;
             const nextBtn = ov.querySelector('#_obNext') as HTMLButtonElement;
             const minMsg = ov.querySelector('#_obMinMsg') as HTMLElement;
+            const descEl = ov.querySelector('#_obDesc') as HTMLElement;
 
-            VAULT_ONBOARD_KINKS.forEach(k => {
+            function updateKinkBtn() {
+                const ok = selectedKinks.size >= 3;
+                nextBtn.disabled = !ok;
+                nextBtn.style.color = ok ? '#c5a059' : 'rgba(255,255,255,0.1)';
+                nextBtn.style.borderColor = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.04)';
+                nextBtn.style.background = ok ? 'rgba(197,160,89,0.06)' : 'transparent';
+                nextBtn.style.cursor = ok ? 'pointer' : 'default';
+                minMsg.textContent = ok ? `${selectedKinks.size} SELECTED` : 'SELECT AT LEAST 3';
+                minMsg.style.color = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.15)';
+            }
+
+            VAULT_ONBOARD_KINKS.forEach(item => {
                 const chip = document.createElement('button');
-                chip.textContent = k;
-                const sel = selectedKinks.has(k);
+                chip.textContent = item.name;
+                const sel = selectedKinks.has(item.name);
                 chip.style.cssText = `padding:8px 16px;border-radius:20px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid ${sel ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.08)'};color:${sel ? '#c5a059' : 'rgba(255,255,255,0.35)'};background:${sel ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.02)'};`;
                 chip.addEventListener('click', () => {
-                    if (selectedKinks.has(k)) { selectedKinks.delete(k); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
-                    else { selectedKinks.add(k); chip.style.borderColor = 'rgba(197,160,89,0.5)'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.08)'; }
-                    const ok = selectedKinks.size >= 3;
-                    nextBtn.disabled = !ok;
-                    nextBtn.style.color = ok ? '#c5a059' : 'rgba(255,255,255,0.1)';
-                    nextBtn.style.borderColor = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.04)';
-                    nextBtn.style.background = ok ? 'rgba(197,160,89,0.06)' : 'transparent';
-                    nextBtn.style.cursor = ok ? 'pointer' : 'default';
-                    minMsg.textContent = ok ? `${selectedKinks.size} SELECTED` : 'SELECT AT LEAST 3';
-                    minMsg.style.color = ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.15)';
+                    if (selectedKinks.has(item.name)) { selectedKinks.delete(item.name); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
+                    else { selectedKinks.add(item.name); chip.style.borderColor = 'rgba(197,160,89,0.5)'; chip.style.color = '#c5a059'; chip.style.background = 'rgba(197,160,89,0.08)'; }
+                    descEl.innerHTML = `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:${selectedKinks.has(item.name) ? '#c5a059' : 'rgba(255,255,255,0.45)'};letter-spacing:2px;margin-bottom:4px;">${item.name.toUpperCase()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">${item.desc}</div>`;
+                    updateKinkBtn();
                 });
                 chipWrap.appendChild(chip);
             });
-            // Init button state
-            if (selectedKinks.size >= 3) {
-                nextBtn.disabled = false;
-                nextBtn.style.color = '#c5a059'; nextBtn.style.borderColor = 'rgba(197,160,89,0.4)'; nextBtn.style.background = 'rgba(197,160,89,0.06)'; nextBtn.style.cursor = 'pointer';
-                minMsg.textContent = `${selectedKinks.size} SELECTED`; minMsg.style.color = 'rgba(197,160,89,0.4)';
-            }
+            updateKinkBtn();
             nextBtn.addEventListener('click', () => { if (!nextBtn.disabled) { step = 2; renderStep(); } });
 
         } else if (step === 2) {
@@ -5828,6 +5872,9 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                     <div style="font-family:Cinzel,serif;font-size:1.4rem;color:rgba(255,255,255,0.7);letter-spacing:5px;font-weight:700;text-align:center;margin-bottom:6px;">YOUR LIMITS</div>
                     <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);text-align:center;margin-bottom:32px;line-height:1.6;">Select your hard limits. These will never<br>appear in your program. Your safety matters.</div>
                     <div style="width:40px;height:1px;background:rgba(139,0,0,0.3);margin:0 auto 28px;"></div>
+                    <div id="_obDesc2" style="min-height:44px;text-align:center;margin-bottom:20px;transition:opacity 0.2s;">
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.2);letter-spacing:1px;line-height:1.5;">Tap a limit to see what it means</div>
+                    </div>
                     <div id="_obChips2" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:40px;"></div>
                     <div style="display:flex;gap:12px;justify-content:center;">
                         <button id="_obBack2" style="padding:14px 28px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;color:rgba(255,255,255,0.25);background:none;border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;">BACK</button>
@@ -5836,14 +5883,16 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                 </div>
             `;
             const chipWrap = ov.querySelector('#_obChips2')!;
-            VAULT_ONBOARD_LIMITS.forEach(k => {
+            const descEl2 = ov.querySelector('#_obDesc2') as HTMLElement;
+            VAULT_ONBOARD_LIMITS.forEach(item => {
                 const chip = document.createElement('button');
-                chip.textContent = k;
-                const sel = selectedLimits.has(k);
+                chip.textContent = item.name;
+                const sel = selectedLimits.has(item.name);
                 chip.style.cssText = `padding:8px 16px;border-radius:20px;font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid ${sel ? 'rgba(139,0,0,0.5)' : 'rgba(255,255,255,0.08)'};color:${sel ? 'rgba(200,60,60,0.8)' : 'rgba(255,255,255,0.35)'};background:${sel ? 'rgba(139,0,0,0.08)' : 'rgba(255,255,255,0.02)'};`;
                 chip.addEventListener('click', () => {
-                    if (selectedLimits.has(k)) { selectedLimits.delete(k); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
-                    else { selectedLimits.add(k); chip.style.borderColor = 'rgba(139,0,0,0.5)'; chip.style.color = 'rgba(200,60,60,0.8)'; chip.style.background = 'rgba(139,0,0,0.08)'; }
+                    if (selectedLimits.has(item.name)) { selectedLimits.delete(item.name); chip.style.borderColor = 'rgba(255,255,255,0.08)'; chip.style.color = 'rgba(255,255,255,0.35)'; chip.style.background = 'rgba(255,255,255,0.02)'; }
+                    else { selectedLimits.add(item.name); chip.style.borderColor = 'rgba(139,0,0,0.5)'; chip.style.color = 'rgba(200,60,60,0.8)'; chip.style.background = 'rgba(139,0,0,0.08)'; }
+                    descEl2.innerHTML = `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:${selectedLimits.has(item.name) ? 'rgba(200,60,60,0.8)' : 'rgba(255,255,255,0.45)'};letter-spacing:2px;margin-bottom:4px;">${item.name.toUpperCase()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);letter-spacing:0.5px;">${item.desc}</div>`;
                 });
                 chipWrap.appendChild(chip);
             });
