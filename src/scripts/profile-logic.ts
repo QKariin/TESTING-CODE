@@ -5489,8 +5489,8 @@ export async function openVaultLockRequest() {
         style.id = '_vaultLockStyles';
         style.textContent = `
             @keyframes _vFadeIn{from{opacity:0}to{opacity:1}}
-            #_vaultLockOverlay,#_vaultVideoOverlay{scrollbar-width:none;-ms-overflow-style:none;}
-            #_vaultLockOverlay::-webkit-scrollbar,#_vaultVideoOverlay::-webkit-scrollbar{display:none;}
+            #_vaultLockOverlay,#_vaultVideoOverlay,#_vaultLockOverlay *,#_vaultVideoOverlay *{scrollbar-width:none !important;-ms-overflow-style:none !important;}
+            #_vaultLockOverlay::-webkit-scrollbar,#_vaultVideoOverlay::-webkit-scrollbar,#_vaultLockOverlay *::-webkit-scrollbar,#_vaultVideoOverlay *::-webkit-scrollbar{display:none !important;}
             #_vaultDateInput::-webkit-calendar-picker-indicator{filter:invert(0.25) sepia(1) hue-rotate(-30deg);cursor:pointer;}
         `;
         document.head.appendChild(style);
@@ -5809,7 +5809,7 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
 
     const ov = document.createElement('div');
     ov.id = '_vaultVideoOverlay';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;background:#080507;animation:_vFadeIn 0.3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;background:#080507;animation:_vFadeIn 0.3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;';
 
     let step = 1;
 
@@ -5947,7 +5947,12 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                 </div>
             `;
             ov.querySelector('#_obRuleBack')!.addEventListener('click', () => { step = step - 1; renderStep(); });
-            ov.querySelector('#_obRuleNext')!.addEventListener('click', () => { step = step + 1; renderStep(); });
+            ov.querySelector('#_obRuleNext')!.addEventListener('click', () => {
+                const next = step + 1;
+                // Skip install step if app already installed
+                if (next === 7 && (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone)) { step = 8; } else { step = next; }
+                renderStep();
+            });
 
         } else if (step === 7) {
             // STEP 7: INSTALL THE APP
@@ -6069,7 +6074,11 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                     </div>
                 </div>
             `;
-            ov.querySelector('#_obAboutBack')!.addEventListener('click', () => { step = 7; renderStep(); });
+            ov.querySelector('#_obAboutBack')!.addEventListener('click', () => {
+                // Skip install step going back if app already installed
+                if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) { step = 6; } else { step = 7; }
+                renderStep();
+            });
             ov.querySelector('#_obAccept')!.addEventListener('click', async () => {
                 const acceptBtn = ov.querySelector('#_obAccept') as HTMLButtonElement;
                 acceptBtn.disabled = true; acceptBtn.textContent = 'SAVING...'; acceptBtn.style.color = 'rgba(197,160,89,0.3)';
