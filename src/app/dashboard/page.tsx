@@ -2144,9 +2144,16 @@ export default function DashboardPage() {
                                             )}
                                         </div>
 
-                                        {/* ── VIEW FULL PROGRAM BUTTON ── */}
-                                        <div style={{ margin: '0 4px 12px', textAlign: 'center' }}>
-                                            <button onClick={() => { setKeyholderMember(currId || ''); setShowKeyholder(true); }} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(139,0,0,0.25)', background: 'rgba(139,0,0,0.06)', color: 'rgba(180,40,40,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>VIEW FULL PROGRAM</button>
+                                        {/* ── VIEW FULL PROGRAM + OPEN CHAT BUTTONS ── */}
+                                        <div style={{ margin: '0 4px 12px', display: 'flex', gap: 8 }}>
+                                            <button onClick={() => { setKeyholderMember(currId || ''); setShowKeyholder(true); }} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(139,0,0,0.25)', background: 'rgba(139,0,0,0.06)', color: 'rgba(180,40,40,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>VIEW PROGRAM</button>
+                                            <button onClick={async () => {
+                                                const until = Date.now() + 15 * 60 * 1000;
+                                                try {
+                                                    await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_cooldown', memberId: currId, until }) });
+                                                    alert('Chat opened for 15 minutes');
+                                                } catch {}
+                                            }} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(197,160,89,0.25)', background: 'rgba(197,160,89,0.06)', color: 'rgba(197,160,89,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>OPEN CHAT 15 MIN</button>
                                         </div>
 
                                         {/* ── CHASTITY CHECK — PRIMARY TASK ── */}
