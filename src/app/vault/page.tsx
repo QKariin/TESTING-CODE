@@ -1147,7 +1147,7 @@ export default function VaultPage() {
                         width: 340, height: 340, borderRadius: '50%',
                         border: `2px solid ${borderColor}`,
                         boxShadow: glowColor,
-                        background: 'rgba(10,5,8,0.7)',
+                        background: '#000',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         gap: 0, overflow: 'hidden',
                         transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
