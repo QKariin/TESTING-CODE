@@ -36,10 +36,10 @@ export async function GET(req: NextRequest) {
                 .eq('date', today)
                 .maybeSingle();
 
-            // Get profile name
+            // Get profile name + kinks/limits
             const { data: prof } = await supabaseAdmin
                 .from('profiles')
-                .select('name, title, avatar_url, profile_picture_url')
+                .select('name, title, avatar_url, profile_picture_url, kinks, limits')
                 .ilike('member_id', s.member_id)
                 .maybeSingle();
 
@@ -50,6 +50,8 @@ export async function GET(req: NextRequest) {
                 memberId: s.member_id,
                 name: prof?.name || prof?.title || s.member_id.split('@')[0],
                 avatar: prof?.profile_picture_url || prof?.avatar_url || null,
+                kinks: prof?.kinks || '',
+                limits: prof?.limits || '',
                 daysIn,
                 lockDays: s.lock_days,
                 status: s.status,

@@ -308,6 +308,8 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const [memberProgram, setMemberProgram] = useState<Record<string,Task[]>|null>(null);
     const [memberSelectedDay, setMemberSelectedDay] = useState<number|null>(null);
     const [memberInfo, setMemberInfo] = useState<any>(null);
+    const [memberAbout, setMemberAbout] = useState<string>('');
+    const [showMemberProfile, setShowMemberProfile] = useState(true);
     const [dragIdx, setDragIdx] = useState<number|null>(null);
 
     useEffect(() => { loadTemplate(); loadConfig(); loadLockedMembers(); if(initialMember) setTimeout(()=>loadMemberProgram(),150); }, []);
@@ -315,7 +317,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const loadLockedMembers = async () => { try { const r = await fetch('/api/vault/program?listLocked=true'); const j = await r.json(); if(j.locked) setLockedMembers(j.locked); } catch{} };
     const loadTemplate = async () => { try { const r = await fetch('/api/vault/program?template=true'); const j = await r.json(); if(j.template?.length>0){ const d: Record<string,Task[]>={}; for(const row of j.template){ d[String(row.day_number)]=typeof row.tasks==='string'?JSON.parse(row.tasks):row.tasks; } setTemplateDays(d); } else { /* DB has no template — auto-save the defaults so member program generation uses the same data */ const defaults = generateDefaultProgram() as Record<string,Task[]>; try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_template',days:defaults})}); console.log('[KeyholderProgram] Auto-saved default template to DB'); } catch{} } } catch{} };
     const loadConfig = async () => { try { const r = await fetch('/api/vault/program?config=true'); const j = await r.json(); if(j.config){ const m: Record<string,any>={}; for(const row of j.config){ m[row.key]=typeof row.value==='string'?JSON.parse(row.value):row.value; } setConfigData(m); } } catch{} };
-    const loadMemberProgram = async (emailOverride?: string) => { const email = emailOverride || memberEmail; if(!email) return; setLoading(true); try { const r = await fetch(`/api/vault/program?memberId=${encodeURIComponent(email)}`); const j = await r.json(); if(j.program?.program){setMemberProgram(typeof j.program.program==='string'?JSON.parse(j.program.program):j.program.program);}else{setMemberProgram(null);} setMemberInfo(lockedMembers.find((m:any)=>m.memberId.toLowerCase()===email.toLowerCase())||null); } catch{} setLoading(false); };
+    const loadMemberProgram = async (emailOverride?: string) => { const email = emailOverride || memberEmail; if(!email) return; setLoading(true); setMemberAbout(''); try { const r = await fetch(`/api/vault/program?memberId=${encodeURIComponent(email)}`); const j = await r.json(); if(j.program?.program){setMemberProgram(typeof j.program.program==='string'?JSON.parse(j.program.program):j.program.program);}else{setMemberProgram(null);} setMemberInfo(lockedMembers.find((m:any)=>m.memberId.toLowerCase()===email.toLowerCase())||null); } catch{} try { const cr = await fetch(`/api/chat/history`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: email }) }); const cj = await cr.json(); if(cj.messages) { const firstUserMsg = cj.messages.find((m: any) => m.sender_email === email && m.content && !m.content.startsWith('http') && m.content.length > 20); if(firstUserMsg) setMemberAbout(firstUserMsg.content); } } catch{} setLoading(false); };
     const generateMemberProgram = async () => { if(!memberEmail) return; setSaving(true); try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate_program',memberId:memberEmail})}); await loadMemberProgram(); } catch{} setSaving(false); };
     const saveTemplate = async () => { setSaving(true); try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_template',days:templateDays})}); } catch{} setSaving(false); };
     const saveConfig = async (key: string, value: any) => { setSaving(true); try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_config',key,value})}); } catch{} setSaving(false); };
@@ -419,7 +421,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', position: 'relative', zIndex: 1 }}>
                 {view==='program' && <ProgramView days={templateDays} sel={selectedDay} setSel={setSelectedDay} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveTemplate={saveTemplate} saving={saving} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
                 {view==='config' && <ConfigView configData={configData} setConfigData={setConfigData} configSection={configSection} setConfigSection={setConfigSection} onSave={saveConfig} saving={saving} />}
-                {view==='member' && <MemberView email={memberEmail} setEmail={setMemberEmail} program={memberProgram} sel={memberSelectedDay} setSel={setMemberSelectedDay} info={memberInfo} locked={lockedMembers} onLoad={loadMemberProgram} onGenerate={generateMemberProgram} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveMemberDay={saveMemberDay} saving={saving} loading={loading} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
+                {view==='member' && <MemberView email={memberEmail} setEmail={setMemberEmail} program={memberProgram} sel={memberSelectedDay} setSel={setMemberSelectedDay} info={memberInfo} locked={lockedMembers} onLoad={loadMemberProgram} onGenerate={generateMemberProgram} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveMemberDay={saveMemberDay} saving={saving} loading={loading} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} memberAbout={memberAbout} showMemberProfile={showMemberProfile} setShowMemberProfile={setShowMemberProfile} />}
             </div>
         </div>
     );
@@ -1136,7 +1138,7 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
 }
 
 /* ═══════════════ MEMBER VIEW ═══════════════ */
-function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoad, onGenerate, updateTask, addTask, removeTask, moveTask, saveMemberDay, saving, loading, dragIdx, setDragIdx, configData, setView, setConfigSection }: any) {
+function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoad, onGenerate, updateTask, addTask, removeTask, moveTask, saveMemberDay, saving, loading, dragIdx, setDragIdx, configData, setView, setConfigSection, memberAbout, showMemberProfile, setShowMemberProfile }: any) {
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {!email ? (
@@ -1189,6 +1191,45 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                                 <button onClick={() => { if(sel) saveMemberDay(sel,program[String(sel)]||[]); }} className="kbtn" style={{ padding: '9px 22px', borderRadius: 6, border: `1px solid rgba(197,160,89,.3)`, background: 'rgba(197,160,89,.1)', color: GOLD, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3, opacity: sel?1:.3 }}>{saving?'SAVING...':'SAVE DAY'}</button>
                             )}
                         </div>
+                        {/* ── MEMBER KINKS / LIMITS / ABOUT ── */}
+                        {info && (info.kinks || info.limits || memberAbout) && (
+                            <div style={{ flexShrink: 0, borderBottom: '1px solid rgba(197,160,89,.12)', background: 'rgba(10,10,16,0.4)' }}>
+                                <button onClick={() => setShowMemberProfile(!showMemberProfile)} style={{ width: '100%', padding: '8px 24px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span style={{ fontFamily: FC, fontSize: '.35rem', color: GOLD, letterSpacing: 4 }}>MEMBER PROFILE</span>
+                                    <span style={{ fontFamily: F, fontSize: '.5rem', color: TEXT_DIM, transform: showMemberProfile ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>{'\u25BE'}</span>
+                                </button>
+                                {showMemberProfile && (
+                                    <div style={{ padding: '0 24px 14px' }}>
+                                        {info.kinks && (
+                                            <div style={{ marginBottom: 12 }}>
+                                                <div style={{ fontFamily: FC, fontSize: '.32rem', color: GOLD, letterSpacing: 3, marginBottom: 6, opacity: .6 }}>KINKS</div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                                    {info.kinks.split(',').map((k: string) => k.trim()).filter(Boolean).map((k: string) => (
+                                                        <span key={k} style={{ padding: '3px 10px', borderRadius: 12, border: '1px solid rgba(197,160,89,.25)', background: 'rgba(197,160,89,.06)', fontFamily: F, fontSize: '.4rem', color: GOLD, letterSpacing: 1 }}>{k}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {info.limits && (
+                                            <div style={{ marginBottom: 12 }}>
+                                                <div style={{ fontFamily: FC, fontSize: '.32rem', color: RED, letterSpacing: 3, marginBottom: 6, opacity: .6 }}>LIMITS</div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                                    {info.limits.split(',').map((k: string) => k.trim()).filter(Boolean).map((k: string) => (
+                                                        <span key={k} style={{ padding: '3px 10px', borderRadius: 12, border: '1px solid rgba(139,0,0,.3)', background: 'rgba(139,0,0,.06)', fontFamily: F, fontSize: '.4rem', color: 'rgba(200,60,60,.8)', letterSpacing: 1 }}>{k}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {memberAbout && (
+                                            <div>
+                                                <div style={{ fontFamily: FC, fontSize: '.32rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 6 }}>ABOUT THEM</div>
+                                                <div style={{ fontFamily: F, fontSize: '.42rem', color: 'rgba(255,255,255,.5)', lineHeight: 1.7, padding: '10px 14px', background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>{memberAbout}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {program ? (
                             <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }} className="kscr">
                                 {PHASES.map(phase => (
