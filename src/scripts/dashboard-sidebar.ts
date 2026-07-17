@@ -418,32 +418,25 @@ function moveCard(list: HTMLElement, memberId: string, now: number) {
     const card = list.querySelector<HTMLElement>(`.u-item[data-id="${memberId}"]`);
     if (!card) return;
 
-    // Figure out where this card should go
     const sorted = getSortedUsers(now);
     const targetIdx = sorted.findIndex(u => u.memberId === memberId);
     if (targetIdx < 0) return;
 
-    const allCards = Array.from(list.querySelectorAll<HTMLElement>('.u-item[data-id]'));
-    const currentIdx = allCards.indexOf(card);
-    if (currentIdx === targetIdx) return; // already in the right spot
-
-    // Record position before move for animation
+    // Record position before move
     const beforeRect = card.getBoundingClientRect();
 
-    // Insert at the right position
-    if (targetIdx >= allCards.length - 1) {
+    // Remove card first, then get clean children list without it
+    card.remove();
+    const remaining = Array.from(list.querySelectorAll<HTMLElement>('.u-item[data-id]'));
+
+    // Insert at target position
+    if (targetIdx >= remaining.length) {
         list.appendChild(card);
     } else {
-        // Find the card currently at the target position (skip self if before target)
-        const refCard = targetIdx < currentIdx
-            ? allCards[targetIdx]
-            : allCards[targetIdx + 1];
-        if (refCard && refCard !== card) {
-            list.insertBefore(card, refCard);
-        }
+        list.insertBefore(card, remaining[targetIdx]);
     }
 
-    // FLIP animate just this card
+    // FLIP animate
     const afterRect = card.getBoundingClientRect();
     const dy = beforeRect.top - afterRect.top;
     if (Math.abs(dy) > 2) {
