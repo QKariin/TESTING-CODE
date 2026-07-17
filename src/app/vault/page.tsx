@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { startPresenceHeartbeat } from '@/scripts/telemetry';
 import '../../css/profile.css';
 import '../../css/profile-mobile.css';
 
@@ -475,6 +476,11 @@ export default function VaultPage() {
                 // Cache name + avatar for loading screen
                 try { if (data.name) localStorage.setItem('_qk_name', data.name); if (data.avatar_url) localStorage.setItem('_qk_avatar', data.avatar_url); } catch {}
                 setProfile(data);
+                // Start presence heartbeat so vault members show as online
+                if (data.memberId || user?.id) {
+                    const hb = startPresenceHeartbeat(data.memberId || user?.id || '', data.member_id || data.email || '');
+                    (window as any)._vaultHeartbeat = hb;
+                }
                 const { initProfileState } = await import('@/scripts/profile-state');
                 initProfileState(data);
                 const memberId = data.member_id || userEmail;
