@@ -627,6 +627,51 @@ export async function POST(req: NextRequest) {
 
         await _syncChastityOrder(session.id, date, 'approved');
 
+        // Count toward main profile consistency (same as routine approval)
+        try {
+            const yesterdayDate = new Date(new Date(date + 'T00:00:00Z').getTime() - 86400000).toISOString().split('T')[0];
+            const { data: ur } = await supabaseAdmin.from('user_routines').select('*').eq('member_id', email).maybeSingle();
+            if (ur) {
+                const lastApproved = ur.last_approved_date;
+                // Only count if not already counted today
+                if (lastApproved !== date) {
+                    const newStreak = (lastApproved === yesterdayDate) ? (ur.current_streak || 0) + 1 : 1;
+                    const newBest = Math.max(newStreak, ur.best_streak || 0);
+                    const entry = { id: Date.now().toString(), date, submitted_at: new Date().toISOString(), status: 'approve', proof_url: 'VAULT_CHASTITY', proof_type: 'image', thumbnail_url: null, points_awarded: 0 };
+                    await supabaseAdmin.from('user_routines').update({
+                        history: [...(ur.history || []), entry],
+                        current_streak: newStreak,
+                        best_streak: newBest,
+                        last_approved_date: date,
+                    }).eq('member_id', email);
+                    // Sync to profiles.parameters
+                    const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', email).maybeSingle();
+                    if (prof) {
+                        const params = prof.parameters || {};
+                        params.consistency = newStreak;
+                        params.routine_streak = newBest;
+                        params.taskdom_current_streak = newStreak;
+                        await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
+                    }
+                }
+            } else {
+                // No user_routines row yet — create one
+                const entry = { id: Date.now().toString(), date, submitted_at: new Date().toISOString(), status: 'approve', proof_url: 'VAULT_CHASTITY', proof_type: 'image', thumbnail_url: null, points_awarded: 0 };
+                await supabaseAdmin.from('user_routines').insert({
+                    member_id: email, routine_name: 'Daily Routine',
+                    history: [entry], current_streak: 1, best_streak: 1, last_approved_date: date,
+                });
+                const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', email).maybeSingle();
+                if (prof) {
+                    const params = prof.parameters || {};
+                    params.consistency = 1;
+                    params.routine_streak = 1;
+                    params.taskdom_current_streak = 1;
+                    await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
+                }
+            }
+        } catch (e: any) { console.error('[vault] chastity consistency update error:', e?.message); }
+
         // Broadcast to member so their vault page updates instantly
         _notifyMember(email, 'chastity_reviewed', { status: 'approved', date });
         // Push notification
