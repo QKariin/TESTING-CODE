@@ -503,15 +503,20 @@ export default function VaultPage() {
                             if (vd.chatCooldownUntil) {
                                 const cdUntil = new Date(vd.chatCooldownUntil).getTime();
                                 if (cdUntil > Date.now()) {
-                                    const minutesLeft = (cdUntil - Date.now()) / 60000;
-                                    if (minutesLeft <= 30) {
-                                        // Short duration = keyholder granted chat access
+                                    const hoursLeft = (cdUntil - Date.now()) / 3600000;
+                                    if (hoursLeft > 24) {
+                                        // Keyholder opened chat (no time limit)
+                                        setChatGateDone(true);
+                                        setChatGateCooldownUntil(0);
+                                        setTab('chat');
+                                    } else if (hoursLeft <= 0.5) {
+                                        // Coin flip HEADS grant (with timer)
                                         setChatExpiresAt(cdUntil);
                                         setChatGateDone(true);
-                                        setChatGateCooldownUntil(0); // clear any deny
-                                        setTab('chat'); // auto-open chat
+                                        setChatGateCooldownUntil(0);
+                                        setTab('chat');
                                     } else {
-                                        // Long duration = deny cooldown (8h from coin flip)
+                                        // Deny cooldown (8h from coin flip TAILS)
                                         setChatGateCooldownUntil(cdUntil);
                                     }
                                 }
@@ -624,8 +629,14 @@ export default function VaultPage() {
                                     if (data.chatCooldownUntil) {
                                         const cdUntil = new Date(data.chatCooldownUntil).getTime();
                                         if (cdUntil > Date.now()) {
-                                            const minutesLeft = (cdUntil - Date.now()) / 60000;
-                                            if (minutesLeft <= 30) {
+                                            const hoursLeft = (cdUntil - Date.now()) / 3600000;
+                                            if (hoursLeft > 24) {
+                                                // Keyholder opened chat (no limit)
+                                                setChatGateDone(true);
+                                                setChatGateCooldownUntil(0);
+                                                setTab('chat');
+                                            } else if (hoursLeft <= 0.5) {
+                                                // Coin flip grant (with timer)
                                                 setChatExpiresAt(cdUntil);
                                                 setChatGateDone(true);
                                                 setChatGateCooldownUntil(0);
