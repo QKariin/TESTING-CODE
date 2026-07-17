@@ -244,8 +244,8 @@ export async function GET(req: Request) {
                 const localHour = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
                 const localMinute = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(new Date()), 10);
 
-                // Send at 6:00-6:29 (cron runs every 30 min so this catches once)
-                if (localHour === 6 && localMinute < 30) {
+                // Send at 6:00-6:59 (cron runs every 30 min — widened window ensures at least one hit)
+                if (localHour === 6) {
                     // Check they haven't already submitted today
                     const todayLocal = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date()); // YYYY-MM-DD
                     const { data: existing } = await supabaseAdmin.from('vault_check_log')
