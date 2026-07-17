@@ -476,17 +476,35 @@ export default function VaultPage() {
                 // Cache name + avatar for loading screen
                 try { if (data.name) localStorage.setItem('_qk_name', data.name); if (data.avatar_url) localStorage.setItem('_qk_avatar', data.avatar_url); } catch {}
                 setProfile(data);
-                // Start presence heartbeat so vault members show as online
+                // Start presence heartbeat (updates last_active in DB) + realtime presence channel
                 if (data.memberId || user?.id) {
                     const hb = startPresenceHeartbeat(data.memberId || user?.id || '', data.member_id || data.email || '');
                     (window as any)._vaultHeartbeat = hb;
+                    // Join realtime presence channel so dashboard sees ONLINE status
+                    try {
+                        const { presenceKey } = await import('@/scripts/dashboard-presence');
+                        const pEmail = (data.member_id || data.email || '').toLowerCase();
+                        if (pEmail) {
+                            const supabaseClient = createClient();
+                            const presenceCh = supabaseClient.channel('members-online');
+                            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+                            const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+                            const platform = isStandalone ? 'app' : isMobile ? 'mobile' : 'desktop';
+                            presenceCh.subscribe(async (status: string) => {
+                                if (status === 'SUBSCRIBED') {
+                                    await presenceCh.track({ id: presenceKey(pEmail), platform });
+                                }
+                            });
+                            (window as any)._vaultPresenceCh = presenceCh;
+                        }
+                    } catch (_) {}
                 }
                 const { initProfileState } = await import('@/scripts/profile-state');
                 initProfileState(data);
                 const memberId = data.member_id || userEmail;
                 (window as any).__vaultMemberId = memberId;
 
-                const { sendChatMessage, handleChatKey, toggleAiMode, sendAiMessage, switchMobChatTab, handleMediaPlus } = await import('@/scripts/profile-logic');
+                const { sendChatMessage, handleChatKey, toggleAiMode, sendAiMessage, switchMobChatTab, handleMediaPlus, initChatSystem, openMobChatOverlay, closeMobChatOverlay } = await import('@/scripts/profile-logic');
                 (window as any).sendChatMessage = sendChatMessage;
                 (window as any).handleChatKey = handleChatKey;
                 (window as any).toggleAiMode = toggleAiMode;
@@ -494,6 +512,10 @@ export default function VaultPage() {
                 (window as any).switchMobChatTab = switchMobChatTab;
                 (window as any).handleMediaPlus = handleMediaPlus;
                 (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
+                (window as any).openMobChatOverlay = openMobChatOverlay;
+                (window as any).closeMobChatOverlay = closeMobChatOverlay;
+                // Initialize chat system (presence, realtime subscription, history)
+                initChatSystem();
 
                 // Load vault session — use cache from /profile splash if available
                 const sessionReady = _cachedSession
@@ -772,19 +794,14 @@ export default function VaultPage() {
         });
     }, []);
 
-    // Load chat history once gate is done and chat tab is open (mob_chatContent exists in DOM)
-    const chatLoaded = useRef(false);
+    // When chat gate is passed, open the chat overlay
     useEffect(() => {
-        if (!chatGateDone || !profile || chatLoaded.current) return;
-        // Small delay to let React render the chat DOM elements
-        const t = setTimeout(async () => {
-            const chatId = profile.memberId || profile.ID || profile.member_id || '';
-            const { loadChatHistory } = await import('@/scripts/profile-logic');
-            loadChatHistory(chatId);
-            chatLoaded.current = true;
-        }, 100);
+        if (!chatGateDone) return;
+        const t = setTimeout(() => {
+            (window as any).openMobChatOverlay?.();
+        }, 300);
         return () => clearTimeout(t);
-    }, [chatGateDone, profile]);
+    }, [chatGateDone]);
 
     // Auto-close chat when time expires
     useEffect(() => {
@@ -795,7 +812,7 @@ export default function VaultPage() {
                 setChatGateDone(false);
                 setChatGateTask(null);
                 setChatExpiresAt(0);
-                chatLoaded.current = false;
+                (window as any).closeMobChatOverlay?.();
                 setTab('vault');
             }
         }, 1000);
@@ -2107,54 +2124,9 @@ export default function VaultPage() {
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '2px' }}>TO UNLOCK UNION</div>
                             </div>
                         ) : t === 'chat' ? (
-                            <div id="mobChatOverlay" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                {/* Tab bar — same as profile */}
-                                <div className="mob-gl-tabs">
-                                    <button id="mobChatBtnChat" className="mob-gl-tab active" onClick={() => { (window as any).toggleAiMode?.(false); (window as any).switchMobChatTab?.('chat'); }}>CHAT</button>
-                                    <button id="mobChatBtnAi" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode?.(true); (window as any).switchMobChatTab?.('chat'); }}>@VLAD</button>
-                                    <button id="mobChatBtnService" className="mob-gl-tab" onClick={() => { (window as any).toggleAiMode?.(false); (window as any).switchMobChatTab?.('service'); }}>SERVICE</button>
-                                </div>
-
-                                {/* Chat panel */}
-                                <div id="mobChatTabChat" className="mob-gl-panel" style={{ flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
-                                    <div id="mob_chatBox" className="mob-gl-scroll" style={{ flex: 1, position: 'relative' }}>
-                                        <div id="mob_systemTicker" className="system-ticker" style={{ cursor: 'pointer' }} onClick={() => (window as any).switchMobChatTab?.('service')}>SYSTEM ONLINE</div>
-                                        <div id="mob_chatContent" className="chat-area"></div>
-                                        <div id="mob_aiChatContent" className="chat-area" style={{ display: 'none' }}></div>
-                                    </div>
-                                    {/* Normal chat footer */}
-                                    <div id="mobChatFooterNormal" className="chat-footer">
-                                        <div className="chat-input-wrapper">
-                                            <button className="chat-btn-plus" onClick={() => (window as any).handleMediaPlus?.()}>+</button>
-                                            <input type="text" id="mob_chatMsgInput" className="chat-input" placeholder="Transmit..." onKeyPress={(e: any) => (window as any).handleChatKey?.(e)} />
-                                        </div>
-                                        <button onClick={() => (window as any).openProfileGifPicker?.()} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', cursor: 'pointer', padding: '4px 8px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.65rem', fontWeight: 700, color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', flexShrink: 0 }}>GIF</button>
-                                        <button className="chat-btn-send" onClick={() => (window as any).sendChatMessage?.()}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M22 2L11 13" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#c5a059" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    {/* AI chat footer */}
-                                    <div id="mobChatAiFooter" className="chat-footer ai-footer footer-hidden">
-                                        <div className="chat-input-wrapper" style={{ flex: 1 }}>
-                                            <input type="text" id="mob_aiMsgInput" className="chat-input ai-input" placeholder="Ask me anything..." onKeyPress={(e: any) => (window as any).handleAiChatKey?.(e)} />
-                                        </div>
-                                        <button id="mobAiSendBtn" className="chat-btn-send ai-send-btn" onClick={() => (window as any).sendAiMessage?.()}>
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M22 2L11 13" stroke="rgba(160,100,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="rgba(160,100,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Service panel */}
-                                <div id="mobChatTabService" style={{ display: 'none', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                                    <div id="mob_systemLogContent" className="chat-area mob-gl-scroll" style={{ flex: 1 }}></div>
-                                </div>
-                                <div id="mobSystemLogContainer" style={{ display: 'none' }}></div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px' }}>CHAT ACTIVE</div>
+                                <button onClick={() => (window as any).openMobChatOverlay?.()} style={{ padding: '12px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.7)', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, cursor: 'pointer' }}>OPEN CHAT</button>
                             </div>
                         ) : t === 'challenge' ? (
                             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 100px', display: 'flex', flexDirection: 'column' }}>

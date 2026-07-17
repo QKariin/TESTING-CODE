@@ -92,8 +92,7 @@ export function initDashboard() {
 
     console.log('Dashboard initialized. ID:', dayCode);
 
-    // Auto-backfill missing thumbnails in background (silent, no UI)
-    debouncedBackfill();
+    // Backfill disabled — only run manually via console: backfillThumbnails()
 }
 
 async function refreshQueueFromServer(fresh = false) {
@@ -145,7 +144,6 @@ async function refreshQueueFromServer(fresh = false) {
             }
         }
 
-        debouncedBackfill();
     } catch (err) {
         console.warn('[DASHBOARD] Queue refresh failed:', err);
     }

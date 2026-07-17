@@ -96,10 +96,12 @@ export async function getAdminDashboardData() {
             { data: pendingRoutines },
             { data: vaultSessions },
         ] = await Promise.all([
-            getAdmin().from('profiles').select('*').order('name'),
+            // Only fetch fields needed for sidebar list — NOT full profiles
+            getAdmin().from('profiles').select('ID, member_id, name, hierarchy, avatar_url, profile_picture_url, parameters, silence, last_active, score, wallet, routine, paywall, kinks, limits, skippass, cumpass, checkpoint, joined_date, strike_count').order('name'),
             getAdmin().from('daily_tasks').select('*'),
             getAdmin().from('system_rules').select('*'),
-            getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", kneel_history'),
+            // Lightweight task data — NO Taskdom_History, NO Tribute History, NO kneel_history, NO taskQueue
+            getAdmin().from('tasks').select('"ID", member_id, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
             getAdmin().from('user_routines').select('*').not('pending_id', 'is', null),
             getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
@@ -141,26 +143,14 @@ export async function getAdminDashboardData() {
             return mapped;
         });
 
-        // Build review queue from already-fetched tasks data - no extra DB call, no URL signing (proofs load on click)
-        // Resolve email-keyed tasks.member_id → profile UUID so mobile dashboard lookups always match
+        // Review queue: only pending routines (from user_routines table)
+        // No more parsing entire Taskdom_History for every user
         const emailToProfileUuid: Record<string, string> = {};
         for (const p of (profiles || [])) {
             if (p.member_id && p.ID) emailToProfileUuid[p.member_id.toLowerCase()] = p.ID;
         }
-        const _isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
         const reviewQueue: any[] = [];
-        // Tasks from Taskdom_History (non-routine only)
-        for (const row of (tasksData || [])) {
-            let history: any[] = [];
-            try { history = typeof row['Taskdom_History'] === 'string' ? JSON.parse(row['Taskdom_History']) : (row['Taskdom_History'] || []); } catch { }
-            const rawMid = row.member_id || '';
-            const resolvedMid = _isUuid(rawMid) ? rawMid : (emailToProfileUuid[rawMid.toLowerCase()] || rawMid);
-            for (const entry of history.filter((e: any) => e.status === 'pending' && !e.isRoutine)) {
-                reviewQueue.push({ ...entry, member_id: resolvedMid });
-            }
-        }
-        // Routines from user_routines table (pending submissions)
         for (const ur of (pendingRoutines || [])) {
             const resolvedMid = emailToProfileUuid[ur.member_id] || ur.member_id;
             reviewQueue.push({
@@ -854,8 +844,8 @@ export async function getMasterData() {
             { data: authData },
             { data: vaultSessions },
         ] = await Promise.all([
-            getAdmin().from('profiles').select('*').limit(1000),
-            getAdmin().from('tasks').select('*').limit(1000),
+            getAdmin().from('profiles').select('ID, member_id, name, hierarchy, avatar_url, profile_picture_url, parameters, silence, last_active, score, wallet, routine, paywall, kinks, limits, skippass, cumpass, checkpoint, joined_date, strike_count').limit(1000),
+            getAdmin().from('tasks').select('"ID", member_id, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"').limit(1000),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
             getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
         ]);
