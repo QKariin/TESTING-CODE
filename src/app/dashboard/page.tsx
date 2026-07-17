@@ -2289,6 +2289,35 @@ export default function DashboardPage() {
                                                                         {!sub.photo_url && !sub.video_url && !sub.text && (
                                                                             <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>No media attached</div>
                                                                         )}
+                                                                        {sub.status === 'pending' && (
+                                                                            <>
+                                                                                <textarea id={`subLogComment-${sub.id}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginTop: 8, marginBottom: 6 }} />
+                                                                                <div style={{ display: 'flex', gap: 8 }}>
+                                                                                    <button disabled={vaultLoading} onClick={async () => {
+                                                                                        setVaultLoading(true);
+                                                                                        const cEl = document.getElementById(`subLogComment-${sub.id}`) as HTMLTextAreaElement;
+                                                                                        const comment = cEl?.value?.trim() || '';
+                                                                                        try {
+                                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
+                                                                                            const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                                            const d = await r.json();
+                                                                                            if (d.active) setVaultSession(d);
+                                                                                        } catch (_) {} finally { setVaultLoading(false); }
+                                                                                    }} style={{ flex: 1, padding: '8px', background: 'rgba(80,200,80,0.08)', border: '1px solid rgba(80,200,80,0.3)', borderRadius: 6, color: 'rgba(80,200,80,0.9)', fontFamily: "'Cinzel',serif", fontSize: '0.42rem', letterSpacing: 3, cursor: 'pointer', fontWeight: 700 }}>APPROVE</button>
+                                                                                    <button disabled={vaultLoading} onClick={async () => {
+                                                                                        setVaultLoading(true);
+                                                                                        const cEl = document.getElementById(`subLogComment-${sub.id}`) as HTMLTextAreaElement;
+                                                                                        const comment = cEl?.value?.trim() || '';
+                                                                                        try {
+                                                                                            await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_task', memberId: currId, submissionId: sub.id, date: sub.date, comment }) });
+                                                                                            const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                                                            const d = await r.json();
+                                                                                            if (d.active) setVaultSession(d);
+                                                                                        } catch (_) {} finally { setVaultLoading(false); }
+                                                                                    }} style={{ padding: '8px 14px', background: 'none', border: '1px solid rgba(255,60,60,0.2)', borderRadius: 6, color: 'rgba(255,60,60,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', letterSpacing: 2, cursor: 'pointer' }}>REJECT</button>
+                                                                                </div>
+                                                                            </>
+                                                                        )}
                                                                     </div>
                                                                 )}
                                                             </div>
