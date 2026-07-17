@@ -216,7 +216,8 @@ let _lastSortOrder: string[] = [];
 const _lastUnreadState: Record<string, boolean> = {};
 
 /**
- * Full sidebar render — used on first load and when users array changes (new user added, etc.)
+ * Full sidebar render — only does innerHTML on first load or when user count changes.
+ * Otherwise patches each card in-place to avoid image reload blinks.
  */
 export function renderSidebar() {
     if (!users.length) return;
@@ -227,7 +228,6 @@ export function renderSidebar() {
     updateTrackingState(now);
 
     const sorted = getSortedUsers(now);
-    _lastSortOrder = sorted.map(u => u.memberId);
 
     // Initialize unread state baseline
     sorted.forEach(u => { if (u) _lastUnreadState[u.memberId] = hasUnreadMessage(u); });
@@ -235,15 +235,27 @@ export function renderSidebar() {
     const list = document.getElementById('userList');
     if (!list) return;
 
-    // Full rebuild — only on init or structural changes
-    let html = '';
-    sorted.forEach(u => { if (u) html += buildItemHtml(u, now); });
-    list.innerHTML = html;
+    const existingCards = list.querySelectorAll<HTMLElement>('.u-item[data-id]');
+
+    // Full rebuild only on first load or when user count changed (added/removed)
+    if (existingCards.length === 0 || existingCards.length !== sorted.length) {
+        _lastSortOrder = sorted.map(u => u.memberId);
+        let html = '';
+        sorted.forEach(u => { if (u) html += buildItemHtml(u, now); });
+        list.innerHTML = html;
+        return;
+    }
+
+    // Incremental: patch each card in-place (no reorder, no DOM destruction)
+    sorted.forEach(u => {
+        if (!u) return;
+        patchCard(list, u, now);
+    });
 }
 
 /**
  * Incremental update — patches a single user's card in-place without touching others.
- * If the sort order changed, moves only the affected card(s).
+ * Only reorders when unread status changes (new message), not on presence updates.
  */
 export function updateSidebarItem(memberId: string) {
     const list = document.getElementById('userList');
@@ -261,26 +273,8 @@ export function updateSidebarItem(memberId: string) {
     if (!online) delete onlineJoinTime[pid];
     prevOnlineState[pid] = online;
 
-    // (Sound notification removed per user request)
-
-    // Find existing card and replace its content
-    const existing = list.querySelector<HTMLElement>(`.u-item[data-id="${memberId}"]`);
-    if (!existing) {
-        // User not in sidebar yet — do a full render
-        renderSidebar();
-        return;
-    }
-
-    // Build new HTML — only swap if content actually changed (prevents image reload blinks)
-    const newHtml = buildItemHtml(u, now).trim();
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = newHtml;
-    const newEl = wrapper.firstElementChild as HTMLElement;
-    if (newEl && existing.innerHTML !== newEl.innerHTML) {
-        existing.className = newEl.className;
-        existing.setAttribute('style', newEl.getAttribute('style') || '');
-        existing.innerHTML = newEl.innerHTML;
-    }
+    // Patch card in-place (no DOM destruction)
+    patchCard(list, u, now);
 
     // Only reorder when unread status changes (new message), NOT on presence updates
     const hadUnread = _lastUnreadState[memberId] ?? false;
@@ -290,6 +284,128 @@ export function updateSidebarItem(memberId: string) {
         const newSorted = getSortedUsers(now);
         const newOrder = newSorted.map(x => x.memberId);
         reorderSidebar(newOrder);
+    }
+}
+
+/**
+ * Patch a single card's text/classes in-place WITHOUT destroying/recreating DOM elements.
+ * Images stay alive — no blink. Only text nodes, classes, and attributes change.
+ */
+function patchCard(list: HTMLElement, u: any, now: number) {
+    const existing = list.querySelector<HTMLElement>(`.u-item[data-id="${u.memberId}"]`);
+    if (!existing) {
+        // Card doesn't exist yet — append it
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = buildItemHtml(u, now).trim();
+        const newEl = wrapper.firstElementChild as HTMLElement;
+        if (newEl) list.appendChild(newEl);
+        return;
+    }
+
+    const isActive = currId === u.memberId;
+    const isQueen = u.hierarchy === "Queen";
+    const hasMsg = hasUnreadMessage(u);
+    const statusText = getStatusText(u, now);
+    const online = statusText === "ONLINE";
+    const isSilenced = u.silence === true;
+    const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
+    const isLocked = isSilenced || isPaywalled;
+    const vaultReqStatus = u.parameters?.vault_request?.status;
+    const hasVaultRequest = vaultReqStatus === 'pending' || vaultReqStatus === 'awaiting_video';
+
+    // If the card TYPE changed (e.g. user got paywalled/unpaywalled), we must rebuild
+    const wasLocked = existing.querySelector('svg[viewBox="0 0 24 24"]')?.parentElement?.querySelector('.u-name') === null
+        && !existing.querySelector('.icon-box');
+    const wasVaultReq = existing.innerHTML.includes('LOCK REQUEST') || existing.innerHTML.includes('VIDEO PROOF');
+    const isNowSpecial = (isLocked && !hasVaultRequest) || (hasVaultRequest && !isLocked);
+    const wasSpecial = wasLocked || wasVaultReq;
+
+    // Card type changed — must do full replacement (rare)
+    if (isNowSpecial !== wasSpecial || (isLocked !== wasLocked) || (hasVaultRequest !== wasVaultReq)) {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = buildItemHtml(u, now).trim();
+        const newEl = wrapper.firstElementChild as HTMLElement;
+        if (newEl) existing.replaceWith(newEl);
+        return;
+    }
+
+    // For locked/vault-request cards, just update name text
+    if (isLocked || hasVaultRequest) {
+        // Update name if changed
+        const nameEls = existing.querySelectorAll<HTMLElement>('div[style*="letter-spacing"]');
+        nameEls.forEach(el => {
+            if (el.style.letterSpacing === '1px' && el.textContent !== clean(u.name)) {
+                el.textContent = clean(u.name);
+            }
+        });
+        // Update active state
+        existing.classList.toggle('active', isActive);
+        return;
+    }
+
+    // ── Normal card: surgical updates ──
+
+    // Active state
+    existing.classList.toggle('active', isActive);
+    existing.classList.toggle('queen-item', isQueen);
+    existing.classList.toggle('has-msg', hasMsg);
+
+    // Online dot
+    const existingDot = existing.querySelector('.online-dot');
+    if (online && !existingDot) {
+        const dot = document.createElement('div');
+        dot.className = 'online-dot';
+        dot.setAttribute('style', 'position:absolute;top:8px;right:8px;z-index:2;');
+        existing.appendChild(dot);
+    } else if (!online && existingDot) {
+        existingDot.remove();
+    }
+
+    // Status text
+    const seenEl = existing.querySelector<HTMLElement>('.u-seen');
+    if (seenEl) {
+        if (seenEl.textContent !== statusText) seenEl.textContent = statusText;
+        seenEl.classList.toggle('online', online);
+    }
+
+    // Name
+    const nameEl = existing.querySelector<HTMLElement>('.u-name');
+    if (nameEl && nameEl.textContent !== clean(u.name)) {
+        nameEl.textContent = clean(u.name);
+    }
+
+    // Icon states
+    const icons = existing.querySelectorAll<HTMLElement>('.svg-icon');
+    if (icons.length >= 3) {
+        // Mail icon
+        const mailIcon = icons[0];
+        mailIcon.classList.toggle('active-msg', hasMsg);
+        mailIcon.classList.toggle('icon-dim', !hasMsg);
+
+        // Task icon
+        let resolvedEndTime = u.endTime || null;
+        if (!resolvedEndTime && u.activeTask?.assigned_at) {
+            resolvedEndTime = new Date(u.activeTask.assigned_at).getTime() + (24 * 60 * 60 * 1000);
+        }
+        const hasActiveTask = u.activeTask && (!resolvedEndTime || resolvedEndTime > Date.now());
+        icons[1].classList.toggle('active-grey', !!hasActiveTask);
+        icons[1].classList.toggle('icon-dim', !hasActiveTask);
+
+        // Review icon
+        const hasPendingReview = u.reviewQueue && u.reviewQueue.length > 0;
+        icons[2].classList.toggle('active-pink', !!hasPendingReview);
+        icons[2].classList.toggle('icon-dim', !hasPendingReview);
+    }
+
+    // Avatar — update only if src actually changed
+    const img = existing.querySelector<HTMLImageElement>('img');
+    if (img) {
+        let rawPic = u.avatar || u.profilePicture || DEFAULT_PIC;
+        if (rawPic === "null" || rawPic === "undefined" || !rawPic) rawPic = DEFAULT_PIC;
+        const finalPic = getOptimizedUrl(rawPic, 80) || DEFAULT_PIC;
+        if (img.src !== finalPic && !img.src.endsWith(finalPic)) {
+            img.src = finalPic;
+        }
     }
 }
 

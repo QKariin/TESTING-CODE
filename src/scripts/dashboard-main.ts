@@ -332,7 +332,7 @@ async function refreshUnreadStatus() {
                 }
             }
         });
-        if (changed) renderSidebar();
+        // No full renderSidebar() — updateSidebarItem already patched each card
     } catch {}
 }
 
