@@ -276,7 +276,7 @@ export function updateSidebarItem(memberId: string) {
     // Patch card in-place (no DOM destruction)
     patchCard(list, u, now);
 
-    // Reorder when online/offline flips or unread status changes — not on routine polling
+    // Move this single card when online/offline flips or unread changes
     const hadUnread = _lastUnreadState[memberId] ?? false;
     const hasUnread = hasUnreadMessage(u);
     const onlineFlipped = online !== wasOnline;
@@ -284,9 +284,7 @@ export function updateSidebarItem(memberId: string) {
 
     if (onlineFlipped || unreadFlipped) {
         if (unreadFlipped) _lastUnreadState[memberId] = hasUnread;
-        const newSorted = getSortedUsers(now);
-        const newOrder = newSorted.map(x => x.memberId);
-        reorderSidebar(newOrder);
+        moveCard(list, memberId, now);
     }
 }
 
@@ -413,42 +411,49 @@ function patchCard(list: HTMLElement, u: any, now: number) {
 }
 
 /**
- * Reorder existing DOM nodes without rebuilding them.
- * Uses FLIP animation for the items that actually moved.
+ * Move a single card to its correct position in the list.
+ * Only touches the one card — everything else stays put.
  */
-function reorderSidebar(newOrder: string[]) {
-    const list = document.getElementById('userList');
-    if (!list) return;
+function moveCard(list: HTMLElement, memberId: string, now: number) {
+    const card = list.querySelector<HTMLElement>(`.u-item[data-id="${memberId}"]`);
+    if (!card) return;
 
-    // Record positions before reorder
-    const beforeRects: Record<string, DOMRect> = {};
-    list.querySelectorAll<HTMLElement>('.u-item[data-id]').forEach(el => {
-        beforeRects[el.dataset.id!] = el.getBoundingClientRect();
-    });
+    // Figure out where this card should go
+    const sorted = getSortedUsers(now);
+    const targetIdx = sorted.findIndex(u => u.memberId === memberId);
+    if (targetIdx < 0) return;
 
-    // Move DOM nodes to match new order (no innerHTML, no destroy/recreate)
-    newOrder.forEach(id => {
-        const el = list.querySelector<HTMLElement>(`.u-item[data-id="${id}"]`);
-        if (el) list.appendChild(el); // moves existing node to end in order
-    });
+    const allCards = Array.from(list.querySelectorAll<HTMLElement>('.u-item[data-id]'));
+    const currentIdx = allCards.indexOf(card);
+    if (currentIdx === targetIdx) return; // already in the right spot
 
-    _lastSortOrder = newOrder;
+    // Record position before move for animation
+    const beforeRect = card.getBoundingClientRect();
 
-    // FLIP animate only items that actually moved
-    list.querySelectorAll<HTMLElement>('.u-item[data-id]').forEach(el => {
-        const id = el.dataset.id!;
-        const before = beforeRects[id];
-        if (!before) return;
-        const after = el.getBoundingClientRect();
-        const dy = before.top - after.top;
-        if (Math.abs(dy) < 2) return;
-        el.style.transition = 'none';
-        el.style.transform = `translateY(${dy}px)`;
+    // Insert at the right position
+    if (targetIdx >= allCards.length - 1) {
+        list.appendChild(card);
+    } else {
+        // Find the card currently at the target position (skip self if before target)
+        const refCard = targetIdx < currentIdx
+            ? allCards[targetIdx]
+            : allCards[targetIdx + 1];
+        if (refCard && refCard !== card) {
+            list.insertBefore(card, refCard);
+        }
+    }
+
+    // FLIP animate just this card
+    const afterRect = card.getBoundingClientRect();
+    const dy = beforeRect.top - afterRect.top;
+    if (Math.abs(dy) > 2) {
+        card.style.transition = 'none';
+        card.style.transform = `translateY(${dy}px)`;
         requestAnimationFrame(() => {
-            el.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-            el.style.transform = 'translateY(0)';
+            card.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.transform = 'translateY(0)';
         });
-    });
+    }
 }
 
 /** Update presence tracking state for all users */
