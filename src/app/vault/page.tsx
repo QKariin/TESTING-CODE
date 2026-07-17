@@ -515,7 +515,8 @@ export default function VaultPage() {
                 (window as any).openMobChatOverlay = openMobChatOverlay;
                 (window as any).closeMobChatOverlay = closeMobChatOverlay;
                 // Initialize chat system (presence, realtime subscription, history)
-                initChatSystem();
+                // MUST await — loadChatHistory inside needs to finish before overlay can open
+                await initChatSystem();
 
                 // Load vault session — use cache from /profile splash if available
                 const sessionReady = _cachedSession
