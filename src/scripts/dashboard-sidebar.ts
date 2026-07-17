@@ -276,11 +276,14 @@ export function updateSidebarItem(memberId: string) {
     // Patch card in-place (no DOM destruction)
     patchCard(list, u, now);
 
-    // Only reorder when unread status changes (new message), NOT on presence updates
+    // Reorder when online/offline flips or unread status changes — not on routine polling
     const hadUnread = _lastUnreadState[memberId] ?? false;
     const hasUnread = hasUnreadMessage(u);
-    if (hadUnread !== hasUnread) {
-        _lastUnreadState[memberId] = hasUnread;
+    const onlineFlipped = online !== wasOnline;
+    const unreadFlipped = hadUnread !== hasUnread;
+
+    if (onlineFlipped || unreadFlipped) {
+        if (unreadFlipped) _lastUnreadState[memberId] = hasUnread;
         const newSorted = getSortedUsers(now);
         const newOrder = newSorted.map(x => x.memberId);
         reorderSidebar(newOrder);
