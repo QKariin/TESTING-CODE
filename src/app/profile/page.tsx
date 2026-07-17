@@ -2451,17 +2451,17 @@ export default function ProfilePage() {
 
             {/* ── MOBILE BOTTOM NAV - at root level, no stacking context conflicts ── */}
             <nav id="mobBottomNav" className="mob-bottom-nav">
-                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).mobNavTo('profile'); }}>
+                <button id="mobNavProfile" className="mob-nav-item active" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).closeVaultLockOverlay?.(); (window as any).mobNavTo('profile'); }}>
                     <span className="mob-nav-icon">◆</span>
                     <span className="mob-nav-label">PROFILE</span>
                 </button>
-                <button id="mobNavChallenges" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChallenges(); }}>
+                <button id="mobNavChallenges" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).closeVaultLockOverlay?.(); (window as any).openMobChallenges(); }}>
                     <span className="mob-nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '1.6rem' }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                     </span>
                     <span className="mob-nav-label">ARENA</span>
                 </button>
-                <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobChatOverlay(); }}>
+                <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).closeVaultLockOverlay?.(); (window as any).openMobChatOverlay(); }}>
                     <div className="mob-nav-queen-ring">
                         <img id="navQueenPic" src="/queen-nav.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
@@ -2472,11 +2472,11 @@ export default function ProfilePage() {
                         </svg>
                     </div>
                 </button>
-                <button id="mobNavQueen" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobQueenWall(); }}>
+                <button id="mobNavQueen" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).closeVaultLockOverlay?.(); (window as any).openMobQueenWall(); }}>
                     <span className="mob-nav-icon">♛</span>
                     <span className="mob-nav-label">QUEEN</span>
                 </button>
-                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).openMobGlobal(); }}>
+                <button id="mobNavGlobal" className="mob-nav-item" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).closeVaultLockOverlay?.(); (window as any).openMobGlobal(); }}>
                     <span className="mob-nav-icon">◎</span>
                     <span className="mob-nav-label">UNION</span>
                 </button>
