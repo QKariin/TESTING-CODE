@@ -212,6 +212,8 @@ function getSortedUsers(now: number): any[] {
 
 // Track last known sort order to detect when reorder is needed
 let _lastSortOrder: string[] = [];
+// Track last known unread state per user — reorder only when this changes
+const _lastUnreadState: Record<string, boolean> = {};
 
 /**
  * Full sidebar render — used on first load and when users array changes (new user added, etc.)
@@ -226,6 +228,9 @@ export function renderSidebar() {
 
     const sorted = getSortedUsers(now);
     _lastSortOrder = sorted.map(u => u.memberId);
+
+    // Initialize unread state baseline
+    sorted.forEach(u => { if (u) _lastUnreadState[u.memberId] = hasUnreadMessage(u); });
 
     const list = document.getElementById('userList');
     if (!list) return;
@@ -266,22 +271,24 @@ export function updateSidebarItem(memberId: string) {
         return;
     }
 
-    // Build new HTML and swap the element
+    // Build new HTML — only swap if content actually changed (prevents image reload blinks)
+    const newHtml = buildItemHtml(u, now).trim();
     const wrapper = document.createElement('div');
-    wrapper.innerHTML = buildItemHtml(u, now).trim();
+    wrapper.innerHTML = newHtml;
     const newEl = wrapper.firstElementChild as HTMLElement;
-    if (newEl) {
-        existing.replaceWith(newEl);
+    if (newEl && existing.innerHTML !== newEl.innerHTML) {
+        existing.className = newEl.className;
+        existing.setAttribute('style', newEl.getAttribute('style') || '');
+        existing.innerHTML = newEl.innerHTML;
     }
 
-    // Check if sort order changed — if so, move the card to the right position
-    const newSorted = getSortedUsers(now);
-    const newOrder = newSorted.map(x => x.memberId);
-
-    // Only reorder if this user's position actually changed
-    const oldIdx = _lastSortOrder.indexOf(memberId);
-    const newIdx = newOrder.indexOf(memberId);
-    if (oldIdx !== newIdx) {
+    // Only reorder when unread status changes (new message), NOT on presence updates
+    const hadUnread = _lastUnreadState[memberId] ?? false;
+    const hasUnread = hasUnreadMessage(u);
+    if (hadUnread !== hasUnread) {
+        _lastUnreadState[memberId] = hasUnread;
+        const newSorted = getSortedUsers(now);
+        const newOrder = newSorted.map(x => x.memberId);
         reorderSidebar(newOrder);
     }
 }
