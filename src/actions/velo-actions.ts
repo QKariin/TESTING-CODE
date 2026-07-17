@@ -94,6 +94,7 @@ export async function getAdminDashboardData() {
             { data: tasksData },
             { data: authData },
             { data: pendingRoutines },
+            { data: vaultSessions },
         ] = await Promise.all([
             getAdmin().from('profiles').select('*').order('name'),
             getAdmin().from('daily_tasks').select('*'),
@@ -101,6 +102,7 @@ export async function getAdminDashboardData() {
             getAdmin().from('tasks').select('"ID", member_id, "Taskdom_History", "Tribute History", taskQueue, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score", kneel_history'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
             getAdmin().from('user_routines').select('*').not('pending_id', 'is', null),
+            getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
         ]);
 
         if (pError) throw pError;
@@ -110,6 +112,11 @@ export async function getAdminDashboardData() {
         for (const au of (authData?.users || [])) {
             if (au.email) authUuidByEmail[au.email.toLowerCase()] = au.id;
         }
+
+        // Set of emails with active vault sessions (keyholder-locked)
+        const vaultLockedEmails = new Set(
+            (vaultSessions || []).map((s: any) => (s.member_id || '').toLowerCase())
+        );
 
         // Map tasks data to profiles - 3 strategies (collect ALL matches, pick richest row):
         // 1. UUID match: tasks.member_id === profiles.id (most users after migration)
@@ -129,7 +136,9 @@ export async function getAdminDashboardData() {
                 const bScore = Number(best?.kneelCount || 0) + Number(best?.['Taskdom_CompletedTasks'] || 0);
                 return xScore > bScore ? x : best;
             }, matches[0]);
-            return mapUserForDashboard(p, t);
+            const mapped = mapUserForDashboard(p, t);
+            if (vaultLockedEmails.has(profileEmail)) mapped.vaultLocked = true;
+            return mapped;
         });
 
         // Build review queue from already-fetched tasks data - no extra DB call, no URL signing (proofs load on click)

@@ -77,13 +77,16 @@ function hasUnreadMessage(u: any): boolean {
 }
 
 /**
- * Check if user is online — presence channel ONLY, no lastSeen fallback.
- * Uses presenceId (email) because profile pages track with presenceKey(email).
+ * Check if user is online — matches getStatusText logic:
+ * presence channel OR lastSeen within 5 minutes.
  */
 function isUserOnline(u: any): boolean {
     if (!u) return false;
     const email = presenceId(u);
-    return email ? isMemberOnline(email) : false;
+    if (email && isMemberOnline(email)) return true;
+    const ls = getLastSeenMs(u);
+    if (ls <= 0) return false;
+    return (Date.now() - ls) < 5 * 60 * 1000;
 }
 
 // ── Shared helpers ──────────────────────────────────────────────────────
@@ -236,10 +239,6 @@ export function renderSidebar() {
     if (!users.length) return;
 
     const now = Date.now();
-
-    // ── Update tracking state ────────────────────────────────────────────
-    updateTrackingState(now);
-
     const sorted = getSortedUsers(now);
 
     // Initialize unread state baseline

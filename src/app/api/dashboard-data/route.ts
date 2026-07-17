@@ -38,12 +38,12 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({
+            success: true,
             users: users || [],
             globalTributes: tributes || [],
             globalQueue: reviewQueue || [],
             profile,
             availableDailyTasks: [],
-            status: 'success'
         }, { headers: { 'Cache-Control': 'private, max-age=15, stale-while-revalidate=30' } });
     } catch (error) {
         console.error('Dashboard data fetch error:', error);
