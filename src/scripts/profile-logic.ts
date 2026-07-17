@@ -5800,6 +5800,12 @@ const VAULT_ONBOARD_LIMIT_DESCS: Record<string, string> = {
 function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
     document.getElementById('_vaultVideoOverlay')?.remove();
 
+    // If onboarding already completed for this session, skip straight to video
+    try {
+        const ob = JSON.parse(localStorage.getItem(`vault_ob_${data.sessionId}`) || 'null');
+        if (ob?.done) { _showVideoProofUploadDirect(data); return; }
+    } catch {}
+
     const state = getState();
     const raw = state.raw || state;
     const existingKinks = (raw.kinks || '').split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -6100,6 +6106,9 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
                             body: JSON.stringify({ memberId: email, content: aboutText, type: 'text' }) });
                     }
                 } catch {}
+
+                // Mark onboarding as done for this session — skip it on re-entry
+                try { localStorage.setItem(`vault_ob_${data.sessionId}`, JSON.stringify({ done: true })); } catch {}
 
                 // Proceed to video upload
                 ov.remove();

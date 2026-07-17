@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chastity Gate</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+::-webkit-scrollbar { display: none; }
+* { -ms-overflow-style: none; scrollbar-width: none; }
+
+body {
+  background: #05050a;
+  color: #fff;
+  font-family: sans-serif;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px 40px;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(120,0,0,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.6) 0%, transparent 60%),
+    #05050a;
+}
+
+/* ── TOP STRIP ── */
+.gate-top {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+
+.gate-day-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 3px;
+}
+
+.gate-day-badge span {
+  color: rgba(255,255,255,0.2);
+  font-weight: 400;
+  font-size: 0.5rem;
+}
+
+/* Lock icon */
+.gate-lock {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gate-lock::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(160,0,0,0.18);
+  animation: ring 5s ease-in-out infinite;
+}
+
+@keyframes ring {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+.gate-lock svg {
+  width: 20px;
+  height: 20px;
+  stroke: rgba(180,20,20,0.6);
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* ── HEADING ── */
+.gate-heading {
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.gate-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.82);
+  letter-spacing: 10px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.gate-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(160,0,0,0.5);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+}
+
+/* ── DIVIDER ── */
+.gate-divider {
+  width: 100%;
+  max-width: 340px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(160,0,0,0.2), transparent);
+  margin-bottom: 28px;
+}
+
+/* ── DAILY NUMBER ── */
+.gate-code-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.42rem;
+  color: rgba(255,255,255,0.18);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.gate-digits {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.gate-digit {
+  width: 68px;
+  height: 80px;
+  border: 1px solid rgba(160,0,0,0.22);
+  border-radius: 10px;
+  background: rgba(160,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: rgba(220,220,220,0.88);
+  letter-spacing: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.gate-digit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(160,0,0,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.gate-code-hint {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.28);
+  letter-spacing: 1.5px;
+  text-align: center;
+  margin-bottom: 28px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.gate-code-hint .red {
+  color: rgba(200,30,30,0.75);
+  font-weight: 700;
+  text-transform: none;
+}
+
+/* ── UPLOAD ZONE ── */
+.gate-upload {
+  width: 100%;
+  max-width: 340px;
+  height: 180px;
+  border: 1px dashed rgba(255,255,255,0.08);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.015);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, background 0.3s;
+  margin-bottom: 14px;
+}
+
+.gate-upload:active {
+  transform: scale(0.99);
+  border-color: rgba(160,0,0,0.3);
+  background: rgba(160,0,0,0.03);
+}
+
+.gate-upload.has-photo {
+  border-style: solid;
+  border-color: rgba(160,0,0,0.25);
+}
+
+.gate-upload .preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 13px;
+  display: none;
+}
+
+.gate-upload.has-photo .preview { display: block; }
+.gate-upload.has-photo .upload-inner { display: none; }
+
+.gate-upload .retake {
+  display: none;
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 6px 14px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.45rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 2px;
+  backdrop-filter: blur(10px);
+}
+
+.gate-upload.has-photo .retake { display: block; }
+
+.upload-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-icon-wrap svg {
+  width: 20px;
+  height: 20px;
+  stroke: rgba(255,255,255,0.2);
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.upload-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.52rem;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 4px;
+}
+
+.upload-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.1);
+  letter-spacing: 1px;
+}
+
+/* ── SUBMIT ── */
+.gate-submit {
+  width: 100%;
+  max-width: 340px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  background: transparent;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.12);
+  cursor: not-allowed;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.gate-submit.ready {
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(160,0,0,0.3);
+  background: rgba(160,0,0,0.06);
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(120,0,0,0.12), inset 0 0 20px rgba(120,0,0,0.04);
+}
+
+.gate-submit.ready:active { transform: scale(0.98); }
+
+.gate-submit.uploading {
+  color: rgba(255,255,255,0.2);
+  cursor: wait;
+}
+
+.gate-submit.uploading::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(160,0,0,0.7), transparent);
+  animation: scanLine 1.4s ease-in-out infinite;
+}
+
+@keyframes scanLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── SUCCESS ── */
+.gate-success {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.success-ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid rgba(160,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes pop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-ring svg {
+  width: 28px;
+  height: 28px;
+  stroke: rgba(160,0,0,0.65);
+  fill: none;
+  stroke-width: 1.8;
+}
+
+.success-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 8px;
+}
+
+.success-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  color: rgba(160,0,0,0.4);
+  letter-spacing: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+
+  <!-- UPLOAD STATE -->
+  <div id="uploadState" style="display:flex;flex-direction:column;align-items:center;width:100%;">
+
+    <!-- Top strip: day + lock -->
+    <div class="gate-top">
+      <div class="gate-day-badge">
+        DAY <span id="dayNumber">14</span> &nbsp;<span>OF 30</span>
+      </div>
+      <div class="gate-lock">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Heading -->
+    <div class="gate-heading">
+      <div class="gate-title">VERIFICATION</div>
+      <div class="gate-sub">Daily proof required</div>
+    </div>
+
+    <div class="gate-divider"></div>
+
+    <!-- Daily number -->
+    <div class="gate-code-label">Today's number</div>
+    <div class="gate-digits">
+      <div class="gate-digit" id="d1">—</div>
+      <div class="gate-digit" id="d2">—</div>
+      <div class="gate-digit" id="d3">—</div>
+    </div>
+    <div class="gate-code-hint">
+      Write this number on paper and <span class="red">hold it clearly</span> in your photo, otherwise your log <span class="red">will be rejected</span>!
+    </div>
+
+    <!-- Upload -->
+    <div class="gate-upload" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <img class="preview" id="previewImg" />
+      <div class="upload-inner">
+        <div class="upload-icon-wrap">
+          <svg viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <div class="upload-text">TAP TO CAPTURE</div>
+        <div class="upload-sub">Photo of locked device</div>
+      </div>
+      <div class="retake">RETAKE</div>
+    </div>
+
+    <!-- Submit -->
+    <button class="gate-submit" id="submitBtn" onclick="handleSubmit()">SUBMIT PROOF</button>
+
+  </div>
+
+  <!-- SUCCESS STATE -->
+  <div class="gate-success" id="successState">
+    <div class="success-ring">
+      <svg viewBox="0 0 24 24">
+        <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="success-title">VERIFIED</div>
+    <div class="success-sub">Device confirmed locked</div>
+  </div>
+
+</div>
+
+<input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)"/>
+
+<script>
+// Deterministic daily number — same for everyone on the same day
+function getDailyNumber() {
+  const d = new Date();
+  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const hash = ((seed * 2654435761) >>> 0) % 900;
+  return 100 + hash;
+}
+
+const num = getDailyNumber();
+const digits = String(num).split('');
+document.getElementById('d1').textContent = digits[0];
+document.getElementById('d2').textContent = digits[1];
+document.getElementById('d3').textContent = digits[2];
+
+function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('uploadZone').classList.add('has-photo');
+    document.getElementById('submitBtn').classList.add('ready');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleSubmit() {
+  const btn = document.getElementById('submitBtn');
+  if (!btn.classList.contains('ready')) return;
+  btn.classList.remove('ready');
+  btn.classList.add('uploading');
+  btn.textContent = 'UPLOADING...';
+
+  setTimeout(() => {
+    document.getElementById('uploadState').style.display = 'none';
+    document.getElementById('successState').style.display = 'flex';
+
+    setTimeout(() => {
+      const gate = document.getElementById('gate');
+      gate.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+      gate.style.opacity = '0';
+      gate.style.transform = 'scale(1.015)';
+      setTimeout(() => {
+        gate.style.display = 'none';
+        document.body.innerHTML += '<div style="display:flex;align-items:center;justify-content:center;height:100dvh;font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(255,255,255,0.12);letter-spacing:6px;">VAULT UNLOCKED</div>';
+      }, 700);
+    }, 2200);
+  }, 1800);
+}
+</script>
+
+</body>
+</html>
