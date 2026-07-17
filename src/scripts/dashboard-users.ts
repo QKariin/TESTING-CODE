@@ -190,7 +190,8 @@ export async function updateDetail(u: any) {
     const finalPic = realAvatar || defaultPic;
 
     if (profPic) {
-        profPic.src = getOptimizedUrl(finalPic, 200);
+        const newSrc = getOptimizedUrl(finalPic, 200);
+        if (profPic.src !== newSrc && !profPic.src.endsWith(newSrc)) profPic.src = newSrc;
         profPic.onerror = () => { profPic.src = defaultPic; };
     }
     if (headerBg) {
@@ -204,7 +205,7 @@ export async function updateDetail(u: any) {
 
     // Sync chatter chat header
     const chatterAvatar = document.getElementById('chatterHeaderAvatar') as HTMLImageElement;
-    if (chatterAvatar) { chatterAvatar.src = getOptimizedUrl(finalPic, 100); chatterAvatar.onerror = () => { chatterAvatar.src = defaultPic; }; }
+    if (chatterAvatar) { const cSrc = getOptimizedUrl(finalPic, 100); if (chatterAvatar.src !== cSrc && !chatterAvatar.src.endsWith(cSrc)) chatterAvatar.src = cSrc; chatterAvatar.onerror = () => { chatterAvatar.src = defaultPic; }; }
     setText('chatterHeaderName', u.name || 'SLAVE');
     setText('chatterHeaderRank', realRank.toUpperCase());
 

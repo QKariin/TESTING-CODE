@@ -103,12 +103,13 @@ function getLastSeenMs(u: any): number {
 
 function getStatusText(u: any, now: number): string {
     const online = isUserOnline(u);
-    if (online) return "ONLINE";
     const ls = getLastSeenMs(u);
+    const diffMins = ls > 0 ? Math.floor((now - ls) / 60000) : -1;
+    // Match detail card: presence OR lastSeen within 5 minutes = ONLINE
+    if (online || (diffMins >= 0 && diffMins < 5)) return "ONLINE";
     if (ls <= 0) return "OFFLINE";
-    const diffMins = Math.floor((now - ls) / 60000);
     const diffHours = Math.floor(diffMins / 60);
-    if (diffMins < 60) return `${Math.max(1, diffMins)} MIN AGO`;
+    if (diffMins < 60) return `${diffMins} MIN AGO`;
     if (diffHours < 24) return `${diffHours} HR${diffHours > 1 ? 'S' : ''} AGO`;
     if (diffHours < 48) return "YESTERDAY";
     return new Date(ls).toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -119,8 +120,8 @@ function buildItemHtml(u: any, now: number): string {
     const isActive = currId === u.memberId;
     const isQueen = u.hierarchy === "Queen";
     const hasMsg = hasUnreadMessage(u);
-    const online = isUserOnline(u);
     const statusText = getStatusText(u, now);
+    const online = statusText === "ONLINE";
 
     let rawPic = u.avatar || u.profilePicture || DEFAULT_PIC;
     if (rawPic === "null" || rawPic === "undefined" || !rawPic) rawPic = DEFAULT_PIC;
