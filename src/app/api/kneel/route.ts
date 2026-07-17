@@ -144,6 +144,53 @@ export async function POST(req: Request) {
             }
         } catch (_) {}
 
+        // Sync kneel count to vault_daily orders (so kneeling counts toward perfect day)
+        try {
+            const emailLc = (taskEmail || memberId).toLowerCase();
+            const { data: vaultSession } = await supabaseAdmin.from('vault_sessions')
+                .select('id').eq('member_id', emailLc).eq('status', 'active')
+                .order('started_at', { ascending: false }).limit(1).maybeSingle();
+            if (vaultSession) {
+                const { data: daily } = await supabaseAdmin.from('vault_daily')
+                    .select('id, orders, orders_completed, orders_total')
+                    .eq('session_id', vaultSession.id).eq('date', todayStr).maybeSingle();
+                if (daily) {
+                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    let changed = false;
+                    for (const o of orders) {
+                        if (o.type === 'kneel' && newTodayKneeling > (o.done || 0)) {
+                            o.done = Math.min(newTodayKneeling, o.target);
+                            changed = true;
+                            break;
+                        }
+                    }
+                    if (changed) {
+                        const completed = orders.filter((o: any) => o.done >= o.target).length;
+                        const perfect = completed >= orders.length;
+                        await supabaseAdmin.from('vault_daily').update({
+                            orders: JSON.stringify(orders),
+                            orders_completed: completed,
+                            perfect,
+                        }).eq('id', daily.id);
+                        // Update session streak if day just became perfect
+                        if (perfect && !daily.orders_completed) {
+                            const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                                .select('current_streak, best_streak, total_perfect_days')
+                                .eq('id', vaultSession.id).single();
+                            if (sess) {
+                                const newStreak = (sess.current_streak || 0) + 1;
+                                await supabaseAdmin.from('vault_sessions').update({
+                                    current_streak: newStreak,
+                                    best_streak: Math.max(sess.best_streak || 0, newStreak),
+                                    total_perfect_days: (sess.total_perfect_days || 0) + 1,
+                                }).eq('id', vaultSession.id);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (_) {}
+
         try { await DbService.sendMessage(memberId, 'KNEELING SESSION COMPLETED', 'system'); } catch (_) { }
 
         // Check if user now qualifies for promotion

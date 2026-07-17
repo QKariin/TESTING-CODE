@@ -1695,30 +1695,32 @@ export default function VaultPage() {
                             );
                         })}
                     </div>
-                    {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length > 0 && todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').every((o: any) => o.done >= o.target) && (
+                    {todayPerfect && (
                         <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '3px' }}>
                                 ALL ORDERS COMPLETE
                             </div>
-                            {/* 1 Hour Freedom Reward */}
-                            {rewardUntil > Date.now() ? (
-                                <button onClick={() => { window.location.href = '/profile'; }} style={{
-                                    padding: '12px 28px', background: 'linear-gradient(135deg, rgba(80,200,120,0.08), rgba(80,200,120,0.02))',
-                                    border: '1px solid rgba(80,200,120,0.25)', borderRadius: 12, cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', gap: 10,
-                                    WebkitTapHighlightColor: 'transparent', animation: 'vPulse 2s ease infinite',
-                                }}>
-                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="1.5">
-                                        <path d="M7 11V7a5 5 0 0 1 9.9-1" /><rect x="3" y="11" width="18" height="11" rx="2" />
-                                    </svg>
-                                    <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.6)', letterSpacing: '2px' }}>
-                                        ENTER FREEDOM — {(() => { const left = Math.max(0, Math.ceil((rewardUntil - Date.now()) / 60000)); const h = Math.floor(left / 60); const m = left % 60; return `${h}h ${m}m left`; })()}
-                                    </span>
-                                </button>
-                            ) : rewardUntil > 0 ? (
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '2px' }}>
-                                    FREEDOM USED
-                                </div>
+                            {/* Freedom Reward */}
+                            {todayRewardClaimed ? (
+                                rewardUntil > Date.now() ? (
+                                    <button onClick={() => { window.location.href = '/profile'; }} style={{
+                                        padding: '12px 28px', background: 'linear-gradient(135deg, rgba(80,200,120,0.08), rgba(80,200,120,0.02))',
+                                        border: '1px solid rgba(80,200,120,0.25)', borderRadius: 12, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 10,
+                                        WebkitTapHighlightColor: 'transparent', animation: 'vPulse 2s ease infinite',
+                                    }}>
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(80,200,120,0.5)" strokeWidth="1.5">
+                                            <path d="M7 11V7a5 5 0 0 1 9.9-1" /><rect x="3" y="11" width="18" height="11" rx="2" />
+                                        </svg>
+                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.6)', letterSpacing: '2px' }}>
+                                            ENTER FREEDOM — {(() => { const left = Math.max(0, Math.ceil((rewardUntil - Date.now()) / 60000)); const h = Math.floor(left / 60); const m = left % 60; return `${h}h ${m}m left`; })()}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '2px' }}>
+                                        FREEDOM CLAIMED
+                                    </div>
+                                )
                             ) : (
                                 <button onClick={() => {
                                     // Freedom until user's local midnight
