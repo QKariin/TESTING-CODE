@@ -649,6 +649,11 @@ export default function VaultPage() {
                                             _lastPerfect = newPerfect;
                                             setVaultData(data);
                                         }
+                                        // Sync chastity status from API (broadcast may not fire due to RLS)
+                                        const chk = data.chastityCheck;
+                                        if (chk?.status === 'approved') setChastityStatus('approved');
+                                        else if (chk?.status === 'rejected') setChastityStatus('rejected');
+                                        else if (chk?.status === 'pending') setChastityStatus('pending');
                                     }
                                 } catch {}
                             }, 10000);
