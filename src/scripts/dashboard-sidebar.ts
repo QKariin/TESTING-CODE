@@ -151,6 +151,19 @@ function buildItemHtml(u: any, now: number): string {
         `;
     }
 
+    const isVaultLocked = u.vaultLocked === true;
+
+    if (isVaultLocked && !isLocked) {
+        return `
+            <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.4);justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+                <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.15;filter:blur(0px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
+                <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:rgba(139,0,0,0.85);position:relative;z-index:1;flex-shrink:0;"><path d="${LOCK_PATH}"/></svg>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(139,0,0,0.85);letter-spacing:3px;position:relative;z-index:1;">KEYHOLDER</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.62rem;color:rgba(255,255,255,0.55);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
+            </div>
+        `;
+    }
+
     if (isLocked) {
         const lockColor = isSilenced ? 'rgba(220,60,60,0.85)' : 'rgba(197,160,89,0.85)';
         const lockBg = isSilenced ? 'rgba(220,60,60,0.08)' : 'rgba(197,160,89,0.07)';
@@ -311,18 +324,25 @@ function patchCard(list: HTMLElement, u: any, now: number) {
     const isSilenced = u.silence === true;
     const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
     const isLocked = isSilenced || isPaywalled;
+    const isVaultLocked = u.vaultLocked === true;
     const vaultReqStatus = u.parameters?.vault_request?.status;
     const hasVaultRequest = vaultReqStatus === 'pending' || vaultReqStatus === 'awaiting_video';
 
-    // If the card TYPE changed (e.g. user got paywalled/unpaywalled), we must rebuild
-    const wasLocked = existing.querySelector('svg[viewBox="0 0 24 24"]')?.parentElement?.querySelector('.u-name') === null
-        && !existing.querySelector('.icon-box');
+    // Detect current card type from DOM
     const wasVaultReq = existing.innerHTML.includes('LOCK REQUEST') || existing.innerHTML.includes('VIDEO PROOF');
-    const isNowSpecial = (isLocked && !hasVaultRequest) || (hasVaultRequest && !isLocked);
-    const wasSpecial = wasLocked || wasVaultReq;
+    const wasKeyholder = existing.innerHTML.includes('KEYHOLDER');
+    const wasLockedCard = existing.innerHTML.includes('SILENCED') || existing.innerHTML.includes('PAYWALLED');
+    const hasNormalIcons = !!existing.querySelector('.icon-box');
+
+    // Determine what card type should be now
+    const isNowSpecial = (hasVaultRequest && !isLocked) || (isVaultLocked && !isLocked) || isLocked;
+    const wasSpecial = wasVaultReq || wasKeyholder || wasLockedCard;
 
     // Card type changed — must do full replacement (rare)
-    if (isNowSpecial !== wasSpecial || (isLocked !== wasLocked) || (hasVaultRequest !== wasVaultReq)) {
+    const typeChanged = (hasVaultRequest && !wasVaultReq) || (!hasVaultRequest && wasVaultReq)
+        || (isVaultLocked && !wasKeyholder) || (!isVaultLocked && wasKeyholder)
+        || (isLocked && !wasLockedCard) || (!isLocked && wasLockedCard && !hasNormalIcons);
+    if (typeChanged) {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = buildItemHtml(u, now).trim();
         const newEl = wrapper.firstElementChild as HTMLElement;
@@ -330,8 +350,8 @@ function patchCard(list: HTMLElement, u: any, now: number) {
         return;
     }
 
-    // For locked/vault-request cards, just update name text
-    if (isLocked || hasVaultRequest) {
+    // For special cards (locked/vault-request/keyholder), just update name text
+    if (isLocked || hasVaultRequest || isVaultLocked) {
         // Update name if changed
         const nameEls = existing.querySelectorAll<HTMLElement>('div[style*="letter-spacing"]');
         nameEls.forEach(el => {

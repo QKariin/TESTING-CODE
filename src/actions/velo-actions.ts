@@ -843,10 +843,12 @@ export async function getMasterData() {
             { data: profiles, error: pError },
             { data: tasks },
             { data: authData },
+            { data: vaultSessions },
         ] = await Promise.all([
             getAdmin().from('profiles').select('*').limit(1000),
             getAdmin().from('tasks').select('*').limit(1000),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
+            getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
         ]);
 
         if (pError) throw pError;
@@ -855,6 +857,11 @@ export async function getMasterData() {
         for (const au of (authData?.users || [])) {
             if (au.email) authUuidByEmail[au.email.toLowerCase()] = au.id;
         }
+
+        // Set of emails with active vault sessions
+        const vaultLockedEmails = new Set(
+            (vaultSessions || []).map((s: any) => (s.member_id || '').toLowerCase())
+        );
 
         return (profiles || []).map((item: any) => {
             const profileEmail = (item.member_id || '').toLowerCase();
@@ -870,7 +877,9 @@ export async function getMasterData() {
                 const bScore = Number(best?.kneelCount || 0) + Number(best?.['Taskdom_CompletedTasks'] || 0);
                 return xScore > bScore ? x : best;
             }, matches[0]);
-            return mapUserForDashboard(item, uTasks);
+            const mapped = mapUserForDashboard(item, uTasks);
+            if (vaultLockedEmails.has(profileEmail)) mapped.vaultLocked = true;
+            return mapped;
         });
     } catch (err) {
         console.error("Dashboard Data Error:", err);
