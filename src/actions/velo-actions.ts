@@ -96,8 +96,7 @@ export async function getAdminDashboardData() {
             { data: pendingRoutines },
             { data: vaultSessions },
         ] = await Promise.all([
-            // Only fetch fields needed for sidebar list — NOT full profiles
-            getAdmin().from('profiles').select('ID, member_id, name, hierarchy, avatar_url, profile_picture_url, parameters, silence, last_active, score, wallet, routine, paywall, kinks, limits, skippass, cumpass, checkpoint, joined_date, strike_count').order('name'),
+            getAdmin().from('profiles').select('*').order('name'),
             getAdmin().from('daily_tasks').select('*'),
             getAdmin().from('system_rules').select('*'),
             // Lightweight task data — NO Taskdom_History, NO Tribute History, NO kneel_history, NO taskQueue
@@ -844,7 +843,7 @@ export async function getMasterData() {
             { data: authData },
             { data: vaultSessions },
         ] = await Promise.all([
-            getAdmin().from('profiles').select('ID, member_id, name, hierarchy, avatar_url, profile_picture_url, parameters, silence, last_active, score, wallet, routine, paywall, kinks, limits, skippass, cumpass, checkpoint, joined_date, strike_count').limit(1000),
+            getAdmin().from('profiles').select('*').limit(1000),
             getAdmin().from('tasks').select('"ID", member_id, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"').limit(1000),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
             getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
