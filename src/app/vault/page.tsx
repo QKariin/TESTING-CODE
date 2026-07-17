@@ -195,6 +195,10 @@ export default function VaultPage() {
         } catch { return { open: false, before: false, localHour: 0, localMinute: 0 }; }
     });
     const [chastityPhotoUrl, setChastityPhotoUrl] = useState<string | null>(null);
+    const [showChastityGate, setShowChastityGate] = useState(false);
+    const [gatePreviewUrl, setGatePreviewUrl] = useState<string | null>(null);
+    const [gateFile, setGateFile] = useState<File | null>(null);
+    const [gateSuccess, setGateSuccess] = useState(false);
     const [spinning, setSpinning] = useState(false);
     const [wheelAngle, setWheelAngle] = useState(0);
     const [wheelResult, setWheelResult] = useState<any>(null);
@@ -1395,63 +1399,25 @@ export default function VaultPage() {
                                     UPLOADING...
                                 </div>
                             ) : (
-                                <label style={{
-                                    position: 'relative', zIndex: 1, marginTop: 6,
-                                    display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px',
-                                    color: chastityStatus === 'rejected' ? 'rgba(255,200,200,0.8)' : `${R}0.8)`,
-                                    background: chastityStatus === 'rejected' ? 'rgba(255,60,60,0.12)' : `${R}0.12)`,
-                                    border: `1px solid ${chastityStatus === 'rejected' ? 'rgba(255,60,60,0.3)' : `${R}0.35)`}`,
-                                    borderRadius: 20, padding: '6px 14px',
-                                    WebkitTapHighlightColor: 'transparent',
-                                }}>
+                                <button
+                                    onClick={() => setShowChastityGate(true)}
+                                    style={{
+                                        position: 'relative', zIndex: 1, marginTop: 6,
+                                        display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+                                        fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '2px',
+                                        color: chastityStatus === 'rejected' ? 'rgba(255,200,200,0.8)' : `${R}0.8)`,
+                                        background: chastityStatus === 'rejected' ? 'rgba(255,60,60,0.12)' : `${R}0.12)`,
+                                        border: `1px solid ${chastityStatus === 'rejected' ? 'rgba(255,60,60,0.3)' : `${R}0.35)`}`,
+                                        borderRadius: 20, padding: '6px 14px',
+                                        WebkitTapHighlightColor: 'transparent',
+                                    }}
+                                >
                                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                                         <circle cx="12" cy="13" r="4" />
                                     </svg>
                                     {chastityStatus === 'rejected' ? 'RETRY' : 'SUBMIT CHECK'}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        capture="environment"
-                                        style={{ display: 'none' }}
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            e.target.value = '';
-                                            setChastityUploading(true);
-                                            try {
-                                                const mid = profile?.member_id || profile?.memberId || '';
-                                                const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-                                                const fd = new FormData();
-                                                fd.append('file', file);
-                                                fd.append('folder', `vault/chastity/${mid}`);
-                                                fd.append('ext', ext === 'heic' ? 'jpg' : ext);
-                                                const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                const data = await res.json();
-                                                if (data.url && vaultData?.session?.id) {
-                                                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                                                    // Submit to vault_daily via complete_order (stores in orders JSON + submissions)
-                                                    const submitRes = await fetch('/api/vault/session', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: data.url, tz }),
-                                                    });
-                                                    if (submitRes.ok) {
-                                                        setChastityStatus('pending');
-                                                        setChastityPhotoUrl(data.url);
-                                                        vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
-                                                    } else {
-                                                        const err = await submitRes.json().catch(() => ({}));
-                                                        if (err.windowClosed) setChastityWindow(w => ({ ...w, open: false, before: false }));
-                                                    }
-                                                }
-                                            } catch {} finally {
-                                                setChastityUploading(false);
-                                            }
-                                        }}
-                                    />
-                                </label>
+                                </button>
                             )
                         )}
                     </div>
@@ -3384,7 +3350,171 @@ export default function VaultPage() {
                     color: #8b0000 !important;
                     text-shadow: 0 0 10px rgba(139,0,0,0.3) !important;
                 }
+                @keyframes gPop {
+                    0% { transform: scale(0); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
             `}</style>
+
+            {/* ══════════════════════════════════════════════
+                CHASTITY GATE OVERLAY
+            ══════════════════════════════════════════════ */}
+            {showChastityGate && (() => {
+                const d = new Date();
+                const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+                const dailyNum = 100 + (((seed * 2654435761) >>> 0) % 900);
+                const digits = String(dailyNum).split('');
+                return (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 999999,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        padding: '32px 24px 40px', overflowY: 'auto',
+                        background: 'radial-gradient(ellipse at 50% 0%, rgba(120,0,0,0.07) 0%, transparent 65%), radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.6) 0%, transparent 60%), #05050a',
+                    }}>
+                        {gateSuccess ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, textAlign: 'center' }}>
+                                <div style={{ width: 72, height: 72, borderRadius: '50%', border: '1px solid rgba(160,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'gPop 0.5s cubic-bezier(0.34,1.56,0.64,1)' }}>
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(160,0,0,0.65)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                </div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.65)', letterSpacing: 8 }}>VERIFIED</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(160,0,0,0.4)', letterSpacing: 4 }}>DEVICE CONFIRMED LOCKED</div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+
+                                {/* Top strip: day + lock */}
+                                <div style={{ width: '100%', maxWidth: 340, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 36 }}>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 3 }}>
+                                        DAY&nbsp;
+                                        <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, fontSize: '0.5rem' }}>{vaultData?.session?.day_number ?? 1}</span>
+                                        &nbsp;<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, fontSize: '0.5rem' }}>OF {vaultData?.session?.total_days ?? 30}</span>
+                                    </div>
+                                    <div style={{ position: 'relative', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="rgba(180,20,20,0.6)" strokeWidth="1.5">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Heading */}
+                                <div style={{ width: '100%', maxWidth: 340, marginBottom: 32, textAlign: 'center' }}>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.25rem', fontWeight: 700, color: 'rgba(255,255,255,0.82)', letterSpacing: 10, textTransform: 'uppercase', marginBottom: 6 }}>VERIFICATION</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(160,0,0,0.5)', letterSpacing: 5, textTransform: 'uppercase' }}>Daily proof required</div>
+                                </div>
+
+                                {/* Divider */}
+                                <div style={{ width: '100%', maxWidth: 340, height: 1, background: 'linear-gradient(90deg, transparent, rgba(160,0,0,0.2), transparent)', marginBottom: 28 }} />
+
+                                {/* Daily number */}
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(255,255,255,0.18)', letterSpacing: 5, textTransform: 'uppercase', marginBottom: 14, textAlign: 'center' }}>{"Today's number"}</div>
+                                <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                                    {digits.map((dig, i) => (
+                                        <div key={i} style={{ width: 68, height: 80, border: '1px solid rgba(160,0,0,0.22)', borderRadius: 10, background: 'rgba(160,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Orbitron, sans-serif', fontSize: '2.6rem', fontWeight: 900, color: 'rgba(220,220,220,0.88)' }}>{dig}</div>
+                                    ))}
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.28)', letterSpacing: '1.5px', textAlign: 'center', marginBottom: 28, lineHeight: 1.6, fontWeight: 600, maxWidth: 340 }}>
+                                    Write this number on paper and <span style={{ color: 'rgba(200,30,30,0.75)', fontWeight: 700 }}>hold it clearly</span> in your photo, otherwise your log <span style={{ color: 'rgba(200,30,30,0.75)', fontWeight: 700 }}>will be rejected</span>!
+                                </div>
+
+                                {/* Upload zone */}
+                                <label style={{ width: '100%', maxWidth: 340, height: 180, border: gatePreviewUrl ? '1px solid rgba(160,0,0,0.25)' : '1px dashed rgba(255,255,255,0.08)', borderRadius: 14, background: 'rgba(255,255,255,0.015)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', position: 'relative', overflow: 'hidden', marginBottom: 14 }}>
+                                    {gatePreviewUrl ? (
+                                        <>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={gatePreviewUrl} alt="preview" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 13 }} />
+                                            <div style={{ position: 'absolute', bottom: 12, right: 12, padding: '6px 14px', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 2 }}>RETAKE</div>
+                                        </>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                                            <div style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5">
+                                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" />
+                                                </svg>
+                                            </div>
+                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.52rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 4 }}>TAP TO CAPTURE</div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.1)', letterSpacing: 1 }}>Photo of locked device</div>
+                                        </div>
+                                    )}
+                                    <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            e.target.value = '';
+                                            setGateFile(file);
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => setGatePreviewUrl(ev.target?.result as string);
+                                            reader.readAsDataURL(file);
+                                        }}
+                                    />
+                                </label>
+
+                                {/* Submit */}
+                                <button
+                                    disabled={!gatePreviewUrl || chastityUploading}
+                                    onClick={async () => {
+                                        if (!gateFile || chastityUploading) return;
+                                        setChastityUploading(true);
+                                        try {
+                                            const mid = profile?.member_id || profile?.memberId || '';
+                                            const ext = gateFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+                                            const fd = new FormData();
+                                            fd.append('file', gateFile);
+                                            fd.append('folder', `vault/chastity/${mid}`);
+                                            fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                            const uploadData = await res.json();
+                                            if (uploadData.url && vaultData?.session?.id) {
+                                                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                                const submitRes = await fetch('/api/vault/session', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'chastity_check', photoUrl: uploadData.url, tz }),
+                                                });
+                                                if (submitRes.ok) {
+                                                    setChastityStatus('pending');
+                                                    setChastityPhotoUrl(uploadData.url);
+                                                    setGateSuccess(true);
+                                                    vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
+                                                    setTimeout(() => {
+                                                        setShowChastityGate(false);
+                                                        setGatePreviewUrl(null);
+                                                        setGateFile(null);
+                                                        setGateSuccess(false);
+                                                    }, 2500);
+                                                } else {
+                                                    const err = await submitRes.json().catch(() => ({}));
+                                                    if (err.windowClosed) setChastityWindow(w => ({ ...w, open: false, before: false }));
+                                                    setShowChastityGate(false);
+                                                    setGatePreviewUrl(null);
+                                                    setGateFile(null);
+                                                }
+                                            }
+                                        } catch {} finally {
+                                            setChastityUploading(false);
+                                        }
+                                    }}
+                                    style={{
+                                        width: '100%', maxWidth: 340, padding: 18,
+                                        border: (gatePreviewUrl && !chastityUploading) ? '1px solid rgba(160,0,0,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                                        borderRadius: 12, background: (gatePreviewUrl && !chastityUploading) ? 'rgba(160,0,0,0.06)' : 'transparent',
+                                        fontFamily: 'Orbitron, sans-serif', fontSize: '0.62rem', letterSpacing: 5,
+                                        color: chastityUploading ? 'rgba(255,255,255,0.2)' : gatePreviewUrl ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.12)',
+                                        cursor: (gatePreviewUrl && !chastityUploading) ? 'pointer' : 'not-allowed',
+                                        boxShadow: (gatePreviewUrl && !chastityUploading) ? '0 0 30px rgba(120,0,0,0.12), inset 0 0 20px rgba(120,0,0,0.04)' : 'none',
+                                    }}
+                                >{chastityUploading ? 'UPLOADING...' : 'SUBMIT PROOF'}</button>
+
+                                {/* Cancel */}
+                                <button
+                                    onClick={() => { setShowChastityGate(false); setGatePreviewUrl(null); setGateFile(null); }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.12)', letterSpacing: 3, padding: '16px', marginTop: 8 }}
+                                >CANCEL</button>
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
+
         </div>
     );
 }
