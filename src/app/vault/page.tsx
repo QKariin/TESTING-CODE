@@ -1139,7 +1139,7 @@ export default function VaultPage() {
 
                 {/* ── HALO HERO SECTION ── */}
                 {(() => {
-                    const hasChastityTask = todayOrders.some((o: any) => o.type === 'chastity_check') && daysIn >= 1;
+                    const hasChastityTask = daysIn >= 1;
                     const cWindowOpen = chastityWindow.open;
                     const cBeforeWindow = chastityWindow.before;
                     const cMissed = !cWindowOpen && !cBeforeWindow && chastityStatus === 'none' && hasChastityTask;
