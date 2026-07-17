@@ -508,13 +508,11 @@ export default function VaultPage() {
                                         // Keyholder opened chat (no time limit)
                                         setChatGateDone(true);
                                         setChatGateCooldownUntil(0);
-                                        setTab('chat');
                                     } else if (hoursLeft <= 0.5) {
                                         // Coin flip HEADS grant (with timer)
                                         setChatExpiresAt(cdUntil);
                                         setChatGateDone(true);
                                         setChatGateCooldownUntil(0);
-                                        setTab('chat');
                                     } else {
                                         // Deny cooldown (8h from coin flip TAILS)
                                         setChatGateCooldownUntil(cdUntil);
@@ -634,13 +632,11 @@ export default function VaultPage() {
                                                 // Keyholder opened chat (no limit)
                                                 setChatGateDone(true);
                                                 setChatGateCooldownUntil(0);
-                                                setTab('chat');
                                             } else if (hoursLeft <= 0.5) {
                                                 // Coin flip grant (with timer)
                                                 setChatExpiresAt(cdUntil);
                                                 setChatGateDone(true);
                                                 setChatGateCooldownUntil(0);
-                                                setTab('chat');
                                             }
                                         }
                                     }
