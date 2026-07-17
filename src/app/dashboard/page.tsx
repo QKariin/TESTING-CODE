@@ -2249,14 +2249,40 @@ export default function DashboardPage() {
                                                     <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>
                                                         SUBMISSION LOG ({all.length}) {pendingAll.length > 0 && <span style={{ color: 'rgba(197,160,89,0.8)' }}>— {pendingAll.length} PENDING</span>}
                                                     </div>
-                                                    <div style={{ maxHeight: 250, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                    <div style={{ maxHeight: 400, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
                                                         {all.slice().reverse().slice(0, 20).map((sub: any) => (
-                                                            <div key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: sub.status === 'approved' ? 'rgba(80,200,80,0.03)' : sub.status === 'pending' ? 'rgba(197,160,89,0.04)' : 'rgba(255,60,60,0.03)', border: `1px solid ${sub.status === 'approved' ? 'rgba(80,200,80,0.1)' : sub.status === 'pending' ? 'rgba(197,160,89,0.15)' : 'rgba(255,60,60,0.1)'}`, borderRadius: 6 }}>
-                                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.33rem', color: sub.status === 'approved' ? 'rgba(80,200,80,0.6)' : sub.status === 'pending' ? 'rgba(197,160,89,0.7)' : 'rgba(255,60,60,0.5)', letterSpacing: 1, width: 50 }}>{sub.status === 'approved' ? '✓ OK' : sub.status === 'pending' ? '⏳' : '✕ REJ'}</span>
-                                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.3)', width: 55 }}>{sub.date}</span>
-                                                                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{sub.label || sub.order_type}</span>
-                                                                {sub.photo_url && <span style={{ fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)' }}>📷</span>}
-                                                                {sub.queen_comment && <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.4)', fontStyle: 'italic', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>&ldquo;{sub.queen_comment}&rdquo;</span>}
+                                                            <div key={sub.id}>
+                                                                <div onClick={() => {
+                                                                    const el = document.getElementById(`subLogDetail-${sub.id}`);
+                                                                    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                                                                }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: sub.status === 'approved' ? 'rgba(80,200,80,0.03)' : sub.status === 'pending' ? 'rgba(197,160,89,0.04)' : 'rgba(255,60,60,0.03)', border: `1px solid ${sub.status === 'approved' ? 'rgba(80,200,80,0.1)' : sub.status === 'pending' ? 'rgba(197,160,89,0.15)' : 'rgba(255,60,60,0.1)'}`, borderRadius: 6, cursor: 'pointer' }}>
+                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.33rem', color: sub.status === 'approved' ? 'rgba(80,200,80,0.6)' : sub.status === 'pending' ? 'rgba(197,160,89,0.7)' : 'rgba(255,60,60,0.5)', letterSpacing: 1, width: 50 }}>{sub.status === 'approved' ? '✓ OK' : sub.status === 'pending' ? '⏳' : '✕ REJ'}</span>
+                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.3)', width: 55 }}>{sub.date}</span>
+                                                                    <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.4)', flex: 1 }}>{sub.label || sub.order_type}</span>
+                                                                    {sub.photo_url && <span style={{ fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)' }}>📷</span>}
+                                                                    {sub.video_url && <span style={{ fontSize: '0.4rem', color: 'rgba(255,255,255,0.2)' }}>🎥</span>}
+                                                                    {sub.queen_comment && <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.4)', fontStyle: 'italic', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>&ldquo;{sub.queen_comment}&rdquo;</span>}
+                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,255,255,0.15)" style={{ flexShrink: 0 }}><path d="M7 10l5 5 5-5z"/></svg>
+                                                                </div>
+                                                                {/* Expandable detail */}
+                                                                <div id={`subLogDetail-${sub.id}`} style={{ display: 'none', padding: '10px 12px', marginTop: 2, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6 }}>
+                                                                    {sub.photo_url && (
+                                                                        <a href={sub.photo_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.15)', marginBottom: 8 }}>
+                                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                            <img src={sub.photo_url} alt="Submission" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                                        </a>
+                                                                    )}
+                                                                    {sub.video_url && <video src={sub.video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 200, borderRadius: 6, border: '1px solid rgba(197,160,89,0.15)', background: '#000', marginBottom: 8 }} />}
+                                                                    {sub.text && (
+                                                                        <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6, fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, marginBottom: 8, maxHeight: 120, overflowY: 'auto', whiteSpace: 'pre-wrap' }}>{sub.text}</div>
+                                                                    )}
+                                                                    {sub.queen_comment && (
+                                                                        <div style={{ padding: '6px 10px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 6, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', fontStyle: 'italic' }}>&ldquo;{sub.queen_comment}&rdquo;</div>
+                                                                    )}
+                                                                    {!sub.photo_url && !sub.video_url && !sub.text && (
+                                                                        <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>No media attached</div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
