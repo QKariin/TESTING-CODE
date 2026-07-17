@@ -258,11 +258,27 @@ export function renderSidebar() {
         return;
     }
 
-    // Incremental: patch each card in-place (no reorder, no DOM destruction)
+    // Incremental: patch each card in-place
     sorted.forEach(u => {
         if (!u) return;
         patchCard(list, u, now);
     });
+
+    // Check if DOM order matches sort order — reorder if not
+    const newOrder = sorted.map(u => u.memberId);
+    const domCards = Array.from(list.querySelectorAll<HTMLElement>('.u-item[data-id]'));
+    const domOrder = domCards.map(c => c.getAttribute('data-id'));
+    if (JSON.stringify(newOrder) !== JSON.stringify(domOrder)) {
+        for (let i = 0; i < newOrder.length; i++) {
+            const card = list.querySelector<HTMLElement>(`.u-item[data-id="${newOrder[i]}"]`);
+            if (!card) continue;
+            const current = list.children[i] as HTMLElement;
+            if (current !== card) {
+                list.insertBefore(card, current);
+            }
+        }
+        _lastSortOrder = newOrder;
+    }
 }
 
 /**
