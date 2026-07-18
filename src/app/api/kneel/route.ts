@@ -74,6 +74,45 @@ export async function POST(req: Request) {
             }
         }
 
+        // Chastity check: if member has a routine and it's past 10 AM local, they must have submitted today
+        try {
+            const localHour = parseInt(
+                new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
+                10
+            );
+            if (localHour >= 10) {
+                const emailCheck = (taskEmail || memberId).toLowerCase();
+                const { data: ur } = await supabaseAdmin
+                    .from('user_routines')
+                    .select('pending_submitted_at, history')
+                    .eq('member_id', emailCheck)
+                    .maybeSingle();
+                if (ur) {
+                    // Has a routine assigned — check if submitted today
+                    const todayCheckStr = now.toLocaleDateString('en-CA', { timeZone: tz });
+                    let submittedToday = false;
+                    if (ur.pending_submitted_at) {
+                        try {
+                            const pd = new Date(ur.pending_submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
+                            if (pd === todayCheckStr) submittedToday = true;
+                        } catch {}
+                    }
+                    if (!submittedToday && Array.isArray(ur.history)) {
+                        for (let i = ur.history.length - 1; i >= 0; i--) {
+                            const e = (ur.history as any[])[i];
+                            try {
+                                const ed = e.date || new Date(e.submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
+                                if (ed === todayCheckStr) { submittedToday = true; break; }
+                            } catch {}
+                        }
+                    }
+                    if (!submittedToday) {
+                        return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
+                    }
+                }
+            }
+        } catch (_) {}
+
         // Calculate today kneeling (reset at midnight in user's local timezone)
         const todayStr = now.toLocaleDateString('en-CA', { timeZone: tz });
         const lastWorshipStr = task?.lastWorship

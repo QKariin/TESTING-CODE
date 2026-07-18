@@ -311,6 +311,18 @@ async function completeKneelAction() {
                 setState({ isLocked: true, lastWorshipTime: Date.now() - (60 * 60 * 1000) + (data.minLeft || 1) * 60000 });
                 updateKneelingUI();
                 return;
+            } else if (res.status === 403 && data.error === 'CHASTITY_REQUIRED') {
+                console.warn('[KNEEL] Chastity check not submitted — kneeling blocked.');
+                const txtMain = document.getElementById('heroKneelText');
+                const mobText = document.querySelector('.kneel-label') as HTMLElement;
+                const fill = document.getElementById('heroKneelFill');
+                const mobFill = document.getElementById('mob_kneelFill');
+                if (txtMain) txtMain.innerText = 'CHASTITY FIRST';
+                if (mobText) mobText.innerText = 'CHASTITY FIRST';
+                if (fill) { fill.style.transition = 'none'; fill.style.width = '100%'; fill.style.background = 'rgba(139,32,32,0.6)'; }
+                if (mobFill) { mobFill.style.opacity = '0.3'; }
+                setTimeout(() => { resetUI(); setState({ isLocked: false }); }, 3000);
+                return;
             } else {
                 console.error('[KNEEL] Server rejected:', data.error);
                 resetUI();
