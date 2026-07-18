@@ -737,6 +737,10 @@ export default function VaultPage() {
         });
 
         return () => {
+            // Reset module-level chat state so initChatSystem() re-runs fully on next mount
+            import('@/scripts/profile-logic').then(({ cleanupChatSystem }) => {
+                try { cleanupChatSystem(); } catch (_) {}
+            }).catch(() => {});
             if ((window as any)._vaultHeartbeat) { clearInterval((window as any)._vaultHeartbeat); (window as any)._vaultHeartbeat = null; }
             try { if ((window as any)._vaultRtSub) { createClient().removeChannel((window as any)._vaultRtSub); (window as any)._vaultRtSub = null; } } catch {}
             try { if ((window as any)._vaultDailySub) { createClient().removeChannel((window as any)._vaultDailySub); (window as any)._vaultDailySub = null; } } catch {}
