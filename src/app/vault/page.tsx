@@ -194,7 +194,18 @@ export default function VaultPage() {
         } catch { return { open: false, before: false, localHour: 0, localMinute: 0 }; }
     });
     const [chastityPhotoUrl, setChastityPhotoUrl] = useState<string | null>(null);
-    const [showChastityGate, setShowChastityGate] = useState(false);
+    const [showChastityGate, setShowChastityGate] = useState(() => {
+        // Force gate synchronously on first render — no waiting for effects/API
+        // Condition: active vault session + 6-10AM check window + proof not submitted
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const h = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
+            if (h < 6 || h >= 10) return false;
+            if (!_initCache.session?.active) return false;
+            const status = _initCache.session?.chastityCheck?.status;
+            return status !== 'approved' && status !== 'pending';
+        } catch { return false; }
+    });
     const [gatePreviewUrl, setGatePreviewUrl] = useState<string | null>(null);
     const [gateFile, setGateFile] = useState<File | null>(null);
     const [gateSuccess, setGateSuccess] = useState(false);
@@ -820,16 +831,17 @@ export default function VaultPage() {
         return () => clearInterval(iv);
     }, [chatExpiresAt]);
 
-    // Auto-force chastity gate on load during 6-10 AM window if not yet submitted
+    // Auto-force chastity gate once vaultData loads (catches case where cache was empty)
     const chastityGateAutoOpened = useRef(false);
     useEffect(() => {
-        if (loading || !vaultData || chastityGateAutoOpened.current) return;
-        const hasChastityTask = (vaultData?.daysIn ?? 0) >= 1;
-        if (hasChastityTask && chastityWindow.open && chastityStatus !== 'approved' && chastityStatus !== 'pending') {
-            chastityGateAutoOpened.current = true;
-            setShowChastityGate(true);
-        }
-    }, [loading, vaultData, chastityWindow, chastityStatus]);
+        if (chastityGateAutoOpened.current) return;
+        if (!chastityWindow.open) return;
+        if (chastityStatus === 'approved' || chastityStatus === 'pending') return;
+        // Require active vault session — daysIn 0+ is fine (Day 1 needs morning check too)
+        if (!vaultData?.session?.id) return;
+        chastityGateAutoOpened.current = true;
+        setShowChastityGate(true);
+    }, [chastityWindow, vaultData, chastityStatus]);
 
     const HOLD_TIME = 2000;
     const attnDown = useCallback(() => {
