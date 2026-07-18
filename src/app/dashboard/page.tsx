@@ -2289,7 +2289,7 @@ export default function DashboardPage() {
                                                                         {!sub.photo_url && !sub.video_url && !sub.text && (
                                                                             <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic' }}>No media attached</div>
                                                                         )}
-                                                                        {sub.status === 'pending' && (
+                                                                        {(sub.status === 'pending' || sub.status === 'rejected') && (
                                                                             <>
                                                                                 <textarea id={`subLogComment-${sub.id}`} placeholder="Comment (optional)..." style={{ width: '100%', minHeight: 36, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.45rem', resize: 'vertical', outline: 'none', marginTop: 8, marginBottom: 6 }} />
                                                                                 <div style={{ display: 'flex', gap: 8 }}>

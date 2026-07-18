@@ -207,6 +207,8 @@ export default function VaultPage() {
     const [begText, setBegText] = useState('');
     const [begSent, setBegSent] = useState(false);
     const [tab, setTab] = useState<'vault' | 'chat' | 'queen' | 'global' | 'challenge'>('vault');
+    const tabRef = useRef<'vault' | 'chat' | 'queen' | 'global' | 'challenge'>('vault');
+    tabRef.current = tab;
     const [selectedDay, setSelectedDay] = useState<DayLog | null>(null);
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [mechOverlay, setMechOverlay] = useState<{ order: any; idx: number } | null>(null);
@@ -227,6 +229,8 @@ export default function VaultPage() {
     const [greedBusted, setGreedBusted] = useState(false);
     const [greedCashedOut, setGreedCashedOut] = useState(false);
     const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
+    const followUpRef = useRef<typeof followUp>(null);
+    followUpRef.current = followUp;
     const [followUpText, setFollowUpText] = useState('');
     const [followUpUploading, setFollowUpUploading] = useState(false);
     const [pendingFollowUp, setPendingFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
@@ -366,6 +370,8 @@ export default function VaultPage() {
     // Restore gamble results from server-side order data (survives localStorage clear)
     useEffect(() => {
         if (!vaultData) return;
+        // Don't restore while followUp overlay is showing — would disrupt the active submission flow
+        if (followUpRef.current) return;
         const orders = vaultData?.programTasks || (vaultData?.today?.orders ? (typeof vaultData.today.orders === 'string' ? JSON.parse(vaultData.today.orders) : vaultData.today.orders) : []);
         for (const o of orders) {
             if (!o.gambleResult || o.done >= o.target) continue;
@@ -646,7 +652,7 @@ export default function VaultPage() {
                                 try {
                                     const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
                                     if (!mid) return;
-                                    const res = await fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`);
+                                    const res = await fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`);
                                     const data = await res.json();
                                     if (!data.active && data.session?.status) {
                                         const st = data.session.status;
@@ -818,7 +824,8 @@ export default function VaultPage() {
                 setChatGateTask(null);
                 setChatExpiresAt(0);
                 (window as any).closeMobChatOverlay?.();
-                setTab('vault');
+                // Only navigate to vault if user is ON the chat tab — don't kick from WORK/other tabs
+                if (tabRef.current === 'chat') setTab('vault');
             }
         }, 1000);
         return () => clearInterval(iv);
@@ -2310,7 +2317,7 @@ export default function VaultPage() {
                                                                         setTaskText('');
                                                                         // Refresh vault data to get updated submissions
                                                                         if (mid) {
-                                                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`).then(r => r.json()).then(vd2 => {
                                                                                 if (vd2.active) {
                                                                                     console.log('[vault] refreshed data, programTasks submitted states:', vd2.programTasks?.map((t: any) => `${t.type}:${t.submitted || 'none'}`));
                                                                                     setVaultData(vd2);
