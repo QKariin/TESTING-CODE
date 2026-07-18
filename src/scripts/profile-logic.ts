@@ -5588,7 +5588,7 @@ function _closeVaultOverlay() {
     const ov = document.getElementById('_vaultLockOverlay');
     if (ov) { ov.style.opacity = '0'; ov.style.transition = 'opacity 0.2s'; setTimeout(() => ov.remove(), 200); }
 }
-(window as any).closeVaultLockOverlay = _closeVaultOverlay;
+if (typeof window !== 'undefined') (window as any).closeVaultLockOverlay = _closeVaultOverlay;
 
 async function _submitVaultLock(action: string, requestedStart?: string | null) {
     const tier = (window as any)._vaultSelectedTier || '7';
