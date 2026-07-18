@@ -800,6 +800,14 @@ export default function VaultPage() {
                 });
             };
         });
+
+        return () => {
+            if ((window as any)._vaultReleasePoller) { clearInterval((window as any)._vaultReleasePoller); (window as any)._vaultReleasePoller = null; }
+            if ((window as any)._vaultHeartbeat) { clearInterval((window as any)._vaultHeartbeat); (window as any)._vaultHeartbeat = null; }
+            try { if ((window as any)._vaultRtSub) { createClient().removeChannel((window as any)._vaultRtSub); (window as any)._vaultRtSub = null; } } catch {}
+            try { if ((window as any)._vaultDailySub) { createClient().removeChannel((window as any)._vaultDailySub); (window as any)._vaultDailySub = null; } } catch {}
+            try { if ((window as any)._vaultPresenceCh) { createClient().removeChannel((window as any)._vaultPresenceCh); (window as any)._vaultPresenceCh = null; } } catch {}
+        };
     }, []);
 
     // When chat gate is passed, open the chat overlay
