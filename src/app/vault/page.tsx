@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { startPresenceHeartbeat } from '@/scripts/telemetry';
 import '../../css/profile.css';
@@ -339,15 +339,26 @@ export default function VaultPage() {
     // Use programTasks (direct from vault_member_program) as source of truth, fallback to vault_daily orders
     const programTasks = vaultData?.programTasks;
     const rawOrders = vaultData?.today?.orders;
-    const todayOrdersBase = programTasks && programTasks.length > 0
-        ? programTasks
-        : rawOrders ? (typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders) : TODAYS_ORDERS;
-    // Sync kneel order with kneelToday, and chastity with chastityStatus
-    const todayOrders = todayOrdersBase.map((o: any) => {
-        if (o.type === 'kneel') return { ...o, done: kneelToday };
-        if (o.type === 'chastity_check') return { ...o, done: chastityStatus === 'approved' ? o.target : 0, status: chastityStatus };
-        return o;
-    });
+    const todayOrders = useMemo(() => {
+        let base: any[];
+        if (programTasks && programTasks.length > 0) {
+            base = programTasks;
+        } else if (rawOrders) {
+            try {
+                base = typeof rawOrders === 'string' ? JSON.parse(rawOrders) : rawOrders;
+            } catch {
+                base = TODAYS_ORDERS;
+            }
+        } else {
+            base = TODAYS_ORDERS;
+        }
+        // Sync kneel order with kneelToday, and chastity with chastityStatus
+        return base.map((o: any) => {
+            if (o.type === 'kneel') return { ...o, done: kneelToday };
+            if (o.type === 'chastity_check') return { ...o, done: chastityStatus === 'approved' ? o.target : 0, status: chastityStatus };
+            return o;
+        });
+    }, [programTasks, rawOrders, kneelToday, chastityStatus]);
     const todayPerfect = vaultData?.today?.perfect ?? false;
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
@@ -532,7 +543,7 @@ export default function VaultPage() {
                 (window as any).closeMobChatOverlay = closeMobChatOverlay;
                 // Initialize chat system (presence, realtime subscription, history)
                 // Fire and forget — same as /profile page, don't block vault load on chat history
-                initChatSystem();
+                initChatSystem().catch(() => {});
 
                 // Load vault session — use cache from /profile splash if available
                 const sessionReady = _cachedSession
