@@ -179,7 +179,6 @@ export default function VaultPage() {
         return s?.expires_at ? fmt(new Date(s.expires_at).getTime() - Date.now()) : fmt(0);
     });
     const [attentionCount, setAttentionCount] = useState(0);
-    const [sanity, setSanity] = useState(62);
     const [trialOpen, setTrialOpen] = useState(false);
     const [trialText, setTrialText] = useState('');
     const [trialDone, setTrialDone] = useState(false);
@@ -423,14 +422,9 @@ export default function VaultPage() {
         const iv = setInterval(() => {
             setElapsed(fmt(Date.now() - new Date(lockStart).getTime()));
             setRemaining(fmt(new Date(lockEnd).getTime() - Date.now()));
-        }, 1000);
+        }, 60000); // 1-minute interval — display shows days/hours/minutes, no need for per-second renders
         return () => clearInterval(iv);
     }, [vaultData]);
-
-    useEffect(() => {
-        const iv = setInterval(() => setSanity(p => Math.min(100, p + 0.03)), 5000);
-        return () => clearInterval(iv);
-    }, []);
 
     // Update chastity window every minute — pure local time math, no server call
     useEffect(() => {
