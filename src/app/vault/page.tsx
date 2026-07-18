@@ -331,6 +331,7 @@ export default function VaultPage() {
     const vladScrollRef = useRef<HTMLDivElement>(null);
     const attnTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const attnStartTime = useRef(0);
+    const chatBannerArmed = useRef(false); // true when dashboard has granted chat
     const chatGateTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const chatGateStartTime = useRef(0);
     const globalOk = attentionCount >= KNEELS_NEEDED;
@@ -543,8 +544,8 @@ export default function VaultPage() {
                 (window as any).switchMobChatTab = switchMobChatTab;
                 (window as any).handleMediaPlus = handleMediaPlus;
                 (window as any).handleAiChatKey = (e: any) => { if (e.key === 'Enter') sendAiMessage(); };
-                (window as any).openMobChatOverlay = openMobChatOverlay;
-                (window as any).closeMobChatOverlay = closeMobChatOverlay;
+                (window as any).openMobChatOverlay = () => { openMobChatOverlay(); setChatOpenBanner(false); };
+                (window as any).closeMobChatOverlay = () => { closeMobChatOverlay(); if (chatBannerArmed.current) setChatOpenBanner(true); };
                 // Initialize chat system (presence, realtime subscription, history)
                 // Fire and forget — same as /profile page, don't block vault load on chat history
                 initChatSystem().catch(() => {});
@@ -563,6 +564,7 @@ export default function VaultPage() {
                             // Restore chat open banner from DB
                             if (vd.chatOpen) {
                                 setChatOpenBanner(true);
+                                chatBannerArmed.current = true;
                             }
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
@@ -673,9 +675,11 @@ export default function VaultPage() {
                                     })
                                     .on('broadcast', { event: 'chat_granted' }, () => {
                                         setChatOpenBanner(true);
+                                        chatBannerArmed.current = true;
                                     })
                                     .on('broadcast', { event: 'chat_closed' }, () => {
                                         setChatOpenBanner(false);
+                                        chatBannerArmed.current = false;
                                     })
                                     .subscribe();
                                 (window as any)._vaultDailySub = notifySub;
@@ -3006,7 +3010,7 @@ export default function VaultPage() {
             {/* ══════════════════════════════════════════════
                 BOTTOM NAV — 5 tabs matching /profile
             ══════════════════════════════════════════════ */}
-            <nav id="mobBottomNav" className="mob-bottom-nav" style={{
+            <nav id="mobBottomNav" className="mob-bottom-nav" onClick={() => { setChatOpenBanner(false); chatBannerArmed.current = false; }} style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 zIndex: 2147483647,
                 height: 'calc(68px + env(safe-area-inset-bottom, 0px))',
