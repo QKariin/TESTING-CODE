@@ -201,6 +201,9 @@ export default function VaultPage() {
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const h = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
             if (h < 6 || h >= 10) return false;
+            // Check localStorage: if already submitted today, never show gate
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+            if (localStorage.getItem('_ck_submitted') === todayStr) return false;
             if (!_initCache.session?.active) return false;
             const status = _initCache.session?.chastityCheck?.status;
             return status !== 'approved' && status !== 'pending';
@@ -728,14 +731,8 @@ export default function VaultPage() {
                             }
                         }
 
-                        // ALL state set — NOW dismiss splash
-                        if (_cachedProfile) {
-                            setLoading(false);
-                        } else {
-                            const elapsed = Date.now() - _splashStart;
-                            const remaining = Math.max(0, 5000 - elapsed);
-                            setTimeout(() => setLoading(false), remaining);
-                        }
+                        // ALL state set — dismiss splash immediately (no artificial delay)
+                        setLoading(false);
                     })
                     .catch(e => {
                         console.error('[VAULT] Session fetch failed:', e);
@@ -837,6 +834,12 @@ export default function VaultPage() {
         if (chastityGateAutoOpened.current) return;
         if (!chastityWindow.open) return;
         if (chastityStatus === 'approved' || chastityStatus === 'pending') return;
+        // Check localStorage: already submitted today — never re-show
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
+            if (localStorage.getItem('_ck_submitted') === todayStr) return;
+        } catch {}
         // Require active vault session — daysIn 0+ is fine (Day 1 needs morning check too)
         if (!vaultData?.session?.id) return;
         chastityGateAutoOpened.current = true;
@@ -3431,6 +3434,8 @@ export default function VaultPage() {
                                                     setChastityStatus('pending');
                                                     setChastityPhotoUrl(uploadData.url);
                                                     setGateSuccess(true);
+                                                    // Persist submission so gate never re-shows on reload today
+                                                    try { const _tz = Intl.DateTimeFormat().resolvedOptions().timeZone; localStorage.setItem('_ck_submitted', new Date().toLocaleDateString('en-CA', { timeZone: _tz })); } catch {}
                                                     vladReact('Member just submitted their daily chastity check photo. Good boy — or is he hiding something?');
                                                     setTimeout(() => {
                                                         setShowChastityGate(false);
