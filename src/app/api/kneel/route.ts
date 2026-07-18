@@ -74,8 +74,8 @@ export async function POST(req: Request) {
             }
         }
 
-        // Chastity check gate: if member has an active vault session with a chastity_check order today
-        // and the window is closed (past 10 AM local), block kneeling until they submit
+        // Chastity check gate: vault members MUST submit today's chastity check before kneeling
+        // Gate applies after 10 AM local (submission window 6-10 AM has closed)
         try {
             const localHour = parseInt(
                 new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
@@ -94,29 +94,16 @@ export async function POST(req: Request) {
                     .limit(1)
                     .maybeSingle();
                 if (vs) {
-                    // Check if today's orders include a chastity_check
-                    const { data: daily } = await supabaseAdmin
-                        .from('vault_daily')
-                        .select('orders')
+                    // Universal gate: must have submitted chastity check today (pending or approved)
+                    const { data: checkLog } = await supabaseAdmin
+                        .from('vault_check_log')
+                        .select('status')
                         .eq('session_id', vs.id)
                         .eq('date', todayCheckStr)
+                        .eq('type', 'chastity_check')
                         .maybeSingle();
-                    const orders: any[] = daily?.orders
-                        ? (typeof daily.orders === 'string' ? JSON.parse(daily.orders) : daily.orders)
-                        : [];
-                    const hasChastityOrder = orders.some((o: any) => o.type === 'chastity_check');
-                    if (hasChastityOrder) {
-                        // Check vault_check_log for today's submission
-                        const { data: checkLog } = await supabaseAdmin
-                            .from('vault_check_log')
-                            .select('status')
-                            .eq('session_id', vs.id)
-                            .eq('date', todayCheckStr)
-                            .eq('type', 'chastity_check')
-                            .maybeSingle();
-                        if (!checkLog || checkLog.status === 'rejected') {
-                            return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
-                        }
+                    if (!checkLog || checkLog.status === 'rejected') {
+                        return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
                     }
                 }
             }
