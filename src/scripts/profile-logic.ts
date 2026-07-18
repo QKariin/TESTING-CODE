@@ -3534,8 +3534,10 @@ export async function initChatSystem() {
                     }
                 }
                 // Vault: active — redirect to vault (but not if proof upload is in progress — it handles its own redirect)
+                // IMPORTANT: skip if already on /vault — presence heartbeat updates last_active constantly,
+                // which triggers this handler and causes an infinite reload loop on the vault page
                 else if (fresh.parameters?.active_overlay === 'vault') {
-                    if (!document.getElementById('_vaultVideoOverlay')) {
+                    if (!document.getElementById('_vaultVideoOverlay') && window.location.pathname !== '/vault') {
                         window.location.href = '/vault';
                     }
                 }
