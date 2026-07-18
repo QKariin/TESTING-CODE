@@ -300,6 +300,7 @@ export default function VaultPage() {
     const [chatGateFill, setChatGateFill] = useState(0);
     const [chatGateTask, setChatGateTask] = useState<typeof ATTENTION_TASKS[0] | null>(null);
     const [chatGateDone, setChatGateDone] = useState(false);
+    const [chatOpenBanner, setChatOpenBanner] = useState(false);
     const [chatExpiresAt, setChatExpiresAt] = useState(0);
     const [chatGateProofUploaded, setChatGateProofUploaded] = useState(false);
     const [chatGateSpinning, setChatGateSpinning] = useState(false);
@@ -543,10 +544,9 @@ export default function VaultPage() {
                         if (vd.active) {
                             setVaultData(vd);
                             setPenaltyHours(vd.totalPenaltyHours || 0);
-                            // Restore chat cooldown/grant from DB
+                            // Restore chat open banner from DB
                             if (vd.chatOpen) {
-                                setChatGateDone(true);
-                                setChatGateCooldownUntil(0);
+                                setChatOpenBanner(true);
                             }
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
@@ -632,60 +632,6 @@ export default function VaultPage() {
                                 .subscribe();
                             (window as any)._vaultRtSub = rtSub;
 
-                            // Polling fallback: check session status, chat grants, and order updates every 10s
-                            let _lastOrdersCompleted = vd.today?.orders_completed ?? -1;
-                            let _lastPerfect = vd.today?.perfect ?? false;
-                            const sessionId = vd.session.id;
-                            const releasePoller = setInterval(async () => {
-                                try {
-                                    const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
-                                    if (!mid) return;
-                                    const res = await fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`);
-                                    const data = await res.json();
-                                    if (!data.active && data.session?.status) {
-                                        const st = data.session.status;
-                                        if (st === 'released_early' || st === 'completed' || st === 'denied' || st === 'ended') {
-                                            clearInterval(releasePoller);
-                                            try { localStorage.removeItem('vault_cooldowns'); } catch {}
-                                            setReleaseOverlay({ reason: data.session.release_reason || '' });
-                                        }
-                                    }
-                                    // Check for keyholder chat grant
-                                    if (data.chatCooldownUntil) {
-                                        const cdUntil = new Date(data.chatCooldownUntil).getTime();
-                                        if (cdUntil > Date.now()) {
-                                            const hoursLeft = (cdUntil - Date.now()) / 3600000;
-                                            if (hoursLeft > 24) {
-                                                // Keyholder opened chat (no limit)
-                                                setChatGateDone(true);
-                                                setChatGateCooldownUntil(0);
-                                            } else if (hoursLeft <= 0.5) {
-                                                // Coin flip grant (with timer)
-                                                setChatExpiresAt(cdUntil);
-                                                setChatGateDone(true);
-                                                setChatGateCooldownUntil(0);
-                                            }
-                                        }
-                                    }
-                                    // Refresh vault data when order completion changes (task approvals)
-                                    if (data.active) {
-                                        const newCompleted = data.today?.orders_completed ?? -1;
-                                        const newPerfect = data.today?.perfect ?? false;
-                                        if (newCompleted !== _lastOrdersCompleted || newPerfect !== _lastPerfect) {
-                                            _lastOrdersCompleted = newCompleted;
-                                            _lastPerfect = newPerfect;
-                                            setVaultData(data);
-                                        }
-                                        // Sync chastity status from API (broadcast may not fire due to RLS)
-                                        const chk = data.chastityCheck;
-                                        if (chk?.status === 'approved') setChastityStatus('approved');
-                                        else if (chk?.status === 'rejected') setChastityStatus('rejected');
-                                        else if (chk?.status === 'pending') setChastityStatus('pending');
-                                    }
-                                } catch {}
-                            }, 10000);
-                            (window as any)._vaultReleasePoller = releasePoller;
-
                             // Realtime: listen for Queen's review actions (broadcast from API)
                             if (_cachedProfile?.ID) {
                                 const notifySub = supabase
@@ -710,11 +656,10 @@ export default function VaultPage() {
                                         }
                                     })
                                     .on('broadcast', { event: 'chat_granted' }, () => {
-                                        setChatGateDone(true);
-                                        setChatGateCooldownUntil(0);
+                                        setChatOpenBanner(true);
                                     })
                                     .on('broadcast', { event: 'chat_closed' }, () => {
-                                        setChatGateDone(false);
+                                        setChatOpenBanner(false);
                                     })
                                     .subscribe();
                                 (window as any)._vaultDailySub = notifySub;
@@ -792,7 +737,6 @@ export default function VaultPage() {
         });
 
         return () => {
-            if ((window as any)._vaultReleasePoller) { clearInterval((window as any)._vaultReleasePoller); (window as any)._vaultReleasePoller = null; }
             if ((window as any)._vaultHeartbeat) { clearInterval((window as any)._vaultHeartbeat); (window as any)._vaultHeartbeat = null; }
             try { if ((window as any)._vaultRtSub) { createClient().removeChannel((window as any)._vaultRtSub); (window as any)._vaultRtSub = null; } } catch {}
             try { if ((window as any)._vaultDailySub) { createClient().removeChannel((window as any)._vaultDailySub); (window as any)._vaultDailySub = null; } } catch {}
@@ -1168,6 +1112,29 @@ export default function VaultPage() {
                 <div style={{ position: 'absolute', top: -50, left: -50, right: -50, bottom: -50, background: "url('/queen-bg-mobile.jpg') center 20%/cover no-repeat", opacity: 0.5, filter: 'saturate(0.4)' }} />
             </div>
             <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'linear-gradient(180deg, rgba(8,8,16,0.1) 0%, rgba(8,8,16,0.55) 60%, rgba(8,8,16,0.85) 100%)' }} />
+
+            {/* ── CHAT OPEN BANNER — pushed from dashboard, stays until Queen closes it ── */}
+            {chatOpenBanner && (
+                <div
+                    onClick={() => (window as any).openMobChatOverlay?.()}
+                    style={{
+                        position: 'fixed', bottom: 76, left: 12, right: 12, zIndex: 10000004,
+                        background: 'linear-gradient(135deg, rgba(8,7,22,0.97) 0%, rgba(12,10,26,0.97) 100%)',
+                        border: '1px solid rgba(197,160,89,0.55)',
+                        borderRadius: 14, padding: '12px 16px',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        boxShadow: '0 -2px 30px rgba(197,160,89,0.12), 0 4px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(197,160,89,0.08)',
+                        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', cursor: 'pointer',
+                    } as React.CSSProperties}
+                >
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 12px rgba(197,160,89,0.9)', flexShrink: 0, animation: 'pulse 2s infinite' }} />
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.72rem', color: '#c5a059', letterSpacing: '2px', fontWeight: 600 }}>CHAT IS OPEN</div>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', letterSpacing: '1.5px', marginTop: 2, color: 'rgba(197,160,89,0.5)' }}>TAP TO ENTER — QUEEN IS AVAILABLE</div>
+                    </div>
+                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.6)' }}>›</div>
+                </div>
+            )}
 
             {/* ══════════════════════════════════════════════
                 VAULT TAB — main scroll
