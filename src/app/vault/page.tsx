@@ -1136,7 +1136,7 @@ export default function VaultPage() {
             {/* ── CHAT OPEN BANNER — pushed from dashboard, stays until Queen closes it ── */}
             {chatOpenBanner && (
                 <div
-                    onClick={() => (window as any).openMobChatOverlay?.()}
+                    onClick={() => { setChatOpenBanner(false); (window as any).openMobChatOverlay?.(); }}
                     style={{
                         position: 'fixed', top: 12, left: 12, right: 12, zIndex: 10000004,
                         background: 'linear-gradient(135deg, rgba(8,7,22,0.97) 0%, rgba(12,10,26,0.97) 100%)',
@@ -3006,7 +3006,7 @@ export default function VaultPage() {
             {/* ══════════════════════════════════════════════
                 BOTTOM NAV — 5 tabs matching /profile
             ══════════════════════════════════════════════ */}
-            <nav className="mob-bottom-nav" style={{
+            <nav id="mobBottomNav" className="mob-bottom-nav" style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 zIndex: 2147483647,
                 height: 'calc(68px + env(safe-area-inset-bottom, 0px))',
