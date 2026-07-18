@@ -165,11 +165,14 @@ function _readCache() {
     } catch { return { profile: null, session: null, kneel: null }; }
 }
 const _initCache = _readCache();
+// Updated after first successful API load — prevents black screen on every remount from cold start
+let _liveProfile: any = null;
+let _liveVaultData: any = null;
 
 export default function VaultPage() {
-    const [loading, setLoading] = useState(!_initCache.profile);
-    const [profile, setProfile] = useState<any>(_initCache.profile);
-    const [vaultData, setVaultData] = useState<any>(_initCache.session?.active ? _initCache.session : null); // real DB data from /api/vault/session
+    const [loading, setLoading] = useState(!_initCache.profile && !_liveProfile);
+    const [profile, setProfile] = useState<any>(_initCache.profile ?? _liveProfile);
+    const [vaultData, setVaultData] = useState<any>(_initCache.session?.active ? _initCache.session : (_liveVaultData?.active ? _liveVaultData : null)); // real DB data from /api/vault/session
     const [elapsed, setElapsed] = useState(() => {
         const s = _initCache.session?.session;
         return s?.started_at ? fmt(Date.now() - new Date(s.started_at).getTime()) : fmt(0);
@@ -503,6 +506,7 @@ export default function VaultPage() {
                 // Cache name + avatar for loading screen
                 try { if (data.name) localStorage.setItem('_qk_name', data.name); if (data.avatar_url) localStorage.setItem('_qk_avatar', data.avatar_url); } catch {}
                 setProfile(data);
+                _liveProfile = data; // persist across remounts — prevents black screen on revisit
                 // Start presence heartbeat (updates last_active in DB) + realtime presence channel
                 if (data.memberId || user?.id) {
                     const hb = startPresenceHeartbeat(data.memberId || user?.id || '', data.member_id || data.email || '');
@@ -554,6 +558,7 @@ export default function VaultPage() {
                         console.log('[VAULT] Session data:', vd);
                         if (vd.active) {
                             setVaultData(vd);
+                            _liveVaultData = vd; // persist across remounts
                             setPenaltyHours(vd.totalPenaltyHours || 0);
                             // Restore chat open banner from DB
                             if (vd.chatOpen) {
