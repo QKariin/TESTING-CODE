@@ -289,6 +289,7 @@ async function completeKneelAction() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     let kneelSuccess = false;
+    let kneelData: any = null;
     if (userId) {
         try {
             const res = await fetch('/api/kneel', {
@@ -299,6 +300,7 @@ async function completeKneelAction() {
             const data = await res.json();
             if (res.ok && data.success) {
                 kneelSuccess = true;
+                kneelData = data;
                 if (typeof data.todayKneeling === 'number') {
                     updateKneelingHoursUI(data.todayKneeling);
                     renderKneelDots(data.kneelHours || []);
@@ -325,6 +327,11 @@ async function completeKneelAction() {
 
     // Only show reward overlay if server confirmed the kneel
     if (!kneelSuccess) { resetUI(); return; }
+
+    // Notify vault page if present (vault handles its own post-kneel logic)
+    if (typeof (window as any).__vaultKneelCallback === 'function') {
+        (window as any).__vaultKneelCallback({ todayKneeling: kneelData?.todayKneeling });
+    }
 
     const deskReward = document.getElementById('kneelRewardOverlay');
     const mobReward = document.getElementById('mobKneelReward');

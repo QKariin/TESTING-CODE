@@ -300,14 +300,7 @@ export default function VaultPage() {
     const [chatGateCooldownUntil, setChatGateCooldownUntil] = useState(0);
     const [cancelShame, setCancelShame] = useState<'attn' | 'gate' | null>(null);
     // Kneel state
-    const [kneelHolding, setKneelHolding] = useState(false);
-    const [kneelFill, setKneelFill] = useState(0);
     const [kneelToday, setKneelToday] = useState(_initCache.kneel?.todayKneeling || 0);
-    const [kneelCooldownUntil, setKneelCooldownUntil] = useState(_initCache.kneel?.isLocked && _initCache.kneel?.minLeft > 0 ? Date.now() + _initCache.kneel.minLeft * 60000 : 0);
-    const [kneelDone, setKneelDone] = useState(false); // just completed animation
-    const kneelTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-    const kneelStartTime = useRef(0);
-    const kneelCooldown = kneelCooldownUntil > Date.now();
     // Release overlay
     const [releaseOverlay, setReleaseOverlay] = useState<{ reason: string } | null>(null);
     // Vlad mini-chat
@@ -583,13 +576,11 @@ export default function VaultPage() {
                             if (vd.chastityWindow && !_cachedSession) setChastityWindow(vd.chastityWindow);
                             if (_cachedKneel) {
                                 if (_cachedKneel.todayKneeling) setKneelToday(_cachedKneel.todayKneeling);
-                                if (_cachedKneel.isLocked && _cachedKneel.minLeft > 0) setKneelCooldownUntil(Date.now() + _cachedKneel.minLeft * 60000);
                             } else {
                                 fetch(`/api/kneel-status?memberId=${encodeURIComponent(memberId)}&tz=${Intl.DateTimeFormat().resolvedOptions().timeZone}`)
                                     .then(r => r.json())
                                     .then(ks => {
                                         if (ks.todayKneeling) setKneelToday(ks.todayKneeling);
-                                        if (ks.isLocked && ks.minLeft > 0) setKneelCooldownUntil(Date.now() + ks.minLeft * 60000);
                                     }).catch(() => {});
                             }
                             fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ensure_today', memberId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) })
@@ -965,52 +956,32 @@ export default function VaultPage() {
         } catch {}
     }, [loading, profile, vladReact]);
 
-    // Kneel hold handler — CSS-transition driven to avoid 33 renders/sec during hold
-    const KNEEL_HOLD_TIME = 3000; // 3 second hold to kneel
-    const kneelDown = useCallback(() => {
-        if (kneelCooldown || kneelDone) return;
-        setKneelHolding(true);
-        setKneelFill(100); // CSS transition animates 0→100 over 3s (see fill div transition)
-        kneelTimer.current = setTimeout(() => {
-            setKneelHolding(false);
-            setKneelFill(0);
-            setKneelDone(true);
-            setTimeout(() => setKneelDone(false), 2000);
-            // Call kneel API
-            const memberId = profile?.member_id || profile?.memberId || profile?.ID || '';
-            fetch('/api/kneel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId }),
-            }).then(r => r.json()).then(data => {
-                if (data.success) {
-                    setKneelToday(data.todayKneeling);
-                    // Set cooldown (1h prod, 1m dev)
-                    const cooldownMs = process.env.NODE_ENV === 'development' ? 60000 : 3600000;
-                    setKneelCooldownUntil(Date.now() + cooldownMs);
-                    // Update vault daily order
-                    if (vaultData?.session?.id) {
-                        fetch('/api/vault/session', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'kneel', amount: 1 }),
-                        }).catch(() => {});
-                    }
-                    const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 4;
-                    const remaining = Math.max(0, kTarget - data.todayKneeling);
-                    vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${remaining <= 0 ? 'They hit the daily target!' : `${remaining} more to go.`}`);
-                } else if (data.error === 'COOLDOWN') {
-                    setKneelCooldownUntil(Date.now() + data.minLeft * 60000);
-                }
-            }).catch(() => {});
-        }, KNEEL_HOLD_TIME) as unknown as ReturnType<typeof setInterval>;
-    }, [kneelCooldown, kneelDone, profile, vaultData, vladReact]);
+    // Attach profile-style kneel button (same module as /profile page)
+    useEffect(() => {
+        if (loading) return;
+        import('@/scripts/kneeling').then(({ attachKneelListeners }) => {
+            attachKneelListeners();
+        });
+    }, [loading]);
 
-    const kneelUp = useCallback(() => {
-        if (kneelTimer.current) clearTimeout(kneelTimer.current as unknown as ReturnType<typeof setTimeout>);
-        setKneelHolding(false);
-        setKneelFill(0);
-    }, []);
+    // Vault-specific post-kneel callback — updates React state + vault daily order
+    useEffect(() => {
+        (window as any).__vaultKneelCallback = (data: any) => {
+            if (typeof data?.todayKneeling === 'number') setKneelToday(data.todayKneeling);
+            const mid = profile?.member_id || profile?.memberId || '';
+            if (vaultData?.session?.id && mid) {
+                fetch('/api/vault/session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'complete_order', memberId: mid, orderType: 'kneel', amount: 1 }),
+                }).catch(() => {});
+            }
+            const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 4;
+            const remaining = Math.max(0, kTarget - (data?.todayKneeling || 0));
+            vladReact(`Member just completed kneeling session #${data?.todayKneeling} today. ${remaining <= 0 ? 'They hit the daily target!' : `${remaining} more to go.`}`);
+        };
+        return () => { delete (window as any).__vaultKneelCallback; };
+    }, [profile, vaultData, todayOrders, vladReact]);
 
     const spin = useCallback(() => {
         if (spinning || wheelUsed) return;
@@ -1514,58 +1485,12 @@ export default function VaultPage() {
 
                 {/* ── KNEEL BAR ── */}
                 <div style={{ width: '100%', padding: '32px 20px 16px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ width: '100%', maxWidth: 360, position: 'relative' }}>
-                        <div
-                            onPointerDown={kneelDown}
-                            onPointerUp={kneelUp}
-                            onPointerLeave={kneelUp}
-                            onPointerCancel={kneelUp}
-                            onContextMenu={(e) => e.preventDefault()}
-                            style={{
-                                position: 'relative', width: '100%', height: 56, borderRadius: 28,
-                                background: kneelDone ? 'rgba(80,200,120,0.08)' : `${R}0.08)`,
-                                border: `1.5px solid ${kneelDone ? 'rgba(80,200,120,0.4)' : `${R}${kneelHolding ? '0.5' : '0.25'})`}`,
-                                overflow: 'hidden', cursor: kneelCooldown ? 'default' : 'pointer',
-                                boxShadow: kneelHolding ? `0 0 20px ${R}0.2)` : kneelDone ? '0 0 20px rgba(80,200,120,0.1)' : 'none',
-                                transition: 'border-color 0.3s, box-shadow 0.3s, background 0.3s',
-                                WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
-                            } as React.CSSProperties}
-                        >
-                            {/* Fill bar */}
-                            <div style={{
-                                position: 'absolute', left: 0, top: 0, bottom: 0,
-                                width: `${kneelFill}%`,
-                                background: `linear-gradient(90deg, ${R}0.15), ${R}0.35))`,
-                                borderRadius: 26, transition: kneelHolding ? 'width 3s linear' : 'width 0.2s',
-                            }} />
-                            {/* Content */}
-                            <div style={{
-                                position: 'relative', zIndex: 1, width: '100%', height: '100%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                            }}>
-                                {/* Kneeling person icon */}
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={kneelDone ? 'rgba(80,200,120,0.5)' : `${R}${kneelCooldown ? '0.2' : '0.6'})`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="4" r="2" />
-                                    <path d="M12 6v6l-3 4" />
-                                    <path d="M12 12l3 4" />
-                                    <path d="M9 10l-2 1" />
-                                    <path d="M15 10l2 1" />
-                                </svg>
-                                <span style={{
-                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem',
-                                    letterSpacing: '4px',
-                                    color: kneelDone ? 'rgba(80,200,120,0.6)' : kneelCooldown ? 'rgba(255,255,255,0.12)' : `${R}0.65)`,
-                                }}>
-                                    {kneelDone ? 'KNELT' : kneelCooldown ? (() => {
-                                        const left = Math.max(0, Math.ceil((kneelCooldownUntil - Date.now()) / 1000));
-                                        if (left < 60) return `${left}s`;
-                                        const h = Math.floor(left / 3600); const m = Math.floor((left % 3600) / 60);
-                                        return h > 0 ? `${h}h ${m}m` : `${m}m`;
-                                    })() : kneelHolding ? 'HOLD...' : 'KNEEL'}
-                                </span>
-                            </div>
+                    <button id="heroKneelBtn" className="mob-kneel-bar" style={{ height: 48, width: 220, margin: 0, padding: 0, outline: 'none' }}>
+                        <div id="heroKneelFill" className="mob-bar-fill" style={{ width: '0%' }}></div>
+                        <div className="mob-bar-content" style={{ pointerEvents: 'none' }}>
+                            <span id="heroKneelText" style={{ fontFamily: 'Orbitron', fontSize: '0.8rem', color: 'white', textShadow: '0 1px 3px black', letterSpacing: 2 }}>HOLD TO KNEEL</span>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
                 {/* Kneel progress dots — under kneel button */}
