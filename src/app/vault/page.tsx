@@ -531,8 +531,8 @@ export default function VaultPage() {
                 (window as any).openMobChatOverlay = openMobChatOverlay;
                 (window as any).closeMobChatOverlay = closeMobChatOverlay;
                 // Initialize chat system (presence, realtime subscription, history)
-                // MUST await — loadChatHistory inside needs to finish before overlay can open
-                await initChatSystem();
+                // Fire and forget — same as /profile page, don't block vault load on chat history
+                initChatSystem();
 
                 // Load vault session — use cache from /profile splash if available
                 const sessionReady = _cachedSession
@@ -2997,12 +2997,12 @@ export default function VaultPage() {
                 WebkitBackdropFilter: 'blur(20px)',
                 borderTop: `1px solid ${R}0.12)`,
             }}>
-                <NavBtn active={tab === 'vault'} icon="&#9670;" label="VAULT" onClick={() => { setVladOpen(false); setTab('vault'); }} />
-                <NavBtn active={tab === 'challenge'} label="WORK" onClick={() => { setVladOpen(false); setTab('challenge'); }}
+                <NavBtn active={tab === 'vault'} icon="&#9670;" label="VAULT" onClick={() => { setVladOpen(false); setChatOpenBanner(false); setTab('vault'); }} />
+                <NavBtn active={tab === 'challenge'} label="WORK" onClick={() => { setVladOpen(false); setChatOpenBanner(false); setTab('challenge'); }}
                     icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>} />
 
                 {/* Center Queen button */}
-                <button onClick={() => { setVladOpen(false); setTab('chat'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(6px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
+                <button onClick={() => { setVladOpen(false); setChatOpenBanner(false); setTab('chat'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(6px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
                     <div style={{
                         width: 112, height: 112, borderRadius: '50%',
                         border: `2px solid ${tab === 'chat' ? `${R}0.5)` : `${R}0.15)`}`,
@@ -3019,8 +3019,8 @@ export default function VaultPage() {
                     )}
                 </button>
 
-                <NavBtn active={tab === 'queen'} icon="&#9819;" label="RECORD" onClick={() => { setVladOpen(false); setTab('queen'); }} />
-                <NavBtn active={tab === 'global'} icon="&#9678;" label="UNION" onClick={() => { setVladOpen(false); setTab('global'); }} locked={!globalOk} />
+                <NavBtn active={tab === 'queen'} icon="&#9819;" label="RECORD" onClick={() => { setVladOpen(false); setChatOpenBanner(false); setTab('queen'); }} />
+                <NavBtn active={tab === 'global'} icon="&#9678;" label="UNION" onClick={() => { setVladOpen(false); setChatOpenBanner(false); setTab('global'); }} locked={!globalOk} />
             </nav>
 
             {/* ── FLOATING VLAD AVATAR + SPEECH BUBBLE ── */}
