@@ -222,8 +222,7 @@ export async function GET(req: NextRequest) {
     // Read program directly (same source as dashboard's /api/vault/program)
     let programTasks: any[] | null = null;
     try {
-        const startDateP = new Date(session.started_at);
-        const dayNum = Math.floor((Date.now() - startDateP.getTime()) / 86400000) + 1;
+        const dayNum = tzDaysIn(session.started_at, tz) + 1;
         const { data: progRow } = await supabaseAdmin
             .from('vault_member_program')
             .select('id, program')

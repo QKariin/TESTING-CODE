@@ -843,6 +843,15 @@ export default function VaultPage() {
         setShowChastityGate(true);
     }, [chastityWindow, vaultData, chastityStatus]);
 
+    // Close gate if already submitted (handles reload — lazy init can't read empty cache)
+    // Skip if gateSuccess is true — submission flow manages its own close timer
+    useEffect(() => {
+        if (gateSuccess) return;
+        if (chastityStatus === 'pending' || chastityStatus === 'approved') {
+            setShowChastityGate(false);
+        }
+    }, [chastityStatus, gateSuccess]);
+
     const HOLD_TIME = 2000;
     const attnDown = useCallback(() => {
         if (attnCooldown || attnResult) return;
