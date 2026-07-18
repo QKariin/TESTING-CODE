@@ -544,24 +544,9 @@ export default function VaultPage() {
                             setVaultData(vd);
                             setPenaltyHours(vd.totalPenaltyHours || 0);
                             // Restore chat cooldown/grant from DB
-                            if (vd.chatCooldownUntil) {
-                                const cdUntil = new Date(vd.chatCooldownUntil).getTime();
-                                if (cdUntil > Date.now()) {
-                                    const hoursLeft = (cdUntil - Date.now()) / 3600000;
-                                    if (hoursLeft > 24) {
-                                        // Keyholder opened chat (no time limit)
-                                        setChatGateDone(true);
-                                        setChatGateCooldownUntil(0);
-                                    } else if (hoursLeft <= 0.5) {
-                                        // Coin flip HEADS grant (with timer)
-                                        setChatExpiresAt(cdUntil);
-                                        setChatGateDone(true);
-                                        setChatGateCooldownUntil(0);
-                                    } else {
-                                        // Deny cooldown (8h from coin flip TAILS)
-                                        setChatGateCooldownUntil(cdUntil);
-                                    }
-                                }
+                            if (vd.chatOpen) {
+                                setChatGateDone(true);
+                                setChatGateCooldownUntil(0);
                             }
                             if (vd.todaySpin) { setWheelUsed(true); setWheelResult({ text: vd.todaySpin.result_text, type: vd.todaySpin.result_type }); }
                             const todayTrial = (vd.trials || []).find((t: any) => t.date === vd.todayDate);
@@ -709,7 +694,6 @@ export default function VaultPage() {
                                         const s = msg?.payload?.status;
                                         if (s === 'approved') setChastityStatus('approved');
                                         else if (s === 'rejected') setChastityStatus('rejected');
-                                        // Also refresh full vault data so orders/streaks update
                                         const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
                                         if (mid) {
                                             fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
@@ -718,13 +702,19 @@ export default function VaultPage() {
                                         }
                                     })
                                     .on('broadcast', { event: 'task_reviewed' }, (msg: any) => {
-                                        // Refresh full vault data so submission statuses update
                                         const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
                                         if (mid) {
                                             fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
                                                 if (vd2.active) setVaultData(vd2);
                                             }).catch(() => {});
                                         }
+                                    })
+                                    .on('broadcast', { event: 'chat_granted' }, () => {
+                                        setChatGateDone(true);
+                                        setChatGateCooldownUntil(0);
+                                    })
+                                    .on('broadcast', { event: 'chat_closed' }, () => {
+                                        setChatGateDone(false);
                                     })
                                     .subscribe();
                                 (window as any)._vaultDailySub = notifySub;
@@ -2026,9 +2016,6 @@ export default function VaultPage() {
                                                     setTimeout(() => {
                                                         const grantUntil = Date.now() + 15 * 60 * 1000;
                                                         setChatExpiresAt(grantUntil); setChatGateDone(true); setChatGateFlipState('idle');
-                                                        // Persist grant to DB
-                                                        const mid = profile?.member_id || profile?.memberId || '';
-                                                        if (mid) fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_cooldown', memberId: mid, until: grantUntil }) }).catch(() => {});
                                                     }, 2000);
                                                 } else {
                                                     vladReact('Member flipped TAILS. Denied. 8 hour cooldown. Better luck next time.');
@@ -2036,9 +2023,6 @@ export default function VaultPage() {
                                                         const cooldownUntil = Date.now() + 8 * 3600 * 1000;
                                                         setChatGateCooldownUntil(cooldownUntil);
                                                         setChatGateFlipState('idle');
-                                                        // Persist to DB
-                                                        const mid = profile?.member_id || profile?.memberId || '';
-                                                        if (mid) fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_cooldown', memberId: mid, until: cooldownUntil }) }).catch(() => {});
                                                     }, 2500);
                                                 }
                                             }, 1500);

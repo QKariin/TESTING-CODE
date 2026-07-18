@@ -310,7 +310,7 @@ export async function GET(req: NextRequest) {
         submissions: todaySubmissions || [],
         allSubmissions: allSubmissions || [],
         programTasks,
-        chatCooldownUntil: todayRecord?.chat_cooldown_until || null,
+        chatOpen: session.chat_open ?? false,
     });
 }
 
@@ -904,33 +904,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, rewardUntil });
     }
 
-    // ── SET CHAT COOLDOWN (coin flip tails OR keyholder grant) ──
-    if (action === 'set_chat_cooldown') {
-        const { until } = body; // ISO string or timestamp
-        const today = tzToday(tz);
-        let { data: todayRecord } = await supabaseAdmin
-            .from('vault_daily')
-            .select('id')
-            .eq('session_id', session.id)
-            .eq('date', today)
-            .maybeSingle();
-        if (!todayRecord) {
-            // Auto-create today's daily record if missing (e.g. awaiting_video members)
-            const { data: created } = await supabaseAdmin.from('vault_daily').insert({
-                session_id: session.id,
-                member_id: email,
-                day_number: 0,
-                date: today,
-                orders: '[]',
-                orders_total: 0,
-            }).select('id').single();
-            todayRecord = created;
-        }
-        if (todayRecord) {
-            await supabaseAdmin.from('vault_daily').update({
-                chat_cooldown_until: typeof until === 'number' ? new Date(until).toISOString() : until,
-            }).eq('id', todayRecord.id);
-        }
+    // ── SET CHAT OPEN (keyholder grant — simple boolean, no timers) ──
+    if (action === 'set_chat_open') {
+        const { open } = body;
+        await supabaseAdmin.from('vault_sessions').update({ chat_open: !!open }).eq('id', session.id);
+        await _notifyMember(email, open ? 'chat_granted' : 'chat_closed', {});
         return NextResponse.json({ success: true });
     }
 
