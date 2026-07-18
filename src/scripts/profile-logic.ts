@@ -9290,6 +9290,10 @@ let isPromoting = false;
 
 export function renderProfileSidebar(u: any) {
     if (!u || typeof document === 'undefined') return;
+    // Vault page is fully React-managed — none of the profile sidebar DOM elements exist there.
+    // Calling this from vault triggers unnecessary API calls (routine-status, vault/apply)
+    // and sets up duplicate realtime channels. Skip entirely.
+    if (window.location.pathname === '/vault') return;
 
     (window as any).openManageProfileModal = () => openManageProfileModal(u);
 
