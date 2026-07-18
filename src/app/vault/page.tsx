@@ -965,54 +965,49 @@ export default function VaultPage() {
         } catch {}
     }, [loading, profile, vladReact]);
 
-    // Kneel hold handler
+    // Kneel hold handler — CSS-transition driven to avoid 33 renders/sec during hold
     const KNEEL_HOLD_TIME = 3000; // 3 second hold to kneel
     const kneelDown = useCallback(() => {
         if (kneelCooldown || kneelDone) return;
         setKneelHolding(true);
-        kneelStartTime.current = Date.now();
-        kneelTimer.current = setInterval(() => {
-            const progress = Math.min(1, (Date.now() - kneelStartTime.current) / KNEEL_HOLD_TIME);
-            setKneelFill(progress * 100);
-            if (progress >= 1) {
-                if (kneelTimer.current) clearInterval(kneelTimer.current);
-                setKneelHolding(false);
-                setKneelFill(0);
-                setKneelDone(true);
-                setTimeout(() => setKneelDone(false), 2000);
-                // Call kneel API
-                const memberId = profile?.member_id || profile?.memberId || profile?.ID || '';
-                fetch('/api/kneel', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ memberId }),
-                }).then(r => r.json()).then(data => {
-                    if (data.success) {
-                        setKneelToday(data.todayKneeling);
-                        // Set cooldown (1h prod, 1m dev)
-                        const cooldownMs = process.env.NODE_ENV === 'development' ? 60000 : 3600000;
-                        setKneelCooldownUntil(Date.now() + cooldownMs);
-                        // Update vault daily order
-                        if (vaultData?.session?.id) {
-                            fetch('/api/vault/session', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'kneel', amount: 1 }),
-                            }).catch(() => {});
-                        }
-                        const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 4;
-                        const remaining = Math.max(0, kTarget - data.todayKneeling);
-                        vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${remaining <= 0 ? 'They hit the daily target!' : `${remaining} more to go.`}`);
-                    } else if (data.error === 'COOLDOWN') {
-                        setKneelCooldownUntil(Date.now() + data.minLeft * 60000);
+        setKneelFill(100); // CSS transition animates 0→100 over 3s (see fill div transition)
+        kneelTimer.current = setTimeout(() => {
+            setKneelHolding(false);
+            setKneelFill(0);
+            setKneelDone(true);
+            setTimeout(() => setKneelDone(false), 2000);
+            // Call kneel API
+            const memberId = profile?.member_id || profile?.memberId || profile?.ID || '';
+            fetch('/api/kneel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId }),
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    setKneelToday(data.todayKneeling);
+                    // Set cooldown (1h prod, 1m dev)
+                    const cooldownMs = process.env.NODE_ENV === 'development' ? 60000 : 3600000;
+                    setKneelCooldownUntil(Date.now() + cooldownMs);
+                    // Update vault daily order
+                    if (vaultData?.session?.id) {
+                        fetch('/api/vault/session', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'complete_order', memberId, orderType: 'kneel', amount: 1 }),
+                        }).catch(() => {});
                     }
-                }).catch(() => {});
-            }
-        }, 30);
+                    const kTarget = todayOrders.find((o: any) => o.type === 'kneel')?.target || 4;
+                    const remaining = Math.max(0, kTarget - data.todayKneeling);
+                    vladReact(`Member just completed kneeling session #${data.todayKneeling} today. ${remaining <= 0 ? 'They hit the daily target!' : `${remaining} more to go.`}`);
+                } else if (data.error === 'COOLDOWN') {
+                    setKneelCooldownUntil(Date.now() + data.minLeft * 60000);
+                }
+            }).catch(() => {});
+        }, KNEEL_HOLD_TIME) as unknown as ReturnType<typeof setInterval>;
     }, [kneelCooldown, kneelDone, profile, vaultData, vladReact]);
 
     const kneelUp = useCallback(() => {
-        if (kneelTimer.current) clearInterval(kneelTimer.current);
+        if (kneelTimer.current) clearTimeout(kneelTimer.current as unknown as ReturnType<typeof setTimeout>);
         setKneelHolding(false);
         setKneelFill(0);
     }, []);
@@ -1541,7 +1536,7 @@ export default function VaultPage() {
                                 position: 'absolute', left: 0, top: 0, bottom: 0,
                                 width: `${kneelFill}%`,
                                 background: `linear-gradient(90deg, ${R}0.15), ${R}0.35))`,
-                                borderRadius: 26, transition: kneelHolding ? 'none' : 'width 0.2s',
+                                borderRadius: 26, transition: kneelHolding ? 'width 3s linear' : 'width 0.2s',
                             }} />
                             {/* Content */}
                             <div style={{
