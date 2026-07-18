@@ -419,10 +419,14 @@ export default function VaultPage() {
         if (!vaultData?.session?.started_at) return;
         const lockStart = vaultData.session.started_at;
         const lockEnd = vaultData.session.expires_at || new Date(Date.now() + 86400000).toISOString();
+        // Update immediately when vaultData loads (so timer isn't 00:00:00 on mount)
+        setElapsed(fmt(Date.now() - new Date(lockStart).getTime()));
+        setRemaining(fmt(new Date(lockEnd).getTime() - Date.now()));
+        // Then refresh every minute — display shows days/hours/minutes only
         const iv = setInterval(() => {
             setElapsed(fmt(Date.now() - new Date(lockStart).getTime()));
             setRemaining(fmt(new Date(lockEnd).getTime() - Date.now()));
-        }, 60000); // 1-minute interval — display shows days/hours/minutes, no need for per-second renders
+        }, 60000);
         return () => clearInterval(iv);
     }, [vaultData]);
 
@@ -815,6 +819,17 @@ export default function VaultPage() {
         }, 1000);
         return () => clearInterval(iv);
     }, [chatExpiresAt]);
+
+    // Auto-force chastity gate on load during 6-10 AM window if not yet submitted
+    const chastityGateAutoOpened = useRef(false);
+    useEffect(() => {
+        if (loading || !vaultData || chastityGateAutoOpened.current) return;
+        const hasChastityTask = (vaultData?.daysIn ?? 0) >= 1;
+        if (hasChastityTask && chastityWindow.open && chastityStatus !== 'approved' && chastityStatus !== 'pending') {
+            chastityGateAutoOpened.current = true;
+            setShowChastityGate(true);
+        }
+    }, [loading, vaultData, chastityWindow, chastityStatus]);
 
     const HOLD_TIME = 2000;
     const attnDown = useCallback(() => {
