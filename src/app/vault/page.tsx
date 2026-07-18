@@ -3206,7 +3206,7 @@ export default function VaultPage() {
                             <div id="mobChatStatusText2" style={{ fontFamily: 'Orbitron', fontSize: '0.42rem', color: '#888', letterSpacing: '1px' }}>-</div>
                         </div>
                     </div>
-                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>&#10005;</button>
+                    <button className="mob-overlay-close" onPointerDown={(e) => { e.preventDefault(); (window as any).closeMobChatOverlay?.(); }}>&#10005;</button>
                 </div>
 
                 {/* AI HEADER (ai mode) */}
@@ -3220,7 +3220,7 @@ export default function VaultPage() {
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,0,237,0.6)', letterSpacing: '1px' }}>@VLAD</div>
                         </div>
                     </div>
-                    <button className="mob-overlay-close" onClick={() => (window as any).closeMobChatOverlay()}>&#10005;</button>
+                    <button className="mob-overlay-close" onPointerDown={(e) => { e.preventDefault(); (window as any).closeMobChatOverlay?.(); }}>&#10005;</button>
                 </div>
 
                 {/* TAB BAR */}
