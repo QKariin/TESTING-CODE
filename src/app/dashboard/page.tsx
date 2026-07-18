@@ -2149,11 +2149,12 @@ export default function DashboardPage() {
                                         <div style={{ margin: '0 4px 12px', display: 'flex', gap: 8 }}>
                                             <button onClick={() => { setKeyholderMember(currId || ''); setShowKeyholder(true); }} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(139,0,0,0.25)', background: 'rgba(139,0,0,0.06)', color: 'rgba(180,40,40,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>VIEW PROGRAM</button>
                                             <button onClick={async () => {
+                                                const isOpen = !!vaultSession?.chatOpen;
                                                 try {
-                                                    await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_open', memberId: currId, open: true }) });
-                                                    alert('Chat opened');
+                                                    await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_chat_open', memberId: currId, open: !isOpen }) });
+                                                    setVaultSession((prev: any) => prev ? { ...prev, chatOpen: !isOpen } : prev);
                                                 } catch {}
-                                            }} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid rgba(197,160,89,0.25)', background: 'rgba(197,160,89,0.06)', color: 'rgba(197,160,89,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>OPEN CHAT</button>
+                                            }} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: `1px solid ${vaultSession?.chatOpen ? 'rgba(255,60,60,0.25)' : 'rgba(197,160,89,0.25)'}`, background: vaultSession?.chatOpen ? 'rgba(255,60,60,0.06)' : 'rgba(197,160,89,0.06)', color: vaultSession?.chatOpen ? 'rgba(255,80,80,0.8)' : 'rgba(197,160,89,0.8)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', letterSpacing: 2, cursor: 'pointer' }}>{vaultSession?.chatOpen ? 'CLOSE CHAT' : 'OPEN CHAT'}</button>
                                         </div>
 
                                         {/* ── CHASTITY CHECK — PRIMARY TASK ── */}
