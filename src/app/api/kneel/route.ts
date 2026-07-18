@@ -74,7 +74,8 @@ export async function POST(req: Request) {
             }
         }
 
-        // Chastity check: if member has a routine and it's past 10 AM local, they must have submitted today
+        // Chastity check gate: if member has an active vault session with a chastity_check order today
+        // and the window is closed (past 10 AM local), block kneeling until they submit
         try {
             const localHour = parseInt(
                 new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
@@ -82,32 +83,40 @@ export async function POST(req: Request) {
             );
             if (localHour >= 10) {
                 const emailCheck = (taskEmail || memberId).toLowerCase();
-                const { data: ur } = await supabaseAdmin
-                    .from('user_routines')
-                    .select('pending_submitted_at, history')
+                const todayCheckStr = now.toLocaleDateString('en-CA', { timeZone: tz });
+                // Find active vault session
+                const { data: vs } = await supabaseAdmin
+                    .from('vault_sessions')
+                    .select('id')
                     .eq('member_id', emailCheck)
+                    .eq('status', 'active')
+                    .order('started_at', { ascending: false })
+                    .limit(1)
                     .maybeSingle();
-                if (ur) {
-                    // Has a routine assigned — check if submitted today
-                    const todayCheckStr = now.toLocaleDateString('en-CA', { timeZone: tz });
-                    let submittedToday = false;
-                    if (ur.pending_submitted_at) {
-                        try {
-                            const pd = new Date(ur.pending_submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
-                            if (pd === todayCheckStr) submittedToday = true;
-                        } catch {}
-                    }
-                    if (!submittedToday && Array.isArray(ur.history)) {
-                        for (let i = ur.history.length - 1; i >= 0; i--) {
-                            const e = (ur.history as any[])[i];
-                            try {
-                                const ed = e.date || new Date(e.submitted_at).toLocaleDateString('en-CA', { timeZone: tz });
-                                if (ed === todayCheckStr) { submittedToday = true; break; }
-                            } catch {}
+                if (vs) {
+                    // Check if today's orders include a chastity_check
+                    const { data: daily } = await supabaseAdmin
+                        .from('vault_daily')
+                        .select('orders')
+                        .eq('session_id', vs.id)
+                        .eq('date', todayCheckStr)
+                        .maybeSingle();
+                    const orders: any[] = daily?.orders
+                        ? (typeof daily.orders === 'string' ? JSON.parse(daily.orders) : daily.orders)
+                        : [];
+                    const hasChastityOrder = orders.some((o: any) => o.type === 'chastity_check');
+                    if (hasChastityOrder) {
+                        // Check vault_check_log for today's submission
+                        const { data: checkLog } = await supabaseAdmin
+                            .from('vault_check_log')
+                            .select('status')
+                            .eq('session_id', vs.id)
+                            .eq('date', todayCheckStr)
+                            .eq('type', 'chastity_check')
+                            .maybeSingle();
+                        if (!checkLog || checkLog.status === 'rejected') {
+                            return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
                         }
-                    }
-                    if (!submittedToday) {
-                        return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
                     }
                 }
             }

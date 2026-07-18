@@ -1118,7 +1118,7 @@ export default function VaultPage() {
                 <div
                     onClick={() => (window as any).openMobChatOverlay?.()}
                     style={{
-                        position: 'fixed', bottom: 76, left: 12, right: 12, zIndex: 10000004,
+                        position: 'fixed', top: 12, left: 12, right: 12, zIndex: 10000004,
                         background: 'linear-gradient(135deg, rgba(8,7,22,0.97) 0%, rgba(12,10,26,0.97) 100%)',
                         border: '1px solid rgba(197,160,89,0.55)',
                         borderRadius: 14, padding: '12px 16px',
