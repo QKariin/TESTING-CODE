@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Most Days, I Thought I Was Wrong — Queen Karin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;500;600&family=Inter:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    background: #050505;
+    color: #fff;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background: #050505;
+    min-height: 100vh;
+    padding: 80px 24px 120px;
+  }
+
+  /* ——— LAYOUT ——— */
+  .page {
+    max-width: 660px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ——— HEADER ——— */
+  .brand {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 7px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.35);
+    margin-bottom: 60px;
+    display: block;
+    text-decoration: none;
+    transition: color 0.4s ease;
+  }
+
+  .brand:hover {
+    color: rgba(197,160,89,0.65);
+  }
+
+  /* ——— TITLE BLOCK ——— */
+  .title-block {
+    margin-bottom: 56px;
+  }
+
+  .post-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+    margin-bottom: 22px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.1;
+    color: rgba(255,255,255,0.92);
+    letter-spacing: 0.5px;
+    margin-bottom: 28px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: #d4af6a;
+  }
+
+  .title-rule {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(197,160,89,0.4), transparent);
+  }
+
+  /* ——— BODY COPY ——— */
+  .prose {
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1.85;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.2px;
+  }
+
+  .prose p {
+    margin-bottom: 36px;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* pivot sentence — the "I was right" */
+  .prose .pivot {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px;
+    font-weight: 600;
+    font-style: italic;
+    color: rgba(255,255,255,0.88);
+    letter-spacing: 0.5px;
+    display: block;
+    margin: 52px 0;
+    padding-left: 28px;
+    border-left: 1px solid rgba(197,160,89,0.25);
+  }
+
+  /* closing triad */
+  .prose .triad {
+    font-size: 22px;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 0;
+  }
+
+  /* final two lines */
+  .prose .final {
+    margin-top: 52px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(197,160,89,0.08);
+    font-size: 21px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .prose .final strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 400;
+  }
+
+  /* ——— DIVIDER ——— */
+  .sep {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 56px 0;
+  }
+
+  .sep-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(197,160,89,0.12), transparent);
+  }
+
+  .sep-line.rev {
+    background: linear-gradient(270deg, rgba(197,160,89,0.12), transparent);
+  }
+
+  .sep-diamond {
+    width: 4px;
+    height: 4px;
+    background: rgba(197,160,89,0.2);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* ——— CTA ——— */
+  .cta-block {
+    margin-top: 72px;
+    text-align: center;
+  }
+
+  .cta-pre {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 28px;
+    display: block;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 20px 64px;
+    background: linear-gradient(135deg, #8b0000, #6b0000);
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    border: 1px solid rgba(139,0,0,0.35);
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.5s ease;
+  }
+
+  .cta:hover {
+    background: linear-gradient(135deg, #a50000, #8b0000);
+    letter-spacing: 8px;
+    border-color: rgba(197,160,89,0.25);
+  }
+
+  .cta:hover::after {
+    width: 70%;
+  }
+
+  .cta-price {
+    margin-top: 18px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <a href="https://throne.qkarin.com" class="brand">Queen Karin</a>
+
+  <!-- TITLE -->
+  <div class="title-block">
+    <span class="post-label">Personal</span>
+    <h1>Most Days, I Thought<br>I Was <em>Wrong</em></h1>
+    <div class="title-rule"></div>
+  </div>
+
+  <!-- PROSE -->
+  <div class="prose">
+
+    <p>
+      For three years, most days, I believed I'd made a mistake.
+    </p>
+
+    <p>
+      The kind that shows up when you close the laptop at 3 a.m. and the apartment is silent and you realize you haven't had a real conversation in two weeks. The kind that finds you on the one walk of the day, passing people sitting in a taverna laughing in a language you never had time to learn, and you go back up to the desk. I used to be someone who traveled. Someone with rooms full of people in her life. I traded that woman for a screen, and most days the trade looked like a losing one.
+    </p>
+
+    <p>
+      The numbers said I was wrong. The men said I was wrong. Do it for free, do it like the others, why are you making this so complicated. Even the ones who praised me for being different disappeared for two months and came back expecting the door open. I was building something real inside a world that only understood the fake version, and it reminded me of that daily.
+    </p>
+
+    <p>
+      I asked myself the same question the entire time: why can't I just be normal? Every shortcut was right there. I never took one. Not because I'm strong. Because something in me physically cannot put my name on a lie.
+    </p>
+
+    <span class="pivot">I was right.</span>
+
+    <p>
+      A hundred and fifteen of you already live inside what I saw in my head three years ago. And this week I placed the final piece: the keyholder. You lock in and your sentence is already waiting. Your mornings are checked, your kneeling is counted, your streaks build and your failures follow you. Day and night, whether I'm at the desk or asleep or gone. The world holds you by itself now. I only appear to judge what you're worth.
+    </p>
+
+    <p>
+      Nobody else spent three years on this, because nobody else was wrong every single day and kept building anyway.
+    </p>
+
+    <div class="sep">
+      <div class="sep-line"></div>
+      <div class="sep-diamond"></div>
+      <div class="sep-line rev"></div>
+    </div>
+
+    <p class="triad">
+      Now I go collect what I traded. The gym. The language of the country I live in. People. Not because I'm stepping away. The world holds you tighter than I ever could alone. But for the first time in three years, it can hold you without eating me.
+    </p>
+
+    <p class="final">
+      Three years of being wrong every day, to be right once.<br><br>
+      The door is <strong>&euro;55</strong>. It always was, for everyone. This was never about money. It's about whether you're real.<br><br>
+      I was. <strong>Now show me you are.</strong>
+    </p>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-block">
+    <span class="cta-pre">The throne is open</span>
+    <a href="https://throne.qkarin.com/login" class="cta">Enter the Throne</a>
+    <p class="cta-price">&euro;55 &mdash; full membership, immediate access</p>
+  </div>
+
+</div>
+</body>
+</html>
