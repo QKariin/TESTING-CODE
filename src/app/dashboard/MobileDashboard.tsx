@@ -622,10 +622,7 @@ export default function MobileDashboard({ userEmail }: { userEmail: string }) {
                             // Deny the vault session
                             await fetch('/api/vault/apply/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'deny', sessionId: rt.vaultSessionId }) });
                         } else {
-                            await adminRejectTaskAction(taskId, rtUser.memberId);
-                            if (note?.trim()) {
-                                await sendTaskChatFeedback(userEmail, rtUser.memberId, rtProof || null, rtVideo ? 'video' : rtProof ? 'image' : null, note.trim(), taskId || null);
-                            }
+                            await adminRejectTaskAction(taskId, rtUser.memberId, note || null);
                         }
                         setRootReviewTask(null);
                         setGlobalQueue(q => q.filter(t => t.id !== rt.id));

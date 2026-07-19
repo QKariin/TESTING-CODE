@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO, isOwnerOrCEO } from '@/lib/api-auth';
 import { defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { DbService } from '@/lib/supabase-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -805,9 +806,9 @@ export async function POST(req: NextRequest) {
             queen_comment: comment || null,
         }).eq('id', submissionId);
 
-        // Get the submission to find order_idx
+        // Get the submission to find order_idx + info for chat card
         const { data: sub } = await supabaseAdmin.from('vault_submissions')
-            .select('order_idx').eq('id', submissionId).single();
+            .select('order_idx, order_type, label, photo_url').eq('id', submissionId).single();
 
         // Update order done count in vault_daily
         const { data: daily } = await supabaseAdmin.from('vault_daily')
@@ -842,9 +843,15 @@ export async function POST(req: NextRequest) {
             }
         }
 
+        // Send TASK_REVIEW_CARD to member's chat (same as profile task approval)
+        try {
+            const cardData = { status: 'approve', points: 0, type: 'task', comment: comment || null, taskText: sub?.label || sub?.order_type || 'Task', thumbnail: sub?.photo_url || null };
+            await DbService.sendMessage(email, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system');
+        } catch (_) {}
+
         // Broadcast to member so their vault page updates instantly
         _notifyMember(email, 'task_reviewed', { status: 'approved', submissionId });
-        _pushToMember(email, 'Task Approved', 'Your task submission has been approved by Queen.');
+        _pushToMember(email, 'Task Approved', comment ? `Approved: ${comment}` : 'Your task submission has been approved by Queen.');
 
         return NextResponse.json({ success: true, approved: true });
     }
@@ -861,9 +868,9 @@ export async function POST(req: NextRequest) {
             queen_comment: comment || null,
         }).eq('id', submissionId);
 
-        // Get the submission to find order_idx
+        // Get the submission to find order_idx + info for chat card
         const { data: sub } = await supabaseAdmin.from('vault_submissions')
-            .select('order_idx').eq('id', submissionId).single();
+            .select('order_idx, order_type, label, photo_url').eq('id', submissionId).single();
 
         // Reset order done count
         const { data: daily } = await supabaseAdmin.from('vault_daily')
@@ -878,6 +885,12 @@ export async function POST(req: NextRequest) {
                 orders: JSON.stringify(orders),
             }).eq('id', daily.id);
         }
+
+        // Send TASK_REVIEW_CARD to member's chat (same as profile task rejection)
+        try {
+            const cardData = { status: 'reject', points: 0, type: 'task', comment: comment || null, taskText: sub?.label || sub?.order_type || 'Task', thumbnail: sub?.photo_url || null };
+            await DbService.sendMessage(email, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system');
+        } catch (_) {}
 
         // Broadcast to member
         _notifyMember(email, 'task_reviewed', { status: 'rejected', submissionId });
