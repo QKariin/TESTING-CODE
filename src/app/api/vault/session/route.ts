@@ -20,6 +20,10 @@ function tzDaysIn(startedAt: string, tz: string): number {
         return Math.floor((todayMs - startMs) / 86400000);
     } catch { return Math.floor((Date.now() - new Date(startedAt).getTime()) / 86400000); }
 }
+/** Returns the 1-indexed current day. Prefers DB column over date math. */
+function getSessionDay(session: any, tz: string): number {
+    return session.current_day ?? (tzDaysIn(session.started_at, tz) + 1);
+}
 function tzYesterday(tz: string): string {
     try {
         const d = new Date();
@@ -100,7 +104,7 @@ export async function GET(req: NextRequest) {
     let todayRecord = (dailyRecords || []).find((d: any) => d.date === today);
 
     if (!todayRecord && session) {
-        const daysIn2 = tzDaysIn(session.started_at, tz) + 1;
+        const daysIn2 = getSessionDay(session, tz);
         const orders = await _getOrdersForDay(session.id, daysIn2);
         const { data: inserted, error: insertErr } = await supabaseAdmin.from('vault_daily').insert({
             session_id: session.id,
@@ -125,7 +129,7 @@ export async function GET(req: NextRequest) {
     // Sync today's orders with the current program (handles program edits after daily row was created)
     if (todayRecord && session) {
         const currentOrders: any[] = typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : (todayRecord.orders || []);
-        const daysIn3 = tzDaysIn(session.started_at, tz) + 1;
+        const daysIn3 = getSessionDay(session, tz);
         const programOrders = await _getOrdersForDay(session.id, daysIn3);
 
         // Compare types + targets + labels to catch any program edits
@@ -179,8 +183,8 @@ export async function GET(req: NextRequest) {
     // 8. Today's spin check
     const todaySpin = (spins || []).find((s: any) => s.date === today);
 
-    // 9. Calculate days in (timezone-aware)
-    const daysIn = tzDaysIn(session.started_at, tz);
+    // 9. Calculate days in (0-indexed for API consumers; display as daysIn+1 = current day number)
+    const daysIn = getSessionDay(session, tz) - 1;
 
     // 10. Calculate total penalty hours
     const totalPenaltyHours = (adjustments || []).reduce((sum: number, a: any) => sum + a.hours, 0);
@@ -222,7 +226,7 @@ export async function GET(req: NextRequest) {
     // Read program directly (same source as dashboard's /api/vault/program)
     let programTasks: any[] | null = null;
     try {
-        const dayNum = tzDaysIn(session.started_at, tz) + 1;
+        const dayNum = getSessionDay(session, tz);
         const { data: progRow } = await supabaseAdmin
             .from('vault_member_program')
             .select('id, program')
@@ -494,7 +498,7 @@ export async function POST(req: NextRequest) {
     if (action === 'trial') {
         const { prompt, response, proofUrl } = body;
         const today = tzToday(tz);
-        const daysIn = tzDaysIn(session.started_at, tz) + 1;
+        const daysIn = getSessionDay(session, tz);
 
         const { error } = await supabaseAdmin.from('vault_trials').insert({
             session_id: session.id,
@@ -579,6 +583,10 @@ export async function POST(req: NextRequest) {
                     status: 'pending',
                     submitted_at: new Date().toISOString(),
                 });
+                // Advance day counter on each new chastity check submission
+                await supabaseAdmin.from('vault_sessions').update({
+                    current_day: (session.current_day ?? 1) + 1,
+                }).eq('id', session.id);
             }
 
             // No need to touch vault_daily orders — chastity status lives in vault_check_log
@@ -963,7 +971,7 @@ export async function POST(req: NextRequest) {
     // ── ENSURE TODAY ── create today's daily record if missing, or reset if pre-seeded
     if (action === 'ensure_today') {
         const today = tzToday(tz);
-        const daysIn = tzDaysIn(session.started_at, tz) + 1;
+        const daysIn = getSessionDay(session, tz);
 
         const { data: existing } = await supabaseAdmin
             .from('vault_daily')

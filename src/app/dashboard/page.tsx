@@ -2106,7 +2106,7 @@ export default function DashboardPage() {
                                         {/* ── COUNTDOWN ── */}
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, margin: '0 0 16px' }}>
                                             <div style={{ textAlign: 'center' }}>
-                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.6rem', fontWeight: 800, color: '#fff' }}>{daysIn}</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.6rem', fontWeight: 800, color: '#fff' }}>{daysIn + 1}</div>
                                                 <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>DAY</div>
                                             </div>
                                             <div style={{ width: 1, background: 'rgba(139,0,0,0.2)', alignSelf: 'stretch' }} />

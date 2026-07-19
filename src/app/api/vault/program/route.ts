@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     if (listLocked) {
         const { data: sessions } = await supabaseAdmin
             .from('vault_sessions')
-            .select('id, member_id, started_at, lock_days, expires_at, current_streak, total_perfect_days, tier, status')
+            .select('id, member_id, started_at, lock_days, expires_at, current_streak, total_perfect_days, tier, status, current_day')
             .in('status', ['active', 'awaiting_video'])
             .order('started_at', { ascending: false });
 
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         const results = [];
 
         for (const s of sessions) {
-            const daysIn = s.status === 'active' ? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) + 1 : 0;
+            const daysIn = s.status === 'active' ? (s.current_day ?? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) + 1) : 0;
             // Get today's daily record
             const { data: todayRec } = await supabaseAdmin
                 .from('vault_daily')
@@ -304,9 +304,9 @@ export async function POST(req: NextRequest) {
         // If editing today's day, also update the live vault_daily record
         try {
             const { data: fullSession } = await supabaseAdmin
-                .from('vault_sessions').select('started_at').eq('id', session.id).single();
+                .from('vault_sessions').select('started_at, current_day').eq('id', session.id).single();
             if (fullSession?.started_at) {
-                const daysIn = Math.floor((Date.now() - new Date(fullSession.started_at).getTime()) / 86400000) + 1;
+                const daysIn = fullSession.current_day ?? Math.floor((Date.now() - new Date(fullSession.started_at).getTime()) / 86400000) + 1;
                 if (daysIn === dayNumber) {
                     const today = new Date().toISOString().split('T')[0];
                     const { data: daily } = await supabaseAdmin
