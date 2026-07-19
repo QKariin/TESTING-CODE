@@ -4,298 +4,1197 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Most Days, I Thought I Was Wrong — Queen Karin</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;500;600&family=Inter:wght@200;300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500&family=Italianno&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html {
-    background: #050505;
-    color: #fff;
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    -webkit-font-smoothing: antialiased;
-  }
+html { scroll-behavior: smooth; }
 
-  body {
-    background: #050505;
-    min-height: 100vh;
-    padding: 80px 24px 120px;
-  }
+body {
+  background: #020202;
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
 
-  /* ——— LAYOUT ——— */
-  .page {
-    max-width: 660px;
-    margin: 0 auto;
-    position: relative;
-  }
+/* ─── HERO ─────────────────────────────────────── */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-image: url('https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/email/queen-fomo-bg.jpg');
+  background-size: cover;
+  background-position: center top;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 80px;
+}
 
-  /* ——— HEADER ——— */
-  .brand {
-    font-family: 'Cinzel', serif;
-    font-size: 10px;
-    font-weight: 400;
-    letter-spacing: 7px;
-    text-transform: uppercase;
-    color: rgba(197,160,89,0.35);
-    margin-bottom: 60px;
-    display: block;
-    text-decoration: none;
-    transition: color 0.4s ease;
-  }
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(2,2,2,0.25) 0%,
+    rgba(2,2,2,0.5) 40%,
+    rgba(2,2,2,0.85) 70%,
+    #020202 100%
+  );
+}
 
-  .brand:hover {
-    color: rgba(197,160,89,0.65);
-  }
+.hero-top-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #c5a059, transparent);
+}
 
-  /* ——— TITLE BLOCK ——— */
-  .title-block {
-    margin-bottom: 56px;
-  }
+.hero-nav {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+}
 
-  .post-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    font-weight: 300;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: rgba(197,160,89,0.4);
-    margin-bottom: 22px;
-    display: block;
-  }
+.hero-nav a {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: rgba(197,160,89,0.5);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.hero-nav a:hover { color: #c5a059; }
 
-  h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 48px;
-    font-weight: 300;
-    line-height: 1.1;
-    color: rgba(255,255,255,0.92);
-    letter-spacing: 0.5px;
-    margin-bottom: 28px;
-  }
+.hero-body {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 700px;
+  padding: 0 24px;
+}
 
-  h1 em {
-    font-style: italic;
-    color: #d4af6a;
-  }
+.hero-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2px solid rgba(197,160,89,0.35);
+  box-shadow: 0 0 60px rgba(197,160,89,0.1), 0 0 120px rgba(0,0,0,0.8);
+  display: block;
+  margin: 0 auto 24px;
+}
 
-  .title-rule {
-    width: 40px;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(197,160,89,0.4), transparent);
-  }
+.hero-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 8px;
+  color: rgba(197,160,89,0.45);
+  margin-bottom: 14px;
+}
 
-  /* ——— BODY COPY ——— */
-  .prose {
-    font-size: 22px;
-    font-weight: 300;
-    line-height: 1.85;
-    color: rgba(255,255,255,0.5);
-    letter-spacing: 0.2px;
-  }
+.hero-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700;
+  letter-spacing: 4px;
+  line-height: 1.25;
+  color: #fff;
+  margin-bottom: 8px;
+}
 
-  .prose p {
-    margin-bottom: 36px;
-  }
+.hero-rule {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c5a059, transparent);
+  margin: 20px auto;
+}
 
-  .prose p:last-child {
-    margin-bottom: 0;
-  }
+.hero-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,0.35);
+}
 
-  /* pivot sentence — the "I was right" */
-  .prose .pivot {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 30px;
-    font-weight: 600;
-    font-style: italic;
-    color: rgba(255,255,255,0.88);
-    letter-spacing: 0.5px;
-    display: block;
-    margin: 52px 0;
-    padding-left: 28px;
-    border-left: 1px solid rgba(197,160,89,0.25);
-  }
+/* ─── CONTENT WRAPPER ───────────────────────────── */
+.page { max-width: 720px; margin: 0 auto; padding: 0 24px; }
 
-  /* closing triad */
-  .prose .triad {
-    font-size: 22px;
-    font-style: italic;
-    color: rgba(255,255,255,0.35);
-    margin-bottom: 0;
-  }
+/* ─── BLOG PROSE ────────────────────────────────── */
+.prose-section {
+  padding: 72px 0 0;
+}
 
-  /* final two lines */
-  .prose .final {
-    margin-top: 52px;
-    padding-top: 40px;
-    border-top: 1px solid rgba(197,160,89,0.08);
-    font-size: 21px;
-    line-height: 1.9;
-    color: rgba(255,255,255,0.45);
-  }
+.prose p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 32px;
+}
 
-  .prose .final strong {
-    color: rgba(255,255,255,0.9);
-    font-weight: 400;
-  }
+.prose p:last-child { margin-bottom: 0; }
 
-  /* ——— DIVIDER ——— */
-  .sep {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin: 56px 0;
-  }
+.prose strong { color: rgba(255,255,255,0.88); font-weight: 400; }
 
-  .sep-line {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(197,160,89,0.12), transparent);
-  }
+/* ─── PIVOT LINE ────────────────────────────────── */
+.pivot-wrap {
+  padding: 60px 0 56px;
+  text-align: center;
+}
 
-  .sep-line.rev {
-    background: linear-gradient(270deg, rgba(197,160,89,0.12), transparent);
-  }
+.pivot-line {
+  width: 40px;
+  height: 1px;
+  background: rgba(197,160,89,0.2);
+  margin: 0 auto 40px;
+}
 
-  .sep-diamond {
-    width: 4px;
-    height: 4px;
-    background: rgba(197,160,89,0.2);
-    transform: rotate(45deg);
-    flex-shrink: 0;
-  }
+.pivot-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 6vw, 56px);
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 1px;
+  line-height: 1.15;
+}
 
-  /* ——— CTA ——— */
-  .cta-block {
-    margin-top: 72px;
-    text-align: center;
-  }
+.pivot-text em {
+  color: #c5a059;
+  font-style: normal;
+}
 
-  .cta-pre {
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    font-weight: 300;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.2);
-    margin-bottom: 28px;
-    display: block;
-  }
+/* ─── STATS STRIP ───────────────────────────────── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(197,160,89,0.08);
+  border: 1px solid rgba(197,160,89,0.08);
+  margin: 0 0 80px;
+}
 
-  .cta {
-    display: inline-block;
-    padding: 20px 64px;
-    background: linear-gradient(135deg, #8b0000, #6b0000);
-    color: #fff;
-    text-decoration: none;
-    font-family: 'Cinzel', serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    border: 1px solid rgba(139,0,0,0.35);
-    transition: all 0.5s ease;
-    position: relative;
-    overflow: hidden;
-  }
+.stat-cell {
+  background: #020202;
+  padding: 28px 16px;
+  text-align: center;
+}
 
-  .cta::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #c5a059, transparent);
-    transition: width 0.5s ease;
-  }
+.stat-num {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #c5a059;
+  line-height: 1;
+  margin-bottom: 6px;
+  display: block;
+}
 
-  .cta:hover {
-    background: linear-gradient(135deg, #a50000, #8b0000);
-    letter-spacing: 8px;
-    border-color: rgba(197,160,89,0.25);
-  }
+.stat-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
 
-  .cta:hover::after {
-    width: 70%;
-  }
+/* ─── SECTION HEADER ────────────────────────────── */
+.section-head {
+  text-align: center;
+  margin-bottom: 44px;
+}
 
-  .cta-price {
-    margin-top: 18px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.2);
-    letter-spacing: 1px;
-  }
+.section-head-cursive {
+  font-family: 'Italianno', cursive;
+  font-size: 38px;
+  color: rgba(197,160,89,0.5);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.section-head-rule {
+  display: block;
+  width: 200px;
+  height: 16px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+/* ─── APP SHOWCASE ──────────────────────────────── */
+.app-showcase {
+  padding: 0 0 80px;
+}
+
+.app-screenshot {
+  width: 100%;
+  max-width: 520px;
+  display: block;
+  margin: 0 auto 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(139,0,0,0.25);
+  box-shadow: 0 0 60px rgba(139,0,0,0.12), 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.app-description {
+  max-width: 580px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.app-description p {
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.9;
+}
+
+.app-description strong { color: rgba(197,160,89,0.8); font-weight: 400; }
+
+/* ─── LEADERBOARD ───────────────────────────────── */
+.leaderboard-section {
+  padding: 0 0 80px;
+}
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(10,8,4,0.9), rgba(5,4,2,0.95));
+  border: 1px solid rgba(197,160,89,0.08);
+  border-radius: 2px;
+  transition: border-color 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.lb-row:hover { border-color: rgba(197,160,89,0.2); }
+
+.lb-row.first {
+  border-color: rgba(197,160,89,0.2);
+  background: linear-gradient(135deg, rgba(30,22,8,0.95), rgba(10,8,4,0.95));
+}
+
+.lb-row.first::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, #c5a059, transparent);
+}
+
+.lb-rank {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.2);
+  min-width: 24px;
+  text-align: center;
+}
+
+.lb-row.first .lb-rank { color: #c5a059; }
+
+.lb-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(197,160,89,0.15);
+  flex-shrink: 0;
+}
+
+.lb-info { flex: 1; min-width: 0; }
+
+.lb-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.lb-row.first .lb-name { color: #c5a059; }
+
+.lb-badge {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.25);
+}
+
+.lb-merit {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(197,160,89,0.6);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.lb-row.first .lb-merit { color: #c5a059; }
+
+.lb-merit small {
+  display: block;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.2);
+  margin-top: 2px;
+}
+
+.lb-more {
+  text-align: center;
+  padding: 20px 0 0;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.12);
+}
+
+/* ─── REVIEWS ───────────────────────────────────── */
+.reviews-section {
+  padding: 0 0 80px;
+}
+
+.reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-card {
+  border: 1px solid rgba(197,160,89,0.1);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, rgba(197,160,89,0.07), rgba(197,160,89,0.02));
+}
+
+.review-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(197,160,89,0.2);
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+
+.review-meta { flex: 1; }
+
+.review-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #c5a059;
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.review-rank {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.3);
+}
+
+.review-stars {
+  font-size: 11px;
+  color: rgba(197,160,89,0.5);
+  letter-spacing: 2px;
+}
+
+.review-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197,160,89,0.12), transparent);
+}
+
+.review-body {
+  padding: 18px 22px;
+  background: linear-gradient(160deg, rgba(10,8,4,0.8), rgba(5,4,2,0.9));
+}
+
+.review-body p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.85;
+}
+
+.review-sep {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.review-sep-diamond {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: rgba(197,160,89,0.15);
+  transform: rotate(45deg);
+}
+
+.reviews-more {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.reviews-more a {
+  display: inline-block;
+  padding: 12px 32px;
+  border: 1px solid rgba(197,160,89,0.15);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(197,160,89,0.5);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.reviews-more a:hover {
+  border-color: rgba(197,160,89,0.35);
+  color: #c5a059;
+}
+
+/* ─── FEATURES ──────────────────────────────────── */
+.features-section {
+  padding: 0 0 80px;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.feature-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.feature-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon.red { background: rgba(139,0,0,0.08); }
+.feature-icon.gold { background: rgba(197,160,89,0.06); }
+
+.feature-text { flex: 1; padding-top: 4px; }
+
+.feature-title {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.feature-desc {
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.8;
+}
+
+/* ─── GOLD DIVIDER ──────────────────────────────── */
+.gold-div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 0;
+}
+
+.gold-div-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197,160,89,0.15), transparent);
+}
+
+.gold-div-diamond {
+  width: 4px;
+  height: 4px;
+  background: rgba(197,160,89,0.2);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* ─── CRYPTO SECTION ────────────────────────────── */
+.crypto-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.crypto-gradient-in {
+  height: 60px;
+  background: linear-gradient(180deg, #020202 0%, #041230 100%);
+}
+
+.crypto-bg {
+  background: linear-gradient(180deg, #041230 0%, #0a1a3d 60%, #041230 100%);
+  padding: 60px 0;
+}
+
+.crypto-gradient-out {
+  height: 60px;
+  background: linear-gradient(180deg, #041230 0%, #020202 100%);
+}
+
+.crypto-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.crypto-heading-wrap {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.crypto-cursive {
+  font-family: 'Italianno', cursive;
+  font-size: 38px;
+  color: rgba(140,190,255,0.55);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.crypto-box {
+  background: linear-gradient(135deg, rgba(6,30,80,0.9), rgba(45,10,55,0.9));
+  border: 1px solid rgba(100,160,255,0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.crypto-box-inner {
+  padding: 32px 28px;
+}
+
+.crypto-box-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 5px;
+  color: rgba(120,180,255,0.6);
+  text-align: center;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.crypto-box-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.crypto-rule {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(90,160,255,0.3), rgba(220,100,180,0.3));
+  margin: 0 auto 20px;
+}
+
+.crypto-desc {
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.8;
+  text-align: center;
+}
+
+.crypto-tokens {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.crypto-token {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(100,160,255,0.1);
+  border-radius: 8px;
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.crypto-token-symbol {
+  display: block;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(140,190,255,0.7);
+  margin-bottom: 4px;
+}
+
+.crypto-token-name {
+  display: block;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+}
+
+.crypto-note {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.7;
+}
+
+/* ─── CTA BLOCK ─────────────────────────────────── */
+.cta-section {
+  padding: 80px 0 100px;
+  text-align: center;
+}
+
+.cta-pre {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  display: block;
+  margin-bottom: 32px;
+}
+
+.cta-price-display {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(64px, 12vw, 100px);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.cta-price-display sup {
+  font-size: 0.38em;
+  vertical-align: super;
+  color: #c5a059;
+  margin-right: 2px;
+}
+
+.cta-price-note {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255,255,255,0.25);
+  display: block;
+  margin-bottom: 40px;
+  letter-spacing: 1px;
+}
+
+.cta-btn {
+  display: inline-block;
+  padding: 22px 72px;
+  background: linear-gradient(135deg, #8b0000, #6b0000);
+  color: #fff;
+  text-decoration: none;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  border: 1px solid rgba(139,0,0,0.4);
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c5a059, transparent);
+  transition: width 0.5s ease;
+}
+
+.cta-btn:hover {
+  background: linear-gradient(135deg, #a50000, #8b0000);
+  letter-spacing: 8px;
+  border-color: rgba(197,160,89,0.25);
+}
+
+.cta-btn:hover::after { width: 70%; }
+
+.cta-sub {
+  margin-top: 20px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.15);
+}
+
+/* ─── FOOTER ────────────────────────────────────── */
+.footer {
+  border-top: 1px solid rgba(197,160,89,0.06);
+  padding: 40px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+}
+
+.footer-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  color: rgba(255,255,255,0.1);
+  display: block;
+  margin-bottom: 10px;
+}
+
+.footer a {
+  font-size: 10px;
+  color: rgba(255,255,255,0.1);
+  text-decoration: none;
+  letter-spacing: 3px;
+  transition: color 0.3s;
+}
+
+.footer a:hover { color: #c5a059; }
+
+/* ─── MOBILE ────────────────────────────────────── */
+@media (max-width: 600px) {
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat-num { font-size: 26px; }
+  .prose p { font-size: 18px; }
+  .pivot-text { font-size: 32px; }
+  .hero-title { font-size: 26px; letter-spacing: 3px; }
+  .crypto-tokens { grid-template-columns: repeat(2, 1fr); }
+  .cta-btn { padding: 20px 40px; letter-spacing: 4px; }
+  .lb-name { font-size: 11px; }
+  .lb-merit { font-size: 13px; }
+}
 </style>
 </head>
 <body>
+
+<!-- ═══ HERO ═══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-top-rule"></div>
+  <nav class="hero-nav">
+    <a href="https://throne.qkarin.com">Queen Karin</a>
+  </nav>
+  <div class="hero-body">
+    <img src="https://throne.qkarin.com/queen-karin.png" alt="Queen Karin" class="hero-avatar">
+    <p class="hero-label">Personal</p>
+    <h1 class="hero-title">Most Days, I Thought<br>I Was Wrong</h1>
+    <div class="hero-rule"></div>
+    <p class="hero-sub">Three years. One hundred and fifteen of you. And a world that finally holds itself.</p>
+  </div>
+</section>
+
+<!-- ═══ BLOG TEXT ═══════════════════════════════════════ -->
 <div class="page">
+  <section class="prose-section">
+    <div class="prose">
+      <p>For three years, most days, I believed I had made a mistake.</p>
 
-  <a href="https://throne.qkarin.com" class="brand">Queen Karin</a>
+      <p>The kind that shows up when you close the laptop at 3 a.m. and the apartment is silent and you realize you haven't had a real conversation in two weeks. The kind that finds you on the one walk of the day, passing people sitting in a taverna laughing in a language you never had time to learn, and you go back up to the desk. I used to be someone who traveled. Someone with rooms full of people in her life. I traded that woman for a screen, and most days the trade looked like a losing one.</p>
 
-  <!-- TITLE -->
-  <div class="title-block">
-    <span class="post-label">Personal</span>
-    <h1>Most Days, I Thought<br>I Was <em>Wrong</em></h1>
-    <div class="title-rule"></div>
+      <p>The numbers said I was wrong. The men said I was wrong. Do it for free, do it like the others, why are you making this so complicated. Even the ones who praised me for being different disappeared for two months and came back expecting the door open.</p>
+
+      <p>I asked myself the same question the entire time: why can't I just be normal? Every shortcut was right there. I never took one. Not because I'm strong. Because something in me <strong>physically cannot put my name on a lie.</strong></p>
+    </div>
+  </section>
+
+  <!-- PIVOT -->
+  <div class="pivot-wrap">
+    <div class="pivot-line"></div>
+    <p class="pivot-text">I was <em>right.</em></p>
   </div>
 
-  <!-- PROSE -->
-  <div class="prose">
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="stat-cell">
+      <span class="stat-num">115</span>
+      <span class="stat-label">Members Inside</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-num">5</span>
+      <span class="stat-label">Ranks to Climb</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Years Building</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-num">8×</span>
+      <span class="stat-label">Daily Kneeling</span>
+    </div>
+  </div>
+</div>
 
-    <p>
-      For three years, most days, I believed I'd made a mistake.
-    </p>
+<!-- ═══ APP SHOWCASE ════════════════════════════════════ -->
+<div class="page">
+  <div class="section-head">
+    <span class="section-head-cursive">Inside the Throne</span>
+    <svg class="section-head-rule" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 16">
+      <path d="M0,8 Q50,0 100,8 Q150,16 200,8" fill="none" stroke="rgba(197,160,89,0.2)" stroke-width="1"/>
+      <circle cx="100" cy="8" r="2.5" fill="rgba(197,160,89,0.3)"/>
+    </svg>
+  </div>
 
-    <p>
-      The kind that shows up when you close the laptop at 3 a.m. and the apartment is silent and you realize you haven't had a real conversation in two weeks. The kind that finds you on the one walk of the day, passing people sitting in a taverna laughing in a language you never had time to learn, and you go back up to the desk. I used to be someone who traveled. Someone with rooms full of people in her life. I traded that woman for a screen, and most days the trade looked like a losing one.
-    </p>
+  <div class="app-showcase">
+    <img
+      src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/email/vault-screenshot.png"
+      alt="The Vault — your virtual keyholder"
+      class="app-screenshot"
+    >
+    <div class="app-description">
+      <p>
+        A hundred and fifteen of you already live inside what I saw in my head three years ago. This week I placed the final piece: <strong>the keyholder.</strong> You lock in and your sentence is already waiting. Your mornings are checked, your kneeling is counted, your streaks build and your failures follow you. Day and night, whether I'm at the desk or asleep or gone. The world holds you by itself now. I only appear to judge what you're worth.
+      </p>
+    </div>
+  </div>
+</div>
 
-    <p>
-      The numbers said I was wrong. The men said I was wrong. Do it for free, do it like the others, why are you making this so complicated. Even the ones who praised me for being different disappeared for two months and came back expecting the door open. I was building something real inside a world that only understood the fake version, and it reminded me of that daily.
-    </p>
+<!-- ═══ LEADERBOARD ═════════════════════════════════════ -->
+<div class="page">
+  <div class="section-head">
+    <span class="section-head-cursive">The Leaderboard</span>
+    <svg class="section-head-rule" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 16">
+      <path d="M0,8 Q50,0 100,8 Q150,16 200,8" fill="none" stroke="rgba(197,160,89,0.2)" stroke-width="1"/>
+      <circle cx="100" cy="8" r="2.5" fill="rgba(197,160,89,0.3)"/>
+    </svg>
+  </div>
 
-    <p>
-      I asked myself the same question the entire time: why can't I just be normal? Every shortcut was right there. I never took one. Not because I'm strong. Because something in me physically cannot put my name on a lie.
-    </p>
+  <div class="leaderboard-section">
+    <div class="leaderboard">
 
-    <span class="pivot">I was right.</span>
+      <div class="lb-row first">
+        <span class="lb-rank">01</span>
+        <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/avatars/04f10c84-ad1b-4c36-9700-3a4cd2975050_1773806064251.jpg" alt="Mauro" class="lb-avatar">
+        <div class="lb-info">
+          <span class="lb-name">MAURO</span>
+          <span class="lb-badge">SILVERMAN</span>
+        </div>
+        <div class="lb-merit">
+          47,793
+          <small>MERIT POINTS</small>
+        </div>
+      </div>
 
-    <p>
-      A hundred and fifteen of you already live inside what I saw in my head three years ago. And this week I placed the final piece: the keyholder. You lock in and your sentence is already waiting. Your mornings are checked, your kneeling is counted, your streaks build and your failures follow you. Day and night, whether I'm at the desk or asleep or gone. The world holds you by itself now. I only appear to judge what you're worth.
-    </p>
+      <div class="lb-row">
+        <span class="lb-rank">02</span>
+        <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/b33c4b53-c23c-40a4-902d-d0731d29f696_1781885122114.jpg" alt="Billie" class="lb-avatar">
+        <div class="lb-info">
+          <span class="lb-name">BILLIE</span>
+          <span class="lb-badge">FOOTMAN</span>
+        </div>
+        <div class="lb-merit">
+          13,330
+          <small>MERIT POINTS</small>
+        </div>
+      </div>
 
-    <p>
-      Nobody else spent three years on this, because nobody else was wrong every single day and kept building anyway.
-    </p>
+      <div class="lb-row">
+        <span class="lb-rank">03</span>
+        <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/13b6da81-6e52-46cf-85a2-06036a40bab4_1777966179620.jpg" alt="Jax" class="lb-avatar">
+        <div class="lb-info">
+          <span class="lb-name">JAX</span>
+          <span class="lb-badge">FOOTMAN</span>
+        </div>
+        <div class="lb-merit">
+          9,093
+          <small>MERIT POINTS</small>
+        </div>
+      </div>
 
-    <div class="sep">
-      <div class="sep-line"></div>
-      <div class="sep-diamond"></div>
-      <div class="sep-line rev"></div>
+      <div class="lb-row">
+        <span class="lb-rank">04</span>
+        <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/7d1b8a73-666e-4a6b-b513-eda386bde3fd_1778791074386.jpg" alt="JohnDeli" class="lb-avatar">
+        <div class="lb-info">
+          <span class="lb-name">JOHNDELI</span>
+          <span class="lb-badge">FOOTMAN</span>
+        </div>
+        <div class="lb-merit">
+          8,172
+          <small>MERIT POINTS</small>
+        </div>
+      </div>
+
+      <div class="lb-row">
+        <span class="lb-rank">05</span>
+        <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/65b96096-bd75-4220-a4b5-11579d8653ac_1781928710629.jpeg" alt="Your Pet" class="lb-avatar">
+        <div class="lb-info">
+          <span class="lb-name">YOUR PET</span>
+          <span class="lb-badge">SILVERMAN</span>
+        </div>
+        <div class="lb-merit">
+          5,660
+          <small>MERIT POINTS</small>
+        </div>
+      </div>
+
+    </div>
+    <p class="lb-more">+ 110 more inside the throne &bull; your rank is unclaimed</p>
+  </div>
+</div>
+
+<!-- ═══ REVIEWS ══════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-head">
+    <span class="section-head-cursive">What They Say</span>
+    <svg class="section-head-rule" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 16">
+      <path d="M0,8 Q50,0 100,8 Q150,16 200,8" fill="none" stroke="rgba(197,160,89,0.2)" stroke-width="1"/>
+      <circle cx="100" cy="8" r="2.5" fill="rgba(197,160,89,0.3)"/>
+    </svg>
+  </div>
+
+  <div class="reviews-section">
+    <div class="reviews">
+
+      <div class="review-card">
+        <div class="review-header">
+          <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/avatars/04f10c84-ad1b-4c36-9700-3a4cd2975050_1773806064251.jpg" alt="Mauro" class="review-avatar">
+          <div class="review-meta">
+            <span class="review-name">MAURO</span>
+            <span class="review-rank">SILVERMAN &bull; 47,793 MERIT</span>
+          </div>
+          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        </div>
+        <div class="review-rule"></div>
+        <div class="review-body">
+          <p>&ldquo;I have been dreaming of a site like this existing for years. Queen Karin reached out to check in and guide my first steps. There is natural progression and reward to sincere and continued submission.&rdquo;</p>
+        </div>
+      </div>
+
+      <div class="review-sep"><div class="review-sep-diamond"></div></div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/13b6da81-6e52-46cf-85a2-06036a40bab4_1777966179620.jpg" alt="Jax" class="review-avatar">
+          <div class="review-meta">
+            <span class="review-name">JAX</span>
+            <span class="review-rank">FOOTMAN &bull; 9,093 MERIT</span>
+          </div>
+          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        </div>
+        <div class="review-rule"></div>
+        <div class="review-body">
+          <p>&ldquo;QKarin is one of a kind. Unlike many others, she actually tries to bond and cares for her subs. She can be kind, but remember, she is the queen, you're in her empire. If you are a good sub, she'll reward you for it.&rdquo;</p>
+        </div>
+      </div>
+
+      <div class="review-sep"><div class="review-sep-diamond"></div></div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/65b96096-bd75-4220-a4b5-11579d8653ac_1781928710629.jpeg" alt="Your Pet" class="review-avatar">
+          <div class="review-meta">
+            <span class="review-name">YOUR PET</span>
+            <span class="review-rank">SILVERMAN &bull; 5,660 MERIT</span>
+          </div>
+          <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+        </div>
+        <div class="review-rule"></div>
+        <div class="review-body">
+          <p>&ldquo;It's only been 1 day since I found and submitted to Queen K and yet I am already beyond hooked. Best money I have ever spent.&rdquo;</p>
+        </div>
+      </div>
+
     </div>
 
-    <p class="triad">
-      Now I go collect what I traded. The gym. The language of the country I live in. People. Not because I'm stepping away. The world holds you tighter than I ever could alone. But for the first time in three years, it can hold you without eating me.
-    </p>
-
-    <p class="final">
-      Three years of being wrong every day, to be right once.<br><br>
-      The door is <strong>&euro;55</strong>. It always was, for everyone. This was never about money. It's about whether you're real.<br><br>
-      I was. <strong>Now show me you are.</strong>
-    </p>
-
+    <div class="reviews-more">
+      <a href="https://throne.qkarin.com/tribute" target="_blank">Read More Reviews &rarr;</a>
+    </div>
   </div>
-
-  <!-- CTA -->
-  <div class="cta-block">
-    <span class="cta-pre">The throne is open</span>
-    <a href="https://throne.qkarin.com/login" class="cta">Enter the Throne</a>
-    <p class="cta-price">&euro;55 &mdash; full membership, immediate access</p>
-  </div>
-
 </div>
+
+<!-- ═══ HOW IT WORKS ════════════════════════════════════ -->
+<div class="page">
+  <div class="section-head">
+    <span class="section-head-cursive">How It Works</span>
+    <svg class="section-head-rule" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 16">
+      <path d="M0,8 Q50,0 100,8 Q150,16 200,8" fill="none" stroke="rgba(197,160,89,0.2)" stroke-width="1"/>
+      <circle cx="100" cy="8" r="2.5" fill="rgba(197,160,89,0.3)"/>
+    </svg>
+  </div>
+
+  <div class="features-section">
+    <div class="features">
+
+      <div class="feature-row">
+        <div class="feature-icon red">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(139,0,0,0.65)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+        </div>
+        <div class="feature-text">
+          <p class="feature-title">Real Lock. Real Countdown.</p>
+          <p class="feature-desc">Choose 7, 14, or 30 days. Your profile locks. A live countdown runs day and night. You can't unlock early. Missed orders add penalty hours. Your release date moves further away.</p>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-icon gold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="feature-text">
+          <p class="feature-title">Orders Generated Every Morning</p>
+          <p class="feature-desc">8 kneeling sessions. A written trial. A temptation wheel spin that can reward or punish. A tribute. Complete all four and earn one hour of freedom. One hour. That's all you get.</p>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-icon gold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="feature-text">
+          <p class="feature-title">Vlad. Your Guardian.</p>
+          <p class="feature-desc">Not a chatbot. Not a timer. A guardian who knows your lock status, your streak, your failures. He reacts to what you do. Praises perfect days. Punishes laziness. Chat unlocks only after completing your daily orders.</p>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-icon gold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="feature-text">
+          <p class="feature-title">Obedience Calendar</p>
+          <p class="feature-desc">Every day of your sentence is recorded on a grid. Green for a perfect day. Red for a failure. Streaks tracked. Milestones marked. Your entire obedience history visible at a glance. No hiding. No excuses.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CRYPTO ═══════════════════════════════════════════ -->
+<div class="crypto-section">
+  <div class="crypto-gradient-in"></div>
+  <div class="crypto-bg">
+    <div class="crypto-inner">
+      <div class="crypto-heading-wrap">
+        <span class="crypto-cursive">How to Pay</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="16" viewBox="0 0 200 16" style="display:block; margin:0 auto;">
+          <path d="M0,8 Q50,0 100,8 Q150,16 200,8" fill="none" stroke="rgba(120,160,255,0.2)" stroke-width="1"/>
+          <circle cx="100" cy="8" r="2.5" fill="rgba(180,120,220,0.3)"/>
+        </svg>
+      </div>
+
+      <div class="crypto-box">
+        <div class="crypto-box-inner">
+          <span class="crypto-box-label">Fully Private</span>
+          <p class="crypto-box-title">Card &amp; Crypto Accepted</p>
+          <div class="crypto-rule"></div>
+          <p class="crypto-desc">No bank statements. No paper trail. Pay however you need to. The door looks the same from the outside.</p>
+          <div class="crypto-tokens">
+            <div class="crypto-token">
+              <span class="crypto-token-symbol">&#8383;</span>
+              <span class="crypto-token-name">Bitcoin</span>
+            </div>
+            <div class="crypto-token">
+              <span class="crypto-token-symbol">&#926;</span>
+              <span class="crypto-token-name">Ethereum</span>
+            </div>
+            <div class="crypto-token">
+              <span class="crypto-token-symbol">&#x24;&#x20AE;</span>
+              <span class="crypto-token-name">USDT</span>
+            </div>
+            <div class="crypto-token">
+              <span class="crypto-token-symbol">&#321;</span>
+              <span class="crypto-token-name">Litecoin</span>
+            </div>
+          </div>
+          <p class="crypto-note">All major cards also accepted via secure checkout.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="crypto-gradient-out"></div>
+</div>
+
+<!-- ═══ CTA ══════════════════════════════════════════════ -->
+<div class="page">
+  <section class="cta-section">
+    <span class="cta-pre">The door is open</span>
+    <span class="cta-price-display"><sup>&euro;</sup>55</span>
+    <span class="cta-price-note">Full membership. Immediate access. Your rank begins now.</span>
+    <a href="https://throne.qkarin.com/login" class="cta-btn">Enter the Throne</a>
+    <p class="cta-sub">Nobody else spent three years on this. Nobody else was wrong every single day and kept building anyway.</p>
+    <br><br>
+    <p class="cta-sub" style="color:rgba(255,255,255,0.25); font-size:11px; letter-spacing:2px;">I was. Now show me you are.</p>
+  </section>
+</div>
+
+<!-- ═══ FOOTER ═══════════════════════════════════════════ -->
+<footer class="footer">
+  <span class="footer-brand">QUEEN KARIN</span>
+  <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
+</footer>
+
 </body>
 </html>
