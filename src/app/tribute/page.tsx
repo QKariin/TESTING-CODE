@@ -1283,8 +1283,10 @@ export default function TributePage() {
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(180,40,40,0.9)', letterSpacing: 5, fontWeight: 700, textAlign: 'center' }}>CARD PAYMENT UNAVAILABLE</div>
                     <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(139,0,0,0.3),transparent)' }} />
                     <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1, lineHeight: 1.7, textAlign: 'center' }}>
-                        Card payments are temporarily suspended.<br /><br />
-                        Use crypto to proceed.
+                        My card payment provider suspended my account without warning.<br />
+                        I'm fighting to get it back. Until then,<br />
+                        crypto is the only way through.<br /><br />
+                        Every payment keeps me going.
                     </div>
                     <button onClick={() => { setShowStripeWarning(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '18px 24px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, marginTop: 4 }}>
                         <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(160,100,220,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
