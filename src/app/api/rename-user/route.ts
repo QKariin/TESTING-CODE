@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +8,10 @@ export const dynamic = 'force-dynamic';
 // body: { memberEmail: string, newName: string }
 // Updates name across: profiles, tasks, global_messages, global_message_reads, chatters
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     try {
         const { memberEmail, newName } = await req.json();
 

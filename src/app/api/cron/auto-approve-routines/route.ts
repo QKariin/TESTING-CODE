@@ -9,12 +9,14 @@ export const dynamic = 'force-dynamic';
 // Runs every 30 minutes — auto-approves pending routines older than 2 hours
 export async function GET(req: Request) {
     const envSecret = (process.env.CRON_SECRET || '').trim();
-    if (envSecret) {
-        const authHeader = req.headers.get('authorization') || '';
-        const incoming = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
-        if (incoming !== envSecret) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    if (!envSecret) {
+        console.error('[cron/auto-approve] CRON_SECRET env var is not set — refusing to run');
+        return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
+    }
+    const authHeader = req.headers.get('authorization') || '';
+    const incoming = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
+    if (incoming !== envSecret) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();

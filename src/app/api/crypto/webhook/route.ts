@@ -7,6 +7,14 @@ export const dynamic = 'force-dynamic';
 const ALLOWED_IPS = ['51.77.105.132', '135.125.112.47'];
 
 export async function POST(req: Request) {
+    // Enforce IP whitelist — CryptAPI only sends from these IPs
+    const forwarded = req.headers.get('x-forwarded-for') || '';
+    const clientIp = forwarded.split(',')[0].trim();
+    if (clientIp && !ALLOWED_IPS.includes(clientIp)) {
+        console.error('[CRYPTAPI WEBHOOK] Blocked unauthorized IP:', clientIp);
+        return new NextResponse('Forbidden', { status: 403 });
+    }
+
     const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,

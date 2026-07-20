@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { discordDirectTribute, discordRiskyTribute } from '@/lib/discord';
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 // 9 card types for the risky game
 const RISKY_CARDS = [
@@ -29,12 +30,19 @@ const VALID_AMOUNTS = [500, 1000, 2000, 5000, 10000, 20000];
 const VALID_PERCENTS = [10, 25, 50, 75, 100];
 
 export async function POST(request: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     try {
         const body = await request.json();
         const { memberEmail, type } = body;
 
         if (!memberEmail || !type) {
             return NextResponse.json({ success: false, error: 'Missing parameters' }, { status: 400 });
+        }
+
+        if (!isOwnerOrCEO(caller, memberEmail)) {
+            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
         }
 
         // Fetch profile
@@ -103,7 +111,7 @@ export async function POST(request: Request) {
                 const pushUrl = new URL('/api/push', request.url);
                 await fetch(pushUrl.toString(), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'x-push-secret': process.env.PUSH_INTERNAL_SECRET || '' },
                     body: JSON.stringify({
                         externalId: 'ceo@qkarin.com',
                         title: '💰 Direct Tribute',
@@ -230,7 +238,7 @@ export async function POST(request: Request) {
                 const pushUrl = new URL('/api/push', request.url);
                 await fetch(pushUrl.toString(), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'x-push-secret': process.env.PUSH_INTERNAL_SECRET || '' },
                     body: JSON.stringify({
                         externalId: 'ceo@qkarin.com',
                         title: '🎰 Risky Tribute',

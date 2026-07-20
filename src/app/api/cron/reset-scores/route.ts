@@ -135,15 +135,17 @@ async function rewardWinner(scoreCol: string) {
 
 // Runs daily at 22:59 UTC = 23:59 CET (Europe/Prague)
 export async function GET(req: Request) {
-    // Auth check - only enforced if CRON_SECRET is actually set and non-empty
+    // Auth check — CRON_SECRET must be set and must match
     const envSecret = (process.env.CRON_SECRET || '').trim();
-    if (envSecret) {
-        const authHeader = req.headers.get('authorization') || '';
-        const incoming = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
-        if (incoming !== envSecret) {
-            console.error('[cron/reset-scores] Unauthorized. incoming:', JSON.stringify(incoming), 'expected:', JSON.stringify(envSecret));
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    if (!envSecret) {
+        console.error('[cron/reset-scores] CRON_SECRET env var is not set — refusing to run');
+        return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
+    }
+    const authHeader = req.headers.get('authorization') || '';
+    const incoming = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
+    if (incoming !== envSecret) {
+        console.error('[cron/reset-scores] Unauthorized. incoming:', JSON.stringify(incoming), 'expected:', JSON.stringify(envSecret));
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('[cron/reset-scores] Fired at UTC:', new Date().toISOString());

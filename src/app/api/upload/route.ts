@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCaller } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // allow up to 2 min for large video uploads
 
 export async function POST(req: NextRequest) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     try {
         const formData = await req.formData();
         const file = formData.get('file') as File | null;

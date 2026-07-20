@@ -19,9 +19,13 @@ export async function POST(req: Request) {
     const body = await req.text();
     const signature = req.headers.get('X-Signature') || req.headers.get('x-signature') || '';
 
-    // Verify webhook signature if secret key is configured
+    // Verify webhook signature — required when DV_NET_SECRET_KEY is configured
     const secretKey = process.env.DV_NET_SECRET_KEY;
-    if (secretKey && signature) {
+    if (secretKey) {
+        if (!signature) {
+            console.error('[DV WEBHOOK] Missing signature header');
+            return NextResponse.json({ success: false }, { status: 401 });
+        }
         try {
             if (!verifySignature(body, signature, secretKey)) {
                 console.error('[DV WEBHOOK] Invalid signature');
@@ -29,6 +33,7 @@ export async function POST(req: Request) {
             }
         } catch (e) {
             console.error('[DV WEBHOOK] Signature verification error:', e);
+            return NextResponse.json({ success: false }, { status: 401 });
         }
     }
 

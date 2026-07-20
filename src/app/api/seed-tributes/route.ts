@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export async function GET() {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     try {
         const fallbackTributes = [
             { title: "Coffee", price: 100, image_url: "https://static.wixstatic.com/media/ce3e5b_fc21c33f2c5d4fbba210b37cdbf6c8b9~mv2.jpg" },

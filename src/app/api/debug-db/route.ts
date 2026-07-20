@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
     try {
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         const results: any = { connected: true, env: { serviceKeyPresent: !!serviceKey } };

@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/push - send a push notification to a specific user via OneSignal
-// externalId is the user's email (same as their OneSignal external_id)
+// Requires CEO auth OR an internal PUSH_INTERNAL_SECRET header (for server-side self-calls)
 export async function POST(req: Request) {
+    // Allow internal server-to-server calls (Stripe webhook, cron, etc.) via secret header
+    const internalSecret = process.env.PUSH_INTERNAL_SECRET || '';
+    const headerSecret = req.headers.get('x-push-secret') || '';
+    const isInternalCall = internalSecret && headerSecret === internalSecret;
+
+    if (!isInternalCall) {
+        const caller = await getCaller();
+        if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     try {
         const { externalId, title, message } = await req.json();
 

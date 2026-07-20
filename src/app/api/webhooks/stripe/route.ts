@@ -105,7 +105,7 @@ export async function POST(req: Request) {
                     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
                     await fetch(`${baseUrl}/api/push`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'x-push-secret': process.env.PUSH_INTERNAL_SECRET || '' },
                         body: JSON.stringify({
                             externalId: 'ceo@qkarin.com',
                             title: 'New Tribute Received',
@@ -302,7 +302,7 @@ export async function POST(req: Request) {
                     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
                     await fetch(`${baseUrl}/api/push`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'x-push-secret': process.env.PUSH_INTERNAL_SECRET || '' },
                         body: JSON.stringify({
                             externalId: 'ceo@qkarin.com',
                             title: 'New Keyholder Sub',

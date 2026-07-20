@@ -4,14 +4,22 @@ import { DbService } from '@/lib/supabase-service';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cacheDelete } from '@/lib/api-cache';
 import { discordRoutineSubmitted } from '@/lib/discord';
+import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
     try {
         const { type, memberId, payload } = await req.json();
 
         if (!memberId) throw new Error("Missing Member ID");
+
+        if (!isOwnerOrCEO(caller, memberId)) {
+            return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+        }
 
         let result: any = null;
 
