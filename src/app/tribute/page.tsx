@@ -35,6 +35,7 @@ export default function TributePage() {
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
     const [showPayPicker, setShowPayPicker] = useState(false);
+    const [showStripeWarning, setShowStripeWarning] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
     const [cryptoData, setCryptoData] = useState<any>(null);
@@ -274,16 +275,9 @@ export default function TributePage() {
         setShowPayPicker(true);
     };
 
-    const handleStripe = async () => {
+    const handleStripe = () => {
         setShowPayPicker(false);
-        setLoading(true); setStatus(null);
-        try {
-            const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'entrance_tribute' }) });
-            const data = await res.json();
-            if (data.url) window.location.href = data.url;
-            else setStatus('Something went wrong. Try again.');
-        } catch { setStatus('Connection error. Try again.'); }
-        finally { setLoading(false); }
+        setShowStripeWarning(true);
     };
 
     const handleCryptoSelect = () => {
@@ -1274,6 +1268,35 @@ export default function TributePage() {
                         </button>
                     </div>
                     <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>CANCEL</button>
+                </div>
+            </div>
+        )}
+
+        {/* ══ STRIPE UNAVAILABLE WARNING ══ */}
+        {showStripeWarning && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={(e) => { if (e.target === e.currentTarget) setShowStripeWarning(false); }}>
+                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 18, padding: '48px 40px', maxWidth: 420, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.7),0 0 1px rgba(139,0,0,0.2)' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(139,0,0,0.1)', border: '1px solid rgba(139,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.8)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(180,40,40,0.9)', letterSpacing: 5, fontWeight: 700, textAlign: 'center' }}>CARD PAYMENT UNAVAILABLE</div>
+                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(139,0,0,0.3),transparent)' }} />
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1, lineHeight: 1.7, textAlign: 'center' }}>
+                        We are switching to an adult-friendly payment provider.<br />
+                        Card payments will be unavailable until <span style={{ color: '#c5a059' }}>July 27th</span>.<br /><br />
+                        Please use crypto to complete your payment.
+                    </div>
+                    <button onClick={() => { setShowStripeWarning(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '18px 24px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, marginTop: 4 }}>
+                        <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(160,100,220,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.7)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        </div>
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#d4b0f0', letterSpacing: 3, fontWeight: 600 }}>PAY WITH CRYPTO</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Bitcoin, Ethereum, USDT, Litecoin</div>
+                        </div>
+                    </button>
+                    <button onClick={() => setShowStripeWarning(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer' }}>CANCEL</button>
                 </div>
             </div>
         )}
