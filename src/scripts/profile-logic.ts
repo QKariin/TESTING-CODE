@@ -10754,6 +10754,10 @@ export function closeQkLightbox() {
 export function _applyPaywall(paywall: any, memberId: string) {
     const overlay = document.getElementById('paywallOverlay');
     if (!overlay) return;
+    const shouldShow = paywall?.active === true;
+    const isShowing = overlay.style.display === 'flex';
+    // Guard: don't touch the DOM at all if state hasn't changed
+    if (shouldShow === isShowing) return;
     if (paywall?.active) {
         const reasonEl = document.getElementById('paywallReason');
         const amountEl = document.getElementById('paywallAmount');
