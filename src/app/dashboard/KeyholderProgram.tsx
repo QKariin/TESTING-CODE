@@ -753,7 +753,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                                 </div>
                                             </div>
                                         ))}
-                                        <button onClick={() => setQs([...qs, { question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }])} style={addBtnS}>+ ADD QUESTION</button>
+                                        <button onClick={() => setQs([...qs, { question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }])} style={{ ...addBtnS, color: GOLD_DIM, border: '1px dashed rgba(197,160,89,0.3)', background: 'rgba(197,160,89,0.04)' }}>+ ADD QUESTION</button>
                                     </>);
                                 })()}
                                 {mechId === 'writing' && (<>
@@ -998,7 +998,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                                 </div>
                                             </div>
                                         ))}
-                                        <button onClick={() => setQs([...qs, { question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }])} style={addBtn}>+ ADD QUESTION</button>
+                                        <button onClick={() => setQs([...qs, { question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }])} style={{ ...addBtn, color: GOLD_DIM, border: '1px dashed rgba(197,160,89,0.3)', background: 'rgba(197,160,89,0.04)' }}>+ ADD QUESTION</button>
                                     </>);
                                 })()}
 
