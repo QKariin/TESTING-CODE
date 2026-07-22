@@ -1135,6 +1135,9 @@ export async function POST(req: NextRequest) {
             lock_days: newLockDays,
             expires_at: newExpires,
         }).eq('id', session.id);
+        // Send card to member's chat
+        const cardData = { days: d, newTotal: newLockDays, newExpires };
+        try { await DbService.sendMessage(email, `LOCK_EXTENDED_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) {}
         console.log(`[vault] add_lock_days: +${d} days → lockDays=${newLockDays}`);
         return NextResponse.json({ success: true, lockDays: newLockDays, expiresAt: newExpires });
     }

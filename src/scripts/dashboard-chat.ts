@@ -47,6 +47,7 @@ function isSystemMessage(msg: any): boolean {
     if (raw.startsWith('INVENTORY_CARD::')) return false;
     if (raw.startsWith('VAULT_UNLOCK_CARD::')) return false;
     if (raw.startsWith('VAULT_LOCK_CARD::')) return false;
+    if (raw.startsWith('LOCK_EXTENDED_CARD::')) return false;
     if (raw.startsWith('LEADERBOARD_REWARD_CARD::')) return false;
     if (raw.startsWith('UPDATE_COINS_CARD::')) return false;
     if (raw.startsWith('UPDATE_MERIT_CARD::')) return false;
@@ -894,6 +895,29 @@ function renderToHtml(m: any) {
                             <div style="margin-bottom:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                             <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:1px;margin-bottom:4px;">${d.name||''} — ${d.days||0} Days</div>
                             <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(139,0,0,0.45);">${typeLabel}</div>
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // ── Lock Extended Card ──
+    if (content.startsWith('LOCK_EXTENDED_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LOCK_EXTENDED_CARD::', ''));
+            const expiresLabel = d.newExpires ? new Date(d.newExpires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0406,#0d0404,#0a0303);border:1px solid rgba(139,0,0,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:16px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(139,0,0,0.65);letter-spacing:4px;margin-bottom:8px;">LOCK EXTENDED</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.35),transparent);margin:0 auto 12px;"></div>
+                            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:rgba(180,40,40,0.85);letter-spacing:2px;margin-bottom:4px;">+${d.days||0}</div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.35);letter-spacing:3px;margin-bottom:10px;">DAY${(d.days||0) !== 1 ? 'S' : ''} ADDED</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.2),transparent);margin:0 auto 10px;"></div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">${d.newTotal||0} DAYS TOTAL</div>
+                            ${expiresLabel ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:rgba(139,0,0,0.4);margin-top:4px;">Until ${expiresLabel}</div>` : ''}
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>

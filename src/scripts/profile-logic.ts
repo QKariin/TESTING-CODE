@@ -3389,6 +3389,8 @@ export async function initChatSystem() {
                         preview = 'A new item was added to your Vault';
                     } else if (rawContent.startsWith('VAULT_LOCK_CARD::')) {
                         preview = 'Keyholder lock activated';
+                    } else if (rawContent.startsWith('LOCK_EXTENDED_CARD::')) {
+                        preview = 'Your lock has been extended';
                     } else if (rawContent.startsWith('LEADERBOARD_REWARD_CARD::')) {
                         preview = 'Leaderboard Reward';
                     } else if (rawContent.startsWith('CERT_APPROVED::')) {
@@ -3954,7 +3956,7 @@ function isSystemMessage(msg: any) {
     if (!msg) return false;
     const content = (msg.content || msg.message || '');
     // Card messages are NOT system messages — they render as rich cards in regular chat
-    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('VAULT_LOCK_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
+    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('VAULT_LOCK_CARD::') || content.startsWith('LOCK_EXTENDED_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
     if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const upper = content.toUpperCase();
@@ -4346,6 +4348,29 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
         } catch (_) {
             return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Vault Locked</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
+        }
+    }
+
+    // LOCK EXTENDED CARD
+    if (content.startsWith('LOCK_EXTENDED_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LOCK_EXTENDED_CARD::', ''));
+            const expiresLabel = d.newExpires ? new Date(d.newExpires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            const cardHtml = `
+            <div style="width:min(85%,260px);margin:0 auto;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0406,#0d0404,#0a0303);border:1px solid rgba(139,0,0,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                <div style="padding:16px 20px;text-align:center;">
+                    <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(139,0,0,0.65);letter-spacing:4px;margin-bottom:8px;">LOCK EXTENDED</div>
+                    <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.35),transparent);margin:0 auto 12px;"></div>
+                    <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:rgba(180,40,40,0.85);letter-spacing:2px;margin-bottom:4px;">+${d.days||0}</div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.35);letter-spacing:3px;margin-bottom:10px;">DAY${(d.days||0) !== 1 ? 'S' : ''} ADDED</div>
+                    <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.2),transparent);margin:0 auto 10px;"></div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">${d.newTotal||0} DAYS TOTAL</div>
+                    ${expiresLabel ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:rgba(139,0,0,0.4);margin-top:4px;">Until ${expiresLabel}</div>` : ''}
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) {
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;"><div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(139,0,0,0.5);">Lock extended</div></div>`;
         }
     }
 
@@ -8053,6 +8078,30 @@ function _buildMobGlBubble(msg: any): string {
                             <div style="margin-bottom:8px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
                             <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.6);letter-spacing:1px;margin-bottom:4px;">${d.name||''} — ${d.days||0} ${dayLabel}</div>
                             <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(139,0,0,0.45);">${typeLabel}</div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // LOCK EXTENDED CARD (mobile/system chat view)
+    if (content.startsWith('LOCK_EXTENDED_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LOCK_EXTENDED_CARD::', ''));
+            const expiresLabel = d.newExpires ? new Date(d.newExpires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:75%;max-width:260px;min-width:160px;">
+                    <div style="width:100%;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0e0406,#0d0404,#0a0303);border:1px solid rgba(139,0,0,0.5);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:16px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(139,0,0,0.65);letter-spacing:4px;margin-bottom:8px;">LOCK EXTENDED</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.35),transparent);margin:0 auto 12px;"></div>
+                            <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:rgba(180,40,40,0.85);letter-spacing:2px;margin-bottom:4px;">+${d.days||0}</div>
+                            <div style="font-family:'Rajdhani',sans-serif;font-size:0.65rem;color:rgba(255,255,255,0.35);letter-spacing:3px;margin-bottom:10px;">DAY${(d.days||0) !== 1 ? 'S' : ''} ADDED</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.2),transparent);margin:0 auto 10px;"></div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">${d.newTotal||0} DAYS TOTAL</div>
+                            ${expiresLabel ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:rgba(139,0,0,0.4);margin-top:4px;">Until ${expiresLabel}</div>` : ''}
                         </div>
                     </div>
                     <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>

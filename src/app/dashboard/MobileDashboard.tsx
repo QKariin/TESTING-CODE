@@ -3145,6 +3145,29 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                             } catch { /* fall through */ }
                         }
 
+                        if (text.startsWith('LOCK_EXTENDED_CARD::')) {
+                            try {
+                                const d = JSON.parse(text.replace('LOCK_EXTENDED_CARD::', ''));
+                                const expiresLabel = d.newExpires ? new Date(d.newExpires).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0' }}>
+                                        <div style={{ width: '75%', maxWidth: 240, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0e0406,#0d0404,#0a0303)', border: '1px solid rgba(139,0,0,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ padding: '16px 20px', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: 'rgba(139,0,0,0.65)', letterSpacing: '4px', marginBottom: 8 }}>LOCK EXTENDED</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(139,0,0,0.35),transparent)', margin: '0 auto 12px' }} />
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '1.5rem', color: 'rgba(180,40,40,0.85)', letterSpacing: '2px', marginBottom: 4 }}>+{d.days || 0}</div>
+                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginBottom: 10 }}>DAY{(d.days || 0) !== 1 ? 'S' : ''} ADDED</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(139,0,0,0.2),transparent)', margin: '0 auto 10px' }} />
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px' }}>{d.newTotal || 0} DAYS TOTAL</div>
+                                                {expiresLabel ? <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(139,0,0,0.4)', marginTop: 4 }}>Until {expiresLabel}</div> : null}
+                                            </div>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(139,0,0,0.35)', marginTop: 4 }}>{timeStr}</span>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
                         if (text.startsWith('ROUTINE_CHANGE::') || text.startsWith('WISHLIST::') || text.startsWith('CERT_APPROVED::') || text.startsWith('CERT_REJECTED::') || text.startsWith('CERT_PROOF::')) {
                             return null;
                         }
@@ -3627,7 +3650,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
 function isSystemMessage(msg: any): boolean {
     if (!msg) return false;
     const raw = msg.content || msg.message || '';
-    if (raw.startsWith('TASK_REVIEW_CARD::') || raw.startsWith('LEADERBOARD_REWARD_CARD::') || raw.startsWith('INVENTORY_CARD::') || raw.startsWith('VAULT_UNLOCK_CARD::') || raw.startsWith('VAULT_LOCK_CARD::') || raw.startsWith('PROMOTION_CARD::') || raw.startsWith('WELCOME_CARD::') || raw.startsWith('TASK_FEEDBACK::') || raw.startsWith('WISHLIST::') || raw.startsWith('ROUTINE_CHANGE::')) return false;
+    if (raw.startsWith('TASK_REVIEW_CARD::') || raw.startsWith('LEADERBOARD_REWARD_CARD::') || raw.startsWith('INVENTORY_CARD::') || raw.startsWith('VAULT_UNLOCK_CARD::') || raw.startsWith('VAULT_LOCK_CARD::') || raw.startsWith('LOCK_EXTENDED_CARD::') || raw.startsWith('PROMOTION_CARD::') || raw.startsWith('WELCOME_CARD::') || raw.startsWith('TASK_FEEDBACK::') || raw.startsWith('WISHLIST::') || raw.startsWith('ROUTINE_CHANGE::')) return false;
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = raw.toUpperCase();
     return sender === 'system' || content.includes('COINS RECEIVED') || content.includes('TASK APPROVED') || content.includes('POINTS RECEIVED') || content.includes('TASK REJECTED') || content.includes('TASK VERIFIED');
