@@ -922,7 +922,7 @@ export default function ProfilePage() {
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
                     <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 20 }}>
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                        <div style={{ fontFamily: 'Italianno,cursive', fontSize: '1.9rem', color: '#fff', lineHeight: 1.5 }}>{pw.reason || ''}</div>
+                        <div style={{ fontFamily: 'Lora,Georgia,serif', fontSize: '1.15rem', color: '#fff', lineHeight: 1.6 }}>{pw.reason || ''}</div>
                         <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(pw.amount || 0).toFixed(2)}</div>
                     </div>
@@ -974,7 +974,7 @@ export default function ProfilePage() {
         const _cachedAvatar = typeof window !== 'undefined' ? (localStorage.getItem('_qk_avatar') || '') : '';
         return (
             <div id="loading" style={{ height: '100dvh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', background: '#000', padding: '18vh 0 12vh', boxSizing: 'border-box' }}>
-                <link href="https://fonts.googleapis.com/css2?family=Italianno&display=swap" rel="stylesheet" />
+                <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
                 <style>{`
                     @keyframes _splashGrow { 0% { transform: scale(0.8); opacity: 0; } 15% { opacity: 1; } 100% { transform: scale(1.35); opacity: 1; } }
                     @keyframes _splashGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(197,160,89,0.15); } 50% { box-shadow: 0 0 50px 12px rgba(197,160,89,0.1); } }
@@ -1069,7 +1069,7 @@ export default function ProfilePage() {
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
                 <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                    <div id="paywallReason" style={{ fontFamily: 'Italianno,cursive', fontSize: '1.9rem', color: '#fff', lineHeight: 1.5 }}></div>
+                    <div id="paywallReason" style={{ fontFamily: 'Lora,Georgia,serif', fontSize: '1.15rem', color: '#fff', lineHeight: 1.6 }}></div>
                     <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                     <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
                 </div>
