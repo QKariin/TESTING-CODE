@@ -124,6 +124,7 @@ import { bindStreamPlayer, initStreamPlayer, destroyStreamPlayer } from '@/scrip
 export default function ProfilePage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
+    const [paywallData, setPaywallData] = useState<{ paywall: any; memberId: string } | null>(null);
     const [profile, setProfile] = useState<any>(null);
     const [vaultRewardLeft, setVaultRewardLeft] = useState<number | null>(null); // minutes left of freedom hour
     const pendingLockRef = useRef<{ silence: boolean; silenceReason: string; paywall: any; memberId: string } | null>(null);
@@ -541,6 +542,17 @@ export default function ProfilePage() {
 
                 if (unifiedData) {
                     console.log("[PROFILE] Loaded Data. member_id:", unifiedData.member_id, "memberId:", unifiedData.memberId);
+
+                    // ── PAYWALL: kill everything immediately, render only the wall ──
+                    if (unifiedData?.parameters?.paywall?.active) {
+                        setPaywallData({
+                            paywall: unifiedData.parameters.paywall,
+                            memberId: unifiedData.member_id || unifiedData.memberId || '',
+                        });
+                        setLoading(false); // drop splash immediately
+                        return; // stop — nothing else loads, no subscriptions, no intervals, nothing
+                    }
+
                     _loadedData = unifiedData;
                     setProfile(unifiedData);
                     initProfileState(unifiedData);
@@ -602,13 +614,6 @@ export default function ProfilePage() {
                     // Run ALL initialization after splash unmounts so DOM elements exist
                     if (_loadedData) {
                         const d = _loadedData;
-                        // ── PAYWALL: show overlay and stop — load nothing else ──
-                        if (d?.parameters?.paywall?.active) {
-                            _applyPaywall(d.parameters.paywall, d.member_id || d.memberId || '');
-                            // Only start realtime so we can detect when paywall is lifted
-                            setTimeout(() => initChatSystem(), 300);
-                            return;
-                        }
                         setTimeout(async () => {
                             renderProfileSidebar(d);
                             updateKneelingUI();
@@ -903,6 +908,67 @@ export default function ProfilePage() {
         } catch (_) {}
         finally { setAlertUploading(false); }
     };
+
+    // ── PAYWALL GATE: render absolutely nothing except the wall ──
+    if (paywallData) {
+        const pw = paywallData.paywall;
+        const mid = paywallData.memberId;
+        return (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,1)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'sans-serif' }}>
+                <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet" />
+                <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
+                    <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 20 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{pw.reason || ''}</div>
+                        <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(pw.amount || 0).toFixed(2)}</div>
+                    </div>
+                    {/* Card unavailable notice */}
+                    <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.18)', borderRadius: 10, marginBottom: 12, textAlign: 'left' }}>
+                        <div style={{ flexShrink: 0, width: 32, height: 32, borderRadius: '50%', background: 'rgba(139,0,0,0.12)', border: '1px solid rgba(139,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.7)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        </div>
+                        <div>
+                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: '3px', marginBottom: 3 }}>CARD PAYMENT UNAVAILABLE</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>From now on, payment is only possible with crypto.</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <button onClick={() => {
+                            // Show card-unavailable popup
+                            const n = document.getElementById('_pwCardNotice');
+                            if (n) n.style.display = 'flex';
+                        }} style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: 'rgba(255,255,255,0.25)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            PAY WITH CARD
+                        </button>
+                        <button id="_pwCryptoBtn" onClick={() => {
+                            import('@/scripts/profile-logic').then(m => m._showPaywallCryptoPicker(Number(pw.amount) || 0, mid, document.getElementById('_pwWall')!));
+                        }} style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.35)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, boxShadow: '0 8px 30px rgba(100,60,180,0.15)' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                            PAY WITH CRYPTO
+                        </button>
+                    </div>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px', marginTop: 14 }}>Bitcoin · Ethereum · USDT · Litecoin</div>
+                </div>
+                {/* card-only popup */}
+                <div id="_pwCardNotice" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'linear-gradient(160deg,#0d0b14,#07050f)', border: '1px solid rgba(139,0,0,0.25)', borderRadius: 18, padding: '40px 32px', maxWidth: 380, width: '88%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom,transparent,rgba(139,0,0,0.4))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(139,0,0,0.6)', letterSpacing: '5px' }}>NOTICE</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.5 }}>Card payment is not available.</div>
+                        <div style={{ width: 32, height: 1, background: 'rgba(139,0,0,0.3)' }} />
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', lineHeight: 1.7 }}>From now on, payment is<br />only possible with crypto.</div>
+                        <button onClick={() => { const n = document.getElementById('_pwCardNotice'); if (n) n.style.display = 'none'; document.getElementById('_pwCryptoBtn')?.click(); }} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', letterSpacing: '3px', cursor: 'pointer' }}>PAY WITH CRYPTO</button>
+                        <button onClick={() => { const n = document.getElementById('_pwCardNotice'); if (n) n.style.display = 'none'; }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', letterSpacing: '2px', cursor: 'pointer', padding: '4px 16px' }}>DISMISS</button>
+                    </div>
+                </div>
+                <div id="_pwWall" />
+            </div>
+        );
+    }
 
     if (loading) {
         const _cachedName = typeof window !== 'undefined' ? (localStorage.getItem('_qk_name') || '') : '';
