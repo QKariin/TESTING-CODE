@@ -241,7 +241,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
                 <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                    <div style={{ fontFamily: 'Dancing Script,cursive', fontSize: '1.1rem', color: '#fff', lineHeight: 1.6 }}>{paywallReason}</div>
+                    <div style={{ fontFamily: 'Dancing Script,cursive', fontSize: '1.2rem', color: '#fff', lineHeight: 1.6 }}>{paywallReason}</div>
                     <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(paywallAmount).toFixed(2)}</div>
                 </div>
