@@ -773,6 +773,58 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, status: 'pending' });
     }
 
+    // ── QUIZ GRADE — auto-approve quiz, adjust lock days based on score ──
+    if (action === 'quiz_grade') {
+        const { orderType, correct, total } = body;
+        const today = tzToday(tz);
+
+        // all correct → -1 day, all wrong → +3 days, partial → 0
+        const dayChange: number = correct === total ? -1 : correct === 0 ? 3 : 0;
+
+        // Auto-approve in vault_daily orders
+        const { data: daily } = await supabaseAdmin.from('vault_daily')
+            .select('id, orders').eq('session_id', session.id).eq('date', today)
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+        if (daily) {
+            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+            const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target);
+            if (idx >= 0) {
+                orders[idx].submitted = 'approved';
+                orders[idx].done = (orders[idx].done || 0) + 1;
+                orders[idx].submitted_text = `Quiz: ${correct}/${total} correct`;
+                await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+            }
+        }
+
+        // Insert auto-approved submission record
+        try {
+            await supabaseAdmin.from('vault_submissions').insert({
+                session_id: session.id,
+                member_id: email,
+                date: today,
+                order_idx: 0,
+                order_type: orderType || 'quiz',
+                label: 'Quiz',
+                text: `Quiz: ${correct}/${total} correct`,
+                status: 'approved',
+            });
+        } catch (_) {}
+
+        // Apply day change to session
+        if (dayChange !== 0) {
+            const newExpires = new Date(new Date(session.expires_at).getTime() + dayChange * 86400000).toISOString();
+            const newLockDays = Math.max(1, (session.lock_days || 0) + dayChange);
+            await supabaseAdmin.from('vault_sessions').update({
+                expires_at: newExpires,
+                lock_days: newLockDays,
+            }).eq('id', session.id);
+            console.log(`[vault] quiz_grade: ${correct}/${total} → dayChange=${dayChange}, newLockDays=${newLockDays}`);
+        }
+
+        return NextResponse.json({ success: true, dayChange, correct, total });
+    }
+
     // ── SAVE GAMBLE RESULT — persist gamble outcome so it survives page reload ──
     if (action === 'save_gamble') {
         const { orderType, gambleResult } = body;

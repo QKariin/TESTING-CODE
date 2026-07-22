@@ -248,6 +248,7 @@ export default function VaultPage() {
     const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
     const [quizTimeLeft, setQuizTimeLeft] = useState<number | null>(null);
     const [quizReveal, setQuizReveal] = useState<number | null>(null);
+    const [quizResult, setQuizResult] = useState<{ correct: number; total: number; dayChange: number } | null>(null);
     const quizTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const quizRevealRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
@@ -2298,7 +2299,7 @@ export default function VaultPage() {
                                                                                     : [];
                                                                             if (qs.length === 0) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textAlign: 'center' }}>No questions configured.</div>;
 
-                                                                            const allAnswered = quizAnswers.length >= qs.length && quizReveal === null;
+                                                                            const allAnswered = quizResult !== null;
                                                                             const curQ = qs[quizStep];
                                                                             const tl = curQ?.timeLimit || 60;
 
@@ -2328,6 +2329,17 @@ export default function VaultPage() {
                                                                                     if (newAnswers.length < qs.length) {
                                                                                         setQuizStep(s => s + 1);
                                                                                         startTimer(qs[newAnswers.length]?.timeLimit || 60);
+                                                                                    } else {
+                                                                                        // Last question done — auto-grade
+                                                                                        const correct = newAnswers.filter((a, i) => a === qs[i]?.correctIdx).length;
+                                                                                        const total = qs.length;
+                                                                                        const dayChange = correct === total ? -1 : correct === 0 ? 3 : 0;
+                                                                                        setQuizResult({ correct, total, dayChange });
+                                                                                        fetch('/api/vault/session', {
+                                                                                            method: 'POST',
+                                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                                            body: JSON.stringify({ action: 'quiz_grade', memberId: mid, orderType: o.type, correct, total, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+                                                                                        }).catch(() => {});
                                                                                     }
                                                                                 }, 1500);
                                                                             };
@@ -2339,19 +2351,32 @@ export default function VaultPage() {
                                                                                 return null;
                                                                             }
 
-                                                                            if (allAnswered) {
-                                                                                const correct = quizAnswers.filter((a, i) => a === qs[i]?.correctIdx).length;
+                                                                            if (allAnswered && quizResult) {
+                                                                                const { correct, total, dayChange } = quizResult;
+                                                                                const scoreColor = correct === total ? 'rgba(80,200,120,0.85)' : correct === 0 ? 'rgba(255,60,60,0.8)' : 'rgba(197,160,89,0.8)';
                                                                                 return (
                                                                                     <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.4rem', color: correct === qs.length ? 'rgba(80,200,120,0.8)' : 'rgba(255,80,80,0.7)', letterSpacing: 4, marginBottom: 8 }}>
-                                                                                            {correct}/{qs.length}
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.8rem', color: scoreColor, letterSpacing: 6, marginBottom: 6 }}>
+                                                                                            {correct}/{total}
                                                                                         </div>
-                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
-                                                                                            {correct === qs.length ? 'All correct.' : correct === 0 ? 'Every answer wrong.' : `${correct} correct, ${qs.length - correct} wrong.`}
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', marginBottom: 20, letterSpacing: 1 }}>
+                                                                                            {correct === total ? 'Perfect score.' : correct === 0 ? 'Every answer wrong.' : `${correct} correct · ${total - correct} wrong`}
                                                                                         </div>
-                                                                                        <button onClick={() => submitTask({ text: `Quiz result: ${correct}/${qs.length} correct` })} style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: 4, color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
-                                                                                            SUBMIT RESULT
-                                                                                        </button>
+                                                                                        {dayChange === -1 && (
+                                                                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(80,200,120,0.8)', letterSpacing: 4, padding: '14px 20px', background: 'rgba(80,200,120,0.06)', border: '1px solid rgba(80,200,120,0.25)', borderRadius: 10 }}>
+                                                                                                − 1 DAY REMOVED
+                                                                                            </div>
+                                                                                        )}
+                                                                                        {dayChange === 3 && (
+                                                                                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(255,60,60,0.8)', letterSpacing: 4, padding: '14px 20px', background: 'rgba(255,60,60,0.06)', border: '1px solid rgba(255,60,60,0.25)', borderRadius: 10 }}>
+                                                                                                + 3 DAYS ADDED
+                                                                                            </div>
+                                                                                        )}
+                                                                                        {dayChange === 0 && (
+                                                                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4 }}>
+                                                                                                NO CHANGE
+                                                                                            </div>
+                                                                                        )}
                                                                                     </div>
                                                                                 );
                                                                             }
