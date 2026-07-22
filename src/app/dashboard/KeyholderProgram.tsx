@@ -1185,6 +1185,21 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
 
 /* ═══════════════ MEMBER VIEW ═══════════════ */
 function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoad, onGenerate, updateTask, addTask, removeTask, moveTask, saveMemberDay, saving, loading, dragIdx, setDragIdx, configData, setView, setConfigSection, memberAbout, showMemberProfile, setShowMemberProfile }: any) {
+    const [extendDays, setExtendDays] = useState(1);
+    const [extendingLock, setExtendingLock] = useState(false);
+    const addLockDays = async () => {
+        if (!email || extendDays < 1) return;
+        setExtendingLock(true);
+        try {
+            await fetch('/api/vault/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add_lock_days', memberId: email, days: extendDays }),
+            });
+            await onLoad(email);
+        } catch {}
+        setExtendingLock(false);
+    };
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {!email ? (
@@ -1237,6 +1252,17 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                                 <button onClick={() => { if(sel) saveMemberDay(sel,program[String(sel)]||[]); }} className="kbtn" style={{ padding: '9px 22px', borderRadius: 6, border: `1px solid rgba(197,160,89,.3)`, background: 'rgba(197,160,89,.1)', color: GOLD, fontFamily: FC, fontSize: '.4rem', letterSpacing: 3, opacity: sel?1:.3 }}>{saving?'SAVING...':'SAVE DAY'}</button>
                             )}
                         </div>
+                        {/* ── EXTEND LOCK ── */}
+                        {email && program && (
+                            <div style={{ padding: '8px 24px', borderBottom: '1px solid rgba(197,160,89,.1)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, background: 'rgba(10,10,16,0.4)' }}>
+                                <span style={{ fontFamily: FC, fontSize: '.32rem', color: GOLD_DIM, letterSpacing: 3, flexShrink: 0 }}>EXTEND LOCK</span>
+                                <button onClick={() => setExtendDays(d => Math.max(1, d - 1))} style={{ background: 'none', border: '1px solid rgba(197,160,89,.2)', color: GOLD, fontFamily: FC, fontSize: '.45rem', width: 24, height: 24, borderRadius: 4, cursor: 'pointer', lineHeight: 1, padding: 0 }}>−</button>
+                                <span style={{ fontFamily: FC, fontSize: '.45rem', color: 'rgba(255,255,255,.85)', minWidth: 24, textAlign: 'center' }}>{extendDays}</span>
+                                <button onClick={() => setExtendDays(d => d + 1)} style={{ background: 'none', border: '1px solid rgba(197,160,89,.2)', color: GOLD, fontFamily: FC, fontSize: '.45rem', width: 24, height: 24, borderRadius: 4, cursor: 'pointer', lineHeight: 1, padding: 0 }}>+</button>
+                                <span style={{ fontFamily: F, fontSize: '.36rem', color: 'rgba(255,255,255,.4)', flexShrink: 0 }}>day{extendDays !== 1 ? 's' : ''}</span>
+                                <button onClick={addLockDays} disabled={extendingLock} className="kbtn" style={{ marginLeft: 'auto', padding: '5px 16px', borderRadius: 5, border: '1px solid rgba(197,160,89,.35)', background: 'rgba(197,160,89,.08)', color: GOLD, fontFamily: FC, fontSize: '.35rem', letterSpacing: 2, opacity: extendingLock ? 0.5 : 1 }}>{extendingLock ? '...' : '+ ADD'}</button>
+                            </div>
+                        )}
                         {/* ── MEMBER KINKS / LIMITS / ABOUT ── */}
                         {info && (info.kinks || info.limits || memberAbout) && (
                             <div style={{ flexShrink: 0, borderBottom: '1px solid rgba(197,160,89,.12)', background: 'rgba(10,10,16,0.4)' }}>

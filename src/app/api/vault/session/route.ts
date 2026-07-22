@@ -1109,6 +1109,21 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     }
 
+    // ── ADD LOCK DAYS — keyholder extends the chastity lock from dashboard ──
+    if (action === 'add_lock_days') {
+        const { days } = body;
+        if (!days || isNaN(Number(days))) return NextResponse.json({ error: 'Missing days' }, { status: 400 });
+        const d = Number(days);
+        const newLockDays = (session.lock_days || 0) + d;
+        const newExpires = new Date(new Date(session.expires_at).getTime() + d * 86400000).toISOString();
+        await supabaseAdmin.from('vault_sessions').update({
+            lock_days: newLockDays,
+            expires_at: newExpires,
+        }).eq('id', session.id);
+        console.log(`[vault] add_lock_days: +${d} days → lockDays=${newLockDays}`);
+        return NextResponse.json({ success: true, lockDays: newLockDays, expiresAt: newExpires });
+    }
+
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 
