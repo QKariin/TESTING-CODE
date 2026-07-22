@@ -2338,7 +2338,7 @@ export default function VaultPage() {
                                                                                         fetch('/api/vault/session', {
                                                                                             method: 'POST',
                                                                                             headers: { 'Content-Type': 'application/json' },
-                                                                                            body: JSON.stringify({ action: 'quiz_grade', memberId: mid, orderType: o.type, correct, total, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+                                                                                            body: JSON.stringify({ action: 'quiz_grade', memberId: mid, orderType: o.type, correct, total, answers: newAnswers, questions: qs, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
                                                                                         }).catch(() => {});
                                                                                     }
                                                                                 }, 1500);

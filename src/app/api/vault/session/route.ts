@@ -775,11 +775,26 @@ export async function POST(req: NextRequest) {
 
     // ── QUIZ GRADE — auto-approve quiz, adjust lock days based on score ──
     if (action === 'quiz_grade') {
-        const { orderType, correct, total } = body;
+        const { orderType, correct, total, answers, questions } = body;
         const today = tzToday(tz);
 
         // all correct → -1 day, all wrong → +3 days, partial → 0
         const dayChange: number = correct === total ? -1 : correct === 0 ? 3 : 0;
+
+        // Build detailed answer breakdown for the dashboard
+        let detailText = `Quiz: ${correct}/${total} correct`;
+        if (Array.isArray(questions) && Array.isArray(answers)) {
+            detailText += '\n';
+            questions.forEach((q: any, i: number) => {
+                const picked = answers[i] ?? -1;
+                const isRight = picked === q.correctIdx;
+                const pickedLabel = picked >= 0 ? (q.answers?.[picked] || `Option ${picked + 1}`) : '(no answer)';
+                const correctLabel = q.answers?.[q.correctIdx] || `Option ${q.correctIdx + 1}`;
+                detailText += `\nQ${i + 1}: ${q.question}\n`;
+                detailText += `  → ${pickedLabel} ${isRight ? '✓' : '✗'}`;
+                if (!isRight) detailText += `\n  ✓ Correct: ${correctLabel}`;
+            });
+        }
 
         // Auto-approve in vault_daily orders
         const { data: daily } = await supabaseAdmin.from('vault_daily')
@@ -806,7 +821,7 @@ export async function POST(req: NextRequest) {
                 order_idx: 0,
                 order_type: orderType || 'quiz',
                 label: 'Quiz',
-                text: `Quiz: ${correct}/${total} correct`,
+                text: detailText,
                 status: 'approved',
             });
         } catch (_) {}
