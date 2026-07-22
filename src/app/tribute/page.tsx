@@ -275,9 +275,16 @@ export default function TributePage() {
         setShowPayPicker(true);
     };
 
-    const handleStripe = () => {
+    const handleStripe = async () => {
         setShowPayPicker(false);
-        setShowStripeWarning(true);
+        setLoading(true); setStatus(null);
+        try {
+            const res = await fetch('/api/verotel/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'entrance_tribute' }) });
+            const data = await res.json();
+            if (data.url) window.location.href = data.url;
+            else setStatus('Something went wrong. Try again.');
+        } catch { setStatus('Connection error. Try again.'); }
+        finally { setLoading(false); }
     };
 
     const handleCryptoSelect = () => {
@@ -1254,7 +1261,7 @@ export default function TributePage() {
                             </div>
                             <div style={{ textAlign: 'left' }}>
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#f3e5ab', letterSpacing: 3, fontWeight: 600 }}>CARD</div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Visa, Mastercard via Stripe</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Visa, Mastercard</div>
                             </div>
                         </button>
                         <button onClick={handleCryptoSelect} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.2)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
