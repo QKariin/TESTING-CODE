@@ -602,6 +602,13 @@ export default function ProfilePage() {
                     // Run ALL initialization after splash unmounts so DOM elements exist
                     if (_loadedData) {
                         const d = _loadedData;
+                        // ── PAYWALL: show overlay and stop — load nothing else ──
+                        if (d?.parameters?.paywall?.active) {
+                            _applyPaywall(d.parameters.paywall, d.member_id || d.memberId || '');
+                            // Only start realtime so we can detect when paywall is lifted
+                            setTimeout(() => initChatSystem(), 300);
+                            return;
+                        }
                         setTimeout(async () => {
                             renderProfileSidebar(d);
                             updateKneelingUI();
@@ -841,6 +848,7 @@ export default function ProfilePage() {
             if (pendingLockRef.current) {
                 const { silence, silenceReason: reason, paywall, memberId } = pendingLockRef.current;
                 if (silence) _applySilence(true, reason);
+                // Paywall already applied in finish() if active — _applyPaywall guards against double-apply
                 _applyPaywall(paywall, memberId);
                 pendingLockRef.current = null;
             }
