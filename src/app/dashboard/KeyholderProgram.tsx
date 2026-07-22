@@ -606,7 +606,11 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                         if (c.chainTasks) info.push(`${c.chainTasks.length} tasks`);
                                         if (c.prompt) info.push(c.prompt.length > 50 ? c.prompt.slice(0,50) + '...' : c.prompt);
                                         if (c.instruction) info.push(c.instruction.length > 50 ? c.instruction.slice(0,50) + '...' : c.instruction);
-                                        if (c.question) info.push(c.question.length > 50 ? c.question.slice(0,50) + '...' : c.question);
+                                        if (c.questions?.length > 0) {
+                                            c.questions.forEach((q: any, qi: number) => {
+                                                if (q.question) info.push(`Q${qi + 1}: ${q.question.length > 45 ? q.question.slice(0, 45) + '...' : q.question}`);
+                                            });
+                                        } else if (c.question) info.push(c.question.length > 50 ? c.question.slice(0,50) + '...' : c.question);
                                         if (info.length > 0) return (
                                             <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
                                                 {info.map((txt, ii) => <span key={ii} style={{ fontFamily: F, fontSize: '.35rem', color: `rgba(${rgb},.5)`, padding: '3px 8px', background: `rgba(${rgb},.06)`, borderRadius: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{txt}</span>)}
