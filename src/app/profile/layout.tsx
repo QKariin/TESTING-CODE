@@ -2,105 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
-const appearance = {
-    theme: 'night' as const,
-    variables: {
-        colorPrimary: '#c5a059',
-        colorBackground: '#0d0d1a',
-        colorText: '#ffffff',
-        colorDanger: '#ff4444',
-        fontFamily: 'Orbitron, sans-serif',
-        borderRadius: '8px',
-        spacingUnit: '4px',
-    },
-};
-
-function PaymentForm({ email, onSuccess }: { email: string; onSuccess: () => void }) {
-    const stripe = useStripe();
-    const elements = useElements();
-    const [error, setError] = useState('');
-    const [processing, setProcessing] = useState(false);
-    const [expressReady, setExpressReady] = useState(false);
-
-    async function handleSuccess(intentId: string) {
-        await fetch('/api/paywall/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ intentId, memberId: email }),
-        }).catch(() => {});
-        onSuccess();
-    }
-
-    async function confirmCard() {
-        if (!stripe || !elements) return;
-        setProcessing(true);
-        setError('');
-        const { error: err, paymentIntent } = await stripe.confirmPayment({
-            elements,
-            confirmParams: { return_url: window.location.href },
-            redirect: 'if_required',
-        });
-        if (err) {
-            setError(err.message || 'Payment failed');
-            setProcessing(false);
-            return;
-        }
-        if (paymentIntent?.status === 'succeeded') {
-            await handleSuccess(paymentIntent.id);
-        }
-    }
-
-    async function confirmExpress(event: any) {
-        if (!stripe || !elements) { event?.paymentFailed?.({ reason: 'fail' }); return; }
-        const { error: submitErr } = await elements.submit();
-        if (submitErr) { event?.paymentFailed?.({ reason: 'fail' }); return; }
-        const { error: err, paymentIntent } = await stripe.confirmPayment({
-            elements,
-            confirmParams: { return_url: window.location.href },
-            redirect: 'if_required',
-        });
-        if (err) { event?.paymentFailed?.({ reason: 'fail' }); return; }
-        if (paymentIntent?.status === 'succeeded') {
-            await handleSuccess(paymentIntent.id);
-        }
-    }
-
-    return (
-        <div style={{ width: '100%' }}>
-            <ExpressCheckoutElement
-                onConfirm={confirmExpress}
-                options={{ paymentMethods: { googlePay: 'never', link: 'auto' } }}
-                onReady={(e: any) => {
-                    const methods = e?.availablePaymentMethods;
-                    setExpressReady(!!(methods && Object.keys(methods).length > 0));
-                }}
-            />
-            {expressReady && (
-                <div style={{ textAlign: 'center', fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', margin: '16px 0' }}>
-                    OR PAY BY CARD
-                </div>
-            )}
-            <PaymentElement />
-            {error && (
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: '#ff4444', marginTop: 12, textAlign: 'center' }}>
-                    {error}
-                </div>
-            )}
-            <button
-                onClick={confirmCard}
-                disabled={processing || !stripe}
-                style={{ width: '100%', marginTop: 20, padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: processing ? 'not-allowed' : 'pointer', opacity: processing ? 0.7 : 1, boxShadow: '0 8px 30px rgba(197,160,89,0.3)' }}
-            >
-                {processing ? 'PROCESSING...' : 'CONFIRM PAYMENT'}
-            </button>
-        </div>
-    );
-}
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
     const [silenced, setSilenced] = useState(false);
@@ -109,9 +10,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [paywallReason, setPaywallReason] = useState('');
     const [paywallAmount, setPaywallAmount] = useState(0);
     const [email, setEmail] = useState('');
-    const [clientSecret, setClientSecret] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
     const [paid, setPaid] = useState(false);
+    const [showCardNotice, setShowCardNotice] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
     const [cryptoData, setCryptoData] = useState<any>(null);
@@ -242,20 +142,6 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         };
     }, []);
 
-    async function handlePayNow() {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/stripe/paywall-checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: email }),
-            });
-            const data = await res.json();
-            if (data.clientSecret) setClientSecret(data.clientSecret);
-        } catch {}
-        setLoading(false);
-    }
-
     function handleSuccess() {
         sessionStorage.removeItem('__paywalled');
         sessionStorage.removeItem('__paywallReason');
@@ -328,37 +214,47 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     );
 
     if (paywalled && !paid) return (<>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Italianno&display=swap');`}</style>
         <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
             <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
-                {clientSecret ? (
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-                        <PaymentForm email={email} onSuccess={handleSuccess} />
-                    </Elements>
-                ) : (
-                    <>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
-                        <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{paywallReason}</div>
-                            <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(paywallAmount).toFixed(2)}</div>
-                        </div>
-                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <button onClick={handlePayNow} disabled={loading} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                                {loading ? 'LOADING...' : 'PAY WITH CARD'}
-                            </button>
-                            <button onClick={() => setShowCryptoPicker(true)} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                                PAY WITH CRYPTO
-                            </button>
-                        </div>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Card &amp; Crypto accepted</div>
-                    </>
-                )}
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
+                <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
+                    <div style={{ fontFamily: 'Italianno,cursive', fontSize: '1.9rem', color: '#fff', lineHeight: 1.5 }}>{paywallReason}</div>
+                    <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(paywallAmount).toFixed(2)}</div>
+                </div>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <button onClick={() => setShowCardNotice(true)} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        PAY WITH CARD
+                    </button>
+                    <button onClick={() => setShowCryptoPicker(true)} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        PAY WITH CRYPTO
+                    </button>
+                </div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Crypto only</div>
             </div>
         </div>
+
+        {/* ══ CARD UNAVAILABLE NOTICE ══ */}
+        {showCardNotice && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 2147483647, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={(e) => { if (e.target === e.currentTarget) setShowCardNotice(false); }}>
+                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 18, padding: '44px 48px', maxWidth: 400, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6)', textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: '#c5a059', letterSpacing: 4, fontWeight: 700 }}>CARD UNAVAILABLE</div>
+                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent)' }} />
+                    <div style={{ fontFamily: 'Italianno,cursive', fontSize: '1.6rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>Card payments are not available at this time. Please use crypto to complete your payment.</div>
+                    <button onClick={() => { setShowCardNotice(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 4 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        PAY WITH CRYPTO
+                    </button>
+                    <button onClick={() => setShowCardNotice(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer' }}>BACK</button>
+                </div>
+            </div>
+        )}
 
         {/* ══ CRYPTO COIN PICKER ══ */}
         {showCryptoPicker && (
