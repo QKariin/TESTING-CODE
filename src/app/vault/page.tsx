@@ -247,7 +247,9 @@ export default function VaultPage() {
     const [quizStep, setQuizStep] = useState(0);
     const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
     const [quizTimeLeft, setQuizTimeLeft] = useState<number | null>(null);
+    const [quizReveal, setQuizReveal] = useState<number | null>(null);
     const quizTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const quizRevealRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
     const followUpRef = useRef<typeof followUp>(null);
     followUpRef.current = followUp;
@@ -2296,7 +2298,7 @@ export default function VaultPage() {
                                                                                     : [];
                                                                             if (qs.length === 0) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textAlign: 'center' }}>No questions configured.</div>;
 
-                                                                            const allAnswered = quizAnswers.length >= qs.length;
+                                                                            const allAnswered = quizAnswers.length >= qs.length && quizReveal === null;
                                                                             const curQ = qs[quizStep];
                                                                             const tl = curQ?.timeLimit || 60;
 
@@ -2316,20 +2318,23 @@ export default function VaultPage() {
 
                                                                             const pickAnswer = (ai: number) => {
                                                                                 if (quizTimerRef.current) clearInterval(quizTimerRef.current);
-                                                                                const newAnswers = [...quizAnswers, ai];
-                                                                                setQuizAnswers(newAnswers);
-                                                                                if (newAnswers.length < qs.length) {
-                                                                                    setQuizStep(s => s + 1);
-                                                                                    startTimer(qs[newAnswers.length]?.timeLimit || 60);
-                                                                                } else {
-                                                                                    setQuizTimeLeft(null);
-                                                                                }
+                                                                                if (quizRevealRef.current) clearTimeout(quizRevealRef.current);
+                                                                                setQuizReveal(ai);
+                                                                                setQuizTimeLeft(null);
+                                                                                quizRevealRef.current = setTimeout(() => {
+                                                                                    setQuizReveal(null);
+                                                                                    const newAnswers = [...quizAnswers, ai];
+                                                                                    setQuizAnswers(newAnswers);
+                                                                                    if (newAnswers.length < qs.length) {
+                                                                                        setQuizStep(s => s + 1);
+                                                                                        startTimer(qs[newAnswers.length]?.timeLimit || 60);
+                                                                                    }
+                                                                                }, 1500);
                                                                             };
 
-                                                                            const timedOut = quizTimeLeft === 0 && !allAnswered;
+                                                                            const timedOut = quizTimeLeft === 0 && !allAnswered && quizReveal === null;
 
                                                                             if (timedOut) {
-                                                                                // Auto-fail current question and advance
                                                                                 setTimeout(() => pickAnswer(-1), 0);
                                                                                 return null;
                                                                             }
@@ -2379,12 +2384,28 @@ export default function VaultPage() {
                                                                                         </button>
                                                                                     ) : (
                                                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                                                                            {(curQ?.answers || []).map((opt: string, ai: number) => (
-                                                                                                <button key={ai} onClick={() => pickAnswer(ai)} style={{ textAlign: 'left', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-                                                                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: `${R}0.4)`, width: 20 }}>{String.fromCharCode(65 + ai)}</span>
-                                                                                                    {opt}
-                                                                                                </button>
-                                                                                            ))}
+                                                                                            {(curQ?.answers || []).map((opt: string, ai: number) => {
+                                                                                                const isCorrect = ai === curQ.correctIdx;
+                                                                                                const isPicked = quizReveal === ai;
+                                                                                                const revealing = quizReveal !== null;
+                                                                                                const bg = revealing
+                                                                                                    ? isCorrect ? 'rgba(80,200,120,0.12)' : isPicked ? 'rgba(255,60,60,0.1)' : 'rgba(255,255,255,0.02)'
+                                                                                                    : 'rgba(255,255,255,0.03)';
+                                                                                                const border = revealing
+                                                                                                    ? isCorrect ? '1px solid rgba(80,200,120,0.5)' : isPicked ? '1px solid rgba(255,60,60,0.4)' : `1px solid ${R}0.06)`
+                                                                                                    : `1px solid ${R}0.1)`;
+                                                                                                const color = revealing
+                                                                                                    ? isCorrect ? 'rgba(80,200,120,0.9)' : isPicked ? 'rgba(255,80,80,0.7)' : 'rgba(255,255,255,0.25)'
+                                                                                                    : 'rgba(255,255,255,0.6)';
+                                                                                                return (
+                                                                                                    <button key={ai} onClick={() => !revealing && pickAnswer(ai)} style={{ textAlign: 'left', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: bg, border, borderRadius: 8, cursor: revealing ? 'default' : 'pointer', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color, transition: 'all 0.2s' }}>
+                                                                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: revealing && isCorrect ? 'rgba(80,200,120,0.8)' : revealing && isPicked ? 'rgba(255,80,80,0.6)' : `${R}0.4)`, width: 20 }}>
+                                                                                                            {revealing && isCorrect ? '✓' : revealing && isPicked && !isCorrect ? '✗' : String.fromCharCode(65 + ai)}
+                                                                                                        </span>
+                                                                                                        {opt}
+                                                                                                    </button>
+                                                                                                );
+                                                                                            })}
                                                                                         </div>
                                                                                     )}
                                                                                 </div>
