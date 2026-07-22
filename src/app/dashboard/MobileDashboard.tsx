@@ -3177,7 +3177,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                             <div style={{ padding: '16px 20px', textAlign: 'center' }}>
                                                 <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '4px', marginBottom: 8 }}>PAYPAL REQUEST</div>
                                                 <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent)', margin: '0 auto 12px' }} />
-                                                <div style={{ fontFamily: "'Lora',Georgia,serif", fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 10 }}>Requesting PayPal payment for paywall fee</div>
+                                                <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 10 }}>Requesting PayPal payment for paywall fee</div>
                                                 <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.1rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(d.amount || 0).toFixed(2)}</div>
                                             </div>
                                         </div>

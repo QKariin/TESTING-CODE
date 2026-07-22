@@ -936,7 +936,7 @@ function renderToHtml(m: any) {
                         <div style="padding:16px 20px;text-align:center;">
                             <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.6);letter-spacing:4px;margin-bottom:8px;">PAYPAL REQUEST</div>
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:0 auto 12px;"></div>
-                            <div style="font-family:'Lora',Georgia,serif;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:10px;">Requesting PayPal payment for paywall fee</div>
+                            <div style="font-family:'Dancing Script',cursive;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:10px;">Requesting PayPal payment for paywall fee</div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;letter-spacing:2px;">€${Number(d.amount||0).toFixed(2)}</div>
                         </div>
                     </div>
