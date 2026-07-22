@@ -921,8 +921,8 @@ export default function ProfilePage() {
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ACCESS SUSPENDED</div>
                     <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 20 }}>
-                        <div style={{ fontFamily: 'Italianno,cursive', fontSize: '1.1rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '1px', marginBottom: 12 }}>Message from Queen Karin</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#fff', lineHeight: 1.6, letterSpacing: '0.5px' }}>{pw.reason || ''}</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>MESSAGE FROM QUEEN KARIN</div>
+                        <div style={{ fontFamily: 'Italianno,cursive', fontSize: '1.9rem', color: '#fff', lineHeight: 1.5 }}>{pw.reason || ''}</div>
                         <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }} />
                         <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(pw.amount || 0).toFixed(2)}</div>
                     </div>
