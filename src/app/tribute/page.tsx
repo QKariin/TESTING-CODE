@@ -275,16 +275,9 @@ export default function TributePage() {
         setShowPayPicker(true);
     };
 
-    const handleStripe = async () => {
+    const handleStripe = () => {
         setShowPayPicker(false);
-        setLoading(true); setStatus(null);
-        try {
-            const res = await fetch('/api/verotel/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'entrance_tribute' }) });
-            const data = await res.json();
-            if (data.url) window.location.href = data.url;
-            else setStatus('Something went wrong. Try again.');
-        } catch { setStatus('Connection error. Try again.'); }
-        finally { setLoading(false); }
+        setShowStripeWarning(true);
     };
 
     const handleCryptoSelect = () => {
