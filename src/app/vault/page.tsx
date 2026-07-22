@@ -244,6 +244,10 @@ export default function VaultPage() {
     const [greedCoins, setGreedCoins] = useState(0);
     const [greedBusted, setGreedBusted] = useState(false);
     const [greedCashedOut, setGreedCashedOut] = useState(false);
+    const [quizStep, setQuizStep] = useState(0);
+    const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
+    const [quizTimeLeft, setQuizTimeLeft] = useState<number | null>(null);
+    const quizTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [followUp, setFollowUp] = useState<{ orderType: string; source: string; resultText: string; type: string; prompt?: string; instruction?: string; duration?: number; target?: number } | null>(null);
     const followUpRef = useRef<typeof followUp>(null);
     followUpRef.current = followUp;
@@ -2232,7 +2236,7 @@ export default function VaultPage() {
                                                             {/* ── GENERIC TASK SUBMISSION (all non-handled types) ── */}
                                                             {!['spin','trial','tribute','silence'].includes(o.type) && (() => {
                                                                 const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof','ambush_snap','timed_photo','multi_video','endurance'].includes(o.type);
-                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing','quiz'].includes(o.type);
+                                                                const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing'].includes(o.type);
                                                                 const isInteractive = ['dice_roll','coinflip','card_pick','russian_roulette','spin_wheel','truth_dare','greed_game','simon_says'].includes(o.type);
                                                                 const isSelfReport = ['edge','corner_time','denial','kneel'].includes(o.type);
                                                                 const isPayment = o.type === 'payment';
@@ -2281,6 +2285,111 @@ export default function VaultPage() {
                                                                                 || meta.desc || 'Complete this task as ordered.'}
                                                                         </div>
                                                                         {o.config?.duration && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginBottom: 12 }}>{Math.floor(o.config.duration / 60)}:{String(o.config.duration % 60).padStart(2, '0')} DURATION</div>}
+
+                                                                        {/* ── QUIZ ── */}
+                                                                        {o.type === 'quiz' && (() => {
+                                                                            const rawCfg = o.config || {};
+                                                                            const qs: any[] = rawCfg.questions?.length > 0
+                                                                                ? rawCfg.questions
+                                                                                : rawCfg.question
+                                                                                    ? [{ question: rawCfg.question, answers: rawCfg.answers || [], correctIdx: rawCfg.correctIdx ?? 0, timeLimit: rawCfg.timeLimit || 60 }]
+                                                                                    : [];
+                                                                            if (qs.length === 0) return <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textAlign: 'center' }}>No questions configured.</div>;
+
+                                                                            const allAnswered = quizAnswers.length >= qs.length;
+                                                                            const curQ = qs[quizStep];
+                                                                            const tl = curQ?.timeLimit || 60;
+
+                                                                            const startTimer = (limit: number) => {
+                                                                                if (quizTimerRef.current) clearInterval(quizTimerRef.current);
+                                                                                setQuizTimeLeft(limit);
+                                                                                quizTimerRef.current = setInterval(() => {
+                                                                                    setQuizTimeLeft(prev => {
+                                                                                        if (prev === null || prev <= 1) {
+                                                                                            if (quizTimerRef.current) clearInterval(quizTimerRef.current);
+                                                                                            return 0;
+                                                                                        }
+                                                                                        return prev - 1;
+                                                                                    });
+                                                                                }, 1000);
+                                                                            };
+
+                                                                            const pickAnswer = (ai: number) => {
+                                                                                if (quizTimerRef.current) clearInterval(quizTimerRef.current);
+                                                                                const newAnswers = [...quizAnswers, ai];
+                                                                                setQuizAnswers(newAnswers);
+                                                                                if (newAnswers.length < qs.length) {
+                                                                                    setQuizStep(s => s + 1);
+                                                                                    startTimer(qs[newAnswers.length]?.timeLimit || 60);
+                                                                                } else {
+                                                                                    setQuizTimeLeft(null);
+                                                                                }
+                                                                            };
+
+                                                                            const timedOut = quizTimeLeft === 0 && !allAnswered;
+
+                                                                            if (timedOut) {
+                                                                                // Auto-fail current question and advance
+                                                                                setTimeout(() => pickAnswer(-1), 0);
+                                                                                return null;
+                                                                            }
+
+                                                                            if (allAnswered) {
+                                                                                const correct = quizAnswers.filter((a, i) => a === qs[i]?.correctIdx).length;
+                                                                                return (
+                                                                                    <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.4rem', color: correct === qs.length ? 'rgba(80,200,120,0.8)' : 'rgba(255,80,80,0.7)', letterSpacing: 4, marginBottom: 8 }}>
+                                                                                            {correct}/{qs.length}
+                                                                                        </div>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
+                                                                                            {correct === qs.length ? 'All correct.' : correct === 0 ? 'Every answer wrong.' : `${correct} correct, ${qs.length - correct} wrong.`}
+                                                                                        </div>
+                                                                                        <button onClick={() => submitTask({ text: `Quiz result: ${correct}/${qs.length} correct` })} style={{ padding: '14px 36px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: 4, color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                            SUBMIT RESULT
+                                                                                        </button>
+                                                                                    </div>
+                                                                                );
+                                                                            }
+
+                                                                            // Show current question
+                                                                            const isActive = quizTimeLeft !== null;
+                                                                            return (
+                                                                                <div style={{ padding: '4px 0' }}>
+                                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                                                                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 3 }}>
+                                                                                            QUESTION {quizStep + 1} / {qs.length}
+                                                                                        </span>
+                                                                                        {isActive && quizTimeLeft !== null && (
+                                                                                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: quizTimeLeft < 10 ? 'rgba(255,60,60,0.7)' : 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>
+                                                                                                {quizTimeLeft}s
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    {isActive && quizTimeLeft !== null && (
+                                                                                        <div style={{ width: '100%', height: 2, background: 'rgba(255,255,255,0.04)', borderRadius: 2, marginBottom: 14, overflow: 'hidden' }}>
+                                                                                            <div style={{ height: '100%', width: `${(quizTimeLeft / tl) * 100}%`, background: quizTimeLeft < 10 ? 'rgba(255,40,40,0.5)' : `${R}0.4)`, transition: 'width 1s linear', borderRadius: 2 }} />
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 16, textAlign: 'center' }}>
+                                                                                        {curQ?.question || 'No question set.'}
+                                                                                    </div>
+                                                                                    {!isActive ? (
+                                                                                        <button onClick={() => startTimer(tl)} style={{ width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: 4, color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                            START
+                                                                                        </button>
+                                                                                    ) : (
+                                                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                                                            {(curQ?.answers || []).map((opt: string, ai: number) => (
+                                                                                                <button key={ai} onClick={() => pickAnswer(ai)} style={{ textAlign: 'left', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                                                                                                    <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: `${R}0.4)`, width: 20 }}>{String.fromCharCode(65 + ai)}</span>
+                                                                                                    {opt}
+                                                                                                </button>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        })()}
 
                                                                         {/* ── INTERACTIVE MECHANISMS ── */}
 

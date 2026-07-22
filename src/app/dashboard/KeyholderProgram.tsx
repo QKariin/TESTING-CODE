@@ -726,20 +726,36 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                 {mechId === 'russian_roulette' && (
                                     <div><div style={lbl}>PUNISHMENT IF LOADED</div><input value={ec.punishment || ''} onChange={e => setEc({ ...ec, punishment: e.target.value })} style={inp} /></div>
                                 )}
-                                {mechId === 'quiz' && (<>
-                                    <div><div style={lbl}>QUESTION</div><textarea value={ec.question || ''} onChange={e => setEc({ ...ec, question: e.target.value })} rows={2} style={ta as any} /></div>
-                                    <div style={lbl}>ANSWERS (click circle = correct)</div>
-                                    {(ec.answers || ['']).map((ans: string, i: number) => (
-                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                                            <button onClick={() => setEc({ ...ec, correctIdx: i })} style={{ width: 24, height: 24, borderRadius: '50%', background: ec.correctIdx === i ? 'rgba(80,200,120,.2)' : 'rgba(255,255,255,.04)', border: `1px solid ${ec.correctIdx === i ? 'rgba(80,200,120,.4)' : 'rgba(255,255,255,.1)'}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                {ec.correctIdx === i && <span style={{ color: 'rgba(80,200,120,.7)', fontSize: '.7rem' }}>{'\u2713'}</span>}
-                                            </button>
-                                            <input value={ans} onChange={e => { const a = [...(ec.answers || [''])]; a[i] = e.target.value; setEc({ ...ec, answers: a }); }} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setEc({ ...ec, answers: [...(ec.answers || ['']), ''] })} style={addBtnS}>+ ADD ANSWER</button>
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>TIME LIMIT (SEC)</span><input type="number" value={ec.timeLimit || 60} onChange={e => setEc({ ...ec, timeLimit: +e.target.value })} style={{ ...inp, width: 70, padding: '8px 12px' }} /></div>
-                                </>)}
+                                {mechId === 'quiz' && (() => {
+                                    const qs: any[] = ec.questions?.length > 0 ? ec.questions : ec.question ? [{ question: ec.question, answers: ec.answers || [''], correctIdx: ec.correctIdx ?? 0, timeLimit: ec.timeLimit || 60 }] : [{ question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }];
+                                    const setQs = (next: any[]) => setEc({ ...ec, questions: next, question: undefined, answers: undefined, correctIdx: undefined, timeLimit: undefined });
+                                    return (<>
+                                        {qs.map((q: any, qi: number) => (
+                                            <div key={qi} style={{ padding: 12, background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)', marginBottom: 8 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                    <span style={lbl}>QUESTION {qi + 1}</span>
+                                                    {qs.length > 1 && <button onClick={() => { const n = [...qs]; n.splice(qi, 1); setQs(n); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.5)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>{'\u00D7'}</button>}
+                                                </div>
+                                                <textarea value={q.question || ''} onChange={e => { const n = [...qs]; n[qi] = { ...n[qi], question: e.target.value }; setQs(n); }} rows={2} style={ta as any} placeholder="Ask something..." />
+                                                <div style={{ ...lbl, marginTop: 8, marginBottom: 4 }}>ANSWERS (circle = correct)</div>
+                                                {(q.answers || ['']).map((ans: string, ai: number) => (
+                                                    <div key={ai} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 5 }}>
+                                                        <button onClick={() => { const n = [...qs]; n[qi] = { ...n[qi], correctIdx: ai }; setQs(n); }} style={{ width: 22, height: 22, borderRadius: '50%', background: q.correctIdx === ai ? 'rgba(80,200,120,.2)' : 'rgba(255,255,255,.04)', border: `1px solid ${q.correctIdx === ai ? 'rgba(80,200,120,.4)' : 'rgba(255,255,255,.1)'}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {q.correctIdx === ai && <span style={{ color: 'rgba(80,200,120,.7)', fontSize: '.65rem' }}>{'\u2713'}</span>}
+                                                        </button>
+                                                        <input value={ans} onChange={e => { const n = [...qs]; const a = [...(n[qi].answers || [''])]; a[ai] = e.target.value; n[qi] = { ...n[qi], answers: a }; setQs(n); }} style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: '.6rem' }} />
+                                                        {(q.answers || []).length > 1 && <button onClick={() => { const n = [...qs]; const a = [...n[qi].answers]; a.splice(ai, 1); n[qi] = { ...n[qi], answers: a }; setQs(n); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                                    </div>
+                                                ))}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                                                    <button onClick={() => { const n = [...qs]; n[qi] = { ...n[qi], answers: [...(q.answers || ['']), ''] }; setQs(n); }} style={addBtnS}>+ ANSWER</button>
+                                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ ...lbl, margin: 0 }}>TIME</span><input type="number" value={q.timeLimit || 60} onChange={e => { const n = [...qs]; n[qi] = { ...n[qi], timeLimit: +e.target.value }; setQs(n); }} style={{ ...inp, width: 55, padding: '6px 8px', fontSize: '.6rem' }} /><span style={{ ...lbl, margin: 0 }}>s</span></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => setQs([...qs, { question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }])} style={addBtnS}>+ ADD QUESTION</button>
+                                    </>);
+                                })()}
                                 {mechId === 'writing' && (<>
                                     <div><div style={lbl}>PROMPT</div><textarea value={ec.prompt || ''} onChange={e => setEc({ ...ec, prompt: e.target.value })} rows={3} style={ta as any} /></div>
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MIN WORDS</span><input type="number" value={ec.minWords || 50} onChange={e => setEc({ ...ec, minWords: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
@@ -955,21 +971,36 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                 )}
 
                                 {/* ── QUIZ / RIDDLE ── */}
-                                {addMech === 'quiz' && (<>
-                                    <div><div style={lbl}>QUESTION</div><textarea value={addConfig.question || ''} onChange={e => setAddConfig({ ...addConfig, question: e.target.value })} placeholder="Ask something..." rows={2} style={ta as any} /></div>
-                                    <div style={lbl}>ANSWERS (click circle = correct)</div>
-                                    {(addConfig.answers || ['']).map((ans: string, i: number) => (
-                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                                            <button onClick={() => setAddConfig({ ...addConfig, correctIdx: i })} style={{ width: 24, height: 24, borderRadius: '50%', background: addConfig.correctIdx === i ? 'rgba(80,200,120,.2)' : 'rgba(255,255,255,.04)', border: `1px solid ${addConfig.correctIdx === i ? 'rgba(80,200,120,.4)' : 'rgba(255,255,255,.1)'}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                {addConfig.correctIdx === i && <span style={{ color: 'rgba(80,200,120,.7)', fontSize: '.7rem' }}>{'\u2713'}</span>}
-                                            </button>
-                                            <input value={ans} onChange={e => { const a = [...(addConfig.answers || [''])]; a[i] = e.target.value; setAddConfig({ ...addConfig, answers: a }); }} placeholder={`Answer ${i + 1}...`} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
-                                            {(addConfig.answers || []).length > 1 && <button onClick={() => { const a = [...addConfig.answers]; a.splice(i, 1); setAddConfig({ ...addConfig, answers: a }); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
-                                        </div>
-                                    ))}
-                                    <button onClick={() => setAddConfig({ ...addConfig, answers: [...(addConfig.answers || ['']), ''] })} style={addBtn}>+ ADD ANSWER</button>
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>TIME LIMIT (SEC)</span><input type="number" value={addConfig.timeLimit || 60} onChange={e => setAddConfig({ ...addConfig, timeLimit: +e.target.value })} style={{ ...inp, width: 70, padding: '8px 12px' }} /></div>
-                                </>)}
+                                {addMech === 'quiz' && (() => {
+                                    const qs: any[] = addConfig.questions?.length > 0 ? addConfig.questions : [{ question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }];
+                                    const setQs = (next: any[]) => setAddConfig({ ...addConfig, questions: next });
+                                    return (<>
+                                        {qs.map((q: any, qi: number) => (
+                                            <div key={qi} style={{ padding: 12, background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)', marginBottom: 8 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                    <span style={lbl}>QUESTION {qi + 1}</span>
+                                                    {qs.length > 1 && <button onClick={() => { const n = [...qs]; n.splice(qi, 1); setQs(n); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.5)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>{'\u00D7'}</button>}
+                                                </div>
+                                                <textarea value={q.question || ''} onChange={e => { const n = [...qs]; n[qi] = { ...n[qi], question: e.target.value }; setQs(n); }} placeholder="Ask something..." rows={2} style={ta as any} />
+                                                <div style={{ ...lbl, marginTop: 8, marginBottom: 4 }}>ANSWERS (circle = correct)</div>
+                                                {(q.answers || ['']).map((ans: string, ai: number) => (
+                                                    <div key={ai} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 5 }}>
+                                                        <button onClick={() => { const n = [...qs]; n[qi] = { ...n[qi], correctIdx: ai }; setQs(n); }} style={{ width: 22, height: 22, borderRadius: '50%', background: q.correctIdx === ai ? 'rgba(80,200,120,.2)' : 'rgba(255,255,255,.04)', border: `1px solid ${q.correctIdx === ai ? 'rgba(80,200,120,.4)' : 'rgba(255,255,255,.1)'}`, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            {q.correctIdx === ai && <span style={{ color: 'rgba(80,200,120,.7)', fontSize: '.65rem' }}>{'\u2713'}</span>}
+                                                        </button>
+                                                        <input value={ans} onChange={e => { const n = [...qs]; const a = [...(n[qi].answers || [''])]; a[ai] = e.target.value; n[qi] = { ...n[qi], answers: a }; setQs(n); }} placeholder={`Answer ${ai + 1}...`} style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: '.6rem' }} />
+                                                        {(q.answers || []).length > 1 && <button onClick={() => { const n = [...qs]; const a = [...n[qi].answers]; a.splice(ai, 1); n[qi] = { ...n[qi], answers: a }; setQs(n); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                                    </div>
+                                                ))}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                                                    <button onClick={() => { const n = [...qs]; n[qi] = { ...n[qi], answers: [...(q.answers || ['']), ''] }; setQs(n); }} style={addBtn}>+ ANSWER</button>
+                                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><span style={{ ...lbl, margin: 0 }}>TIME</span><input type="number" value={q.timeLimit || 60} onChange={e => { const n = [...qs]; n[qi] = { ...n[qi], timeLimit: +e.target.value }; setQs(n); }} style={{ ...inp, width: 55, padding: '6px 8px', fontSize: '.6rem' }} /><span style={{ ...lbl, margin: 0 }}>s</span></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => setQs([...qs, { question: '', answers: ['', ''], correctIdx: 0, timeLimit: 60 }])} style={addBtn}>+ ADD QUESTION</button>
+                                    </>);
+                                })()}
 
                                 {/* ── WRITING PROMPT ── */}
                                 {addMech === 'writing' && (<>
