@@ -13,6 +13,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [paid, setPaid] = useState(false);
     const [showCardNotice, setShowCardNotice] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
+    const [paypalRequested, setPaypalRequested] = useState(false);
+    const [paypalRequesting, setPaypalRequesting] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
     const [cryptoData, setCryptoData] = useState<any>(null);
     const [cryptoConfirmed, setCryptoConfirmed] = useState(false);
@@ -142,6 +144,24 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         };
     }, []);
 
+    async function handleRequestPaypal() {
+        if (paypalRequested || paypalRequesting) return;
+        setPaypalRequesting(true);
+        try {
+            await fetch('/api/profile-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    memberId: email,
+                    type: 'MESSAGE',
+                    payload: { text: `PAYWALL_PAYPAL_REQUEST::${JSON.stringify({ amount: paywallAmount })}`, sender: 'slave' },
+                }),
+            });
+            setPaypalRequested(true);
+        } catch {}
+        setPaypalRequesting(false);
+    }
+
     function handleSuccess() {
         sessionStorage.removeItem('__paywalled');
         sessionStorage.removeItem('__paywallReason');
@@ -234,8 +254,11 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
                     </button>
+                    <button onClick={handleRequestPaypal} disabled={paypalRequested || paypalRequesting} style={{ width: '100%', padding: '14px', background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, color: paypalRequested ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.7)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 500, letterSpacing: '3px', cursor: paypalRequested ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        {paypalRequested ? '✓ REQUEST SENT' : paypalRequesting ? 'SENDING...' : 'REQUEST PAYPAL'}
+                    </button>
                 </div>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Crypto only</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px', marginTop: 14 }}>Crypto only · PayPal on request</div>
             </div>
         </div>
 
@@ -246,7 +269,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 18, padding: '44px 48px', maxWidth: 400, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6)', textAlign: 'center' }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: '#c5a059', letterSpacing: 4, fontWeight: 700 }}>CARD UNAVAILABLE</div>
                     <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent)' }} />
-                    <div style={{ fontFamily: 'Lora,Georgia,serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>Card payments are not available at this time. Please use crypto to complete your payment.</div>
+                    <div style={{ fontFamily: 'Lora,Georgia,serif', fontSize: '1.15rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>Card payments are not available. Please use crypto, or request PayPal below.</div>
                     <button onClick={() => { setShowCardNotice(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 4 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO

@@ -48,6 +48,7 @@ function isSystemMessage(msg: any): boolean {
     if (raw.startsWith('VAULT_UNLOCK_CARD::')) return false;
     if (raw.startsWith('VAULT_LOCK_CARD::')) return false;
     if (raw.startsWith('LOCK_EXTENDED_CARD::')) return false;
+    if (raw.startsWith('PAYWALL_PAYPAL_REQUEST::')) return false;
     if (raw.startsWith('LEADERBOARD_REWARD_CARD::')) return false;
     if (raw.startsWith('UPDATE_COINS_CARD::')) return false;
     if (raw.startsWith('UPDATE_MERIT_CARD::')) return false;
@@ -918,6 +919,25 @@ function renderToHtml(m: any) {
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(139,0,0,0.2),transparent);margin:0 auto 10px;"></div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.25);letter-spacing:2px;">${d.newTotal||0} DAYS TOTAL</div>
                             ${expiresLabel ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.55rem;color:rgba(139,0,0,0.4);margin-top:4px;">Until ${expiresLabel}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>
+                </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // ── PayPal Request Card ──
+    if (content.startsWith('PAYWALL_PAYPAL_REQUEST::')) {
+        try {
+            const d = JSON.parse(content.replace('PAYWALL_PAYPAL_REQUEST::', ''));
+            return `
+                <div class="chat-gift-wrap">
+                    <div style="max-width:260px;width:65vw;border-radius:14px;overflow:hidden;background:linear-gradient(170deg,#0c0c0a,#0a0a08);border:1px solid rgba(197,160,89,0.3);box-shadow:0 12px 40px rgba(0,0,0,0.8);">
+                        <div style="padding:16px 20px;text-align:center;">
+                            <div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.6);letter-spacing:4px;margin-bottom:8px;">PAYPAL REQUEST</div>
+                            <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent);margin:0 auto 12px;"></div>
+                            <div style="font-family:'Lora',Georgia,serif;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:10px;">Requesting PayPal payment for paywall fee</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#c5a059;font-weight:700;letter-spacing:2px;">€${Number(d.amount||0).toFixed(2)}</div>
                         </div>
                     </div>
                     <div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>

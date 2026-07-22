@@ -3168,6 +3168,25 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                             } catch { /* fall through */ }
                         }
 
+                        if (text.startsWith('PAYWALL_PAYPAL_REQUEST::')) {
+                            try {
+                                const d = JSON.parse(text.replace('PAYWALL_PAYPAL_REQUEST::', ''));
+                                return (
+                                    <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0' }}>
+                                        <div style={{ width: '75%', maxWidth: 240, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(170deg,#0c0c0a,#0a0a08)', border: '1px solid rgba(197,160,89,0.3)', boxShadow: '0 12px 40px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ padding: '16px 20px', textAlign: 'center' }}>
+                                                <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.65rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '4px', marginBottom: 8 }}>PAYPAL REQUEST</div>
+                                                <div style={{ width: '40%', height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.3),transparent)', margin: '0 auto 12px' }} />
+                                                <div style={{ fontFamily: "'Lora',Georgia,serif", fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, marginBottom: 10 }}>Requesting PayPal payment for paywall fee</div>
+                                                <div style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '1.1rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(d.amount || 0).toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(197,160,89,0.35)', marginTop: 4 }}>{timeStr}</span>
+                                    </div>
+                                );
+                            } catch { /* fall through */ }
+                        }
+
                         if (text.startsWith('ROUTINE_CHANGE::') || text.startsWith('WISHLIST::') || text.startsWith('CERT_APPROVED::') || text.startsWith('CERT_REJECTED::') || text.startsWith('CERT_PROOF::')) {
                             return null;
                         }
@@ -3650,7 +3669,7 @@ function QueenView({ userEmail, onLogout, users, stats }: { userEmail: string; o
 function isSystemMessage(msg: any): boolean {
     if (!msg) return false;
     const raw = msg.content || msg.message || '';
-    if (raw.startsWith('TASK_REVIEW_CARD::') || raw.startsWith('LEADERBOARD_REWARD_CARD::') || raw.startsWith('INVENTORY_CARD::') || raw.startsWith('VAULT_UNLOCK_CARD::') || raw.startsWith('VAULT_LOCK_CARD::') || raw.startsWith('LOCK_EXTENDED_CARD::') || raw.startsWith('PROMOTION_CARD::') || raw.startsWith('WELCOME_CARD::') || raw.startsWith('TASK_FEEDBACK::') || raw.startsWith('WISHLIST::') || raw.startsWith('ROUTINE_CHANGE::')) return false;
+    if (raw.startsWith('TASK_REVIEW_CARD::') || raw.startsWith('LEADERBOARD_REWARD_CARD::') || raw.startsWith('INVENTORY_CARD::') || raw.startsWith('VAULT_UNLOCK_CARD::') || raw.startsWith('VAULT_LOCK_CARD::') || raw.startsWith('LOCK_EXTENDED_CARD::') || raw.startsWith('PROMOTION_CARD::') || raw.startsWith('WELCOME_CARD::') || raw.startsWith('TASK_FEEDBACK::') || raw.startsWith('WISHLIST::') || raw.startsWith('ROUTINE_CHANGE::') || raw.startsWith('PAYWALL_PAYPAL_REQUEST::')) return false;
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const content = raw.toUpperCase();
     return sender === 'system' || content.includes('COINS RECEIVED') || content.includes('TASK APPROVED') || content.includes('POINTS RECEIVED') || content.includes('TASK REJECTED') || content.includes('TASK VERIFIED');
