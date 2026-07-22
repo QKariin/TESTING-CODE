@@ -82,6 +82,7 @@ export default function KeyholderPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<string[]>([]);
+    const [quizStarted, setQuizStarted] = useState(false);
     const [toasts, setToasts] = useState<any[]>([]);
     const [reviews, setReviews] = useState<ReviewData[]>([]);
     const [showAllReviews, setShowAllReviews] = useState(false);
@@ -904,7 +905,21 @@ export default function KeyholderPage() {
 
                 {/* ════════ QUIZ ════════ */}
                 <div id="sec-quiz" className="kh-section kh-section-alt" style={{ marginTop: 56, paddingTop: 60, paddingBottom: 60 }}>
-                {step < 3 ? (
+                {step < 3 && !quizStarted ? (
+                    <div style={{ animation: 'fadeSlide 0.45s ease-out both', textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.32rem', color: 'rgba(139,0,0,0.5)', letterSpacing: 5, marginBottom: 20 }}>FIND YOUR SENTENCE</div>
+                        <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.3rem,3.5vw,2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 400, letterSpacing: 2, marginBottom: 16, lineHeight: 1.3 }}>
+                            3 questions.<br />One verdict.
+                        </h2>
+                        <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, marginBottom: 40 }}>
+                            Answer honestly. You cannot go back.
+                        </p>
+                        <button onClick={() => setQuizStarted(true)} style={{ position: 'relative', overflow: 'hidden', padding: '18px 52px', background: 'linear-gradient(135deg,#8b0000,#5a0000)', color: '#fff', border: 'none', borderRadius: 2, cursor: 'pointer', fontFamily: 'Orbitron,sans-serif', fontSize: '0.5rem', letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(139,0,0,0.3)' }}>
+                            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)', animation: 'ctaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                            BEGIN
+                        </button>
+                    </div>
+                ) : step < 3 ? (
                     <div key={step} style={{ animation: 'fadeSlide 0.45s ease-out both' }}>
                         <div style={{ maxWidth: 400, margin: '0 auto 32px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -1027,7 +1042,7 @@ export default function KeyholderPage() {
                         </div>
 
                         <div style={{ textAlign: 'center', marginTop: 12 }}>
-                            <button onClick={() => { setStep(0); setAnswers([]); }} style={{
+                            <button onClick={() => { setStep(0); setAnswers([]); setQuizStarted(false); }} style={{
                                 background: 'none', border: 'none', fontFamily: 'Orbitron,sans-serif', fontSize: '0.3rem',
                                 color: 'rgba(255,255,255,0.12)', letterSpacing: 4, cursor: 'pointer', padding: '8px 16px',
                             }}>RETAKE QUIZ</button>
