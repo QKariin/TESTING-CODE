@@ -10798,7 +10798,7 @@ const PAYWALL_CRYPTO_OPTIONS = [
     { ticker: 'ltc', label: 'LITECOIN', sub: 'LTC · ~5 min', color: '#bfbbbb', icon: 'Ł' },
 ];
 
-function _showPaywallCryptoPicker(amount: number, memberId: string, paywallOverlay: HTMLElement) {
+export function _showPaywallCryptoPicker(amount: number, memberId: string, paywallOverlay: HTMLElement) {
     const existing = document.getElementById('_paywallCryptoPicker');
     if (existing) existing.remove();
 
