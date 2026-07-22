@@ -10775,23 +10775,10 @@ export function _applyPaywall(paywall: any, memberId: string) {
         }
 
         if (payBtn) {
-            payBtn.onclick = async () => {
-                payBtn.textContent = 'LOADING...';
-                (payBtn as HTMLButtonElement).disabled = true;
-                try {
-                    const res = await fetch('/api/verotel/paywall-checkout', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ memberId }),
-                    });
-                    const data = await res.json();
-                    if (!data.url) throw new Error(data.error || 'Failed');
-                    window.location.href = data.url;
-                } catch (e: any) {
-                    payBtn.textContent = 'PAY NOW';
-                    (payBtn as HTMLButtonElement).disabled = false;
-                    alert('Payment error: ' + e.message);
-                }
+            payBtn.onclick = () => {
+                // Card payments unavailable — show notice and push to crypto
+                const notice = document.getElementById('paywallCardNotice');
+                if (notice) notice.style.display = 'flex';
             };
         }
         overlay.style.display = 'flex';

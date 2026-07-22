@@ -1008,17 +1008,32 @@ export default function ProfilePage() {
                     <div style={{ height: 1, background: 'linear-gradient(to right,transparent,rgba(197,160,89,0.2),transparent)', margin: '20px 0' }}></div>
                     <div id="paywallAmount" style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}></div>
                 </div>
-                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <button id="paywallPayBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <button id="paywallPayBtn" style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: 'rgba(255,255,255,0.25)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                         PAY WITH CARD
                     </button>
-                    <button id="paywallCryptoBtn" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <button id="paywallCryptoBtn" style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.35)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, boxShadow: '0 8px 30px rgba(100,60,180,0.15)' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
                     </button>
                 </div>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '1px', marginTop: 16 }}>Card &amp; Crypto accepted</div>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px', marginTop: 14 }}>Bitcoin · Ethereum · USDT · Litecoin</div>
+
+                {/* Card-only popup — shown when card button is tapped */}
+                <div id="paywallCardNotice" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 9999999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'linear-gradient(160deg,#0d0b14,#07050f)', border: '1px solid rgba(139,0,0,0.25)', borderRadius: 18, padding: '40px 32px', maxWidth: 380, width: '88%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, transparent, rgba(139,0,0,0.4))' }} />
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(139,0,0,0.6)', letterSpacing: '5px', textAlign: 'center' }}>NOTICE</div>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', letterSpacing: '1px', textAlign: 'center', lineHeight: 1.5 }}>Card payment is not available.</div>
+                        <div style={{ width: 32, height: 1, background: 'rgba(139,0,0,0.3)' }} />
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', lineHeight: 1.7 }}>From now on, payment is<br />only possible with crypto.</div>
+                        <button onClick={() => { const n = document.getElementById('paywallCardNotice'); if (n) n.style.display = 'none'; document.getElementById('paywallCryptoBtn')?.click(); }} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', letterSpacing: '3px', cursor: 'pointer' }}>
+                            PAY WITH CRYPTO
+                        </button>
+                        <button onClick={() => { const n = document.getElementById('paywallCardNotice'); if (n) n.style.display = 'none'; }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', letterSpacing: '2px', cursor: 'pointer', padding: '4px 16px' }}>DISMISS</button>
+                    </div>
+                </div>
             </div>
             {/* Payment Element mounts here */}
             <div id="paywallEmbedContainer" style={{ display: 'none', width: '100%', maxWidth: 480 }}>
