@@ -772,6 +772,8 @@ export default function DashboardPage() {
     const [queenOnlyChat, setQueenOnlyChat] = useState(false);
     const [vaultRequest, setVaultRequest] = useState<any>(null);
     const [vaultLoading, setVaultLoading] = useState(false);
+    const [extendDays, setExtendDays] = useState(1);
+    const [extendingLock, setExtendingLock] = useState(false);
     const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set());
     const [vaultSession, setVaultSession] = useState<any>(null);
     const [vaultSessionLoading, setVaultSessionLoading] = useState(false);
@@ -2126,6 +2128,23 @@ export default function DashboardPage() {
                                                 <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(139,0,0,0.5)' }}>{Math.round(pctDone)}%</span>
                                                 <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{expiresAt ? fmtDate(expiresAt) : '—'}</span>
                                             </div>
+                                        </div>
+
+                                        {/* ── EXTEND LOCK ── */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 4px 12px', padding: '8px 10px', background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 8 }}>
+                                            <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 3, flexShrink: 0 }}>+ DAYS</span>
+                                            <button onClick={() => setExtendDays(d => Math.max(1, d - 1))} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', color: 'rgba(197,160,89,0.7)', fontFamily: "'Cinzel',serif", fontSize: '0.7rem', width: 22, height: 22, borderRadius: 4, cursor: 'pointer', lineHeight: 1, padding: 0, flexShrink: 0 }}>−</button>
+                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.6rem', color: '#fff', minWidth: 20, textAlign: 'center' }}>{extendDays}</span>
+                                            <button onClick={() => setExtendDays(d => d + 1)} style={{ background: 'none', border: '1px solid rgba(197,160,89,0.2)', color: 'rgba(197,160,89,0.7)', fontFamily: "'Cinzel',serif", fontSize: '0.7rem', width: 22, height: 22, borderRadius: 4, cursor: 'pointer', lineHeight: 1, padding: 0, flexShrink: 0 }}>+</button>
+                                            <button disabled={extendingLock} onClick={async () => {
+                                                setExtendingLock(true);
+                                                try {
+                                                    await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_lock_days', memberId: currId, days: extendDays }) });
+                                                    const r = await fetch(`/api/vault/session?memberId=${encodeURIComponent(currId || '')}`);
+                                                    const d = await r.json();
+                                                    if (d.active) setVaultSession(d);
+                                                } catch (_) {} finally { setExtendingLock(false); }
+                                            }} style={{ marginLeft: 'auto', padding: '4px 14px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 5, color: 'rgba(197,160,89,0.85)', fontFamily: "'Cinzel',serif", fontSize: '0.38rem', letterSpacing: 2, cursor: extendingLock ? 'default' : 'pointer', opacity: extendingLock ? 0.5 : 1 }}>{extendingLock ? '...' : 'ADD'}</button>
                                         </div>
 
                                         {/* ── TODAY'S ORDERS ── */}
