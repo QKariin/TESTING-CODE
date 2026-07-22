@@ -76,9 +76,42 @@ export async function GET(req: NextRequest) {
 
         const userId = order.user_id;
         const userEmail = order.user_email;
+        const amount = (order.amount_cents || 0) / 100;
         const payUrl: string = order.pay_url || '';
         const type = payUrl.split(':')[1] || 'entrance_tribute';
         const displayName = payUrl.split(':')[2] || userEmail.split('@')[0];
+
+        // ── PAYWALL TRIBUTE ──
+        if (type === 'paywall_tribute') {
+            const paywallMemberId = payUrl.split(':')[2] || userEmail;
+            const { data: paywallProfile } = await supabaseAdmin
+                .from('profiles')
+                .select('ID, parameters')
+                .ilike('member_id', paywallMemberId)
+                .maybeSingle();
+
+            if (paywallProfile) {
+                const params = paywallProfile.parameters || {};
+                const purchaseHistory: any[] = params.purchaseHistory || [];
+                purchaseHistory.unshift({
+                    type: 'PAYWALL_TRIBUTE',
+                    memberId: paywallMemberId,
+                    amount,
+                    timestamp: new Date().toISOString(),
+                    orderId,
+                });
+                if (purchaseHistory.length > 100) purchaseHistory.splice(100);
+                params.purchaseHistory = purchaseHistory;
+                delete params.paywall;
+                await supabaseAdmin
+                    .from('profiles')
+                    .update({ paywall: false, parameters: params })
+                    .eq('ID', paywallProfile.ID);
+                console.log(`[VEROTEL WEBHOOK] Paywall unlocked for ${paywallMemberId}`);
+            } else {
+                console.error(`[VEROTEL WEBHOOK] Paywall profile not found: ${paywallMemberId}`);
+            }
+        }
 
         // ── ENTRANCE TRIBUTE ──
         if (type === 'entrance_tribute') {

@@ -10726,97 +10726,14 @@ export function _applyPaywall(paywall: any, memberId: string) {
                 payBtn.textContent = 'LOADING...';
                 (payBtn as HTMLButtonElement).disabled = true;
                 try {
-                    const res = await fetch('/api/stripe/paywall-checkout', {
+                    const res = await fetch('/api/verotel/paywall-checkout', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ memberId }),
                     });
                     const data = await res.json();
-                    if (!data.clientSecret) throw new Error(data.error || 'Failed');
-
-                    const { loadStripe } = await import('@stripe/stripe-js');
-                    const stripeInstance = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-                    if (!stripeInstance) throw new Error('Stripe failed to load');
-
-                    // Hide info card, show payment widget
-                    const infoDiv = overlay.querySelector('div') as HTMLElement;
-                    const embedContainer = document.getElementById('paywallEmbedContainer') as HTMLElement;
-                    infoDiv.style.display = 'none';
-                    embedContainer.style.display = 'block';
-
-                    const appearance = {
-                        theme: 'night' as const,
-                        variables: {
-                            colorPrimary: '#c5a059',
-                            colorBackground: '#0a0a14',
-                            colorText: '#ffffff',
-                            colorDanger: '#ff4444',
-                            fontFamily: 'Orbitron, sans-serif',
-                            borderRadius: '8px',
-                        },
-                    };
-
-                    const elements = stripeInstance.elements({ clientSecret: data.clientSecret, appearance });
-
-                    const confirmBtn = document.getElementById('paywallConfirmBtn') as HTMLButtonElement;
-                    const errorEl = document.getElementById('paywallPayError') as HTMLElement;
-                    const divider = document.getElementById('paywallDivider') as HTMLElement;
-
-                    const handleSuccess = async (intentId: string) => {
-                        confirmBtn.textContent = 'UNLOCKING...';
-                        await fetch('/api/paywall/verify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ intentId, memberId }),
-                        });
-                        overlay.style.display = 'none';
-                        document.body.style.overflow = '';
-                        window.location.reload();
-                    };
-
-                    // Express Checkout (Apple Pay / Google Pay)
-                    const expressElement = elements.create('expressCheckout');
-                    expressElement.mount('#paywallExpressElement');
-                    expressElement.on('confirm', async (event: any) => {
-                        const { error, paymentIntent } = await stripeInstance.confirmPayment({
-                            elements,
-                            confirmParams: { return_url: window.location.href },
-                            redirect: 'if_required',
-                        });
-                        if (error) { event.paymentFailed({ reason: 'fail' }); return; }
-                        if (paymentIntent?.status === 'succeeded') await handleSuccess(paymentIntent.id);
-                    });
-                    expressElement.on('ready', (event: any) => {
-                        if (event.availablePaymentMethods && Object.keys(event.availablePaymentMethods).length > 0) {
-                            divider.style.display = 'block';
-                        }
-                    });
-
-                    // Card fallback
-                    const paymentElement = elements.create('payment');
-                    paymentElement.mount('#paywallPaymentElement');
-
-                    confirmBtn.onclick = async () => {
-                        confirmBtn.textContent = 'PROCESSING...';
-                        confirmBtn.disabled = true;
-                        errorEl.style.display = 'none';
-
-                        const { error, paymentIntent } = await stripeInstance.confirmPayment({
-                            elements,
-                            confirmParams: { return_url: window.location.href },
-                            redirect: 'if_required',
-                        });
-
-                        if (error) {
-                            errorEl.textContent = error.message || 'Payment failed';
-                            errorEl.style.display = 'block';
-                            confirmBtn.textContent = 'CONFIRM PAYMENT';
-                            confirmBtn.disabled = false;
-                            return;
-                        }
-
-                        if (paymentIntent?.status === 'succeeded') await handleSuccess(paymentIntent.id);
-                    };
+                    if (!data.url) throw new Error(data.error || 'Failed');
+                    window.location.href = data.url;
                 } catch (e: any) {
                     payBtn.textContent = 'PAY NOW';
                     (payBtn as HTMLButtonElement).disabled = false;
