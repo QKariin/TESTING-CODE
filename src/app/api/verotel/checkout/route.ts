@@ -50,6 +50,7 @@ export async function POST(req: Request) {
             type: 'purchase',
             returnUrl: `${ORIGIN}/tribute/success?ref=${orderId}`,
             cancelUrl: `${ORIGIN}/tribute?status=cancelled`,
+            postbackUrl: `${ORIGIN}/api/verotel/webhook`,
             ref: orderId,
             email: user.email || undefined,
         });
