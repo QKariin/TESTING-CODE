@@ -19,18 +19,16 @@ export async function POST(req: Request) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                checkout: {
-                    lineItems: [{
-                        quantity: 1,
-                        price: Number(amount).toFixed(2),
-                        productName: { original: 'Paywall Tribute' },
-                        itemType: { custom: 'DEFAULT' },
-                        physicalDetails: { shippingRequired: false },
-                    }],
-                    channelType: 'WEB',
-                    buyerInfo: { email: memberId },
-                    customFields: [{ title: 'memberId', value: memberId }],
-                },
+                lineItems: [{
+                    quantity: 1,
+                    price: Number(amount).toFixed(2),
+                    productName: { original: 'Membership Access' },
+                    itemType: { custom: 'DEFAULT' },
+                    physicalDetails: { shippingRequired: false },
+                }],
+                channelType: 'WEB',
+                buyerInfo: { email: memberId },
+                customFields: [{ title: 'memberId', value: memberId }],
             }),
         });
 
