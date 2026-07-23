@@ -4,8 +4,10 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const { memberId, amount } = await req.json();
-        if (!memberId || !amount) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+        const bodyText = await req.text();
+        console.log('[wix-checkout] body:', bodyText);
+        const { memberId, amount } = bodyText ? JSON.parse(bodyText) : {};
+        if (!memberId || !amount) return NextResponse.json({ error: `Missing params — got: ${bodyText}` }, { status: 400 });
 
         const apiKey = process.env.WIX_API_KEY!;
         const siteId = process.env.WIX_SITE_ID!;
