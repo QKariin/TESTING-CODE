@@ -16,6 +16,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [paypalRequested, setPaypalRequested] = useState(false);
     const [paypalRequesting, setPaypalRequesting] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
+    const [cryptoError, setCryptoError] = useState('');
     const [cryptoPending, setCryptoPending] = useState(false);
 
     useEffect(() => {
@@ -218,20 +219,23 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
     async function handleCryptoPay() {
         setCryptoLoading(true);
+        setCryptoError('');
         try {
             const res = await fetch('/api/paywall/passimpay', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ memberId: email, amount: paywallAmount }),
             });
-            const data = await res.json();
+            const text = await res.text();
+            const data = text ? JSON.parse(text) : {};
             if (data.url) {
                 window.location.href = data.url;
             } else {
-                console.error('[crypto] PassimPay error:', data.error);
+                setCryptoError(`HTTP ${res.status}: ${data.error || text || 'empty response'}`);
                 setCryptoLoading(false);
             }
-        } catch {
+        } catch (e: any) {
+            setCryptoError(e.message || 'Network error');
             setCryptoLoading(false);
         }
     }
@@ -275,6 +279,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         {cryptoLoading ? 'LOADING...' : 'PAY WITH CRYPTO'}
                     </button>
+                    {cryptoError && <div style={{ fontSize: '0.6rem', color: 'rgba(255,80,80,0.7)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center', padding: '4px 8px', wordBreak: 'break-all' }}>{cryptoError}</div>}
                     {cryptoPending && <div style={{ fontSize: '0.6rem', color: 'rgba(100,220,120,0.8)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center', padding: '4px 8px', letterSpacing: 2 }}>✓ Payment received — verifying...</div>}
                     <button onClick={handleRequestPaypal} disabled={paypalRequested || paypalRequesting} style={{ width: '100%', padding: '14px', background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, color: paypalRequested ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.7)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 500, letterSpacing: '3px', cursor: paypalRequested ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                         {paypalRequested ? '✓ REQUEST SENT' : paypalRequesting ? 'SENDING...' : 'REQUEST PAYPAL'}
