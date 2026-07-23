@@ -30,11 +30,12 @@ export async function POST(req: Request) {
             }),
         });
 
-        const checkoutData = await checkoutRes.json();
+        const checkoutText = await checkoutRes.text();
         if (!checkoutRes.ok) {
-            console.error('[wix-checkout] checkout error:', checkoutData);
-            return NextResponse.json({ error: checkoutData }, { status: 500 });
+            console.error('[wix-checkout] checkout error:', checkoutRes.status, checkoutText);
+            return NextResponse.json({ error: `Wix ${checkoutRes.status}: ${checkoutText || 'empty response'}` }, { status: 500 });
         }
+        const checkoutData = checkoutText ? JSON.parse(checkoutText) : {};
 
         const checkoutId = checkoutData.checkout?.id;
         if (!checkoutId) return NextResponse.json({ error: 'No checkout ID returned' }, { status: 500 });
