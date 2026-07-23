@@ -19,17 +19,14 @@ export async function POST(req: Request) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                checkout: {
-                    lineItems: [{
-                        quantity: 1,
-                        price: Number(amount).toFixed(2),
-                        productName: { original: 'Membership Access' },
-                        itemType: { preset: 'DIGITAL' },
-                        physicalDetails: { shippingRequired: false },
-                    }],
-                    channelType: 'WEB',
-                    buyerInfo: { email: memberId },
-                },
+                customLineItems: [{
+                    quantity: 1,
+                    price: Number(amount).toFixed(2),
+                    productName: { original: 'Membership Access' },
+                    itemType: { preset: 'DIGITAL' },
+                }],
+                channelType: 'WEB',
+                buyerInfo: { email: memberId },
             }),
         });
 
