@@ -120,23 +120,18 @@ function _showModal(raw: any): void {
 function _renderWelcome(state: OBState): void {
     state.overlay.innerHTML = `
         <div style="position:absolute;inset:0;background:url('/queen-bg-mobile.jpg') center 15% / cover no-repeat;opacity:0.18;pointer-events:none;"></div>
-        <div style="width:100%;max-width:420px;padding:52px 28px 80px;display:flex;flex-direction:column;min-height:100svh;justify-content:space-between;position:relative;">
+        <div style="width:100%;max-width:420px;padding:48px 28px 52px;display:flex;flex-direction:column;min-height:100svh;position:relative;">
 
             <div class="ob-label" style="margin-bottom:0;">PRIVATE ACCESS</div>
 
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0 32px;text-align:center;">
-
-                <div style="text-align:center;">
-                    <div style="font-family:Cinzel,serif;font-size:1.1rem;color:#fff;font-weight:700;letter-spacing:5px;text-transform:uppercase;margin-bottom:10px;">ONBOARDING</div>
-                    <div style="font-family:'Dancing Script',cursive;font-size:1.6rem;color:rgba(197,160,89,0.85);font-weight:600;line-height:1.3;">Submissive Soul</div>
-                </div>
-                <div class="ob-gold-line" style="margin-top:22px;"></div>
-
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0;">
+                <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.5),transparent);margin-bottom:24px;"></div>
+                <div style="font-family:Cinzel,serif;font-size:1.3rem;color:#c5a059;font-weight:700;letter-spacing:6px;text-transform:uppercase;margin-bottom:12px;">ONBOARDING</div>
+                <div style="font-family:'Dancing Script',cursive;font-size:1.8rem;color:rgba(255,255,255,0.55);font-weight:500;line-height:1.2;margin-bottom:24px;">Submissive Soul</div>
+                <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.5),transparent);"></div>
             </div>
 
-            <div>
-                <button id="ob-enter" style="width:100%;padding:16px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:Cinzel,serif;font-size:0.7rem;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:6px;">I'M READY, QUEEN KARIN</button>
-            </div>
+            <button id="ob-enter" style="width:100%;padding:16px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:Cinzel,serif;font-size:0.7rem;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:6px;">I'M READY, QUEEN KARIN</button>
         </div>
     `;
 
