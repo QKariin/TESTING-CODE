@@ -156,7 +156,9 @@ export async function POST(req: Request) {
 
                     // Purchase entry - realtime notification + persistent history
                     const purchaseEntry = {
+                        type: 'COIN_PURCHASE',
                         coins,
+                        amount: session.amount_total ? session.amount_total / 100 : null,
                         name: profile.name || userEmail || userId || 'Unknown',
                         memberId: profile.member_id || userEmail || '',
                         timestamp: new Date().toISOString(),
