@@ -11,14 +11,34 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [paywallAmount, setPaywallAmount] = useState(0);
     const [email, setEmail] = useState('');
     const [paid, setPaid] = useState(false);
-    const [showCardNotice, setShowCardNotice] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
+    const [wixLoading, setWixLoading] = useState(false);
     const [paypalRequested, setPaypalRequested] = useState(false);
     const [paypalRequesting, setPaypalRequesting] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
     const [cryptoData, setCryptoData] = useState<any>(null);
     const [cryptoConfirmed, setCryptoConfirmed] = useState(false);
     const cryptoPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        // Detect return from Wix checkout
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('wix_paid') === '1') {
+            const cid = params.get('cid');
+            const mid = params.get('mid');
+            if (cid && mid) {
+                fetch('/api/paywall/wix-verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ checkoutId: cid, memberId: mid }),
+                }).then(r => r.json()).then(d => {
+                    if (d.paid) handleSuccess();
+                }).catch(() => {});
+            }
+            // Clean URL
+            window.history.replaceState({}, '', '/profile');
+        }
+    }, []);
 
     useEffect(() => {
         if (sessionStorage.getItem('__silenced') === '1') {
@@ -144,6 +164,25 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         };
     }, []);
 
+    async function handleWixCardPay() {
+        setWixLoading(true);
+        try {
+            const res = await fetch('/api/paywall/wix-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: email, amount: paywallAmount }),
+            });
+            const data = await res.json();
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                setWixLoading(false);
+            }
+        } catch {
+            setWixLoading(false);
+        }
+    }
+
     async function handleRequestPaypal() {
         if (paypalRequested || paypalRequesting) return;
         setPaypalRequesting(true);
@@ -246,9 +285,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€{Number(paywallAmount).toFixed(2)}</div>
                 </div>
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <button onClick={() => setShowCardNotice(true)} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <button onClick={handleWixCardPay} disabled={wixLoading} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: wixLoading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: wixLoading ? 0.6 : 1 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        PAY WITH CARD
+                        {wixLoading ? 'LOADING...' : 'PAY WITH CARD'}
                     </button>
                     <button onClick={() => setShowCryptoPicker(true)} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
@@ -261,23 +300,6 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px', marginTop: 14 }}>Crypto only · PayPal on request</div>
             </div>
         </div>
-
-        {/* ══ CARD UNAVAILABLE NOTICE ══ */}
-        {showCardNotice && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 2147483647, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={(e) => { if (e.target === e.currentTarget) setShowCardNotice(false); }}>
-                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 18, padding: '44px 48px', maxWidth: 400, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6)', textAlign: 'center' }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: '#c5a059', letterSpacing: 4, fontWeight: 700 }}>CARD UNAVAILABLE</div>
-                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent)' }} />
-                    <div style={{ fontFamily: 'Dancing Script,cursive', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>Card payments are not available. Please use crypto, or request PayPal below.</div>
-                    <button onClick={() => { setShowCardNotice(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 4 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                        PAY WITH CRYPTO
-                    </button>
-                    <button onClick={() => setShowCardNotice(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer' }}>BACK</button>
-                </div>
-            </div>
-        )}
 
         {/* ══ CRYPTO COIN PICKER ══ */}
         {showCryptoPicker && (
