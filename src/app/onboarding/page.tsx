@@ -149,7 +149,7 @@ export default function OnboardingPage() {
     return (
         <div className="relative min-h-screen bg-[#030303] flex items-start justify-center overflow-hidden">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;500&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;500&family=Dancing+Script:wght@400;600;700&display=swap');
                 * { box-sizing: border-box; }
                 .ob-input { width:100%; background:transparent; border:none; border-bottom: 1px solid rgba(197,160,89,0.25); color:#fff; font-family:'Raleway',sans-serif; font-size:1rem; font-weight:300; padding:10px 0; letter-spacing:1px; outline:none; transition: border-color 0.3s; }
                 .ob-input::placeholder { color: rgba(255,255,255,0.2); font-weight:300; }

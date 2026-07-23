@@ -126,7 +126,7 @@ function _renderWelcome(state: OBState): void {
 
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0 32px;text-align:center;">
 
-                <div style="font-family:Cinzel,serif;font-size:1.3rem;color:#fff;font-weight:700;letter-spacing:4px;line-height:1.6;">LOST SUBMISSIVE SOUL<br>ONBOARDING</div>
+                <div style="font-family:'Dancing Script',cursive;font-size:2.2rem;color:#fff;font-weight:600;line-height:1.4;">Lost Submissive Soul<br>Onboarding</div>
                 <div class="ob-gold-line" style="margin-top:22px;"></div>
 
             </div>
