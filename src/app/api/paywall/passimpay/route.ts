@@ -13,22 +13,27 @@ export async function POST(req: Request) {
         const platformId = Number(process.env.PASSIMPAY_PLATFORM_ID!);
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        // v1 API: form-encoded with hash param (matches official PHP SDK)
-        const params: Record<string, string> = {
-            platform_id: String(platformId),
-            order_id: orderId,
+        // v2 API: JSON body, keys sorted alphabetically, HMAC-SHA256 signature
+        const bodyObj: Record<string, any> = {
             amount: Number(amount).toFixed(2),
+            orderId,
+            platformId,
+            symbol: 'EUR',
         };
-        const queryStr = new URLSearchParams(params).toString();
-        const hash = createHmac('sha256', apiKey).update(queryStr).digest('hex');
-        const formBody = new URLSearchParams({ ...params, hash }).toString();
+        // Sort keys alphabetically for signature
+        const sortedBodyStr = JSON.stringify(Object.fromEntries(Object.keys(bodyObj).sort().map(k => [k, bodyObj[k]])));
+        const signContract = `${platformId};${sortedBodyStr};${apiKey}`;
+        const signature = createHmac('sha256', apiKey).update(signContract).digest('hex');
 
-        console.log('[passimpay] creating order:', orderId, 'amount:', params.amount, 'hash:', hash);
+        console.log('[passimpay] order:', orderId, 'body:', sortedBodyStr, 'sig:', signature);
 
-        const res = await fetch('https://api.passimpay.io/createorder', {
+        const res = await fetch('https://api.passimpay.io/v2/createorder', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formBody,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-signature': signature,
+            },
+            body: sortedBodyStr,
         });
 
         const resText = await res.text();
