@@ -13,6 +13,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [paid, setPaid] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
     const [wixLoading, setWixLoading] = useState(false);
+    const [wixError, setWixError] = useState('');
     const [paypalRequested, setPaypalRequested] = useState(false);
     const [paypalRequesting, setPaypalRequesting] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
@@ -166,6 +167,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
     async function handleWixCardPay() {
         setWixLoading(true);
+        setWixError('');
         try {
             const res = await fetch('/api/paywall/wix-checkout', {
                 method: 'POST',
@@ -176,9 +178,11 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
             if (data.checkoutUrl) {
                 window.location.href = data.checkoutUrl;
             } else {
+                setWixError(JSON.stringify(data.error || 'Unknown error'));
                 setWixLoading(false);
             }
-        } catch {
+        } catch (e: any) {
+            setWixError(e.message || 'Network error');
             setWixLoading(false);
         }
     }
@@ -289,6 +293,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                         {wixLoading ? 'LOADING...' : 'PAY WITH CARD'}
                     </button>
+                    {wixError && <div style={{ fontSize: '0.6rem', color: 'rgba(255,80,80,0.7)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center', padding: '4px 8px', wordBreak: 'break-all' }}>{wixError}</div>}
                     <button onClick={() => setShowCryptoPicker(true)} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
