@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
+import { createHash } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
         const bodyStr = JSON.stringify(body);
         const signData = `${platformId};${bodyStr};${apiKey}`;
-        const signature = createHmac('sha256', apiKey).update(signData).digest('hex');
+        const signature = createHash('sha256').update(signData).digest('hex');
 
         console.log('[passimpay] creating order:', orderId, 'amount:', body.amount);
 

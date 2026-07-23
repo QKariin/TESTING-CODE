@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
+import { createHash } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const apiKey = process.env.PASSIMPAY_API_KEY!;
 
         // Verify webhook signature
-        const expected = createHmac('sha256', apiKey).update(bodyText).digest('hex');
+        const expected = createHash('sha256').update(`${bodyText};${apiKey}`).digest('hex');
         if (signature && signature !== expected) {
             console.warn('[passimpay webhook] invalid signature, got:', signature, 'expected:', expected);
             return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
