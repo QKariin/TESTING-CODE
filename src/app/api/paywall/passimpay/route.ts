@@ -13,26 +13,20 @@ export async function POST(req: Request) {
         const platformId = Number(process.env.PASSIMPAY_PLATFORM_ID!);
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        // v1 API (form-encoded)
-        // Hash is computed with PHP-style float (50.0 → "50"), but body needs "50.00" format
-        const amountForHash = String(Number(amount));      // "50" — matches PHP http_build_query
-        const amountForBody = Number(amount).toFixed(2);   // "50.00" — what API validates
+        if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing PASSIMPAY env vars' }, { status: 500 });
 
-        const paramsForHash: Record<string, string> = {
+        // v1 API (form-encoded) — hash and body must use identical amount string
+        const amountStr = Number(amount).toFixed(2); // "50.00"
+        const params: Record<string, string> = {
             platform_id: String(platformId),
             order_id: orderId,
-            amount: amountForHash,
+            amount: amountStr,
         };
-        const queryStrForHash = new URLSearchParams(paramsForHash).toString();
+        const queryStrForHash = new URLSearchParams(params).toString();
         const hash = createHmac('sha256', apiKey).update(queryStrForHash).digest('hex');
-        const formBody = new URLSearchParams({
-            platform_id: String(platformId),
-            order_id: orderId,
-            amount: amountForBody,
-            hash,
-        }).toString();
+        const formBody = new URLSearchParams({ ...params, hash }).toString();
 
-        console.log('[passimpay] order:', orderId, 'queryForHash:', queryStrForHash, 'hash:', hash);
+        console.log('[passimpay] platformId:', platformId, 'amount:', amountStr, 'hash_input:', queryStrForHash);
 
         const res = await fetch('https://api.passimpay.io/createorder', {
             method: 'POST',
