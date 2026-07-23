@@ -9,11 +9,12 @@ export async function POST(req: Request) {
         const { memberId, amount } = await req.json();
         if (!memberId || !amount) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
 
-        const apiKey = process.env.PASSIMPAY_API_KEY!;
-        const platformId = Number(process.env.PASSIMPAY_PLATFORM_ID!);
+        const apiKey = (process.env.PASSIMPAY_API_KEY || '').trim();
+        const platformIdRaw = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
+        const platformId = Number(platformIdRaw);
+        console.log('[passimpay] env check — apiKey len:', apiKey.length, 'platformId:', platformId);
+        if (!apiKey || !platformIdRaw) return NextResponse.json({ error: `Missing env vars: apiKey=${!!apiKey} platformId=${!!platformIdRaw}` }, { status: 500 });
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
-
-        if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing PASSIMPAY env vars' }, { status: 500 });
 
         // v1 API (form-encoded) — hash and body must use identical amount string
         const amountStr = Number(amount).toFixed(2); // "50.00"
