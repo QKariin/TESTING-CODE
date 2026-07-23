@@ -26,9 +26,11 @@ export async function POST(req: Request) {
                     price: Number(amount).toFixed(2),
                     productName: { original: 'Membership Access' },
                     itemType: { preset: 'DIGITAL' },
+                    physicalDetails: { shippingRequired: false },
                 }],
                 channelType: 'WEB',
                 buyerInfo: { email: memberId },
+                shippingInfo: { shippingDestination: { address: { country: 'FI' } } },
             }),
         });
 
