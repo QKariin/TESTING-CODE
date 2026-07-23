@@ -37,19 +37,22 @@ export async function GET() {
             });
         }
 
-        // Flatten purchaseHistory (coin purchases + paywall tributes)
+        const PAYMENT_TYPES = new Set(['COIN_PURCHASE', 'PAYWALL_TRIBUTE', 'PAYWALL_TRIBUTE_CRYPTO']);
+
+        // Flatten purchaseHistory — only real payment webhook entries with EUR amounts
         for (const profile of profilesRes.data || []) {
             const history: any[] = profile.parameters?.purchaseHistory || [];
             for (const entry of history) {
-                // Only include entries that represent real money
                 const type = entry.type || 'COIN_PURCHASE';
-                if (!entry.amount && !entry.coins) continue;
+                // Only known payment types with a real EUR amount
+                if (!PAYMENT_TYPES.has(type)) continue;
+                if (!entry.amount || Number(entry.amount) <= 0) continue;
                 transactions.push({
                     type,
                     name: entry.name || profile.name || profile.member_id || 'Unknown',
                     memberId: entry.memberId || profile.member_id || '',
                     coins: entry.coins ?? null,
-                    amount: entry.amount ?? null,
+                    amount: Number(entry.amount),
                     reason: entry.reason || '',
                     timestamp: entry.timestamp,
                     sessionId: entry.sessionId || entry.orderId || '',
