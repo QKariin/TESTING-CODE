@@ -13,17 +13,24 @@ export async function POST(req: Request) {
         const platformId = Number(process.env.PASSIMPAY_PLATFORM_ID!);
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        // v1 API (form-encoded) - matches official PHP SDK exactly
-        // amount must NOT use toFixed — PHP serializes 50.0 as "50", not "50.00"
-        const amountStr = String(Number(amount));
-        const params: Record<string, string> = {
+        // v1 API (form-encoded)
+        // Hash is computed with PHP-style float (50.0 → "50"), but body needs "50.00" format
+        const amountForHash = String(Number(amount));      // "50" — matches PHP http_build_query
+        const amountForBody = Number(amount).toFixed(2);   // "50.00" — what API validates
+
+        const paramsForHash: Record<string, string> = {
             platform_id: String(platformId),
             order_id: orderId,
-            amount: amountStr,
+            amount: amountForHash,
         };
-        const queryStrForHash = new URLSearchParams(params).toString();
+        const queryStrForHash = new URLSearchParams(paramsForHash).toString();
         const hash = createHmac('sha256', apiKey).update(queryStrForHash).digest('hex');
-        const formBody = new URLSearchParams({ ...params, hash }).toString();
+        const formBody = new URLSearchParams({
+            platform_id: String(platformId),
+            order_id: orderId,
+            amount: amountForBody,
+            hash,
+        }).toString();
 
         console.log('[passimpay] order:', orderId, 'queryForHash:', queryStrForHash, 'hash:', hash);
 
