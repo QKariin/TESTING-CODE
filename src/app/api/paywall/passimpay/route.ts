@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createHash } from 'crypto';
+import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -13,26 +13,22 @@ export async function POST(req: Request) {
         const platformId = Number(process.env.PASSIMPAY_PLATFORM_ID!);
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        const body = {
-            platformId,
-            orderId,
+        // v1 API: form-encoded with hash param (matches official PHP SDK)
+        const params: Record<string, string> = {
+            platform_id: String(platformId),
+            order_id: orderId,
             amount: Number(amount).toFixed(2),
-            symbol: 'EUR',
         };
+        const queryStr = new URLSearchParams(params).toString();
+        const hash = createHmac('sha256', apiKey).update(queryStr).digest('hex');
+        const formBody = new URLSearchParams({ ...params, hash }).toString();
 
-        const bodyStr = JSON.stringify(body);
-        const signData = `${platformId};${bodyStr};${apiKey}`;
-        const signature = createHash('sha256').update(signData).digest('hex');
+        console.log('[passimpay] creating order:', orderId, 'amount:', params.amount, 'hash:', hash);
 
-        console.log('[passimpay] creating order:', orderId, 'amount:', body.amount);
-
-        const res = await fetch('https://api.passimpay.io/v2/createorder', {
+        const res = await fetch('https://api.passimpay.io/createorder', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-signature': signature,
-            },
-            body: bodyStr,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formBody,
         });
 
         const resText = await res.text();
