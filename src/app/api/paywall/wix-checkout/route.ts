@@ -40,33 +40,12 @@ export async function POST(req: Request) {
         const checkoutData = checkoutText ? JSON.parse(checkoutText) : {};
 
         const checkoutId = checkoutData.checkout?.id;
-        if (!checkoutId) return NextResponse.json({ error: 'No checkout ID returned' }, { status: 500 });
+        const checkoutUrl = checkoutData.checkout?.checkoutUrl;
 
-        // Step 2: Create redirect session → get Wix-hosted checkout URL
-        const redirectRes = await fetch('https://www.wixapis.com/ecom/v1/redirect-sessions', {
-            method: 'POST',
-            headers: {
-                'Authorization': apiKey,
-                'wix-site-id': siteId,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                checkoutId,
-                callbacks: {
-                    postFlowUrl: 'https://throne.qkarin.com/profile',
-                    thankYouPageUrl: `https://throne.qkarin.com/profile?wix_paid=1&cid=${checkoutId}&mid=${encodeURIComponent(memberId)}`,
-                },
-            }),
-        });
+        console.log('[wix-checkout] full response:', JSON.stringify(checkoutData));
 
-        const redirectData = await redirectRes.json();
-        if (!redirectRes.ok) {
-            console.error('[wix-checkout] redirect session error:', redirectData);
-            return NextResponse.json({ error: redirectData }, { status: 500 });
-        }
-
-        const checkoutUrl = redirectData.redirectSession?.fullUrl;
-        if (!checkoutUrl) return NextResponse.json({ error: 'No redirect URL' }, { status: 500 });
+        if (!checkoutId) return NextResponse.json({ error: `No checkout ID. Response: ${checkoutText}` }, { status: 500 });
+        if (!checkoutUrl) return NextResponse.json({ error: `No checkoutUrl. Keys: ${Object.keys(checkoutData.checkout || {}).join(',')}` }, { status: 500 });
 
         return NextResponse.json({ checkoutUrl, checkoutId });
     } catch (err: any) {
