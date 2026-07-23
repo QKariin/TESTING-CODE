@@ -40,12 +40,10 @@ export async function POST(req: Request) {
         const checkoutData = checkoutText ? JSON.parse(checkoutText) : {};
 
         const checkoutId = checkoutData.checkout?.id;
-        const checkoutUrl = checkoutData.checkout?.checkoutUrl;
-
-        console.log('[wix-checkout] full response:', JSON.stringify(checkoutData));
-
         if (!checkoutId) return NextResponse.json({ error: `No checkout ID. Response: ${checkoutText}` }, { status: 500 });
-        if (!checkoutUrl) return NextResponse.json({ error: `No checkoutUrl. Keys: ${Object.keys(checkoutData.checkout || {}).join(',')}` }, { status: 500 });
+
+        // Wix checkout URL is on the Wix site domain
+        const checkoutUrl = `https://www.qkarin.com/checkout?checkoutId=${checkoutId}&memberId=${encodeURIComponent(memberId)}`;
 
         return NextResponse.json({ checkoutUrl, checkoutId });
     } catch (err: any) {
