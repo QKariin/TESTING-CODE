@@ -45,6 +45,8 @@ export async function GET(req: Request) {
             const taskUuid = (t.ID || '').toLowerCase();
             const prof: any = profileByEmail.get(key) || profileByUuid.get(taskUuid) || profileByUuid.get(key) || {};
 
+            if (prof?.parameters?.isDemo) return null;
+
             // Use the same mapUserProfile that the dashboard uses — guarantees same avatar logic
             const mapped = mapUserProfile(prof, t);
 
@@ -56,7 +58,7 @@ export async function GET(req: Request) {
                 member_number: prof.ID || null,
             };
         })
-        .filter((e: any) => e.score > 0)
+        .filter((e: any) => e && e.score > 0)
         .sort((a: any, b: any) => b.score - a.score)
         .slice(0, 10);
 
