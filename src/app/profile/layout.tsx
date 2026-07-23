@@ -174,11 +174,12 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ memberId: email, amount: paywallAmount }),
             });
-            const data = await res.json();
+            const text = await res.text();
+            const data = text ? JSON.parse(text) : {};
             if (data.checkoutUrl) {
                 window.location.href = data.checkoutUrl;
             } else {
-                setWixError(JSON.stringify(data.error || 'Unknown error'));
+                setWixError(`HTTP ${res.status}: ${JSON.stringify(data.error || text || 'empty response')}`);
                 setWixLoading(false);
             }
         } catch (e: any) {
