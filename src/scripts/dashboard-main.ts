@@ -438,7 +438,9 @@ export async function loadExchequerLog() {
                 const date = new Date(tx.timestamp);
                 const timeStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                     + ' · ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                const amountStr = tx.amount != null ? `€${Number(tx.amount).toFixed(2)}` : '';
+                const amountStr = tx.amount != null
+                    ? `€${Number(tx.amount).toFixed(2)}`
+                    : tx.coins != null ? `${Number(tx.coins).toLocaleString()} coins` : '';
 
                 const typeMap: Record<string, { label: string; color: string; border: string }> = {
                     ENTRANCE_TRIBUTE:       { label: 'ENTRANCE',       color: 'rgba(100,200,120,0.8)',   border: 'rgba(100,200,120,0.2)' },

@@ -39,20 +39,22 @@ export async function GET() {
 
         const PAYMENT_TYPES = new Set(['COIN_PURCHASE', 'PAYWALL_TRIBUTE', 'PAYWALL_TRIBUTE_CRYPTO']);
 
-        // Flatten purchaseHistory — only real payment webhook entries with EUR amounts
+        // Flatten purchaseHistory — only real payment webhook entries
         for (const profile of profilesRes.data || []) {
             const history: any[] = profile.parameters?.purchaseHistory || [];
             for (const entry of history) {
                 const type = entry.type || 'COIN_PURCHASE';
-                // Only known payment types with a real EUR amount
                 if (!PAYMENT_TYPES.has(type)) continue;
-                if (!entry.amount || Number(entry.amount) <= 0) continue;
+                // Paywall tributes must have a real EUR amount
+                if (type !== 'COIN_PURCHASE' && (!entry.amount || Number(entry.amount) <= 0)) continue;
+                // Coin purchases must have coins or amount
+                if (type === 'COIN_PURCHASE' && !entry.coins && !entry.amount) continue;
                 transactions.push({
                     type,
                     name: entry.name || profile.name || profile.member_id || 'Unknown',
                     memberId: entry.memberId || profile.member_id || '',
                     coins: entry.coins ?? null,
-                    amount: Number(entry.amount),
+                    amount: entry.amount ? Number(entry.amount) : null,
                     reason: entry.reason || '',
                     timestamp: entry.timestamp,
                     sessionId: entry.sessionId || entry.orderId || '',
