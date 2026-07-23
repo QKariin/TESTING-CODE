@@ -120,18 +120,18 @@ function _showModal(raw: any): void {
 function _renderWelcome(state: OBState): void {
     state.overlay.innerHTML = `
         <div style="position:fixed;inset:0;background:url('/queen-bg-mobile.jpg') center 15% / cover no-repeat;opacity:0.18;pointer-events:none;"></div>
-        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:48px 28px 52px;">
+        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:48px 28px 0;">
 
             <div class="ob-label">PRIVATE ACCESS</div>
 
-            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;width:100%;padding-bottom:60px;">
                 <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.6),transparent);"></div>
                 <div style="font-family:Cinzel,serif;font-size:1.3rem;color:#c5a059;font-weight:700;letter-spacing:6px;">ONBOARDING</div>
                 <div style="font-family:'Dancing Script',cursive;font-size:1.8rem;color:rgba(255,255,255,0.5);font-weight:500;line-height:1.2;">Submissive Soul</div>
                 <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.6),transparent);"></div>
+                <div style="height:12px;"></div>
+                <button id="ob-enter" style="width:100%;max-width:420px;padding:16px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:Cinzel,serif;font-size:0.7rem;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:6px;">I'M READY, QUEEN KARIN</button>
             </div>
-
-            <button id="ob-enter" style="width:100%;max-width:420px;padding:16px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;color:#000;font-family:Cinzel,serif;font-size:0.7rem;font-weight:700;letter-spacing:3px;cursor:pointer;border-radius:6px;">I'M READY, QUEEN KARIN</button>
         </div>
     `;
 
