@@ -119,12 +119,12 @@ function _showModal(raw: any): void {
 
 function _renderWelcome(state: OBState): void {
     state.overlay.innerHTML = `
-        <div style="position:absolute;inset:0;background:url('/queen-bg-mobile.jpg') center 15% / cover no-repeat;opacity:0.18;pointer-events:none;"></div>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:48px 28px 56px;">
+        <div style="position:fixed;inset:0;background:url('/queen-bg-mobile.jpg') center 15% / cover no-repeat;opacity:0.18;pointer-events:none;"></div>
+        <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:48px 28px 52px;">
 
             <div class="ob-label">PRIVATE ACCESS</div>
 
-            <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;">
                 <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.6),transparent);"></div>
                 <div style="font-family:Cinzel,serif;font-size:1.3rem;color:#c5a059;font-weight:700;letter-spacing:6px;">ONBOARDING</div>
                 <div style="font-family:'Dancing Script',cursive;font-size:1.8rem;color:rgba(255,255,255,0.5);font-weight:500;line-height:1.2;">Submissive Soul</div>
