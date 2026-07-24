@@ -220,22 +220,22 @@ const MECH_PRESETS: Record<string, { name: string; desc: string; config: any }[]
         { name: 'Words or Proof', desc: 'Essay or photo proof', config: { label: 'Words or Proof', truthText: 'Why do you need to be controlled? 200 words.', truthFollowUp: 'writing', dareText: 'Body writing photo — write PROPERTY on your chest', dareFollowUp: 'photo' }},
     ],
     simon_says: [
-        { name: 'Quick Obedience', desc: '3 fast tasks, 30s each', config: { label: 'Quick Obedience', chainTasks: [
-            { text: 'Drop and do 10 pushups', timeLimit: 30 },
-            { text: 'Take a selfie on your knees', timeLimit: 30 },
-            { text: 'Write "I obey" 5 times', timeLimit: 30 },
+        { name: 'Quick Obedience', desc: '3 fast tasks, 30s each', config: { label: 'Quick Obedience', intervalMinutes: 60, chainTasks: [
+            { text: 'Drop and do 10 pushups', timeLimit: 30, proofType: 'video' },
+            { text: 'Take a selfie on your knees', timeLimit: 30, proofType: 'photo' },
+            { text: 'Write "I obey" 5 times — photo of it', timeLimit: 30, proofType: 'photo' },
         ]}},
-        { name: 'Endurance Chain', desc: '4 longer tasks', config: { label: 'Endurance Chain', chainTasks: [
-            { text: 'Hold plank position', timeLimit: 60 },
-            { text: '20 squats — go', timeLimit: 45 },
-            { text: 'Wall sit — hold it', timeLimit: 60 },
-            { text: '15 burpees — no breaks', timeLimit: 60 },
+        { name: 'Endurance Chain', desc: '4 longer tasks', config: { label: 'Endurance Chain', intervalMinutes: 120, chainTasks: [
+            { text: 'Hold plank position', timeLimit: 60, proofType: 'video' },
+            { text: '20 squats — go', timeLimit: 45, proofType: 'video' },
+            { text: 'Wall sit — hold it', timeLimit: 60, proofType: 'video' },
+            { text: '15 burpees — no breaks', timeLimit: 60, proofType: 'video' },
         ]}},
-        { name: 'Devotion Drill', desc: 'Rapid devotion tasks', config: { label: 'Devotion Drill', chainTasks: [
-            { text: 'Say "I serve my Queen" out loud 5 times', timeLimit: 20 },
-            { text: 'Bow your head and count to 10', timeLimit: 15 },
-            { text: 'Write 3 things you are grateful for', timeLimit: 45 },
-            { text: 'Photo of yourself in devotion pose', timeLimit: 30 },
+        { name: 'Devotion Drill', desc: 'Rapid devotion tasks', config: { label: 'Devotion Drill', intervalMinutes: 90, chainTasks: [
+            { text: 'Say "I serve my Queen" out loud 5 times', timeLimit: 20, proofType: 'video' },
+            { text: 'Bow your head and count to 10', timeLimit: 15, proofType: 'video' },
+            { text: 'Write 3 things you are grateful for', timeLimit: 45, proofType: 'photo' },
+            { text: 'Photo of yourself in devotion pose', timeLimit: 30, proofType: 'photo' },
         ]}},
     ],
     payment: [
@@ -795,16 +795,31 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                     </div>
                                 </>)}
                                 {mechId === 'simon_says' && (<>
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                                        <span style={{ ...lbl, margin: 0 }}>INTERVAL BETWEEN TASKS</span>
+                                        <input type="number" value={ec.intervalMinutes || 60} onChange={e => setEc({ ...ec, intervalMinutes: +e.target.value })} style={{ ...inp, width: 60, padding: '6px 8px', fontSize: '.55rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>min</span>
+                                    </div>
                                     <div style={lbl}>TASKS IN CHAIN</div>
-                                    {(ec.chainTasks || [{ text: '', timeLimit: 60 }]).map((ct: any, i: number) => (
-                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
-                                            <input value={ct.text} onChange={e => { const n = [...(ec.chainTasks || [])]; n[i] = { ...n[i], text: e.target.value }; setEc({ ...ec, chainTasks: n }); }} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
-                                            <input type="number" value={ct.timeLimit} onChange={e => { const n = [...ec.chainTasks]; n[i] = { ...n[i], timeLimit: +e.target.value }; setEc({ ...ec, chainTasks: n }); }} style={{ ...inp, width: 55, padding: '8px', fontSize: '.55rem' }} />
-                                            <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>s</span>
+                                    {(ec.chainTasks || [{ text: '', timeLimit: 60, proofType: 'video' }]).map((ct: any, i: number) => (
+                                        <div key={i} style={{ marginBottom: 8 }}>
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                                                <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                                <input value={ct.text} onChange={e => { const n = [...(ec.chainTasks || [])]; n[i] = { ...n[i], text: e.target.value }; setEc({ ...ec, chainTasks: n }); }} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                                <input type="number" value={ct.timeLimit} onChange={e => { const n = [...ec.chainTasks]; n[i] = { ...n[i], timeLimit: +e.target.value }; setEc({ ...ec, chainTasks: n }); }} style={{ ...inp, width: 55, padding: '8px', fontSize: '.55rem' }} />
+                                                <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>s</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 6, paddingLeft: 26 }}>
+                                                {(['photo', 'video'] as const).map(pt => (
+                                                    <button key={pt} onClick={() => { const n = [...ec.chainTasks]; n[i] = { ...n[i], proofType: pt }; setEc({ ...ec, chainTasks: n }); }}
+                                                        style={{ fontFamily: F, fontSize: '.38rem', letterSpacing: 2, padding: '4px 10px', borderRadius: 4, cursor: 'pointer', border: `1px solid ${(ct.proofType || 'video') === pt ? 'rgba(197,160,89,.5)' : 'rgba(255,255,255,.08)'}`, background: (ct.proofType || 'video') === pt ? 'rgba(197,160,89,.1)' : 'transparent', color: (ct.proofType || 'video') === pt ? GOLD : TEXT_DIM }}>
+                                                        {pt.toUpperCase()}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
-                                    <button onClick={() => setEc({ ...ec, chainTasks: [...(ec.chainTasks || []), { text: '', timeLimit: 60 }] })} style={addBtnS}>+ ADD TASK</button>
+                                    <button onClick={() => setEc({ ...ec, chainTasks: [...(ec.chainTasks || []), { text: '', timeLimit: 60, proofType: 'video' }] })} style={addBtnS}>+ ADD TASK</button>
                                 </>)}
                                 {mechId === 'payment' && (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>COIN AMOUNT</span><input type="number" value={ec.amount || 10} onChange={e => setEc({ ...ec, amount: +e.target.value, target: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
@@ -1060,17 +1075,32 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                                 {/* ── SIMON SAYS ── */}
                                 {addMech === 'simon_says' && (<>
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                                        <span style={{ ...lbl, margin: 0 }}>INTERVAL BETWEEN TASKS</span>
+                                        <input type="number" value={addConfig.intervalMinutes || 60} onChange={e => setAddConfig({ ...addConfig, intervalMinutes: +e.target.value })} style={{ ...inp, width: 60, padding: '6px 8px', fontSize: '.55rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>min</span>
+                                    </div>
                                     <div style={lbl}>RANDOM TASKS</div>
-                                    {(addConfig.chainTasks || [{ text: '', timeLimit: 60 }]).map((t: any, i: number) => (
-                                        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
-                                            <input value={t.text} onChange={e => { const n = [...(addConfig.chainTasks || [{ text: '', timeLimit: 60 }])]; n[i] = { ...n[i], text: e.target.value }; setAddConfig({ ...addConfig, chainTasks: n }); }} placeholder="Task..." style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
-                                            <input type="number" value={t.timeLimit} onChange={e => { const n = [...addConfig.chainTasks]; n[i] = { ...n[i], timeLimit: +e.target.value }; setAddConfig({ ...addConfig, chainTasks: n }); }} style={{ ...inp, width: 55, padding: '8px', fontSize: '.55rem' }} />
-                                            <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>s</span>
-                                            {(addConfig.chainTasks || []).length > 1 && <button onClick={() => { const n = [...addConfig.chainTasks]; n.splice(i, 1); setAddConfig({ ...addConfig, chainTasks: n }); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                    {(addConfig.chainTasks || [{ text: '', timeLimit: 60, proofType: 'video' }]).map((t: any, i: number) => (
+                                        <div key={i} style={{ marginBottom: 8 }}>
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                                                <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                                <input value={t.text} onChange={e => { const n = [...(addConfig.chainTasks || [{ text: '', timeLimit: 60, proofType: 'video' }])]; n[i] = { ...n[i], text: e.target.value }; setAddConfig({ ...addConfig, chainTasks: n }); }} placeholder="Task..." style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
+                                                <input type="number" value={t.timeLimit} onChange={e => { const n = [...addConfig.chainTasks]; n[i] = { ...n[i], timeLimit: +e.target.value }; setAddConfig({ ...addConfig, chainTasks: n }); }} style={{ ...inp, width: 55, padding: '8px', fontSize: '.55rem' }} />
+                                                <span style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>s</span>
+                                                {(addConfig.chainTasks || []).length > 1 && <button onClick={() => { const n = [...addConfig.chainTasks]; n.splice(i, 1); setAddConfig({ ...addConfig, chainTasks: n }); }} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 6, paddingLeft: 26 }}>
+                                                {(['photo', 'video'] as const).map(pt => (
+                                                    <button key={pt} onClick={() => { const n = [...(addConfig.chainTasks || [])]; n[i] = { ...n[i], proofType: pt }; setAddConfig({ ...addConfig, chainTasks: n }); }}
+                                                        style={{ fontFamily: F, fontSize: '.38rem', letterSpacing: 2, padding: '4px 10px', borderRadius: 4, cursor: 'pointer', border: `1px solid ${(t.proofType || 'video') === pt ? 'rgba(197,160,89,.5)' : 'rgba(255,255,255,.08)'}`, background: (t.proofType || 'video') === pt ? 'rgba(197,160,89,.1)' : 'transparent', color: (t.proofType || 'video') === pt ? GOLD : TEXT_DIM }}>
+                                                        {pt.toUpperCase()}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
-                                    <button onClick={() => setAddConfig({ ...addConfig, chainTasks: [...(addConfig.chainTasks || [{ text: '', timeLimit: 60 }]), { text: '', timeLimit: 60 }] })} style={addBtn}>+ ADD TASK</button>
+                                    <button onClick={() => setAddConfig({ ...addConfig, chainTasks: [...(addConfig.chainTasks || [{ text: '', timeLimit: 60, proofType: 'video' }]), { text: '', timeLimit: 60, proofType: 'video' }] })} style={addBtn}>+ ADD TASK</button>
                                 </>)}
 
                                 {/* ── PAYMENT ── */}
