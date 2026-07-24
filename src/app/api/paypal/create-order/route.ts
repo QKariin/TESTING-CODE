@@ -71,9 +71,7 @@ export async function POST(req: NextRequest) {
                 application_context: {
                     return_url: returnUrl,
                     cancel_url: cancelUrl,
-                    brand_name: 'AntiGravity by Queen Karin',
                     user_action: 'PAY_NOW',
-                    shipping_preference: 'NO_SHIPPING',
                 },
             }),
         });
@@ -82,8 +80,10 @@ export async function POST(req: NextRequest) {
         const approvalUrl = order.links?.find((l: any) => l.rel === 'approve')?.href;
 
         if (!approvalUrl) {
-            console.error('[paypal/create-order] No approval URL:', JSON.stringify(order));
-            return NextResponse.json({ error: order.message || 'Could not create PayPal order' }, { status: 500 });
+            const detail = order.details?.[0];
+            const msg = detail?.description || detail?.issue || order.message || 'Could not create PayPal order';
+            console.error('[paypal/create-order] failed:', JSON.stringify(order));
+            return NextResponse.json({ error: msg }, { status: 500 });
         }
 
         return NextResponse.json({ approvalUrl });
