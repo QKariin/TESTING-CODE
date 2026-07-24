@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         const orderRes = await ppRequest('/createorder', {
             platform_id: platformId,
             order_id: orderId,
-            amount: String(amountEur),
+            amount: Number(amountEur).toFixed(2),
         }, apiKey);
         const orderData = await orderRes.json();
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
