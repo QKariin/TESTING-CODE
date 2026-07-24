@@ -2168,68 +2168,61 @@ export default function VaultPage() {
 
                                     return (
                                         <>
-                                            {/* ── DAY HERO ── */}
-                                            <div style={{ padding: '28px 24px 22px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '8px', marginBottom: 4 }}>DAY</div>
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '4.5rem', color: 'rgba(255,255,255,0.95)', fontWeight: 700, lineHeight: 0.85, letterSpacing: '-3px', marginBottom: 18 }}>{daysIn + 1}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            {/* ── DAY HERO + TASK INDEX (side by side) ── */}
+                                            <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                                                    {/* Left: day number */}
+                                                    <div style={{ flexShrink: 0 }}>
+                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '6px', marginBottom: 2 }}>DAY</div>
+                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '4.2rem', color: 'rgba(255,255,255,0.95)', fontWeight: 700, lineHeight: 0.85, letterSpacing: '-2px' }}>{daysIn + 1}</div>
+                                                    </div>
+
+                                                    {/* Right: task circles */}
+                                                    {tasks.length > 0 && (
+                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'row', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+                                                            {tasks.map((o: any, i: number) => {
+                                                                const isDone = o.done >= o.target;
+                                                                const pending = !isDone && isPending(o);
+                                                                const isCurrent = o === currentTask;
+                                                                const m = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
+                                                                const taskLabel = (!o.label || o.label === o.type || o.label.includes('_')) ? m.label : o.label;
+
+                                                                const circleColor = isDone ? 'rgba(80,200,120,0.8)' : pending ? 'rgba(197,160,89,0.7)' : isCurrent ? 'rgba(197,160,89,0.95)' : 'rgba(255,255,255,0.15)';
+                                                                const circleBorder = isDone ? 'rgba(80,200,120,0.4)' : pending ? 'rgba(197,160,89,0.35)' : isCurrent ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.1)';
+                                                                const circleBg = isDone ? 'rgba(80,200,120,0.09)' : pending ? 'rgba(197,160,89,0.08)' : isCurrent ? 'rgba(197,160,89,0.12)' : 'rgba(255,255,255,0.03)';
+
+                                                                return (
+                                                                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flex: '0 0 56px' }}>
+                                                                        {/* Number */}
+                                                                        <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.38rem', color: isDone ? 'rgba(80,200,120,0.5)' : isCurrent ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
+                                                                            {String(i + 1).padStart(2, '0')}
+                                                                        </div>
+                                                                        {/* Status circle */}
+                                                                        <div style={{ width: 40, height: 40, borderRadius: '50%', border: `1.5px solid ${circleBorder}`, background: circleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: isCurrent ? '0 0 12px rgba(197,160,89,0.3)' : 'none', animation: isCurrent ? 'vPulse 2s ease infinite' : 'none' }}>
+                                                                            {isDone && <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={circleColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                                                                            {pending && !isDone && <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={circleColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 15" /></svg>}
+                                                                            {isCurrent && !isDone && !pending && <svg viewBox="0 0 24 24" width="9" height="9" fill={circleColor}><circle cx="12" cy="12" r="6" /></svg>}
+                                                                            {!isDone && !pending && !isCurrent && <svg viewBox="0 0 24 24" width="7" height="7" fill="rgba(255,255,255,0.15)"><circle cx="12" cy="12" r="5" /></svg>}
+                                                                        </div>
+                                                                        {/* Task name */}
+                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.58rem', letterSpacing: '0px', color: isDone ? 'rgba(255,255,255,0.2)' : isCurrent ? 'rgba(255,255,255,0.9)' : pending ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                                                                            {taskLabel}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Progress line */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
                                                     <div style={{ height: 1, width: 20, background: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.5)' : 'rgba(197,160,89,0.35)' }} />
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.68rem', letterSpacing: '4px', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.65)' : 'rgba(255,255,255,0.25)' }}>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', letterSpacing: '4px', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.65)' : 'rgba(255,255,255,0.25)' }}>
                                                         {allDone && pendingCount === 0 ? 'ALL ORDERS FULFILLED' : allDone ? 'AWAITING REVIEW' : `${doneCount} OF ${tasks.length} COMPLETE`}
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* ── TASK INDEX ── */}
-                                            {tasks.length > 0 && (
-                                                <div style={{ display: 'flex', flexDirection: 'row', padding: '18px 16px 20px', gap: 8, overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.05)', scrollbarWidth: 'none' }}>
-                                                    {tasks.map((o: any, i: number) => {
-                                                        const isDone = o.done >= o.target;
-                                                        const pending = !isDone && isPending(o);
-                                                        const isCurrent = o === currentTask;
-                                                        const m = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
-                                                        const taskLabel = (!o.label || o.label === o.type || o.label.includes('_')) ? m.label : o.label;
-
-                                                        const circleColor = isDone ? 'rgba(80,200,120,0.75)' : pending ? 'rgba(197,160,89,0.65)' : isCurrent ? 'rgba(197,160,89,0.9)' : 'rgba(255,255,255,0.12)';
-                                                        const circleBorder = isDone ? 'rgba(80,200,120,0.35)' : pending ? 'rgba(197,160,89,0.3)' : isCurrent ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.1)';
-                                                        const circleBg = isDone ? 'rgba(80,200,120,0.08)' : pending ? 'rgba(197,160,89,0.07)' : isCurrent ? 'rgba(197,160,89,0.1)' : 'rgba(255,255,255,0.03)';
-
-                                                        return (
-                                                            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: `0 0 ${Math.max(60, Math.floor(100 / Math.min(tasks.length, 5)))}px`, maxWidth: 80 }}>
-                                                                {/* Number */}
-                                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: isDone ? 'rgba(80,200,120,0.5)' : isCurrent ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
-                                                                    {String(i + 1).padStart(2, '0')}
-                                                                </div>
-                                                                {/* Circle with SVG status */}
-                                                                <div style={{ width: 44, height: 44, borderRadius: '50%', border: `1.5px solid ${circleBorder}`, background: circleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: isCurrent ? '0 0 12px rgba(197,160,89,0.25)' : 'none', animation: isCurrent ? 'vPulse 2s ease infinite' : 'none' }}>
-                                                                    {isDone && (
-                                                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={circleColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                                                    )}
-                                                                    {pending && !isDone && (
-                                                                        /* Clock / pending SVG */
-                                                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={circleColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                                            <circle cx="12" cy="12" r="9" />
-                                                                            <polyline points="12 7 12 12 15 15" />
-                                                                        </svg>
-                                                                    )}
-                                                                    {isCurrent && !isDone && !pending && (
-                                                                        /* Active pulse dot */
-                                                                        <svg viewBox="0 0 24 24" width="10" height="10" fill={circleColor}><circle cx="12" cy="12" r="6" /></svg>
-                                                                    )}
-                                                                    {!isDone && !pending && !isCurrent && (
-                                                                        /* Upcoming empty circle */
-                                                                        <svg viewBox="0 0 24 24" width="8" height="8" fill="rgba(255,255,255,0.18)"><circle cx="12" cy="12" r="5" /></svg>
-                                                                    )}
-                                                                </div>
-                                                                {/* Task name */}
-                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.62rem', letterSpacing: '0.5px', color: isDone ? 'rgba(255,255,255,0.22)' : isCurrent ? 'rgba(255,255,255,0.85)' : pending ? 'rgba(197,160,89,0.55)' : 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.25, wordBreak: 'break-word' }}>
-                                                                    {taskLabel}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
 
                                             {/* ── ALL COMPLETE ── */}
                                             {allDone && pendingCount === 0 && (
