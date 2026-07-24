@@ -178,16 +178,16 @@ export default function PaymentModal({
                 </button>
             </div>
             {confirmed ? (
-                <div style={{ marginTop: 32, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#66bb6a', letterSpacing: 3, fontWeight: 700 }}>{confirmMessage}</div>
+                <div style={{ marginTop: 32, fontFamily: 'Rajdhani,sans-serif', fontSize: '1rem', color: '#66bb6a', letterSpacing: 3, fontWeight: 700 }}>{confirmMessage}</div>
             ) : (
-                <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
-                    <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.28)', letterSpacing: 4 }}>WAITING FOR PAYMENT</span>
+                <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', display: 'inline-block', flexShrink: 0, animation: '_pmPulse 1.5s infinite' }} />
+                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 3, fontWeight: 600 }}>WAITING FOR PAYMENT</span>
                 </div>
             )}
-            <div style={{ marginTop: 10, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.1)', textAlign: 'center', maxWidth: 300, lineHeight: 1.8 }}>Send the exact amount. Confirms automatically.</div>
+            <div style={{ marginTop: 10, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', maxWidth: 300, lineHeight: 1.7 }}>Send the exact amount. Confirms automatically.</div>
             <button onClick={() => { setCryptoData(null); if (pollRef.current) clearInterval(pollRef.current); setScreen('method'); }}
-                style={{ marginTop: 28, background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', letterSpacing: 4, cursor: 'pointer', padding: '12px 24px' }}>CANCEL</button>
+                style={{ marginTop: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', letterSpacing: 4, cursor: 'pointer', padding: '12px 24px' }}>CANCEL</button>
         </div>
     );
 
