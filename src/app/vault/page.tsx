@@ -241,17 +241,16 @@ export default function VaultPage() {
     const [wheelPreview, setWheelPreview] = useState<string | null>(null);
     const [truthDareChoice, setTruthDareChoice] = useState<'truth' | 'dare' | null>(null);
     const [simonStep, setSimonStep] = useState(0);
-    const [simonPhase, setSimonPhase] = useState<'explain'|'confirm'|'entered'|'timer1'|'timer2'|'recording'|'between'|'complete'>('explain');
-    const [simonT1, setSimonT1] = useState(60);
-    const [simonT2, setSimonT2] = useState(10);
-    const [simonT3, setSimonT3] = useState(30);
-    const [simonTimeLimit, setSimonTimeLimit] = useState(30);
+    const [simonPhase, setSimonPhase] = useState<'idle'|'waiting'|'task'|'complete'>('idle');
+    const [simonWaitUntil, setSimonWaitUntil] = useState(0);
+    const [simonTaskSecs, setSimonTaskSecs] = useState(0);
+    const [simonTaskLimit, setSimonTaskLimit] = useState(0);
+    const [simonCurrentTask, setSimonCurrentTask] = useState<{text:string;timeLimit:number;proofType?:string}|null>(null);
+    const [simonLastTask, setSimonLastTask] = useState<{text:string}|null>(null);
     const [simonProofs, setSimonProofs] = useState<string[]>([]);
     const [simonUploading, setSimonUploading] = useState(false);
-    const simonT1Ref = useRef<ReturnType<typeof setInterval>|null>(null);
-    const simonT2Ref = useRef<ReturnType<typeof setInterval>|null>(null);
-    const simonT3Ref = useRef<ReturnType<typeof setInterval>|null>(null);
-    const simonTimeLimitRef = useRef(30);
+    const simonWaitRef = useRef<ReturnType<typeof setInterval>|null>(null);
+    const simonTaskRef = useRef<ReturnType<typeof setInterval>|null>(null);
     const [greedCoins, setGreedCoins] = useState(0);
     const [greedBusted, setGreedBusted] = useState(false);
     const [greedCashedOut, setGreedCashedOut] = useState(false);
@@ -466,9 +465,8 @@ export default function VaultPage() {
     // ── Simon Says: reset + restore when overlay opens ──
     useEffect(() => {
         if (mechOverlay?.order?.type !== 'simon_says') {
-            if (simonT1Ref.current) { clearInterval(simonT1Ref.current); simonT1Ref.current = null; }
-            if (simonT2Ref.current) { clearInterval(simonT2Ref.current); simonT2Ref.current = null; }
-            if (simonT3Ref.current) { clearInterval(simonT3Ref.current); simonT3Ref.current = null; }
+            if (simonWaitRef.current) { clearInterval(simonWaitRef.current); simonWaitRef.current = null; }
+            if (simonTaskRef.current) { clearInterval(simonTaskRef.current); simonTaskRef.current = null; }
             return;
         }
         const chain: any[] = mechOverlay?.order?.config?.chainTasks || [];
@@ -476,101 +474,85 @@ export default function VaultPage() {
             const stored = localStorage.getItem('ss_state');
             if (stored) {
                 const s = JSON.parse(stored);
-                if (s.phase && s.phase !== 'explain') {
-                    const step = s.step || 0;
-                    simonTimeLimitRef.current = chain[step]?.timeLimit || 30;
-                    setSimonT3(simonTimeLimitRef.current);
-                    setSimonTimeLimit(simonTimeLimitRef.current);
-                    setSimonStep(step);
+                if (s.phase && s.phase !== 'idle') {
+                    setSimonStep(s.step || 0);
                     setSimonProofs(s.proofs || []);
-                    if (s.phase === 'timer1' && s.pushAt) {
-                        const rem = Math.max(1, 60 - Math.floor((Date.now() - s.pushAt) / 1000));
-                        setSimonT1(rem);
+                    setSimonLastTask(s.lastTask || null);
+                    if (s.phase === 'waiting' && s.waitUntil) {
+                        if (Date.now() >= s.waitUntil) {
+                            // Time already passed — pick task immediately
+                            const lastTxt = s.lastTask?.text;
+                            const pool = lastTxt ? chain.filter((t: any) => t.text !== lastTxt) : chain;
+                            const src = pool.length > 0 ? pool : chain;
+                            const task = src[Math.floor(Math.random() * src.length)];
+                            if (task) {
+                                setSimonCurrentTask(task); setSimonLastTask(task);
+                                setSimonTaskSecs(task.timeLimit || 30); setSimonTaskLimit(task.timeLimit || 30);
+                                setSimonPhase('task');
+                            }
+                        } else {
+                            setSimonWaitUntil(s.waitUntil);
+                            setSimonPhase('waiting');
+                        }
+                    } else if (s.phase === 'task' && s.currentTask) {
+                        setSimonCurrentTask(s.currentTask);
+                        setSimonTaskSecs(s.currentTask.timeLimit || 30);
+                        setSimonTaskLimit(s.currentTask.timeLimit || 30);
+                        setSimonPhase('task');
+                    } else if (s.phase === 'complete') {
+                        setSimonPhase('complete');
+                    } else {
+                        setSimonPhase('idle');
                     }
-                    setSimonPhase(s.phase);
                     return;
                 }
             }
         } catch {}
-        simonTimeLimitRef.current = chain[0]?.timeLimit || 30;
-        setSimonT3(simonTimeLimitRef.current);
-        setSimonTimeLimit(simonTimeLimitRef.current);
-        setSimonPhase('explain');
+        setSimonPhase('idle');
         setSimonStep(0);
-        setSimonT1(60);
-        setSimonT2(10);
         setSimonProofs([]);
+        setSimonCurrentTask(null);
+        setSimonLastTask(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mechOverlay?.order?.type, mechOverlay?.idx]);
 
-    // ── Simon Says: auto-advance entered → timer1 ──
+    // ── Simon Says: wait countdown → pick random task ──
     useEffect(() => {
-        if (simonPhase !== 'entered') return;
-        const t = setTimeout(() => {
-            setSimonT1(60);
-            setSimonPhase('timer1');
-            try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'timer1', step: simonStep, pushAt: Date.now() })); } catch {}
-        }, 3000);
-        return () => clearTimeout(t);
+        if (simonPhase !== 'waiting' || !simonWaitUntil) return;
+        const chain: any[] = (mechOverlay as any)?.order?.config?.chainTasks || [];
+        const lastTxt = simonLastTask?.text;
+        simonWaitRef.current = setInterval(() => {
+            if (Date.now() >= simonWaitUntil) {
+                clearInterval(simonWaitRef.current!); simonWaitRef.current = null;
+                const pool = lastTxt ? chain.filter((t: any) => t.text !== lastTxt) : chain;
+                const src = pool.length > 0 ? pool : chain;
+                if (!src.length) return;
+                const task = src[Math.floor(Math.random() * src.length)];
+                setSimonCurrentTask(task);
+                setSimonLastTask(task);
+                setSimonTaskSecs(task.timeLimit || 30);
+                setSimonTaskLimit(task.timeLimit || 30);
+                setSimonPhase('task');
+                try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'task', currentTask: task, step: simonStep, proofs: simonProofs, lastTask: task })); } catch {}
+            }
+        }, 1000);
+        return () => { if (simonWaitRef.current) { clearInterval(simonWaitRef.current); simonWaitRef.current = null; } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [simonPhase]);
+    }, [simonPhase, simonWaitUntil]);
 
-    // ── Simon Says: timer1 countdown ──
+    // ── Simon Says: task time limit countdown ──
     useEffect(() => {
-        if (simonPhase !== 'timer1') {
-            if (simonT1Ref.current) { clearInterval(simonT1Ref.current); simonT1Ref.current = null; }
+        if (simonPhase !== 'task') {
+            if (simonTaskRef.current) { clearInterval(simonTaskRef.current); simonTaskRef.current = null; }
             return;
         }
-        simonT1Ref.current = setInterval(() => {
-            setSimonT1(prev => {
-                if (prev <= 1) {
-                    clearInterval(simonT1Ref.current!); simonT1Ref.current = null;
-                    setSimonT2(10);
-                    setSimonT3(simonTimeLimitRef.current);
-                    setSimonTimeLimit(simonTimeLimitRef.current);
-                    setSimonPhase('timer2');
-                    return 0;
-                }
+        simonTaskRef.current = setInterval(() => {
+            setSimonTaskSecs(prev => {
+                if (prev <= 1) { clearInterval(simonTaskRef.current!); simonTaskRef.current = null; return 0; }
                 return prev - 1;
             });
         }, 1000);
-        return () => { if (simonT1Ref.current) { clearInterval(simonT1Ref.current); simonT1Ref.current = null; } };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [simonPhase]);
-
-    // ── Simon Says: timer2 countdown ──
-    useEffect(() => {
-        if (simonPhase !== 'timer2') {
-            if (simonT2Ref.current) { clearInterval(simonT2Ref.current); simonT2Ref.current = null; }
-            return;
-        }
-        simonT2Ref.current = setInterval(() => {
-            setSimonT2(prev => {
-                if (prev <= 1) {
-                    clearInterval(simonT2Ref.current!); simonT2Ref.current = null;
-                    setSimonPhase('recording');
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => { if (simonT2Ref.current) { clearInterval(simonT2Ref.current); simonT2Ref.current = null; } };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [simonPhase]);
-
-    // ── Simon Says: timer3 (recording) countdown ──
-    useEffect(() => {
-        if (simonPhase !== 'recording') {
-            if (simonT3Ref.current) { clearInterval(simonT3Ref.current); simonT3Ref.current = null; }
-            return;
-        }
-        simonT3Ref.current = setInterval(() => {
-            setSimonT3(prev => {
-                if (prev <= 1) { clearInterval(simonT3Ref.current!); simonT3Ref.current = null; return 0; }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => { if (simonT3Ref.current) { clearInterval(simonT3Ref.current); simonT3Ref.current = null; } };
+        return () => { if (simonTaskRef.current) { clearInterval(simonTaskRef.current); simonTaskRef.current = null; } };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [simonPhase]);
 
@@ -2805,129 +2787,80 @@ export default function VaultPage() {
 
                                                                         {/* SIMON SAYS */}
                                                                         {o.type === 'simon_says' && (() => {
-                                                                            const chain: { text: string; timeLimit: number; proofType?: 'photo'|'video' }[] = o.config?.chainTasks?.length > 0 ? o.config.chainTasks : [
-                                                                                { text: 'Drop and do 10 pushups — NOW', timeLimit: 30, proofType: 'video' },
-                                                                                { text: 'Take a selfie on your knees', timeLimit: 20, proofType: 'photo' },
-                                                                            ];
-                                                                            const allDone = simonStep >= chain.length;
-                                                                            const currentChainTask = chain[simonStep] || null;
+                                                                            const chain: { text: string; timeLimit: number; proofType?: 'photo'|'video' }[] = o.config?.chainTasks || [];
 
-                                                                            // ── EXPLAIN ──
-                                                                            if (simonPhase === 'explain') return (
-                                                                                <div style={{ textAlign: 'center', padding: '8px 0 4px', animation: 'vFadeIn 0.4s ease' }}>
+                                                                            // ── IDLE ──
+                                                                            if (simonPhase === 'idle') return (
+                                                                                <div style={{ textAlign: 'center', padding: '12px 0 4px', animation: 'vFadeIn 0.4s ease' }}>
                                                                                     <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '7px', marginBottom: 22 }}>⚡ SIMON SAYS</div>
-                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.75, marginBottom: 12 }}>
-                                                                                        A challenge awaits you.
-                                                                                    </div>
-                                                                                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.8, marginBottom: 30 }}>
-                                                                                        You will receive tasks one at a time. Each must be completed immediately when called. You will not know what comes next. You will not know how much time you have.
-                                                                                    </div>
-                                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                                                                        <button onClick={() => setSimonPhase('confirm')} style={{
-                                                                                            padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px',
-                                                                                            color: '#050508', background: `${R}0.55)`, border: 'none', borderRadius: 8, cursor: 'pointer',
-                                                                                        }}>ACCEPT THE CHALLENGE</button>
-                                                                                        <button onClick={() => setMechOverlay(null)} style={{
-                                                                                            padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
-                                                                                            color: 'rgba(255,255,255,0.18)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, cursor: 'pointer',
-                                                                                        }}>DELAY THE CHALLENGE</button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            );
-
-                                                                            // ── CONFIRM ──
-                                                                            if (simonPhase === 'confirm') return (
-                                                                                <div style={{ textAlign: 'center', padding: '8px 0 4px', animation: 'vFadeIn 0.4s ease' }}>
-                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: `${R}0.85)`, letterSpacing: '3px', marginBottom: 20, lineHeight: 1.4 }}>
-                                                                                        There is no way back.
-                                                                                    </div>
-                                                                                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.8, marginBottom: 30 }}>
-                                                                                        You cannot retreat. You will not be warned. When the moment comes — you obey immediately, completely, without question.
-                                                                                    </div>
-                                                                                    <button onClick={() => setSimonPhase('entered')} style={{
-                                                                                        width: '100%', padding: '18px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '5px',
-                                                                                        color: `${R}0.9)`, background: `${R}0.05)`, border: `1px solid ${R}0.3)`, borderRadius: 8, cursor: 'pointer',
-                                                                                        boxShadow: `0 0 20px ${R}0.12)`,
-                                                                                    }}>I OBEY</button>
-                                                                                </div>
-                                                                            );
-
-                                                                            // ── ENTERED ──
-                                                                            if (simonPhase === 'entered') return (
-                                                                                <div style={{ textAlign: 'center', padding: '30px 10px 24px', animation: 'vFadeIn 0.8s ease' }}>
-                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.48rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '8px', marginBottom: 30 }}>YOU'VE ENTERED THE GAME</div>
-                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.9rem', color: 'rgba(255,255,255,0.7)', letterSpacing: '8px', lineHeight: 1.15, marginBottom: 18 }}>Stand by.</div>
-                                                                                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '3px' }}>The clock is already running.</div>
-                                                                                </div>
-                                                                            );
-
-                                                                            // ── TIMER 1 ──
-                                                                            if (simonPhase === 'timer1') {
-                                                                                const urgent = simonT1 <= 10;
-                                                                                return (
-                                                                                    <div style={{ textAlign: 'center', padding: '8px 0 4px', animation: 'vFadeIn 0.4s ease' }}>
-                                                                                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.48rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '6px', marginBottom: 22 }}>RESPOND NOW</div>
-                                                                                        <div style={{ position: 'relative', width: 130, height: 130, margin: '0 auto 26px' }}>
-                                                                                            <svg width="130" height="130" style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}>
-                                                                                                <circle cx="65" cy="65" r="56" fill="none" stroke={urgent ? `${R}0.12)` : `${R}0.08)`} strokeWidth="4" />
-                                                                                                <circle cx="65" cy="65" r="56" fill="none"
-                                                                                                    stroke={urgent ? 'rgba(255,60,60,0.7)' : `${R}0.5)`} strokeWidth="4"
-                                                                                                    strokeDasharray={`${2 * Math.PI * 56 * simonT1 / 60} ${2 * Math.PI * 56}`}
-                                                                                                    strokeLinecap="round" style={{ transition: 'stroke-dasharray 0.9s linear, stroke 0.5s' }} />
-                                                                                            </svg>
-                                                                                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '2.4rem', color: urgent ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.8)', lineHeight: 1, animation: urgent ? 'vPulse 0.7s ease infinite' : 'none' }}>{simonT1}</div>
-                                                                                            </div>
+                                                                                    {chain.length === 0 ? (
+                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,80,80,0.5)', letterSpacing: '3px', marginBottom: 24 }}>NO TASKS CONFIGURED</div>
+                                                                                    ) : (<>
+                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.75, marginBottom: 12 }}>
+                                                                                            {chain.length} commands are waiting.
+                                                                                        </div>
+                                                                                        <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.8, marginBottom: 28 }}>
+                                                                                            Tasks will arrive at random. You will not be warned. When one appears — you obey immediately.
                                                                                         </div>
                                                                                         <button onClick={() => {
-                                                                                            if (simonT1Ref.current) { clearInterval(simonT1Ref.current); simonT1Ref.current = null; }
-                                                                                            const tl = currentChainTask?.timeLimit || 30;
-                                                                                            simonTimeLimitRef.current = tl;
-                                                                                            setSimonTimeLimit(tl);
-                                                                                            setSimonT3(tl);
-                                                                                            setSimonT2(10);
-                                                                                            setSimonPhase('timer2');
+                                                                                            const intervalMinutes = o.config?.intervalMinutes || 60;
+                                                                                            const waitMs = Math.floor(Math.random() * intervalMinutes * 60 * 1000) + 60000;
+                                                                                            const waitUntil = Date.now() + waitMs;
+                                                                                            setSimonWaitUntil(waitUntil);
+                                                                                            setSimonStep(0);
+                                                                                            setSimonProofs([]);
+                                                                                            setSimonLastTask(null);
+                                                                                            setSimonPhase('waiting');
+                                                                                            try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'waiting', step: 0, waitUntil, proofs: [], lastTask: null })); } catch {}
                                                                                         }} style={{
-                                                                                            padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '4px',
-                                                                                            color: '#050508', background: `${R}0.55)`, border: 'none', borderRadius: 8, cursor: 'pointer',
-                                                                                        }}>I'M READY</button>
-                                                                                    </div>
-                                                                                );
-                                                                            }
-
-                                                                            // ── TIMER 2 ──
-                                                                            if (simonPhase === 'timer2') return (
-                                                                                <div style={{ textAlign: 'center', padding: '20px 0 12px', animation: 'vFadeIn 0.4s ease' }}>
-                                                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '5px', marginBottom: 28 }}>YOUR TASK IS ABOUT TO BE REVEALED</div>
-                                                                                    <div style={{
-                                                                                        fontFamily: 'Orbitron, sans-serif', fontSize: '5.5rem', lineHeight: 1,
-                                                                                        color: simonT2 <= 3 ? 'rgba(255,50,50,0.95)' : simonT2 <= 6 ? 'rgba(255,140,60,0.85)' : 'rgba(255,255,255,0.75)',
-                                                                                        letterSpacing: '12px',
-                                                                                        animation: simonT2 <= 3 ? 'vPulse 0.4s ease infinite' : 'none',
-                                                                                        textShadow: simonT2 <= 3 ? '0 0 30px rgba(255,50,50,0.4)' : 'none',
-                                                                                        transition: 'color 0.3s, text-shadow 0.3s',
-                                                                                    }}>{simonT2}</div>
+                                                                                            width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px',
+                                                                                            color: '#050508', background: `${R}0.55)`, border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 10,
+                                                                                        }}>START THE GAME</button>
+                                                                                    </>)}
+                                                                                    <button onClick={() => setMechOverlay(null)} style={{
+                                                                                        width: '100%', padding: '13px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
+                                                                                        color: 'rgba(255,255,255,0.18)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, cursor: 'pointer',
+                                                                                    }}>CLOSE</button>
                                                                                 </div>
                                                                             );
 
-                                                                            // ── RECORDING ──
-                                                                            if (simonPhase === 'recording' && currentChainTask) {
-                                                                                const proofType = currentChainTask.proofType || 'photo';
+                                                                            // ── WAITING ──
+                                                                            if (simonPhase === 'waiting') return (
+                                                                                <div style={{ textAlign: 'center', padding: '36px 10px 24px', animation: 'vFadeIn 0.8s ease' }}>
+                                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '8px', marginBottom: 32 }}>SIMON IS WATCHING</div>
+                                                                                    <div style={{
+                                                                                        width: 18, height: 18, borderRadius: '50%',
+                                                                                        background: `${R}0.75)`, margin: '0 auto 32px',
+                                                                                        animation: 'vPulse 1.5s ease infinite',
+                                                                                        boxShadow: `0 0 16px ${R}0.3)`,
+                                                                                    }} />
+                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '8px', marginBottom: 12 }}>Stand by.</div>
+                                                                                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '3px' }}>The next command is coming.</div>
+                                                                                    <div style={{ marginTop: 36, fontFamily: 'Orbitron, sans-serif', fontSize: '0.48rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '4px' }}>
+                                                                                        TASK {simonStep + 1} / {chain.length}
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+
+                                                                            // ── TASK ──
+                                                                            if (simonPhase === 'task' && simonCurrentTask) {
+                                                                                const proofType = simonCurrentTask.proofType || 'photo';
                                                                                 const isVideo = proofType === 'video';
                                                                                 return (
-                                                                                    <div style={{ animation: 'vFadeIn 0.5s ease' }}>
-                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: `${R}0.55)`, letterSpacing: '6px', marginBottom: 16, textAlign: 'center' }}>SIMON SAYS</div>
-                                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.7, marginBottom: 20, padding: '16px 18px', background: `${R}0.06)`, border: `1px solid ${R}0.18)`, borderRadius: 10, textAlign: 'center' }}>
-                                                                                            {currentChainTask.text}
-                                                                                        </div>
-                                                                                        {/* Urgency bar — no timer number shown, hidden count adds tension */}
-                                                                                        <div style={{ marginBottom: 18 }}>
+                                                                                    <div style={{ animation: 'vFadeIn 0.4s ease' }}>
+                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: `${R}0.6)`, letterSpacing: '7px', marginBottom: 14, textAlign: 'center' }}>⚡ SIMON SAYS</div>
+                                                                                        <div style={{
+                                                                                            fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.75,
+                                                                                            marginBottom: 18, padding: '18px 16px',
+                                                                                            background: `${R}0.06)`, border: `1px solid ${R}0.2)`, borderRadius: 10, textAlign: 'center',
+                                                                                        }}>{simonCurrentTask.text}</div>
+                                                                                        <div style={{ marginBottom: 20 }}>
                                                                                             <div style={{ height: 3, background: 'rgba(255,255,255,0.04)', borderRadius: 2, overflow: 'hidden' }}>
                                                                                                 <div style={{
                                                                                                     height: '100%',
-                                                                                                    width: `${simonTimeLimit > 0 ? (simonT3 / simonTimeLimit) * 100 : 100}%`,
-                                                                                                    background: simonT3 <= Math.ceil(simonTimeLimit * 0.2) ? 'rgba(255,50,50,0.6)' : `${R}0.5)`,
-                                                                                                    borderRadius: 2, transition: 'width 0.9s linear, background 0.5s',
+                                                                                                    width: `${simonTaskLimit > 0 ? (simonTaskSecs / simonTaskLimit) * 100 : 100}%`,
+                                                                                                    background: simonTaskSecs <= Math.ceil(simonTaskLimit * 0.2) ? 'rgba(255,50,50,0.7)' : `${R}0.55)`,
+                                                                                                    borderRadius: 2, transition: 'width 0.9s linear, background 0.4s',
                                                                                                 }} />
                                                                                             </div>
                                                                                         </div>
@@ -2945,7 +2878,7 @@ export default function VaultPage() {
                                                                                             <input type="file" accept={isVideo ? 'video/*' : 'image/*'} capture="environment" style={{ display: 'none' }} onChange={async (e) => {
                                                                                                 const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
                                                                                                 setSimonUploading(true);
-                                                                                                if (simonT3Ref.current) { clearInterval(simonT3Ref.current); simonT3Ref.current = null; }
+                                                                                                if (simonTaskRef.current) { clearInterval(simonTaskRef.current); simonTaskRef.current = null; }
                                                                                                 try {
                                                                                                     const ext = file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'jpg');
                                                                                                     const fd = new FormData();
@@ -2960,60 +2893,34 @@ export default function VaultPage() {
                                                                                                         const nextStep = simonStep + 1;
                                                                                                         if (nextStep >= chain.length) {
                                                                                                             await submitTask({ text: `Simon Says: completed ${chain.length} task${chain.length !== 1 ? 's' : ''}`, photoUrl: newProofs[0] });
-                                                                                                            setSimonStep(0);
-                                                                                                            setSimonProofs([]);
+                                                                                                            setSimonStep(0); setSimonProofs([]); setSimonCurrentTask(null); setSimonLastTask(null);
                                                                                                             setSimonPhase('complete');
                                                                                                             try { localStorage.removeItem('ss_state'); } catch {}
                                                                                                         } else {
                                                                                                             setSimonStep(nextStep);
-                                                                                                            setSimonPhase('between');
-                                                                                                            try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'between', step: nextStep, proofs: newProofs })); } catch {}
+                                                                                                            const intervalMinutes = o.config?.intervalMinutes || 60;
+                                                                                                            const waitMs = Math.floor(Math.random() * intervalMinutes * 60 * 1000) + 60000;
+                                                                                                            const waitUntil = Date.now() + waitMs;
+                                                                                                            setSimonWaitUntil(waitUntil);
+                                                                                                            setSimonPhase('waiting');
+                                                                                                            try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'waiting', step: nextStep, waitUntil, proofs: newProofs, lastTask: simonCurrentTask })); } catch {}
                                                                                                         }
                                                                                                     }
                                                                                                 } catch {} finally { setSimonUploading(false); }
                                                                                             }} />
                                                                                         </label>
+                                                                                        <div style={{ marginTop: 10, fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '4px', textAlign: 'center' }}>
+                                                                                            TASK {simonStep + 1} / {chain.length}
+                                                                                        </div>
                                                                                     </div>
                                                                                 );
                                                                             }
 
-                                                                            // ── BETWEEN TASKS ──
-                                                                            if (simonPhase === 'between') return (
-                                                                                <div style={{ textAlign: 'center', padding: '24px 10px 16px', animation: 'vFadeIn 0.8s ease' }}>
-                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: 14 }}>
-                                                                                        Let's see if you're a good boy.
-                                                                                    </div>
-                                                                                    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.22)', lineHeight: 1.75, marginBottom: 28 }}>
-                                                                                        I'll be back for you. Stay ready.
-                                                                                    </div>
-                                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                                                                        <button onClick={() => {
-                                                                                            const tl = chain[simonStep]?.timeLimit || 30;
-                                                                                            simonTimeLimitRef.current = tl;
-                                                                                            setSimonTimeLimit(tl);
-                                                                                            setSimonT3(tl);
-                                                                                            setSimonT1(60);
-                                                                                            setSimonPhase('timer1');
-                                                                                            try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'timer1', step: simonStep, pushAt: Date.now() })); } catch {}
-                                                                                        }} style={{
-                                                                                            padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px',
-                                                                                            color: '#050508', background: `${R}0.55)`, border: 'none', borderRadius: 8, cursor: 'pointer',
-                                                                                        }}>NEXT TASK</button>
-                                                                                        <button onClick={() => setMechOverlay(null)} style={{
-                                                                                            padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.62rem', letterSpacing: '3px',
-                                                                                            color: 'rgba(255,255,255,0.15)', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, cursor: 'pointer',
-                                                                                        }}>CLOSE</button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            );
-
                                                                             // ── COMPLETE ──
-                                                                            if (simonPhase === 'complete' || allDone) return (
+                                                                            if (simonPhase === 'complete') return (
                                                                                 <div style={{ textAlign: 'center', padding: '24px 10px 16px', animation: 'vFadeIn 0.8s ease' }}>
                                                                                     <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.48rem', color: 'rgba(80,200,120,0.45)', letterSpacing: '8px', marginBottom: 24 }}>ALL TASKS COMPLETE</div>
-                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, marginBottom: 14 }}>
-                                                                                        Good boy.
-                                                                                    </div>
+                                                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, marginBottom: 14 }}>Good boy.</div>
                                                                                     <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.22)', lineHeight: 1.75, marginBottom: 28 }}>
                                                                                         You've proven yourself today. You may rest.
                                                                                     </div>
