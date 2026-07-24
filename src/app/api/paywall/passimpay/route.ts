@@ -4,65 +4,76 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
+function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string) {
+    const qs = new URLSearchParams(params).toString();
+    const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
+    return fetch(`https://api.passimpay.io${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ ...params, hash }).toString(),
+    });
+}
+
 export async function POST(req: Request) {
     try {
-        const { memberId, amount } = await req.json();
-        if (!memberId || !amount) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+        const { memberId, amount, currencyId } = await req.json();
+        if (!memberId || !amount || !currencyId) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
 
         const apiKey = (process.env.PASSIMPAY_API_KEY || '').trim();
-        const platformIdRaw = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
-        const platformId = Number(platformIdRaw);
-        console.log('[passimpay] env check — apiKey len:', apiKey.length, 'platformId:', platformId);
-        if (!apiKey || !platformIdRaw) return NextResponse.json({ error: `Missing env vars: apiKey=${!!apiKey} platformId=${!!platformIdRaw}` }, { status: 500 });
-        const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
+        const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
+        if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
 
-        // v1 API (form-encoded) — hash and body must use identical amount string
-        const amountStr = Number(amount).toFixed(2); // "50.00"
-        const params: Record<string, string> = {
-            platform_id: String(platformId),
+        const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
+        const amountStr = Number(amount).toFixed(2);
+
+        // Step 1: Create order
+        const orderRes = await ppRequest('/createorder', {
+            platform_id: platformId,
             order_id: orderId,
             amount: amountStr,
+        }, apiKey);
+        const orderData = await orderRes.json();
+        console.log('[passimpay] createorder:', orderData);
+        if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
+
+        // Step 2: Get wallet address for chosen currency
+        // Note: payment_id must come before platform_id in params (PHP SDK order)
+        const walletRes = await ppRequest('/getpaymentwallet', {
+            payment_id: String(currencyId),
+            platform_id: platformId,
+            order_id: orderId,
+        }, apiKey);
+        const walletData = await walletRes.json();
+        console.log('[passimpay] getwallet:', walletData);
+        if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet address returned' }, { status: 500 });
+
+        // Step 3: Get live EUR→crypto rate from CoinGecko
+        const cgMap: Record<string, string> = {
+            '10': 'bitcoin', '20': 'ethereum', '60': 'litecoin',
+            '70': 'tether', '71': 'tether', '72': 'tether',
         };
-        const queryStrForHash = new URLSearchParams(params).toString();
-        const hash = createHmac('sha256', apiKey).update(queryStrForHash).digest('hex');
-        const formBody = new URLSearchParams({ ...params, hash }).toString();
+        const cgId = cgMap[String(currencyId)] || 'bitcoin';
+        let cryptoAmount: string | null = null;
+        try {
+            const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur`, { cache: 'no-store' });
+            const rateData = await rateRes.json();
+            const eurPrice = rateData[cgId]?.eur;
+            if (eurPrice) {
+                const raw = Number(amount) / eurPrice;
+                // USDT is stable, show 2dp; others show 8dp
+                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
+            }
+        } catch {}
 
-        console.log('[passimpay] platformId:', platformId, 'amount:', amountStr, 'hash_input:', queryStrForHash);
-
-        const res = await fetch('https://api.passimpay.io/createorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formBody,
-        });
-
-        const resText = await res.text();
-        const data = resText ? JSON.parse(resText) : {};
-        console.log('[passimpay] response:', res.status, resText);
-
-        if (data.result !== 1 || !data.url) {
-            return NextResponse.json({ error: data.message || `HTTP ${res.status}: ${resText}` }, { status: 500 });
-        }
-
-        // Store orderId in profile so webhook can find this member
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('parameters')
-            .ilike('member_id', memberId)
-            .single();
-
+        // Store orderId so webhook can find this member
+        const { data: profile } = await supabaseAdmin.from('profiles').select('parameters').ilike('member_id', memberId).single();
         if (profile) {
-            await supabaseAdmin
-                .from('profiles')
-                .update({
-                    parameters: {
-                        ...(profile.parameters || {}),
-                        pendingCryptoPay: { orderId, created: new Date().toISOString() },
-                    },
-                })
-                .ilike('member_id', memberId);
+            await supabaseAdmin.from('profiles').update({
+                parameters: { ...(profile.parameters || {}), pendingCryptoPay: { orderId, created: new Date().toISOString() } },
+            }).ilike('member_id', memberId);
         }
 
-        return NextResponse.json({ url: data.url, orderId });
+        return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: Number(amount) });
     } catch (err: any) {
         console.error('[passimpay] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
