@@ -2182,23 +2182,49 @@ export default function VaultPage() {
 
                                             {/* ── TASK INDEX ── */}
                                             {tasks.length > 0 && (
-                                                <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'row', padding: '18px 16px 20px', gap: 8, overflowX: 'auto', borderBottom: '1px solid rgba(255,255,255,0.05)', scrollbarWidth: 'none' }}>
                                                     {tasks.map((o: any, i: number) => {
                                                         const isDone = o.done >= o.target;
                                                         const pending = !isDone && isPending(o);
                                                         const isCurrent = o === currentTask;
                                                         const m = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
+                                                        const taskLabel = (!o.label || o.label === o.type || o.label.includes('_')) ? m.label : o.label;
+
+                                                        const circleColor = isDone ? 'rgba(80,200,120,0.75)' : pending ? 'rgba(197,160,89,0.65)' : isCurrent ? 'rgba(197,160,89,0.9)' : 'rgba(255,255,255,0.12)';
+                                                        const circleBorder = isDone ? 'rgba(80,200,120,0.35)' : pending ? 'rgba(197,160,89,0.3)' : isCurrent ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.1)';
+                                                        const circleBg = isDone ? 'rgba(80,200,120,0.08)' : pending ? 'rgba(197,160,89,0.07)' : isCurrent ? 'rgba(197,160,89,0.1)' : 'rgba(255,255,255,0.03)';
+
                                                         return (
-                                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 24px', borderBottom: i < tasks.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: isCurrent ? 'rgba(197,160,89,0.04)' : 'transparent' }}>
-                                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: isDone ? 'rgba(80,200,120,0.45)' : isCurrent ? 'rgba(197,160,89,0.55)' : 'rgba(255,255,255,0.12)', letterSpacing: '1px', minWidth: 18, flexShrink: 0 }}>
+                                                            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: `0 0 ${Math.max(60, Math.floor(100 / Math.min(tasks.length, 5)))}px`, maxWidth: 80 }}>
+                                                                {/* Number */}
+                                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.42rem', color: isDone ? 'rgba(80,200,120,0.5)' : isCurrent ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
                                                                     {String(i + 1).padStart(2, '0')}
                                                                 </div>
-                                                                <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: isDone ? 'rgba(80,200,120,0.65)' : pending ? 'rgba(197,160,89,0.45)' : isCurrent ? '#c5a059' : 'rgba(255,255,255,0.1)', boxShadow: isCurrent ? '0 0 8px rgba(197,160,89,0.6)' : 'none', animation: isCurrent ? 'vPulse 2s ease infinite' : 'none' }} />
-                                                                <div style={{ flex: 1, fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', fontWeight: isCurrent ? 600 : 400, letterSpacing: '2px', color: isDone ? 'rgba(255,255,255,0.25)' : isCurrent ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.38)', textDecoration: isDone ? 'line-through' : 'none', textDecorationColor: 'rgba(255,255,255,0.1)' }}>
-                                                                    {o.label || m.label}
+                                                                {/* Circle with SVG status */}
+                                                                <div style={{ width: 44, height: 44, borderRadius: '50%', border: `1.5px solid ${circleBorder}`, background: circleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: isCurrent ? '0 0 12px rgba(197,160,89,0.25)' : 'none', animation: isCurrent ? 'vPulse 2s ease infinite' : 'none' }}>
+                                                                    {isDone && (
+                                                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={circleColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                                                    )}
+                                                                    {pending && !isDone && (
+                                                                        /* Clock / pending SVG */
+                                                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={circleColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                            <circle cx="12" cy="12" r="9" />
+                                                                            <polyline points="12 7 12 12 15 15" />
+                                                                        </svg>
+                                                                    )}
+                                                                    {isCurrent && !isDone && !pending && (
+                                                                        /* Active pulse dot */
+                                                                        <svg viewBox="0 0 24 24" width="10" height="10" fill={circleColor}><circle cx="12" cy="12" r="6" /></svg>
+                                                                    )}
+                                                                    {!isDone && !pending && !isCurrent && (
+                                                                        /* Upcoming empty circle */
+                                                                        <svg viewBox="0 0 24 24" width="8" height="8" fill="rgba(255,255,255,0.18)"><circle cx="12" cy="12" r="5" /></svg>
+                                                                    )}
                                                                 </div>
-                                                                {isDone && <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.55)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
-                                                                {pending && !isDone && <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px' }}>REVIEW</span>}
+                                                                {/* Task name */}
+                                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.62rem', letterSpacing: '0.5px', color: isDone ? 'rgba(255,255,255,0.22)' : isCurrent ? 'rgba(255,255,255,0.85)' : pending ? 'rgba(197,160,89,0.55)' : 'rgba(255,255,255,0.3)', textAlign: 'center', lineHeight: 1.25, wordBreak: 'break-word' }}>
+                                                                    {taskLabel}
+                                                                </div>
                                                             </div>
                                                         );
                                                     })}
