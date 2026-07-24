@@ -94,6 +94,7 @@ export default function KeyholderPage() {
     const [wixError, setWixError] = useState('');
     const [paypalRequested, setPaypalRequested] = useState(false);
     const [paypalRequesting, setPaypalRequesting] = useState(false);
+    const [paypalError, setPaypalError] = useState('');
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
     const [cryptoError, setCryptoError] = useState('');
@@ -353,6 +354,7 @@ export default function KeyholderPage() {
     const handleRequestPaypal = async () => {
         if (paypalRequesting || !selectedTier) return;
         setPaypalRequesting(true);
+        setPaypalError('');
         try {
             const tierAmount = TIER_PRICES[selectedTier] || 55;
             const res = await fetch('/api/paypal/create-order', {
@@ -364,9 +366,11 @@ export default function KeyholderPage() {
             if (data.approvalUrl) {
                 window.location.href = data.approvalUrl;
             } else {
+                setPaypalError(data.error || 'PayPal unavailable. Try another method.');
                 setPaypalRequesting(false);
             }
-        } catch {
+        } catch (e: any) {
+            setPaypalError(e.message || 'Network error.');
             setPaypalRequesting(false);
         }
     };
@@ -1229,6 +1233,7 @@ export default function KeyholderPage() {
                             <button onClick={handleRequestPaypal} disabled={paypalRequesting} style={{ width: '100%', padding: '14px', background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, color: 'rgba(197,160,89,0.7)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 500, letterSpacing: '3px', cursor: paypalRequesting ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                 {paypalRequesting ? 'LOADING...' : 'PAY WITH PAYPAL'}
                             </button>
+                            {paypalError && <div style={{ fontSize: '0.6rem', color: 'rgba(255,80,80,0.7)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center' }}>{paypalError}</div>}
                         </div>
                         <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '16px 20px', cursor: 'pointer', marginTop: 4 }}>CANCEL</button>
                     </div>
