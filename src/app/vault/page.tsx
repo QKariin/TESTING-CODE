@@ -3090,8 +3090,6 @@ export default function VaultPage() {
                 return (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'linear-gradient(rgba(4,3,10,0.78) 0%, rgba(4,3,10,0.88) 100%), url(/work-bg.jpg) center top / cover no-repeat', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
                         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
-                        {/* Skip button */}
-                        <button onClick={() => setFollowUpSkipping(!followUpSkipping)} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 2, padding: '8px 12px' }}>{followUpSkipping ? 'BACK' : 'SKIP'}</button>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '70px 20px 24px', position: 'relative', zIndex: 5 }}>
                             {/* Source label */}
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, textAlign: 'center', marginBottom: 40 }}>{followUp.source.toUpperCase()}</div>
@@ -3190,6 +3188,17 @@ export default function VaultPage() {
                             {followUp.type === 'instant' && (
                                 <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}` })}
                                     style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
+                            )}
+
+                            {/* SKIP BUTTON — visible below task content */}
+                            {!followUpSkipping && (
+                                <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)', width: '75%' }}>
+                                    <button onClick={() => setFollowUpSkipping(true)} style={{
+                                        width: '100%', padding: '14px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '3px',
+                                        color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.03)',
+                                        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, cursor: 'pointer',
+                                    }}>SKIP THIS TASK</button>
+                                </div>
                             )}
 
                             {/* SKIP OPTIONS OVERLAY */}
