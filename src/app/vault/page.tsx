@@ -1258,7 +1258,7 @@ export default function VaultPage() {
     const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
 
     return (
-        <div style={{ background: '#080810', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#080810', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflowX: 'clip' }}>
 
             {/* BG — queen photo + layered red glow */}
             <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
