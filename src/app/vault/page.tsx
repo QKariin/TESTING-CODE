@@ -2249,7 +2249,7 @@ export default function VaultPage() {
                                                 const isMech = false;
 
                                                 return (
-                                                    <div style={{ margin: '20px 16px 80px', animation: 'vFadeIn 0.3s ease' }}>
+                                                    <div style={{ margin: '20px 16px 120px', animation: 'vFadeIn 0.3s ease' }}>
                                                         {/* Gold accent line */}
                                                         <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(197,160,89,0.85) 0%, rgba(197,160,89,0.05) 100%)', borderRadius: '2px 2px 0 0' }} />
                                                         {/* Card shell */}
@@ -3109,7 +3109,7 @@ export default function VaultPage() {
                 return (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'linear-gradient(rgba(4,3,10,0.78) 0%, rgba(4,3,10,0.88) 100%), url(/work-bg.jpg) center top / cover no-repeat', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
                         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '70px 20px 24px', position: 'relative', zIndex: 5 }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '70px 20px 120px', position: 'relative', zIndex: 5 }}>
                             {/* Source label */}
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, textAlign: 'center', marginBottom: 40 }}>{followUp.source.toUpperCase()}</div>
                             {/* Thin gold line */}
