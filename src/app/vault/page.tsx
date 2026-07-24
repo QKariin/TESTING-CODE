@@ -2000,7 +2000,7 @@ export default function VaultPage() {
                 return (
                     <div key={t} style={{ display: tab === t ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', inset: 0, zIndex: 40, background: '#050508' }}>
                         {/* Header */}
-                        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${R}0.1)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ padding: '16px 20px', borderBottom: t === 'challenge' ? '1px solid rgba(197,160,89,0.12)' : `1px solid ${R}0.1)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: t === 'challenge' ? 'rgba(197,160,89,0.03)' : 'transparent' }}>
                             {t === 'chat' ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                     <div style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${R}0.2)`, overflow: 'hidden' }}>
@@ -2012,6 +2012,11 @@ export default function VaultPage() {
                                             {chatExpiresAt ? (() => { const left = Math.max(0, Math.ceil((chatExpiresAt - Date.now()) / 1000)); const m = Math.floor(left / 60); const s = left % 60; return `${m}:${s.toString().padStart(2, '0')} LEFT`; })() : 'KEYHOLDER'}
                                         </div>
                                     </div>
+                                </div>
+                            ) : t === 'challenge' ? (
+                                <div>
+                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '6px', marginBottom: 3 }}>TODAY'S</div>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '3px' }}>ORDERS</div>
                                 </div>
                             ) : (
                                 <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '2px' }}>{title}</span>
@@ -2150,7 +2155,7 @@ export default function VaultPage() {
                                 <button onClick={() => (window as any).openMobChatOverlay?.()} style={{ padding: '12px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.7)', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, cursor: 'pointer' }}>OPEN CHAT</button>
                             </div>
                         ) : t === 'challenge' ? (
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px 100px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                                 {(() => {
                                     const tasks = todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel');
                                     const subs = vaultData?.submissions || [];
@@ -2158,129 +2163,109 @@ export default function VaultPage() {
                                     const doneCount = tasks.filter((o: any) => o.done >= o.target).length;
                                     const pendingCount = tasks.filter((o: any) => o.done < o.target && isPending(o)).length;
                                     const allDone = (doneCount + pendingCount) >= tasks.length;
-                                    // Skip done AND pending tasks — show the next actionable one
                                     const currentTask = tasks.find((o: any) => o.done < o.target && !isPending(o));
 
                                     return (
                                         <>
-                                            {/* ── Header: day + task count ── */}
-                                            <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '6px', fontWeight: 700 }}>DAY {daysIn + 1}</div>
-                                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '4px', marginTop: 6 }}>
-                                                    {allDone && pendingCount === 0 ? 'ALL ORDERS COMPLETE' : allDone ? 'AWAITING REVIEW' : `${tasks.length} TASKS TODAY`}
-                                                </div>
-                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.8)' : allDone ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.5)', letterSpacing: '3px', marginTop: 8 }}>
-                                                    {doneCount} / {tasks.length} DONE{pendingCount > 0 ? ` · ${pendingCount} PENDING` : ''}
-                                                </div>
-                                            </div>
-
-                                            {/* ── Progress circles: each task = one circle ── */}
-                                            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 32, flexWrap: 'wrap' }}>
-                                                {tasks.map((o: any, i: number) => {
-                                                    const isDone = o.done >= o.target;
-                                                    const pending = !isDone && isPending(o);
-                                                    const isCurrent = o === currentTask;
-                                                    const meta = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
-                                                    return (
-                                                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                                                            <div style={{
-                                                                width: 36, height: 36, borderRadius: '50%',
-                                                                border: `2px solid ${isDone ? 'rgba(80,200,120,0.5)' : pending ? 'rgba(197,160,89,0.5)' : isCurrent ? `${R}0.5)` : 'rgba(255,255,255,0.08)'}`,
-                                                                background: isDone ? 'rgba(80,200,120,0.08)' : pending ? 'rgba(197,160,89,0.06)' : isCurrent ? `${R}0.06)` : 'transparent',
-                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                transition: 'all 0.3s',
-                                                                boxShadow: isCurrent ? `0 0 12px ${R}0.15)` : pending ? '0 0 10px rgba(197,160,89,0.1)' : 'none',
-                                                                animation: pending ? 'vPulse 2s ease infinite' : 'none',
-                                                            }}>
-                                                                {isDone ? (
-                                                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(80,200,120,0.8)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                                                ) : pending ? (
-                                                                    <span style={{ fontSize: '0.65rem', color: 'rgba(197,160,89,0.7)' }}>⏳</span>
-                                                                ) : (
-                                                                    <span style={{ fontSize: '0.8rem', opacity: isCurrent ? 0.7 : 0.2 }}>{meta.icon}</span>
-                                                                )}
-                                                            </div>
-                                                            <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: isDone ? 'rgba(80,200,120,0.5)' : pending ? 'rgba(197,160,89,0.5)' : isCurrent ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)', letterSpacing: '1px', maxWidth: 50, textAlign: 'center', lineHeight: 1.2 }}>{pending ? 'Pending' : meta.label}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {/* ── All complete / all pending celebration ── */}
-                                            {allDone && pendingCount === 0 && (
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', animation: 'vFadeIn 0.6s ease', flex: 1 }}>
-                                                    <div style={{
-                                                        width: 90, height: 90, borderRadius: '50%',
-                                                        border: '2px solid rgba(80,200,120,0.3)',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        boxShadow: '0 0 40px rgba(80,200,120,0.1), inset 0 0 20px rgba(80,200,120,0.05)',
-                                                        marginBottom: 28,
-                                                    }}>
-                                                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                            {/* ── DAY HERO ── */}
+                                            <div style={{ padding: '28px 24px 22px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.55)', letterSpacing: '8px', marginBottom: 4 }}>DAY</div>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '4.5rem', color: 'rgba(255,255,255,0.95)', fontWeight: 700, lineHeight: 0.85, letterSpacing: '-3px', marginBottom: 18 }}>{daysIn + 1}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                    <div style={{ height: 1, width: 20, background: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.5)' : 'rgba(197,160,89,0.35)' }} />
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.68rem', letterSpacing: '4px', color: allDone && pendingCount === 0 ? 'rgba(80,200,120,0.65)' : 'rgba(255,255,255,0.25)' }}>
+                                                        {allDone && pendingCount === 0 ? 'ALL ORDERS FULFILLED' : allDone ? 'AWAITING REVIEW' : `${doneCount} OF ${tasks.length} COMPLETE`}
                                                     </div>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.5rem', color: 'rgba(80,200,120,0.7)', letterSpacing: '6px', marginBottom: 10, fontWeight: 700 }}>PERFECT</div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px' }}>ALL ORDERS FULFILLED</div>
+                                                </div>
+                                            </div>
+
+                                            {/* ── TASK INDEX ── */}
+                                            {tasks.length > 0 && (
+                                                <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                                    {tasks.map((o: any, i: number) => {
+                                                        const isDone = o.done >= o.target;
+                                                        const pending = !isDone && isPending(o);
+                                                        const isCurrent = o === currentTask;
+                                                        const m = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
+                                                        return (
+                                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 24px', borderBottom: i < tasks.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', background: isCurrent ? 'rgba(197,160,89,0.04)' : 'transparent' }}>
+                                                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.48rem', color: isDone ? 'rgba(80,200,120,0.45)' : isCurrent ? 'rgba(197,160,89,0.55)' : 'rgba(255,255,255,0.12)', letterSpacing: '1px', minWidth: 18, flexShrink: 0 }}>
+                                                                    {String(i + 1).padStart(2, '0')}
+                                                                </div>
+                                                                <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: isDone ? 'rgba(80,200,120,0.65)' : pending ? 'rgba(197,160,89,0.45)' : isCurrent ? '#c5a059' : 'rgba(255,255,255,0.1)', boxShadow: isCurrent ? '0 0 8px rgba(197,160,89,0.6)' : 'none', animation: isCurrent ? 'vPulse 2s ease infinite' : 'none' }} />
+                                                                <div style={{ flex: 1, fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', fontWeight: isCurrent ? 600 : 400, letterSpacing: '2px', color: isDone ? 'rgba(255,255,255,0.25)' : isCurrent ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.38)', textDecoration: isDone ? 'line-through' : 'none', textDecorationColor: 'rgba(255,255,255,0.1)' }}>
+                                                                    {o.label || m.label}
+                                                                </div>
+                                                                {isDone && <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.55)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                                                                {pending && !isDone && <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px' }}>REVIEW</span>}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+
+                                            {/* ── ALL COMPLETE ── */}
+                                            {allDone && pendingCount === 0 && (
+                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px 24px', animation: 'vFadeIn 0.6s ease' }}>
+                                                    <div style={{ width: 64, height: 64, borderRadius: '50%', border: '1px solid rgba(80,200,120,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px rgba(80,200,120,0.08)', marginBottom: 20 }}>
+                                                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(80,200,120,0.55)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                                    </div>
+                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(80,200,120,0.65)', letterSpacing: '5px', fontWeight: 700, marginBottom: 8 }}>PERFECT</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '4px' }}>ALL ORDERS FULFILLED</div>
                                                 </div>
                                             )}
                                             {allDone && pendingCount > 0 && !currentTask && (
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', animation: 'vFadeIn 0.6s ease', flex: 1 }}>
-                                                    <div style={{
-                                                        width: 90, height: 90, borderRadius: '50%',
-                                                        border: '2px solid rgba(197,160,89,0.25)',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        boxShadow: '0 0 40px rgba(197,160,89,0.08), inset 0 0 20px rgba(197,160,89,0.04)',
-                                                        marginBottom: 28,
-                                                    }}>
-                                                        <span style={{ fontSize: '2rem', animation: 'vPulse 2s ease infinite' }}>&#9203;</span>
-                                                    </div>
-                                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.5rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '6px', marginBottom: 10, fontWeight: 700 }}>SUBMITTED</div>
-                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '3px' }}>{pendingCount} TASK{pendingCount > 1 ? 'S' : ''} AWAITING REVIEW</div>
+                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '56px 24px', animation: 'vFadeIn 0.6s ease' }}>
+                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '6px', marginBottom: 12 }}>SUBMITTED</div>
+                                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px' }}>{pendingCount} AWAITING REVIEW</div>
                                                 </div>
                                             )}
 
-                                            {/* ── Current active task (ONE at a time) ── */}
+                                            {/* ── ACTIVE TASK ── */}
                                             {currentTask && (() => {
                                                 const o = currentTask;
                                                 const meta = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
                                                 const label = o.label || meta.label;
-                                                const isMech = false; // All types now handled by generic submission below
+                                                const isMech = false;
 
                                                 return (
-                                                    <div
-                                                        style={{ background: `${R}0.05)`, border: `1px solid ${R}0.15)`, borderRadius: 16, animation: 'vFadeIn 0.3s ease' }}>
-
+                                                    <div style={{ margin: '20px 16px 80px', animation: 'vFadeIn 0.3s ease' }}>
+                                                        {/* Gold accent line */}
+                                                        <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(197,160,89,0.85) 0%, rgba(197,160,89,0.05) 100%)', borderRadius: '2px 2px 0 0' }} />
+                                                        {/* Card shell */}
+                                                        <div style={{ border: '1px solid rgba(197,160,89,0.2)', borderTop: 'none', borderRadius: '0 0 14px 14px', overflow: 'hidden' }}>
                                                         {/* Card header */}
-                                                        <div style={{ padding: '20px 22px 16px', borderBottom: `1px solid ${R}0.08)` }}>
-                                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: `${R}0.4)`, letterSpacing: '4px', marginBottom: 6 }}>CURRENT ORDER</div>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                                                <span style={{ fontSize: '1.4rem', opacity: 0.5 }}>{meta.icon}</span>
-                                                                <span style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.75)', letterSpacing: '1px', lineHeight: 1.3 }}>{label}</span>
+                                                        <div style={{ padding: '18px 20px 16px', background: 'rgba(197,160,89,0.05)', borderBottom: '1px solid rgba(197,160,89,0.1)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                                                            <div style={{ width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.07)', flexShrink: 0 }}>
+                                                                <span style={{ fontSize: '0.95rem', color: 'rgba(197,160,89,0.85)' }}>{meta.icon}</span>
                                                             </div>
-                                                            {o.done > 0 && (
-                                                                <div style={{ marginTop: 10 }}>
-                                                                    <div style={{ height: 3, background: 'rgba(255,255,255,0.04)', borderRadius: 2, overflow: 'hidden' }}>
-                                                                        <div style={{ height: '100%', width: `${Math.min(100, (o.done / o.target) * 100)}%`, background: `${R}0.5)`, borderRadius: 2, transition: 'width 0.5s' }} />
-                                                                    </div>
-                                                                    <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: `${R}0.5)`, letterSpacing: '2px', marginTop: 6, textAlign: 'right' }}>{o.done} / {o.target}</div>
-                                                                </div>
-                                                            )}
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '5px', marginBottom: 4 }}>NOW</div>
+                                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(255,255,255,0.92)', letterSpacing: '1px' }}>{label}</div>
+                                                            </div>
+                                                            {o.done > 0 && <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.6rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '1px', textAlign: 'right' }}>{o.done}<span style={{ color: 'rgba(255,255,255,0.15)' }}>/{o.target}</span></div>}
                                                         </div>
+                                                        {o.done > 0 && (
+                                                            <div style={{ height: 2, background: 'rgba(255,255,255,0.04)' }}>
+                                                                <div style={{ height: '100%', width: `${Math.min(100, (o.done / o.target) * 100)}%`, background: 'rgba(197,160,89,0.6)', transition: 'width 0.5s' }} />
+                                                            </div>
+                                                        )}
 
                                                         {/* Task-specific content */}
-                                                        <div style={{ padding: '20px 22px' }}>
+                                                        <div style={{ padding: '22px 20px 24px', background: '#050508' }}>
                                                             {/* SPIN (old type) */}
                                                             {o.type === 'spin' && (
                                                                 <div style={{ textAlign: 'center' }}>
                                                                     <div style={{ position: 'relative', width: 220, height: 220, margin: '0 auto 20px' }}>
-                                                                        <div style={{ position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: `14px solid ${R}0.6)` }} />
-                                                                        <div style={{ width: 220, height: 220, borderRadius: '50%', border: `1.5px solid ${R}0.12)`, transform: `rotate(${wheelAngle}deg)`, transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
-                                                                            {WHEEL.map((_, wi) => { const seg = 360 / WHEEL.length; return <div key={wi} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${wi * seg - 90}deg) skewY(-${90 - seg}deg)`, background: wi % 2 === 0 ? `${R}0.04)` : 'rgba(255,255,255,0.015)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
-                                                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 44, height: 44, borderRadius: '50%', background: '#0a0a0e', border: `1px solid ${R}0.12)`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                                                                                <span style={{ fontSize: '0.8rem', color: `${R}0.6)` }}>&#9819;</span>
+                                                                        <div style={{ position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', zIndex: 2, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '14px solid rgba(197,160,89,0.7)' }} />
+                                                                        <div style={{ width: 220, height: 220, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.15)', transform: `rotate(${wheelAngle}deg)`, transition: spinning ? 'transform 4s cubic-bezier(0.2, 0.8, 0.3, 1)' : 'none', position: 'relative', overflow: 'hidden' }}>
+                                                                            {WHEEL.map((_, wi) => { const seg = 360 / WHEEL.length; return <div key={wi} style={{ position: 'absolute', width: '50%', height: '50%', top: 0, right: 0, transformOrigin: '0% 100%', transform: `rotate(${wi * seg - 90}deg) skewY(-${90 - seg}deg)`, background: wi % 2 === 0 ? 'rgba(197,160,89,0.04)' : 'rgba(255,255,255,0.015)', borderRight: '1px solid rgba(255,255,255,0.03)' }} />; })}
+                                                                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 44, height: 44, borderRadius: '50%', background: '#0a0a0e', border: '1px solid rgba(197,160,89,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                                                                                <span style={{ fontSize: '0.8rem', color: 'rgba(197,160,89,0.7)' }}>&#9819;</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <button onClick={spin} disabled={spinning || wheelUsed} style={{ padding: '14px 44px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '4px', color: wheelUsed ? 'rgba(255,255,255,0.12)' : `${R}0.5)`, background: 'transparent', border: `1px solid ${wheelUsed ? 'rgba(255,255,255,0.05)' : `${R}0.12)`}`, borderRadius: 8, cursor: wheelUsed ? 'default' : 'pointer' }}>
+                                                                    <button onClick={spin} disabled={spinning || wheelUsed} style={{ padding: '14px 44px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '4px', color: wheelUsed ? 'rgba(255,255,255,0.12)' : 'rgba(197,160,89,0.8)', background: 'transparent', border: `1px solid ${wheelUsed ? 'rgba(255,255,255,0.05)' : 'rgba(197,160,89,0.2)'}`, borderRadius: 8, cursor: wheelUsed ? 'default' : 'pointer' }}>
                                                                         {spinning ? 'SPINNING...' : 'SPIN'}
                                                                     </button>
                                                                 </div>
@@ -2295,13 +2280,13 @@ export default function VaultPage() {
                                                                     {!trialDone && !trialOpen && (
                                                                         <button onClick={() => setTrialOpen(true)} style={{
                                                                             width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px',
-                                                                            color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 8, cursor: 'pointer',
+                                                                            color: 'rgba(197,160,89,0.85)', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer',
                                                                         }}>BEGIN TRIAL</button>
                                                                     )}
                                                                     {trialOpen && !trialDone && (
                                                                         <>
                                                                             <textarea value={trialText} onChange={e => setTrialText(e.target.value)} placeholder="Write here..."
-                                                                                style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                                                                style={{ width: '100%', minHeight: 120, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.6)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
                                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                                                                                 <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>{trialText.split(/\s+/).filter(Boolean).length} / 200</span>
                                                                                 <button onClick={() => {
@@ -2309,7 +2294,7 @@ export default function VaultPage() {
                                                                                     if (vaultData?.session?.id) {
                                                                                         fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'trial', memberId: profile?.member_id || profile?.memberId || '', prompt: vaultData?.today?.trial_prompt || 'Daily trial', response: trialText }) }).catch(() => {});
                                                                                     }
-                                                                                }} style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>SUBMIT</button>
+                                                                                }} style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>SUBMIT</button>
                                                                             </div>
                                                                         </>
                                                                     )}
@@ -2321,7 +2306,7 @@ export default function VaultPage() {
                                                                 <div style={{ textAlign: 'center' }}>
                                                                     <button onClick={() => (window as any).openStandaloneTribute?.('wishlist')} style={{
                                                                         width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px',
-                                                                        color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 8, cursor: 'pointer',
+                                                                        color: 'rgba(197,160,89,0.85)', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer',
                                                                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                                                                     }}>
                                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="8" width="18" height="12" rx="1" /><path d="M12 8v12" /><path d="M19 8c-1.5-1.5-3-2-4.5-2C13 6 12 8 12 8s-1-2-2.5-2C8 6 6.5 6.5 5 8" /></svg>
@@ -2385,7 +2370,7 @@ export default function VaultPage() {
                                                                 return (
                                                                     <div>
                                                                         {/* Task description — priority: config fields > meta desc > fallback */}
-                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 16 }}>
+                                                                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, marginBottom: 22, padding: '14px 16px', background: 'rgba(0,0,0,0.25)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
                                                                             {o.config?.instruction || o.config?.prompt || o.config?.question
                                                                                 || (o.type === 'coinflip' && o.config?.headsText ? `Heads: ${o.config.headsText} / Tails: ${o.config.tailsText}` : null)
                                                                                 || (o.type === 'multi_video' && o.config?.target ? `Record ${o.config.target} clips as instructed.` : null)
@@ -2508,7 +2493,7 @@ export default function VaultPage() {
                                                                                         {curQ?.question || 'No question set.'}
                                                                                     </div>
                                                                                     {!isActive ? (
-                                                                                        <button onClick={() => startTimer(tl)} style={{ width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: 4, color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                        <button onClick={() => startTimer(tl)} style={{ width: '100%', padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', letterSpacing: 4, color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                             START
                                                                                         </button>
                                                                                     ) : (
@@ -2521,14 +2506,14 @@ export default function VaultPage() {
                                                                                                     ? isCorrect ? 'rgba(80,200,120,0.12)' : isPicked ? 'rgba(255,60,60,0.1)' : 'rgba(255,255,255,0.02)'
                                                                                                     : 'rgba(255,255,255,0.03)';
                                                                                                 const border = revealing
-                                                                                                    ? isCorrect ? '1px solid rgba(80,200,120,0.5)' : isPicked ? '1px solid rgba(255,60,60,0.4)' : `1px solid ${R}0.06)`
-                                                                                                    : `1px solid ${R}0.1)`;
+                                                                                                    ? isCorrect ? '1px solid rgba(80,200,120,0.5)' : isPicked ? '1px solid rgba(255,60,60,0.4)' : '1px solid rgba(255,255,255,0.06)'
+                                                                                                    : '1px solid rgba(197,160,89,0.12)';
                                                                                                 const color = revealing
                                                                                                     ? isCorrect ? 'rgba(80,200,120,0.9)' : isPicked ? 'rgba(255,80,80,0.7)' : 'rgba(255,255,255,0.25)'
                                                                                                     : 'rgba(255,255,255,0.6)';
                                                                                                 return (
                                                                                                     <button key={ai} onClick={() => !revealing && pickAnswer(ai)} style={{ textAlign: 'left', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: bg, border, borderRadius: 8, cursor: revealing ? 'default' : 'pointer', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', color, transition: 'all 0.2s' }}>
-                                                                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: revealing && isCorrect ? 'rgba(80,200,120,0.8)' : revealing && isPicked ? 'rgba(255,80,80,0.6)' : `${R}0.4)`, width: 20 }}>
+                                                                                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: revealing && isCorrect ? 'rgba(80,200,120,0.8)' : revealing && isPicked ? 'rgba(255,80,80,0.6)' : 'rgba(197,160,89,0.5)', width: 20 }}>
                                                                                                             {revealing && isCorrect ? '✓' : revealing && isPicked && !isCorrect ? '✗' : String.fromCharCode(65 + ai)}
                                                                                                         </span>
                                                                                                         {opt}
@@ -2565,7 +2550,7 @@ export default function VaultPage() {
                                                                                             count++;
                                                                                             if (count > 15) { clearInterval(iv); setDiceRolling(false); setMechDone(true); saveGambleResult({ diceResult: val }, 'dice_roll'); const oc = diceOutcomes[val - 1]; const ft = oc?.followUpType || 'writing'; setPendingFollowUp({ orderType: o.type, source: `Dice Roll — ${val}`, resultText: oc?.text || `Face ${val}`, type: ft, prompt: oc?.followUpPrompt, instruction: oc?.followUpInstruction, duration: oc?.followUpDuration, target: oc?.followUpTarget }); }
                                                                                         }, 100);
-                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {diceRolling ? 'ROLLING...' : 'ROLL DICE'}
                                                                                     </button>
                                                                                 ) : mechDone ? (
@@ -2605,7 +2590,7 @@ export default function VaultPage() {
                                                                                             count++;
                                                                                             if (count > 12) { clearInterval(iv); setCoinFlipping(false); setMechDone(true); saveGambleResult({ coinResult: val }, 'coinflip'); const tt = val === 'heads' ? headsTask : tailsTask; const lo2 = tt.toLowerCase(); const it = /proof|video|selfie|photo|picture|body writing/.test(lo2) ? 'photo' : /write|essay|confession|journal|list|lines|letter|words|grateful/.test(lo2) ? 'writing' : /shower|plank|hold|sit|pushup|squat|burpee|exercise|camera|edge|ice/.test(lo2) ? 'endurance' : 'writing'; setPendingFollowUp({ orderType: o.type, source: `Coinflip — ${val.toUpperCase()}`, resultText: tt, type: it }); }
                                                                                         }, 120);
-                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                    }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                         {coinFlipping ? 'FLIPPING...' : 'FLIP COIN'}
                                                                                     </button>
                                                                                 ) : mechDone ? (
@@ -2712,7 +2697,7 @@ export default function VaultPage() {
                                                                                                 count++;
                                                                                                 if (count > 20) { clearInterval(iv); setWheelSpinning(false); setWheelPreview(null); setWheelResult(finalSeg); setMechDone(true); saveGambleResult({ wheelResult: finalSeg }, 'spin_wheel'); const wft = finalSeg.followUpType || 'writing'; setPendingFollowUp({ orderType: o.type, source: 'Spin Wheel', resultText: finalSeg.text, type: wft === 'instant' ? 'writing' : wft, prompt: finalSeg.followUpPrompt, instruction: finalSeg.followUpInstruction, duration: finalSeg.followUpDuration, target: finalSeg.followUpTarget }); }
                                                                                             }, 100);
-                                                                                        }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+                                                                                        }} style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.9rem', letterSpacing: '4px', color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
                                                                                             {wheelSpinning ? 'SPINNING...' : 'SPIN'}
                                                                                         </button>
                                                                                     </>
@@ -2814,7 +2799,7 @@ export default function VaultPage() {
                                                                                             try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'waiting', step: 0, waitUntil, proofs: [], lastTask: null })); } catch {}
                                                                                         }} style={{
                                                                                             width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px',
-                                                                                            color: '#050508', background: `${R}0.55)`, border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 10,
+                                                                                            color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 10,
                                                                                         }}>START THE GAME</button>
                                                                                     </>)}
                                                                                     <button onClick={() => setMechOverlay(null)} style={{
@@ -2951,11 +2936,11 @@ export default function VaultPage() {
                                                                         {isTextTask && (
                                                                             <>
                                                                                 <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Write here..."
-                                                                                    style={{ width: '100%', minHeight: 120, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
+                                                                                    style={{ width: '100%', minHeight: 120, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.6)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none' }} />
                                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                                                                                     <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>{taskText.split(/\s+/).filter(Boolean).length} words</span>
                                                                                     <button onClick={() => submitTask({ text: taskText })} disabled={!taskText.trim()}
-                                                                                        style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#050508' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${taskText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                                                                                        style={{ padding: '12px 28px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#080810' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? 'rgba(197,160,89,0.7)' : 'transparent', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
                                                                                 </div>
                                                                             </>
                                                                         )}
@@ -2986,7 +2971,7 @@ export default function VaultPage() {
                                                                         {/* Self-report button */}
                                                                         {isSelfReport && (
                                                                             <button onClick={() => submitTask({ text: `${o.type} completed` })}
-                                                                                style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: `${R}0.5)`, background: `${R}0.04)`, border: `1px solid ${R}0.12)`, borderRadius: 8, cursor: 'pointer', textAlign: 'center' }}>
+                                                                                style={{ width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: 'rgba(197,160,89,0.85)', background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 8, cursor: 'pointer', textAlign: 'center' }}>
                                                                                 MARK COMPLETE
                                                                             </button>
                                                                         )}
@@ -2995,7 +2980,7 @@ export default function VaultPage() {
                                                                         {!isPhotoTask && !isTextTask && !isSelfReport && !isPayment && !isInteractive && (
                                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                                                                 <textarea value={taskText} onChange={e => setTaskText(e.target.value)} placeholder="Describe your completion..."
-                                                                                    style={{ width: '100%', minHeight: 80, background: 'rgba(0,0,0,0.3)', border: `1px solid ${R}0.08)`, borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
+                                                                                    style={{ width: '100%', minHeight: 80, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.12)', borderRadius: 10, padding: 14, color: 'rgba(255,255,255,0.6)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.6, resize: 'vertical', outline: 'none' }} />
                                                                                 <label style={{ cursor: 'pointer' }}>
                                                                                     <div style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', color: '#c5a059', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 10, textAlign: 'center', boxShadow: '0 0 10px rgba(197,160,89,0.1)' }}>
                                                                                         + ATTACH PHOTO
@@ -3013,12 +2998,13 @@ export default function VaultPage() {
                                                                                     }} />
                                                                                 </label>
                                                                                 <button onClick={() => submitTask({ text: taskText })} disabled={!taskText.trim()}
-                                                                                    style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#050508' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? `${R}0.5)` : 'transparent', border: `1px solid ${taskText.trim() ? `${R}0.3)` : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
+                                                                                    style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#080810' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? 'rgba(197,160,89,0.7)' : 'transparent', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 );
                                                             })()}
+                                                        </div>
                                                         </div>
                                                     </div>
                                                 );
@@ -3113,7 +3099,7 @@ export default function VaultPage() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: ok ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{wc} / {minW} words</span>
                                         <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!ok}
-                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: ok ? '#050508' : 'rgba(255,255,255,0.08)', background: ok ? `${R}0.5)` : 'transparent', border: `1px solid ${ok ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: ok ? 'pointer' : 'default' }}>SUBMIT</button>
+                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: ok ? '#080810' : 'rgba(255,255,255,0.08)', background: ok ? 'rgba(197,160,89,0.7)' : 'transparent', border: `1px solid ${ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: ok ? 'pointer' : 'default' }}>SUBMIT</button>
                                     </div>
                                     <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Write here..."
                                         style={{ width: '100%', minHeight: '35vh', background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none', boxSizing: 'border-box' }} />
@@ -3155,7 +3141,7 @@ export default function VaultPage() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: ok ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{wc} / {minW} words</span>
                                         <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText} — ${followUpText}` })} disabled={!ok}
-                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: ok ? '#050508' : 'rgba(255,255,255,0.08)', background: ok ? `${R}0.5)` : 'transparent', border: `1px solid ${ok ? `${R}0.3)` : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: ok ? 'pointer' : 'default' }}>SUBMIT</button>
+                                            style={{ padding: '14px 32px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: ok ? '#080810' : 'rgba(255,255,255,0.08)', background: ok ? 'rgba(197,160,89,0.7)' : 'transparent', border: `1px solid ${ok ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.03)'}`, borderRadius: 8, cursor: ok ? 'pointer' : 'default' }}>SUBMIT</button>
                                     </div>
                                     <textarea value={followUpText} onChange={e => setFollowUpText(e.target.value)} placeholder="Describe how you completed this task..."
                                         style={{ width: '100%', minHeight: 220, background: 'rgba(255,255,255,0.03)', border: `1px solid ${R}0.1)`, borderRadius: 10, padding: 16, color: 'rgba(255,255,255,0.5)', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '16px', lineHeight: 1.7, resize: 'vertical', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
@@ -3182,7 +3168,7 @@ export default function VaultPage() {
                             {/* INSTANT follow-up — auto-acknowledged */}
                             {followUp.type === 'instant' && (
                                 <button onClick={() => submitFollowUp({ text: `${followUp.source}: ${followUp.resultText}` })}
-                                    style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#050508', background: `${R}0.5)`, border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
+                                    style={{ padding: '16px 48px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', letterSpacing: '3px', color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer' }}>ACKNOWLEDGE</button>
                             )}
 
                             {/* SKIP OPTIONS OVERLAY */}
