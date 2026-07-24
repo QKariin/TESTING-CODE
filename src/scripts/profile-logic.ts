@@ -6678,7 +6678,7 @@ const CRYPTO_OPTIONS = [
     { id: 60, label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł' },
 ];
 
-function _showCryptoCoinPicker(amount: number) {
+function _showCryptoCoinPicker(amount: number, error?: string) {
     const existing = document.getElementById('_cryptoCoinPicker');
     if (existing) existing.remove();
 
@@ -6710,6 +6710,7 @@ function _showCryptoCoinPicker(amount: number) {
         <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.8rem' : '1rem'};color:#d4b0f0;letter-spacing:5px;font-weight:700;">SELECT CURRENCY</div>
         <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent);"></div>
         <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.7rem' : '0.8rem'};color:rgba(255,255,255,0.3);letter-spacing:3px;font-weight:500;">${amount.toLocaleString()} ROYAL SILVER</div>
+        ${error ? `<div style="font-family:Rajdhani,sans-serif;font-size:0.65rem;color:rgba(255,80,80,0.8);letter-spacing:1px;text-align:center;">${error}</div>` : ''}
         <div style="width:100%;margin-top:8px;display:flex;flex-direction:column;gap:10px;">
             ${buttonsHtml}
         </div>
@@ -6759,15 +6760,15 @@ async function _createCryptoPayment(amount: number, currencyId: number, label: s
         if (!data.success) {
             loader.remove();
             console.error('[EXCHEQUER] Crypto error:', data.error);
-            alert('Could not create crypto payment. Please try again.');
+            _showCryptoCoinPicker(amount, data.error || 'Payment setup failed. Try again.');
             return;
         }
         loader.remove();
         _showCryptoPaymentOverlay({ ...data, currency: label }, amount);
-    } catch (err) {
+    } catch (err: any) {
         loader.remove();
         console.error('[EXCHEQUER] Crypto network error:', err);
-        alert('Could not reach payment service. Please try again.');
+        _showCryptoCoinPicker(amount, err.message || 'Could not reach payment service. Try again.');
     }
 }
 

@@ -96,6 +96,7 @@ export default function KeyholderPage() {
     const [paypalRequesting, setPaypalRequesting] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
+    const [cryptoError, setCryptoError] = useState('');
     const [cryptoData, setCryptoData] = useState<any>(null);
     const [cryptoConfirmed, setCryptoConfirmed] = useState(false);
     const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -379,6 +380,7 @@ export default function KeyholderPage() {
         if (!selectedTier) return;
         setShowCryptoPicker(false);
         setCryptoLoading(true);
+        setCryptoError('');
         try {
             const res = await fetch('/api/keyholder/passimpay', {
                 method: 'POST',
@@ -387,8 +389,9 @@ export default function KeyholderPage() {
             });
             const data = await res.json();
             if (!data.success) {
-                setStatus('error');
+                setCryptoError(data.error || 'Payment setup failed. Try again.');
                 setCryptoLoading(false);
+                setShowCryptoPicker(true);
                 return;
             }
             setCryptoData({ ...data, currency: ticker });
@@ -414,9 +417,10 @@ export default function KeyholderPage() {
                     }
                 } catch {}
             }, 5000);
-        } catch {
-            setStatus('error');
+        } catch (e: any) {
+            setCryptoError(e.message || 'Network error. Try again.');
             setCryptoLoading(false);
+            setShowCryptoPicker(true);
         }
     };
 
@@ -1237,6 +1241,7 @@ export default function KeyholderPage() {
                         <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#d4b0f0', letterSpacing: 5, fontWeight: 700 }}>SELECT CURRENCY</div>
                         <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent)' }} />
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>&euro;{TIER_PRICES[selectedTier || 'weekly'] || 55} EXCLUSIVE ACCESS</div>
+                        {cryptoError && <div style={{ fontSize: '0.65rem', color: 'rgba(255,80,80,0.8)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center', letterSpacing: 1 }}>{cryptoError}</div>}
                         <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
                             {CRYPTO_OPTIONS.map((opt) => {
                                 const rgb = opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187';
