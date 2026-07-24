@@ -187,7 +187,7 @@ export default function PaymentModal({
             )}
             <div style={{ marginTop: 10, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', maxWidth: 300, lineHeight: 1.7 }}>Send the exact amount. Confirms automatically.</div>
             <button onClick={() => { setCryptoData(null); if (pollRef.current) clearInterval(pollRef.current); setScreen('method'); }}
-                style={{ marginTop: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', letterSpacing: 4, cursor: 'pointer', padding: '12px 24px' }}>CANCEL</button>
+                style={{ marginTop: 24, width: '100%', maxWidth: 400, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
         </div>
     );
 
@@ -211,7 +211,7 @@ export default function PaymentModal({
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.4)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 ))}
-                <button onClick={() => setScreen('method')} style={{ width: '100%', padding: '16px', marginTop: 24, background: 'none', border: 'none', color: 'rgba(255,255,255,0.18)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', letterSpacing: 4, cursor: 'pointer' }}>BACK</button>
+                <button onClick={() => setScreen('method')} style={{ width: '100%', padding: '16px', marginTop: 24, background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>BACK</button>
             </div>
         </div>
     );
@@ -239,7 +239,7 @@ export default function PaymentModal({
                         PAY WITH CRYPTO
                     </button>
                 </div>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.18)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', letterSpacing: 4, cursor: 'pointer', padding: '20px 24px', marginTop: 8 }}>CANCEL</button>
+                <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
         </div>
     );
