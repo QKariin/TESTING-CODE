@@ -6601,9 +6601,6 @@ export async function buyRealCoins(amount: number) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                 PAY WITH CRYPTO
             </button>
-            <button id="_payPaypal" style="width:100%;padding:14px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:10px;color:rgba(197,160,89,0.7);font-family:Orbitron,sans-serif;font-size:0.55rem;font-weight:500;letter-spacing:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                PAY WITH PAYPAL
-            </button>
         </div>
         <button id="_payCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:16px 20px;cursor:pointer;margin-top:4px;">CANCEL</button>
     `;
@@ -6647,30 +6644,6 @@ export async function buyRealCoins(amount: number) {
     });
 
     box.querySelector('#_payCrypto')!.addEventListener('click', () => { overlay.remove(); _showCryptoCoinPicker(amount); });
-
-    (box.querySelector('#_payPaypal') as HTMLButtonElement).addEventListener('click', async () => {
-        const btn = box.querySelector('#_payPaypal') as HTMLButtonElement;
-        btn.textContent = 'LOADING...';
-        btn.disabled = true;
-        try {
-            const memberId = getState().email || '';
-            const res = await fetch('/api/paypal/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'coins', amount: eurAmount, memberId, coins: amount }),
-            });
-            const data = await res.json();
-            if (data.approvalUrl) {
-                window.location.href = data.approvalUrl;
-            } else {
-                btn.textContent = 'PAY WITH PAYPAL';
-                btn.disabled = false;
-            }
-        } catch {
-            btn.textContent = 'PAY WITH PAYPAL';
-            btn.disabled = false;
-        }
-    });
 }
 
 const CRYPTO_OPTIONS = [
