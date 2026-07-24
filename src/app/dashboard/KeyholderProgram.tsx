@@ -344,7 +344,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     };
 
     const updateTask = (dn: number,idx: number,field: string,val: any) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t[idx]={...t[idx],[field]:val}; d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
-    const addTask = (dn: number,type: string, label?: string, target?: number, config?: any) => { const meta=TASK_META[type]; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const task: any = {type, target: target||1, label: label||meta?.label||type}; if(config) task.config = config; t.push(task); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
+    const addTask = (dn: number,type: string, label?: string, target?: number, config?: any) => { const meta=TASK_META[type]; const mechInfo=MECH_LIST.find(m=>m.id===type); const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const task: any = {type, target: target||1, label: label||meta?.label||mechInfo?.name||type}; if(config) task.config = config; t.push(task); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
     const removeTask = (dn: number,idx: number) => { const d={...getDays()}; const t=[...(d[String(dn)]||[])]; t.splice(idx,1); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
     const moveTask = (dn: number,from: number,to: number) => { if(from===to) return; const d={...getDays()}; const t=[...(d[String(dn)]||[])]; const[m]=t.splice(from,1); t.splice(to,0,m); d[String(dn)]=t; setDays(d); autoSaveMemberDay(dn,t); };
 
@@ -569,7 +569,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                                 {/* Card body */}
                                 <div style={{ padding: '24px 20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flex: 1 }}>
-                                    <div style={{ fontFamily: F, fontSize: '.8rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textAlign: 'center', lineHeight: 1.3 }}>{task.label}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.8rem', color: '#fff', fontWeight: 700, letterSpacing: 1, textAlign: 'center', lineHeight: 1.3 }}>{(!task.label || task.label === task.type || task.label.includes('_')) ? typeName : task.label}</div>
                                     <div style={{ fontSize: '2.2rem', color, lineHeight: 1, margin: '8px 0' }}>{icon}</div>
                                     <div style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM, letterSpacing: 2 }}>{typeName}</div>
                                     {/* Gamble outcomes — show all possibilities */}
