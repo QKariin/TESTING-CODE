@@ -151,17 +151,25 @@ export default function PaymentModal({
 
     /* ── QR OVERLAY ── */
     if (screen === 'qr' && cryptoData) return (
-        <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', padding: '44px 28px 60px' }}>
+        <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', padding: '36px 28px 60px' }}>
             <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+
+            {/* AMOUNT — first, biggest, unmissable */}
+            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 6, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>SEND EXACTLY</div>
+            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(2.8rem,9vw,4rem)', color: '#fff', fontWeight: 900, lineHeight: 1, marginBottom: 6, textAlign: 'center' }}>{cryptoData.cryptoAmount}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.1rem', color: tickerColor, letterSpacing: 4, fontWeight: 700 }}>{cryptoData.currency}</span>
+                <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '1rem' }}>·</span>
+                <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.1rem', color: '#c5a059', fontWeight: 600 }}>€{Number(cryptoData.amountEur).toFixed(2)}</span>
+            </div>
+            <div style={{ height: 1, width: 60, background: 'rgba(255,255,255,0.08)', margin: '16px 0 24px' }} />
+
+            {/* QR — after the amount */}
             <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(cryptoData.address)}`}
                 alt="QR"
-                style={{ width: 260, height: 260, background: '#fff', borderRadius: 14, padding: 10, display: 'block', marginBottom: 32, flexShrink: 0 }}
+                style={{ width: 240, height: 240, background: '#fff', borderRadius: 14, padding: 10, display: 'block', marginBottom: 28, flexShrink: 0 }}
             />
-            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 6, fontWeight: 600, marginBottom: 10 }}>SEND EXACTLY</div>
-            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2.6rem', color: '#fff', fontWeight: 700, lineHeight: 1, marginBottom: 8, textAlign: 'center' }}>{cryptoData.cryptoAmount}</div>
-            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.85rem', color: tickerColor, letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{cryptoData.currency}</div>
-            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.55)', letterSpacing: 2, marginBottom: 36 }}>= €{Number(cryptoData.amountEur).toFixed(2)}</div>
             <div style={{ width: '100%', maxWidth: 400 }}>
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4, textAlign: 'center', marginBottom: 10 }}>WALLET ADDRESS</div>
                 <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7 }}>{cryptoData.address}</div>
