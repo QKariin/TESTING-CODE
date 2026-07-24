@@ -240,8 +240,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
             });
             const data = await res.json();
             if (!data.success) {
-                setCryptoError(data.error || 'Failed to get wallet');
+                setCryptoError(data.error || 'Payment setup failed. Try again.');
                 setCryptoLoading(false);
+                setShowCryptoPicker(true);
                 return;
             }
             setCryptoData({ ...data, currency: ticker });
@@ -267,8 +268,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 } catch {}
             }, 5000);
         } catch (e: any) {
-            setCryptoError(e.message || 'Network error');
+            setCryptoError(e.message || 'Network error. Try again.');
             setCryptoLoading(false);
+            setShowCryptoPicker(true);
         }
     }
 
