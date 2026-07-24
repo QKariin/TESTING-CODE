@@ -107,31 +107,9 @@ export async function GET(req: NextRequest) {
         .limit(1)
         .maybeSingle();
 
-    // Auto-regenerate if program is stale (old format without configs) or missing
-    if (prog?.program) {
-        const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
-        const day1 = program['1'];
-        const isStale = !day1 || day1.length === 0 || !day1.some((t: any) => t.config);
-        if (isStale) {
-            console.log(`[vault program GET] Stale program detected for ${email}, regenerating from template...`);
-            // Read template
-            const freshProgram: Record<string, any[]> = {};
-            const { data: template } = await supabaseAdmin
-                .from('vault_program_template').select('*').order('day_number');
-            if (template && template.length > 0) {
-                for (const row of template) {
-                    freshProgram[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
-                }
-            } else {
-                Object.assign(freshProgram, generateDefaultProgram());
-            }
-            await supabaseAdmin.from('vault_member_program').update({
-                program: JSON.stringify(freshProgram),
-            }).eq('id', prog.id);
-            prog = { ...prog, program: JSON.stringify(freshProgram) };
-        }
-    } else if (!prog) {
-        // No program at all — generate fresh
+    // Auto-create program if none exists for this session
+    if (!prog) {
+        // No program at all — generate fresh from template
         console.log(`[vault program GET] No program for ${email}, generating fresh...`);
         const freshProgram: Record<string, any[]> = {};
         const { data: template } = await supabaseAdmin
@@ -185,27 +163,8 @@ export async function POST(req: NextRequest) {
         const { error } = await supabaseAdmin.from('vault_program_template').insert(rows);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-        // Auto-regenerate programs for all active sessions from new template
-        try {
-            const { data: activeSessions } = await supabaseAdmin
-                .from('vault_sessions')
-                .select('id, member_id')
-                .in('status', ['active', 'awaiting_video']);
-            if (activeSessions && activeSessions.length > 0) {
-                for (const s of activeSessions) {
-                    await supabaseAdmin.from('vault_member_program').delete().eq('session_id', s.id);
-                    await supabaseAdmin.from('vault_member_program').insert({
-                        session_id: s.id,
-                        member_id: s.member_id,
-                        program: JSON.stringify(days),
-                    });
-                }
-                console.log(`[vault] Regenerated programs for ${activeSessions.length} active sessions from new template`);
-            }
-        } catch (e: any) {
-            console.error('[vault] Failed to regenerate active programs:', e?.message);
-        }
-
+        // Template saved — member programs are NOT auto-overwritten.
+        // Each member has their own independent copy. Use generate_program per-member to reset.
         return NextResponse.json({ success: true });
     }
 
