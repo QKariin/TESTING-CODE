@@ -14,6 +14,15 @@ export async function POST(req: NextRequest) {
             .ilike('member_id', memberId)
             .maybeSingle();
 
+        // If paywalled, stamp last_seen — fire and forget, no await
+        if (data?.paywall === true) {
+            supabaseAdmin
+                .from('profiles')
+                .update({ parameters: { ...(data.parameters || {}), last_seen: new Date().toISOString() } })
+                .ilike('member_id', memberId)
+                .then(() => {}).catch(() => {});
+        }
+
         return NextResponse.json({
             silence: data?.silence === true,
             reason: data?.parameters?.silence_reason || '',
