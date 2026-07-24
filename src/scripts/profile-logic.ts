@@ -6602,7 +6602,7 @@ export async function buyRealCoins(amount: number) {
                 PAY WITH CRYPTO
             </button>
             <button id="_payPaypal" style="width:100%;padding:14px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:10px;color:rgba(197,160,89,0.7);font-family:Orbitron,sans-serif;font-size:0.55rem;font-weight:500;letter-spacing:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                REQUEST PAYPAL
+                PAY WITH PAYPAL
             </button>
         </div>
         <button id="_payCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:16px 20px;cursor:pointer;margin-top:4px;">CANCEL</button>
@@ -6650,22 +6650,24 @@ export async function buyRealCoins(amount: number) {
 
     (box.querySelector('#_payPaypal') as HTMLButtonElement).addEventListener('click', async () => {
         const btn = box.querySelector('#_payPaypal') as HTMLButtonElement;
-        btn.textContent = 'SENDING...';
+        btn.textContent = 'LOADING...';
         btn.disabled = true;
         try {
             const memberId = getState().email || '';
-            await fetch('/api/profile-action', {
+            const res = await fetch('/api/paypal/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    memberId,
-                    type: 'MESSAGE',
-                    payload: { text: `COINS_PAYPAL_REQUEST::${JSON.stringify({ coins: amount, eurAmount })}`, sender: 'slave' },
-                }),
+                body: JSON.stringify({ type: 'coins', amount: eurAmount, memberId, coins: amount }),
             });
-            btn.textContent = '✓ REQUEST SENT';
+            const data = await res.json();
+            if (data.approvalUrl) {
+                window.location.href = data.approvalUrl;
+            } else {
+                btn.textContent = 'PAY WITH PAYPAL';
+                btn.disabled = false;
+            }
         } catch {
-            btn.textContent = 'REQUEST PAYPAL';
+            btn.textContent = 'PAY WITH PAYPAL';
             btn.disabled = false;
         }
     });

@@ -195,21 +195,23 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     }
 
     async function handleRequestPaypal() {
-        if (paypalRequested || paypalRequesting) return;
+        if (paypalRequesting) return;
         setPaypalRequesting(true);
         try {
-            await fetch('/api/profile-action', {
+            const res = await fetch('/api/paypal/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    memberId: email,
-                    type: 'MESSAGE',
-                    payload: { text: `PAYWALL_PAYPAL_REQUEST::${JSON.stringify({ amount: paywallAmount })}`, sender: 'slave' },
-                }),
+                body: JSON.stringify({ type: 'paywall', amount: paywallAmount, memberId: email }),
             });
-            setPaypalRequested(true);
-        } catch {}
-        setPaypalRequesting(false);
+            const data = await res.json();
+            if (data.approvalUrl) {
+                window.location.href = data.approvalUrl;
+            } else {
+                setPaypalRequesting(false);
+            }
+        } catch {
+            setPaypalRequesting(false);
+        }
     }
 
     function handleSuccess() {
@@ -313,11 +315,11 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
                     </button>
-                    <button onClick={handleRequestPaypal} disabled={paypalRequested || paypalRequesting} style={{ width: '100%', padding: '14px', background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, color: paypalRequested ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.7)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 500, letterSpacing: '3px', cursor: paypalRequested ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                        {paypalRequested ? '✓ REQUEST SENT' : paypalRequesting ? 'SENDING...' : 'REQUEST PAYPAL'}
+                    <button onClick={handleRequestPaypal} disabled={paypalRequesting} style={{ width: '100%', padding: '14px', background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, color: 'rgba(197,160,89,0.7)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 500, letterSpacing: '3px', cursor: paypalRequesting ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        {paypalRequesting ? 'LOADING...' : 'PAY WITH PAYPAL'}
                     </button>
                 </div>
-                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px', marginTop: 14 }}>Crypto only · PayPal on request</div>
+                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '1px', marginTop: 14 }}>Card · PayPal · Crypto</div>
             </div>
         </div>
 
