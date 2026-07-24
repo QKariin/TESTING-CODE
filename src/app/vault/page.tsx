@@ -305,6 +305,7 @@ export default function VaultPage() {
     const [taskText, setTaskText] = useState('');
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
+    const [vaultSkipOpen, setVaultSkipOpen] = useState(false);
     const [attnHolding, setAttnHolding] = useState(false);
     const [attnFill, setAttnFill] = useState(0);
     const [attnResult, setAttnResult] = useState<typeof ATTENTION_TASKS[0] | null>(null);
@@ -1998,7 +1999,7 @@ export default function VaultPage() {
                 const title = t === 'chat' ? 'QUEEN KARIN' : t === 'global' ? 'SUBS UNION' : 'WORK';
                 const lockMsg = t === 'chat' ? 'COMPLETE YOUR DAILY TRIAL' : 'KNEEL 5 TIMES TODAY';
                 return (
-                    <div key={t} style={{ display: tab === t ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', inset: 0, zIndex: 40, background: '#050508' }}>
+                    <div key={t} style={{ display: tab === t ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', inset: 0, zIndex: 40, background: t === 'challenge' ? 'linear-gradient(rgba(4,3,10,0.78) 0%, rgba(4,3,10,0.85) 100%), url(/work-bg.jpg) center top / cover no-repeat' : '#050508' }}>
                         {/* Header */}
                         <div style={{ padding: '16px 20px', borderBottom: t === 'challenge' ? '1px solid rgba(197,160,89,0.12)' : `1px solid ${R}0.1)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: t === 'challenge' ? 'rgba(197,160,89,0.03)' : 'transparent' }}>
                             {t === 'chat' ? (
@@ -3012,6 +3013,15 @@ export default function VaultPage() {
                                                                                     style={{ padding: '14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', letterSpacing: '3px', color: taskText.trim() ? '#080810' : 'rgba(255,255,255,0.1)', background: taskText.trim() ? 'rgba(197,160,89,0.7)' : 'transparent', border: `1px solid ${taskText.trim() ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 8, cursor: taskText.trim() ? 'pointer' : 'default' }}>SUBMIT</button>
                                                                             </div>
                                                                         )}
+
+                                                                        {/* SKIP BUTTON */}
+                                                                        <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                            <button onClick={() => setVaultSkipOpen(true)} style={{
+                                                                                width: '100%', padding: '12px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '3px',
+                                                                                color: 'rgba(255,255,255,0.22)', background: 'transparent',
+                                                                                border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, cursor: 'pointer',
+                                                                            }}>SKIP THIS TASK</button>
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             })()}
@@ -3078,7 +3088,7 @@ export default function VaultPage() {
                     } catch (e: any) { alert('Submit failed: ' + e?.message); }
                 };
                 return (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: '#050508', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'linear-gradient(rgba(4,3,10,0.78) 0%, rgba(4,3,10,0.88) 100%), url(/work-bg.jpg) center top / cover no-repeat', display: 'flex', flexDirection: 'column', overflow: 'auto' } as React.CSSProperties}>
                         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, background: 'radial-gradient(ellipse at 50% 20%, rgba(139,0,0,0.08) 0%, transparent 60%)' }} />
                         {/* Skip button */}
                         <button onClick={() => setFollowUpSkipping(!followUpSkipping)} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 2, padding: '8px 12px' }}>{followUpSkipping ? 'BACK' : 'SKIP'}</button>
@@ -3236,6 +3246,80 @@ export default function VaultPage() {
                                 </div>
                             )}
                         </div>
+                    </div>
+                );
+            })()}
+
+            {/* ══════════════════════════════════════════════
+                VAULT SKIP OVERLAY
+            ══════════════════════════════════════════════ */}
+            {vaultSkipOpen && (() => {
+                const tasks = todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel');
+                const subs = vaultData?.submissions || [];
+                const isPendingFn = (o: any) => taskSubmitted[o.type] || o.submitted === 'pending' || subs.some((s: any) => s.order_type === o.type && s.status === 'pending');
+                const currentSkipTask = tasks.find((o: any) => o.done < o.target && !isPendingFn(o));
+                const skipMid = profile?.member_id || profile?.memberId || '';
+                return (
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'linear-gradient(rgba(4,3,10,0.88) 0%, rgba(4,3,10,0.94) 100%), url(/work-bg.jpg) center top / cover no-repeat', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 30, gap: 24, animation: 'vFadeIn 0.25s ease' }}>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, textAlign: 'center', lineHeight: 1.7 }}>
+                            {currentSkipTask ? `Skip this task?` : 'Skip this task?'}
+                        </div>
+                        {currentSkipTask && (
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4, textAlign: 'center', marginTop: -16 }}>
+                                {currentSkipTask.label || currentSkipTask.type}
+                            </div>
+                        )}
+                        <div style={{ width: 40, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+                        {/* Pay 300 coins */}
+                        <button onClick={async () => {
+                            const coins = profile?.wallet ?? 0;
+                            if (coins < 300) { alert('Not enough coins. 300 required.'); return; }
+                            if (!currentSkipTask) { setVaultSkipOpen(false); return; }
+                            try {
+                                const res = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'skip_order', memberId: skipMid, orderType: currentSkipTask.type, cost: 300 }) });
+                                const data = await res.json();
+                                if (data.success) {
+                                    setProfile((p: any) => ({ ...p, wallet: (p?.wallet || 0) - 300 }));
+                                    setTaskSubmitted(prev => ({ ...prev, [currentSkipTask.type]: true }));
+                                    setVaultSkipOpen(false);
+                                    if (skipMid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(skipMid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }).catch(() => {}); }
+                                } else { alert(data.error || 'Skip failed'); }
+                            } catch { alert('Something went wrong'); }
+                        }} style={{
+                            width: '100%', maxWidth: 300, padding: '18px 20px', borderRadius: 12,
+                            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                            cursor: 'pointer', textAlign: 'center',
+                        }}>
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', letterSpacing: 3, marginBottom: 6 }}>PAY 300 COINS</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,60,60,0.5)', letterSpacing: 1 }}>BREAKS OBEDIENCE STREAK</div>
+                        </button>
+
+                        {/* Use skip pass */}
+                        <button disabled={!(profile?.skippass > 0)} onClick={async () => {
+                            if (!currentSkipTask) { setVaultSkipOpen(false); return; }
+                            try {
+                                const res = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'skip_order', memberId: skipMid, orderType: currentSkipTask.type, useSkipPass: true }) });
+                                const data = await res.json();
+                                if (data.success) {
+                                    setProfile((p: any) => ({ ...p, skippass: Math.max(0, (p?.skippass || 0) - 1) }));
+                                    setTaskSubmitted(prev => ({ ...prev, [currentSkipTask.type]: true }));
+                                    setVaultSkipOpen(false);
+                                    if (skipMid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(skipMid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }).catch(() => {}); }
+                                } else { alert(data.error || 'Skip failed'); }
+                            } catch { alert('Something went wrong'); }
+                        }} style={{
+                            width: '100%', maxWidth: 300, padding: '18px 20px', borderRadius: 12,
+                            background: (profile?.skippass > 0) ? 'rgba(197,160,89,0.05)' : 'transparent',
+                            border: `1px solid ${(profile?.skippass > 0) ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.05)'}`,
+                            cursor: (profile?.skippass > 0) ? 'pointer' : 'default', textAlign: 'center',
+                            opacity: (profile?.skippass > 0) ? 1 : 0.35,
+                        }}>
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: (profile?.skippass > 0) ? 'rgba(197,160,89,0.7)' : 'rgba(255,255,255,0.2)', letterSpacing: 3, marginBottom: 6 }}>USE SKIP PASS</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1 }}>{profile?.skippass || 0} AVAILABLE</div>
+                        </button>
+
+                        <button onClick={() => setVaultSkipOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.18)', letterSpacing: 2, padding: '12px', marginTop: 8 }}>CANCEL</button>
                     </div>
                 );
             })()}
