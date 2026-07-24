@@ -35,7 +35,15 @@ export default function TributePage() {
     const iframeFullRef = useRef(false);
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
+    const [showTierPicker, setShowTierPicker] = useState(false);
     const [showPayment, setShowPayment] = useState(false);
+    const [selectedTier, setSelectedTier] = useState<{ id: string; price: number } | null>(null);
+
+    const TRIBUTE_TIERS = [
+        { id: 'weekly',  label: '1 WEEK',  period: '7 DAYS',   price: 55,  desc: 'First step. Prove you are worthy of Her attention.' },
+        { id: 'monthly', label: '1 MONTH', period: '30 DAYS',  price: 99,  desc: 'Full month under Her rule. Real commitment begins here.', badge: 'POPULAR' },
+        { id: 'yearly',  label: '1 YEAR',  period: '365 DAYS', price: 259, desc: 'Total surrender for a full year. No excuses. No exits.', badge: 'BEST VALUE' },
+    ];
 
     useEffect(() => {
         const storedRedirect = localStorage.getItem('post_login_redirect');
@@ -267,7 +275,7 @@ export default function TributePage() {
     }, []);
 
     const handleTribute = () => {
-        setShowPayment(true);
+        setShowTierPicker(true);
     };
 
     const handleLogout = async () => { const s = createClient(); await s.auth.signOut(); window.location.href = '/login'; };
@@ -1169,17 +1177,43 @@ export default function TributePage() {
                     : { top: 'auto', bottom: 0, height: 'calc(140px + env(safe-area-inset-bottom))' }),
             }}
         />
-        {showPayment && (
+        {/* ── TIER PICKER ── */}
+        {showTierPicker && !showPayment && (
+            <div style={{ position: 'fixed', inset: 0, background: '#030308', zIndex: 99999999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 28px', overflowY: 'auto' }}>
+                <div style={{ width: '100%', maxWidth: 420, paddingTop: 20, paddingBottom: 40 }}>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.2rem', color: '#fff', fontWeight: 700, letterSpacing: 2, textAlign: 'center', marginBottom: 8 }}>SELECT ACCESS</div>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, textAlign: 'center', marginBottom: 36 }}>ENTRANCE TRIBUTE</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {TRIBUTE_TIERS.map(tier => (
+                            <button key={tier.id} onClick={() => { setSelectedTier(tier); setShowTierPicker(false); setShowPayment(true); }}
+                                style={{ position: 'relative', width: '100%', padding: '22px 24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
+                                {tier.badge && (
+                                    <div style={{ position: 'absolute', top: -9, right: 16, fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: '#c5a059', background: '#030308', padding: '2px 8px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 3, letterSpacing: 2 }}>{tier.badge}</div>
+                                )}
+                                <div style={{ textAlign: 'left' }}>
+                                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', color: '#fff', fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{tier.label} <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.55rem', fontWeight: 400 }}>· {tier.period}</span></div>
+                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.4 }}>{tier.desc}</div>
+                                </div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700, flexShrink: 0, marginLeft: 16 }}>€{tier.price}</div>
+                            </button>
+                        ))}
+                    </div>
+                    <button onClick={() => setShowTierPicker(false)} style={{ width: '100%', marginTop: 20, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
+                </div>
+            </div>
+        )}
+
+        {showPayment && selectedTier && (
             <PaymentModal
-                amountEur={55}
+                amountEur={selectedTier.price}
                 label="ENTRANCE TRIBUTE"
-                cardBody={{ memberId: userEmail || '', amount: 55 }}
+                cardBody={{ memberId: userEmail || '', amount: selectedTier.price }}
                 cryptoApiPath="/api/tribute/passimpay"
                 cryptoStatusApiPath="/api/tribute/passimpay-status"
-                cryptoPayBody={{ memberId: userEmail || '' }}
+                cryptoPayBody={{ memberId: userEmail || '', amount: selectedTier.price, tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
                 onSuccess={() => { window.location.href = '/onboarding'; }}
-                onClose={() => setShowPayment(false)}
+                onClose={() => { setShowPayment(false); setShowTierPicker(true); }}
             />
         )}
     </>);

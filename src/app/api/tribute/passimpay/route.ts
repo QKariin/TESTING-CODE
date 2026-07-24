@@ -20,14 +20,15 @@ function ppRequest(endpoint: string, params: Record<string, string>, apiKey: str
 
 export async function POST(req: Request) {
     try {
-        const { memberId, currencyId } = await req.json();
+        const { memberId, currencyId, amount: reqAmount, tierId } = await req.json();
         if (!currencyId) return NextResponse.json({ error: 'Missing currencyId' }, { status: 400 });
 
         const apiKey = (process.env.PASSIMPAY_API_KEY || '').trim();
         const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
         if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
 
-        const amount = 55; // €55 entrance tribute
+        const VALID_AMOUNTS: Record<string, number> = { weekly: 55, monthly: 99, yearly: 259 };
+        const amount = tierId && VALID_AMOUNTS[tierId] ? VALID_AMOUNTS[tierId] : (reqAmount && [55, 99, 259].includes(Number(reqAmount)) ? Number(reqAmount) : 55);
         const orderId = `trib${Date.now()}${(memberId || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
         // Step 1: Create order
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
                     .from('profiles').select('parameters').ilike('member_id', memberId).single();
                 if (profile) {
                     await supabaseAdmin.from('profiles').update({
-                        parameters: { ...(profile.parameters || {}), pendingTributePay: { orderId, created: new Date().toISOString() } },
+                        parameters: { ...(profile.parameters || {}), pendingTributePay: { orderId, tierId: tierId || 'weekly', amount, created: new Date().toISOString() } },
                     }).ilike('member_id', memberId);
                 }
             } catch {}
