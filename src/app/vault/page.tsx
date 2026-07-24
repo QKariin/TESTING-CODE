@@ -115,6 +115,40 @@ const MECH_ICON: Record<string, { icon: string; label: string; desc?: string }> 
 // No hardcoded fallback — orders come only from vault_daily (the database)
 const TODAYS_ORDERS: any[] = [];
 
+/* ── PREVIEW MODE helpers ── */
+const PREVIEW_MECHS = [
+    { type: 'spin_wheel', name: 'Spin Wheel' }, { type: 'coinflip', name: 'Coinflip' },
+    { type: 'card_pick', name: 'Card Pick' }, { type: 'dice_roll', name: 'Dice Roll' },
+    { type: 'russian_roulette', name: 'Roulette' }, { type: 'quiz', name: 'Quiz' },
+    { type: 'writing', name: 'Writing' }, { type: 'photo_proof', name: 'Photo Proof' },
+    { type: 'endurance', name: 'Endurance' }, { type: 'greed_game', name: 'Greed Game' },
+    { type: 'truth_dare', name: 'Truth/Dare' }, { type: 'simon_says', name: 'Simon Says' },
+    { type: 'trial', name: 'Trial' }, { type: 'lines', name: 'Lines' },
+    { type: 'cold_shower', name: 'Cold Shower' }, { type: 'body_writing', name: 'Body Writing' },
+    { type: 'exercise', name: 'Exercise' }, { type: 'corner_time', name: 'Corner Time' },
+    { type: 'edge', name: 'Edge' }, { type: 'denial', name: 'Denial' },
+];
+function buildPreviewTask(type: string) {
+    const cfg: Record<string, any> = {
+        quiz: { questions: [{ question: 'What is the first thing you must do each morning?', answers: ['Check phone', 'Complete your kneeling', 'Send a message', 'Wait for instructions'], correctIdx: 1, timeLimit: 60 }] },
+        simon_says: { chainTasks: [{ text: 'Drop and do 10 pushups — NOW', timeLimit: 30, proofType: 'photo' }, { text: 'Write OWNED on your wrist, photograph it', timeLimit: 60, proofType: 'photo' }], intervalMinutes: 1 },
+        writing: { prompt: 'Write about why you chose to submit. What brought you here? What do you hope to become? Be honest and vulnerable.', minWords: 100 },
+        endurance: { duration: 60, instruction: 'Hold plank position for 60 seconds. Proper form. Camera shows full body.' },
+        cold_shower: { duration: 60, instruction: 'Cold shower for 60 seconds. Camera on, do not stop.' },
+        coinflip: { headsText: '+20 coins — Queen shows mercy', tailsText: 'Write 30 lines: "I will obey without question"' },
+        truth_dare: { instruction: 'Choose truth or dare. Both will test you.' },
+        lines: { prompt: 'Write 30 lines: "I will obey without question"', target: 30 },
+        exercise: { instruction: '20 pushups on camera — upload video proof' },
+        body_writing: { instruction: 'Write OWNED on your wrist. Clear photograph.' },
+        corner_time: { duration: 300, instruction: 'Stand in the corner facing the wall. No phone. No distractions.' },
+        edge: { instruction: 'Edge once. Do not release. Report when done.' },
+        denial: { instruction: 'Full denial. No touching for 24 hours. Report compliance.' },
+        trial: { prompt: 'Write about your devotion to Queen Karin. 200 words minimum.' },
+    };
+    const m = MECH_ICON[type] || { label: type, desc: '' };
+    return [{ type, done: 0, target: 1, label: m.label, config: cfg[type] || {} }];
+}
+
 const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 // Convert a vault_daily DB record into a DayLog for the day detail modal
@@ -306,6 +340,12 @@ export default function VaultPage() {
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
     const [vaultSkipOpen, setVaultSkipOpen] = useState(false);
+    const [previewTasks, setPreviewTasks] = useState<any[] | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const p = new URLSearchParams(window.location.search).get('preview');
+        return p ? buildPreviewTask(p) : null;
+    });
+    const previewMode = previewTasks !== null;
     const [attnHolding, setAttnHolding] = useState(false);
     const [attnFill, setAttnFill] = useState(0);
     const [attnResult, setAttnResult] = useState<typeof ATTENTION_TASKS[0] | null>(null);
@@ -362,6 +402,7 @@ export default function VaultPage() {
     const programTasks = vaultData?.programTasks;
     const rawOrders = vaultData?.today?.orders;
     const todayOrders = useMemo(() => {
+        if (previewTasks) return previewTasks;
         let base: any[];
         if (programTasks && programTasks.length > 0) {
             base = programTasks;
@@ -380,7 +421,7 @@ export default function VaultPage() {
             if (o.type === 'chastity_check') return { ...o, done: chastityStatus === 'approved' ? o.target : 0, status: chastityStatus };
             return o;
         });
-    }, [programTasks, rawOrders, kneelToday, chastityStatus]);
+    }, [programTasks, rawOrders, kneelToday, chastityStatus, previewTasks]);
     const todayPerfect = vaultData?.today?.perfect ?? false;
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
@@ -589,6 +630,15 @@ export default function VaultPage() {
 
     // Init profile state from real DB + tribute system
     useEffect(() => {
+        // ── PREVIEW MODE: bypass auth + API entirely ──
+        if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('preview')) {
+            const p = new URLSearchParams(window.location.search).get('preview') || 'spin_wheel';
+            setProfile({ name: 'Preview', member_id: 'preview@test.com', memberId: 'preview-id', wallet: 1200, hierarchy: 'Slave', skip_passes: 2 });
+            setVaultData({ active: true, daysIn: 7, programTasks: buildPreviewTask(p), today: { perfect: false, orders: [], trial_prompt: 'Write about your devotion to Queen Karin. 200 words minimum.' }, submissions: [], adjustments: [], session: { lock_days: 30, id: 'preview', started_at: new Date(Date.now() - 7 * 86400000).toISOString(), expires_at: new Date(Date.now() + 23 * 86400000).toISOString() }, dailyRecords: [] });
+            setLoading(false);
+            setTab('challenge');
+            return;
+        }
         const _splashStart = Date.now();
         // Use data pre-loaded by /profile splash (already in state via _initCache)
         const _cachedProfile = _initCache.profile;
@@ -1240,8 +1290,40 @@ export default function VaultPage() {
     // ── Pressure: actual percentage based on days elapsed vs total ──
     const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
 
+    // ── Preview mode: switch mechanism + reset all interactive states ──
+    const setPreviewMech = useCallback((type: string) => {
+        setPreviewTasks(buildPreviewTask(type));
+        setSpinning(false); setWheelAngle(0); setWheelResult(null); setWheelUsed(false); setWheelSpinning(false); setWheelPreview(null); setMechDone(false);
+        setDiceRolling(false); setDiceResult(null);
+        setCoinFlipping(false); setCoinResult(null);
+        setCardPicking(false); setCardResult(null);
+        setRouletteSpinning(false); setRouletteResult(null);
+        setTruthDareChoice(null);
+        setSimonStep(0); setSimonPhase('idle'); setSimonCurrentTask(null); setSimonLastTask(null); setSimonProofs([]);
+        setGreedCoins(0); setGreedBusted(false); setGreedCashedOut(false);
+        setQuizStep(0); setQuizAnswers([]); setQuizTimeLeft(null); setQuizReveal(null); setQuizResult(null);
+        setFollowUp(null); setFollowUpText(''); setFollowUpSkipping(false);
+        setTaskText(''); setTaskSubmitted({}); setVaultSkipOpen(false);
+        setTrialOpen(false); setTrialText(''); setTrialDone(false);
+        try { localStorage.removeItem('vault_followup'); localStorage.removeItem('vault_gamble_results'); localStorage.removeItem('ss_state'); } catch {}
+    }, []);
+
     return (
         <div style={{ background: '#080810', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', overflowX: 'clip' }}>
+
+            {/* ── PREVIEW TOOLBAR ── */}
+            {previewMode && (
+                <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, background: 'rgba(6,5,14,0.98)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(197,160,89,0.3)', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none', maxWidth: 480, width: '100%', height: 36, alignItems: 'center' }}>
+                    {PREVIEW_MECHS.map(m => {
+                        const active = previewTasks?.[0]?.type === m.type;
+                        return (
+                            <button key={m.type} onClick={() => setPreviewMech(m.type)} style={{ padding: '0 10px', height: '100%', fontFamily: 'Orbitron, sans-serif', fontSize: '0.3rem', letterSpacing: '1px', color: active ? 'rgba(197,160,89,0.95)' : 'rgba(255,255,255,0.22)', background: 'transparent', border: 'none', borderBottom: `2px solid ${active ? 'rgba(197,160,89,0.7)' : 'transparent'}`, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                {m.name.toUpperCase()}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* BG — queen photo + layered red glow */}
             <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
@@ -1999,7 +2081,7 @@ export default function VaultPage() {
                 const title = t === 'chat' ? 'QUEEN KARIN' : t === 'global' ? 'SUBS UNION' : 'WORK';
                 const lockMsg = t === 'chat' ? 'COMPLETE YOUR DAILY TRIAL' : 'KNEEL 5 TIMES TODAY';
                 return (
-                    <div key={t} style={{ display: tab === t ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', inset: 0, zIndex: 40, background: t === 'challenge' ? 'linear-gradient(rgba(4,3,10,0.78) 0%, rgba(4,3,10,0.85) 100%), url(/work-bg.jpg) center top / cover no-repeat' : '#050508' }}>
+                    <div key={t} style={{ display: tab === t ? 'flex' : 'none', flexDirection: 'column', position: 'fixed', top: (previewMode && t === 'challenge') ? 36 : 0, left: 0, right: 0, bottom: 0, zIndex: 40, background: t === 'challenge' ? 'linear-gradient(rgba(4,3,10,0.78) 0%, rgba(4,3,10,0.85) 100%), url(/work-bg.jpg) center top / cover no-repeat' : '#050508' }}>
                         {/* Header */}
                         <div style={{ padding: '16px 20px', borderBottom: t === 'challenge' ? '1px solid rgba(197,160,89,0.12)' : `1px solid ${R}0.1)`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: t === 'challenge' ? 'rgba(197,160,89,0.03)' : 'transparent' }}>
                             {t === 'chat' ? (
