@@ -2225,7 +2225,7 @@ export default function VaultPage() {
                                             {currentTask && (() => {
                                                 const o = currentTask;
                                                 const meta = MECH_ICON[o.type] || { icon: '\u25C6', label: o.type };
-                                                const label = o.label || meta.label;
+                                                const label = (!o.label || o.label === o.type || o.label.includes('_')) ? meta.label : o.label;
                                                 const isMech = false;
 
                                                 return (
@@ -2233,7 +2233,7 @@ export default function VaultPage() {
                                                         {/* Gold accent line */}
                                                         <div style={{ height: 2, background: 'linear-gradient(90deg, rgba(197,160,89,0.85) 0%, rgba(197,160,89,0.05) 100%)', borderRadius: '2px 2px 0 0' }} />
                                                         {/* Card shell */}
-                                                        <div style={{ border: '1px solid rgba(197,160,89,0.2)', borderTop: 'none', borderRadius: '0 0 14px 14px', overflow: 'hidden' }}>
+                                                        <div style={{ border: '1px solid rgba(197,160,89,0.35)', borderTop: 'none', borderRadius: '0 0 14px 14px', overflow: 'hidden' }}>
                                                         {/* Card header */}
                                                         <div style={{ padding: '18px 20px 16px', background: 'rgba(197,160,89,0.05)', borderBottom: '1px solid rgba(197,160,89,0.1)', display: 'flex', alignItems: 'center', gap: 14 }}>
                                                             <div style={{ width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.07)', flexShrink: 0 }}>
@@ -2252,7 +2252,7 @@ export default function VaultPage() {
                                                         )}
 
                                                         {/* Task-specific content */}
-                                                        <div style={{ padding: '22px 20px 24px', background: '#050508' }}>
+                                                        <div style={{ padding: '22px 20px 24px', background: 'rgba(15,12,25,0.6)' }}>
                                                             {/* SPIN (old type) */}
                                                             {o.type === 'spin' && (
                                                                 <div style={{ textAlign: 'center' }}>
@@ -2779,7 +2779,18 @@ export default function VaultPage() {
                                                                                 <div style={{ textAlign: 'center', padding: '12px 0 4px', animation: 'vFadeIn 0.4s ease' }}>
                                                                                     <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '7px', marginBottom: 22 }}>⚡ SIMON SAYS</div>
                                                                                     {chain.length === 0 ? (
-                                                                                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,80,80,0.5)', letterSpacing: '3px', marginBottom: 24 }}>NO TASKS CONFIGURED</div>
+                                                                                        <>
+                                                                                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.75, marginBottom: 12 }}>
+                                                                                                You have obeyed.
+                                                                                            </div>
+                                                                                            <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)', lineHeight: 1.8, marginBottom: 28 }}>
+                                                                                                No commands were issued. Mark complete to continue.
+                                                                                            </div>
+                                                                                            <button onClick={() => submitTask({})} style={{
+                                                                                                width: '100%', padding: '16px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px',
+                                                                                                color: '#080810', background: 'rgba(197,160,89,0.7)', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 10,
+                                                                                            }}>MARK COMPLETE</button>
+                                                                                        </>
                                                                                     ) : (<>
                                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.75, marginBottom: 12 }}>
                                                                                             {chain.length} commands are waiting.
